@@ -16,7 +16,7 @@
 template<int D>
 class MRGrid {
 public:
-    MRGrid(int order = -1, const BoundingBox<D> *box = 0);
+    MRGrid(int order = -1, const GridNodeBox<D> *box = 0);
     virtual ~MRGrid();
 
     int getOrder() const { return this->order; }

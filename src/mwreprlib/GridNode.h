@@ -14,6 +14,9 @@
 #include "parallel.h"
 #include "mwrepr_declarations.h"
 
+#include "MRGrid.h"
+#include "GridNodeBox.h"
+
 #ifdef OPENMP
 #define SET_NODE_LOCK() omp_set_lock(&this->node_lock)
 #define UNSET_NODE_LOCK() omp_unset_lock(&this->node_lock)
@@ -27,7 +30,7 @@
 template<int D>
 class GridNode {
 public:
-    GridNode(MRGrid<D> *_grid, int n = 0, const int *l = 0);
+    GridNode(MRGrid<D> *_grid, const NodeIndex<D> &idx);
     ~GridNode();
 
     void clearGridPointer() { this->grid = 0; }
@@ -77,10 +80,12 @@ public:
 
 protected:
     static const int tDim = (1 << D);
+    NodeIndex<D> nodeIndex;
+
     Eigen::MatrixXd *roots;
     Eigen::VectorXd *weights;
+
     MRGrid<D> *grid;
-    NodeIndex<D> nodeIndex;
     GridNode<D> *parent; ///< Parent node
     GridNode<D> **children; ///< 2^D children
 

@@ -1,5 +1,5 @@
 #include "mwtest.h"
-#include "BoundingBox.h"
+#include "GridNodeBox.h"
 #include "Molecule.h"
 #include "AtomicElement.h"
 #include "PeriodicTable.h"
@@ -69,8 +69,8 @@ TEST_F(GridTest, UniformGrid_1D) {
     int rootScale = -2;
     int nBoxes[1] = {3};
     double origin[1] = {6.0};
-    BoundingBox<1> box_1D(rootScale, nBoxes, origin);
-    println(0, box_1D);
+    GridNodeBox<1> box_1D(rootScale, nBoxes, origin);
+    //println(0, box_1D);
 
     MRGrid<1> grid_1D(order, &box_1D);
     const double *lb = grid_1D.getLowerBounds();
@@ -99,9 +99,9 @@ TEST_F(GridTest, UniformGrid_2D) {
     int rootScale = -2;
     int nBoxes[2] = {3,2};
     double origin[2] = {6.0,4.0};
-    BoundingBox<2> box_2D(rootScale, nBoxes, origin);
-    println(0, box_2D);
+    GridNodeBox<2> box_2D(rootScale, nBoxes, origin);
 /*
+    println(0, box_2D);
     MRGrid<2> grid_2D(order, box_2D);
     const double *lb = grid_2D.getLowerBounds();
     const double *ub = grid_2D.getUpperBounds();
@@ -134,9 +134,9 @@ TEST_F(GridTest, UniformGrid_3D) {
     int rootScale = -2;
     int nBoxes[3] = {3,2,1};
     double origin[3] = {6.0,4.0,2.0};
-    BoundingBox<3> box_3D(rootScale, nBoxes, origin);
-    println(0, box_3D);
+    GridNodeBox<3> box_3D(rootScale, nBoxes, origin);
 /*
+    println(0, box_3D);
     MRGrid<3> grid_3D(order, box_3D);
     const double *lb = grid_2D.getLowerBounds();
     const double *ub = grid_2D.getUpperBounds();

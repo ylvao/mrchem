@@ -1,7 +1,8 @@
 #include "GridNode.h"
+#include "NodeIndex.h"
 
 template<int D>
-GridNode<D>::GridNode(MRGrid<D> *_grid, int n, const int *l) {
+GridNode<D>::GridNode(MRGrid<D> *_grid, const NodeIndex<D> &idx) {
     NOT_IMPLEMENTED_ABORT
 }
 
@@ -21,3 +22,6 @@ void GridNode<D>::createChildren() {
     NOT_IMPLEMENTED_ABORT
 }
 
+template class GridNode<1>;
+template class GridNode<2>;
+template class GridNode<3>;

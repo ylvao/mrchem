@@ -7,12 +7,17 @@
 using namespace std;
 
 template<int D>
-MRGrid<D>::MRGrid(int _order, const BoundingBox<D> *_box) {
+MRGrid<D>::MRGrid(int _order, const GridNodeBox<D> *box) {
     this->order = _order;
     this->kp1 = this->order + 1;
     this->kp1_d = MathUtils::ipow(this->kp1, D);
 
-    this->rootBox = new GridNodeBox<D>(this, _box);
+    if (box != 0) {
+        this->rootBox = new GridNodeBox<D>(*box);
+    } else {
+	NOT_IMPLEMENTED_ABORT
+    }
+
     this->nodesAtDepth.push_back(0);
     initializeRootNodes();
     this->resetEndNodeTable();
@@ -25,10 +30,9 @@ template<int D>
 void MRGrid<D>::initializeRootNodes() {
     GridNode<D> **nodes = this->getRootBox().getNodes();
     assert(nodes != 0);
-    NodeIndex<D> transl(this->getRootScale());
     for (int i = 0; i < this->getRootBox().getNBoxes(); i++) {
-        this->getRootBox().getBoxTranslation(i, transl);
-        nodes[i] = new GridNode<D>(this, transl.getScale(), transl.getTranslation());
+	NodeIndex<D> idx = this->getRootBox().getNodeIndex(i);
+        nodes[i] = new GridNode<D>(this, idx);
     }
 }
 
