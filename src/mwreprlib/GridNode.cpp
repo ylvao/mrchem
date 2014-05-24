@@ -1,3 +1,12 @@
+/**
+*
+*
+*  \date May 23, 2014
+*  \author Stig Rune Jensen <stig.r.jensen@uit.no> \n
+*   CTCC, University of Tromsø
+*
+*/
+
 #include "GridNode.h"
 #include "NodeIndex.h"
 

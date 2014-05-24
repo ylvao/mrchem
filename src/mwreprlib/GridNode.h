@@ -1,9 +1,11 @@
 /**
- *  Simple n-dimensional node
- *
- *  Created on: May 29, 2009
- *      Author: jonas
- */
+*
+*
+*  \date May 23, 2014
+*  \author Stig Rune Jensen <stig.r.jensen@uit.no> \n
+*   CTCC, University of Tromsø
+*
+*/
 
 #ifndef GRIDNODE_H_
 #define GRIDNODE_H_

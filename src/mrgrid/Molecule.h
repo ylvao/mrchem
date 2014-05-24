@@ -1,11 +1,11 @@
 /**
- *
- * \date 23. may, 2014
- * \author Stig Rune Jensen \n
- *		   CTCC, University of Tromsø
- *
- *
- */
+*
+*
+*  \date May 23, 2014
+*  \author Stig Rune Jensen <stig.r.jensen@uit.no> \n
+*  CTCC, University of Tromsø
+*
+*/
 
 #ifndef MOLECULE_H_
 #define MOLECULE_H_
