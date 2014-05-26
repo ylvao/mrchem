@@ -32,10 +32,14 @@
 template<int D>
 class GridNode {
 public:
-    GridNode(MRGrid<D> *_grid, const NodeIndex<D> &idx);
+    GridNode(MRGrid<D> *_grid, int n, const int *l);
+    GridNode(GridNode<D> *_parent, const int *l);
     ~GridNode();
 
     void clearGridPointer() { this->grid = 0; }
+    MRGrid<D> &getGrid() { return *this->grid; }
+
+    GridNode<D> &getNode(const NodeIndex<D> &idx);
 
     int getKp1() const { return this->grid->getKp1(); }
     int getKp1_d() const { return this->grid->getKp1_d(); }
@@ -43,6 +47,7 @@ public:
     int getScale() const { return this->nodeIndex.scale(); }
     int getOrder() const { return this->grid->getOrder(); }
     int getNChildren() const { if (isBranchNode()) return tDim; return 0; }
+    const NodeIndex<D> &getNodeIndex() const { return this->nodeIndex; }
 
     inline bool isRoot() const;
     inline bool hasCoefs() const;
@@ -80,6 +85,8 @@ public:
 	return this->children[i];
     }
 
+    friend class MRGrid<D>;
+
 protected:
     static const int tDim = (1 << D);
     NodeIndex<D> nodeIndex;
@@ -92,10 +99,18 @@ protected:
     GridNode<D> **children; ///< 2^D children
 
     inline bool checkStatus(unsigned char mask) const;
-    inline void allocKindergarten();
 
     void deleteChildren();
     void createChildren();
+    void createChild(int i);
+    void allocKindergarten();
+
+    GridNode<D> *retrieveNode(const NodeIndex<D> &idx);
+    bool isAncestor(const NodeIndex<D> &idx) const;
+
+    void calcChildTranslation(int cIdx, int *l) const;
+    int getChildIndex(const NodeIndex<D> &nIdx) const;
+    NodeIndex<D> getChildIndex(int cIdx) const;
 
 //  void recurCompQuadRoots(int d, int *l, const Eigen::VectorXd &primRoots, Eigen::MatrixXd &expRoots);
 
@@ -184,16 +199,6 @@ bool GridNode<D>::checkStatus(unsigned char mask) const {
     	return true;
     }
     return false;
-}
-
-template<int D>
-void GridNode<D>::allocKindergarten() {
-    if (this->children == 0) {
-	this->children = new GridNode<D> *[this->tDim];
-	for (int i = 0; i < this->tDim; i++) {
-	    this->children[i] = 0;
-	}
-    }
 }
 
 #endif /* GRIDNODE_H_ */

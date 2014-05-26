@@ -26,17 +26,24 @@ public:
     int getMaxDepth() const { return this->maxDepth; }
     int getRootScale() const { return this->rootBox->getRootScale(); }
 
+    void incrementNodeCount(int scale);
+    void decrementNodeCount(int scale);
+    int getNodesAtDepth(int depth) const;
+
+    void clearEndNodeTable();
+    void copyEndNodeTable(GridNodeVector &outTable);
+    void resetEndNodeTable();
+
     GridNodeBox<D> &getRootBox() { return *this->rootBox; }
     const GridNodeBox<D> &getRootBox() const { return *this->rootBox; }
 
-    const double *getLowerBounds() const;
-    const double *getUpperBounds() const;
+    const double *getLowerBounds() const { return this->rootBox->getLowerBounds(); }
+    const double *getUpperBounds() const { return this->rootBox->getUpperBounds(); }
 
     int getNNodes(int depth = -1) const;
-    int getNLeafNodes(int depth = -1) const;
-
-    int getNQuadPoints(int depth = -1) const;
-    int getNQuadPointsPerNode() const;
+    int countBranchNodes(int depth = -1);
+    int countLeafNodes(int depth = -1);
+    int countQuadPoints(int depth = -1);
 
     void getQuadraturePoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const;
     void getQuadratureWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const;
@@ -47,7 +54,10 @@ public:
     void saveGrid(const std::string &file);
     void loadGrid(const std::string &file);
 
+    friend class GridGenerator<D>;
+
 protected:
+    const static int tDim = (1 << D);
     int order;		
     int kp1;
     int kp1_d;
@@ -59,7 +69,7 @@ protected:
     std::vector<int> nodesAtDepth;  ///< Number of nodes per scale
 
     void initializeRootNodes();
-    void resetEndNodeTable();
+    void yieldChildren(GridNodeVector &nodeTable, const NodeIndexSet &idxSet);
 };
 
 #endif /* MRGRID_H_*/

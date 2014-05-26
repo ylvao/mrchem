@@ -22,6 +22,8 @@ set(mwrepr_SOURCES
 	parallel.h
 	TelePrompter.cpp
 	TelePrompter.h
+	TreeIterator.h
+	LebesgueIterator.h
 	)
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

@@ -27,6 +27,7 @@ protected:
 
     void splitNodeTable(GridNodeVector &nodeTable);
     virtual bool splitCheck(GridNode<D> *node);
+    bool updateNodeTable(GridNodeVector &nodeTable, NodeIndexSet &idxSet);
 };
 
 #endif /* GRID_GENERATOR_H_ */

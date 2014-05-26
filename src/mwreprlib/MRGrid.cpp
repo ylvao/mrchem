@@ -3,6 +3,7 @@
 #include "TelePrompter.h"
 #include "GridNodeBox.h"
 #include "GridNode.h"
+#include "LebesgueIterator.h"
 
 using namespace std;
 
@@ -18,62 +19,149 @@ MRGrid<D>::MRGrid(int _order, const GridNodeBox<D> *box) {
 	NOT_IMPLEMENTED_ABORT
     }
 
+    this->maxDepth = 25;
+    this->maxScale = this->getRootScale() + this->maxDepth - 1;
+
     this->nodesAtDepth.push_back(0);
     initializeRootNodes();
     this->resetEndNodeTable();
-
-    this->maxDepth = 25;
-    this->maxScale = this->getRootScale() + this->maxDepth - 1;
 }
 
 template<int D>
 void MRGrid<D>::initializeRootNodes() {
-    GridNode<D> **nodes = this->getRootBox().getNodes();
-    assert(nodes != 0);
     for (int i = 0; i < this->getRootBox().getNBoxes(); i++) {
 	NodeIndex<D> idx = this->getRootBox().getNodeIndex(i);
-        nodes[i] = new GridNode<D>(this, idx);
+        GridNode<D> *root = new GridNode<D>(this, idx.getScale(), idx.getTranslation());
+	this->rootBox->setNode(i, &root);
     }
 }
 
 template<int D>
+MRGrid<D>::~MRGrid() {
+    this->endNodeTable.clear();
+    delete this->rootBox;
+}
+
+template<int D>
+void MRGrid<D>::incrementNodeCount(int scale) {
+    int depth = scale - this->getRootScale();
+    int n = this->nodesAtDepth.size() - 1;
+    if (depth > n) {
+        for (int i = 0; i < depth - n; i++) {
+            this->nodesAtDepth.push_back(0);
+        }
+    }
+    int nodes = this->nodesAtDepth[depth];
+    nodes++;
+    this->nodesAtDepth[depth] = nodes;
+}
+
+template<int D>
+void MRGrid<D>::decrementNodeCount(int scale) {
+    unsigned int depth = scale - this->getRootScale();
+    if (depth >= this->nodesAtDepth.size()) {
+        THROW_ERROR("Depth out of bounds!");
+    }
+    int nodes = this->nodesAtDepth[depth];
+    nodes--;
+    if (nodes < 0) {
+        THROW_ERROR("Number of nodes cannot be negative.");
+    }
+    this->nodesAtDepth[depth] = nodes;
+    if (nodes == 0) { 
+        this->nodesAtDepth.pop_back();
+    }
+}
+
+template<int D>
+int MRGrid<D>::getNodesAtDepth(int depth) const {
+    if (depth < 0) {
+	THROW_ERROR("Negative depth");
+    }
+    int n = this->nodesAtDepth.size() - 1;
+    if (depth > n) {
+	return 0;
+    }
+    return this->nodesAtDepth[depth];
+}
+
+template<int D>
+void MRGrid<D>::clearEndNodeTable() {
+    this->endNodeTable.clear();
+}
+
+template<int D>
 void MRGrid<D>::resetEndNodeTable() {
-    NOT_IMPLEMENTED_ABORT
+    this->endNodeTable.clear();
+    LebesgueIterator<D> it(this);
+    it.setReturnGenNodes(false);
+    while (it.next()) {
+        GridNode<D> &node = it.getNode();
+        if (node.isEndNode()) {
+	    this->endNodeTable.push_back(&node);
+        }
+    }
+}
+
+template<int D>
+void MRGrid<D>::copyEndNodeTable(GridNodeVector &outTable) {
+    for (int i = 0; i < this->endNodeTable.size(); i++) {
+	GridNode<D> *node = this->endNodeTable[i];
+	outTable.push_back(node);
+    }
 }
     
 template<int D>
-MRGrid<D>::~MRGrid() {
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-const double* MRGrid<D>::getLowerBounds() const {
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-const double* MRGrid<D>::getUpperBounds() const {
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
 int MRGrid<D>::getNNodes(int depth) const {
-    NOT_IMPLEMENTED_ABORT
+    int nScales = this->nodesAtDepth.size();
+    if (depth > nScales) {
+	return 0;
+    }
+    if (depth >= 0) {
+	return this->nodesAtDepth[depth];
+    }
+    int totNodes = 0;
+    for (int i = 0; i < nScales; i++) {
+	totNodes += this->nodesAtDepth[i];
+    }
+    return totNodes; 
 }
 
 template<int D>
-int MRGrid<D>::getNLeafNodes(int depth) const {
-    NOT_IMPLEMENTED_ABORT
+int MRGrid<D>::countBranchNodes(int depth) {
+    int nNodes = 0;
+    LebesgueIterator<D> it(this);
+    while (it.next()) {
+        GridNode<D> &node = it.getNode();
+	if (node.getDepth() == depth or depth < 0) {
+            if (node.isBranchNode()) {
+		nNodes++;
+	    }
+	}
+    }
+    return nNodes;
 }
 
 template<int D>
-int MRGrid<D>::getNQuadPoints(int depth) const {
-    NOT_IMPLEMENTED_ABORT
+int MRGrid<D>::countLeafNodes(int depth) {
+    int nNodes = 0;
+    LebesgueIterator<D> it(this);
+    while (it.next()) {
+        GridNode<D> &node = it.getNode();
+	if (node.getDepth() == depth or depth < 0) {
+            if (node.isLeafNode()) {
+		nNodes++;
+	    }
+	}
+    }
+    return nNodes;
 }
 
 template<int D>
-int MRGrid<D>::getNQuadPointsPerNode() const {
-    NOT_IMPLEMENTED_ABORT
+int MRGrid<D>::countQuadPoints(int depth) {
+    int nNodes = countLeafNodes(depth);
+    int ptsPerNode = this->tDim*this->kp1_d;
+    return nNodes*ptsPerNode;
 }
 
 template<int D>
@@ -104,6 +192,25 @@ void MRGrid<D>::saveGrid(const string &file) {
 template<int D>
 void MRGrid<D>::loadGrid(const string &file) {
     NOT_IMPLEMENTED_ABORT
+}
+
+template<int D>
+void MRGrid<D>::yieldChildren(GridNodeVector &nodeTable, const NodeIndexSet &idxSet) {
+    typename set<const NodeIndex<D> *>::iterator it;
+    for (it = idxSet.begin(); it != idxSet.end(); it++) {
+        GridNode<D> &node = this->rootBox->getNode(**it);
+        int childDepth = node.getDepth() + 1;
+        if (this->maxDepth != 0 and childDepth > this->maxDepth) {
+            println(1, "+++ Maximum depth reached: " << childDepth);
+            node.setIsEndNode();
+        } else {
+            node.createChildren();
+            for (int i = 0; i < node.getNChildren(); i++) {
+                GridNode<D> *child = node.getChild(i);
+                nodeTable.push_back(child);
+            }
+        }
+    }
 }
 
 template class MRGrid<1>;
