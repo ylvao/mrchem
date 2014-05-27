@@ -51,25 +51,25 @@ public:
         o << std::fixed;
         o << "*GridNodeBox: " << std::endl;
         o << "  origin index    = " << box.cornerIndex << std::endl;
-        o << "  unit box length =  " << box.unitLength << std::endl;
+        o << "  unit box length = " << box.unitLength << std::endl;
         o << "  origin          = [ ";
         for (int i = 0; i < D; i++) {
-            o << box.origin[i] << " ";
-        }
-        o << "]" << std::endl;
-        o << "  boxes           = [ ";
-        for (int i = 0; i < D; i++) {
-            o << box.nBoxes[i] << " ";
+            o << std::setw(21) << box.origin[i] << " ";
         }
         o << "]" << std::endl;
         o << "  lower bounds    = [ ";
         for (int i = 0; i < D; i++) {
-            o << box.lowerBounds[i] << " ";
+            o << std::setw(21) << box.lowerBounds[i] << " ";
         }
         o << "]" << std::endl;
         o << "  upper bounds    = [ ";
         for (int i = 0; i < D; i++) {
-            o << box.upperBounds[i] << " ";
+            o << std::setw(21) << box.upperBounds[i] << " ";
+        }
+        o << "]" << std::endl;
+        o << "  boxes           = [ ";
+        for (int i = 0; i < D; i++) {
+            o << std::setw(21) << box.nBoxes[i] << " ";
         }
         o << "]" << std::endl;
         o << "  nBoxes          = " << box.nBoxes[D] << std::endl;

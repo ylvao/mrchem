@@ -10,23 +10,31 @@
 #ifndef GRID_GENERATOR_H_
 #define GRID_GENERATOR_H_
 
+#include "constants.h"
 #include "mwrepr_declarations.h"
 
 template<int D>
 class GridGenerator {
 public:
-    GridGenerator(int u = 0) : uniform(u), grid (0) { }
+    GridGenerator(int uScale = MinScale);
     virtual ~GridGenerator();
 
-    void setUniform(int u) { this->uniform = u; }
+    void setUniformScale(int u) { this->uniformScale = u; }
     void generateGrid(MRGrid<D> &outGrid);
-
 protected:
-    int uniform;
+    int uniformScale;
+
+    void initGrid(MRGrid<D> &outGrid);
+    void clearGrid();
+    void buildGrid();
+
+    virtual bool splitCheck(const GridNode<D> *node);
+private:
     MRGrid<D> *grid;
+    int quadOrder;
+    int uniformDepth;
 
     void splitNodeTable(GridNodeVector &nodeTable);
-    virtual bool splitCheck(GridNode<D> *node);
     bool updateNodeTable(GridNodeVector &nodeTable, NodeIndexSet &idxSet);
 };
 

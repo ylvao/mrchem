@@ -11,6 +11,7 @@
 #define MOLECULE_H_
 
 #include <vector>
+#include <iostream>
 
 #include "Atom.h"
 

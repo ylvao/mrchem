@@ -16,6 +16,8 @@ const double MachinePrec = 1.0e-15L;
 const double MachineZero = 1.0e-15L;
 const int MaxOrder = 41; ///< Maximum scaling order
 const int MaxDepth = 31; ///< Maximum depth of trees
+const int MaxScale = 31; ///< Maximum scale of trees
+const int MinScale = -31; ///< Minimum scale of trees
 
 namespace Axis {
 const int None = -1;

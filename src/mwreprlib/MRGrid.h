@@ -12,6 +12,7 @@
 
 #include <Eigen/Core>
 #include "mwrepr_declarations.h"
+#include "TelePrompter.h"
 
 template<int D>
 class MRGrid {
@@ -25,6 +26,7 @@ public:
     int getMaxScale() const { return this->maxScale; }
     int getMaxDepth() const { return this->maxDepth; }
     int getRootScale() const { return this->rootBox->getRootScale(); }
+    const double *getOrigin() const { return this->rootBox->getOrigin(); }
 
     void incrementNodeCount(int scale);
     void decrementNodeCount(int scale);
@@ -44,18 +46,41 @@ public:
     int countBranchNodes(int depth = -1);
     int countLeafNodes(int depth = -1);
     int countQuadPoints(int depth = -1);
+    int getNQuadPointsPerNode() const;
 
-    void getQuadraturePoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const;
-    void getQuadratureWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const;
+    void getQuadPoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const;
+    void getQuadWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const;
 
-    void getQuadraturePoints(Eigen::MatrixXd &roots) const;
-    void getQuadratureWeights(Eigen::VectorXd &weights) const;
+    void getQuadPoints(Eigen::MatrixXd &roots) const;
+    void getQuadWeights(Eigen::VectorXd &weights) const;
 
     void saveGrid(const std::string &file);
     void loadGrid(const std::string &file);
 
-    friend class GridGenerator<D>;
+    friend std::ostream& operator<<(std::ostream &o, MRGrid<D> &grid) {
+	o << std::endl << std::endl;
+	o << "===============================================" << std::endl;
+	o << "|                   MRGrid                    |" << std::endl;
+	o << "|---------------------------------------------|" << std::endl;
+	int root = grid.getRootScale();
+	int nScales = grid.nodesAtDepth.size();
+	o << "| Scale "  << "   AllNodes " << "  LeafNodes " << "   QuadPoints |" << std::endl;
+	for (int depth = 0; depth < nScales; depth++) {
+	    int scale = depth + root;
+	    o << "|" << std::setw(5) << scale << std::setw(12) << grid.getNNodes(depth);
+	    o << std::setw(12) << grid.countLeafNodes(depth);
+	    o << std::setw(14) << grid.countQuadPoints(depth);
+	    o << "  |" << std::endl;
+	}
+	o << "|---------------------------------------------|" << std::endl;
+	o << "| Total " << std::setw(10) << grid.getNNodes();
+	o << std::setw(12) << grid.countLeafNodes();
+	o << std::setw(14) << grid.countQuadPoints() << "  |" << std::endl;
+	o << "===============================================" << std::endl << std::endl;
+	return o;
+    }
 
+    friend class GridGenerator<D>;
 protected:
     const static int tDim = (1 << D);
     int order;		

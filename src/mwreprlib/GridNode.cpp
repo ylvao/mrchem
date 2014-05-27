@@ -10,6 +10,8 @@
 #include "GridNode.h"
 #include "NodeIndex.h"
 
+using namespace std;
+
 template<int D>
 GridNode<D>::GridNode(MRGrid<D> *_grid, int n, const int *l) {
     if (_grid == 0) {
@@ -192,6 +194,62 @@ void GridNode<D>::calcChildTranslation(int cIdx, int *l) const {
     for (int i = 0; i < D; i++) {
         l[i] = (2 * this->nodeIndex[i]) + ((cIdx >> i) & 1);
     }
+}
+
+template<int D>
+void GridNode<D>::getCenter(double *r) const {
+    if (r == 0) {
+	THROW_ERROR("Invalid argument");
+    }
+    const double *origin = this->grid->getOrigin();
+    int n = getScale();
+    double sFac = pow(2.0, -n);
+    const int *l = getTranslation();
+    for (int d = 0; d < D; d++) {
+	r[d] = sFac*(1.0*l[d] + 0.5) - origin[d];
+    }
+}
+
+template<int D>
+void GridNode<D>::getLowerBounds(double *r) const {
+    if (r == 0) {
+	THROW_ERROR("Invalid argument");
+    }
+    const double *origin = this->grid->getOrigin();
+    int n = getScale();
+    double sFac = pow(2.0, -n);
+    const int *l = getTranslation();
+    for (int d = 0; d < D; d++) {
+	r[d] = sFac*(1.0*l[d]) - origin[d];
+    }
+}
+
+template<int D>
+void GridNode<D>::getUpperBounds(double *r) const {
+    if (r == 0) {
+	THROW_ERROR("Invalid argument");
+    }
+    const double *origin = this->grid->getOrigin();
+    int n = getScale();
+    double sFac = pow(2.0, -n);
+    const int *l = getTranslation();
+    for (int d = 0; d < D; d++) {
+	r[d] = sFac*(1.0*l[d] + 1.0) - origin[d];
+    }
+}
+
+template<int D>
+bool GridNode<D>::checkCoordOnNode(const double *r) const {
+    int n = getScale();
+    double nLength = pow(2.0, -n);
+    const int *l = getTranslation();
+    for (int d = 0; d < D; d++) {
+	const double *origin = this->grid->getOrigin();
+	if (r[d] < (l[d]*nLength - origin[d]) or r[d] > ((l[d] + 1)*nLength) - origin[d]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 template class GridNode<1>;

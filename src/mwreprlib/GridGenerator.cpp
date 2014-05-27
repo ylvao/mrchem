@@ -15,6 +15,13 @@
 using namespace std;
 
 template<int D>
+GridGenerator<D>::GridGenerator(int uScale) : uniformScale(uScale){
+    this->grid = 0;
+    this->quadOrder = 0;
+    this->uniformDepth = -1;
+}
+
+template<int D>
 GridGenerator<D>::~GridGenerator() {
     if (this->grid != 0) {
         THROW_ERROR("Grid pointer not released");
@@ -23,8 +30,29 @@ GridGenerator<D>::~GridGenerator() {
 
 template<int D>
 void GridGenerator<D>::generateGrid(MRGrid<D> &outGrid) { 
-    println(0, " == Generating grid ");
+    initGrid(outGrid);
+    buildGrid();
+    clearGrid();
+}
+
+template<int D>
+void GridGenerator<D>::initGrid(MRGrid<D> &outGrid) {
     this->grid = &outGrid;
+    this->quadOrder = this->grid->getKp1();
+    int rootScale = this->grid->getRootScale();
+    this->uniformDepth = this->uniformScale - rootScale;
+}
+
+template<int D>
+void GridGenerator<D>::clearGrid() {
+    this->grid = 0;
+    this->quadOrder = 0;
+    this->uniformDepth = -1;
+}
+
+template<int D>
+void GridGenerator<D>::buildGrid() { 
+    println(0, " == Building grid");
     GridNodeVector nodeTable;
     this->grid->copyEndNodeTable(nodeTable);
     this->grid->clearEndNodeTable();
@@ -46,7 +74,6 @@ void GridGenerator<D>::splitNodeTable(GridNodeVector &nodeTable) {
     NodeIndexSet idxSet;
     NodeIndexSet tmpIdx;
 
-    // nodeTable contains ALL endNodes, including foreign
     int nNodes = nodeTable.size();
 #pragma omp parallel firstprivate(nNodes) \
     private(tmpIdx, tmpEndNodes)
@@ -69,16 +96,16 @@ void GridGenerator<D>::splitNodeTable(GridNodeVector &nodeTable) {
 }
 
 template<int D>
-bool GridGenerator<D>::splitCheck(GridNode<D> *node) {
+bool GridGenerator<D>::splitCheck(const GridNode<D> *node) {
     if (node == 0) {
 	return false;
     }
-    if (node->getDepth() < this->uniform) {
+    if (node->getDepth() < this->uniformDepth) {
+	//println(0, "uniform depth split " << node->getDepth() << " < " << this->uniformDepth);
 	return true;
     }
     return false;
 }
-
 
 template class GridGenerator<1>;
 template class GridGenerator<2>;

@@ -160,27 +160,32 @@ int MRGrid<D>::countLeafNodes(int depth) {
 template<int D>
 int MRGrid<D>::countQuadPoints(int depth) {
     int nNodes = countLeafNodes(depth);
-    int ptsPerNode = this->tDim*this->kp1_d;
+    int ptsPerNode = getNQuadPointsPerNode();
     return nNodes*ptsPerNode;
 }
 
 template<int D>
-void MRGrid<D>::getQuadraturePoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const {
+int MRGrid<D>::getNQuadPointsPerNode() const {
+    return this->tDim*this->kp1_d;
+}
+
+template<int D>
+void MRGrid<D>::getQuadPoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const {
     NOT_IMPLEMENTED_ABORT
 }
 
 template<int D>
-void MRGrid<D>::getQuadratureWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const {
+void MRGrid<D>::getQuadWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const {
     NOT_IMPLEMENTED_ABORT
 }
 
 template<int D>
-void MRGrid<D>::getQuadraturePoints(Eigen::MatrixXd &roots) const {
+void MRGrid<D>::getQuadPoints(Eigen::MatrixXd &roots) const {
     NOT_IMPLEMENTED_ABORT
 }
 
 template<int D>
-void MRGrid<D>::getQuadratureWeights(Eigen::VectorXd &weights) const {
+void MRGrid<D>::getQuadWeights(Eigen::VectorXd &weights) const {
     NOT_IMPLEMENTED_ABORT
 }
 

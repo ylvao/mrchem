@@ -11,6 +11,7 @@
 #define ATOM_H_
 
 #include "AtomicElement.h"
+#include "TelePrompter.h"
 
 class Atom {
 public:

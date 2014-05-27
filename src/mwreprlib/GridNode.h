@@ -43,11 +43,17 @@ public:
 
     int getKp1() const { return this->grid->getKp1(); }
     int getKp1_d() const { return this->grid->getKp1_d(); }
-    int getDepth() const { return this->nodeIndex.scale()-this->grid->getRootScale(); }
-    int getScale() const { return this->nodeIndex.scale(); }
+    int getDepth() const { return this->nodeIndex.getScale()-this->grid->getRootScale(); }
+    int getScale() const { return this->nodeIndex.getScale(); }
     int getOrder() const { return this->grid->getOrder(); }
     int getNChildren() const { if (isBranchNode()) return tDim; return 0; }
+    void getCenter(double *r) const;
+    void getLowerBounds(double *r) const;
+    void getUpperBounds(double *r) const;
     const NodeIndex<D> &getNodeIndex() const { return this->nodeIndex; }
+    const int *getTranslation() const { return this->nodeIndex.getTranslation(); }
+
+    bool checkCoordOnNode(const double *r) const; 
 
     inline bool isRoot() const;
     inline bool hasCoefs() const;

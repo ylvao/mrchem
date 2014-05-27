@@ -10,9 +10,6 @@
 #ifndef ELEMENT_H_
 #define ELEMENT_H_
 
-#include <iostream>
-#include "TelePrompter.h"
-
 /** Basic chemical element data.
  *  
  */
