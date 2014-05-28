@@ -24,6 +24,17 @@ set(mwrepr_SOURCES
 	TelePrompter.h
 	TreeIterator.h
 	LebesgueIterator.h
+	GaussQuadrature.cpp
+	GaussQuadrature.h
+	QuadratureCache.cpp
+	QuadratureCache.h
+	RepresentableFunction.cpp
+	RepresentableFunction.h
+	ObjectCache.h
+	LegendrePoly.cpp
+	LegendrePoly.h
+	Polynomial.cpp
+	Polynomial.h
 	)
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

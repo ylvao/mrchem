@@ -68,7 +68,7 @@ void MolecularGridGenerator::setupRefinementFunction() {
 void MolecularGridGenerator::clearRefinementFunction() {
     for (int i = 0; i < this->coords.size(); i++) {
 	if (this->coords[i] != 0) {
-            delete this->coords[i];
+            delete[] this->coords[i];
 	    this->coords[i] = 0;
 	}
     }

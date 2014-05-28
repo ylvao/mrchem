@@ -7,9 +7,12 @@
 *
 */
 
+#include "MathUtils.h"
 #include "GridNode.h"
 #include "NodeIndex.h"
+#include "QuadratureCache.h"
 
+using namespace Eigen;
 using namespace std;
 
 template<int D>
@@ -27,8 +30,8 @@ GridNode<D>::GridNode(MRGrid<D> *_grid, int n, const int *l) {
     this->status = 0;
     this->children = 0;
 
-    this->roots = 0;
-    this->weights = 0;
+    calcQuadPoints();
+    calcQuadWeights();
 
     setIsLeafNode();
     setIsEndNode();
@@ -44,8 +47,6 @@ GridNode<D>::GridNode(GridNode<D> *_parent, const int *l) {
     this->parent = _parent;
     this->status = 0;
     this->children = 0;
-    this->roots = 0;
-    this->weights = 0;
 
     if (this->parent == 0) {
 	NOT_IMPLEMENTED_ABORT
@@ -56,6 +57,10 @@ GridNode<D>::GridNode(GridNode<D> *_parent, const int *l) {
         this->grid = this->parent->grid;
 	this->grid->incrementNodeCount(n);
     }
+
+    calcQuadPoints();
+    calcQuadWeights();
+
     setIsLeafNode();
     setIsEndNode();
 #ifdef OPENMP
@@ -66,12 +71,6 @@ GridNode<D>::GridNode(GridNode<D> *_parent, const int *l) {
 template<int D>
 GridNode<D>::~GridNode() {
     SET_NODE_LOCK();
-    if (this->roots != 0) {
-        delete this->roots;
-    }
-    if (this->weights != 0) {
-        delete this->weights;
-    }
     if (this->isBranchNode()) {
         assert(this->children != 0);
         deleteChildren();
@@ -86,10 +85,10 @@ GridNode<D>::~GridNode() {
 template<int D>
 void GridNode<D>::deleteChildren() {
     assert(this->children != 0);
-    for (int i = 0; i < this->tDim; i++) {
-        if (this->children[i] != 0) {
-            delete this->children[i];
-            this->children[i] = 0;
+    for (int n = 0; n < getTDim(); n++) {
+        if (this->children[n] != 0) {
+            delete this->children[n];
+            this->children[n] = 0;
         }
     }
     delete [] this->children;
@@ -103,8 +102,8 @@ void GridNode<D>::createChildren() {
     if (this->children == 0) {
         this->allocKindergarten();
     }
-    for (int i = 0; i < this->tDim; i++) {
-        createChild(i);
+    for (int n = 0; n < getTDim(); n++) {
+        createChild(n);
     }
     this->setIsBranchNode();
     this->clearIsEndNode();
@@ -123,11 +122,69 @@ void GridNode<D>::createChild(int i) {
 template<int D>
 void GridNode<D>::allocKindergarten() {
     if (this->children == 0) {
-	this->children = new GridNode<D> *[this->tDim];
-	for (int i = 0; i < this->tDim; i++) {
-	    this->children[i] = 0;
+	int nChildren = getTDim();
+	this->children = new GridNode<D> *[nChildren];
+	for (int n = 0; n < nChildren; n++) {
+	    this->children[n] = 0;
 	}
     }
+}
+
+template<int D>
+void GridNode<D>::calcQuadPoints() {
+    int kp1 = getKp1();
+    this->roots = MatrixXd::Zero(kp1,D);
+
+    getQuadratureCache(qc);
+    const VectorXd &pts = qc.getRoots(kp1);
+
+    double sFac = pow(2.0, -getScale());
+    const int *l = getTranslation();
+    const double *o = this->grid->getOrigin();
+    for (int d = 0; d < D; d++) {
+	this->roots.col(d) = sFac*(pts.array() + double(l[d])) - o[d];
+    }
+}
+
+template<int D>
+void GridNode<D>::calcQuadWeights() {
+    int kp1 = getKp1();
+    double sFac = pow(2.0, -getScale());
+    this->weights = MatrixXd::Zero(kp1,D);
+
+    getQuadratureCache(qc);
+    VectorXd wgts = sFac*qc.getWeights(kp1);
+
+    for (int d = 0; d < D; d++) {
+        this->weights.col(d) = wgts;
+    }
+}
+
+template<int D>
+void GridNode<D>::getExpandedPoints(Eigen::MatrixXd &expandedWeights) const {
+    NOT_IMPLEMENTED_ABORT
+}
+
+template<>
+void GridNode<3>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
+    int kp1 = getKp1();
+    int kp1_d = getKp1_d();
+    int inpos = kp1_d - kp1;
+    const MatrixXd &primitivePoints = getQuadPoints();
+    expandedPoints = MatrixXd::Zero(kp1_d,3);
+    MathUtils::tensorExpandCoords_3D(kp1, primitivePoints, expandedPoints);
+}
+
+template<int D>
+void GridNode<D>::getExpandedWeights(Eigen::VectorXd &expandedWeights) const {
+    int kp1 = getKp1();
+    int kp1_d = getKp1_d();
+    int inpos = kp1_d - kp1;
+    const MatrixXd &primitiveWeights = getQuadWeights();
+
+    expandedWeights = VectorXd::Zero(kp1_d);
+    expandedWeights.segment(inpos, kp1) = primitiveWeights.col(0);
+    MathUtils::tensorExpandCoefs(D, 0, kp1, kp1_d, primitiveWeights, expandedWeights);
 }
 
 template<int D>
@@ -163,10 +220,10 @@ bool GridNode<D>::isAncestor(const NodeIndex<D> &idx) const {
     if (relScale < 0) {
         return false;
     }
-    for (int i = 0; i < D; i++) {
+    for (int d = 0; d < D; d++) {
         NodeIndex<D> &l = const_cast<NodeIndex<D> &> (idx);
-        int reqTransl = l[i] >> relScale;
-	if (this->nodeIndex[i] != reqTransl) {
+        int reqTransl = l[d] >> relScale;
+	if (this->nodeIndex[d] != reqTransl) {
 	    return false;
 	}
     }
@@ -177,9 +234,9 @@ template<int D>
 int GridNode<D>::getChildIndex(const NodeIndex<D> &nIdx) const {
     int cIdx = 0;
     int delta_scale = nIdx.getScale() - this->nodeIndex.getScale() - 1;
-    for (int i = 0; i < D; i++) {
-        int bit = (nIdx.getTranslation()[i] >> (delta_scale)) & 1;
-        cIdx = cIdx + (bit << i);
+    for (int d = 0; d < D; d++) {
+        int bit = (nIdx.getTranslation()[d] >> (delta_scale)) & 1;
+        cIdx = cIdx + (bit << d);
     }
     return cIdx;
 }
@@ -191,8 +248,8 @@ NodeIndex<D> GridNode<D>::getChildIndex(int cIdx) const {
 
 template<int D>
 void GridNode<D>::calcChildTranslation(int cIdx, int *l) const {
-    for (int i = 0; i < D; i++) {
-        l[i] = (2 * this->nodeIndex[i]) + ((cIdx >> i) & 1);
+    for (int d = 0; d < D; d++) {
+        l[d] = (2 * this->nodeIndex[d]) + ((cIdx >> d) & 1);
     }
 }
 

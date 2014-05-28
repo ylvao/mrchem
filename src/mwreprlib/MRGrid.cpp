@@ -5,6 +5,7 @@
 #include "GridNode.h"
 #include "LebesgueIterator.h"
 
+using namespace Eigen;
 using namespace std;
 
 template<int D>
@@ -160,33 +161,54 @@ int MRGrid<D>::countLeafNodes(int depth) {
 template<int D>
 int MRGrid<D>::countQuadPoints(int depth) {
     int nNodes = countLeafNodes(depth);
-    int ptsPerNode = getNQuadPointsPerNode();
+    int ptsPerNode = this->tDim*this->kp1_d;
     return nNodes*ptsPerNode;
 }
 
 template<int D>
-int MRGrid<D>::getNQuadPointsPerNode() const {
-    return this->tDim*this->kp1_d;
+void MRGrid<D>::getQuadPoints(Eigen::MatrixXd &gridPoints) {
+    int tDim = getTDim();
+    int kp1_d = getKp1_d();
+    int nPoints = tDim*kp1_d;
+    int nNodes = this->endNodeTable.size();
+    int totPoints = nPoints*nNodes;
+
+    gridPoints = MatrixXd::Zero(totPoints,D);
+    MatrixXd nodePoints = MatrixXd(nPoints,D);
+    for (int n = 0; n < nNodes; n++) {
+        GridNode<D> &node = *this->endNodeTable[n];
+	node.createChildren();
+	for (int cIdx = 0; cIdx < tDim; cIdx++) {
+	    GridNode<D> &child = *node.getChild(cIdx);
+	    child.getExpandedPoints(nodePoints);
+	    int inpos = n*nPoints + cIdx*kp1_d;
+	    gridPoints.block(inpos, 0, kp1_d, D) = nodePoints;
+	}
+	node.deleteChildren();
+    }
 }
 
 template<int D>
-void MRGrid<D>::getQuadPoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT
-}
+void MRGrid<D>::getQuadWeights(Eigen::VectorXd &gridWeights) {
+    int tDim = getTDim();
+    int kp1_d = getKp1_d();
+    int nWeights = tDim*kp1_d;
+    int nNodes = this->endNodeTable.size();
+    int totWeights = nWeights*nNodes;
 
-template<int D>
-void MRGrid<D>::getQuadWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-void MRGrid<D>::getQuadPoints(Eigen::MatrixXd &roots) const {
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-void MRGrid<D>::getQuadWeights(Eigen::VectorXd &weights) const {
-    NOT_IMPLEMENTED_ABORT
+    gridWeights = VectorXd::Zero(totWeights);
+    VectorXd nodeWeights = VectorXd(nWeights);
+    for (int n = 0; n < nNodes; n++) {
+        GridNode<D> &node = *this->endNodeTable[n];
+	node.createChildren();
+	for (int cIdx = 0; cIdx < tDim; cIdx++) {
+	    GridNode<D> &child = *node.getChild(cIdx);
+	    child.getExpandedWeights(nodeWeights);
+	    int inpos = n*nWeights + cIdx*kp1_d;
+	    gridWeights.segment(inpos, kp1_d) = nodeWeights;
+	}
+	node.deleteChildren();
+    }
 }
 
 template<int D>

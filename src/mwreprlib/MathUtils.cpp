@@ -288,34 +288,66 @@ void MathUtils::applyFilter(double *out, double *in,
  * avoid the use of temporaries.
  */
 void MathUtils::tensorExpandCoefs(int dim, int dir, int kp1, int kp1_d,
-		const MatrixXd &scaling, VectorXd &coefs) {
-	if (dir < dim - 1) {
-		int idx = MathUtils::ipow(kp1, dir + 1);
-		int nelem = idx * kp1;
-		int pos = kp1_d - nelem;
-		int inpos = kp1_d - idx;
-		for (int i = 0; i < kp1; i++) {
+	const MatrixXd &primitive, VectorXd &expanded) {
+    if (dir < dim - 1) {
+	int idx = MathUtils::ipow(kp1, dir + 1);
+	int nelem = idx * kp1;
+	int pos = kp1_d - nelem;
+	int inpos = kp1_d - idx;
+	for (int i = 0; i < kp1; i++) {
 //#ifdef HAVE_BLAS
-//			cblas_dcopy(idx, &coefs(inpos), 1, &coefs(pos + i * idx), 1);
-//			cblas_dscal(idx, scaling.col(dim + 1)(i), &coefs(pos + i * idx), 1);
+//	    cblas_dcopy(idx, &coefs(inpos), 1, &coefs(pos + i * idx), 1);
+//	    cblas_dscal(idx, scaling.col(dim + 1)(i), &coefs(pos + i * idx), 1);
 //#else
-			coefs.segment(pos + i * idx, idx) = coefs.segment(inpos, idx)
-				* scaling.col(dir + 1)(i);
+	    expanded.segment(pos + i * idx, idx) = 
+		    expanded.segment(inpos, idx) * primitive.col(dir + 1)(i);
 //#endif
-		}
-		tensorExpandCoefs(dim, dir + 1, kp1, kp1_d, scaling, coefs);
 	}
+	tensorExpandCoefs(dim, dir + 1, kp1, kp1_d, primitive, expanded);
+    }
+}
+
+void MathUtils::tensorExpandCoords_2D(int kp1, const MatrixXd &primitive, MatrixXd &expanded) {
+    NOT_IMPLEMENTED_ABORT
+}
+
+void MathUtils::tensorExpandCoords_3D(int kp1, const MatrixXd &primitive, MatrixXd &expanded) {
+    int n = 0;
+    for (int i = 0; i < kp1; i++) {
+	for (int j = 0; j < kp1; j++) {
+	    for (int k = 0; k < kp1; k++) {
+		expanded(n,0) = primitive(k,0);
+		expanded(n,1) = primitive(j,1);
+		expanded(n,2) = primitive(i,2);
+		n++;
+	    }
+	}
+    }
+/*
+    if (dir <= D) {
+	tensorExpandCoords(dim, dir+1, kp1, primitive, expanded);
+    }
+    int dim = D-1;
+    int kp1_dir = ipow(kp1, dir);
+    int kp1_dmd = ipow(kp1, dim - dir);
+    for (int i = 0; i < kp1_dmd; i++) {
+        for (int j = 0; j < kp1_dir; j++) {
+	    for (int k = 0; k < kp1; k++) {
+                expanded(k*() + j*() + i*(), dir) = primitive(k, dir);
+	    }
+        }
+    }
+*/
 }
 
 /** Calculate the distance between two points in n-dimensions */
-double MathUtils::calcDistance(int D, const double *a, 
-		const double *b) {
-	assert(a != 0 and b != 0 and D >= 0);
-	double r = 0.0;
-	for (int i = 0; i < D; i++) {
-		r += pow(a[i] - b[i], 2.0);
-	}
-	return sqrt(r);
+double MathUtils::calcDistance(int D, const double *a, const double *b) {
+    assert(a != 0 and b != 0 and D >= 0);
+    double r = 0.0;
+    for (int i = 0; i < D; i++) {
+	r += pow(a[i] - b[i], 2.0);
+    }
+    return sqrt(r);
 }
 
 void MathUtils::swapCols(Matrix<double, Dynamic, Dynamic, RowMajor> &mat, int i, int j) {

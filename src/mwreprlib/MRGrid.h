@@ -20,6 +20,7 @@ public:
     MRGrid(int order = -1, const GridNodeBox<D> *box = 0);
     virtual ~MRGrid();
 
+    int getTDim() const { return this->tDim; }
     int getOrder() const { return this->order; }
     int getKp1() const { return this->kp1; }
     int getKp1_d() const { return this->kp1_d; }
@@ -46,13 +47,9 @@ public:
     int countBranchNodes(int depth = -1);
     int countLeafNodes(int depth = -1);
     int countQuadPoints(int depth = -1);
-    int getNQuadPointsPerNode() const;
 
-    void getQuadPoints(Eigen::MatrixXd &roots, const NodeIndex<D> &idx) const;
-    void getQuadWeights(Eigen::VectorXd &weights, const NodeIndex<D> &idx) const;
-
-    void getQuadPoints(Eigen::MatrixXd &roots) const;
-    void getQuadWeights(Eigen::VectorXd &weights) const;
+    void getQuadPoints(Eigen::MatrixXd &points);
+    void getQuadWeights(Eigen::VectorXd &weights);
 
     void saveGrid(const std::string &file);
     void loadGrid(const std::string &file);

@@ -36,17 +36,21 @@ public:
     GridNode(GridNode<D> *_parent, const int *l);
     ~GridNode();
 
+    void createChildren();
+    void deleteChildren();
+
     void clearGridPointer() { this->grid = 0; }
     MRGrid<D> &getGrid() { return *this->grid; }
 
     GridNode<D> &getNode(const NodeIndex<D> &idx);
 
+    int getTDim() const { return this->grid->getTDim(); }
     int getKp1() const { return this->grid->getKp1(); }
     int getKp1_d() const { return this->grid->getKp1_d(); }
     int getDepth() const { return this->nodeIndex.getScale()-this->grid->getRootScale(); }
     int getScale() const { return this->nodeIndex.getScale(); }
     int getOrder() const { return this->grid->getOrder(); }
-    int getNChildren() const { if (isBranchNode()) return tDim; return 0; }
+    int getNChildren() const { if (isBranchNode()) return getTDim(); return 0; }
     void getCenter(double *r) const;
     void getLowerBounds(double *r) const;
     void getUpperBounds(double *r) const;
@@ -81,12 +85,14 @@ public:
 	}
     }
 
-//    void getChildrenQuadRoots(std::vector<Eigen::MatrixXd *> &quadPts);
-//    void getChildrenQuadRoots(Eigen::MatrixXd &quadPts);
-//    void getChildrenQuadWeights(Eigen::VectorXd &quadWeights);
+    const Eigen::MatrixXd &getQuadPoints() const { return this->roots; }
+    const Eigen::MatrixXd &getQuadWeights() const { return this->weights; }
+
+    void getExpandedPoints(Eigen::MatrixXd &points) const;
+    void getExpandedWeights(Eigen::VectorXd &weights) const;
 
     GridNode<D> *getChild(int i) {
-	assert(i >= 0 and i < tDim);
+	assert(i >= 0 and i < getTDim());
 	assert(this->children != 0);
 	return this->children[i];
     }
@@ -94,11 +100,10 @@ public:
     friend class MRGrid<D>;
 
 protected:
-    static const int tDim = (1 << D);
     NodeIndex<D> nodeIndex;
 
-    Eigen::MatrixXd *roots;
-    Eigen::VectorXd *weights;
+    Eigen::MatrixXd roots;
+    Eigen::MatrixXd weights;
 
     MRGrid<D> *grid;
     GridNode<D> *parent; ///< Parent node
@@ -106,8 +111,6 @@ protected:
 
     inline bool checkStatus(unsigned char mask) const;
 
-    void deleteChildren();
-    void createChildren();
     void createChild(int i);
     void allocKindergarten();
 
@@ -118,6 +121,8 @@ protected:
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     NodeIndex<D> getChildIndex(int cIdx) const;
 
+    void calcQuadPoints();
+    void calcQuadWeights();
 //  void recurCompQuadRoots(int d, int *l, const Eigen::VectorXd &primRoots, Eigen::MatrixXd &expRoots);
 
     static const unsigned char FlagBranchNode =  B8(00000001);
@@ -191,7 +196,7 @@ bool GridNode<D>::isBranchNode() const {
 
 template<int D>
 bool GridNode<D>::hasChild(int i) const {
-    assert(i >= 0 and i < tDim);
+    assert(i >= 0 and i < getTDim());
     assert(this->children != 0);
     if (this->children[i] == 0) {
 	return false;
