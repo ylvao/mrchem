@@ -161,8 +161,28 @@ void GridNode<D>::calcQuadWeights() {
 }
 
 template<int D>
-void GridNode<D>::getExpandedPoints(Eigen::MatrixXd &expandedWeights) const {
+void GridNode<D>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
     NOT_IMPLEMENTED_ABORT
+}
+
+template<>
+void GridNode<1>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
+    int kp1_d = getKp1_d();
+    expandedPoints = MatrixXd::Zero(kp1_d,1);
+
+    const MatrixXd &primitivePoints = getQuadPoints();
+    expandedPoints.col(0) = primitivePoints;
+}
+
+template<>
+void GridNode<2>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
+    NOT_IMPLEMENTED_ABORT
+    int kp1 = getKp1();
+    int kp1_d = getKp1_d();
+    int inpos = kp1_d - kp1;
+    const MatrixXd &primitivePoints = getQuadPoints();
+    expandedPoints = MatrixXd::Zero(kp1_d,2);
+    MathUtils::tensorExpandCoords_2D(kp1, primitivePoints, expandedPoints);
 }
 
 template<>

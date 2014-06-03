@@ -52,7 +52,7 @@ void GridGenerator<D>::clearGrid() {
 
 template<int D>
 void GridGenerator<D>::buildGrid() { 
-    println(0, " == Building grid");
+    println(1, " == Building grid");
     GridNodeVector nodeTable;
     this->grid->copyEndNodeTable(nodeTable);
     this->grid->clearEndNodeTable();
@@ -61,7 +61,7 @@ void GridGenerator<D>::buildGrid() {
     while (nodeTable.size() > 0) {
         int nNodes = nodeTable.size();
         splitNodeTable(nodeTable);
-        println(0, "  -- #" << setw(3) << iteration << ": Generated    "
+        println(1, "  -- #" << setw(3) << iteration << ": Generated    "
                 << setw(6) << nNodes << " nodes");
         iteration++;
     }
@@ -75,22 +75,14 @@ void GridGenerator<D>::splitNodeTable(GridNodeVector &nodeTable) {
     NodeIndexSet tmpIdx;
 
     int nNodes = nodeTable.size();
-#pragma omp parallel firstprivate(nNodes) \
-    private(tmpIdx, tmpEndNodes)
-    {
-#pragma omp for schedule(guided)
-        for (int n = 0; n < nNodes; n++) {
-            GridNode<D> *node = nodeTable[n];
-            if (splitCheck(node)) {
-                const NodeIndex<D> *idx = &node->getNodeIndex();
-                tmpIdx.insert(idx);
-            }
-        }
-#pragma omp critical
-        {
-            idxSet.insert(tmpIdx.begin(), tmpIdx.end());
-        }
+    for (int n = 0; n < nNodes; n++) {
+	GridNode<D> *node = nodeTable[n];
+	if (splitCheck(node)) {
+	    const NodeIndex<D> *idx = &node->getNodeIndex();
+	    tmpIdx.insert(idx);
+	}
     }
+    idxSet.insert(tmpIdx.begin(), tmpIdx.end());
     nodeTable.clear();
     this->grid->yieldChildren(nodeTable, idxSet);
 }

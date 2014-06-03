@@ -9,6 +9,7 @@
 
 #include "MolecularGridGenerator.h"
 #include "Molecule.h"
+#include "Atom.h"
 #include "MRGrid.h"
 #include "GridNode.h"
 
@@ -35,6 +36,18 @@ MolecularGridGenerator::~MolecularGridGenerator() {
     if (this->exps.size() != 0) {
         THROW_ERROR("Exponent vector not cleared");
     }
+}
+
+void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Atom &atom) { 
+    initGrid(outGrid);
+    this->molecule = new Molecule;
+    this->molecule->addAtom(atom);
+    setupRefinementFunction();
+    buildGrid();
+    clearRefinementFunction();
+    delete this->molecule;
+    this->molecule = 0;
+    clearGrid();
 }
 
 void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Molecule &mol) { 
@@ -86,12 +99,17 @@ double MolecularGridGenerator::evalRefinementFunction(int i, double *r) const {
         double relPos = (r[d] - r_0);
         gauss *= exp(-e*relPos*relPos);
     }
-    return c*gauss;
+    int rootScale = getGrid()->getRootScale();
+    int uniform = this->uniformScale;
+    if (uniform < rootScale) {
+	uniform = rootScale;
+    }
+    return c*gauss + uniform;
 }
 
 bool MolecularGridGenerator::splitCheck(const GridNode<3> *node) {
     if (GridGenerator<3>::splitCheck(node)) {
-	return true;
+	//return true;
     }
     if (atomInsideNodeCheck(*node)) {
 	//println(0, "insideSplit");
@@ -140,7 +158,12 @@ double MolecularGridGenerator::calcCoef(int Z) const {
 	double lnZ = log2(1.0*Z);
 	nucFac = pow(2.0, (this->nucDep*lnZ)/this->depthFac);
     }
-    return nucFac*this->amplitude;
+    int rootScale = getGrid()->getRootScale();
+    int uniform = this->uniformScale;
+    if (uniform < rootScale) {
+	uniform = rootScale;
+    }
+    return nucFac*this->amplitude - uniform;
 }
 
 double MolecularGridGenerator::calcExp(int Z) const {

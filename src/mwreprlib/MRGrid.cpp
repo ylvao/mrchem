@@ -198,6 +198,7 @@ void MRGrid<D>::getQuadWeights(Eigen::VectorXd &gridWeights) {
 
     gridWeights = VectorXd::Zero(totWeights);
     VectorXd nodeWeights = VectorXd(nWeights);
+
     for (int n = 0; n < nNodes; n++) {
         GridNode<D> &node = *this->endNodeTable[n];
 	node.createChildren();

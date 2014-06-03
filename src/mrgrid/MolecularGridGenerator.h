@@ -15,6 +15,7 @@
 #include "GridGenerator.h"
 
 class Molecule;
+class Atom;
 
 class MolecularGridGenerator : public GridGenerator<3> {
 public:
@@ -26,6 +27,7 @@ public:
     void setNuclearDependence(int n) { this->nucDep = n; }
 
     void generateGrid(MRGrid<3> &grid, Molecule &mol);
+    void generateGrid(MRGrid<3> &grid, Atom &atom);
 
 protected:
     int amplitude; ///< refinement scale for hydrogen 2^{-depth}
@@ -48,7 +50,7 @@ protected:
     double calcCoef(int Z) const;
     double calcExp(int Z) const;
 private:
-    static const double widthFac = 1.0e4;
+    static const double widthFac = 1.0e2;
     static const double depthFac = 1.0e1;
 };
 

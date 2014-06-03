@@ -29,6 +29,8 @@ protected:
     void buildGrid();
 
     virtual bool splitCheck(const GridNode<D> *node);
+
+    const MRGrid<D> *getGrid() const { return this->grid; }
 private:
     MRGrid<D> *grid;
     int quadOrder;
