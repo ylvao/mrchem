@@ -24,7 +24,6 @@ int get_hosts_bitmap_size();
 
 #define OPENMP
 #include <omp.h>
-
 #else
 
 #define omp_get_max_threads() 1

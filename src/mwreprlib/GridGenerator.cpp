@@ -9,7 +9,7 @@
 
 #include "GridGenerator.h"
 #include "MRGrid.h"
-#include "GridNode.h"
+#include "MRNode.h"
 #include "TelePrompter.h"
 
 using namespace std;
@@ -53,7 +53,7 @@ void GridGenerator<D>::clearGrid() {
 template<int D>
 void GridGenerator<D>::buildGrid() { 
     println(1, " == Building grid");
-    GridNodeVector nodeTable;
+    MRNodeVector nodeTable;
     this->grid->copyEndNodeTable(nodeTable);
     this->grid->clearEndNodeTable();
 
@@ -70,13 +70,13 @@ void GridGenerator<D>::buildGrid() {
 }
 
 template<int D>
-void GridGenerator<D>::splitNodeTable(GridNodeVector &nodeTable) { 
+void GridGenerator<D>::splitNodeTable(MRNodeVector &nodeTable) { 
     NodeIndexSet idxSet;
     NodeIndexSet tmpIdx;
 
     int nNodes = nodeTable.size();
     for (int n = 0; n < nNodes; n++) {
-	GridNode<D> *node = nodeTable[n];
+	MRNode<D> *node = nodeTable[n];
 	if (splitCheck(node)) {
 	    const NodeIndex<D> *idx = &node->getNodeIndex();
 	    tmpIdx.insert(idx);
@@ -88,7 +88,7 @@ void GridGenerator<D>::splitNodeTable(GridNodeVector &nodeTable) {
 }
 
 template<int D>
-bool GridGenerator<D>::splitCheck(const GridNode<D> *node) {
+bool GridGenerator<D>::splitCheck(const MRNode<D> *node) {
     if (node == 0) {
 	return false;
     }

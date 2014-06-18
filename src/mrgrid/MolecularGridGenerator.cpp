@@ -125,7 +125,7 @@ bool MolecularGridGenerator::splitCheck(const GridNode<3> *node) {
 bool MolecularGridGenerator::atomInsideNodeCheck(const GridNode<3> &node) {
     int nAtoms = this->molecule->getNAtoms();
     for (int i = 0; i < nAtoms; i++) {
-	if (node.checkCoordOnNode(this->coords[i])) {
+	if (node.hasCoord(this->coords[i])) {
 	    if (node.getScale() < this->coefs[i]) {
 		return true;
 	    }

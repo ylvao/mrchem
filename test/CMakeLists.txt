@@ -32,6 +32,9 @@ if (MPI_FOUND)
 endif()
 
 set(tests
+	NodeIndexTest
+	BoundingBoxTest
+	TreeTest 
 	GridTest 
 	)
 

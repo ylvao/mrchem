@@ -9,12 +9,18 @@ set(mwrepr_SOURCES
 	MathUtils.h
 	GridNode.cpp
 	GridNode.h
-	GridNodeBox.cpp
-	GridNodeBox.h
+	NodeBox.cpp
+	NodeBox.h
+	BoundingBox.cpp
+	BoundingBox.h
 	GridGenerator.cpp
 	GridGenerator.h
 	MRGrid.cpp
 	MRGrid.h
+	MRTree.cpp
+	MRTree.h
+	MRNode.cpp
+	MRNode.h
 	MultiException.cpp
 	MultiException.h
 	NodeIndex.h

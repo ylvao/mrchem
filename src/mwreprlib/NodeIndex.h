@@ -23,230 +23,151 @@ template<int D> class NodeIndexComp;
 template<int D>
 class NodeIndex {
 public:
-	NodeIndex(int n = 0, const int *l = 0) {
-		N = (short int) n;
-		setTranslation(l);
-		rankId = 0;
-	}
-	virtual ~NodeIndex() {
-	}
-	NodeIndex(const NodeIndex<D> &idx) {
-		N = idx.N;
-		rankId = idx.rankId;
-		setTranslation(idx.L);
-	}
-	NodeIndex<D> &operator=(const NodeIndex<D> &idx) {
-		if (&idx == this) {
-			return *this;
-		}
-		N = idx.N;
-		rankId = idx.rankId;
-		setTranslation(idx.L);
-		return *this;
-	}
+    NodeIndex(int n = 0, const int *l = 0, int r = -1);
+    NodeIndex(const NodeIndex<D> &idx);
+    virtual ~NodeIndex() { }
 
-	void setTranslation(const int *l) {
-		for (int i = 0; i < D; i++) {
-			if (l == 0) {
-				L[i] = 0;
-			} else {
-				L[i] = l[i];
-			}
-		}
-	}
-	void setScale(const int n) {
-		N = (short int) n;
-	}
-	void setRankId(const int n) {
-		rankId = (unsigned short int) n;
-	}
+    inline NodeIndex<D>& operator=(const NodeIndex<D> &idx);
+    inline bool operator==(const NodeIndex<D> &idx) const;
+    inline bool operator!=(const NodeIndex<D> &idx) const;
 
-	const int *getTranslation() const {
-		return L;
-	}
-	int getScale() const {
-		return N;
-	}
-	int scale() const {
-		return N;
-	}
-	int getRankId() const {
-		return rankId;
-	}
-	int transl(int i) {
-		assert(i >= 0 or i < D);
-		return L[i];
-	}
-	const int &operator[](int i) const {
-		assert(i >= 0 or i < D);
-		return L[i];
-	}
-	int &operator[](int i) {
-		assert(i >= 0 or i < D);
-		return L[i];
-	}
-	bool operator==(const NodeIndex<D> &idx) const {
-		if (N != idx.N) {
-			return false;
-		}
-		for (int i = 0; i < D; i++) {
-			if (L[i] != idx.L[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator!=(const NodeIndex<D> &idx) const {
-		if (*this == idx) {
-			return false;
-		}
-		return true;
-	}
-	bool operator>=(const NodeIndex<D> &idx) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] < idx.getTranslation()[d]) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator<=(const NodeIndex<D> &idx) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] > idx.getTranslation()[d]) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator>(const NodeIndex<D> &idx) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] <= idx.getTranslation()[d]) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator<(const NodeIndex<D> &idx) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] >= idx.getTranslation()[d]) {
-				return false;
-			}
-		}
-		return true;
-	}
+    void setScale(int n) { this->N = (short int) n; }
+    void setRankId(int r) { this->rankId = (short int) r; }
+    inline void setTranslation(const int *l);
 
-	// Integer comparsion
-	bool operator>=(int l) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] < l) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator<=(int l) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] > l) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator>(int l) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] <= l) {
-				return false;
-			}
-		}
-		return true;
-	}
-	bool operator<(int l) const {
-		for (int d = 0; d < D; d++) {
-			if (this->L[d] >= l) {
-				return false;
-			}
-		}
-		return true;
-	}
+    int getScale() const { return this->N; }
+    int getRankId() const { return this->rankId; }
+    int getTranslation(int d) const { assert(d >= 0 or d < D); return this->L[d]; }
+    const int *getTranslation() const {	return this->L; }
 
-	friend std::ostream& operator<<(std::ostream &o, const NodeIndex<D> &idx) {
-		o << "[ " << idx.N << " | ";
-		for (int i = 0; i < D - 1; i++) {
-			o << idx.L[i] << ", ";
-		}
-		o << idx.L[D - 1] << "] @" << idx.rankId;
-		return o;
-	}
-	friend class NodeIndexComp<D>;
+    template<int T>
+    friend std::ostream& operator<<(std::ostream &o, const NodeIndex<T> &idx);
+    friend class NodeIndexComp<D>;
+
 private:
-	short int N;
-	int L[D];
-	unsigned short int rankId;
+    int L[D];
+    short int N;
+    short int rankId;
 
-	friend class boost::serialization::access;
-	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version) {
-		ar & N;
-		ar & L;
-		ar & rankId;
-	}
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+	ar & L;
+	ar & N;
+	ar & rankId;
+    }
 };
+
+template<int D>
+NodeIndex<D>::NodeIndex(int n, const int *l, int r) {
+    this->N = (short int) n;
+    this->rankId = r;
+    setTranslation(l);
+}
+
+template<int D>
+NodeIndex<D>::NodeIndex(const NodeIndex<D> &idx) {
+    this->N = idx.N;
+    this->rankId = idx.rankId;
+    setTranslation(idx.L);
+}
+
+template<int D>
+NodeIndex<D>& NodeIndex<D>::operator=(const NodeIndex<D> &idx) {
+    if (&idx == this) {
+	return *this;
+    }
+    this->N = idx.N;
+    this->rankId = idx.rankId;
+    setTranslation(idx.L);
+    return *this;
+}
+
+template<int D>
+void NodeIndex<D>::setTranslation(const int *l) {
+    for (int d = 0; d < D; d++) {
+	if (l == 0) {
+	    this->L[d] = 0;
+	} else {
+	    this->L[d] = l[d];
+	}
+    }
+}
+
+template<int D>
+bool NodeIndex<D>::operator==(const NodeIndex<D> &idx) const {
+    if (this->N != idx.N) {
+	return false;
+    }
+    for (int d = 0; d < D; d++) {
+	if (this->L[d] != idx.L[d]) {
+	    return false;
+	}
+    }
+    return true;
+}
+
+template<int D>
+bool NodeIndex<D>::operator!=(const NodeIndex<D> &idx) const {
+    if (*this == idx) {
+	return false;
+    }
+    return true;
+}
+
+template<int D>
+std::ostream& operator<<(std::ostream &o, const NodeIndex<D> &idx) {
+    o << "[ " << idx.N << " | ";
+    for (int d = 0; d < D - 1; d++) {
+	o << idx.L[d] << ", ";
+    }
+    o << idx.L[D - 1] << "] @" << idx.rankId;
+    return o;
+}
+
 
 template<int D>
 class NodeIndexComp {
 public:
-	bool operator()(const NodeIndex<D> &a, const NodeIndex<D> &b) const {
-		if (a->rankId < b->rankId) {
-			return true;
-		}
-		if (a->rankId > b->rankId) {
-			return false;
-		}
-		if (a.N < b.N) {
-			return true;
-		}
-		if (a.N > b.N) {
-			return false;
-		}
-		if (a.N == b.N) {
-			for (int i = 0; i < D; i++) {
-				if (a.L[i] == b.L[i]) {
-					continue;
-				}
-				if (a.L[i] < b.L[i]) {
-					return true;
-				}
-				return false;
-			}
-		}
-		return false;
+    bool operator()(const NodeIndex<D> &a, const NodeIndex<D> &b) const {
+	if (a.N < b.N) {
+	    return true;
 	}
-	bool operator()(const NodeIndex<D> *a, const NodeIndex<D> *b) const {
-		if (a->rankId < b->rankId) {
-			return true;
-		}
-		if (a->rankId > b->rankId) {
-			return false;
-		}
-		if (a->N < b->N) {
-			return true;
-		}
-		if (a->N > b->N) {
-			return false;
-		}
-		if (a->N == b->N) {
-			for (int i = 0; i < D; i++) {
-				if (a->L[i] == b->L[i]) {
-					continue;
-				}
-				if (a->L[i] < b->L[i]) {
-					return true;
-				}
-				return false;
-			}
-		}
-		return false;
+	if (a.N > b.N) {
+	    return false;
 	}
+	for (int d = 0; d < D; d++) {
+	    if (a.L[d] == b.L[d]) {
+	        continue;
+	    }
+	    if (a.L[d] < b.L[d]) {
+	        return true;
+	    }
+	    return false;
+	}
+	assert(a.rankId == b.rankId);
+	return false;
+    }
+
+    bool operator()(const NodeIndex<D> *a, const NodeIndex<D> *b) const {
+	if (a->N < b->N) {
+	    return true;
+	}
+	if (a->N > b->N) {
+	    return false;
+	}
+	for (int d = 0; d < D; d++) {
+	    if (a->L[d] == b->L[d]) {
+		continue;
+	    }
+	    if (a->L[d] < b->L[d]) {
+		return true;
+	    }
+	    return false;
+	}
+	assert(a->rankId == b->rankId);
+	return false;
+    }
 };
 
 #endif /* NODEINDEX_H_ */

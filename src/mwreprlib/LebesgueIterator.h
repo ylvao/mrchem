@@ -1,14 +1,14 @@
 #ifndef LEBESGUEITERATOR_H
 #define LEBESGUEITERATOR_H
 
-#include "MRGrid.h"
-#include "GridNode.h"
+#include "MRTree.h"
+#include "MRNode.h"
 #include "TreeIterator.h"
 
 template<int D>
 class LebesgueIterator: public TreeIterator<D> {
 public:
-    LebesgueIterator(MRGrid<D> *tree, int dir = TreeIterator<D>::TopDown):
+    LebesgueIterator(MRTree<D> *tree, int dir = TreeIterator<D>::TopDown):
         TreeIterator<D>(tree, dir) {
         init(tree);
     }
@@ -22,7 +22,7 @@ public:
 		return true;
 	    }
 	}
-	GridNode<D> &node = *this->state->node;
+	MRNode<D> &node = *this->state->node;
 	if ((node.getDepth() < this->maxDepth) and
 		not (node.isEndNode() and not this->returnGenNodes)) {
 	    const int nChildren = 1 << D;

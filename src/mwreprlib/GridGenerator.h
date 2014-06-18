@@ -28,7 +28,7 @@ protected:
     void clearGrid();
     void buildGrid();
 
-    virtual bool splitCheck(const GridNode<D> *node);
+    virtual bool splitCheck(const MRNode<D> *node);
 
     const MRGrid<D> *getGrid() const { return this->grid; }
 private:
@@ -36,8 +36,8 @@ private:
     int quadOrder;
     int uniformDepth;
 
-    void splitNodeTable(GridNodeVector &nodeTable);
-    bool updateNodeTable(GridNodeVector &nodeTable, NodeIndexSet &idxSet);
+    void splitNodeTable(MRNodeVector &nodeTable);
+    bool updateNodeTable(MRNodeVector &nodeTable, NodeIndexSet &idxSet);
 };
 
 #endif /* GRID_GENERATOR_H_ */
