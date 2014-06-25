@@ -7,21 +7,20 @@
  *
  */
 
-#include <cmath>
-
-#include "macros.h"
 #include "Polynomial.h"
-#include "MultiException.h"
-#include "MathUtils.h"
-#include "QuadratureCache.h"
-#include "GaussQuadrature.h"
-
 
 using namespace Eigen;
 using namespace std;
 
+Polynomial::Polynomial(const VectorXd &c, const double *a, const double *b) 
+	: RepresentableFunction<1>(a,b) {
+    this->N = 1.0;
+    this->L = 0.0;
+    setCoefs(c);
+}
+
 Polynomial::Polynomial(int power, const double *a, const double *b) 
-	: RepresentableFunction(a, b) {
+	: RepresentableFunction<1>(a, b) {
     assert(power >= 0);
     this->N = 1.0;
     this->L = 0.0;
@@ -29,7 +28,7 @@ Polynomial::Polynomial(int power, const double *a, const double *b)
     this->coefs = VectorXd::Zero(power + 1);
 }
 
-/** Makes a complete copy of the polynomail */
+/** Makes a complete copy of the polynomial */
 Polynomial::Polynomial(const Polynomial &poly) : RepresentableFunction<1>(poly) {
     this->N = poly.getDilation();
     this->L = poly.getTranslation();
@@ -138,12 +137,8 @@ void Polynomial::setTranslation(double l) {
 /** Dilates and translates the polynomial, changes the domain [A,B] accordingly
   * Transform: P(2^(-n)*x+l)->P(2^(-n')*(2^(-n)x+l)+l') for given arguments n,l. */
 void Polynomial::rescale(double n, double l) {
-    if (n <= 0.0) {
-	THROW_ERROR("Scaling factor must be positive " << n);
-    }
-    this->L = this->L + l;
-    this->N *= n;
-    this->squareNorm = -1.0;
+    setDilation(this->N*n);
+    setTranslation(this->L + l);
 }
 
 /** Returns the order of the highest non-zero coef, not the length of the coefs vector */
@@ -165,6 +160,7 @@ void Polynomial::clearCoefs() {
 void Polynomial::setZero() {
     int n = this->coefs.size();
     this->coefs = VectorXd::Zero(n);
+    this->squareNorm = -1.0;
 }
 
 /** Calculate P = c*P */
@@ -332,15 +328,14 @@ double Polynomial::innerProduct(const Polynomial &Q) const {
 
 /** Compute <P,Q> using quadrature. This MIGHT be less accurate than
  the true polynomial product.*/
+/*
 double Polynomial::innerProduct(const RepresentableFunction<1> &Q, int quadOrder) const {
     const Polynomial &P = *this;
-    NOT_IMPLEMENTED_ABORT;
     //FunctionProduct<1, SeparableFunction<1> > fprod(this, &Q);
     //getQuadratureCache(qCache);
     //GaussQuadrature &quad = qCache.get(quadratureOrder);
     //return quad.integrate(fprod);
 }
-/*
 Polynomial Polynomial::projectPolynomial(Polynomial &q) {
     double proj = calcPolynomialProjection(q);
     return (*this) * proj;

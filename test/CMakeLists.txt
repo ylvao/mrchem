@@ -32,6 +32,8 @@ if (MPI_FOUND)
 endif()
 
 set(tests
+	PolynomialTest
+	LegendrePolyTest
 	NodeIndexTest
 	BoundingBoxTest
 	TreeTest 

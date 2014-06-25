@@ -8,8 +8,7 @@
  */
 
 #include "LegendrePoly.h"
-#include "constants.h"
-#include "macros.h"
+#include "ObjectCache.h"
 
 using namespace std;
 using namespace Eigen;
@@ -29,7 +28,7 @@ LegendrePoly::LegendrePoly(int _order, double n, double l) :
 	}
     }
     computeLegendrePolynomial(_order);
-    haveWeightsAndRoots = false;
+//    haveWeightsAndRoots = false;
     double a = -1.0;
     double b = 1.0;
     setBounds(&a, &b);
@@ -68,6 +67,7 @@ void LegendrePoly::computeLegendrePolynomial(int _order) {
  * @param x Pretty obvious, right?
  * @return Value of Pn(x)
  */
+/*
 double LegendrePoly::evalLegendrePoly(double x) const {
     NOT_IMPLEMENTED_ABORT
 	double c1, c2, c4, ym, yp, y;
@@ -95,11 +95,10 @@ double LegendrePoly::evalLegendrePoly(double x) const {
 	}
 	return y;
 }
-
+*/
 /** Calulate the value of an n:th order Legendre polynominal in x, including
  * the first derivative.
  */
-
 Vector2d LegendrePoly::firstDerivative(double x) const {
     double c1, c2, c4, ym, yp, y;
     double dy, dyp, dym;
@@ -150,57 +149,56 @@ Vector2d LegendrePoly::firstDerivative(double x) const {
  * first and second derivatives.
  */
 Vector3d LegendrePoly::secondDerivative(double x) const {
-    NOT_IMPLEMENTED_ABORT
-	double c1, c2, c4, ym, yp, y, d2y;
-	double dy, dyp, dym, d2ym, d2yp;
+    double c1, c2, c4, ym, yp, y, d2y;
+    double dy, dyp, dym, d2ym, d2yp;
 
-	double q = this->N * x + this->L;
-	if (out_of_bounds(x, this->A[0], this->B[0])) {
-		MSG_FATAL("Argument out of bounds: " << x << " [" <<
-				this->A[0] << ", " << this->B[0] << "]");
-	}
+    double q = this->N * x + this->L;
+    if (out_of_bounds(x, this->A[0], this->B[0])) {
+	MSG_FATAL("Argument out of bounds: " << x << " [" <<
+		    this->A[0] << ", " << this->B[0] << "]");
+    }
 
-	Vector3d val;
+    Vector3d val;
 
-	int order = getOrder();
-	if (order == 0) {
-		val(0) = 1.e0;
-		val(1) = 0.e0;
-		val(2) = 0.e0;
-		return val;
-	}
-
-	if (order == 1) {
-		val(0) = q;
-		val(1) = this->N * 1.e0 + this->L;
-		val(2) = 0.e0;
-		return val;
-	}
-
-	y = q;
-	dy = 1.e0;
-	d2y = 0.e0;
-	yp = 1.e0;
-	dyp = 0.e0;
-	d2yp = 0.e0;
-	for (int i = 2; i < order + 1; i++) {
-		c1 = (double) i;
-		c2 = c1 * 2.e0 - 1.e0;
-		c4 = c1 - 1.e0;
-		ym = y;
-		y = (c2 * x * y - c4 * yp) / c1;
-		yp = ym;
-		dym = dy;
-		dy = (c2 * x * dy - c4 * dyp + c2 * yp) / c1;
-		dyp = dym;
-		d2ym = d2y;
-		d2y = (c2 * x * d2y - c4 * d2yp + c2 * 2.e0 * dyp) / c1;
-		d2yp = d2ym;
-	}
-	val(0) = y;
-	val(1) = dy;
-	val(2) = d2y;
+    int order = getOrder();
+    if (order == 0) {
+	val(0) = 1.e0;
+	val(1) = 0.e0;
+	val(2) = 0.e0;
 	return val;
+    }
+
+    if (order == 1) {
+	val(0) = q;
+	val(1) = this->N * 1.e0 + this->L;
+	val(2) = 0.e0;
+	return val;
+    }
+
+    y = q;
+    dy = 1.e0;
+    d2y = 0.e0;
+    yp = 1.e0;
+    dyp = 0.e0;
+    d2yp = 0.e0;
+    for (int i = 2; i < order + 1; i++) {
+	c1 = (double) i;
+	c2 = c1 * 2.e0 - 1.e0;
+	c4 = c1 - 1.e0;
+	ym = y;
+	y = (c2 * x * y - c4 * yp) / c1;
+	yp = ym;
+	dym = dy;
+	dy = (c2 * x * dy - c4 * dyp + c2 * yp) / c1;
+	dyp = dym;
+	d2ym = d2y;
+	d2y = (c2 * x * d2y - c4 * d2yp + c2 * 2.e0 * dyp) / c1;
+	d2yp = d2ym;
+    }
+    val(0) = y;
+    val(1) = dy;
+    val(2) = d2y;
+    return val;
 }
 
 /** Compute the roots of the Legendre polynomial of
@@ -218,6 +216,7 @@ Vector3d LegendrePoly::secondDerivative(double x) const {
  % Compute the zeros of the N+1 Legendre Polynomial
  % using the recursion relation and the Newton-Raphson method
  y0=2 */
+/*
 void LegendrePoly::calcRootsAndWeights(double prec) {
     NOT_IMPLEMENTED_ABORT
 
@@ -270,12 +269,12 @@ void LegendrePoly::calcRootsAndWeights(double prec) {
 			maxDiff = max(maxDiff, fabs(y(i) - y0(i)));
 		}
 	}
-
+*/
 	/*Linear map from[-1,1] to [a,b]:
 	 x=(a*(1-y)+b*(1+y))/2;
 	 Compute the weights:
 	 w=(b-a)./((1-y.^2).*Lp.^2)*(K1/K)^2; */
-	for (int i = 0; i < K; i++) {
+/*	for (int i = 0; i < K; i++) {
 		this->roots(K - 1 - i) = 0.5 * (this->A[0] * (1.0 - y(i)) + this->B[0] * (1.0
 				+ y(i)));
 		this->weights(K - 1 - i) = (this->B[0] - this->A[0]) * (K1 * K1) / (K * K);
@@ -283,16 +282,17 @@ void LegendrePoly::calcRootsAndWeights(double prec) {
 	}
 	this->haveWeightsAndRoots = true;
 }
-
+*/
 /** Change the weights and roots according to the transformation of variable:
  * x->n*x+l. */
+/*
 void LegendrePoly::rescale(double n, double l) {
     Polynomial::rescale(n, l);
-    if (haveWeightsAndRoots) {
+    if (this->haveWeightsAndRoots) {
 	for (int k = 0; k < this->roots.size(); k++) {
 	    this->roots(k) = (this->roots(k) - this->L) / this->N;
 	    this->weights(k) *= 1.0/this->N;
 	}
     }
 }
-
+*/

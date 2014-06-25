@@ -17,12 +17,11 @@
 #define POLYNOMIAL_H_
 
 #include <Eigen/Core>
-
 #include "RepresentableFunction.h"
-#include "GaussQuadrature.h"
 
 class Polynomial: public RepresentableFunction<1> {
 public:
+    Polynomial(const Eigen::VectorXd &c, const double *a = 0, const double *b = 0);
     Polynomial(int power = 0, const double *a = 0, const double *b = 0);
     Polynomial(const Polynomial &poly);
     Polynomial &operator=(const Polynomial &poly);
@@ -31,10 +30,10 @@ public:
     double evalf(double x) const;
     double evalf(const double *r) const;
 
-    double getUpperBound(int i = 0) const; ///< Scaled lower bound
-    double getLowerBound(int i = 0) const; ///< Scaled upper bound
+    double getUpperBound(int i = 0) const; ///< Scaled upper bound
+    double getLowerBound(int i = 0) const; ///< Scaled lower bound
 
-    const double *getUpperBounds() const; ///< Unscaled lower bounds
+    const double *getUpperBounds() const; ///< Unscaled upper bounds
     const double *getLowerBounds() const; ///< Unscaled lower bounds
 
     void normalize();
@@ -73,13 +72,6 @@ public:
 
     double integrate(const double *a = 0, const double *b = 0) const;
     double innerProduct(const Polynomial &p) const;
-    double innerProduct(const RepresentableFunction<1> &p, int quadOrder = -1) const;
-
-    //double calcPolynomialProjection(Polynomial &p, int quadOrder = -1) const;
-    //double calcFunctionProjection(RepresentableFunction<1> &p, int quadOrder = -1) const;
-
-    //double projectPolynomial(Polynomial &p, int quadOrder = -1);
-    //double projectFunction(RepresentableFunction<1> &p, int quadOrder = -1);
 
     Polynomial operator*(double c) { return mult(c); }
     Polynomial operator*(const Polynomial &p) { return mult(p); }
