@@ -1,3 +1,6 @@
+cmake/bump-version
+cdash/
+MRGrid.*
 tags
 src/tags
 Debug*
