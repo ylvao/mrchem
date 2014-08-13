@@ -7,35 +7,35 @@ using namespace Eigen;
 class PolynomialTest: public ::testing::Test {
 public:
     static void SetUpTestCase() {
-	SET_PRINT_PRECISION(15);
+        SET_PRINT_PRECISION(15);
     }
     static void TearDownTestCase() {
     }
 
     virtual void SetUp() {
-	X = 0.3;
-	A = -1.0;
-	B = 1.0;
+        X = 0.3;
+        A = -1.0;
+        B = 1.0;
 
-	F = 0;
-	G = 0;
+        F = 0;
+        G = 0;
 
-	initializeReferenceF();
-	initializeReferenceG();
+        initializeReferenceF();
+        initializeReferenceG();
     }
 
     virtual void TearDown() {
-	ASSERT_TRUE(F != 0);
-	testBounds(F, &A, &B);
-	testReferenceF(F);
-	deletePolynomial(&F);
-	ASSERT_TRUE(F == 0);
+        ASSERT_TRUE(F != 0);
+        testBounds(F, &A, &B);
+        testReferenceF(F);
+        deletePolynomial(&F);
+        ASSERT_TRUE(F == 0);
 
-	ASSERT_TRUE(G != 0);
-	testBounds(G, &A, &B);
-	testReferenceG(G);
-	deletePolynomial(&G);
-	ASSERT_TRUE(G == 0);
+        ASSERT_TRUE(G != 0);
+        testBounds(G, &A, &B);
+        testReferenceG(G);
+        deletePolynomial(&G);
+        ASSERT_TRUE(G == 0);
     }
 
     void initializeReferenceF();
@@ -83,18 +83,18 @@ void PolynomialTest::deletePolynomial(Polynomial **poly) {
 
 void PolynomialTest::testBounds(const Polynomial *poly, const double *a, const double *b) {
     if (a == 0 or b == 0) {
-	ASSERT_TRUE(a == b);
+        ASSERT_TRUE(a == b);
         EXPECT_FALSE(poly->isBounded());
-	EXPECT_TRUE(poly->getLowerBounds() == 0);
-	EXPECT_TRUE(poly->getUpperBounds() == 0);
+        EXPECT_TRUE(poly->getLowerBounds() == 0);
+        EXPECT_TRUE(poly->getUpperBounds() == 0);
     } else {
-	ASSERT_TRUE(a != 0);
-	ASSERT_TRUE(b != 0);
+        ASSERT_TRUE(a != 0);
+        ASSERT_TRUE(b != 0);
         EXPECT_TRUE(poly->isBounded());
-	EXPECT_TRUE(poly->getLowerBounds() != 0);
-	EXPECT_TRUE(poly->getUpperBounds() != 0);
-	EXPECT_LT(fabs(poly->getLowerBounds()[0] - *a), MachineZero);
-	EXPECT_LT(fabs(poly->getUpperBounds()[0] - *b), MachineZero);
+        EXPECT_TRUE(poly->getLowerBounds() != 0);
+        EXPECT_TRUE(poly->getUpperBounds() != 0);
+        EXPECT_LT(fabs(poly->getLowerBounds()[0] - *a), MachineZero);
+        EXPECT_LT(fabs(poly->getUpperBounds()[0] - *b), MachineZero);
     }
 }
 
@@ -115,6 +115,17 @@ void PolynomialTest::testReferenceF(const Polynomial *f) {
 
 void PolynomialTest::testReferenceG(const Polynomial *g) {
     ASSERT_TRUE(g != 0);
+
+    EXPECT_EQ(2, g->size());
+    EXPECT_EQ(1, g->getOrder());
+
+    EXPECT_LT(g->getSquareNorm(), 0.0);
+    EXPECT_LT(fabs(g->getDilation() - 1.0), MachineZero);
+    EXPECT_LT(fabs(g->getTranslation()), MachineZero);
+
+    const double val = X;
+    const double err = val - g->evalf(X);
+    EXPECT_LT(fabs(err), MachineZero);
 }
 
 void PolynomialTest::testPolynomial(const Polynomial *poly, const Polynomial *ref) {
@@ -233,9 +244,9 @@ TEST_F(PolynomialTest, Rescale) {
     testBounds(f, &A, &B);
     testBounds(g, &A, &B);
     testPolynomial(f, g);
-    
-    deletePolynomial(&f); 
-    deletePolynomial(&g); 
+
+    deletePolynomial(&f);
+    deletePolynomial(&g);
     ASSERT_TRUE(f == 0);
     ASSERT_TRUE(g == 0);
 }
@@ -279,7 +290,7 @@ TEST_F(PolynomialTest, MultConstInPlace) {
     VectorXd &coefs = g->getCoefs();
     coefs[1] = 3.0;
     coefs[2] = 3.0;
-    
+
     testBounds(f, &A, &B);
     testBounds(g, &A, &B);
     testPolynomial(f, g);
@@ -341,7 +352,7 @@ TEST_F(PolynomialTest, Multiplication) {
     VectorXd &coefs = fg->getCoefs();
     coefs[2] = 1.0;
     coefs[3] = 1.0;
-    
+
     testBounds(h, 0, 0);
     testBounds(fg, &A, &B);
     testPolynomial(h, fg);
@@ -383,7 +394,7 @@ TEST_F(PolynomialTest, Addition) {
     VectorXd &coefs = fg->getCoefs();
     coefs[1] = 2.0;
     coefs[2] = 1.0;
-    
+
     testBounds(h, 0, 0);
     testBounds(fg, &A, &B);
     testPolynomial(h, fg);
@@ -483,7 +494,7 @@ TEST_F(PolynomialTest, Integrate) {
 
     const double fullErr = F->integrate() - 2.0/3.0;
     const double partErr = G->integrate(&a, &b) - 1.0/2.0;
-    
+
     EXPECT_LT(fabs(fullErr), MachineZero);
     EXPECT_LT(fabs(partErr), MachineZero);
 }
@@ -522,8 +533,8 @@ TEST_F(PolynomialTest, Normalize) {
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-//  ::testing::AddGlobalTestEnvironment(new Environment);
-//  MREnv::initializeMRCPP(argc, argv, "FuncTreeTest");
+    //  ::testing::AddGlobalTestEnvironment(new Environment);
+    //  MREnv::initializeMRCPP(argc, argv, "FuncTreeTest");
     mpi::environment env(argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -7,45 +7,31 @@
 
 #include "NodeBox.h"
 #include "MRNode.h"
-#include "TelePrompter.h"
-#include "MathUtils.h"
-#include "constants.h"
 
 using namespace std;
 
 template<int D>
-NodeBox<D>::NodeBox(int n, const int *nb, const double *o) 
-    : BoundingBox<D>(n, nb, o), nodes(0) {
-    NOT_IMPLEMENTED_ABORT
+NodeBox<D>::NodeBox(const NodeIndex<D> &idx, const int *nb, const double *o)
+    : BoundingBox<D>(idx, nb, o) {
+    this->nOccupied = 0;
+    this->nodes = 0;
     allocNodePointers();
 }
 
 template<int D>
-NodeBox<D>::NodeBox(const NodeBox<D> &box) 
-	: BoundingBox<D>(box), nodes(0) {
-    NOT_IMPLEMENTED_ABORT
-    this->unitLength = box.unitLength;
-    this->nBoxes[D] = box.nBoxes[D];
-    for (int i = 0; i < D; i++) {
-	assert(box.nBoxes[i] > 0);
-	this->nBoxes[i] = box.nBoxes[i];
-	this->origin[i] = box.origin[i];
-	this->boxLength[i] = box.boxLength[i];
-	this->lowerBounds[i] = box.lowerBounds[i];
-	this->upperBounds[i] = box.upperBounds[i];
-    }
+NodeBox<D>::NodeBox(const BoundingBox<D> &box) : BoundingBox<D>(box) {
+    this->nOccupied = 0;
+    this->nodes = 0;
     allocNodePointers();
 }
 
 template<int D>
 void NodeBox<D>::allocNodePointers() {
-    if(this->nodes != 0) {
-	THROW_ERROR("Node pointers already allocated");
-    }
-    int n = this->getNBoxes(); 
-    this->nodes = new MRNode<D>*[n];
-    for (int i = 0; i < n; i++) {
-	this->nodes[i] = 0;
+    assert(this->nodes == 0);
+    int nNodes = this->getNBoxes();
+    this->nodes = new MRNode<D>*[nNodes];
+    for (int n = 0; n < nNodes; n++) {
+        this->nodes[n] = 0;
     }
     this->nOccupied = 0;
 }
@@ -58,58 +44,59 @@ NodeBox<D>::~NodeBox() {
 template<int D>
 void NodeBox<D>::deleteNodes() {
     if (this->nodes == 0) {
-	return;
+        return;
     }
-    for (int i = 0; i < this->getNBoxes(); i++) {
-	removeNode(i);
+    for (int n = 0; n < this->getNBoxes(); n++) {
+        removeNode(n);
     }
     delete [] this->nodes;
     this->nodes = 0;
 }
 
 template<int D>
-void NodeBox<D>::setNode(int idx, MRNode<D> **node) {
-    if ((idx < 0) or (idx > this->nBoxes[D])) {
-	MSG_FATAL("Node index out of range: " << idx);
-    }
-    removeNode(idx);
-    this->nodes[idx] = *node;
+void NodeBox<D>::setNode(int bIdx, MRNode<D> **node) {
+    assert(bIdx >= 0);
+    assert(bIdx < this->nBoxes[D]);
+    removeNode(bIdx);
+    this->nodes[bIdx] = *node;
     this->nOccupied++;
+    assert(this->nOccupied > 0);
     *node = 0;
 }
 
 /** Remove a node from the box **/
 template<int D>
-void NodeBox<D>::removeNode(int idx) {
-    assert(idx >= 0 and idx < this->nBoxes[D]);
-    if (this->nodes[idx] != 0 ) {
-	delete nodes[idx];
-	this->nodes[idx] = 0;
-	this->nOccupied--;
+void NodeBox<D>::removeNode(int bIdx) {
+    assert(bIdx >= 0);
+    assert(bIdx < this->nBoxes[D]);
+    if (this->nodes[bIdx] != 0 ) {
+        delete nodes[bIdx];
+        this->nodes[bIdx] = 0;
+        this->nOccupied--;
     }
     assert(this->nOccupied >= 0);
 }
 
 template<int D>
-MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &idx) {
-    int i = getBoxIndex(idx);
-    return getNode(i);
+MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) {
+    NOT_IMPLEMENTED_ABORT;
+    int bIdx = this->getBoxIndex(nIdx);
+    return getNode(bIdx);
 }
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(const double *r) {
-    int i = this->getBoxIndex(r);
-    return getNode(i);
+    NOT_IMPLEMENTED_ABORT;
+    int bIdx = this->getBoxIndex(r);
+    return getNode(bIdx);
 }
 
 template<int D>
-MRNode<D>& NodeBox<D>::getNode(int i) {
-    assert(i >= 0 and i < this->nBoxes[D]);
-    if (this->nodes[i] == 0) {
-	println(1, *this);
-	MSG_FATAL("Node not initialized, index: " << i);
-    }
-    return *this->nodes[i];
+MRNode<D>& NodeBox<D>::getNode(int bIdx) {
+    assert(bIdx >= 0);
+    assert(bIdx < this->nBoxes[D]);
+    assert(this->nodes[bIdx] != 0);
+    return *this->nodes[bIdx];
 }
 
 template class NodeBox<1>;

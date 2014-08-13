@@ -16,21 +16,21 @@
 class Atom {
 public:
     Atom(const AtomicElement &elm, const double *r = 0) {
-	this->element = &elm;
-    	if (r != 0) {
-	    setCoord(r);
-	}
+        this->element = &elm;
+        if (r != 0) {
+            setCoord(r);
+        }
     }
 
     Atom(const Atom &atom) {
-	this->element = &atom.getAtomicElement();
-	setCoord(atom.getCoord());
+        this->element = &atom.getAtomicElement();
+        setCoord(atom.getCoord());
     }
 
     void setCoord(const double *r) {
-	for (int d = 0; d < 3; d++) {
-	    this->coord[d] = r[d];
-	}
+        for (int d = 0; d < 3; d++) {
+            this->coord[d] = r[d];
+        }
     }
 
     const AtomicElement &getAtomicElement() const { return *element; }
@@ -38,12 +38,12 @@ public:
     const double *getCoord() const { return coord; }
 
     friend std::ostream& operator<<(std::ostream &o, const Atom &a) {
-	o << a.getAtomicElement().getSymbol() << "  [ ";
-	for (int i = 0; i < 3; i++) {
-	    o << std::setw(25) << a.getCoord()[i] << " ";
-	}
-	o << " ]" << std::endl;
-	return o;
+        o << a.getAtomicElement().getSymbol() << "  [ ";
+        for (int i = 0; i < 3; i++) {
+            o << std::setw(25) << a.getCoord()[i] << " ";
+        }
+        o << " ]" << std::endl;
+        return o;
     }
 private:
     const AtomicElement *element;

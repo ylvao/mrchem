@@ -15,8 +15,8 @@
 template<int D>
 class NodeBox : public BoundingBox<D> {
 public:
-    NodeBox(int scale = 0, const int *nbox = 0, const double *origo = 0);
-    NodeBox(const NodeBox<D> &box);
+    NodeBox(const NodeIndex<D> &idx, const int *nb = 0, const double *o = 0);
+    NodeBox(const BoundingBox<D> &box);
     virtual ~NodeBox();
 
     void initBox(const int *nbox, const double *origo);
@@ -32,8 +32,8 @@ public:
     MRNode<D> **getNodes() { return this->nodes; }
 
 protected:
-    int nOccupied;		///< Number of non-zero pointers in box
-    MRNode<D> **nodes;		///< Container of nodes
+    int nOccupied;      ///< Number of non-zero pointers in box
+    MRNode<D> **nodes;  ///< Container of nodes
 
     void allocNodePointers();
     void deleteNodes();

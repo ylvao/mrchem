@@ -11,9 +11,9 @@ template<int D> int MRTree<D>::defaultMaxDepth = 30;
 template<int D> int MRTree<D>::defaultOrder = 3;
 
 template<int D>
-MRTree<D>::MRTree(int k, const NodeBox<D> *box) {
+MRTree<D>::MRTree(int k, const BoundingBox<D> *box) {
     if (k < 0) {
-	k = defaultOrder;
+        k = defaultOrder;
     }
     this->order = k;
     this->kp1 = this->order + 1;
@@ -22,9 +22,10 @@ MRTree<D>::MRTree(int k, const NodeBox<D> *box) {
     if (box != 0) {
         this->rootBox = new NodeBox<D>(*box);
     } else {
-	NOT_IMPLEMENTED_ABORT
+        NOT_IMPLEMENTED_ABORT
     }
 
+    this->name = "nn";
     this->maxDepth = defaultMaxDepth;
     this->maxScale = this->getRootScale() + this->maxDepth - 1;
 
@@ -43,7 +44,20 @@ MRTree<D>::MRTree(int k, const NodeBox<D> *box) {
 
 template<int D>
 MRTree<D>::MRTree(const MRTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT
+    copyTreeParams(tree);
+
+    this->rootBox = new NodeBox<D>(*tree.rootBox);
+    this->nNodes = 0;
+    this->nodesAtDepth.push_back(0);
+
+    mpi::communicator world;
+    this->rank = world.rank();
+    this->nThreads = omp_get_max_threads();
+    allocNodeCounters();
+
+#ifdef OPENMP
+    omp_init_lock(&tree_lock);
+#endif
 }
 
 template<int D>
@@ -51,10 +65,10 @@ MRTree<D>::~MRTree() {
     this->endNodeTable.clear();
     delete this->rootBox;
     if (this->nNodes != 0) {
-	THROW_ERROR("Node count != 0 -> " << this->nNodes);
+        THROW_ERROR("Node count != 0 -> " << this->nNodes);
     }
     if (this->nodesAtDepth.size() != 0) {
-	THROW_ERROR("Nodes at depth != 0 -> " << this->nodesAtDepth.size());
+        THROW_ERROR("Nodes at depth != 0 -> " << this->nodesAtDepth.size());
     }
     deleteNodeCounters();
 #ifdef OPENMP
@@ -80,7 +94,13 @@ void MRTree<D>::deleteNodeCounters() {
 
 template<int D>
 void MRTree<D>::copyTreeParams(const MRTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT
+    this->order = tree.order;
+    this->kp1 = tree.kp1;
+    this->kp1_d = tree.kp1_d;
+    this->maxDepth = tree.maxDepth;
+    this->maxScale = tree.maxScale;
+    this->name = tree.name;
+    this->scattered = tree.scattered;
 }
 
 template<int D>
@@ -151,7 +171,7 @@ void MRTree<D>::decrementNodeCount(int scale) {
     assert(depth < this->nodesAtDepth.size());
     this->nodesAtDepth[depth]--;
     assert(this->nodesAtDepth[depth] >= 0);
-    if (this->nodesAtDepth[depth] == 0) { 
+    if (this->nodesAtDepth[depth] == 0) {
         this->nodesAtDepth.pop_back();
     }
 
@@ -208,10 +228,10 @@ void MRTree<D>::decrementAllocGenNodeCount() {
 template<int D>
 int MRTree<D>::getNNodes(int depth) const {
     if (depth < 0) {
-	return this->nNodes;
+        return this->nNodes;
     }
     if (depth >= this->nodesAtDepth.size()) {
-	return 0;
+        return 0;
     }
     return this->nodesAtDepth[depth];
 }
@@ -298,8 +318,8 @@ void MRTree<D>::makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable) {
 template<int D>
 void MRTree<D>::copyEndNodeTable(MRNodeVector &nodeTable) {
     for (int n = 0; n < getNEndNodes(); n++) {
-	MRNode<D> &node = getEndNode(n);
-	nodeTable.push_back(&node);
+        MRNode<D> &node = getEndNode(n);
+        nodeTable.push_back(&node);
     }
 }
 
@@ -311,7 +331,7 @@ void MRTree<D>::resetEndNodeTable() {
     while (it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.isEndNode()) {
-	    this->endNodeTable.push_back(&node);
+            this->endNodeTable.push_back(&node);
         }
     }
 }
@@ -321,7 +341,7 @@ void MRTree<D>::purgeGenerated() {
     for (int n = 0; n < getNEndNodes(); n++) {
         getEndNode(n).purgeGenerated();
     }
-} 
+}
 
 template<int D>
 int MRTree<D>::countBranchNodes(int depth) {
@@ -334,11 +354,11 @@ int MRTree<D>::countLeafNodes(int depth) {
     LebesgueIterator<D> it(this);
     while (it.next()) {
         MRNode<D> &node = it.getNode();
-	if (node.getDepth() == depth or depth < 0) {
+        if (node.getDepth() == depth or depth < 0) {
             if (node.isLeafNode()) {
-		nNodes++;
-	    }
-	}
+                nNodes++;
+            }
+        }
     }
     return nNodes;
 }
@@ -372,12 +392,12 @@ void MRTree<D>::printNodeRankCount() {
         }
         int depth = node.getDepth();
         int rank = node.getRankId();
-	if (rank >= 0) {
+        if (rank >= 0) {
             count[depth][rank]++;
-	    count[mDepth][rank]++;
-	} else {
-	    notDistributed++;
-	}
+            count[mDepth][rank]++;
+        } else {
+            notDistributed++;
+        }
     }
 
     println(0, endl);
@@ -399,7 +419,7 @@ void MRTree<D>::printNodeRankCount() {
     println(0, endl);
     if (notDistributed > 0) {
         println(0, "There were " << notDistributed << " non-distributed nodes");
-	println(0, endl);
+        println(0, endl);
     }
 }
 
@@ -418,9 +438,9 @@ void MRTree<D>::distributeEndNodes() {
 
     int *distNodes = new int[nLocales];
     for (int i = 0; i < nLocales; i++) {
-	distNodes[i] = 0;
+        distNodes[i] = 0;
     }
-    
+
     int rank = 0;
     int nPerRank = nNodes/nLocales;
     println(0, "Number of nodes       " << nNodes);
@@ -428,26 +448,26 @@ void MRTree<D>::distributeEndNodes() {
     println(0, "Number of MPI hosts   " << nLocales);
     println(0, "Nodes per host        " << nPerRank);
     for (int n = 0; n < nNodes; n++) {
-	MRNode<D> &parent = getEndNode(n).getParent();
-	for (int i = 0; i < tDim; i++) {
-	    MRNode<D> &child = parent.getChild(i);
-	    if (child.isEndNode() and child.getRankId() < 0) {
-		assert(rank < nLocales);
-	        child.setRankId(rank);
-	        distNodes[rank]++;
-	    }
-	}
-	if (distNodes[rank] >= nPerRank) {
-	    rank++;
-	}
+        MRNode<D> &parent = getEndNode(n).getParent();
+        for (int i = 0; i < tDim; i++) {
+            MRNode<D> &child = parent.getChild(i);
+            if (child.isEndNode() and child.getRankId() < 0) {
+                assert(rank < nLocales);
+                child.setRankId(rank);
+                distNodes[rank]++;
+            }
+        }
+        if (distNodes[rank] >= nPerRank) {
+            rank++;
+        }
     }
     int nDist = 0;
     for (int i = 0; i < nLocales; i++) {
-	println(0, "MPI rank " << i << " has " << distNodes[i] << " nodes");
-	nDist += distNodes[i];
+        println(0, "MPI rank " << i << " has " << distNodes[i] << " nodes");
+        nDist += distNodes[i];
     }
     if (nDist != nNodes) {
-	THROW_ERROR("Not all endNodes were distributed");
+        THROW_ERROR("Not all endNodes were distributed");
     }
 }
 
@@ -456,7 +476,7 @@ template class MRTree<2>;
 template class MRTree<3>;
 
 /*
- 
+
 template<int D>
 void MRGrid<D>::incrementNodeCount(int scale) {
     int depth = scale - this->getRootScale();
@@ -483,7 +503,7 @@ void MRGrid<D>::decrementNodeCount(int scale) {
         THROW_ERROR("Number of nodes cannot be negative.");
     }
     this->nodesAtDepth[depth] = nodes;
-    if (nodes == 0) { 
+    if (nodes == 0) {
         this->nodesAtDepth.pop_back();
     }
 }
@@ -491,11 +511,11 @@ void MRGrid<D>::decrementNodeCount(int scale) {
 template<int D>
 int MRGrid<D>::getNodesAtDepth(int depth) const {
     if (depth < 0) {
-	THROW_ERROR("Negative depth");
+    THROW_ERROR("Negative depth");
     }
     int n = this->nodesAtDepth.size() - 1;
     if (depth > n) {
-	return 0;
+    return 0;
     }
     return this->nodesAtDepth[depth];
 }
@@ -513,7 +533,7 @@ void MRGrid<D>::resetEndNodeTable() {
     while (it.next()) {
         GridNode<D> &node = it.getNode();
         if (node.isEndNode()) {
-	    this->endNodeTable.push_back(&node);
+        this->endNodeTable.push_back(&node);
         }
     }
 }
@@ -521,25 +541,25 @@ void MRGrid<D>::resetEndNodeTable() {
 template<int D>
 void MRGrid<D>::copyEndNodeTable(GridNodeVector &outTable) {
     for (int i = 0; i < this->endNodeTable.size(); i++) {
-	GridNode<D> *node = this->endNodeTable[i];
-	outTable.push_back(node);
+    GridNode<D> *node = this->endNodeTable[i];
+    outTable.push_back(node);
     }
 }
-    
+
 template<int D>
 int MRGrid<D>::getNNodes(int depth) const {
     int nScales = this->nodesAtDepth.size();
     if (depth > nScales) {
-	return 0;
+    return 0;
     }
     if (depth >= 0) {
-	return this->nodesAtDepth[depth];
+    return this->nodesAtDepth[depth];
     }
     int totNodes = 0;
     for (int i = 0; i < nScales; i++) {
-	totNodes += this->nodesAtDepth[i];
+    totNodes += this->nodesAtDepth[i];
     }
-    return totNodes; 
+    return totNodes;
 }
 
 template<int D>
@@ -548,11 +568,11 @@ int MRGrid<D>::countBranchNodes(int depth) {
     LebesgueIterator<D> it(this);
     while (it.next()) {
         GridNode<D> &node = it.getNode();
-	if (node.getDepth() == depth or depth < 0) {
+    if (node.getDepth() == depth or depth < 0) {
             if (node.isBranchNode()) {
-		nNodes++;
-	    }
-	}
+        nNodes++;
+        }
+    }
     }
     return nNodes;
 }
@@ -563,11 +583,11 @@ int MRGrid<D>::countLeafNodes(int depth) {
     LebesgueIterator<D> it(this);
     while (it.next()) {
         GridNode<D> &node = it.getNode();
-	if (node.getDepth() == depth or depth < 0) {
+    if (node.getDepth() == depth or depth < 0) {
             if (node.isLeafNode()) {
-		nNodes++;
-	    }
-	}
+        nNodes++;
+        }
+    }
     }
     return nNodes;
 }

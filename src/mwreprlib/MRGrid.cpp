@@ -9,7 +9,7 @@ using namespace Eigen;
 using namespace std;
 
 template<int D>
-MRGrid<D>::MRGrid(int k, const NodeBox<D> *box) : MRTree<D>(k, box) {
+MRGrid<D>::MRGrid(int k, const BoundingBox<D> *box) : MRTree<D>(k, box) {
     initializeRootNodes();
     this->resetEndNodeTable();
 }
@@ -17,9 +17,9 @@ MRGrid<D>::MRGrid(int k, const NodeBox<D> *box) : MRTree<D>(k, box) {
 template<int D>
 void MRGrid<D>::initializeRootNodes() {
     for (int i = 0; i < this->getRootBox().getNBoxes(); i++) {
-	NodeIndex<D> idx = this->getRootBox().getNodeIndex(i);
+        NodeIndex<D> idx = this->getRootBox().getNodeIndex(i);
         MRNode<D> *root = new GridNode<D>(this, idx);
-	this->rootBox->setNode(i, &root);
+        this->rootBox->setNode(i, &root);
     }
 }
 
@@ -49,8 +49,8 @@ void MRGrid<D>::getQuadPoints(Eigen::MatrixXd &gridPoints) {
     MatrixXd nodePoints = MatrixXd(nPoints,D);
     for (int n = 0; n < nNodes; n++) {
         GridNode<D> &node = static_cast<GridNode<D> &>(*this->endNodeTable[n]);
-	node.getExpandedPoints(nodePoints);
-	gridPoints.block(n*nPoints, 0, nPoints, D) = nodePoints;
+        node.getExpandedPoints(nodePoints);
+        gridPoints.block(n*nPoints, 0, nPoints, D) = nodePoints;
     }
 }
 
@@ -65,8 +65,10 @@ void MRGrid<D>::getQuadWeights(Eigen::VectorXd &gridWeights) {
 
     for (int n = 0; n < nNodes; n++) {
         GridNode<D> &node = static_cast<GridNode<D> &>(*this->endNodeTable[n]);
-	node.getExpandedWeights(nodeWeights);
-	gridWeights.segment(n*nWeights, nWeights) = nodeWeights;
+        node.getExpandedWeights(nodeWeights);
+        for (int i = 0; i < nWeights; i++) {
+            gridWeights(n*nWeights + i) = nodeWeights(i);
+        }
     }
 }
 

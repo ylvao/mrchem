@@ -16,8 +16,8 @@ using namespace Eigen;
 using namespace std;
 
 template<int D>
-GridNode<D>::GridNode(MRTree<D> *t, const NodeIndex<D> &idx) 
-	: MRNode<D>(t, idx) {
+GridNode<D>::GridNode(MRTree<D> *t, const NodeIndex<D> &idx)
+    : MRNode<D>(t, idx) {
     calcQuadPoints();
     calcQuadWeights();
 }
@@ -31,8 +31,8 @@ GridNode<D>::GridNode(GridNode<D> *p, const int *l) : MRNode<D>(p, l) {
 template<int D>
 GridNode<D>::~GridNode() {
     if (this->isGenNode()) {
-	this->tree->decrementGenNodeCount();
-	this->tree->decrementAllocGenNodeCount();
+        this->tree->decrementGenNodeCount();
+        this->tree->decrementAllocGenNodeCount();
     }
 }
 
@@ -60,7 +60,7 @@ void GridNode<D>::genChild(int i) {
 
 template<int D>
 MRNode<D> *GridNode<D>::retrieveNode(int n, const double *r) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -70,10 +70,10 @@ MRNode<D> *GridNode<D>::retrieveNode(const NodeIndex<D> &idx) {
     }
     SET_NODE_LOCK();
     if (this->isLeafNode()) {
-	this->genChildren();
+        this->genChildren();
     }
     UNSET_NODE_LOCK();
-    int cIdx = getChildIndex(idx);
+    int cIdx = this->getChildIndex(idx);
     return this->children[cIdx]->retrieveNode(idx);
 }
 
@@ -89,7 +89,7 @@ void GridNode<D>::calcQuadPoints() {
     const int *l = this->getTranslation();
     const double *o = this->tree->getOrigin();
     for (int d = 0; d < D; d++) {
-	this->roots.col(d) = sFac*(pts.array() + double(l[d])) - o[d];
+        this->roots.col(d) = sFac*(pts.array() + double(l[d])) - o[d];
     }
 }
 
@@ -109,7 +109,7 @@ void GridNode<D>::calcQuadWeights() {
 
 template<int D>
 void GridNode<D>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<>
@@ -123,10 +123,9 @@ void GridNode<1>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
 
 template<>
 void GridNode<2>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
     int kp1 = this->getKp1();
     int kp1_d = this->getKp1_d();
-    int inpos = kp1_d - kp1;
     const MatrixXd &primitivePoints = getQuadPoints();
     expandedPoints = MatrixXd::Zero(kp1_d,2);
     MathUtils::tensorExpandCoords_2D(kp1, primitivePoints, expandedPoints);
@@ -136,7 +135,6 @@ template<>
 void GridNode<3>::getExpandedPoints(Eigen::MatrixXd &expandedPoints) const {
     int kp1 = this->getKp1();
     int kp1_d = this->getKp1_d();
-    int inpos = kp1_d - kp1;
     const MatrixXd &primitivePoints = getQuadPoints();
     expandedPoints = MatrixXd::Zero(kp1_d,3);
     MathUtils::tensorExpandCoords_3D(kp1, primitivePoints, expandedPoints);
@@ -150,7 +148,9 @@ void GridNode<D>::getExpandedWeights(Eigen::VectorXd &expandedWeights) const {
     const MatrixXd &primitiveWeights = getQuadWeights();
 
     expandedWeights = VectorXd::Zero(kp1_d);
-    expandedWeights.segment(inpos, kp1) = primitiveWeights.col(0);
+    for (int i = 0; i < kp1; i++) {
+        expandedWeights(inpos + i) = primitiveWeights(i,0);
+    }
     MathUtils::tensorExpandCoefs(D, 0, kp1, kp1_d, primitiveWeights, expandedWeights);
 }
 

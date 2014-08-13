@@ -10,9 +10,6 @@
 #ifndef MRTREE_H_
 #define MRTREE_H_
 
-#include <set>
-#include <vector>
-
 #include "NodeBox.h"
 #include "parallel.h"
 #include "mwrepr_declarations.h"
@@ -30,7 +27,7 @@
 template<int D>
 class MRTree {
 public:
-    MRTree(int k = defaultOrder, const NodeBox<D> *box = 0);
+    MRTree(int k = -1, const BoundingBox<D> *box = 0);
     MRTree(const MRTree<D> &tree);
     virtual ~MRTree();
 
@@ -112,7 +109,7 @@ public:
 
 protected:
     // Parameters that are set in construction and should never change
-    int order;		
+    int order;
     int maxDepth;
     int rank;
     int nThreads;
@@ -130,10 +127,11 @@ protected:
     int nNodes;
     int *nGenNodes;
     int *nAllocGenNodes;
-    NodeBox<D> *rootBox;
-    MRNodeVector endNodeTable;	    ///< Final projected node
-    std::vector<int> nodesAtDepth;  ///< used to determine who has a given node
+    NodeBox<D> *rootBox;            ///< The actual container of nodes
+    MRNodeVector endNodeTable;	     ///< Final projected node
+    std::vector<int> nodesAtDepth;  ///< Node counter
 
+    // Static default parameters
     const static int tDim = (1 << D);
     static int defaultSplitType;
     static int defaultScalingType;

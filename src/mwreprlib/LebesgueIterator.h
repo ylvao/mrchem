@@ -10,36 +10,36 @@ class LebesgueIterator: public TreeIterator<D> {
 public:
     LebesgueIterator(MRTree<D> *tree, int dir = TreeIterator<D>::TopDown):
         TreeIterator<D>(tree, dir) {
-        init(tree);
+        this->init(tree);
     }
     virtual ~LebesgueIterator() {}
     inline bool next() {
         if (not this->state) {
-	    return false;
-	}
+            return false;
+        }
         if (this->mode == TreeIterator<D>::TopDown) {
             if (this->tryNode()) {
-		return true;
-	    }
-	}
-	MRNode<D> &node = *this->state->node;
-	if ((node.getDepth() < this->maxDepth) and
-		not (node.isEndNode() and not this->returnGenNodes)) {
-	    const int nChildren = 1 << D;
-	    for (int i = 0; i < nChildren; i++) {
-		if (this->tryChild(i)) {
-		    return true;
-		}
-	    }
-	}
+                return true;
+            }
+        }
+        MRNode<D> &node = *this->state->node;
+        if ((node.getDepth() < this->maxDepth) and
+                not (node.isEndNode() and not this->returnGenNodes)) {
+            const int nChildren = 1 << D;
+            for (int i = 0; i < nChildren; i++) {
+                if (this->tryChild(i)) {
+                    return true;
+                }
+            }
+        }
         if (this->tryNextRoot()) {
-	    return true;
-	}
+            return true;
+        }
         if (this->mode == TreeIterator<D>::BottomUp) {
             if (this->tryNode()) {
-	    	return true;
-	    }
-	}
+                return true;
+            }
+        }
         this->removeState();
         return next();
     }

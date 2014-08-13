@@ -15,15 +15,21 @@ template<int D>
 class BoundingBox {
 public:
     BoundingBox(const NodeIndex<D> &idx, const int *nb = 0, const double *o = 0);
-    BoundingBox(const BoundingBox<D> &box);
     virtual ~BoundingBox() { }
+
+    BoundingBox(const BoundingBox<D> &box);
+    BoundingBox<D> &operator=(const BoundingBox<D> &box);
+
+    void setCornerIndex(const NodeIndex<D> &idx);
+    void setOrigin(const double *o);
+    void setNBoxes(const int *nb);
 
     NodeIndex<D> getNodeIndex(const double *r) const;
     NodeIndex<D> getNodeIndex(int bIdx) const;
 
     int getBoxIndex(const double *r) const;
     int getBoxIndex(const NodeIndex<D> &nIdx) const;
-    
+
     inline int getNBoxes(int d = -1) const;
     int getRootScale() const { return this->cornerIndex.getScale(); }
     double getUnitLength() const { return this->unitLength; }
@@ -37,15 +43,18 @@ public:
     friend std::ostream& operator<<(std::ostream &o, const BoundingBox<T> &box);
 
 protected:
+    // Fundamental parameters
     int nBoxes[D+1];		///< Number of boxes in each dim, last entry total
-    double unitLength;		///< 1/2^initialScale
     double origin[D];		///< Relates box origin to real origin
+    NodeIndex<D> cornerIndex;	///< Index defining the lower corner of the box
+
+    // Derived parameters
+    double unitLength;		///< 1/2^initialScale
     double boxLength[D];	///< Total length (unitLength times nBoxes)
     double lowerBounds[D];	///< Box lower bound (not real)
     double upperBounds[D];	///< Box upper bound (not real)
-    NodeIndex<D> cornerIndex;	///< Index defining the lower corner of the box
 
-    void initBox(const int *nbox, const double *origo);
+    void setDerivedParameters();
 
 private:
     friend class boost::serialization::access;
@@ -65,16 +74,16 @@ private:
 template<int D>
 int BoundingBox<D>::getNBoxes(int d) const {
     if (d < 0) {
-	return this->nBoxes[D];
+        return this->nBoxes[D];
     } else if (d < D) {
-	return this->nBoxes[d];
+        return this->nBoxes[d];
     } else {
-	THROW_ERROR("Invalid dimension argument");
+        THROW_ERROR("Invalid dimension argument");
     }
 }
 
 template<int T>
-std::ostream& operator<<(std::ostream &o, const BoundingBox<T> &box) {   
+std::ostream& operator<<(std::ostream &o, const BoundingBox<T> &box) {
     GET_PRINT_PRECISION(int pprec);
     o << std::fixed;
     o << "*BoundingBox: " << std::endl;

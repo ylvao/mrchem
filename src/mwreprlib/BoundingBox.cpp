@@ -12,47 +12,94 @@
 using namespace std;
 
 template<int D>
-BoundingBox<D>::BoundingBox(const NodeIndex<D> &idx, const int *nb, const double *o)
-	: cornerIndex(idx) {
-    initBox(nb, o);
-}
-
-template<int D>
-BoundingBox<D>::BoundingBox(const BoundingBox<D> &box) : cornerIndex(box.cornerIndex) {
-    assert(box.nBoxes[D] > 0);
-    assert(box.unitLength > 0.0);
-    this->nBoxes[D] = box.nBoxes[D];
-    this->unitLength = box.unitLength;
-    for (int d = 0; d < D; d++) {
-	assert(box.nBoxes[d] > 0);
-	this->nBoxes[d] = box.nBoxes[d];
-	this->origin[d] = box.origin[d];
-	this->boxLength[d] = box.boxLength[d];
-	this->lowerBounds[d] = box.lowerBounds[d];
-	this->upperBounds[d] = box.upperBounds[d];
-    }
-}
-
-template<int D>
-void BoundingBox<D>::initBox(const int *nb, const double *o) {
+BoundingBox<D>::BoundingBox(const NodeIndex<D> &idx, const int *nb,
+                            const double *o) : cornerIndex(idx) {
     this->nBoxes[D] = 1;
-    this->unitLength = pow(2.0, -getRootScale());
     for (int d = 0; d < D; d++) {
-	if (nb == 0) {
-	    this->nBoxes[d] = 1;
-	} else {
-	    assert(nb[d] > 0);
-	    this->nBoxes[d] = nb[d];
-	    this->nBoxes[D] *= this->nBoxes[d];
+        if (nb == 0) {
+            this->nBoxes[d] = 1;
+        } else {
+            assert(nb[d] > 0);
+            this->nBoxes[d] = nb[d];
+            this->nBoxes[D] *= this->nBoxes[d];
         }
         if (o == 0) {
-	    this->origin[d] = 0.0;
+            this->origin[d] = 0.0;
         } else {
-	    this->origin[d] = o[d];
-	}
-	this->boxLength[d] = this->unitLength * this->nBoxes[d];
-	this->lowerBounds[d] = this->cornerIndex.getTranslation(d) * this->unitLength;
-	this->upperBounds[d] = this->lowerBounds[d] + this->boxLength[d];
+            this->origin[d] = o[d];
+        }
+    }
+    setDerivedParameters();
+}
+
+template<int D>
+BoundingBox<D>::BoundingBox(const BoundingBox<D> &box)
+        : cornerIndex(box.cornerIndex) {
+    this->nBoxes[D] = box.nBoxes[D];
+    for (int d = 0; d < D; d++) {
+        assert(box.nBoxes[d] > 0);
+        this->nBoxes[d] = box.nBoxes[d];
+        this->origin[d] = box.origin[d];
+    }
+    setDerivedParameters();
+}
+
+template<int D>
+BoundingBox<D> &BoundingBox<D>::operator=(const BoundingBox<D> &box) {
+    this->cornerIndex = box.cornerIndex;
+    this->nBoxes[D] = box.nBoxes[D];
+    for (int d = 0; d < D; d++) {
+        assert(box.nBoxes[d] > 0);
+        this->nBoxes[d] = box.nBoxes[d];
+        this->origin[d] = box.origin[d];
+    }
+    setDerivedParameters();
+}
+
+template<int D>
+void BoundingBox<D>::setCornerIndex(const NodeIndex<D> &idx) {
+    this->cornerIndex = idx;
+    setDerivedParameters();
+}
+
+template<int D>
+void BoundingBox<D>::setOrigin(const int *o) {
+    for (int d = 0; d < D; d++) {
+        if (o == 0) {
+            this->origin[d] = 0.0;
+        } else {
+            this->origin[d] = o[d];
+        }
+    }
+    setDerivedParameters();
+}
+
+template<int D>
+void BoundingBox<D>::setNBoxes(const int *nb) {
+    this->nBoxes[D] = 1;
+    for (int d = 0; d < D; d++) {
+        if (nb == 0) {
+            this->nBoxes[d] = 1;
+        } else {
+            assert(nb[d] > 0);
+            this->nBoxes[d] = nb[d];
+            this->nBoxes[D] *= this->nBoxes[d];
+        }
+    }
+    setDerivedParameters();
+}
+
+template<int D>
+void BoundingBox<D>::setDerivedParameters() {
+    assert(this->nBoxes[D] > 0);
+    int scale = this->cornerIndex.getScale();
+    const int *l = this->cornerIndex.getTranslation();
+    this->unitLength = pow(2.0, -scale);
+    for (int d = 0; d < D; d++) {
+        assert(box.nBoxes[d] > 0);
+        this->boxLength[d] = this->unitLength * this->nBoxes[d];
+        this->lowerBounds[d] = l[d] * this->unitLength;
+        this->upperBounds[d] = this->lowerBounds[d] + this->boxLength[d];
     }
 }
 
@@ -63,11 +110,11 @@ NodeIndex<D> BoundingBox<D>::getNodeIndex(const double *r) const {
     for (int d = 0; d < D; d++) {
         double x = r[d];
         assert(x >= this->lowerBounds[d]);
-	assert(x < this->upperBounds[d]);
+        assert(x < this->upperBounds[d]);
         double div = (x - this->lowerBounds[d]) / this->unitLength;
-	double iint;
-	double ffloat = modf(div,&iint);
-	idx[d] = (int) iint;
+        double iint;
+        double ffloat = modf(div,&iint);
+        idx[d] = (int) iint;
     }
 
     const int *cl = this->cornerIndex.getTranslation();
@@ -136,11 +183,11 @@ int BoundingBox<D>::getBoxIndex(const double *r) const {
     for (int d = 0; d < D; d++) {
         double x = r[d];
         assert(x >= this->lowerBounds[d]);
-	assert(x < this->upperBounds[d]);
+        assert(x < this->upperBounds[d]);
         double div = (x - this->lowerBounds[d]) / this->unitLength;
-	double iint;
-	double ffloat = modf(div,&iint);
-	idx[d] = (int) iint;
+        double iint;
+        double ffloat = modf(div,&iint);
+        idx[d] = (int) iint;
     }
 
     int bIdx = 0;
@@ -185,7 +232,7 @@ int BoundingBox<D>::getBoxIndex(const NodeIndex<D> &nIdx) const {
     }
     return bIdx;
 }
-    
+
 template class BoundingBox<1>;
 template class BoundingBox<2>;
 template class BoundingBox<3>;

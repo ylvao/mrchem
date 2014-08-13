@@ -5,7 +5,7 @@ using namespace std;
 
 template<int D>
 MRNode<D>::MRNode() {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -37,13 +37,13 @@ MRNode<D>::MRNode(MRNode<D> *p, const int *l) {
     this->children = 0;
 
     if (this->parent == 0) {
-	NOT_IMPLEMENTED_ABORT
+        NOT_IMPLEMENTED_ABORT;
     } else {
-	int n = this->parent->getScale() + 1;
+        int n = this->parent->getScale() + 1;
         this->nodeIndex.setScale(n);
-	this->nodeIndex.setTranslation(l);
+        this->nodeIndex.setTranslation(l);
         this->tree = this->parent->tree;
-	this->tree->incrementNodeCount(n);
+        this->tree->incrementNodeCount(n);
     }
     setIsLeafNode();
 #ifdef OPENMP
@@ -53,17 +53,17 @@ MRNode<D>::MRNode(MRNode<D> *p, const int *l) {
 
 template<int D>
 MRNode<D>::MRNode(const MRNode<D> &nd, MRNode<D> *p, bool copyCoefs) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 MRNode<D>::MRNode(const MRNode<D> &nd, MRTree<D> *t, bool copyCoefs) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 MRNode<D>& MRNode<D>::operator=(const MRNode<D> &nd) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -121,7 +121,7 @@ void MRNode<D>::genChildren() {
     this->allocKindergarten();
     int nChildren = this->getTDim();
     for (int i = 0; i < nChildren; i++) {
-        genChild(i);    
+        genChild(i);
     }
     this->setIsBranchNode();
 }
@@ -143,24 +143,24 @@ void MRNode<D>::purgeGenerated() {
 
 template<int D>
 void MRNode<D>::getCenter(double *r) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
     assert(r != 0);
     double sFac = pow(2.0, -getScale());
     for (int d = 0; d < D; d++) {
-	double l = (double) getTranslation()[d];
-	double o = this->tree->getOrigin()[d];
-	r[d] = sFac*(l + 0.5) - o;
+        double l = (double) getTranslation()[d];
+        double o = this->tree->getOrigin()[d];
+        r[d] = sFac*(l + 0.5) - o;
     }
 }
 
 template<int D>
 void MRNode<D>::getLowerBounds(double *r) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 void MRNode<D>::getUpperBounds(double *r) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -211,7 +211,7 @@ const MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) const {
         return this;
     }
     if (this->isEndNode()) { // don't return GenNodes
-	return 0;
+        return 0;
     }
     int cIdx = getChildIndex(idx);
     return this->children[cIdx]->retrieveNodeNoGen(idx);
@@ -223,7 +223,7 @@ MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) {
         return this;
     }
     if (this->isEndNode()) { // don't return GenNodes
-	return 0;
+        return 0;
     }
     int cIdx = getChildIndex(idx);
     return this->children[cIdx]->retrieveNodeNoGen(idx);
@@ -243,7 +243,7 @@ template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const double *r, int depth) {
     println(0, *this);
     if (getDepth() == depth or this->isEndNode()) {
-	println(0, "returning");
+        println(0, "returning");
         return this;
     }
     int cIdx = getChildIndex(r);
@@ -254,12 +254,12 @@ MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const double *r, int depth) {
 
 template<int D>
 const MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -272,8 +272,8 @@ bool MRNode<D>::hasCoord(const double *r) const {
     println(0, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
     println(0, *this);
     for (int d = 0; d < D; d++) {
-	if (r[d] < (sFac*l[d] + o[d]) or r[d] > (sFac*(l[d] + 1)) + o[d]) {
-	    println(0, "false");
+        if (r[d] < (sFac*l[d] + o[d]) or r[d] > (sFac*(l[d] + 1)) + o[d]) {
+            println(0, "false");
             return false;
         }
     }
@@ -283,7 +283,7 @@ bool MRNode<D>::hasCoord(const double *r) const {
 
 template<int D>
 bool MRNode<D>::isCompatible(const MRNode<D> &node) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -295,41 +295,41 @@ bool MRNode<D>::isAncestor(const NodeIndex<D> &idx) const {
     const int *l = getTranslation();
     for (int d = 0; d < D; d++) {
         int reqTransl = idx.getTranslation()[d] >> relScale;
-	if (l[d] != reqTransl) {
-	    return false;
-	}
+        if (l[d] != reqTransl) {
+            return false;
+        }
     }
     return true;
 }
 
 template<int D>
 bool MRNode<D>::isDecendant(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 void MRNode<D>::broadcastCoefs(int src, mpi::communicator *comm) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 void MRNode<D>::sendCoefs(int who, int tag, mpi::communicator *comm) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 template<int D>
 void MRNode<D>::receiveCoefs(int who, int tag, mpi::communicator *comm) {
 
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 mpi::request MRNode<D>::isendCoefs(int who, int tag, int comp) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 mpi::request MRNode<D>::ireceiveCoefs(int who, int tag, int comp) {
-    NOT_IMPLEMENTED_ABORT
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template class MRNode<1>;
@@ -340,14 +340,14 @@ template class MRNode<3>;
 template<int D>
 GridNode<D> &GridNode<D>::getNode(const NodeIndex<D> &idx) {
     if (not isAncestor(idx)) {
-	THROW_ERROR("Cannot get node, node out of bounds:\nthis->idx: " <<
+ THROW_ERROR("Cannot get node, node out of bounds:\nthis->idx: " <<
                         this->getNodeIndex() << "\narg->idx: " << idx);
     }
     int scale = idx.getScale();
     if (scale > this->tree->getMaxScale()) {
-	THROW_ERROR("Requested (" << scale << ") node beyond max scale ("
+ THROW_ERROR("Requested (" << scale << ") node beyond max scale ("
                         << this->tree->getMaxScale() << ")!")
-    } 
+    }
     return *(retrieveNode(idx));
 }
 
@@ -357,7 +357,7 @@ GridNode<D> *GridNode<D>::retrieveNode(const NodeIndex<D> &idx) {
         return this;
     }
     if (this->isLeafNode()) {
-	THROW_ERROR("Requested node does not exist");
+ THROW_ERROR("Requested node does not exist");
     }
     int childIdx = getChildIndex(idx);
     return children[childIdx]->retrieveNode(idx);
@@ -373,9 +373,9 @@ bool GridNode<D>::isAncestor(const NodeIndex<D> &idx) const {
     const int *l = this->nodeIndex.getTranslation();
     for (int d = 0; d < D; d++) {
         int reqTransl = idx.getTranslation()[d] >> relScale;
-	if (l[d] != reqTransl) {
-	    return false;
-	}
+ if (l[d] != reqTransl) {
+     return false;
+ }
     }
     return true;
 }
@@ -407,53 +407,53 @@ void GridNode<D>::calcChildTranslation(int cIdx, int *transl) const {
 template<int D>
 void GridNode<D>::getCenter(double *r) const {
     if (r == 0) {
-	THROW_ERROR("Invalid argument");
+ THROW_ERROR("Invalid argument");
     }
     const double *origin = this->tree->getOrigin();
     int n = getScale();
     double sFac = pow(2.0, -n);
     const int *l = getTranslation();
     for (int d = 0; d < D; d++) {
-	r[d] = sFac*(1.0*l[d] + 0.5) - origin[d];
+ r[d] = sFac*(1.0*l[d] + 0.5) - origin[d];
     }
 }
 
 template<int D>
 void GridNode<D>::getLowerBounds(double *r) const {
     if (r == 0) {
-	THROW_ERROR("Invalid argument");
+ THROW_ERROR("Invalid argument");
     }
     const double *origin = this->tree->getOrigin();
     int n = getScale();
     double sFac = pow(2.0, -n);
     const int *l = getTranslation();
     for (int d = 0; d < D; d++) {
-	r[d] = sFac*(1.0*l[d]) - origin[d];
+ r[d] = sFac*(1.0*l[d]) - origin[d];
     }
 }
 
 template<int D>
 void GridNode<D>::getUpperBounds(double *r) const {
     if (r == 0) {
-	THROW_ERROR("Invalid argument");
+ THROW_ERROR("Invalid argument");
     }
     const double *origin = this->tree->getOrigin();
     int n = getScale();
     double sFac = pow(2.0, -n);
     const int *l = getTranslation();
     for (int d = 0; d < D; d++) {
-	r[d] = sFac*(1.0*l[d] + 1.0) - origin[d];
+ r[d] = sFac*(1.0*l[d] + 1.0) - origin[d];
     }
 }
 
 template<int D>
 void GridNode<D>::allocKindergarten() {
     if (this->children == 0) {
-	int nChildren = getTDim();
-	this->children = new GridNode<D> *[nChildren];
-	for (int n = 0; n < nChildren; n++) {
-	    this->children[n] = 0;
-	}
+ int nChildren = getTDim();
+ this->children = new GridNode<D> *[nChildren];
+ for (int n = 0; n < nChildren; n++) {
+     this->children[n] = 0;
+ }
     }
 }
 

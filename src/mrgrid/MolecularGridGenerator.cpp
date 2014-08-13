@@ -7,16 +7,19 @@
 *
 */
 
+#include <Eigen/Core>
+
 #include "MolecularGridGenerator.h"
 #include "Molecule.h"
 #include "Atom.h"
 #include "MRGrid.h"
-#include "GridNode.h"
+#include "MRNode.h"
 
 using namespace Eigen;
 using namespace std;
 
-MolecularGridGenerator::MolecularGridGenerator() {
+MolecularGridGenerator::MolecularGridGenerator(double wf, double df)
+        : widthFac(wf), depthFac(df) {
     this->amplitude = -1;
     this->width = -1;
     this->nucDep = -1;
@@ -38,7 +41,7 @@ MolecularGridGenerator::~MolecularGridGenerator() {
     }
 }
 
-void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Atom &atom) { 
+void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Atom &atom) {
     initGrid(outGrid);
     this->molecule = new Molecule;
     this->molecule->addAtom(atom);
@@ -50,7 +53,7 @@ void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Atom &atom) {
     clearGrid();
 }
 
-void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Molecule &mol) { 
+void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Molecule &mol) {
     initGrid(outGrid);
     this->molecule = &mol;
     setupRefinementFunction();
@@ -63,27 +66,27 @@ void MolecularGridGenerator::generateGrid(MRGrid<3> &outGrid, Molecule &mol) {
 void MolecularGridGenerator::setupRefinementFunction() {
     int nAtoms = this->molecule->getNAtoms();
     for (int i = 0; i < nAtoms; i++) {
-	Atom &atom = this->molecule->getAtom(i);
-	const double *coord = atom.getCoord();
-	double *r = new double[3];
-	for (int d = 0; d < 3; d++) {
-	    r[d] = coord[d];
-	}
-	int z = atom.getNuclearCharge();
-	double c = calcCoef(z);
-	double e = calcExp(z);
+    Atom &atom = this->molecule->getAtom(i);
+    const double *coord = atom.getCoord();
+    double *r = new double[3];
+    for (int d = 0; d < 3; d++) {
+        r[d] = coord[d];
+    }
+    int z = atom.getNuclearCharge();
+    double c = calcCoef(z);
+    double e = calcExp(z);
         this->coords.push_back(r);
-	this->coefs.push_back(c);
-	this->exps.push_back(e);
+    this->coefs.push_back(c);
+    this->exps.push_back(e);
     }
 }
 
 void MolecularGridGenerator::clearRefinementFunction() {
     for (int i = 0; i < this->coords.size(); i++) {
-	if (this->coords[i] != 0) {
+    if (this->coords[i] != 0) {
             delete[] this->coords[i];
-	    this->coords[i] = 0;
-	}
+        this->coords[i] = 0;
+    }
     }
     this->coords.clear();
     this->coefs.clear();
@@ -102,41 +105,41 @@ double MolecularGridGenerator::evalRefinementFunction(int i, double *r) const {
     int rootScale = getGrid()->getRootScale();
     int uniform = this->uniformScale;
     if (uniform < rootScale) {
-	uniform = rootScale;
+    uniform = rootScale;
     }
     return c*gauss + uniform;
 }
 
-bool MolecularGridGenerator::splitCheck(const GridNode<3> *node) {
+bool MolecularGridGenerator::splitCheck(const MRNode<3> *node) {
     if (GridGenerator<3>::splitCheck(node)) {
-	//return true;
+    //return true;
     }
     if (atomInsideNodeCheck(*node)) {
-	//println(0, "insideSplit");
-	return true;
+    //println(0, "insideSplit");
+    return true;
     }
     if (atomOutsideNodeCheck(*node)) {
-	//println(0, "outsideSplit");
-	return true;
+    //println(0, "outsideSplit");
+    return true;
     }
     return false;
 }
 
-bool MolecularGridGenerator::atomInsideNodeCheck(const GridNode<3> &node) {
+bool MolecularGridGenerator::atomInsideNodeCheck(const MRNode<3> &node) {
     int nAtoms = this->molecule->getNAtoms();
     for (int i = 0; i < nAtoms; i++) {
-	if (node.hasCoord(this->coords[i])) {
-	    if (node.getScale() < this->coefs[i]) {
-		return true;
-	    }
-	}
+    if (node.hasCoord(this->coords[i])) {
+        if (node.getScale() < this->coefs[i]) {
+        return true;
+        }
+    }
     }
     return false;
 }
 
-bool MolecularGridGenerator::atomOutsideNodeCheck(const GridNode<3> &node) {
+bool MolecularGridGenerator::atomOutsideNodeCheck(const MRNode<3> &node) {
     if (this->width <= 0) {
-	return false;
+    return false;
     }
     double c[3];
     node.getCenter(c);
@@ -145,9 +148,9 @@ bool MolecularGridGenerator::atomOutsideNodeCheck(const GridNode<3> &node) {
     int nAtoms = this->molecule->getNAtoms();
     for (int i = 0; i < nAtoms; i++) {
         double reqScale = evalRefinementFunction(i, c);
-	if (nodeScale < reqScale) {
-	    return true;
-	}
+    if (nodeScale < reqScale) {
+        return true;
+    }
     }
     return false;
 }
@@ -155,20 +158,20 @@ bool MolecularGridGenerator::atomOutsideNodeCheck(const GridNode<3> &node) {
 double MolecularGridGenerator::calcCoef(int Z) const {
     double nucFac = 1.0;
     if (this->nucDep > 0) {
-	double lnZ = log2(1.0*Z);
-	nucFac = pow(2.0, (this->nucDep*lnZ)/this->depthFac);
+    double lnZ = log2(1.0*Z);
+    nucFac = pow(2.0, (this->nucDep*lnZ)/this->depthFac);
     }
     int rootScale = getGrid()->getRootScale();
     int uniform = this->uniformScale;
     if (uniform < rootScale) {
-	uniform = rootScale;
+    uniform = rootScale;
     }
     return nucFac*this->amplitude - uniform;
 }
 
 double MolecularGridGenerator::calcExp(int Z) const {
     if (this->width <= 0) {
-	return 0.0;
+    return 0.0;
     }
     return this->widthFac/(this->width*this->width);
 }

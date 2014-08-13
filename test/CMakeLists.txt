@@ -11,10 +11,10 @@ include_directories (
 link_directories(${GTEST_LIBRARY_DIRS})
 
 set(TESTING_LIBS mwrepr mrgrid
-	${Boost_LIBRARIES}
-	${BLAS_LIBRARIES}
-    	${GTEST_LIBRARIES}
-	)
+        ${Boost_LIBRARIES}
+        ${BLAS_LIBRARIES}
+        ${GTEST_LIBRARIES}
+        )
 
 if (MPI_FOUND)
     if (DEFINED ENV{MPIEXEC_PREFLAGS})
@@ -22,9 +22,9 @@ if (MPI_FOUND)
         set (MPIEXEC_PREFLAGS ${args})
         unset(args)
     endif()
-    if (DEFINED MPI_NUMPROC OR DEFINED $ENV{MPI_NUMPROC})    
-        set (MPIRUN ${MPIEXEC} ${MPIEXEC_PREFLAGS} 
-            ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROC} 
+    if (DEFINED MPI_NUMPROC OR DEFINED $ENV{MPI_NUMPROC})
+        set (MPIRUN ${MPIEXEC} ${MPIEXEC_PREFLAGS}
+            ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROC}
             )
     else()
         set (MPIRUN ${MPIEXEC} ${MPIEXEC_PREFLAGS})
@@ -32,17 +32,20 @@ if (MPI_FOUND)
 endif()
 
 set(tests
-	PolynomialTest
-	LegendrePolyTest
-	NodeIndexTest
-	BoundingBoxTest
-	TreeTest 
-	GridTest 
-	)
+        PolynomialTest
+        LegendrePolyTest
+        NodeIndexTest
+        BoundingBoxTest
+        NodeBoxTest
+        MRNodeTest
+        MRTreeTest
+        TreeTest
+        GridTest
+        )
 
 foreach(test ${tests})
-	add_executable(${test} ${test}.cpp)
-	target_link_libraries(${test} ${TESTING_LIBS})
-    	add_dependencies(${test} external-modules)
+        add_executable(${test} ${test}.cpp)
+        target_link_libraries(${test} ${TESTING_LIBS})
+        add_dependencies(${test} external-modules)
 endforeach()
 

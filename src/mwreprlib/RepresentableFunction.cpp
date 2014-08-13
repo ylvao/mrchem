@@ -20,54 +20,58 @@ RepresentableFunction<D>::RepresentableFunction() {
 }
 
 template<int D>
-RepresentableFunction<D>::RepresentableFunction(const double *a, const double *b) {
+RepresentableFunction<D>::RepresentableFunction(const double *a,
+                                                const double *b) {
     if (a == 0 or b == 0) {
-	this->bounded = false;
-	this->A = 0;
-	this->B = 0;
+        this->bounded = false;
+        this->A = 0;
+        this->B = 0;
     } else {
-	this->bounded = true;
-	this->A = new double[D];
-	this->B = new double[D];
+        this->bounded = true;
+        this->A = new double[D];
+        this->B = new double[D];
         for (int d = 0; d < D; d++) {
-	    if (a[d] > b[d]) {
-		THROW_ERROR("Lower bound > Upper bound.");
-	    }
-	    A[d] = a[d];
-	    B[d] = b[d];
-	}
+            if (a[d] > b[d]) {
+                THROW_ERROR("Lower bound > Upper bound.");
+            }
+            A[d] = a[d];
+            B[d] = b[d];
+        }
     }
 }
 
 /** Constructs a new function with same bounds as the input function */
 template<int D>
-RepresentableFunction<D>::RepresentableFunction<D>(const RepresentableFunction<D> &func) {
+RepresentableFunction<D>::RepresentableFunction(
+        const RepresentableFunction<D> &func) {
     if (func.isBounded()) {
-	this->bounded = true;
-	this->A = new double[D];
-	this->B = new double[D];
+        this->bounded = true;
+        this->A = new double[D];
+        this->B = new double[D];
         for (int d = 0; d < D; d++) {
-	    A[d] = func.getLowerBounds()[d];
-	    B[d] = func.getUpperBounds()[d];
-	}
+            A[d] = func.getLowerBounds()[d];
+            B[d] = func.getUpperBounds()[d];
+        }
     } else {
-	this->bounded = false;
-	this->A = 0;
-	this->B = 0;
+        this->bounded = false;
+        this->A = 0;
+        this->B = 0;
     }
 }
 
-/** Copies function, not bounds. Use copy constructor if you want an identical function. */
+/** Copies function, not bounds. Use copy constructor if you want an
+  * identical function. */
 template<int D>
-RepresentableFunction<D>& RepresentableFunction<D>::operator=(const RepresentableFunction<D> &func) {
+RepresentableFunction<D>& RepresentableFunction<D>::operator=(
+        const RepresentableFunction<D> &func) {
     return *this;
 }
 
 template<int D>
-RepresentableFunction<D>::~RepresentableFunction<D>() {
+RepresentableFunction<D>::~RepresentableFunction() {
     if (this->isBounded()) {
-	delete[] this->A;
-	delete[] this->B;
+        delete[] this->A;
+        delete[] this->B;
     }
     this->A = 0;
     this->B = 0;
@@ -76,34 +80,34 @@ RepresentableFunction<D>::~RepresentableFunction<D>() {
 template<int D>
 void RepresentableFunction<D>::setBounds(const double *a, const double *b) {
     if (a == 0 or b == 0) {
-	THROW_ERROR("Invalid arguments");
+        THROW_ERROR("Invalid arguments");
     }
     if (not isBounded()) {
-	this->bounded = true;
-	this->A = new double[D];
-	this->B = new double[D];
+        this->bounded = true;
+        this->A = new double[D];
+        this->B = new double[D];
     }
     for (int d = 0; d < D; d++) {
-	if (a[d] > b[d]) {
-	    THROW_ERROR("Lower bound > Upper bound.");
-	}
-	A[d] = a[d];
-	B[d] = b[d];
+        if (a[d] > b[d]) {
+            THROW_ERROR("Lower bound > Upper bound.");
+        }
+        A[d] = a[d];
+        B[d] = b[d];
     }
 }
 
 template<int D>
 bool RepresentableFunction<D>::outOfBounds(const double *r) const {
     if (not isBounded()) {
-	return false;
+        return false;
     }
     for (int d = 0; d < D; d++) {
-	if (r[d] < getLowerBound(d)) {
-	    return true;
-	}
-	if (r[d] > getUpperBound(d)) {
-	    return true;
-	}
+        if (r[d] < getLowerBound(d)) {
+            return true;
+        }
+        if (r[d] > getUpperBound(d)) {
+            return true;
+        }
     }
     return false;
 }

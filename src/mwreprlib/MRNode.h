@@ -60,8 +60,8 @@ public:
     MRTree<D> &getTree() { return *tree; }
     MRNode<D> &getParent() { return *parent; }
     MRNode<D> &getChild(int i) {
-	assert(this->children != 0);
-	return *this->children[i];
+        assert(this->children != 0);
+        return *this->children[i];
     }
 
     const int *getTranslation() const { return nodeIndex.getTranslation(); }
@@ -79,7 +79,7 @@ public:
     inline bool isAllocated() const;
     inline bool isBranchNode() const;
     inline bool hasChild(int i) const;
-    
+
     void setIsEndNode() { SET_BITS(status, FlagEndNode); }
     void setIsGenNode() { SET_BITS(status, FlagGenNode); }
     void setIsRootNode() { SET_BITS(status, FlagRootNode); }
@@ -90,11 +90,11 @@ public:
     void clearIsRootNode() { CLEAR_BITS(status, FlagRootNode); }
     void clearIsAllocated() { CLEAR_BITS(status, FlagAllocated); }
     void setHasCoefs(bool flag = true) {
-	if (flag) {
-	    SET_BITS(status, FlagHasCoefs | FlagAllocated);
-	} else {
-	    CLEAR_BITS(status, FlagHasCoefs);
-	}
+        if (flag) {
+            SET_BITS(status, FlagHasCoefs | FlagAllocated);
+        } else {
+            CLEAR_BITS(status, FlagHasCoefs);
+        }
     }
 
     bool hasCoord(const double *r) const;
@@ -112,14 +112,14 @@ public:
 
     void setRankId(int n) { this->nodeIndex.setRankId(n); }
     bool isForeign() const {
-	if (this->getRankId() == this->tree->getRankId()) {
-	    return false;
-	}
-	    return true;
+        if (this->getRankId() == this->tree->getRankId()) {
+            return false;
+        }
+        return true;
     }
 
     friend class GridNode<D>;
-//	friend class HilbertIterator<D>;
+    //	friend class HilbertIterator<D>;
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
@@ -177,61 +177,61 @@ private:
     friend class boost::serialization::access;
     template<class Archive>
     void save(Archive & ar, const unsigned int version) const {
-	NOT_IMPLEMENTED_ABORT
-/*
-		ar & parent;
-		ar & tree;
-		ar & nodeIndex;
-		ar & hilbertPath;
-		ar & status;
-		if (this->isBranchNode()) {
-			assert(children != 0);
-			for (int i=0; i < tDim; i++) {
-				ar & children[i];
-			}
-		}
-		if (this->isEndNode() and not this->isForeign()) {
-			if (checkStatus(this->FlagAllocated | this->FlagHasCoefs)) {
-				const double *data = this->getRawData();
-				for (int i = 0; i < this->getNCoefs(); i++) {
-					ar & data[i];
-				}
-			}
-		}
-*/
+        NOT_IMPLEMENTED_ABORT
+                /*
+          ar & parent;
+          ar & tree;
+          ar & nodeIndex;
+          ar & hilbertPath;
+          ar & status;
+          if (this->isBranchNode()) {
+           assert(children != 0);
+           for (int i=0; i < tDim; i++) {
+            ar & children[i];
+           }
+          }
+          if (this->isEndNode() and not this->isForeign()) {
+           if (checkStatus(this->FlagAllocated | this->FlagHasCoefs)) {
+            const double *data = this->getRawData();
+            for (int i = 0; i < this->getNCoefs(); i++) {
+             ar & data[i];
+            }
+           }
+          }
+        */
     }
     template<class Archive>
     void load(Archive & ar, const unsigned int version) {
-	NOT_IMPLEMENTED_ABORT
-/*
-		ar & parent;
-		ar & tree;
-		ar & nodeIndex;
-		ar & hilbertPath;
-		ar & status;
-		if (this->isBranchNode()) {
-			allocKindergarten();
-			for (int i=0; i < tDim; i++) {
-				ar & children[i];
-			}
-		}
-		if (this->isEndNode() and not this->isForeign()) {
-			if (this->hasCoefs()) {
-				this->allocCoefs();
-				this->setHasCoefs(); // allocCoefs() resets hasCoefs!
-				double *data = this->getCoefs().data();
-				for (int i = 0; i < this->getNCoefs(); i++) {
-					ar & data[i];
-				}
-				this->calcNorms();
-			}
-		} else {
-			this->clearIsAllocated();
-			this->setHasCoefs(false);
-		}
-		clearNodeWeight(0);
-		clearNodeWeight(1);
-*/
+        NOT_IMPLEMENTED_ABORT
+                /*
+          ar & parent;
+          ar & tree;
+          ar & nodeIndex;
+          ar & hilbertPath;
+          ar & status;
+          if (this->isBranchNode()) {
+           allocKindergarten();
+           for (int i=0; i < tDim; i++) {
+            ar & children[i];
+           }
+          }
+          if (this->isEndNode() and not this->isForeign()) {
+           if (this->hasCoefs()) {
+            this->allocCoefs();
+            this->setHasCoefs(); // allocCoefs() resets hasCoefs!
+            double *data = this->getCoefs().data();
+            for (int i = 0; i < this->getNCoefs(); i++) {
+             ar & data[i];
+            }
+            this->calcNorms();
+           }
+          } else {
+           this->clearIsAllocated();
+           this->setHasCoefs(false);
+          }
+          clearNodeWeight(0);
+          clearNodeWeight(1);
+        */
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER();
 };
@@ -242,7 +242,7 @@ private:
 template<int D>
 bool MRNode<D>::isAllocated() const {
     if (this->status & FlagAllocated) {
-	return true;
+        return true;
     }
     return false;
 }
@@ -250,7 +250,7 @@ bool MRNode<D>::isAllocated() const {
 template<int D>
 bool MRNode<D>::hasCoefs() const {
     if (this->status & FlagHasCoefs) {
-	return true;
+        return true;
     }
     return false;
 }
@@ -258,7 +258,7 @@ bool MRNode<D>::hasCoefs() const {
 template<int D>
 bool MRNode<D>::isGenNode() const {
     if (this->status & FlagGenNode) {
-    	return true;
+        return true;
     }
     return false;
 }
@@ -266,7 +266,7 @@ bool MRNode<D>::isGenNode() const {
 template<int D>
 bool MRNode<D>::isLeafNode() const {
     if (this->status & FlagBranchNode) {
-	return false;
+        return false;
     }
     return true;
 }
@@ -274,7 +274,7 @@ bool MRNode<D>::isLeafNode() const {
 template<int D>
 bool MRNode<D>::isBranchNode() const {
     if (this->status & FlagBranchNode) {
-	return true;
+        return true;
     }
     return false;
 }
@@ -282,7 +282,7 @@ bool MRNode<D>::isBranchNode() const {
 template<int D>
 bool MRNode<D>::isEndNode() const {
     if (this->status & FlagEndNode) {
-	return true;
+        return true;
     }
     return false;
 }
@@ -290,7 +290,7 @@ bool MRNode<D>::isEndNode() const {
 template<int D>
 bool MRNode<D>::isRoot() const {
     if (this->status & FlagRootNode) {
-	return true;
+        return true;
     }
     return false;
 }
@@ -300,7 +300,7 @@ bool MRNode<D>::hasChild(int i) const {
     assert(i >= 0 and i < getTDim());
     assert(this->children != 0);
     if (this->children[i] == 0) {
-	return false;
+        return false;
     }
     return true;
 }
@@ -308,7 +308,7 @@ bool MRNode<D>::hasChild(int i) const {
 template<int D>
 bool MRNode<D>::checkStatus(unsigned char mask) const {
     if (mask == (this->status & mask)) {
-    	return true;
+        return true;
     }
     return false;
 }
@@ -318,26 +318,26 @@ std::ostream& operator<<(std::ostream &o, const MRNode<D> &nd) {
     std::string flags ="      ";
     o << nd.nodeIndex;
     if (nd.isRoot()) {
-	flags[0] = 'R';
+        flags[0] = 'R';
     }
     if (nd.isEndNode()) {
-    	flags[1] = 'E';
+        flags[1] = 'E';
     }
     if (nd.isBranchNode()) {
-	flags[2] = 'B';
+        flags[2] = 'B';
     } else {
         flags[2] = 'L';
     }
     if (nd.isGenNode()) {
-	flags[3] = 'G';
+        flags[3] = 'G';
     } else {
-	flags[3] = 'P';
+        flags[3] = 'P';
     }
     if (nd.isAllocated()) {
-    	flags[4] = 'A';
+        flags[4] = 'A';
     }
     if (nd.hasCoefs()) {
-	flags[5] = 'C';
+        flags[5] = 'C';
     }
     o << " " << flags;
     return o;

@@ -11,7 +11,6 @@
 #define MOLECULAR_GRID_GENERATOR_H_
 
 #include <vector>
-#include <Eigen/Core>
 #include "GridGenerator.h"
 
 class Molecule;
@@ -19,7 +18,7 @@ class Atom;
 
 class MolecularGridGenerator : public GridGenerator<3> {
 public:
-    MolecularGridGenerator();
+    MolecularGridGenerator(double wf = 1.0e2, double df = 1.0e1);
     virtual ~MolecularGridGenerator();
 
     void setAmplitude(int a) { this->amplitude = a; }
@@ -38,20 +37,20 @@ protected:
     std::vector<double > exps;
     Molecule *molecule;
 
-    bool splitCheck(const GridNode<3> *node);
+    bool splitCheck(const MRNode<3> *node);
 
     void setupRefinementFunction();
     void clearRefinementFunction();
     double evalRefinementFunction(int i, double *r) const;
 
-    bool atomInsideNodeCheck(const GridNode<3> &node);
-    bool atomOutsideNodeCheck(const GridNode<3> &node);
+    bool atomInsideNodeCheck(const MRNode<3> &node);
+    bool atomOutsideNodeCheck(const MRNode<3> &node);
 
     double calcCoef(int Z) const;
     double calcExp(int Z) const;
 private:
-    static const double widthFac = 1.0e2;
-    static const double depthFac = 1.0e1;
+    const double widthFac;
+    const double depthFac;
 };
 
 #endif /* GRID_GENERATOR_H_ */
