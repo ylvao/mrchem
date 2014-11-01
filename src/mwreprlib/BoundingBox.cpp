@@ -54,6 +54,7 @@ BoundingBox<D> &BoundingBox<D>::operator=(const BoundingBox<D> &box) {
         this->origin[d] = box.origin[d];
     }
     setDerivedParameters();
+    return *this;
 }
 
 template<int D>
@@ -63,7 +64,7 @@ void BoundingBox<D>::setCornerIndex(const NodeIndex<D> &idx) {
 }
 
 template<int D>
-void BoundingBox<D>::setOrigin(const int *o) {
+void BoundingBox<D>::setOrigin(const double *o) {
     for (int d = 0; d < D; d++) {
         if (o == 0) {
             this->origin[d] = 0.0;
@@ -96,7 +97,7 @@ void BoundingBox<D>::setDerivedParameters() {
     const int *l = this->cornerIndex.getTranslation();
     this->unitLength = pow(2.0, -scale);
     for (int d = 0; d < D; d++) {
-        assert(box.nBoxes[d] > 0);
+        assert(this->nBoxes[d] > 0);
         this->boxLength[d] = this->unitLength * this->nBoxes[d];
         this->lowerBounds[d] = l[d] * this->unitLength;
         this->upperBounds[d] = this->lowerBounds[d] + this->boxLength[d];
