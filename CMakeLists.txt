@@ -85,15 +85,6 @@ if (ENABLE_TESTS)
     add_subdirectory(test)
 endif()
 
-# Copy the examples in place for convenience 
-if (NOT EXISTS ${CMAKE_BINARY_DIR}/mrchem.inp)
-    set(_dir ${CMAKE_SOURCE_DIR}/examples)
-    file(COPY ${_dir}/mrchem.inp ${_dir}/h2o.bas ${_dir}/h2o.dens
-        DESTINATION ${CMAKE_BINARY_DIR}
-        )
-    unset(_dir)
-endif()
-
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
     add_subdirectory(doc EXCLUDE_FROM_ALL)
@@ -105,16 +96,6 @@ configure_file (
     )
 
 find_package(Git REQUIRED)
-
-# Configure qtcreator
-configure_file(${CMAKE_SOURCE_DIR}/tools/mrcpp_sources.in
-    ${CMAKE_SOURCE_DIR}/tools/mrcpp_sources @ONLY)
-execute_process(COMMAND 
-    chmod 755 ${CMAKE_SOURCE_DIR}/tools/mrcpp_sources OUTPUT_QUIET)
-execute_process(COMMAND 
-    ${CMAKE_SOURCE_DIR}/tools/mrcpp_sources OUTPUT_QUIET)
-configure_file(${CMAKE_SOURCE_DIR}/mrcpp.includes.in
-    ${CMAKE_SOURCE_DIR}/mrcpp.includes @ONLY)
 
 # Configure CPack
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY

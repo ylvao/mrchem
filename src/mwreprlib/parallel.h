@@ -44,25 +44,25 @@ namespace mpi = boost::mpi;
 
 /** Return the number MPI hosts available. */
 inline int get_mpi_world_size() {
-	mpi::communicator world;
-	return world.size();
+    mpi::communicator world;
+    return world.size();
 }
 
 #else
 namespace mpi {
-	struct communicator {
-		int rank() const { return 0; }
-		int size() const { return 1; }
-		void barrier() const { }
-	};
-	struct environment {
-		environment(int argc, char **argv) { }
-	};
-	struct timer {
-		void restart() { }
-		double elapsed() { return 0.0; }
-	};
-	typedef int request;
+    struct communicator {
+	int rank() const { return 0; }
+	int size() const { return 1; }
+	void barrier() const { }
+    };
+    struct environment {
+	environment(int argc, char **argv) { }
+    };
+    struct timer {
+	void restart() { }
+	double elapsed() { return 0.0; }
+    };
+    typedef int request;
 }
 inline int get_mpi_world_size() { return 0; }
 #endif
