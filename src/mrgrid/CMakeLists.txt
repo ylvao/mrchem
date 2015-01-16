@@ -15,16 +15,11 @@ set (mrgridlib_SOURCES
         MREnv.h
 	)
 
-if (XCFUN_FOUND)
-        set (mrgridlib_sources ${mrgridlib_SOURCES} XCFun.cpp)
-        set (mrgridlib_sources ${mrgridlib_SOURCES} XCFun.h)
-endif()
-
 add_library(mrgrid STATIC 
         ${mrgridlib_SOURCES}
         )
 
-target_link_libraries(mrgrid mwrepr xcfun getkw)
+target_link_libraries(mrgrid mwrepr getkw)
 add_dependencies(mrgrid external-modules)
 
 install(TARGETS mrgrid

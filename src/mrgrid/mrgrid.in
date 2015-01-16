@@ -9,7 +9,7 @@
 ON=1
 OFF=0
 
-executable="@MRCHEM_EXECUTABLE@"
+executable="@MRGRID_EXECUTABLE@"
 debug=@MRCHEM_DRIVER_DEBUG@
 printlevel=0
 dryrun=False
@@ -19,8 +19,6 @@ import sys, re, optparse, os, string, subprocess, tempfile
 from copy import deepcopy
 
 sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
-if not os.environ.has_key('MRCHEM_FILTER_DIR'):
-    os.environ['MRCHEM_FILTER_DIR'] = "@MW_FILTER_DIR@"
 import getkw
 
 def main():

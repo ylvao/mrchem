@@ -33,11 +33,11 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     } else {
 	MSG_ERROR("Ivalid number of arguments!");
     }
-    Input = Getkw(infile, false, true);
+    //Input = Getkw(infile, false, true);
 
     Debug = false;
-    int printLevel = Input.get<int>("printlevel");
-    bool teletype = Input.get<bool>("teletype");
+    int printLevel = 0;//Input.get<int>("printlevel");
+    bool teletype = 0;//Input.get<bool>("teletype");
 
     if (fname != 0) {
 	TelePrompter::init(printLevel, teletype, fname);
@@ -78,15 +78,15 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     qCache.setBounds(0.0, 1.0);
 
     //Initialize world
-    int order = Input.get<int>("order");
-    int max_depth = Input.get<int>("max_depth");
-    double rel_prec = Input.get<double>("rel_prec");
-    string wlet = Input.get<string>("wavelet");
+    //int order = Input.get<int>("order");
+    //int max_depth = Input.get<int>("max_depth");
+    //double rel_prec = Input.get<double>("rel_prec");
+    //string wlet = Input.get<string>("wavelet");
 
-    int rootScale = Input.get<int>("World.scale");
-    const vector<int> &nbox = Input.getIntVec("World.boxes");
-    const vector<int> &transl = Input.getIntVec("World.translation");
-    const vector<double> &origin = Input.getDblVec("World.origin");
+    //int rootScale = Input.get<int>("World.scale");
+    //const vector<int> &nbox = Input.getIntVec("World.boxes");
+    //const vector<int> &transl = Input.getIntVec("World.translation");
+    //const vector<double> &origin = Input.getDblVec("World.origin");
 
     //BoundingBox<1>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
     //BoundingBox<2>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
@@ -95,23 +95,23 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     //const BoundingBox<3> &worldbox = BoundingBox<3>::getWorldBox();
     //println(0, worldbox);
 
-    int polytype;
-    if (wlet == "I") {
-	polytype = Interpol;
-    } else {
-	polytype = Legendre;
-    }
-    println(0, "*Default parameters:");
-    println(0, "  Debug level  :     " << printLevel);
-    println(0, "  Default order:     " << order);
-    println(0, "  Default max depth: " << max_depth);
-    println(0, "  Default precision: " << rel_prec);
-    printout(0, "  Default polynomial type: ");
-    if (polytype == Interpol) println(1, "Interpolating");
-    if (polytype == Legendre) println(1, "Legendre");
-    println(0, endl);
+    //int polytype;
+    //if (wlet == "I") {
+	//polytype = Interpol;
+    //} else {
+	//polytype = Legendre;
+    //}
+    //println(0, "*Default parameters:");
+    //println(0, "  Debug level  :     " << printLevel);
+    //println(0, "  Default order:     " << order);
+    //println(0, "  Default max depth: " << max_depth);
+    //println(0, "  Default precision: " << rel_prec);
+    //printout(0, "  Default polynomial type: ");
+    //if (polytype == Interpol) println(1, "Interpolating");
+    //if (polytype == Legendre) println(1, "Legendre");
+    //println(0, endl);
 
-    initializeTrees(order, max_depth, rel_prec, polytype);
+    //initializeTrees(order, max_depth, rel_prec, polytype);
 }
 
 void MREnv::initializeTrees(int k, int depth, double prec, int type) {
