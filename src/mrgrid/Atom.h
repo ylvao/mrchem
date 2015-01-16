@@ -17,9 +17,7 @@ class Atom {
 public:
     Atom(const AtomicElement &elm, const double *r = 0) {
         this->element = &elm;
-        if (r != 0) {
-            setCoord(r);
-        }
+        setCoord(r);
     }
 
     Atom(const Atom &atom) {
@@ -29,7 +27,11 @@ public:
 
     void setCoord(const double *r) {
         for (int d = 0; d < 3; d++) {
-            this->coord[d] = r[d];
+            if (r == 0) {
+                this->coord[d] = 0.0;
+            } else {
+                this->coord[d] = r[d];
+            }
         }
     }
 
