@@ -101,7 +101,7 @@ def setup_keywords():
     top.set_status(True)
     top.add_kw('order',				'INT')
     top.add_kw('rel_prec',			'DBL', 1.0e-4)
-    top.add_kw('uniform',			'INT', 0)
+    top.add_kw('uniform_depth',			'INT', 0)
     top.add_kw('max_depth',			'INT', 20)
     top.add_kw('wavelet',			'STR', 'Interpolating')
     top.add_kw('printlevel',			'INT', 0)
