@@ -1,4 +1,6 @@
 cmake/bump-version
+CMakeCache.txt
+CMakeFiles*
 cdash/
 MRGrid.*
 tags
@@ -7,6 +9,8 @@ Debug*
 Release*
 Profiling*
 build*
+debug*
+release*
 intel*
 pilot
 mrcpp.config
