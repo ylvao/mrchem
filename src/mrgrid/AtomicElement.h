@@ -10,6 +10,8 @@
 #ifndef ELEMENT_H_
 #define ELEMENT_H_
 
+#include <string>
+
 /** Basic chemical element data.
  *  
  */
@@ -28,12 +30,12 @@ public:
     int getZ() const { return this->Z; }
 
 protected:
-	const int Z; /** atomic number */
-	const std::string symbol; /** atomic symbol */
-	const std::string name; /** element name */
-	const double mass; /** atomic mass */
-	const double r_vdw; /** van der waals radius */
-	const double r_cov; /** covalent radius */
+    const int Z; /** atomic number */
+    const std::string symbol; /** atomic symbol */
+    const std::string name; /** element name */
+    const double mass; /** atomic mass */
+    const double r_vdw; /** van der waals radius */
+    const double r_cov; /** covalent radius */
 };
 
 #endif /* ELEMENT_H_ */

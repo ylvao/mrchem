@@ -52,7 +52,7 @@ void GridGenerator<D>::clearGrid() {
 
 template<int D>
 void GridGenerator<D>::buildGrid() { 
-    println(1, " == Building grid");
+    println(0, " == Building grid");
     MRNodeVector nodeTable;
     this->grid->copyEndNodeTable(nodeTable);
     this->grid->clearEndNodeTable();
@@ -61,7 +61,7 @@ void GridGenerator<D>::buildGrid() {
     while (nodeTable.size() > 0) {
         int nNodes = nodeTable.size();
         splitNodeTable(nodeTable);
-        println(1, "  -- #" << setw(3) << iteration << ": Generated    "
+        println(0, "  -- #" << setw(3) << iteration << ": Generated    "
                 << setw(6) << nNodes << " nodes");
         iteration++;
     }

@@ -1,51 +1,37 @@
 /**
-*
-*
-*  \date May 23, 2014
-*  \author Stig Rune Jensen <stig.r.jensen@uit.no> \n
-*  CTCC, University of Tromsø
-*
-*/
+ *
+ * \date Jul 13, 2010
+ * \author Stig Rune Jensen \n
+ *		   CTCC, University of Tromsø
+ *
+ *
+ */
 
-#ifndef MOLECULE_H_
-#define MOLECULE_H_
+#ifndef MOLECULE_H
+#define MOLECULE_H
 
 #include <vector>
-#include <iostream>
+#include <string>
 
-#include "Atom.h"
+class Atom;
 
 class Molecule {
 public:
     Molecule() { }
-    virtual ~Molecule() {
-        int nAtoms = getNAtoms();
-        for (int i = 0; i < nAtoms; i++) {
-            if (this->atoms[i] != 0) {
-                delete this->atoms[i];
-            }
-            this->atoms[i] = 0;
-        }
-    }
+    Molecule(const std::string &coord_file);
+    ~Molecule();
+
+    void print();
+    void addAtom(const Atom &atom);
 
     int getNAtoms() const { return this->atoms.size(); }
     Atom &getAtom(int i) { return *this->atoms[i]; }
     const Atom &getAtom(int i) const { return *this->atoms[i]; }
 
-    void addAtom(const Atom &atom) {
-        Atom *newAtom = new Atom(atom);
-        this->atoms.push_back(newAtom);
-    }
-
-    friend std::ostream& operator<<(std::ostream &o, const Molecule &m) {
-        o << "Molecule contains " << m.getNAtoms() << " atoms: " << std::endl;
-        for (int i = 0; i < m.getNAtoms(); i++) {
-            o << std::setw(3) << i << "      " << m.getAtom(i);
-        }
-        return o;
-    }
 protected:
     std::vector<Atom *> atoms;
+
+    void readCoordinateFile(const std::string &file);
 };
 
-#endif // MOLECULE_H_
+#endif // MOLECULE_H

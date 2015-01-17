@@ -4,8 +4,10 @@ link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 link_directories (${Boost_LIBRARY_DIRS})
 
 set (mrgridlib_SOURCES
+	Atom.cpp
 	Atom.h
 	AtomicElement.h
+	Molecule.cpp
 	Molecule.h
 	PeriodicTable.cpp
 	PeriodicTable.h
