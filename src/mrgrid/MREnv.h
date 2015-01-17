@@ -3,8 +3,8 @@
 
 class MREnv {
 public:
-    static void initializeMRCPP();
-    static void initializeMRCPP(int argc, char **argv, const char *fname = 0);
+    static void initializeMRCPP(int k, double prec);
+    static void finalizeMRCPP(double t);
 
 private:
     static void initializeTrees(int k, int depth, double prec, int type);

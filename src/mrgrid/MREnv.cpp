@@ -1,62 +1,30 @@
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
-#include <cmath>
-#include <boost/timer.hpp>
-
-#include "mrgrid.h"
-#include "parallel.h"
-#include "config.h"
-
-#include "Getkw.h"
+#include "MREnv.h"
 #include "TelePrompter.h"
 
-#include "MREnv.h"
-#include "BoundingBox.h"
 #include "QuadratureCache.h"
 
-void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
+using namespace std;
+
+void MREnv::initializeMRCPP(int k, double prec) {
     omp_set_dynamic(0);
     mpi::communicator world;
-
-    extern mpi::communicator orbital_group;
 
     int nThreads = omp_get_max_threads();
     Eigen::setNbThreads(1); 
 
-    const char *infile = 0;
-    if (argc == 1) {
-	infile = "STDIN";
-    } else if (argc == 2) {
-	infile = argv[1];
-    } else {
-	MSG_ERROR("Ivalid number of arguments!");
-    }
-    //Input = Getkw(infile, false, true);
+    int printLevel = 0;
+    bool teletype = 0;
 
-    Debug = false;
-    int printLevel = 0;//Input.get<int>("printlevel");
-    bool teletype = 0;//Input.get<bool>("teletype");
-
-    if (fname != 0) {
-	TelePrompter::init(printLevel, teletype, fname);
-    } else {
-	TelePrompter::init(printLevel, teletype, "MRGRID");
-    }
-
-    if (printLevel != 0) {
-	Debug = true;
-    }
+    TelePrompter::init(printLevel, teletype, "MRGRID");
 
     println(0, endl << endl);
     println(0, "************************************************************");
     println(0, "***                                                      ***");
     println(0, "***    MRGrid " << PROJECT_VERSION << " (rev. " <<
-	    GIT_REVISION <<                     ")                       ***");
+	                        GIT_REVISION << ")                       ***");
     println(0, "***                                                      ***");
-    println(0, "***    Jonas Juselius   <jonas.juselius@uit.no>          ***");
     println(0, "***    Stig Rune Jensen <stig.r.jensen@uit.no>           ***");
+    println(0, "***    Jonas Juselius   <jonas.juselius@uit.no>          ***");
     println(0, "***    Luca Frediani    <luca.frediani@uit.no>           ***");
     println(0, "***                                                      ***");
     println(0, "************************************************************");
@@ -78,15 +46,14 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     qCache.setBounds(0.0, 1.0);
 
     //Initialize world
-    //int order = Input.get<int>("order");
-    //int max_depth = Input.get<int>("max_depth");
-    //double rel_prec = Input.get<double>("rel_prec");
-    //string wlet = Input.get<string>("wavelet");
+    int uni_depth = 0;
+    int max_depth = 20;
+    int polytype = Interpol;
 
-    //int rootScale = Input.get<int>("World.scale");
-    //const vector<int> &nbox = Input.getIntVec("World.boxes");
-    //const vector<int> &transl = Input.getIntVec("World.translation");
-    //const vector<double> &origin = Input.getDblVec("World.origin");
+    int root_scale    = -5;
+    int nbox[3]      = {    1,    1,    1};
+    int transl[3]    = {    0,    0,    0};
+    double origin[3] = {-32.0,-32.0,-32.0};
 
     //BoundingBox<1>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
     //BoundingBox<2>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
@@ -95,21 +62,16 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     //const BoundingBox<3> &worldbox = BoundingBox<3>::getWorldBox();
     //println(0, worldbox);
 
-    //int polytype;
-    //if (wlet == "I") {
-	//polytype = Interpol;
-    //} else {
-	//polytype = Legendre;
-    //}
-    //println(0, "*Default parameters:");
-    //println(0, "  Debug level  :     " << printLevel);
-    //println(0, "  Default order:     " << order);
-    //println(0, "  Default max depth: " << max_depth);
-    //println(0, "  Default precision: " << rel_prec);
-    //printout(0, "  Default polynomial type: ");
-    //if (polytype == Interpol) println(1, "Interpolating");
-    //if (polytype == Legendre) println(1, "Legendre");
-    //println(0, endl);
+    println(0, "+++ Parameters:");
+    println(0, "  Initial scale:    " << root_scale);
+    println(0, "  Uniform depth:    " << uni_depth);
+    println(0, "  Max depth:        " << max_depth);
+    println(0, "  Precision:        " << prec);
+    println(0, "  Polynomial order: " << k);
+    printout(0, "  Polynomial type:  ");
+    if (polytype == Interpol) println(0, "Interpolating");
+    if (polytype == Legendre) println(0, "Legendre");
+    println(0, endl);
 
     //initializeTrees(order, max_depth, rel_prec, polytype);
 }
@@ -131,4 +93,17 @@ void MREnv::initializeTrees(int k, int depth, double prec, int type) {
     FunctionTree<3>::setDefaultPrecision(prec);
     FunctionTree<3>::setDefaultScalingType(type);
 */
+}
+
+void MREnv::finalizeMRCPP(double t) {
+    SET_PRINT_PRECISION(5);
+    println(0, endl);
+    println(0, "************************************************************");
+    println(0, "***                                                      ***");
+    println(0, "***                     Exiting MRGrid                   ***");
+    println(0, "***                                                      ***");
+    println(0, "***               World clock: " << t << "               ***");
+    println(0, "***                                                      ***");
+    println(0, "************************************************************");
+    println(0, endl);
 }
