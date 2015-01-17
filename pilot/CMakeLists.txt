@@ -1,4 +1,3 @@
-project(Pilot)
 
 include(DefaultPathsMRCPP)
 include_directories (${CMAKE_SOURCE_DIR}/src/mwreprlib)
@@ -9,7 +8,7 @@ set (MRCHEM_DRIVER_DEBUG ON)
 
 add_executable(mrgrid.bin mrgrid.cpp)
 add_dependencies(mrgrid.bin external-modules)
-target_link_libraries(mrgrid.bin mrgrid mwrepr getkw)
+target_link_libraries(mrgrid.bin mrgrid mwrepr)
 target_link_libraries(mrgrid.bin ${Boost_LIBRARIES})
 target_link_libraries(mrgrid.bin ${BLAS_LIBRARIES})
 
@@ -17,4 +16,9 @@ configure_file(${CMAKE_SOURCE_DIR}/src/mrgrid/mrgrid.in
     ${CMAKE_BINARY_DIR}/pilot/mrgrid)
 execute_process(COMMAND
     chmod 755 ${CMAKE_BINARY_DIR}/pilot/mrgrid OUTPUT_QUIET)
+
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/mrgrid.inp)
+    file(COPY mrgrid.inp
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 

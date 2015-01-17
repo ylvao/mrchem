@@ -13,14 +13,17 @@ set (mrgridlib_SOURCES
 	MolecularGridGenerator.h
         MREnv.cpp
         MREnv.h
+        mrgrid.in
 	)
 
 add_library(mrgrid STATIC 
         ${mrgridlib_SOURCES}
         )
 
-target_link_libraries(mrgrid mwrepr getkw)
+target_link_libraries(mrgrid mwrepr)
 add_dependencies(mrgrid external-modules)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mrgrid.in mrgrid)
 
 install(TARGETS mrgrid
         ARCHIVE DESTINATION lib

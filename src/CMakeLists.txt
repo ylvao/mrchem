@@ -1,5 +1,3 @@
-project(Top CXX)
-
 include(DefaultPathsMRCPP)
 include_directories(mwreprlib)
 include_directories(mrgrid)
