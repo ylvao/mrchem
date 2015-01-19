@@ -1,20 +1,20 @@
 set(mwutils_SOURCES 
-    #AOBasis.cpp
-    #AOBasis.h
-    #AOContraction.cpp
-    #AOContraction.h
-    #DensExp.cpp
-    #DensExp.h
+    AOBasis.cpp
+    AOBasis.h
+    AOContraction.cpp
+    AOContraction.h
+    DensExp.cpp
+    DensExp.h
     #Density.cpp
     #Density.h
-    #GaussExp.cpp
-    #GaussExp.h
-    #GaussFunc.cpp
-    #GaussFunc.h
-    #GaussPoly.cpp
-    #GaussPoly.h
-    #Gaussian.cpp
-    #Gaussian.h
+    GaussExp.cpp
+    GaussExp.h
+    GaussFunc.cpp
+    GaussFunc.h
+    GaussPoly.cpp
+    GaussPoly.h
+    Gaussian.cpp
+    Gaussian.h
     Intgrl.cpp
     Intgrl.h
 	)

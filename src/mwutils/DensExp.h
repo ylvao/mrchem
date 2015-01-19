@@ -1,20 +1,22 @@
 #ifndef DENSEXP_H
 #define DENSEXP_H
 
+#include <vector>
 #include <Eigen/Core>
 
 #include "RepresentableFunction.h"
 
+class Intgrl;
 template<int D> class GaussExp;
 
 class DensExp : public RepresentableFunction<3> {
 public:
     DensExp(Intgrl &intgrl, Eigen::MatrixXd &D);
-    virtual ~DensExp() { }
+    virtual ~DensExp() { }
 
-    Eigen::MatrixXd &getDensityMatrix() { return &this->densMat; }
+    Eigen::MatrixXd &getDensityMatrix() { return this->densMat; }
     GaussExp<3> getAODensExpansion();
-    GaussExp<3> &getAO(int n) { return *this->orbitals[n]; }
+    GaussExp<3> &getOrbital(int n) { return *this->orbitals[n]; }
 
     int size() const { return this->orbitals.size(); }
     int getAngularMomentum(int n) const;

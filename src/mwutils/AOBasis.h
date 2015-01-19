@@ -2,7 +2,9 @@
 #define AOBASIS_H
 
 #include <vector>
-//#include "AOContraction.h"
+#include <iostream>
+
+#include "AOContraction.h"
 
 template<int D> class GaussExp;
 class AOContraction;
@@ -27,11 +29,11 @@ public:
 
     // This should print shell by shell
     friend std::ostream& operator<<(std::ostream &o, const AOBasis &b) {
-	o << "    nFunc " << b.nFunc << std::endl;
-	for (unsigned int i = 0; i < b.ctrs.size(); i++) {
-	    o << "    " << *b.ctrs[i];
-	}
-	return o;
+        o << "    nFunc " << b.nFunc << std::endl;
+        for (unsigned int i = 0; i < b.ctrs.size(); i++) {
+            o << "    " << *b.ctrs[i];
+        }
+        return o;
     }
 private:
     int nPrim; ///< Total number of primitives in set

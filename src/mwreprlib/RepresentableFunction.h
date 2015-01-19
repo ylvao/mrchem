@@ -1,5 +1,5 @@
 /*
- * 
+ *
  *
  *  \date Sep 27, 2009
  *  \author Jonas Juselius <jonas.juselius@uit.no> \n
@@ -44,18 +44,18 @@ public:
     virtual bool isZeroOnInterval(const double *a, const double *b) const { return false; }
 
     friend std::ostream& operator<<(std::ostream &o, const RepresentableFunction<D> &func) {
-	o << "RepresentableFunction: " << std::endl;
-	o << "  A=[ ";
-	for (int i = 0; i < D; i++) {
-	    o << func.A[i] << " ";
-	}
-	o << "]" << std::endl;
-	o << "  B=[ ";
-	for (int i = 0; i < D; i++) {
-	    o << func.B[i] << " ";
-	}
-	o << "]" << std::endl;
-	return o;
+        o << "RepresentableFunction: " << std::endl;
+        o << "  A=[ ";
+        for (int i = 0; i < D; i++) {
+            o << func.A[i] << " ";
+        }
+        o << "]" << std::endl;
+        o << "  B=[ ";
+        for (int i = 0; i < D; i++) {
+            o << func.B[i] << " ";
+        }
+        o << "]" << std::endl;
+        return o;
     }
 protected:
     bool bounded;

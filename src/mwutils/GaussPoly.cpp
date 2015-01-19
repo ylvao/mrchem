@@ -22,7 +22,7 @@ GaussPoly<D>::GaussPoly(double alpha, double coef, const double pos[D],
     for (int d = 0; d < D; d++) {
         if (pow != 0) {
             this->poly[d] = new Polynomial(this->power[d]);
-            this->poly[d]->unsetBounds();
+            //this->poly[d]->unsetBounds();
         } else {
             this->poly[d] = 0;
         }
@@ -44,7 +44,7 @@ GaussPoly<D>::GaussPoly(const GaussFunc<D> &gf) : Gaussian<D>(gf) {
         VectorXd coefs = VectorXd::Zero(order + 1);
         coefs[order] = 1.0;
         poly[d]->setCoefs(coefs);
-        poly[d]->unsetBounds();
+        //poly[d]->unsetBounds();
     }
 }
 
@@ -67,9 +67,9 @@ double GaussPoly<D>::calcOverlap(GaussPoly<D> &b) {
     GaussExp<D> fExp(b);
 
     double overlap = 0.0;
-    for (int i = 0; i < fExp.getNFuncs(); i++) {
+    for (int i = 0; i < fExp.size(); i++) {
         GaussFunc<D> &fFunc = static_cast<GaussFunc<D> &>(fExp.getFunc(i));
-        for (int j = 0; j < gExp.getNFuncs(); j++) {
+        for (int j = 0; j < gExp.size(); j++) {
             overlap += gExp.getFunc(j).calcOverlap(fFunc);
         }
     }
@@ -98,7 +98,7 @@ double GaussPoly<D>::evalf(const double *r) const {
     }
     double q2 = 0.0, p2 = 1.0;
     for (int d = 0; d < D; d++) {
-        assert(this->poly[d]->getCheckBounds() == false);
+        //assert(this->poly[d]->getCheckBounds() == false);
         double q = r[d] - this->pos[d];
         q2 += q * q;
         p2 *= poly[d]->evalf(r[d] - this->pos[d]);
@@ -119,7 +119,7 @@ double GaussPoly<D>::evalf(const double r, int d) const {
             return 0.0;
         }
     }
-    assert(this->poly[d]->getCheckBounds() == false);
+    //assert(this->poly[d]->getCheckBounds() == false);
     double q2 = 0.0, p2 = 1.0;
     double q = (r - this->pos[d]);
     q2 += q * q;
@@ -164,6 +164,8 @@ void GaussPoly<D>::fillCoefPowVector(vector<double> &coefs, vector<int *> &power
 
 template<int D>
 GaussPoly<D> GaussPoly<D>::mult(const GaussPoly<D> &rhs) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
     GaussPoly<D> &lhs = *this;
     GaussPoly<D> result;
     result.multPureGauss(lhs, rhs);
@@ -191,6 +193,7 @@ GaussPoly<D> GaussPoly<D>::mult(const GaussPoly<D> &rhs) {
     }
     result.setCoef(result.getCoef() * lhs.getCoef() * rhs.getCoef());
     return result;
+    */
 }
 
 template<int D>
@@ -226,7 +229,7 @@ void GaussPoly<D>::setPoly(int d, Polynomial &poly) {
         delete this->poly[d];
     }
     this->poly[d] = new Polynomial(poly);
-    this->poly[d]->unsetBounds();
+    //this->poly[d]->unsetBounds();
     this->power[d] = poly.getOrder();
 }
 

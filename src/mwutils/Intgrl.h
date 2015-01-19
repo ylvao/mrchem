@@ -6,8 +6,9 @@
 #include <vector>
 #include <string>
 
-#include "Atom.h"
-#include "AOBasis.h"
+class Atom;
+class AOBasis;
+template<int D> class GaussExp;
 
 class Intgrl {
 public:

@@ -8,7 +8,7 @@ set (MRGRID_EXECUTABLE ${CMAKE_BINARY_DIR}/pilot/mrgrid.bin)
 set (MRCHEM_DRIVER_DEBUG ON)
 
 add_executable(mrgrid.bin mrgrid.cpp)
-#add_dependencies(mrgrid.bin external-modules)
+add_dependencies(mrgrid.bin external-modules)
 target_link_libraries(mrgrid.bin mwutils mrgrid mwrepr)
 target_link_libraries(mrgrid.bin ${Boost_LIBRARIES})
 target_link_libraries(mrgrid.bin ${BLAS_LIBRARIES})
