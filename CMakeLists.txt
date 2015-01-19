@@ -25,9 +25,9 @@ include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigCompilerFlags)
 
-find_package(Python REQUIRED)
-set(PYTHON_SITE_INSTALL_DIR
-        lib/python${PYTHON_VERSION}/site-packages)
+#find_package(Python REQUIRED)
+#set(PYTHON_SITE_INSTALL_DIR
+#        lib/python${PYTHON_VERSION}/site-packages)
 
 find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
