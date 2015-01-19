@@ -1,4 +1,4 @@
-/** 
+/**
  *
  * \date Jun 7, 2009
  * \author Jonas Juselius <jonas.juselius@uit.no> \n
@@ -15,16 +15,16 @@ const AtomicElement & PeriodicTable::getAtomicElement(const char *sym) const {
     string id(sym);
     id[0] = toupper(id[0]);
     for (unsigned int i = 1; i < id.size(); i++) {
-	id[i] = tolower(id[i]);
+        id[i] = tolower(id[i]);
     }
     if (id.size() > 2) {
-	if (byName.find(id) != byName.end()) {
-	    return *byName[id];
-	}
+        if (byName.find(id) != byName.end()) {
+            return *byName[id];
+        }
     } else {
-	if (bySymbol.find(id) != bySymbol.end()) {
-	    return *bySymbol[id];
-	}
+        if (bySymbol.find(id) != bySymbol.end()) {
+            return *bySymbol[id];
+        }
     }
 
     string err = "Error! Invalid element: " + id;
@@ -33,8 +33,8 @@ const AtomicElement & PeriodicTable::getAtomicElement(const char *sym) const {
 
 const AtomicElement & PeriodicTable::getAtomicElement(int Z) const {
     if (Z < 0 or Z > nAtomicElements ) {
-	string err="Error! Invalid element number: " + Z;
-	throw err;
+        string err="Error! Invalid element number: %d", Z;
+        throw err;
     }
     return elements[Z];
 }
@@ -156,24 +156,24 @@ AtomicElement( 0, "Gh", "Heavy", 1.e6, 0.000000, 0.000000 )
 
 PeriodicTable::map_t PeriodicTable::_init_byname()
 {
-	string name;
-	map_t _map;
-	for (int i=0; i < PeriodicTable::nAtomicElements; i++ ) {
-		name=elements[i].getName();
-		_map[name]=&elements[i];
-	}
-	return _map;
+    string name;
+    map_t _map;
+    for (int i=0; i < PeriodicTable::nAtomicElements; i++ ) {
+        name=elements[i].getName();
+        _map[name]=&elements[i];
+    }
+    return _map;
 }
 
 PeriodicTable::map_t PeriodicTable::_init_bysymbol()
 {
-	string name;
-	map_t _map;
-	for (int i=0; i < PeriodicTable::nAtomicElements; i++ ) {
-		name=elements[i].getSymbol();
-		_map[name]=&elements[i];
-	}
-	return _map;
+    string name;
+    map_t _map;
+    for (int i=0; i < PeriodicTable::nAtomicElements; i++ ) {
+        name=elements[i].getSymbol();
+        _map[name]=&elements[i];
+    }
+    return _map;
 }
 PeriodicTable::map_t PeriodicTable::byName = _init_byname();
 PeriodicTable::map_t PeriodicTable::bySymbol = _init_bysymbol();
