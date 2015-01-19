@@ -19,12 +19,12 @@ public:
     const AtomicElement &getAtomicElement() const { return *this->element; }
 
     friend std::ostream& operator<<(std::ostream &o, const Atom &a) {
-	o << std::endl << a.element->getSymbol()  << "   ";
-	for (int i = 0; i < 3; i++) {
-	    o << a.coord[i] << " ";
-	}
-	o << std::endl;
-	return o;
+        o << std::endl << a.element->getSymbol()  << "   ";
+        for (int i = 0; i < 3; i++) {
+            o << a.coord[i] << " ";
+        }
+        o << std::endl;
+        return o;
     }
 private:
     const AtomicElement *element;

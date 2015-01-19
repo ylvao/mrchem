@@ -75,6 +75,7 @@ public:
     static Eigen::MatrixXd SkewMatrixExp(Eigen::MatrixXd &A);
     static Eigen::MatrixXcd diagonalizeHermitianMatrix(Eigen::MatrixXcd &A,Eigen::VectorXd &diag);
 
+    static Eigen::MatrixXd readMatrixFile(const std::string &file);
 
 private:
     static void print_vector(int n, const double *vec);

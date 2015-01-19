@@ -10,21 +10,30 @@
  */
 
 #include <boost/timer.hpp>
+#include <Eigen/Core>
 
 #include "parallel.h"
 #include "MREnv.h"
 #include "TelePrompter.h"
 
+#include "PeriodicTable.h"
 #include "Atom.h"
 #include "Molecule.h"
-#include "Intgrl.h"
+#include "MolecularGridGenerator.h"
+
 #include "BoundingBox.h"
 #include "NodeIndex.h"
 #include "MRGrid.h"
-#include "MolecularGridGenerator.h"
+#include "MathUtils.h"
+
+#include "Intgrl.h"
+#include "DensExp.h"
+#include "GaussExp.h"
+#include "GaussFunc.h"
 
 
 using namespace std;
+using namespace Eigen;
 
 void testGrid();
 
@@ -53,31 +62,80 @@ int main(int argc, char **argv) {
 }
 
 void testGrid() {
-    Molecule molecule("diamond_1.xyz");
-    molecule.print();
-
-    int k = 3;
-    int n = -3;
+    //Setting up world parameters
+    int n = -1;
     int l[3] = {-1,-1,-1};
     int nb[3] = {2,2,2};
     double o[3] = {0.0,0.0,0.0};
-
     NodeIndex<3> idx(n, l);
+
+    //Constructing world box
     BoundingBox<3> world(idx, nb, o);
     println(0, world);
 
+    //Constructing initial grid
+    int k = 3;
     MRGrid<3> grid(k, &world);
     println(0, grid);
 
-    //MolecularGridGenerator generator;
-    //generator.generateGrid(grid, molecule);
+    //Setting up toy molecule
+    PeriodicTable pt;
+    const AtomicElement &H = pt.getAtomicElement("H");
+    double pos[3] = {0.0, 0.0, 0.0};
+    Atom h_1(H, pos);
+    Molecule molecule;
+    molecule.addAtom(h_1);
+    println(0, h_1);
 
-    //println(0, grid);
+    //Adapting grid to molecular geometry
+    MolecularGridGenerator generator;
+    generator.setUniformScale(0);
+    generator.setAmplitude(0);
+    generator.setWidth(0);
+    generator.setNuclearDependence(0);
 
-    //MatrixXd *D = readMatrix("diamond_1.dens");
-    Intgrl intgrl("diamond_1.bas");
-    //DensExp density(intgrl, *densMat);
+    generator.generateGrid(grid, molecule);
+    println(0, grid);
 
+    //setting up quadrature data
+    MatrixXd QP;
+    VectorXd QW;
+    grid.getQuadPoints(QP);
+    grid.getQuadWeights(QW);
+
+    int nPoints = QW.size();
+    VectorXd QV = VectorXd::Zero(QW.size());
+
+    double alpha = 10.0;
+    double coef = pow(alpha/pi, 3.0/2.0);
+    GaussFunc<3> gFunc(alpha, coef);
+
+    for (int i = 0; i < nPoints; i++) {
+        double r[3];
+        for (int d = 0; d < 3; d++) {
+            r[d] = QP(i,d);
+        }
+        QV(i) = gFunc.evalf(r);
+    }
+
+    double integral = QW.dot(QV);
+
+    println(0, "Quadrature points  " << QP.rows() << " x " << QP.cols());
+    println(0, "Quadrature weights " << QW.size());
+    println(0, "Quadrature values  " << QV.size() << endl);
+    println(0, "Integrated charge  " << integral << endl);
+
+    //Molecule molecule("alkane_1.xyz");
+    //molecule.print();
+
+    //MatrixXd D = MathUtils::readMatrixFile("alkane_1.dens");
+    //Intgrl intgrl("alkane_1.bas");
+
+    //DensExp densExp(intgrl, D);
+    //GaussExp<3> dens = densExp.getAODensExpansion();
+    //for (int i = 0; i < QP.rows(); i++) {
+    //    QV(i) = dens.evalf(QP.row(i).data());
+    //}
 
     //Projector P;
     //FunctionTree<3> *densTree = P.project(density, grid);

@@ -22,7 +22,8 @@
 class Polynomial: public RepresentableFunction<1> {
 public:
     Polynomial(const Eigen::VectorXd &c, const double *a = 0, const double *b = 0);
-    Polynomial(int power = 0, const double *a = 0, const double *b = 0);
+    Polynomial(double c, int k = 0, const double *a = 0, const double *b = 0);
+    Polynomial(int k = 0, const double *a = 0, const double *b = 0);
     Polynomial(const Polynomial &poly);
     Polynomial &operator=(const Polynomial &poly);
     virtual ~Polynomial() {}

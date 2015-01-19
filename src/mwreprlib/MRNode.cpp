@@ -267,17 +267,17 @@ bool MRNode<D>::hasCoord(const double *r) const {
     double sFac = pow(2.0, -getScale());
     const int *l = getTranslation();
     const double *o = this->tree->getOrigin();
-    println(0, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
-    println(0, "[" << o[0] << "," << o[1] << "," << o[2] << "]");
-    println(0, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
-    println(0, *this);
+    println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
+    println(1, "[" << o[0] << "," << o[1] << "," << o[2] << "]");
+    println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
+    println(1, *this);
     for (int d = 0; d < D; d++) {
         if (r[d] < (sFac*l[d] + o[d]) or r[d] > (sFac*(l[d] + 1)) + o[d]) {
-            println(0, "false");
+            println(1, "false");
             return false;
         }
     }
-    println(0, "true");
+    println(1, "true");
     return true;
 }
 

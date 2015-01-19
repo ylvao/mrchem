@@ -140,8 +140,6 @@ void GaussFunc<D>::multInPlace(const GaussFunc<D> &rhs) {
 
 template<int D>
 GaussPoly<D> GaussFunc<D>::mult(const GaussFunc<D> &rhs) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     GaussFunc<D> &lhs = *this;
     GaussPoly<D> result;
     result.multPureGauss(lhs, rhs);
@@ -154,7 +152,6 @@ GaussPoly<D> GaussFunc<D>::mult(const GaussFunc<D> &rhs) {
     }
     result.setCoef(result.getCoef() * lhs.getCoef() * rhs.getCoef());
     return result;
-    */
 }
 
 template<int D>

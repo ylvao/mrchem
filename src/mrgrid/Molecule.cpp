@@ -13,7 +13,8 @@ Molecule::Molecule(const std::string &coord_file) {
 }
 
 void Molecule::addAtom(const Atom &atom) {
-    NOT_IMPLEMENTED_ABORT;
+    Atom *newAtom = new Atom(atom);
+    this->atoms.push_back(newAtom);
 }
 
 void Molecule::readCoordinateFile(const std::string &coord_file) {
@@ -22,7 +23,7 @@ void Molecule::readCoordinateFile(const std::string &coord_file) {
     fstream ifs;
     ifs.open(coord_file.c_str());
     if (not ifs) {
-    	THROW_ERROR("Failed to open basis set file: " << coord_file);
+        THROW_ERROR("Failed to open basis set file: " << coord_file);
     }
 
     PeriodicTable pt;
@@ -31,26 +32,26 @@ void Molecule::readCoordinateFile(const std::string &coord_file) {
     double coord[3];
     ifs >> nAtoms;
     for (int i = 0; i < nAtoms; i++) {
-	ifs >> sym;
-	ifs >> coord[0];
-	ifs >> coord[1];
-	ifs >> coord[2];
-	for (int d = 0; d < 3; d++) {
-	    coord[d] -= origin[d];
-	}
-	const AtomicElement &element = pt.getAtomicElement(sym.c_str());
-	Atom *atom  = new Atom(element, coord);
-	this->atoms.push_back(atom);
+    ifs >> sym;
+    ifs >> coord[0];
+    ifs >> coord[1];
+    ifs >> coord[2];
+    for (int d = 0; d < 3; d++) {
+        coord[d] -= origin[d];
+    }
+    const AtomicElement &element = pt.getAtomicElement(sym.c_str());
+    Atom *atom  = new Atom(element, coord);
+    this->atoms.push_back(atom);
     }
     ifs.close();
 }
 
 Molecule::~Molecule() {
     for (int i = 0; i < getNAtoms(); i++) {
-	if (this->atoms[i] != 0) {
-	    delete this->atoms[i];
-	    this->atoms[i] = 0;
-	}
+    if (this->atoms[i] != 0) {
+        delete this->atoms[i];
+        this->atoms[i] = 0;
+    }
     }
     this->atoms.clear();
 }

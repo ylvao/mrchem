@@ -29,7 +29,7 @@ GridGenerator<D>::~GridGenerator() {
 }
 
 template<int D>
-void GridGenerator<D>::generateGrid(MRGrid<D> &outGrid) { 
+void GridGenerator<D>::generateGrid(MRGrid<D> &outGrid) {
     initGrid(outGrid);
     buildGrid();
     clearGrid();
@@ -51,7 +51,7 @@ void GridGenerator<D>::clearGrid() {
 }
 
 template<int D>
-void GridGenerator<D>::buildGrid() { 
+void GridGenerator<D>::buildGrid() {
     println(0, " == Building grid");
     MRNodeVector nodeTable;
     this->grid->copyEndNodeTable(nodeTable);
@@ -70,17 +70,17 @@ void GridGenerator<D>::buildGrid() {
 }
 
 template<int D>
-void GridGenerator<D>::splitNodeTable(MRNodeVector &nodeTable) { 
+void GridGenerator<D>::splitNodeTable(MRNodeVector &nodeTable) {
     NodeIndexSet idxSet;
     NodeIndexSet tmpIdx;
 
     int nNodes = nodeTable.size();
     for (int n = 0; n < nNodes; n++) {
-	MRNode<D> *node = nodeTable[n];
-	if (splitCheck(node)) {
-	    const NodeIndex<D> *idx = &node->getNodeIndex();
-	    tmpIdx.insert(idx);
-	}
+        MRNode<D> *node = nodeTable[n];
+        if (splitCheck(node)) {
+            const NodeIndex<D> *idx = &node->getNodeIndex();
+            tmpIdx.insert(idx);
+        }
     }
     idxSet.insert(tmpIdx.begin(), tmpIdx.end());
     nodeTable.clear();
@@ -90,11 +90,11 @@ void GridGenerator<D>::splitNodeTable(MRNodeVector &nodeTable) {
 template<int D>
 bool GridGenerator<D>::splitCheck(const MRNode<D> *node) {
     if (node == 0) {
-	return false;
+        return false;
     }
     if (node->getDepth() < this->uniformDepth) {
-	//println(0, "uniform depth split " << node->getDepth() << " < " << this->uniformDepth);
-	return true;
+        //println(0, "uniform depth split " << node->getDepth() << " < " << this->uniformDepth);
+        return true;
     }
     return false;
 }

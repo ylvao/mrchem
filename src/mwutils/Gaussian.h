@@ -22,7 +22,7 @@ template<int D> class GaussPoly;
 template<int D>
 class Gaussian: public RepresentableFunction<D> {
 public:
-    Gaussian(double alpha, double coef, const double pos[D], const int pow[D]);
+    Gaussian(double a, double c, const double r[D], const int p[D]);
     virtual Gaussian<D> *copy() const = 0;
     virtual ~Gaussian() {}
 

@@ -32,7 +32,7 @@ public:
 
 protected:
     bool cartesian;
-    Eigen::MatrixXd &densMat;
+    Eigen::MatrixXd densMat;
     std::vector<GaussExp<3> *> orbitals;
 
     void readAOExpansion(Intgrl &intgrl);

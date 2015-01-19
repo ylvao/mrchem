@@ -14,21 +14,21 @@ using namespace Eigen;
 using namespace std;
 
 template<int D>
-Gaussian<D>::Gaussian(double alpha, double coef, const double pos[D],
-        const int pow[D]) {
-    this->alpha = alpha;
-    this->coef = coef;
+Gaussian<D>::Gaussian(double a, double c, const double r[D],
+        const int p[D]) {
+    this->alpha = a;
+    this->coef = c;
     this->screen = false;
     for (int d = 0; d < D; d++) {
-        if (pos == 0) {
+        if (r == 0) {
             this->pos[d] = 0.0;
         } else {
-            this->pos[d] = pos[d];
+            this->pos[d] = r[d];
         }
-        if (pow == 0) {
+        if (p == 0) {
             this->power[d] = 0;
         } else {
-            this->power[d] = pow[d];
+            this->power[d] = p[d];
         }
     }
     this->squareNorm = -1.0;

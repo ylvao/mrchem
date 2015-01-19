@@ -79,14 +79,12 @@ void NodeBox<D>::removeNode(int bIdx) {
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) {
-    NOT_IMPLEMENTED_ABORT;
     int bIdx = this->getBoxIndex(nIdx);
     return getNode(bIdx);
 }
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(const double *r) {
-    NOT_IMPLEMENTED_ABORT;
     int bIdx = this->getBoxIndex(r);
     return getNode(bIdx);
 }
