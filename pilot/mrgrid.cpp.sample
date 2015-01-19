@@ -1,71 +1,32 @@
-/** \mainpage The MRCPP program
- *  Based on the original MRChem program by Luca Frediani and
- *  Eirik Fossgaard, with contributions from Stig-Rune Jensen, Peter Wind and
- *  Jonas Juselius
+/** \mainpage The MRGrid program
  *
- * \author Jonas Juselius
- * \author Luca Frediani
- * \author Stig-Rune Jensen
- * \author Peter Wind
- * \author Eirik Fossgaard
- * \author Antoine Durdek
- * \version 0.1
+ * \author Stig Rune Jensen
+ *
+ * \version 1.0
  *
  * \par Copyright:
  * GPLv4
  *
  */
 
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
 #include <boost/timer.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <Eigen/Core>
 
-#include "MWFilter.h"
-#include "mrchem.h"
-#include "constants.h"
 #include "parallel.h"
-#include "MathUtils.h"
 #include "MREnv.h"
-#include "TreeIterator.h"
 #include "TelePrompter.h"
-#include "MRUtils.h"
-#include "Plot.h"
-#include "MolPlot.h"
-#include "MultiFunction.h"
-#include "Density.h"
-#include "Molecule.h"
-#include "FunctionTree.h"
-#include "PositionFunction.h"
-#include "SCF.h"
-#include "DFT.h"
-#include "OrbitalFreeDFT.h"
-#include "HartreeFock.h"
-#include "NuclearGaussPotential.h"
-#include "OperatorTree.h"
-#include "HilbertIterator.h"
-#include "OrbitalMask.h"
-#include "KAIN.h"
-#include "DIIS.h"
-#include "GaussPoly.h"
 
-#define ELAPSED(X,S) \
-    println(0, "  @Timing for " << S << ": " <<	X.elapsed()); X.restart();
+#include "Atom.h"
+#include "Molecule.h"
+#include "Intgrl.h"
+#include "BoundingBox.h"
+#include "NodeIndex.h"
+#include "MRGrid.h"
+#include "MolecularGridGenerator.h"
+
 
 using namespace std;
-using namespace Eigen;
 
-void testFunction();
-void testPoisson();
-void testSCF();
-
-bool Debug;
-Getkw Input;
-CoulombOperator *defaultCoulomb;
-CoulombOperator *coulomb;
+void testGrid();
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
@@ -79,348 +40,47 @@ int main(int argc, char **argv) {
     SET_PRINT_PRECISION(15);
     cout << scientific << setprecision(14);
 
-    MREnv::initializeMRCPP(argc, argv);
+    int k = 5;
+    double prec = 1.0e-4;
 
-    bool test_function = Input.get<bool>("Pilot.testFunction");
-    bool test_poisson = Input.get<bool>("Pilot.testPoisson");
-    bool test_scf = Input.get<bool>("Pilot.testSCF");
+    MREnv::initializeMRCPP(k, prec);
 
-    if (test_function) testFunction();
-    if (test_poisson) testPoisson();
-    if (test_scf) testSCF();
+    testGrid();
 
-    double t = rolex.elapsed();
-    SET_PRINT_PRECISION(5);
-    println(0, endl);
-    println(0, "************************************************************");
-    println(0, "***                                                      ***");
-    println(0, "***                     Exiting MRChem                   ***");
-    println(0, "***                                                      ***");
-    println(0, "***               World clock: " << t << "               ***");
-    println(0, "***                                                      ***");
-    println(0, "************************************************************");
-    println(0, endl);
+    MREnv::finalizeMRCPP(rolex.elapsed());
+
     return 0;
 }
 
-void testFunction() {
-    boost::timer rolex;
-
-    double fAlpha = 10.0;
-    double fCoef = pow(fAlpha/pi, 3.0/2.0);
-    double fPos[3] = {pi,pi,pi};
-    int fPow[3] = {0,0,0};
-    GaussFunc<3> fGauss(fAlpha, fCoef, fPos, fPow);
-
-    double gAlpha = 20.0;
-    double gCoef = pow(gAlpha/pi, 3.0/2.0);
-    double gPos[3] = {3.0,pi,pi};
-    int gPow[3] = {0,0,0};
-    GaussFunc<3> gGauss(gAlpha, gCoef, gPos, gPow);
-
-    GaussExp<3> gaussSum;
-    gaussSum.append(fGauss);
-    gaussSum.append(gGauss);
-
-    GaussPoly<3> gaussProd = fGauss * gGauss;
-
-
-
-    printout(0, endl);
-    println(0, "=================== Projecting functions ===================");
-    printout(0, endl);
-    rolex.restart();
-
-    FunctionTree<3> fTree;
-    fTree.projectFunction(fGauss);
-    FunctionTree<3> gTree;
-    gTree.projectFunction(gGauss);
-
-    double fInt = fTree.integrate();
-    double fNorm = sqrt(fTree.getSquareNorm());
-    double fAnalyticNorm = sqrt(fGauss.getSquareNorm());
-    double gInt = gTree.integrate();
-    double gNorm = sqrt(gTree.getSquareNorm());
-    double gAnalyticNorm = sqrt(gGauss.getSquareNorm());
-    double fError = (fNorm-fAnalyticNorm)/fNorm;
-    double gError = (gNorm-gAnalyticNorm)/gNorm;
-
-    println(0, "fGauss integral:              " << setw(30) << fInt);
-    println(0, "fGauss analytic norm:         " << setw(30) << fAnalyticNorm);
-    println(0, "fGauss numerical norm:        " << setw(30) << fNorm);
-    println(0, "Relative error:               " << setw(30) << fError << endl);
-    println(0, "gGauss integral:              " << setw(30) << gInt);
-    println(0, "gGauss analytic norm:         " << setw(30) << gAnalyticNorm);
-    println(0, "gGauss numerical norm:        " << setw(30) << gNorm);
-    println(0, "Relative error:               " << setw(30) << gError << endl);
-    println(0, "Elapsed time:                 " << setw(30) << rolex.elapsed() << endl);
-    println(0, "============================================================");
-    printout(0, endl);
-
-
-
-    printout(0, endl);
-    println(0, "===================== Adding functions =====================");
-    printout(0, endl);
-    rolex.restart();
-
-    FunctionTree<3> gaussSumTree;
-    gaussSumTree.projectFunction(gaussSum);
-    FunctionTree<3> treeSum;
-    treeSum.add(1.0, fTree, 1.0, gTree);
-
-    double gaussSumInt = gaussSumTree.integrate();
-    double gaussSumNorm = sqrt(gaussSumTree.getSquareNorm());
-    double treeSumInt = treeSum.integrate();
-    double treeSumNorm = sqrt(treeSum.getSquareNorm());
-    double sumIntError = (treeSumInt-gaussSumInt)/treeSumInt;
-    double sumNormError = (treeSumNorm-gaussSumNorm)/treeSumNorm;
-
-    println(0, "Analytic sum integral:        " << setw(30) << gaussSumInt);
-    println(0, "Numerical sum integral:       " << setw(30) << treeSumInt);
-    println(0, "Relative error:               " << setw(30) << sumIntError << endl);
-    println(0, "Analytic sum norm:            " << setw(30) << gaussSumNorm);
-    println(0, "Numerical sum norm:           " << setw(30) << treeSumNorm);
-    println(0, "Relative error:               " << setw(30) << sumNormError << endl);
-    println(0, "Elapsed time:                 " << setw(30) << rolex.elapsed() << endl);
-    println(0, "============================================================");
-    printout(0, endl);
-
-
-
-    printout(0, endl);
-    println(0, "================== Multiplying functions ===================");
-    printout(0, endl);
-    rolex.restart();
-
-    FunctionTree<3> gaussProdTree;
-    gaussProdTree.projectFunction(gaussProd);
-    FunctionTree<3> treeProd;
-    treeProd.mult(1.0, fTree, 1.0, gTree);
-
-    double gaussProdInt = gaussProdTree.integrate();
-    double gaussProdNorm = sqrt(gaussProdTree.getSquareNorm());
-    double treeProdInt = treeProd.integrate();
-    double treeProdNorm = sqrt(treeProd.getSquareNorm());
-    double prodIntError = (treeProdInt-gaussProdInt)/treeProdInt;
-    double prodNormError = (treeProdNorm-gaussProdNorm)/treeProdNorm;
-
-    println(0, "Analytic product integral:    " << setw(30) << gaussProdInt);
-    println(0, "Numerical product integral:   " << setw(30) << treeProdInt);
-    println(0, "Relative error:               " << setw(30) << prodIntError << endl);
-    println(0, "Analytic product norm:        " << setw(30) << gaussProdNorm);
-    println(0, "Numerical product norm:       " << setw(30) << treeProdNorm);
-    println(0, "Relative error:               " << setw(30) << prodNormError << endl);
-    println(0, "Elapsed time:                 " << setw(30) << rolex.elapsed() << endl);
-    println(0, "============================================================");
-    printout(0, endl);
-}
-
-void testPoisson() {
-    boost::timer rolex;
-
-    double alpha = 10.0;
-    double coef = pow(alpha/pi, 3.0/2.0);
-    double pos[3] = {pi,pi,pi};
-    int pow[3] = {0,0,0};
-    GaussFunc<3> fGauss(alpha, coef, pos, pow);
-
-    printout(0, endl);
-    println(0, "=================== Projecting function ====================");
-    printout(0, endl);
-    rolex.restart();
-
-    FunctionTree<3> fTree;
-    fTree.projectFunction(fGauss);
-
-    double fInt = fTree.integrate();
-    double fNorm = sqrt(fTree.getSquareNorm());
-
-    println(0, "fGauss integral:              " << setw(30) << fInt);
-    println(0, "fGauss norm:                  " << setw(30) << fNorm << endl);
-    println(0, "Elapsed time:                 " << setw(30) << rolex.elapsed() << endl);
-    println(0, "============================================================");
-    printout(0, endl);
-
-
-
-    printout(0, endl);
-    println(0, "================== Constructing operator ===================");
-    printout(0, endl);
-    rolex.restart();
-    CoulombOperator coulombOper;
-    println(0, "Elapsed time:                 " << setw(30) << rolex.elapsed() << endl);
-    println(0, "============================================================");
-    printout(0, endl);
-
-
-
-    printout(0, endl);
-    println(0, "==================== Applying operator =====================");
-    printout(0, endl);
-    rolex.restart();
-
-    FunctionTree<3> gTree;
-    gTree = coulombOper.apply(fTree);
-
-    double gInt = gTree.integrate();
-    double gNorm = sqrt(gTree.getSquareNorm());
-    double numericalEnergy = gTree.innerProduct(fTree);
-    double analyticEnergy = fGauss.calcCoulombEnergy(fGauss);
-    double error = (numericalEnergy-analyticEnergy)/numericalEnergy;
-
-    println(0, "gGauss integral:              " << setw(30) << gInt);
-    println(0, "gGauss norm:                  " << setw(30) << gNorm << endl);
-    println(0, "Analytic energy:              " << setw(30) << numericalEnergy);
-    println(0, "Numerical energy:             " << setw(30) << analyticEnergy);
-    println(0, "Relative error:               " << setw(30) << error << endl);
-    println(0, "Elapsed time:                 " << setw(30) << rolex.elapsed() << endl);
-    println(0, "============================================================");
-    printout(0, endl);
-
-    Plot<3> plot;
-    double a[3] = {0.0, 0.0, 0.0};
-    double b[3] = {2*pi, 2*pi, 2*pi};
-    plot.setRange(a, b);
-    plot.linePlot(fTree, "fTree");
-    plot.linePlot(gTree, "gTree");
-}
-
-void testSCF() {
-    defaultCoulomb = new CoulombOperator();
-
-    string basis_file = Input.get<string>("Molecule.basis");
-    string mo_file = Input.get<string>("Molecule.mo_matrix");
-    string mo_file_b = Input.get<string>("Molecule.mo_matrix_b");
-    string en_file = Input.get<string>("Molecule.energies");
-    string en_file_b = Input.get<string>("Molecule.energies_b");
-
-    int nOrbs = Input.get<int>("Molecule.nOrbitals");
-    int nEl = Input.get<int>("Molecule.nElectrons");
-    int mult = Input.get<int>("Molecule.multiplicity");
-    double nucParam = Input.get<double>("Molecule.nucParam");
-    string nucType = Input.get<string>("Molecule.nucType");
-
-    string solver = Input.get<string>("Accelerator.method");
-    int maxHistory = Input.get<int>("Accelerator.maxHistory");
-    int minHistory = Input.get<int>("Accelerator.minHistory");
-    bool sepOrb = Input.get<bool>("Accelerator.separateOrbitals");
-    bool inclFock = Input.get<bool>("Accelerator.includeFockMatrix");
-
-    string method = Input.get<string>("SCF.method");
-    string functional = Input.get<string>("SCF.functional");
-    bool localize = Input.get<bool>("SCF.localize");
-    bool clearAccelerator = Input.get<bool>("SCF.clearAccelerator");
-    bool restricted = Input.get<bool>("SCF.restricted");
-    bool dumpToFile = Input.get<bool>("SCF.dumpToFile");
-    bool useExactLambda = Input.get<bool>("SCF.useExactLambda");
-    bool orbitalFree = Input.get<bool>("SCF.orbitalFree");
-    int maxIter = Input.get<int>("SCF.maxIter");
-    int iterPerRotation = Input.get<int>("SCF.iterPerRotation");
-    double convThrs = Input.get<double>("SCF.convThrs");
-
-    Molecule molecule(basis_file);
-    molecule.setMultiplicity(mult);
-
+void testGrid() {
+    Molecule molecule("diamond_1.xyz");
     molecule.print();
-    if (mo_file.size() == 0) {
-        molecule.initializeOrbitals(restricted, nOrbs, nEl);
-    } else if (restricted) {
-        molecule.initializeOrbitals(nOrbs, Orbital::Undefined, 2, mo_file, en_file);
-	int singleOcc = mult - 1;
-	int doubleOcc = nOrbs - singleOcc;
-	for (int i = doubleOcc; i < nOrbs; i++) {
-	    Orbital &orb = molecule.getOrbitals().getOrbital(i);
-	    orb.setSpin(Orbital::Alpha);
-	    orb.setOccupancy(1);
-	}
-    } else {
-	int nAlpha = (nOrbs - mult + 1)/2;
-        int nBeta = nAlpha + mult - 1;
-	if ((nAlpha + nBeta) != nOrbs) {
-	    MSG_FATAL("Something went wrong in the spin splitting");
-	}
-	molecule.initializeOrbitals(nAlpha, Orbital::Alpha, 1, mo_file, en_file);
-	if (mo_file_b.size() > 0) {
-	    molecule.initializeOrbitals(nBeta, Orbital::Beta, 1, mo_file_b, en_file_b);
-	} else {
-	    molecule.initializeOrbitals(nBeta, Orbital::Beta, 1, mo_file, en_file);
-	}
-    }
 
-    if (orbitalFree) {
-	molecule.initializeOrbitalFree();
-    }
-    molecule.getOrbitals().setDumpToFile(dumpToFile);
-    molecule.getOrbitals().dumpAll(true);
-    println(0, molecule.getOrbitals());
+    int k = 3;
+    int n = -3;
+    int l[3] = {-1,-1,-1};
+    int nb[3] = {2,2,2};
+    double o[3] = {0.0,0.0,0.0};
 
-    if (nucType == "Gauss") {
-        molecule.initializeNuclearPotential(nucParam, Molecule::GaussTypePotential);
-    }
-    if (nucType == "Harrison") {
-        molecule.initializeNuclearPotential(nucParam, Molecule::HarrisonTypePotential);
-    }
+    NodeIndex<3> idx(n, l);
+    BoundingBox<3> world(idx, nb, o);
+    println(0, world);
 
-    Accelerator *accelerator = 0;
-    if (solver == "DIIS") {
-        accelerator = new DIIS(maxHistory, minHistory);
-        accelerator->separateOrbitals(sepOrb);
-        accelerator->includeFockMatrix(inclFock);
-    }
-    if (solver == "KAIN") {
-        accelerator = new KAIN(maxHistory, minHistory);
-        accelerator->separateOrbitals(sepOrb);
-        accelerator->includeFockMatrix(inclFock);
-    }
+    MRGrid<3> grid(k, &world);
+    println(0, grid);
 
-    SCF *scf = 0;
-    XCFun *xcfun = 0;
-    if (method == "HartreeFock") {
-        scf = new HartreeFock;
-    } else if (method == "DFT") {
-        xcfun = new XCFun;
-	xcfun->setFunctional(functional);
-	if (orbitalFree) {
-	    scf = new OrbitalFreeDFT(xcfun);
-	} else {
-            scf = new DFT(xcfun);
-	}
-    } else {
-	MSG_ERROR("Invalid SCF method");
-    }
+    //MolecularGridGenerator generator;
+    //generator.generateGrid(grid, molecule);
 
-    if (localize) {
-	scf->setLocalize(iterPerRotation, clearAccelerator);
-    } else {
-	scf->setDiagonalize(iterPerRotation, clearAccelerator);
-    }
-    scf->setRestricted(restricted);
-    scf->setDumpToFile(dumpToFile);
-    scf->setUseExactLambda(useExactLambda);
-    scf->setMaxIterations(maxIter);
+    //println(0, grid);
 
-    double scfPrec;
-    double treePrec;
-    if (maxIter != 0) {
-	scf->setPrec(convThrs);
-	scf->optimizeOrbitals(molecule, accelerator);
-	scf->calcTotalEnergy(molecule);
-    } else {
-	if (dumpToFile) {
-	    molecule.getNuclearPotential().saveTree("extPot");
-	    molecule.getNuclearPotential().clear();
-	}
-	if (localize) {
-	    molecule.getOrbitals().localize();
-	}
-	scf->calcTotalEnergy(molecule);
-    }
+    //MatrixXd *D = readMatrix("diamond_1.dens");
+    Intgrl intgrl("diamond_1.bas");
+    //DensExp density(intgrl, *densMat);
 
-    molecule.getOrbitals().fetchAll();
 
-    if (defaultCoulomb != 0) delete defaultCoulomb;
-    if (accelerator != 0) delete accelerator;
-    if (xcfun != 0) delete xcfun;
-    if (scf != 0) delete scf;
+    //Projector P;
+    //FunctionTree<3> *densTree = P.project(density, grid);
+
 }
+
