@@ -3,11 +3,9 @@
 
 #include "Intgrl.h"
 #include "Atom.h"
-#include "AOBasis.h"
-#include "GaussExp.h"
 #include "PeriodicTable.h"
-#include "MathUtils.h"
 #include "TelePrompter.h"
+#include "MathUtils.h"
 
 using namespace std;
 
@@ -79,6 +77,7 @@ void Intgrl::readAtomBlock(iostream &ifs) {
 void Intgrl::readAtomData(iostream &ifs, int n_atoms, double z) {
     double coord[3];
     string sym;
+    double origin[3] = {0.0, 0.0, 0.0};
     //const double *origin = BoundingBox<3>::getWorldBox().getOrigin();
     for (int j = 0; j < n_atoms; j++) {
         ifs >> sym;
@@ -87,7 +86,7 @@ void Intgrl::readAtomData(iostream &ifs, int n_atoms, double z) {
         }
         for (int d = 0; d < 3; d++) {
             ifs >> coord[d];
-            //coord[d] -= origin[d];
+            coord[d] -= origin[d];
         }
         PeriodicTable pt;
         const AtomicElement &element = pt.getAtomicElement(sym.c_str());

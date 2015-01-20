@@ -45,8 +45,8 @@ public:
         return this->squareNorm;
     }
     void normalize() {
-        double norm = getSquareNorm();
-        multConstInPlace(norm);
+        double norm = sqrt(getSquareNorm());
+        multConstInPlace(1.0/norm);
     }
     void multPureGauss(const Gaussian<D> &lhs, const Gaussian<D> &rhs);
     void multConstInPlace(double c) {

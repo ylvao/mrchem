@@ -1,5 +1,4 @@
 #include "AOContraction.h"
-#include "GaussExp.h"
 #include "GaussFunc.h"
 #include "MathUtils.h"
 
@@ -39,6 +38,7 @@ struct gtoDef {
     int l;
     int ncomp;
     const int *comp[(MAX_L + 1) * (MAX_L + 2) / 2];
+
 };
 
 static const gtoDef GTOS[MAX_L+1] = {

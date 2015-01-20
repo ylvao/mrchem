@@ -14,8 +14,7 @@ using namespace Eigen;
 using namespace std;
 
 template<int D>
-Gaussian<D>::Gaussian(double a, double c, const double r[D],
-        const int p[D]) {
+Gaussian<D>::Gaussian(double a, double c, const double r[D], const int p[D]) {
     this->alpha = a;
     this->coef = c;
     this->screen = false;
@@ -55,6 +54,10 @@ template<int D>
 void Gaussian<D>::calcScreening(double nStdDev) {
     assert(nStdDev > 0);
     double limit = sqrt(nStdDev/this->alpha);
+    if (not this->isBounded()) {
+        this->A = new double[D];
+        this->B = new double[D];
+    }
     for (int d = 0; d < D; d++) {
         this->A[d] = this->pos[d] - limit;
         this->B[d] = this->pos[d] + limit;

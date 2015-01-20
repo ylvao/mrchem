@@ -1,6 +1,5 @@
 #include "AOBasis.h"
 #include "AOContraction.h"
-#include "GaussExp.h"
 
 AOBasis::AOBasis() {
     this->nPrim = 0;

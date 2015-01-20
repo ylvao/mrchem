@@ -2,12 +2,8 @@
 #define AOBASIS_H
 
 #include <vector>
-#include <iostream>
-
 #include "AOContraction.h"
 
-template<int D> class GaussExp;
-class AOContraction;
 
 class AOBasis {
 public:

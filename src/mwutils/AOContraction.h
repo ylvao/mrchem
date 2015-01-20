@@ -2,13 +2,11 @@
 #define AOCONTRACTION_H
 
 #include <vector>
-#include <iostream>
-
-template<int D> class GaussExp;
+#include "GaussExp.h"
 
 static const int MAX_L = 3; // Max f-functions
 
-/** Contracted atomic orbital.
+/** Contracted atomic orbital. 
  *
  * AOContraction defines a singel, contracted atomic orbital as a GaussExp
  * with coefficients.
@@ -28,11 +26,11 @@ public:
     void setMoment(int l) { this->L = l; }
 
     friend std::ostream& operator<<(std::ostream &o, const AOContraction &c) {
-        o << " " << c.L << " " << c.coefs.size() << std::endl;
-        for (unsigned int i = 0; i < c.expo.size(); i++) {
-            o << "    " << c.expo[i] << "   " << c.coefs[i] << std::endl;
-        }
-        return o;
+	o << " " << c.L << " " << c.coefs.size() << std::endl;
+	for (unsigned int i = 0; i < c.expo.size(); i++) {
+	    o << "    " << c.expo[i] << "   " << c.coefs[i] << std::endl;
+	}
+	return o;
     }
 protected:
     int L;

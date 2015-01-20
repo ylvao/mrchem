@@ -5,6 +5,8 @@ set(mwutils_SOURCES
     AOContraction.h
     DensExp.cpp
     DensExp.h
+    OrbExp.cpp
+    OrbExp.h
     #Density.cpp
     #Density.h
     GaussExp.cpp

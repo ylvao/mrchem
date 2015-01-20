@@ -5,10 +5,9 @@
 
 #include <vector>
 #include <string>
-
-class Atom;
-class AOBasis;
-template<int D> class GaussExp;
+#include <iostream>
+#include "Atom.h"
+#include "AOBasis.h"
 
 class Intgrl {
 public:

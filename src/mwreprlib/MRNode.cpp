@@ -143,7 +143,6 @@ void MRNode<D>::purgeGenerated() {
 
 template<int D>
 void MRNode<D>::getCenter(double *r) const {
-    NOT_IMPLEMENTED_ABORT;
     assert(r != 0);
     double sFac = pow(2.0, -getScale());
     for (int d = 0; d < D; d++) {
