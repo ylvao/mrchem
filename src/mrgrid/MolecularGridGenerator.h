@@ -21,9 +21,9 @@ public:
     MolecularGridGenerator(double wf = 1.0e2, double df = 1.0e1);
     virtual ~MolecularGridGenerator();
 
-    void setAmplitude(int a) { this->amplitude = a; }
-    void setWidth(int w) { this->width = w; }
-    void setNuclearDependence(int n) { this->nucDep = n; }
+    void setAmplitude(int a) { if (a < 0) a = 0; this->amplitude = a; }
+    void setWidth(int w) { if (w < 0) w = 0; this->width = w; }
+    void setNuclearDependence(int n) { if (n < 0) n = 0; this->nucDep = n; }
 
     void generateGrid(MRGrid<3> &grid, Molecule &mol);
     void generateGrid(MRGrid<3> &grid, Atom &atom);

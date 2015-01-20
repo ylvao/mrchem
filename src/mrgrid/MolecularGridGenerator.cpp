@@ -164,7 +164,7 @@ double MolecularGridGenerator::calcCoef(int Z) const {
     if (uniform < rootScale) {
         uniform = rootScale;
     }
-    return nucFac*this->amplitude - uniform;
+    return nucFac*this->amplitude + uniform;
 }
 
 double MolecularGridGenerator::calcExp(int Z) const {
