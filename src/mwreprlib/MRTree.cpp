@@ -1022,6 +1022,7 @@ void MRTree<D>::distributeEndNodes() {
     if (nDist != nNodes) {
         THROW_ERROR("Not all endNodes were distributed");
     }
+    delete[] distNodes;
 }
 
 /** Traverse tree and remove nodes of foreign rank.
