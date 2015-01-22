@@ -52,9 +52,9 @@ private:
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version) {
-	ar & L;
-	ar & N;
-	ar & rankId;
+        ar & L;
+        ar & N;
+        ar & rankId;
     }
 };
 
@@ -75,7 +75,7 @@ NodeIndex<D>::NodeIndex(const NodeIndex<D> &idx) {
 template<int D>
 NodeIndex<D>& NodeIndex<D>::operator=(const NodeIndex<D> &idx) {
     if (&idx == this) {
-	return *this;
+        return *this;
     }
     this->N = idx.N;
     this->rankId = idx.rankId;
@@ -86,23 +86,23 @@ NodeIndex<D>& NodeIndex<D>::operator=(const NodeIndex<D> &idx) {
 template<int D>
 void NodeIndex<D>::setTranslation(const int *l) {
     for (int d = 0; d < D; d++) {
-	if (l == 0) {
-	    this->L[d] = 0;
-	} else {
-	    this->L[d] = l[d];
-	}
+        if (l == 0) {
+            this->L[d] = 0;
+        } else {
+            this->L[d] = l[d];
+        }
     }
 }
 
 template<int D>
 bool NodeIndex<D>::operator==(const NodeIndex<D> &idx) const {
     if (this->N != idx.N) {
-	return false;
+        return false;
     }
     for (int d = 0; d < D; d++) {
-	if (this->L[d] != idx.L[d]) {
-	    return false;
-	}
+        if (this->L[d] != idx.L[d]) {
+            return false;
+        }
     }
     return true;
 }
@@ -110,7 +110,7 @@ bool NodeIndex<D>::operator==(const NodeIndex<D> &idx) const {
 template<int D>
 bool NodeIndex<D>::operator!=(const NodeIndex<D> &idx) const {
     if (*this == idx) {
-	return false;
+        return false;
     }
     return true;
 }
@@ -119,7 +119,7 @@ template<int D>
 std::ostream& operator<<(std::ostream &o, const NodeIndex<D> &idx) {
     o << "[ " << idx.N << " | ";
     for (int d = 0; d < D - 1; d++) {
-	o << idx.L[d] << ", ";
+        o << idx.L[d] << ", ";
     }
     o << idx.L[D - 1] << "] @" << idx.rankId;
     return o;
@@ -130,43 +130,43 @@ template<int D>
 class NodeIndexComp {
 public:
     bool operator()(const NodeIndex<D> &a, const NodeIndex<D> &b) const {
-	if (a.N < b.N) {
-	    return true;
-	}
-	if (a.N > b.N) {
-	    return false;
-	}
-	for (int d = 0; d < D; d++) {
-	    if (a.L[d] == b.L[d]) {
-	        continue;
-	    }
-	    if (a.L[d] < b.L[d]) {
-	        return true;
-	    }
-	    return false;
-	}
-	assert(a.rankId == b.rankId);
-	return false;
+        if (a.N < b.N) {
+            return true;
+        }
+        if (a.N > b.N) {
+            return false;
+        }
+        for (int d = 0; d < D; d++) {
+            if (a.L[d] == b.L[d]) {
+                continue;
+            }
+            if (a.L[d] < b.L[d]) {
+                return true;
+            }
+            return false;
+        }
+        assert(a.rankId == b.rankId);
+        return false;
     }
 
     bool operator()(const NodeIndex<D> *a, const NodeIndex<D> *b) const {
-	if (a->N < b->N) {
-	    return true;
-	}
-	if (a->N > b->N) {
-	    return false;
-	}
-	for (int d = 0; d < D; d++) {
-	    if (a->L[d] == b->L[d]) {
-		continue;
-	    }
-	    if (a->L[d] < b->L[d]) {
-		return true;
-	    }
-	    return false;
-	}
-	assert(a->rankId == b->rankId);
-	return false;
+        if (a->N < b->N) {
+            return true;
+        }
+        if (a->N > b->N) {
+            return false;
+        }
+        for (int d = 0; d < D; d++) {
+            if (a->L[d] == b->L[d]) {
+                continue;
+            }
+            if (a->L[d] < b->L[d]) {
+                return true;
+            }
+            return false;
+        }
+        assert(a->rankId == b->rankId);
+        return false;
     }
 };
 

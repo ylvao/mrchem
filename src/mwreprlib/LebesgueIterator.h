@@ -8,16 +8,18 @@
 template<int D>
 class LebesgueIterator: public TreeIterator<D> {
 public:
-    LebesgueIterator(MRTree<D> *tree, int dir = TreeIterator<D>::TopDown):
+    LebesgueIterator(MRTree<D> *tree, int dir = TopDown):
         TreeIterator<D>(tree, dir) {
         this->init(tree);
     }
-    virtual ~LebesgueIterator() {}
+
+    virtual ~LebesgueIterator() { }
+
     inline bool next() {
         if (not this->state) {
             return false;
         }
-        if (this->mode == TreeIterator<D>::TopDown) {
+        if (this->mode == TopDown) {
             if (this->tryNode()) {
                 return true;
             }
@@ -35,7 +37,7 @@ public:
         if (this->tryNextRoot()) {
             return true;
         }
-        if (this->mode == TreeIterator<D>::BottomUp) {
+        if (this->mode == BottomUp) {
             if (this->tryNode()) {
                 return true;
             }

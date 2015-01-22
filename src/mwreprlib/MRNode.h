@@ -31,10 +31,10 @@ template<int D>
 class MRNode {
 public:
     MRNode();
-    MRNode(MRTree<D> *t, const NodeIndex<D> &idx);
-    MRNode(MRNode<D> *p, const int *l = 0);
-    MRNode(const MRNode<D> &nd, MRNode<D> *p, bool copyCoefs = true);
-    MRNode(const MRNode<D> &nd, MRTree<D> *t, bool copyCoefs = true);
+    MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
+    MRNode(MRNode<D> *p, int cIdx);
+    MRNode(const MRNode<D> &nd, MRNode<D> *p);
+    MRNode(const MRNode<D> &nd, MRTree<D> *t);
     MRNode<D> &operator=(const MRNode<D> &nd);
     virtual ~MRNode();
 
@@ -50,15 +50,15 @@ public:
     int getRankId() const { return this->nodeIndex.getRankId(); }
     int getNChildren() const { if (isBranchNode()) return getTDim(); return 0; }
 
-    const MRTree<D> &getTree() const {return *tree; }
-    const MRNode<D> &getParent() const { return *parent; }
+    const MRTree<D> &getTree() const {return *this->tree; }
+    const MRNode<D> &getParent() const { return *this->parent; }
     const MRNode<D> &getChild(int i) const {
         assert(this->children != 0);
         return *this->children[i];
     }
 
-    MRTree<D> &getTree() { return *tree; }
-    MRNode<D> &getParent() { return *parent; }
+    MRTree<D> &getTree() { return *this->tree; }
+    MRNode<D> &getParent() { return *this->parent; }
     MRNode<D> &getChild(int i) {
         assert(this->children != 0);
         return *this->children[i];
@@ -103,6 +103,7 @@ public:
     bool isDecendant(const NodeIndex<D> &idx) const;
 
     void calcChildTranslation(int cIdx, int *transl) const;
+    void calcChildIndex(int cIdx, NodeIndex<D> &nIdx) const;
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     int getChildIndex(const double *r) const;
 
@@ -125,6 +126,7 @@ public:
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
 
 protected:
+    //unsigned char hilbertPath;
     NodeIndex<D> nodeIndex;
 
     MRTree<D> *tree;
@@ -144,6 +146,9 @@ protected:
     const MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx) const;
     MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
     MRNode<D> *retrieveNodeOrEndNode(const double *r, int depth);
+
+//    char getHilbertPath() const { return hilbertPath; }
+//    void setHilbertPath(char hilbertIdx) { hilbertPath = hilbertIdx; }
 
     void allocKindergarten();
     virtual void deleteChildren();

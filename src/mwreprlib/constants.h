@@ -1,6 +1,6 @@
 
 /*
- * 
+ *
  *
  *  \date Jul 8, 2009
  *  \author Jonas Juselius <jonas.juselius@uit.no> \n
@@ -28,8 +28,10 @@ const int Z = 2;
 
 enum FuncType {	Legendre, Interpol };
 enum SplitType { ExactSplit, NormalSplit, FastSplit };
-enum TreeState { UnSeeded, Seeding, Seeded, Projected, Reversed	};
-enum Transform { Forward, Backward };
+enum CV_Transform { Forward, Backward };
+enum MW_Transform { Compression, Reconstruction };
+
+enum Traverse { TopDown, BottomUp };
 
 //Math constants
 const double pi = 3.1415926535897932384626433832795;

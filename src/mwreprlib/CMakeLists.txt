@@ -17,10 +17,27 @@ set(mwrepr_SOURCES
 	GridGenerator.h
 	MRGrid.cpp
 	MRGrid.h
+	FunctionTree.cpp
+	FunctionTree.h
 	MRTree.cpp
 	MRTree.h
+	MWTree.cpp
+	MWTree.h
 	MRNode.cpp
 	MRNode.h
+	MWNode.cpp
+	MWNode.h
+	#MWFilter.cpp
+	#MWFilter.h
+	#Filter.h
+	#FilterCache.cpp
+	#FilterCache.h
+	FunctionNode.cpp
+	FunctionNode.h
+	ProjectedNode.cpp
+	ProjectedNode.h
+	GenNode.cpp
+	GenNode.h
 	MultiException.cpp
 	MultiException.h
 	NodeIndex.h
@@ -41,6 +58,12 @@ set(mwrepr_SOURCES
 	LegendrePoly.h
 	Polynomial.cpp
 	Polynomial.h
+        #ScalingCache.h
+        #ScalingBasis.h
+        #LegendreBasis.cpp
+        #LegendreBasis.h
+        #InterpolatingBasis.cpp
+        #InterpolatingBasis.h
 	)
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

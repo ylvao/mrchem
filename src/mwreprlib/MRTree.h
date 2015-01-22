@@ -27,7 +27,7 @@
 template<int D>
 class MRTree {
 public:
-    MRTree(int k = -1, const BoundingBox<D> *box = 0);
+    MRTree(int k, const BoundingBox<D> *box);
     MRTree(const MRTree<D> &tree);
     virtual ~MRTree();
 
@@ -59,27 +59,28 @@ public:
     const double *getUpperBounds() const { return this->rootBox->getUpperBounds(); }
 
     const MRNode<D> *findNode(const double *r, int depth = -1) const;
-    const MRNode<D> *findNode(const NodeIndex<D> &idx) const;
-    MRNode<D> *findNode(const NodeIndex<D> &idx);
+    const MRNode<D> *findNode(const NodeIndex<D> &nIdx) const;
+    MRNode<D> *findNode(const NodeIndex<D> &nIdx);
     MRNode<D> *findNode(const double *r, int depth = -1);
-    MRNode<D> &getNode(const NodeIndex<D> &idx);
+    MRNode<D> &getNode(const NodeIndex<D> &nIdx);
     MRNode<D> &getNode(const double *r, int depth = -1);
-    MRNode<D> &getNodeNoGen(const NodeIndex<D> &idx);
+    MRNode<D> &getNodeNoGen(const NodeIndex<D> &nIdx);
 
     const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
     const MRNode<D> &getRootNode(int i = 0) const { return this->rootBox->getNode(i); }
     const MRNode<D> &getRootNode(const double *r) const { return this->rootBox->getNode(r); }
-    const MRNode<D> &getRootNode(const NodeIndex<D> &idx) const { return this->rootBox->getNode(idx); }
+    const MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) const { return this->rootBox->getNode(nIdx); }
 
     MRNode<D> &getEndNode(int i) { return *this->endNodeTable[i]; }
     MRNode<D> &getRootNode(int i = 0) { return this->rootBox->getNode(i); }
     MRNode<D> &getRootNode(const double *r) { return this->rootBox->getNode(r); }
-    MRNode<D> &getRootNode(const NodeIndex<D> &idx) { return this->rootBox->getNode(idx); }
+    MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox->getNode(nIdx); }
 
     void purgeGenerated();
 
     void broadcastTree();
     void distributeEndNodes();
+    void purgeForeignNodes(bool keepEndNodes = false);
 
     void lockTree() { SET_TREE_LOCK(); }
     void unlockTree() { UNSET_TREE_LOCK(); }
@@ -100,6 +101,9 @@ public:
     int countAllocNodes(int depth = -1);
     int countMyNodes(int depth = -1);
     void printNodeRankCount();
+
+    void checkGridOverlap(MRTree<D> &tree);
+    void checkRankOverlap(MRTree<D> &tree);
 
     static void setDefaultOrder(int _order);
     static void setDefaultMaxDepth(int max_depth);
@@ -133,14 +137,11 @@ protected:
 
     // Static default parameters
     const static int tDim = (1 << D);
-    static int defaultSplitType;
-    static int defaultScalingType;
-    static int defaultUniformDepth;
-    static int defaultMaxDepth;
     static int defaultOrder;
+    static int defaultMaxDepth;
 
     int getRootIndex(const double *r) const { return this->rootBox->getBoxIndex(r); }
-    int getRootIndex(const NodeIndex<D> &idx) { return this->rootBox->getBoxIndex(idx); }
+    int getRootIndex(const NodeIndex<D> &nIdx) { return this->rootBox->getBoxIndex(nIdx); }
 
     void allocNodeCounters();
     void deleteNodeCounters();
@@ -171,6 +172,16 @@ protected:
     void findMissingChildren(MRNodeVector &nodeTable, std::set<MRNode<D> *> &missing);
 
     void tagNodes(MRNodeVector &nodeList, int _rank);
+
+//    void sendTree(int dest);
+//    void collectNodes(int dest, const MWNodeVector &nodeList);
+//    void sendNodes(int dest, const MWNodeVector &nodeList);
+//    void recvNodes(int src, MWNodeVector *nodeList = 0);
+//    void broadcastNodes(const MWNodeVector &nodeList);
+//    void broadcastIndexList(std::set<const NodeIndex<D> *, NodeIndexComp<D> > &idx);
+//    int buildRequestLists(const std::set<MWNode<D> *> &list,
+//                          std::vector<NodeIndex<D> > *myReqs,
+//                          std::vector<NodeIndex<D> > *sReqs);
 
 #ifdef OPENMP
     omp_lock_t tree_lock;

@@ -11,13 +11,14 @@
 #define GRIDNODE_H_
 
 #include <Eigen/Core>
+
 #include "MRNode.h"
 
 template<int D>
 class GridNode : public MRNode<D> {
 public:
-    GridNode(MRTree<D> *t, const NodeIndex<D> &idx);
-    GridNode(GridNode<D> *p, const int *l);
+    GridNode(MRTree<D> &t, const NodeIndex<D> &idx);
+    GridNode(GridNode<D> *p, int cIdx);
     virtual ~GridNode();
 
     const Eigen::MatrixXd &getQuadPoints() const { return this->roots; }
@@ -33,8 +34,8 @@ protected:
     MRNode<D> *retrieveNode(int n, const double *r);
     MRNode<D> *retrieveNode(const NodeIndex<D> &idx);
 
-    void createChild(int i);
-    void genChild(int i);
+    void createChild(int cIdx);
+    void genChild(int cIdx);
 
     void calcQuadPoints();
     void calcQuadWeights();

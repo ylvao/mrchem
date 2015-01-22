@@ -16,14 +16,14 @@ using namespace Eigen;
 using namespace std;
 
 template<int D>
-GridNode<D>::GridNode(MRTree<D> *t, const NodeIndex<D> &idx)
-    : MRNode<D>(t, idx) {
+GridNode<D>::GridNode(MRTree<D> &t, const NodeIndex<D> &nIdx)
+        : MRNode<D>(t, nIdx) {
     calcQuadPoints();
     calcQuadWeights();
 }
 
 template<int D>
-GridNode<D>::GridNode(GridNode<D> *p, const int *l) : MRNode<D>(p, l) {
+GridNode<D>::GridNode(GridNode<D> *p, int cIdx) : MRNode<D>(p, cIdx) {
     calcQuadPoints();
     calcQuadWeights();
 }
@@ -37,22 +37,18 @@ GridNode<D>::~GridNode() {
 }
 
 template<int D>
-void GridNode<D>::createChild(int i) {
-    assert(this->children[i] == 0);
-    int l[3];
-    this->calcChildTranslation(i, l);
-    GridNode<D> *child = new GridNode<D> (this, l);
-    this->children[i] = child;
+void GridNode<D>::createChild(int cIdx) {
+    assert(this->children[cIdx] == 0);
+    GridNode<D> *child = new GridNode<D> (this, cIdx);
+    this->children[cIdx] = child;
     child->setIsEndNode();
 }
 
 template<int D>
-void GridNode<D>::genChild(int i) {
-    assert(this->children[i] == 0);
-    int l[3];
-    this->calcChildTranslation(i, l);
-    GridNode<D> *child = new GridNode<D> (this, l);
-    this->children[i] = child;
+void GridNode<D>::genChild(int cIdx) {
+    assert(this->children[cIdx] == 0);
+    GridNode<D> *child = new GridNode<D> (this, cIdx);
+    this->children[cIdx] = child;
     child->setIsGenNode();
     this->tree->incrementGenNodeCount();
     this->tree->incrementAllocGenNodeCount();
