@@ -367,33 +367,33 @@ void MWNode<D>::cvTransform(int operation) {
 template<int D>
 void MWNode<D>::mwTransform(int operation) {
     NOT_IMPLEMENTED_ABORT;
-    int kp1 = this->getKp1();
-    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
-    int kp1_d = this->getKp1_d();
-    const Filter &filter = getMWTree().getFilter();
-    VectorXd &result = getMWTree().getTmpMWCoefs();
-    bool overwrite = true;
+//    int kp1 = this->getKp1();
+//    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
+//    int kp1_d = this->getKp1_d();
+//    const Filter &filter = getMWTree().getFilter();
+//    VectorXd &result = getMWTree().getTmpMWCoefs();
+//    bool overwrite = true;
 
-    for (int i = 0; i < D; i++) {
-        int mask = 1 << i;
-        for (int gt = 0; gt < this->getTDim(); gt++) {
-            double *out = result.data() + gt * kp1_d;
-            for (int ft = 0; ft < this->getTDim(); ft++) {
-                /* Operate in direction i only if the bits along other
-                 * directions are identical. The bit of the direction we
-                 * operate on determines the appropriate filter/operator */
-                if ((gt | mask) == (ft | mask)) {
-                    double *in = this->coefs->data() + ft * kp1_d;
-                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
-                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
-                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
-                    overwrite = false;
-                }
-            }
-            overwrite = true;
-        }
-        this->coefs->swap(result);
-    }
+//    for (int i = 0; i < D; i++) {
+//        int mask = 1 << i;
+//        for (int gt = 0; gt < this->getTDim(); gt++) {
+//            double *out = result.data() + gt * kp1_d;
+//            for (int ft = 0; ft < this->getTDim(); ft++) {
+//                /* Operate in direction i only if the bits along other
+//                 * directions are identical. The bit of the direction we
+//                 * operate on determines the appropriate filter/operator */
+//                if ((gt | mask) == (ft | mask)) {
+//                    double *in = this->coefs->data() + ft * kp1_d;
+//                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
+//                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
+//                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
+//                    overwrite = false;
+//                }
+//            }
+//            overwrite = true;
+//        }
+//        this->coefs->swap(result);
+//    }
 }
 
 /** Set all norms to Undefined. */
