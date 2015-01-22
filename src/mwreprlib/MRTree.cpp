@@ -74,6 +74,7 @@ MRTree<D>::~MRTree() {
         THROW_ERROR("Nodes at depth != 0 -> " << this->nodesAtDepth.size());
     }
     deleteNodeCounters();
+
 #ifdef OPENMP
     omp_destroy_lock(&tree_lock);
 #endif

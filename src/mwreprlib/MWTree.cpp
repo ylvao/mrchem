@@ -64,14 +64,10 @@ void MWTree<D>::allocWorkMemory() {
     this->tmpCoefs = new Eigen::MatrixXd *[this->nThreads];
     this->tmpVector = new Eigen::VectorXd *[this->nThreads];
     this->tmpMWCoefs = new Eigen::VectorXd *[this->nThreads];
-    this->nGenNodes = new int[this->nThreads];
-    this->nAllocGenNodes = new int[this->nThreads];
     for (int i = 0; i < this->nThreads; i++) {
         this->tmpCoefs[i] = new Eigen::MatrixXd(this->order + 1, D);
         this->tmpVector[i] = new Eigen::VectorXd(this->kp1_d);
         this->tmpMWCoefs[i] = new Eigen::VectorXd(this->kp1_d * (1 << D));
-        this->nGenNodes[i] = 0;
-        this->nAllocGenNodes[i] = 0;
     }
 }
 
