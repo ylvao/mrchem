@@ -13,6 +13,7 @@
 #include <Eigen/Core>
 
 #include "parallel.h"
+#include "constants.h"
 #include "MREnv.h"
 #include "TelePrompter.h"
 
@@ -24,10 +25,12 @@
 #include "BoundingBox.h"
 #include "NodeIndex.h"
 #include "MRGrid.h"
+#include "FunctionTree.h"
 #include "MathUtils.h"
 
 #include "Intgrl.h"
 #include "DensExp.h"
+#include "OrbExp.h"
 #include "GaussExp.h"
 #include "GaussFunc.h"
 
@@ -36,6 +39,7 @@ using namespace std;
 using namespace Eigen;
 
 void testGrid();
+void testTrees();
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
@@ -54,16 +58,50 @@ int main(int argc, char **argv) {
 
     MREnv::initializeMRCPP(k, prec);
 
-    testGrid();
+//    testGrid();
+    testTrees();
 
     MREnv::finalizeMRCPP(rolex.elapsed());
 
     return 0;
 }
 
+void testTrees() {
+    //Setting up world parameters
+    int k = 5;
+    int type = Interpol;
+
+    int n = -1;
+    int l[3] = {0,-1,-2};
+    int nb[3] = {1,2,4};
+    double o[3] = {0.0,0.0,0.0};
+
+    //Constructing world box
+    NodeIndex<1> idx_1D(n, l);
+    BoundingBox<1> world_1D(idx_1D, nb, o);
+
+    //Constructing world box
+    NodeIndex<2> idx_2D(n, l);
+    BoundingBox<2> world_2D(idx_2D, nb, o);
+
+    //Constructing world box
+    NodeIndex<3> idx_3D(n, l);
+    BoundingBox<3> world_3D(idx_3D, nb, o);
+    println(0, world_3D);
+
+    FunctionTree<1> *tree_1D = new FunctionTree<1>(type, k, &world_1D);
+    delete tree_1D;
+
+    FunctionTree<2> *tree_2D = new FunctionTree<2>(type, k, &world_2D);
+    delete tree_2D;
+
+    FunctionTree<3> *tree_3D = new FunctionTree<3>(type, k, &world_3D);
+    delete tree_3D;
+}
+
 void testGrid() {
     //Setting up world parameters
-    int n = -1;
+    int n = -3;
     int l[3] = {-1,-1,-1};
     int nb[3] = {2,2,2};
     double o[3] = {0.0,0.0,0.0};
@@ -74,71 +112,57 @@ void testGrid() {
     println(0, world);
 
     //Constructing initial grid
-    int k = 3;
+    int k = 5;
     MRGrid<3> grid(k, &world);
     println(0, grid);
 
-    //Setting up toy molecule
-    PeriodicTable pt;
-    const AtomicElement &H = pt.getAtomicElement("H");
-    double pos[3] = {0.0, 0.0, 0.0};
-    Atom h_1(H, pos);
-    Molecule molecule;
-    molecule.addAtom(h_1);
-    println(0, h_1);
+    // Setting up molecular density
+    Molecule molecule("diamond_1.xyz");
+    molecule.print();
+
+    Intgrl intgrl("diamond_1.bas");
+    MatrixXd D = MathUtils::readMatrixFile("diamond_1.dens");
+    DensExp densExp(intgrl, D);
 
     //Adapting grid to molecular geometry
     MolecularGridGenerator generator;
-    generator.setUniformScale(0);
-    generator.setAmplitude(0);
-    generator.setWidth(0);
+    generator.setUniformScale(-1);
+    generator.setAmplitude(5);
+    generator.setWidth(5);
     generator.setNuclearDependence(0);
 
     generator.generateGrid(grid, molecule);
     println(0, grid);
 
+//    MWProjector P(grid);
+//    P.setAbsPrec(1.0e-3);
+//    P.setRelPrec(1.0e-6);
+//    P.setUniformDepth(0);
+//    P.setMaxRefinement(0);
+
     //setting up quadrature data
-    MatrixXd QP;
-    VectorXd QW;
-    grid.getQuadPoints(QP);
-    grid.getQuadWeights(QW);
+    MatrixXd points;
+    VectorXd weights;
+    grid.getQuadPoints(points);
+    grid.getQuadWeights(weights);
 
-    int nPoints = QW.size();
-    VectorXd QV = VectorXd::Zero(QW.size());
+    int nPoints = weights.size();
+    VectorXd values = VectorXd::Zero(weights.size());
 
-    double alpha = 10.0;
-    double coef = pow(alpha/pi, 3.0/2.0);
-    GaussFunc<3> gFunc(alpha, coef);
-
-    for (int i = 0; i < nPoints; i++) {
-        double r[3];
-        for (int d = 0; d < 3; d++) {
-            r[d] = QP(i,d);
-        }
-        QV(i) = gFunc.evalf(r);
+    GaussExp<3> density = densExp.getAODensExpansion();
+    density.calcScreening(25);
+    density.setScreen(true);
+    for (int n = 0; n < nPoints; n++) {
+        double r[3] = { points(n,0), points(n,1), points(n,2) };
+        values(n) = density.evalf(r);
     }
 
-    double integral = QW.dot(QV);
+    double integral = weights.dot(values);
 
-    println(0, "Quadrature points  " << QP.rows() << " x " << QP.cols());
-    println(0, "Quadrature weights " << QW.size());
-    println(0, "Quadrature values  " << QV.size() << endl);
+    println(0, "Quadrature points  " << points.rows() << " x " << points.cols());
+    println(0, "Quadrature weights " << weights.size());
+    println(0, "Quadrature values  " << values.size() << endl);
     println(0, "Integrated charge  " << integral << endl);
-
-    //Molecule molecule("alkane_1.xyz");
-    //molecule.print();
-
-    //MatrixXd D = MathUtils::readMatrixFile("alkane_1.dens");
-    //Intgrl intgrl("alkane_1.bas");
-
-    //DensExp densExp(intgrl, D);
-    //GaussExp<3> dens = densExp.getAODensExpansion();
-    //for (int i = 0; i < QP.rows(); i++) {
-    //    QV(i) = dens.evalf(QP.row(i).data());
-    //}
-
-    //Projector P;
-    //FunctionTree<3> *densTree = P.project(density, grid);
 
 }
 
