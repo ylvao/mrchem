@@ -7,7 +7,6 @@
 
 #include "MWNode.h"
 #include "MWTree.h"
-#include "Filter.h"
 #include "QuadratureCache.h"
 #include "NodeIndex.h"
 #include "MathUtils.h"

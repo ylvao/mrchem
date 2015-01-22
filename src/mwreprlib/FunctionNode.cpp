@@ -5,7 +5,6 @@
 #include "FunctionNode.h"
 #include "FunctionTree.h"
 #include "QuadratureCache.h"
-#include "Filter.h"
 #include "MathUtils.h"
 #include "config.h"
 #include "eigen_disable_warnings.h"
