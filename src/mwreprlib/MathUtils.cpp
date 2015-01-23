@@ -139,7 +139,7 @@ double MathUtils::binomialCoeff(int n, int j) {
     int k = 0;
 
     if (n < 0 || j < 0 || j > n) {
-        THROW_ERROR("Negative argument or j > n is not defined.");
+        MSG_ERROR("Negative argument or j > n is not defined.");
     } else {
         k = 0;
         while (k < j) {
@@ -430,7 +430,7 @@ MatrixXd MathUtils::readMatrixFile(const string &file) {
     fstream ifs;
     ifs.open(file.c_str());
     if (not ifs) {
-        THROW_ERROR("Failed to open file: " << file);
+        MSG_ERROR("Failed to open file: " << file);
     }
     string line;
     getline(ifs, line);

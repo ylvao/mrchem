@@ -24,7 +24,7 @@ GridGenerator<D>::GridGenerator(int uScale) : uniformScale(uScale){
 template<int D>
 GridGenerator<D>::~GridGenerator() {
     if (this->grid != 0) {
-        THROW_ERROR("Grid pointer not released");
+        MSG_ERROR("Grid pointer not released");
     }
 }
 

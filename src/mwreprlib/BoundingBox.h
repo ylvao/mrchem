@@ -78,7 +78,8 @@ int BoundingBox<D>::getNBoxes(int d) const {
     } else if (d < D) {
         return this->nBoxes[d];
     } else {
-        THROW_ERROR("Invalid dimension argument");
+        MSG_ERROR("Invalid dimension argument");
+        return -1;
     }
 }
 

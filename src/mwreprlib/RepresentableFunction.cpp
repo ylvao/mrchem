@@ -32,7 +32,7 @@ RepresentableFunction<D>::RepresentableFunction(const double *a,
         this->B = new double[D];
         for (int d = 0; d < D; d++) {
             if (a[d] > b[d]) {
-                THROW_ERROR("Lower bound > Upper bound.");
+                MSG_ERROR("Lower bound > Upper bound.");
             }
             A[d] = a[d];
             B[d] = b[d];
@@ -80,7 +80,7 @@ RepresentableFunction<D>::~RepresentableFunction() {
 template<int D>
 void RepresentableFunction<D>::setBounds(const double *a, const double *b) {
     if (a == 0 or b == 0) {
-        THROW_ERROR("Invalid arguments");
+        MSG_ERROR("Invalid arguments");
     }
     if (not isBounded()) {
         this->bounded = true;
@@ -89,7 +89,7 @@ void RepresentableFunction<D>::setBounds(const double *a, const double *b) {
     }
     for (int d = 0; d < D; d++) {
         if (a[d] > b[d]) {
-            THROW_ERROR("Lower bound > Upper bound.");
+            MSG_ERROR("Lower bound > Upper bound.");
         }
         A[d] = a[d];
         B[d] = b[d];

@@ -19,11 +19,10 @@ using namespace Eigen;
 
 string MWFilter::default_filter_lib = MW_FILTER_DIR;
 
-MWFilter::MWFilter(int k, int type, const string &lib) :
-    Filter(k, type) {
-    if (k > MaxOrder) {
-        string err = "Invalid filter order, %d", k;
-        throw MultiException(err);
+MWFilter::MWFilter(int k, int t, const string &lib) :
+    Filter(k, t) {
+    if (this->order > MaxOrder) {
+        MSG_FATAL("Invalid filter order " << this->order);
     }
     char *ep = getenv("MRCPP_FILTER_DIR");
     if (ep != 0) {
@@ -39,11 +38,10 @@ MWFilter::MWFilter(int k, int type, const string &lib) :
     fillFilterBlocks();
 }
 
-MWFilter::MWFilter(int type, const MatrixXd &data) :
-    Filter(data.cols() / 2 - 1, type) {
+MWFilter::MWFilter(int t, const MatrixXd &data) :
+    Filter(data.cols() / 2 - 1, t) {
     if (this->order > MaxOrder) {
-        string err = "Invalid filter order, %d", order;
-        throw MultiException(err);
+        MSG_FATAL("Invalid filter order " << this->order);
     }
 
     this->filter = data;
@@ -101,7 +99,7 @@ void MWFilter::setFilterPaths(const string &lib) {
     } else {
         flib = lib;
     }
-    switch (type) {
+    switch (this->type) {
     case (Interpol):
         this->H_path = flib + "/I_H0_" + ordr;
         this->G_path = flib + "/I_G0_" + ordr;
@@ -111,8 +109,7 @@ void MWFilter::setFilterPaths(const string &lib) {
         this->G_path = flib + "/L_G0_" + ordr;
         break;
     default:
-        string err = "Invalid filter type, %d", type;
-        throw MultiException(err);
+        MSG_FATAL("Invalid filter type " << this->type);
     }
 }
 
@@ -145,7 +142,7 @@ void MWFilter::readFilterBin() {
     }
 
     /* fill H1 and G1 according to symmetry */
-    switch (type) {
+    switch (this->type) {
     case Interpol:
         for (i = 0; i < K; i++) {
             for (j = 0; j < K; j++) {

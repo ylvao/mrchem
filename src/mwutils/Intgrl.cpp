@@ -10,13 +10,13 @@
 using namespace std;
 
 #define GETLINE(X,S)  if (not getline(X,S)) \
-    THROW_ERROR("Unexpected end of file while reading basis sets!");
+    MSG_ERROR("Unexpected end of file while reading basis sets!");
 
 Intgrl::Intgrl(const string &file) {
     fstream ifs;
     ifs.open(file.c_str());
     if (not ifs) {
-        THROW_ERROR("Failed to open basis set file: " << file);
+        MSG_ERROR("Failed to open basis set file: " << file);
     }
     readIntgrlFile(ifs);
     ifs.close();

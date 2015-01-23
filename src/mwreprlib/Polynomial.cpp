@@ -79,7 +79,7 @@ double Polynomial::evalf(const double *r) const {
 /** This returns the actual scaled lower bound */
 double Polynomial::getLowerBound(int i) const {
     if (not isBounded()) {
-        THROW_ERROR("Unbounded polynomial");
+        MSG_ERROR("Unbounded polynomial");
     }
     return (1.0/this->N * (this->A[0] + (double) this->L));
 }
@@ -87,7 +87,7 @@ double Polynomial::getLowerBound(int i) const {
 /** This returns the actual scaled upper bound */
 double Polynomial::getUpperBound(int i) const {
     if (not isBounded()) {
-        THROW_ERROR("Unbounded polynomial");
+        MSG_ERROR("Unbounded polynomial");
     }
     return (1.0/this->N * (this->B[0] + (double) this->L));
 }
@@ -125,7 +125,7 @@ void Polynomial::calcSquareNorm() {
     }
     double norm = this->innerProduct(*this);
     if (norm < 0.0) {
-        THROW_ERROR("Undefined, L2-norm < 0.0: " << squareNorm);
+        MSG_ERROR("Undefined, L2-norm < 0.0: " << squareNorm);
     }
     if (norm < MachineZero) {
         norm = 0.0;
@@ -136,7 +136,7 @@ void Polynomial::calcSquareNorm() {
 /** Dilates the polynomial, keeps the domain [A,B] */
 void Polynomial::setDilation(double n) {
     if (n <= 0.0) {
-        THROW_ERROR("Scaling factor must be positive");
+        MSG_ERROR("Scaling factor must be positive");
     }
     this->N = n;
     this->squareNorm = -1.0;
@@ -186,10 +186,10 @@ void Polynomial::multInPlace(double c) {
 void Polynomial::multInPlace(const Polynomial &Q) {
     Polynomial &P = *this;
     if (fabs(P.getDilation() - Q.getDilation()) > MachineZero) {
-        THROW_ERROR("Polynomials not defined on same scale.");
+        MSG_ERROR("Polynomials not defined on same scale.");
     }
     if (fabs(P.getTranslation() - Q.getTranslation()) > MachineZero) {
-        THROW_ERROR("Polynomials not defined on same translation.");
+        MSG_ERROR("Polynomials not defined on same translation.");
     }
 
     int P_order = P.getOrder();
@@ -225,10 +225,10 @@ Polynomial Polynomial::mult(const Polynomial &Q) const {
 void Polynomial::addInPlace(const Polynomial &Q, double c) {
     Polynomial &P = *this;
     if (fabs(P.getDilation() - Q.getDilation()) > MachineZero) {
-        THROW_ERROR("Polynomials not defined on same scale.");
+        MSG_ERROR("Polynomials not defined on same scale.");
     }
     if (fabs(P.getTranslation() - Q.getTranslation()) > MachineZero) {
-        THROW_ERROR("Polynomials not defined on same translation.");
+        MSG_ERROR("Polynomials not defined on same translation.");
     }
 
     int P_order = P.getOrder();
@@ -303,23 +303,23 @@ double Polynomial::integrate(const double *a, const double *b) const {
     double lb, ub;
     if (a == 0) {
         if (not this->isBounded()) {
-            THROW_ERROR("Cannot integrate polynomial without bounds");
+            MSG_ERROR("Cannot integrate polynomial without bounds");
         }
         lb = getLowerBound();
     } else {
         if (this->outOfBounds(a)) {
-            THROW_ERROR("Integration out of bounds");
+            MSG_ERROR("Integration out of bounds");
         }
         lb = a[0];
     }
     if (b == 0) {
         if (not this->isBounded()) {
-            THROW_ERROR("Cannot integrate polynomial without bounds");
+            MSG_ERROR("Cannot integrate polynomial without bounds");
         }
         ub = getUpperBound();
     } else {
         if (this->outOfBounds(b)) {
-            THROW_ERROR("Integration out of bounds");
+            MSG_ERROR("Integration out of bounds");
         }
         ub = b[0];
     }
@@ -332,7 +332,7 @@ double Polynomial::integrate(const double *a, const double *b) const {
 double Polynomial::innerProduct(const Polynomial &Q) const {
     const Polynomial &P = *this;
     if (not P.isBounded()) {
-        THROW_ERROR("Unbounded polynomial");
+        MSG_ERROR("Unbounded polynomial");
     }
     Polynomial pq = P.mult(Q);
     pq.setBounds(P.getLowerBounds(), P.getUpperBounds());
@@ -372,7 +372,7 @@ double Polynomial::calcPolynomialProjection(Polynomial &q) {
     }
     double dot_p = polynomialInnerproduct(q);
     if (norm_p < SQUARE(dot_p) / norm_q) {
-        THROW_ERROR("Projection violates the Schwartz inequality; Result is undefined.");
+        MSG_ERROR("Projection violates the Schwartz inequality; Result is undefined.");
     }
     return dot_p/norm_p;
 }

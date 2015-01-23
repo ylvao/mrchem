@@ -9,7 +9,6 @@
  */
 
 #include "FilterCache.h"
-#include "MultiException.h"
 
 using namespace std;
 using namespace Eigen;
@@ -24,7 +23,7 @@ FilterCache<T>::FilterCache() {
         type = Legendre;
         break;
     default:
-        THROW_ERROR("Invalid filter type: " << T);
+        MSG_ERROR("Invalid filter type: " << T);
     }
     this->libPath = MWFilter::getDefaultLibrary();
 }

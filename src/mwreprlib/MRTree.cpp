@@ -68,10 +68,10 @@ MRTree<D>::~MRTree() {
     this->endNodeTable.clear();
     delete this->rootBox;
     if (this->nNodes != 0) {
-        THROW_ERROR("Node count != 0 -> " << this->nNodes);
+        MSG_ERROR("Node count != 0 -> " << this->nNodes);
     }
     if (this->nodesAtDepth.size() != 0) {
-        THROW_ERROR("Nodes at depth != 0 -> " << this->nodesAtDepth.size());
+        MSG_ERROR("Nodes at depth != 0 -> " << this->nodesAtDepth.size());
     }
     deleteNodeCounters();
 
@@ -1020,7 +1020,7 @@ void MRTree<D>::distributeEndNodes() {
         nDist += distNodes[i];
     }
     if (nDist != nNodes) {
-        THROW_ERROR("Not all endNodes were distributed");
+        MSG_ERROR("Not all endNodes were distributed");
     }
     delete[] distNodes;
 }

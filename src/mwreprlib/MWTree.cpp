@@ -106,7 +106,7 @@ void MWTree<D>::setSplitType(int type) {
         this->splitType = FastSplit;
         break;
     default:
-        THROW_ERROR("Invalid tree type: " << type)
+        MSG_ERROR("Invalid tree type: " << type)
     }
 }
 */
@@ -365,7 +365,7 @@ void MWTree<D>::setupFilters(int type) {
         this->filter = &ifilters.get(this->order);
         break;
     default:
-        THROW_ERROR("Invalid scaling basis selected.")
+        MSG_ERROR("Invalid scaling basis selected.")
     }
 }
 
@@ -384,7 +384,7 @@ void MWTree<D>::setupScalingBasis(int type) {
 //        this->scalingFunc = &isf.get(this->order);
 //        break;
 //    default:
-//        THROW_ERROR("Invalid scaling basis selected.")
+//        MSG_ERROR("Invalid scaling basis selected.")
 //    }
 }
 

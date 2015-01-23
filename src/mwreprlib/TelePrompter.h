@@ -15,47 +15,45 @@
 #include <string>
 #include <iomanip>
 
-#include "MultiException.h"
-
 class TelePrompter {
 public:
-	static void init(int level = 0, bool teletype = false, const char *fil=0);
-	static void printHeader(const std::string &str);
-	static void setOutputStream(std::ostream &o) {
-		out = &o;
-	}
-	static void setPrintLevel(int i) {
-		printLevel = i;
-	}
-	static void setPrecision(int i) {
-		assert(i > 1);
-		precision = i;
-		*out << std::scientific << std::setprecision(i);
-	}
-	static int  getPrecision() {
-		return precision;
-	}
-	static int  getPrintLevel() {
-		return printLevel;
-	}
-	static std::ostream *out;
+    static void init(int level = 0, bool teletype = false, const char *fil=0);
+    static void printHeader(const std::string &str);
+    static void setOutputStream(std::ostream &o) {
+        out = &o;
+    }
+    static void setPrintLevel(int i) {
+        printLevel = i;
+    }
+    static void setPrecision(int i) {
+        assert(i > 1);
+        precision = i;
+        *out << std::scientific << std::setprecision(i);
+    }
+    static int  getPrecision() {
+        return precision;
+    }
+    static int  getPrintLevel() {
+        return printLevel;
+    }
+    static std::ostream *out;
 private:
-	static int printLevel;
-	static int precision;
+    static int printLevel;
+    static int precision;
 };
 
 #define STR_DEBUG(S,X) {std::ostringstream _str;\
-	_str << "Debug: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Debug: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 #define STR_INFO(S,X) {std::ostringstream _str;\
-	_str << "Info: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Info: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 #define STR_WARN(S,X) {std::ostringstream _str;\
-	_str << "Warning: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Warning: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 #define STR_ERROR(S,X) {std::ostringstream _str;\
-	_str << "Error: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Error: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 
 #define println(level, STR) if (level <= TelePrompter::getPrintLevel()) \
 *TelePrompter::out << STR << std::endl;
@@ -69,71 +67,71 @@ private:
 #define PRINT_LEVEL TelePrompter::getPrintLevel()
 
 #define MSG_DEBUG(X) { *TelePrompter::out << "Debug: " << \
-	__func__ << "(), line " << __LINE__ << "in " << \
-	__FILE__ << ": " << X << std::endl;}
+    __func__ << "(), line " << __LINE__ << "in " << \
+    __FILE__ << ": " << X << std::endl;}
 #define MSG_INFO(X) { *TelePrompter::out << "Info: " << __FILE__ << ": " <<\
-	__func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
+    __func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
 #define MSG_NOTE(X) { *TelePrompter::out << "Note: " << __FILE__ << ": " <<\
-	__func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
+    __func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
 #define MSG_WARN(X) { *TelePrompter::out << "Warning: " \
-	<< __func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
+    << __func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
 #define MSG_ERROR(X) { *TelePrompter::out << "Error: " << \
-	__func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
+    __func__ << "(), line " << __LINE__ << ": " << X << std::endl;}
 #define MSG_FATAL(X) { *TelePrompter::out << "Error: " << __FILE__ << ": " << \
-	__func__ << "(), line " << __LINE__ << ": " << X << std::endl; abort();}
+    __func__ << "(), line " << __LINE__ << ": " << X << std::endl; abort();}
 
 #define MSG_INVALID_ARG(X) { *TelePrompter::out << \
-	"Error, invalid argument passed: " << __func__ << "(), line " <<\
-	__LINE__ << ": " << X << std::endl;}
+    "Error, invalid argument passed: " << __func__ << "(), line " <<\
+    __LINE__ << ": " << X << std::endl;}
 #define INVALID_ARG_ABORT { *TelePrompter::out << \
-	"Error, invalid argument passed: " << __func__ << "(), line " <<\
-	__LINE__ << std::endl; abort();}
+    "Error, invalid argument passed: " << __func__ << "(), line " <<\
+    __LINE__ << std::endl; abort();}
 #define NOT_REACHED_ABORT { *TelePrompter::out << \
-	"Error, should not be reached: " << __func__ << "(), line " <<\
-	__LINE__ << std::endl; abort();}
+    "Error, should not be reached: " << __func__ << "(), line " <<\
+    __LINE__ << std::endl; abort();}
 #define INTERNAL_INCONSISTENCY { *TelePrompter::out << \
-	"Internal inconsistency! You have found a bug: " << __func__ << "(), line " <<\
-	__LINE__ << std::endl; abort();}
+    "Internal inconsistency! You have found a bug: " << __func__ << "(), line " <<\
+    __LINE__ << std::endl; abort();}
 
 #define NEEDS_TESTING {static bool __once = true;\
-	if (__once) { __once = false;\
-	*TelePrompter::out << "NEEDS TESTING: " << __FILE__ << ", " << \
-	__func__ << "(), line " << __LINE__ <<  std::endl;}}
+    if (__once) { __once = false;\
+    *TelePrompter::out << "NEEDS TESTING: " << __FILE__ << ", " << \
+    __func__ << "(), line " << __LINE__ <<  std::endl;}}
 
 #define ASSERT_FILE(A,B) {if (A == NULL) {\
-	*TelePrompter::out << "Error: " << __func__ << "(), line " << __LINE__ << \
-	": No such file, " << B << std::endl; abort();}}
+    *TelePrompter::out << "Error: " << __func__ << "(), line " << __LINE__ << \
+    ": No such file, " << B << std::endl; abort();}}
 
 #define NOT_IMPLEMENTED_ABORT {*TelePrompter::out << \
-	"Error: Not implemented, " << __FILE__ ", " << __func__ << "(), line " << __LINE__ << \
-	std::endl; abort();}
+    "Error: Not implemented, " << __FILE__ ", " << __func__ << "(), line " << __LINE__ << \
+    std::endl; abort();}
 
 #define NOTE(X) {static bool __once = true;\
-	if (__once) { __once = false; *TelePrompter::out << \
-	"NOTE: " << __FILE__ << ", " << __func__ << "(), line " << __LINE__ << ": " << X << \
-	std::endl; }}
+    if (__once) { __once = false; *TelePrompter::out << \
+    "NOTE: " << __FILE__ << ", " << __func__ << "(), line " << __LINE__ << ": " << X << \
+    std::endl; }}
 
 #define NEEDS_FIX(X) {static bool __once = true;\
-	if (__once) { __once = false; *TelePrompter::out << \
-	"NEEDS FIX: " << __FILE__ << ", " << __func__ << "(), line " << __LINE__ << ": " << X << \
-	std::endl; }}
+    if (__once) { __once = false; *TelePrompter::out << \
+    "NEEDS FIX: " << __FILE__ << ", " << __func__ << "(), line " << __LINE__ << ": " << X << \
+    std::endl; }}
 
 #define WRONG(X) {*TelePrompter::out << \
-	"WRONG: " << __FILE__ << ", " << __func__ << "(), line " << __LINE__ << ": " << X << \
-	std::endl; abort();}
+    "WRONG: " << __FILE__ << ", " << __func__ << "(), line " << __LINE__ << ": " << X << \
+    std::endl; abort();}
 
 #define STR_DEBUG(S,X) {std::ostringstream _str;\
-	_str << "Debug: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Debug: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 #define STR_INFO(S,X) {std::ostringstream _str;\
-	_str << "Info: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Info: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 #define STR_WARN(S,X) {std::ostringstream _str;\
-	_str << "Warning: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Warning: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 #define STR_ERROR(S,X) {std::ostringstream _str;\
-	_str << "Error: " << __func__ << ",  line " << __LINE__ << \
-	" in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
+    _str << "Error: " << __func__ << ",  line " << __LINE__ << \
+    " in  " << __FILE__ << ": " << X << std::endl; S=_str.str();}
 
 /* The quiet versions...
  #define SET_PRINT_LEVEL(a)

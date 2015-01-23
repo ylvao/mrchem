@@ -13,21 +13,21 @@
 
 #include <Eigen/Core>
 
-#include "MultiException.h"
 #include "constants.h"
+#include "TelePrompter.h"
 
 class Filter {
 public:
     Filter(int k, int t) : type(t), order(k) {
         if (this->order < 1) {
-            THROW_ERROR("Filter order < 1. Requested order: " << this->order)
+            MSG_ERROR("Filter order < 1. Requested order: " << this->order);
         }
         switch (this->type) {
         case (Interpol):
         case (Legendre):
             break;
         default:
-            THROW_ERROR("Unknown filter type: " << type)
+            MSG_ERROR("Unknown filter type: " << type);
         }
     }
     virtual ~Filter() { }

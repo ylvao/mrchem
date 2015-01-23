@@ -22,8 +22,8 @@ typedef Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic>
 
 class MWFilter: public Filter {
 public:
-    MWFilter(int k, int type, const std::string &lib = "");
-    MWFilter(int type, const Eigen::MatrixXd &data);
+    MWFilter(int k, int t, const std::string &lib = "");
+    MWFilter(int t, const Eigen::MatrixXd &data);
     virtual ~MWFilter() { }
     virtual void apply(Eigen::MatrixXd &data) const;
     virtual void applyInverse(Eigen::MatrixXd &data) const;

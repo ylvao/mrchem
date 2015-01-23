@@ -23,7 +23,7 @@ void Molecule::readCoordinateFile(const std::string &coord_file) {
     fstream ifs;
     ifs.open(coord_file.c_str());
     if (not ifs) {
-        THROW_ERROR("Failed to open basis set file: " << coord_file);
+        MSG_ERROR("Failed to open basis set file: " << coord_file);
     }
 
     PeriodicTable pt;

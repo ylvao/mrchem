@@ -28,16 +28,16 @@ MolecularGridGenerator::MolecularGridGenerator(double wf, double df)
 
 MolecularGridGenerator::~MolecularGridGenerator() {
     if (this->molecule != 0) {
-        THROW_ERROR("Molecule pointer not released");
+        MSG_ERROR("Molecule pointer not released");
     }
     if (this->coords.size() != 0) {
-        THROW_ERROR("Coordinate vector not cleared");
+        MSG_ERROR("Coordinate vector not cleared");
     }
     if (this->coefs.size() != 0) {
-        THROW_ERROR("Coefficient vector not cleared");
+        MSG_ERROR("Coefficient vector not cleared");
     }
     if (this->exps.size() != 0) {
-        THROW_ERROR("Exponent vector not cleared");
+        MSG_ERROR("Exponent vector not cleared");
     }
 }
 

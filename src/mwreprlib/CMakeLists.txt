@@ -38,8 +38,6 @@ set(mwrepr_SOURCES
 	ProjectedNode.h
 	GenNode.cpp
 	GenNode.h
-	MultiException.cpp
-	MultiException.h
 	NodeIndex.h
 	parallel.cpp
 	parallel.h
