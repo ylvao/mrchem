@@ -1,5 +1,6 @@
 #include "AOBasis.h"
 #include "AOContraction.h"
+#include "parallel.h"
 
 AOBasis::AOBasis() {
     this->nPrim = 0;

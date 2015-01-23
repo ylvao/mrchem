@@ -11,11 +11,9 @@
 #ifndef MWFILTER_H_
 #define MWFILTER_H_
 
-#include <Eigen/Core>
 #include <string>
 
 #include "Filter.h"
-#include "TelePrompter.h"
 
 typedef Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic>
         FilterBlock;
