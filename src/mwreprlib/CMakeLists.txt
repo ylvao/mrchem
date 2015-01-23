@@ -27,11 +27,11 @@ set(mwrepr_SOURCES
 	MRNode.h
 	MWNode.cpp
 	MWNode.h
-	#MWFilter.cpp
-	#MWFilter.h
-	#Filter.h
-	#FilterCache.cpp
-	#FilterCache.h
+	MWFilter.cpp
+	MWFilter.h
+	Filter.h
+	FilterCache.cpp
+	FilterCache.h
 	FunctionNode.cpp
 	FunctionNode.h
 	ProjectedNode.cpp

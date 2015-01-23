@@ -4,13 +4,9 @@
  *
  */
 
-#include <set>
-#include <iomanip>
-#include <config.h>
-#include <boost/timer.hpp>
-
 #include "constants.h"
 #include "MWTree.h"
+#include "FilterCache.h"
 
 using namespace std;
 using namespace Eigen;
@@ -28,7 +24,7 @@ MWTree<D>::MWTree(int type, int k, const BoundingBox<D> *box)
     this->autoCleanGenerated = true;
 
 //    setupScalingBasis(type);
-//    setupFilters(type);
+    setupFilters(type);
 
     allocWorkMemory();
 }
@@ -359,19 +355,18 @@ void MWTree<D>::assignNodeTags(MWNodeVector &workTable, int rank) {
 /** Initialize MW filter cache. */
 template<int D>
 void MWTree<D>::setupFilters(int type) {
-    NOT_IMPLEMENTED_ABORT;
-//    getLegendreFilterCache(lfilters);
-//    getInterpolatingFilterCache(ifilters);
-//    switch (type) {
-//    case Legendre:
-//        this->filter = &lfilters.get(this->order);
-//        break;
-//    case Interpol:
-//        this->filter = &ifilters.get(this->order);
-//        break;
-//    default:
-//        THROW_ERROR("Invalid scaling basis selected.")
-//    }
+    getLegendreFilterCache(lfilters);
+    getInterpolatingFilterCache(ifilters);
+    switch (type) {
+    case Legendre:
+        this->filter = &lfilters.get(this->order);
+        break;
+    case Interpol:
+        this->filter = &ifilters.get(this->order);
+        break;
+    default:
+        THROW_ERROR("Invalid scaling basis selected.")
+    }
 }
 
 /** Initialize scaling basis cache. */
