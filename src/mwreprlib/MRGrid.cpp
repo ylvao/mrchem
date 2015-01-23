@@ -9,7 +9,7 @@ using namespace Eigen;
 using namespace std;
 
 template<int D>
-MRGrid<D>::MRGrid(int k, const BoundingBox<D> *box) : MRTree<D>(k, box) {
+MRGrid<D>::MRGrid(const BoundingBox<D> *box, int k) : MRTree<D>(box, k) {
     initializeRootNodes();
     this->resetEndNodeTable();
 }

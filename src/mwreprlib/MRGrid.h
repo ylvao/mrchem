@@ -16,7 +16,7 @@
 template<int D>
 class MRGrid : public MRTree<D> {
 public:
-    MRGrid(int k = -1, const BoundingBox<D> *box = 0);
+    MRGrid(const BoundingBox<D> *box = 0, int k = -1);
     virtual ~MRGrid();
     void clear();
 

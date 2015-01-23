@@ -11,7 +11,7 @@ template<int D> int MRTree<D>::defaultMaxDepth = 30;
 template<int D> int MRTree<D>::defaultOrder = 3;
 
 template<int D>
-MRTree<D>::MRTree(int k, const BoundingBox<D> *box) {
+MRTree<D>::MRTree(const BoundingBox<D> *box, int k) {
     if (k < 0) {
         k = defaultOrder;
     }

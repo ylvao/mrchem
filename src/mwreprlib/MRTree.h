@@ -27,7 +27,7 @@
 template<int D>
 class MRTree {
 public:
-    MRTree(int k, const BoundingBox<D> *box);
+    MRTree(const BoundingBox<D> *box, int k);
     MRTree(const MRTree<D> &tree);
     virtual ~MRTree();
 
@@ -75,6 +75,10 @@ public:
     MRNode<D> &getRootNode(int i = 0) { return this->rootBox->getNode(i); }
     MRNode<D> &getRootNode(const double *r) { return this->rootBox->getNode(r); }
     MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox->getNode(nIdx); }
+
+    void refine(MRTree<D> &tree) { NOT_IMPLEMENTED_ABORT; }
+    void crop(MRTree<D> &tree) { NOT_IMPLEMENTED_ABORT; }
+    void copy(MRTree<D> &tree) { NOT_IMPLEMENTED_ABORT; }
 
     void purgeGenerated();
 

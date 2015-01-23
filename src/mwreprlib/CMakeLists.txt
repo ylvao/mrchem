@@ -56,12 +56,12 @@ set(mwrepr_SOURCES
 	LegendrePoly.h
 	Polynomial.cpp
 	Polynomial.h
-        #ScalingCache.h
-        #ScalingBasis.h
+        ScalingCache.h
+        ScalingBasis.h
         #LegendreBasis.cpp
-        #LegendreBasis.h
+        LegendreBasis.h
         #InterpolatingBasis.cpp
-        #InterpolatingBasis.h
+        InterpolatingBasis.h
 	)
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

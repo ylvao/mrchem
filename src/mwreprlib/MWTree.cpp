@@ -7,6 +7,9 @@
 #include "constants.h"
 #include "MWTree.h"
 #include "FilterCache.h"
+#include "ScalingCache.h"
+#include "LegendreBasis.h"
+#include "InterpolatingBasis.h"
 
 using namespace std;
 using namespace Eigen;
@@ -18,12 +21,12 @@ template<int D> int MWTree<D>::defaultScalingType = Interpol;
   * Creates an empty tree object. Node construction and assignment of most of
   * the parameters are done in derived classes. */
 template<int D>
-MWTree<D>::MWTree(int type, int k, const BoundingBox<D> *box)
-        : MRTree<D>(k, box) {
+MWTree<D>::MWTree(const BoundingBox<D> *box, int k, int type)
+        : MRTree<D>(box, k) {
     this->squareNorm = 0.0;
     this->autoCleanGenerated = true;
 
-//    setupScalingBasis(type);
+    setupScalingBasis(type);
     setupFilters(type);
 
     allocWorkMemory();
@@ -153,12 +156,21 @@ double MWTree<D>::reduceNorm(double treeNorm) {
 //    return treeNorm;
 }
 
+template<int D>
+void MWTree<D>::refine(double thrs, bool absPrec) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
 /** Reduce the accuracy of the tree by deleting nodes
   * which have a higher precision than the requested precison.
   * By default, the relative precision of the tree is used. */
 template<int D>
-void MWTree<D>::cropTree(double prec, bool absPrec) {
+void MWTree<D>::crop(double thrs, bool absPrec) {
     NOT_IMPLEMENTED_ABORT;
+}
+
+//template<int D>
+//void MWTree<D>::cropTree(double prec, bool absPrec) {
 //    set<const NodeIndex<D> *, NodeIndexComp<D> > cropNodes;
 //    for (int i = 0; i < this->rootBox.getNBoxes(); i++) {
 //        MWNode<D> &rootNode = getRootMWNode(i);
@@ -181,7 +193,7 @@ void MWTree<D>::cropTree(double prec, bool absPrec) {
 //    }
 //    resetEndNodeTable();
 //    this->squareNorm = calcTreeNorm();
-}
+//}
 
 /** Regenerate all s/d-coeffs by backtransformation, starting at the bottom and
   * thus purifying all coefficients. Option to overwrite or add up existing
@@ -372,20 +384,19 @@ void MWTree<D>::setupFilters(int type) {
 /** Initialize scaling basis cache. */
 template<int D>
 void MWTree<D>::setupScalingBasis(int type) {
-    NOT_IMPLEMENTED_ABORT;
-//    this->scalingType = type;
-//    getLegendreScalingCache(lsf);
-//    getInterpolatingScalingCache(isf);
-//    switch (type) {
-//    case Legendre:
-//        this->scalingFunc = &lsf.get(this->order);
-//        break;
-//    case Interpol:
-//        this->scalingFunc = &isf.get(this->order);
-//        break;
-//    default:
-//        MSG_ERROR("Invalid scaling basis selected.")
-//    }
+    this->scalingType = type;
+    getLegendreScalingCache(lsf);
+    getInterpolatingScalingCache(isf);
+    switch (type) {
+    case Legendre:
+        this->scalingFunc = &lsf.get(this->order);
+        break;
+    case Interpol:
+        this->scalingFunc = &isf.get(this->order);
+        break;
+    default:
+        MSG_ERROR("Invalid scaling basis selected.")
+    }
 }
 
 /** Traverse tree and set all nodes to zero.

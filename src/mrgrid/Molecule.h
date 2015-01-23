@@ -13,6 +13,8 @@
 #include <vector>
 #include <string>
 
+#include "TelePrompter.h"
+
 class Atom;
 
 class Molecule {
@@ -24,6 +26,7 @@ public:
     void print();
     void addAtom(const Atom &atom);
 
+    int getNElectrons() const { NOT_IMPLEMENTED_ABORT; }
     int getNAtoms() const { return this->atoms.size(); }
     Atom &getAtom(int i) { return *this->atoms[i]; }
     const Atom &getAtom(int i) const { return *this->atoms[i]; }

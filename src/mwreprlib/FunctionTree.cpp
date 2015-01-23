@@ -14,8 +14,8 @@ using namespace Eigen;
 /** FunctionTree constructor.
   * Initializes root nodes to represent the zero function. */
 template<int D>
-FunctionTree<D>::FunctionTree(int type, int k, const BoundingBox<D> *box)
-        : MWTree<D> (type, k, box) {
+FunctionTree<D>::FunctionTree(const BoundingBox<D> *box, int k, int type)
+        : MWTree<D> (box, k, type) {
     initializeRootNodes();
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();

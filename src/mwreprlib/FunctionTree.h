@@ -15,8 +15,6 @@
 #include "MWTree.h"
 #include "RepresentableFunction.h"
 
-const int MaxBandwidth = 10;
-
 template<int D> class FunctionNode;
 template<int D> class BoundingBox;
 template<int D> class NodeIndex;
@@ -24,7 +22,7 @@ template<int D> class NodeIndex;
 template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
-    FunctionTree(int type = -1, int k = -1, const BoundingBox<D> *box = 0);
+    FunctionTree(const BoundingBox<D> *box = 0, int k = -1,  int type = -1);
     FunctionTree(const FunctionTree<D> &tree);
     FunctionTree<D> &operator=(const FunctionTree<D> &tree);
     virtual ~FunctionTree();

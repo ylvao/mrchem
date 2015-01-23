@@ -22,7 +22,7 @@ class ScalingBasis;
 template<int D>
 class MWTree : public MRTree<D> {
 public:
-    MWTree(int type, int k, const BoundingBox<D> *box = 0);
+    MWTree(const BoundingBox<D> *box, int k, int type);
     MWTree(const MWTree<D> &tree);
     MWTree<D> &operator=(const MWTree<D> &tree);
     virtual ~MWTree();
@@ -43,7 +43,9 @@ public:
 
     void mwTransformDown(bool overwrite = true);
     void mwTransformUp(bool overwrite = true);
-    void cropTree(double prec = -1.0, bool absPrec = true);
+
+    void refine(double thrs = -1.0, bool absPrec = true);
+    void crop(double thrs = -1.0, bool absPrec = true);
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
