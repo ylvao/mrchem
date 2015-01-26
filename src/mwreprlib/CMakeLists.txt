@@ -31,6 +31,10 @@ set(mwrepr_SOURCES
 	MWNode.h
 	MWFilter.cpp
 	MWFilter.h
+	MWProjector.cpp
+	MWProjector.h
+	FunctionProjector.cpp
+	FunctionProjector.h
 	Filter.h
 	FilterCache.cpp
 	FilterCache.h
