@@ -35,7 +35,7 @@ MRNode<D>::MRNode(MRNode<D> *p, int cIdx) {
     if (this->parent == 0) {
         NOT_IMPLEMENTED_ABORT;
     } else {
-        this->nodeIndex = this->parent->getChildIndex(cIdx);
+        this->parent->calcChildNodeIndex(this->nodeIndex, cIdx);
         this->tree = this->parent->tree;
         this->tree->incrementNodeCount(getScale());
     }
@@ -161,7 +161,7 @@ void MRNode<D>::getUpperBounds(double *r) const {
 /** Given the child index (between 0 and (2^D - 1)) calculate the translation
   * index and store it in the *l argument. Assumes *l is allocated. */
 template<int D>
-void MRNode<D>::calcChildTranslation(int cIdx, int *transl) const {
+void MRNode<D>::calcChildTranslation(int *transl, int cIdx) const {
     assert(cIdx >= 0);
     assert(cIdx < getTDim());
     const int *l = this->nodeIndex.getTranslation();
@@ -171,8 +171,14 @@ void MRNode<D>::calcChildTranslation(int cIdx, int *transl) const {
 }
 
 template<int D>
-void MRNode<D>::calcChildIndex(int cIdx, NodeIndex<D> &nIdx) const {
-    NOT_IMPLEMENTED_ABORT;
+void MRNode<D>::calcChildNodeIndex(NodeIndex<D> &nIdx, int cIdx) const {
+    int n = getScale() + 1;
+    int rank = getRankId();
+    int l[3];
+    calcChildTranslation(l, cIdx);
+    nIdx.setRankId(rank);
+    nIdx.setScale(n);
+    nIdx.setTranslation(l);
 }
 
 /** Routine to find the path along the tree.

@@ -120,22 +120,21 @@ void MRTree<D>::initializeRootNodes() {
   * children through MW transform. */
 template<int D>
 void MRTree<D>::yieldChildren(MRNodeVector &nodeTable, const NodeIndexSet &idxSet) {
-    NOT_IMPLEMENTED_ABORT;
-//    typename set<const NodeIndex<D> *>::iterator it;
-//    for (it = idxSet.begin(); it != idxSet.end(); it++) {
-//        MRNode<D> &node = getNode(**it);
-//        int childDepth = node.getDepth() + 1;
-//        if (this->maxDepth != 0 and childDepth > this->maxDepth) {
-//            println(1, "+++ Maximum depth reached: " << childDepth);
-//            node.setIsEndNode();
-//        } else {
-//            node.createChildren();
-//            for (int i = 0; i < node.getNChildren(); i++) {
-//                MRNode<D> *child = &node.getChild(i);
-//                nodeTable.push_back(child);
-//            }
-//        }
-//    }
+    typename set<const NodeIndex<D> *>::iterator it;
+    for (it = idxSet.begin(); it != idxSet.end(); it++) {
+        MRNode<D> &node = getNode(**it);
+        int childDepth = node.getDepth() + 1;
+        if (this->maxDepth != 0 and childDepth > this->maxDepth) {
+            println(1, "+++ Maximum depth reached: " << childDepth);
+            node.setIsEndNode();
+        } else {
+            node.createChildren();
+            for (int i = 0; i < node.getNChildren(); i++) {
+                MRNode<D> *child = &node.getChild(i);
+                nodeTable.push_back(child);
+            }
+        }
+    }
     //very old below?
 //    siblings.clear();
 //    typename set<const NodeIndex<D> *>::iterator it;

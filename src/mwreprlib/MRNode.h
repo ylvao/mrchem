@@ -102,8 +102,8 @@ public:
     bool isAncestor(const NodeIndex<D> &idx) const;
     bool isDecendant(const NodeIndex<D> &idx) const;
 
-    void calcChildTranslation(int cIdx, int *transl) const;
-    void calcChildIndex(int cIdx, NodeIndex<D> &nIdx) const;
+    void calcChildTranslation(int *transl, int cIdx) const;
+    void calcChildNodeIndex(NodeIndex<D> &nIdx, int cIdx) const;
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     int getChildIndex(const double *r) const;
 

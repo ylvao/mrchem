@@ -687,10 +687,10 @@ void MWNode<D>::getChildrenQuadRoots(vector<MatrixXd *> &quadPts) {
     getQuadratureCache(qc);
     const VectorXd &pts = qc.getRoots(kp1);
 
-    for (int child = 0; child < this->getTDim(); child++) {
+    for (int cIdx = 0; cIdx < this->getTDim(); cIdx++) {
         MatrixXd *tmpMat = new MatrixXd(kp1, D);
         int l[D];
-        this->calcChildTranslation(child, l);
+        this->calcChildTranslation(l, cIdx);
         for (int d = 0; d < D; d++) {
             for (int i = 0; i < kp1; i++) {
                 (*tmpMat)(i, d) = (pts(i) + l[d]) / sfac;
