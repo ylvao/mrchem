@@ -15,6 +15,8 @@ set(mwrepr_SOURCES
 	BoundingBox.h
 	GridGenerator.cpp
 	GridGenerator.h
+	GridAdaptor.cpp
+	GridAdaptor.h
 	MRGrid.cpp
 	MRGrid.h
 	FunctionTree.cpp

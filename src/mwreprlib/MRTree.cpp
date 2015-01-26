@@ -107,11 +107,6 @@ void MRTree<D>::copyTreeParams(const MRTree<D> &tree) {
     this->scattered = tree.scattered;
 }
 
-template<int D>
-void MRTree<D>::initializeRootNodes() {
-    NOT_IMPLEMENTED_ABORT
-}
-
 /** Updates nodeTable according to the indexTable of nodes to split.
   *
   * Given a list of NodeIndices to split, this routine collects the newly born

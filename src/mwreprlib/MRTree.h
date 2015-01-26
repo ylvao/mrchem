@@ -76,10 +76,6 @@ public:
     MRNode<D> &getRootNode(const double *r) { return this->rootBox->getNode(r); }
     MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox->getNode(nIdx); }
 
-    void refine(MRTree<D> &tree) { NOT_IMPLEMENTED_ABORT; }
-    void crop(MRTree<D> &tree) { NOT_IMPLEMENTED_ABORT; }
-    void copy(MRTree<D> &tree) { NOT_IMPLEMENTED_ABORT; }
-
     void purgeGenerated();
 
     void broadcastTree();
