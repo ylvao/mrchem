@@ -34,6 +34,10 @@ Gaussian<D>::Gaussian(double a, double c, const double r[D], const int p[D]) {
 }
 
 template<int D>
+Gaussian<D>::~Gaussian() {
+}
+
+template<int D>
 void Gaussian<D>::multPureGauss(const Gaussian<D> &lhs,	const Gaussian<D> &rhs) {
     double newPos[D], relPos[D];
     double newAlpha = lhs.alpha + rhs.alpha;
@@ -55,6 +59,7 @@ void Gaussian<D>::calcScreening(double nStdDev) {
     assert(nStdDev > 0);
     double limit = sqrt(nStdDev/this->alpha);
     if (not this->isBounded()) {
+        this->bounded = true;
         this->A = new double[D];
         this->B = new double[D];
     }

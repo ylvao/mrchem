@@ -41,7 +41,7 @@ public:
     GaussExp(const GaussExp<D> &gExp);
     GaussExp(const GaussPoly<D> &gPoly);
     GaussExp &operator=(const GaussExp<D> &gExp);
-    ~GaussExp() { }
+    virtual ~GaussExp();
 
     double calcCoulombEnergy();
     double calcSquareNorm();

@@ -24,7 +24,7 @@ class Gaussian: public RepresentableFunction<D> {
 public:
     Gaussian(double a, double c, const double r[D], const int p[D]);
     virtual Gaussian<D> *copy() const = 0;
-    virtual ~Gaussian() {}
+    virtual ~Gaussian();
 
     virtual double evalf(const double *r) const = 0;
     virtual double evalf(double r, int dim) const = 0;

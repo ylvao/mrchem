@@ -70,6 +70,16 @@ GaussExp<D>::GaussExp(const GaussPoly<D> &gPoly) : screening(0.0), squareNorm(-1
 }
 
 template<int D>
+GaussExp<D>::~GaussExp() {
+    for (int i = 0; i < size(); i++) {
+        if (this->funcs[i] != 0) {
+            delete this->funcs[i];
+            this->funcs[i] = 0;
+        }
+    }
+}
+
+template<int D>
 GaussExp<D> &GaussExp<D>::operator=(const GaussExp<D> &gexp) {
     if (&gexp == this)
         return *this;
