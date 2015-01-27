@@ -3,15 +3,19 @@
 
 template<int D> class MRGrid;
 template<int D> class GridAdaptor;
+template<int D> class FunctionTree;
 
 template<int D>
 class MWProjector {
 public:
-    MWProjector(MRGrid<D> *startGrid, GridAdaptor<D> *adap);
+    MWProjector();
+    MWProjector(GridAdaptor<D> &a);
+    virtual ~MWProjector();
 
 protected:
-    MRGrid<D> *grid;
     GridAdaptor<D> *adaptor;
+
+    void buildTree(FunctionTree<D> &tree);
 };
 
 #endif // MWPROJECTOR_H

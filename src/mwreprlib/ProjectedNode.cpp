@@ -9,6 +9,7 @@
  */
 
 #include "ProjectedNode.h"
+#include "GridNode.h"
 
 #ifdef HAVE_BLAS
 extern "C" {
@@ -24,6 +25,45 @@ using namespace Eigen;
 template<int D>
 ProjectedNode<D>::ProjectedNode() : FunctionNode<D> () {
     NOT_IMPLEMENTED_ABORT;
+}
+
+template<int D>
+ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
+        : FunctionNode<D> (t, gNode.getNodeIndex()) {
+    this->allocCoefs();
+    this->zeroCoefs();
+    this->zeroNorms();
+
+    if (gNode.isBranchNode()) {
+        this->allocKindergarten();
+        this->setIsBranchNode();
+        this->clearIsEndNode();
+    }
+    for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
+        const GridNode<D> &gChild = gNode.getGridChild(cIdx);
+        ProjectedNode<D> *pChild = new ProjectedNode(this, cIdx, gChild);
+        this->children[cIdx] = pChild;
+    }
+}
+
+template<int D>
+ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx,
+                                const GridNode<D> &gNode)
+        : FunctionNode<D> (p, cIdx) {
+    this->allocCoefs();
+    this->zeroCoefs();
+    this->zeroNorms();
+
+    if (gNode.isBranchNode()) {
+        this->allocKindergarten();
+        this->setIsBranchNode();
+        this->clearIsEndNode();
+    }
+    for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
+        const GridNode<D> &gChild = gNode.getGridChild(cIdx);
+        ProjectedNode<D> *pChild = new ProjectedNode(this, cIdx, gChild);
+        this->children[cIdx] = pChild;
+    }
 }
 
 /** Root node constructor. By default root nodes are initialized to

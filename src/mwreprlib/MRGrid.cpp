@@ -82,6 +82,27 @@ bool MRGrid<D>::loadTree(const string &file) {
     NOT_IMPLEMENTED_ABORT
 }
 
+template<int D>
+GridNode<D>& MRGrid<D>::getRootGridNode(int rIdx) {
+    return static_cast<GridNode<D> &>(this->getRootNode(rIdx));
+}
+
+template<int D>
+const GridNode<D>& MRGrid<D>::getRootGridNode(int rIdx) const {
+    return static_cast<const GridNode<D> &>(this->getRootNode(rIdx));
+}
+
+template<int D>
+GridNode<D>& MRGrid<D>::getRootGridNode(const NodeIndex<D> &nIdx) {
+    return static_cast<GridNode<D> &>(this->getRootNode(nIdx));
+}
+
+template<int D>
+const GridNode<D>& MRGrid<D>::getRootGridNode(const NodeIndex<D> &nIdx) const {
+    return static_cast<const GridNode<D> &>(this->getRootNode(nIdx));
+}
+
+
 template class MRGrid<1>;
 template class MRGrid<2>;
 template class MRGrid<3>;

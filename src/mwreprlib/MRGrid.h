@@ -27,6 +27,12 @@ public:
     bool saveTree(const std::string &file);
     bool loadTree(const std::string &file);
 
+    GridNode<D>& getRootGridNode(int rIdx);
+    GridNode<D>& getRootGridNode(const NodeIndex<D> &nIdx);
+
+    const GridNode<D>& getRootGridNode(int rIdx) const;
+    const GridNode<D>& getRootGridNode(const NodeIndex<D> &nIdx) const;
+
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MRGrid<T> &grid);
     friend class GridGenerator<D>;

@@ -21,6 +21,7 @@ public:
 
     void setUniformScale(int u) { this->uniformScale = u; }
     void generateGrid(MRGrid<D> &outGrid);
+    void copyGrid(MRTree<D> &outTree, MRTree<D> &inTree);
 protected:
     int uniformScale;
 

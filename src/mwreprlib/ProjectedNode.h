@@ -16,8 +16,10 @@ template<int D>
 class ProjectedNode: public FunctionNode<D> {
 public:
     ProjectedNode();
+    ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode);
     ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     ProjectedNode(ProjectedNode<D> *p, int cIdx);
+    ProjectedNode(ProjectedNode<D> *p, int cIdx, const GridNode<D> &gNode);
     ProjectedNode(const ProjectedNode<D> &nd, ProjectedNode<D> *p);
     ProjectedNode(const ProjectedNode<D> &nd, FunctionTree<D> *t);
     ProjectedNode<D> &operator=(const ProjectedNode<D> &nd);
@@ -36,6 +38,8 @@ protected:
         MWNode<D>::deleteChildren();
         this->setIsEndNode();
     }
+
+    void copyRecursive(GridNode<D> &gNode);
 
     void genChildren(bool genEmpty = false);
     void genChild(int i);

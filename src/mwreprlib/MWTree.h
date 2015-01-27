@@ -23,6 +23,7 @@ template<int D>
 class MWTree : public MRTree<D> {
 public:
     MWTree(const BoundingBox<D> *box, int k, int type);
+    MWTree(const MRGrid<D> &grid, int type);
     MWTree(const MWTree<D> &tree);
     MWTree<D> &operator=(const MWTree<D> &tree);
     virtual ~MWTree();
@@ -152,15 +153,14 @@ Eigen::VectorXd& MWTree<D>::getTmpMWCoefs() {
 
 template<int T>
 std::ostream& operator<<(std::ostream &o, MWTree<T> &tree) {
-    NOT_IMPLEMENTED_ABORT;
-//    o << "*MWTree: " << tree.name << std::endl;
-//    o << "  scaling type: " << tree.scalingType << std::endl;
-//    o << "  order: " << tree.order << std::endl;
-//    o << "  nodes: " << tree.nNodes << std::endl;
-//    o << "  genNodes: " << tree.getNGenNodes() <<
-//            " (" << tree.getNAllocGenNodes() << ")" << std::endl;
-//    o << "  nodes per scale: " << std::endl;
-//    return o;
+    o << "*MWTree: " << tree.name << std::endl;
+    o << "  scaling type: " << tree.scalingType << std::endl;
+    o << "  order: " << tree.order << std::endl;
+    o << "  nodes: " << tree.nNodes << std::endl;
+    o << "  genNodes: " << tree.getNGenNodes() <<
+            " (" << tree.getNAllocGenNodes() << ")" << std::endl;
+    o << "  nodes per scale: " << std::endl;
+    return o;
 }
 
 #endif /* MWTREE_H_ */

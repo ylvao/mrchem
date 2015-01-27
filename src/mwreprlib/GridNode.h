@@ -13,6 +13,7 @@
 #include <Eigen/Core>
 
 #include "MRNode.h"
+#include "MRGrid.h"
 
 template<int D>
 class GridNode : public MRNode<D> {
@@ -27,6 +28,14 @@ public:
     void getExpandedPoints(Eigen::MatrixXd &points) const;
     void getExpandedWeights(Eigen::VectorXd &weights) const;
 
+    inline MRGrid<D> &getGridTree();
+    inline GridNode<D> &getGridParent();
+    inline GridNode<D> &getGridChild(int cIdx);
+
+    inline const MRGrid<D> &getGridTree() const;
+    inline const GridNode<D> &getGridParent() const;
+    inline const GridNode<D> &getGridChild(int cIdx) const;
+
 protected:
     Eigen::MatrixXd roots;
     Eigen::MatrixXd weights;
@@ -40,6 +49,44 @@ protected:
     void calcQuadPoints();
     void calcQuadWeights();
 };
+
+template<int D>
+const MRGrid<D> &GridNode<D>::getGridTree() const {
+    assert(this->tree != 0);
+    return static_cast<const MRGrid<D> &>(*this->tree);
+}
+
+template<int D>
+MRGrid<D> &GridNode<D>::getGridTree() {
+    assert(this->tree != 0);
+    return static_cast<MRGrid<D> &>(*this->tree);
+}
+
+template<int D>
+const GridNode<D> &GridNode<D>::getGridChild(int cIdx) const {
+    assert(this->children != 0);
+    assert(this->children[cIdx] != 0);
+    return static_cast<const GridNode<D> &>(*this->children[cIdx]);
+}
+
+template<int D>
+GridNode<D> &GridNode<D>::getGridChild(int cIdx) {
+    assert(this->children != 0);
+    assert(this->children[cIdx] != 0);
+    return static_cast<GridNode<D> &>(*this->children[cIdx]);
+}
+
+template<int D>
+const GridNode<D> &GridNode<D>::getGridParent() const {
+    assert(this->parent != 0);
+    return static_cast<const GridNode<D> &>(*this->parent);
+}
+
+template<int D>
+GridNode<D> &GridNode<D>::getGridParent() {
+    assert(this->parent != 0);
+    return static_cast<GridNode<D> &>(*this->parent);
+}
 
 #endif /* GRIDNODE_H_ */
 

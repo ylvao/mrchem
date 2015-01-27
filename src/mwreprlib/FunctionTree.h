@@ -23,6 +23,7 @@ template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
     FunctionTree(const BoundingBox<D> *box = 0, int k = -1,  int type = -1);
+    FunctionTree(const MRGrid<D> &grid, int type = -1);
     FunctionTree(const FunctionTree<D> &tree);
     FunctionTree<D> &operator=(const FunctionTree<D> &tree);
     virtual ~FunctionTree();
@@ -32,6 +33,7 @@ public:
     void purgeGenNodes();
 
     void initializeRootNodes();
+    void initializeNodesRecursive(const MRGrid<D> &grid);
 
     double integrate();
     virtual double innerProduct(FunctionTree<D> &tree);
@@ -76,7 +78,21 @@ private:
 
 template<int D>
 std::ostream& operator<<(std::ostream &o, FunctionTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
+    o << std::endl << "*FunctionTree: " << tree.name << std::endl;
+    o << "  squareNorm: " << tree.squareNorm << std::endl;
+    o << "  root scale: " << tree.getRootScale() << std::endl;
+    o << "  order: " << tree.order << std::endl;
+    o << "  nodes: " << tree.getNNodes() << std::endl;
+    o << "  local end nodes: " << tree.endNodeTable.size() << std::endl;
+    o << "  genNodes: " << tree.getNGenNodes() <<
+            " (" << tree.getNAllocGenNodes() << ")" <<std::endl;
+    o << "  nodes per scale: " << std::endl;
+    for (int i = 0; i < tree.nodesAtDepth.size(); i++) {
+        o << "    scale=" << i + tree.getRootScale() << "  nodes="
+          << tree.nodesAtDepth[i] << std::endl;
+    }
+    return o;
 }
+
 
 #endif /* FUNCTIONTREE_H_*/

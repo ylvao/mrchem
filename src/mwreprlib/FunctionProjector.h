@@ -9,10 +9,15 @@ template<int D> class RepresentableFunction;
 template<int D>
 class FunctionProjector : public MWProjector<D> {
 public:
-    FunctionProjector(MRGrid<D> *startGrid = 0, GridAdaptor<D> *adap = 0);
+    FunctionProjector();
+    FunctionProjector(GridAdaptor<D> &a);
+    virtual ~FunctionProjector();
 
     void operator()(FunctionTree<D> &tree, RepresentableFunction<D> &func);
+
 protected:
+    RepresentableFunction<D> *function;
+
 };
 
 #endif // FUNCTIONPROJECTOR_H

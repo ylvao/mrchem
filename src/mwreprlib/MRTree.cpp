@@ -1,4 +1,5 @@
 #include "MRTree.h"
+#include "MRGrid.h"
 #include "MathUtils.h"
 #include "MRNode.h"
 #include "LebesgueIterator.h"
@@ -36,6 +37,26 @@ MRTree<D>::MRTree(const BoundingBox<D> *box, int k) {
     this->rank = world.rank();
     this->nThreads = omp_get_max_threads();
     this->scattered = false;
+    allocNodeCounters();
+
+#ifdef OPENMP
+    omp_init_lock(&tree_lock);
+#endif
+}
+
+/** MRTree copy constructor.
+  * Builds a copy of the input grid structure, not grid data */
+template<int D>
+MRTree<D>::MRTree(const MRGrid<D> &grid) {
+    copyTreeParams(grid);
+
+    this->rootBox = new NodeBox<D>(*grid.rootBox);
+    this->nNodes = 0;
+    this->nodesAtDepth.push_back(0);
+
+    mpi::communicator world;
+    this->rank = world.rank();
+    this->nThreads = omp_get_max_threads();
     allocNodeCounters();
 
 #ifdef OPENMP

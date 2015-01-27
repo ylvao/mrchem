@@ -7,6 +7,8 @@
 #include "FunctionTree.h"
 #include "FunctionNode.h"
 #include "ProjectedNode.h"
+#include "MRGrid.h"
+#include "GridNode.h"
 
 using namespace std;
 using namespace Eigen;
@@ -24,15 +26,15 @@ FunctionTree<D>::FunctionTree(const BoundingBox<D> *box, int k, int type)
     this->resetEndNodeTable();
 }
 
-/** Allocate the root FunctionNodes and fill in the empty slots of rootBox.
-  * Initializes rootNodes to represent the zero function. */
 template<int D>
-void FunctionTree<D>::initializeRootNodes() {
-    for (int i = 0; i < this->getNRootNodes(); i++) {
-        NodeIndex<D> nIdx = this->getRootBox().getNodeIndex(i);
-        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        this->rootBox->setNode(i, &root);
-    }
+FunctionTree<D>::FunctionTree(const MRGrid<D> &grid, int type)
+        : MWTree<D>(grid, type) {
+    initializeNodesRecursive(grid);
+    const double *lB = this->rootBox->getLowerBounds();
+    const double *uB = this->rootBox->getUpperBounds();
+    this->setBounds(lB, uB);
+
+    this->resetEndNodeTable();
 }
 
 /** FunctionTree copy constructor.
@@ -89,6 +91,26 @@ FunctionTree<D> &FunctionTree<D>::operator=(const FunctionTree<D> &tree) {
 /** FunctionTree destructor. */
 template<int D>
 FunctionTree<D>::~FunctionTree() {
+}
+
+/** Allocate the root FunctionNodes and fill in the empty slots of rootBox.
+  * Initializes rootNodes to represent the zero function. */
+template<int D>
+void FunctionTree<D>::initializeRootNodes() {
+    for (int i = 0; i < this->getNRootNodes(); i++) {
+        NodeIndex<D> nIdx = this->getRootBox().getNodeIndex(i);
+        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        this->rootBox->setNode(i, &root);
+    }
+}
+
+template<int D>
+void FunctionTree<D>::initializeNodesRecursive(const MRGrid<D> &grid) {
+    for (int i = 0; i < this->getNRootNodes(); i++) {
+        const GridNode<D> &gNode = grid.getRootGridNode(i);
+        MRNode<D> *root = new ProjectedNode<D>(*this, gNode);
+        this->rootBox->setNode(i, &root);
+    }
 }
 
 template<int D>

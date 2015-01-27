@@ -37,11 +37,11 @@ public:
 
     inline FunctionTree<D> &getFuncTree();
     inline FunctionNode<D> &getFuncParent();
-    inline FunctionNode<D> &getFuncChild(int i);
+    inline FunctionNode<D> &getFuncChild(int cIdx);
 
     inline const FunctionTree<D> &getFuncTree() const;
     inline const FunctionNode<D> &getFuncParent() const;
-    inline const FunctionNode<D> &getFuncChild(int i) const;
+    inline const FunctionNode<D> &getFuncChild(int cIdx) const;
 
     friend class FunctionTree<D>;
 
@@ -79,17 +79,17 @@ FunctionTree<D> &FunctionNode<D>::getFuncTree() {
 }
 
 template<int D>
-const FunctionNode<D> &FunctionNode<D>::getFuncChild(int i) const {
+const FunctionNode<D> &FunctionNode<D>::getFuncChild(int cIdx) const {
     assert(this->children != 0);
-    assert(this->children[i] != 0);
-    return static_cast<const FunctionNode<D> &>(*this->children[i]);
+    assert(this->children[cIdx] != 0);
+    return static_cast<const FunctionNode<D> &>(*this->children[cIdx]);
 }
 
 template<int D>
-FunctionNode<D> &FunctionNode<D>::getFuncChild(int i) {
+FunctionNode<D> &FunctionNode<D>::getFuncChild(int cIdx) {
     assert(this->children != 0);
-    assert(this->children[i] != 0);
-    return static_cast<FunctionNode<D> &>(*this->children[i]);
+    assert(this->children[cIdx] != 0);
+    return static_cast<FunctionNode<D> &>(*this->children[cIdx]);
 }
 
 template<int D>

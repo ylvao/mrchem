@@ -32,6 +32,15 @@ MWTree<D>::MWTree(const BoundingBox<D> *box, int k, int type)
     allocWorkMemory();
 }
 
+template<int D>
+MWTree<D>::MWTree(const MRGrid<D> &grid, int type) : MRTree<D>(grid) {
+    this->squareNorm = 0.0;
+    this->autoCleanGenerated = true;
+
+    setupScalingBasis(type);
+    setupFilters(type);
+}
+
 /** MWTree copy constructor.
   * Takes the parameters of the input tree, not it's data */
 template<int D>
