@@ -6,6 +6,7 @@
 
 #include "constants.h"
 #include "MWTree.h"
+#include "MRGrid.h"
 #include "FilterCache.h"
 #include "ScalingCache.h"
 #include "LegendreBasis.h"
@@ -39,6 +40,8 @@ MWTree<D>::MWTree(const MRGrid<D> &grid, int type) : MRTree<D>(grid) {
 
     setupScalingBasis(type);
     setupFilters(type);
+
+    allocWorkMemory();
 }
 
 /** MWTree copy constructor.

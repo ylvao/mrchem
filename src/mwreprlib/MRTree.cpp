@@ -3,6 +3,7 @@
 #include "MathUtils.h"
 #include "MRNode.h"
 #include "LebesgueIterator.h"
+#include "TelePrompter.h"
 
 
 using namespace std;
@@ -50,7 +51,8 @@ template<int D>
 MRTree<D>::MRTree(const MRGrid<D> &grid) {
     copyTreeParams(grid);
 
-    this->rootBox = new NodeBox<D>(*grid.rootBox);
+    const BoundingBox<D> &box = grid.getRootBox();
+    this->rootBox = new NodeBox<D>(box);
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 
@@ -68,9 +70,11 @@ MRTree<D>::MRTree(const MRGrid<D> &grid) {
   * Takes the parameters of the input tree, not it's data */
 template<int D>
 MRTree<D>::MRTree(const MRTree<D> &tree) {
+    NOT_IMPLEMENTED_ABORT;
     copyTreeParams(tree);
 
-    this->rootBox = new NodeBox<D>(*tree.rootBox);
+    const BoundingBox<D> &box = tree.getRootBox();
+    this->rootBox = new NodeBox<D>(box);
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 

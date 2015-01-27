@@ -41,8 +41,7 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
     }
     for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
         const GridNode<D> &gChild = gNode.getGridChild(cIdx);
-        ProjectedNode<D> *pChild = new ProjectedNode(this, cIdx, gChild);
-        this->children[cIdx] = pChild;
+        this->children[cIdx] = new ProjectedNode(this, cIdx, gChild);
     }
 }
 
@@ -61,8 +60,7 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx,
     }
     for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
         const GridNode<D> &gChild = gNode.getGridChild(cIdx);
-        ProjectedNode<D> *pChild = new ProjectedNode(this, cIdx, gChild);
-        this->children[cIdx] = pChild;
+        this->children[cIdx] = new ProjectedNode(this, cIdx, gChild);
     }
 }
 

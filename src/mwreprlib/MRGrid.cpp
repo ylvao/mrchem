@@ -16,10 +16,10 @@ MRGrid<D>::MRGrid(const BoundingBox<D> *box, int k) : MRTree<D>(box, k) {
 
 template<int D>
 void MRGrid<D>::initializeRootNodes() {
-    for (int i = 0; i < this->getNRootNodes(); i++) {
-        NodeIndex<D> nIdx = this->getRootBox().getNodeIndex(i);
+    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+        NodeIndex<D> nIdx = this->getRootBox().getNodeIndex(rIdx);
         MRNode<D> *root = new GridNode<D>(*this, nIdx);
-        this->rootBox->setNode(i, &root);
+        this->rootBox->setNode(rIdx, &root);
     }
 }
 

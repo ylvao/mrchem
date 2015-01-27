@@ -97,19 +97,19 @@ FunctionTree<D>::~FunctionTree() {
   * Initializes rootNodes to represent the zero function. */
 template<int D>
 void FunctionTree<D>::initializeRootNodes() {
-    for (int i = 0; i < this->getNRootNodes(); i++) {
-        NodeIndex<D> nIdx = this->getRootBox().getNodeIndex(i);
+    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+        NodeIndex<D> nIdx = this->rootBox->getNodeIndex(rIdx);
         MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        this->rootBox->setNode(i, &root);
+        this->rootBox->setNode(rIdx, &root);
     }
 }
 
 template<int D>
 void FunctionTree<D>::initializeNodesRecursive(const MRGrid<D> &grid) {
-    for (int i = 0; i < this->getNRootNodes(); i++) {
-        const GridNode<D> &gNode = grid.getRootGridNode(i);
+    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+        const GridNode<D> &gNode = grid.getRootGridNode(rIdx);
         MRNode<D> *root = new ProjectedNode<D>(*this, gNode);
-        this->rootBox->setNode(i, &root);
+        this->rootBox->setNode(rIdx, &root);
     }
 }
 
