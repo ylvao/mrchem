@@ -5,6 +5,7 @@
 #include "FunctionNode.h"
 #include "FunctionTree.h"
 #include "QuadratureCache.h"
+#include "ScalingBasis.h"
 #include "MathUtils.h"
 #include "config.h"
 #include "eigen_disable_warnings.h"
@@ -328,41 +329,40 @@ double FunctionNode<D>::integrateLegendre() {
   * coupling of quadrature weights. */
 template<int D>
 double FunctionNode<D>::integrateInterpolating() {
-    NOT_IMPLEMENTED_ABORT;
-//    const ScalingBasis &sf = this->tree->getScalingFunctions();
-//    VectorXd coefs = this->getCoefs();
+    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
+    VectorXd coefs = this->getCoefs();
 
-//    int quadratureOrder = sf.getQuadratureOrder();
-//    getQuadratureCache(qc);
-//    const VectorXd &weights = qc.getWeights(quadratureOrder);
-//    double sqWeights[this->getKp1()];
-//    for (int i = 0; i < this->getKp1(); i++) {
-//        sqWeights[i] = sqrt(weights[i]);
-//    }
+    int quadratureOrder = sf.getQuadratureOrder();
+    getQuadratureCache(qc);
+    const VectorXd &weights = qc.getWeights(quadratureOrder);
+    double sqWeights[this->getKp1()];
+    for (int i = 0; i < this->getKp1(); i++) {
+        sqWeights[i] = sqrt(weights[i]);
+    }
 
-//    int kp1_p[D];
-//    for (int i = 0; i < D; i++) {
-//        kp1_p[i] = MathUtils::ipow(this->getKp1(), i);
-//    }
+    int kp1_p[D];
+    for (int i = 0; i < D; i++) {
+        kp1_p[i] = MathUtils::ipow(this->getKp1(), i);
+    }
 
-//    double result = 0.0;
-//    for (int p = 0; p < D; p++) {
-//        int n = 0;
-//        for (int i = 0; i < kp1_p[D - p - 1]; i++) {
-//            for (int j = 0; j < this->getKp1(); j++) {
-//                for (int k = 0; k < kp1_p[p]; k++) {
-//                    coefs[n] *= sqWeights[j];
-//                    n++;
-//                }
-//            }
-//        }
-//    }
-//    for (int i = 0; i < this->getKp1_d(); i++) {
-//        result += coefs[i];
-//    }
-//    double n = (D * this->nodeIndex.getScale()) / 2.0;
-//    result *= pow(2.0, -n);
-//    return result;
+    double result = 0.0;
+    for (int p = 0; p < D; p++) {
+        int n = 0;
+        for (int i = 0; i < kp1_p[D - p - 1]; i++) {
+            for (int j = 0; j < this->getKp1(); j++) {
+                for (int k = 0; k < kp1_p[p]; k++) {
+                    coefs[n] *= sqWeights[j];
+                    n++;
+                }
+            }
+        }
+    }
+    for (int i = 0; i < this->getKp1_d(); i++) {
+        result += coefs[i];
+    }
+    double n = (D * this->getScale()) / 2.0;
+    result *= pow(2.0, -n);
+    return result;
 }
 
 /** Inner product of the functions represented by the scaling basis of the nodes.

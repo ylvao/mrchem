@@ -33,6 +33,7 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
     this->allocCoefs();
     this->zeroCoefs();
     this->zeroNorms();
+    this->setIsEndNode();
 
     if (gNode.isBranchNode()) {
         this->allocKindergarten();
@@ -52,6 +53,7 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx,
     this->allocCoefs();
     this->zeroCoefs();
     this->zeroNorms();
+    this->setIsEndNode();
 
     if (gNode.isBranchNode()) {
         this->allocKindergarten();
@@ -72,6 +74,7 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
     this->allocCoefs();
     this->zeroCoefs();
     this->zeroNorms();
+    this->setIsEndNode();
 }
 
 /** ProjectedNode constructor.

@@ -217,19 +217,17 @@ const FunctionNode<D>& FunctionTree<D>::getRootFuncNode(const NodeIndex<D> &nIdx
 
 template<int D>
 double FunctionTree<D>::integrate() {
-    NOT_IMPLEMENTED_ABORT;
-//    double result = 0.0;
-//    for (int i = 0; i < this->getNRootNodes(); i++) {
-//        FunctionNode<D> &fNode = getRootFuncNode(i);
-//        result += fNode.integrate();
-//    }
-//#ifdef HAVE_MPI
-//    if (this->isScattered()) {
-
-//        return mpi::all_reduce(node_group, result, std::plus<double>());
-//    }
-//#endif
-//    return result;
+    double result = 0.0;
+    for (int i = 0; i < this->getNRootNodes(); i++) {
+        FunctionNode<D> &fNode = getRootFuncNode(i);
+        result += fNode.integrate();
+    }
+#ifdef HAVE_MPI
+    if (this->isScattered()) {
+        return mpi::all_reduce(node_group, result, std::plus<double>());
+    }
+#endif
+    return result;
 }
 
 template<int D>

@@ -66,7 +66,6 @@ void GridGenerator<D>::buildGrid() {
         iteration++;
     }
     this->grid->resetEndNodeTable();
-    this->grid = 0;
 }
 
 template<int D>

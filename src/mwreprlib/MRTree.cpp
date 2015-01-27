@@ -5,7 +5,6 @@
 #include "LebesgueIterator.h"
 #include "TelePrompter.h"
 
-
 using namespace std;
 using namespace Eigen;
 
@@ -532,19 +531,19 @@ void MRTree<D>::makeNodeTable(MRNodeVector &nodeTable) {
   * Returns one nodeVector per scale. GenNodes disregarded. */
 template<int D>
 void MRTree<D>::makeNodeTable(std::vector<MRNodeVector > &nodeTable) {
-    NOT_IMPLEMENTED_ABORT;
 //    HilbertIterator<D> it(this);
-//    while (it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        if (node.isGenNode()) {
-//            continue;
-//        }
-//        int depth = node.getDepth();
-//        if (depth + 1 > nodeTable.size()) { // Add one more element
-//            nodeTable.push_back(MWNodeVector());
-//        }
-//        nodeTable[depth].push_back(&node);
-//    }
+    LebesgueIterator<D> it(this);
+    while (it.next()) {
+        MRNode<D> &node = it.getNode();
+        if (node.isGenNode()) {
+            continue;
+        }
+        int depth = node.getDepth();
+        if (depth + 1 > nodeTable.size()) { // Add one more element
+            nodeTable.push_back(MRNodeVector());
+        }
+        nodeTable[depth].push_back(&node);
+    }
 }
 
 /** Traverse tree along the Hilbert path and find nodes of local rankId.

@@ -10,6 +10,7 @@
 #include "QuadratureCache.h"
 #include "NodeIndex.h"
 #include "MathUtils.h"
+#include "Filter.h"
 
 using namespace std;
 using namespace Eigen;
@@ -365,34 +366,33 @@ void MWNode<D>::cvTransform(int operation) {
   * C++ version: Jonas Juselius, September 2009 */
 template<int D>
 void MWNode<D>::mwTransform(int operation) {
-    NOT_IMPLEMENTED_ABORT;
-//    int kp1 = this->getKp1();
-//    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
-//    int kp1_d = this->getKp1_d();
-//    const Filter &filter = getMWTree().getFilter();
-//    VectorXd &result = getMWTree().getTmpMWCoefs();
-//    bool overwrite = true;
+    int kp1 = this->getKp1();
+    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
+    int kp1_d = this->getKp1_d();
+    const Filter &filter = getMWTree().getFilter();
+    VectorXd &result = getMWTree().getTmpMWCoefs();
+    bool overwrite = true;
 
-//    for (int i = 0; i < D; i++) {
-//        int mask = 1 << i;
-//        for (int gt = 0; gt < this->getTDim(); gt++) {
-//            double *out = result.data() + gt * kp1_d;
-//            for (int ft = 0; ft < this->getTDim(); ft++) {
-//                /* Operate in direction i only if the bits along other
-//                 * directions are identical. The bit of the direction we
-//                 * operate on determines the appropriate filter/operator */
-//                if ((gt | mask) == (ft | mask)) {
-//                    double *in = this->coefs->data() + ft * kp1_d;
-//                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
-//                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
-//                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
-//                    overwrite = false;
-//                }
-//            }
-//            overwrite = true;
-//        }
-//        this->coefs->swap(result);
-//    }
+    for (int i = 0; i < D; i++) {
+        int mask = 1 << i;
+        for (int gt = 0; gt < this->getTDim(); gt++) {
+            double *out = result.data() + gt * kp1_d;
+            for (int ft = 0; ft < this->getTDim(); ft++) {
+                /* Operate in direction i only if the bits along other
+                 * directions are identical. The bit of the direction we
+                 * operate on determines the appropriate filter/operator */
+                if ((gt | mask) == (ft | mask)) {
+                    double *in = this->coefs->data() + ft * kp1_d;
+                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
+                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
+                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
+                    overwrite = false;
+                }
+            }
+            overwrite = true;
+        }
+        this->coefs->swap(result);
+    }
 }
 
 /** Set all norms to Undefined. */
@@ -429,7 +429,6 @@ void MWNode<D>::zeroNorms() {
 /** Calculate and store square norm and component norms, if allocated. */
 template<int D>
 void MWNode<D>::calcNorms() {
-    NOT_IMPLEMENTED_ABORT;
     calcSquareNorm();
     if (this->componentNorms != 0) {
         calcComponentNorms();
@@ -439,7 +438,6 @@ void MWNode<D>::calcNorms() {
 /** Calculate, store and return square norm. */
 template<int D>
 double MWNode<D>::calcSquareNorm() {
-    NOT_IMPLEMENTED_ABORT;
     assert(this->coefs != 0);
     assert(this->hasCoefs());
     this->squareNorm = this->coefs->squaredNorm();
@@ -469,7 +467,6 @@ double MWNode<D>::calcWaveletNorm() {
 /** Return coefficients, allocate if necessary. */
 template<int D>
 VectorXd& MWNode<D>::getCoefs() {
-    NOT_IMPLEMENTED_ABORT;
     if (not this->isAllocated()) { // Lazy allocation of the fly
         allocCoefs();
     }
@@ -479,7 +476,6 @@ VectorXd& MWNode<D>::getCoefs() {
 /** Return coefficients, allocate if necessary. Const version.*/
 template<int D>
 const VectorXd& MWNode<D>::getCoefs() const {
-    NOT_IMPLEMENTED_ABORT;
     assert(this->coefs != 0);
     return *this->coefs;
 }
@@ -488,18 +484,17 @@ const VectorXd& MWNode<D>::getCoefs() const {
   * in the  given vector. */
 template<int D>
 void MWNode<D>::copyScalingCoefsFromChildren(VectorXd &scaling) {
-    NOT_IMPLEMENTED_ABORT;
-//    int kp1_d = this->getKp1_d();
-//    assert(this->children != 0);
-//    for (int i = 0; i < this->getTDim(); i++) {
-//        MWNode<D> &child = getMWChild(i);
-//        if (child.hasCoefs()) {
-//            VectorXd &cc = child.getCoefs();
-//            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
-//        } else {
-//            scaling.segment(i * kp1_d, kp1_d).setZero();
-//        }
-//    }
+    int kp1_d = this->getKp1_d();
+    assert(this->children != 0);
+    for (int i = 0; i < this->getTDim(); i++) {
+        MWNode<D> &child = getMWChild(i);
+        if (child.hasCoefs()) {
+            VectorXd &cc = child.getCoefs();
+            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
+        } else {
+            scaling.segment(i * kp1_d, kp1_d).setZero();
+        }
+    }
 }
 
 /** Update the coefficients of the node by a mw transform of the scaling
@@ -507,24 +502,23 @@ void MWNode<D>::copyScalingCoefsFromChildren(VectorXd &scaling) {
   * coefficients. */
 template<int D>
 void MWNode<D>::reCompress(bool overwrite) {
-    NOT_IMPLEMENTED_ABORT;
-//    if ((not this->isGenNode()) and this->isBranchNode()) {
-//        if (not this->isAllocated()) {
-//            // This happens for seeded nodes and on distributed trees
-//            allocCoefs();
-//        }
-//        if (overwrite) {
-//            copyScalingCoefsFromChildren(*this->coefs);
-//            mwTransform(Compression);
-//        } else {
-//            MatrixXd tmp = getCoefs();
-//            copyScalingCoefsFromChildren(*this->coefs);
-//            mwTransform(Compression);
-//            getCoefs() += tmp;
-//        }
-//        this->setHasCoefs();
-//        clearNorms();
-//    }
+    if ((not this->isGenNode()) and this->isBranchNode()) {
+        if (not this->isAllocated()) {
+            // This happens for seeded nodes and on distributed trees
+            allocCoefs();
+        }
+        if (overwrite) {
+            copyScalingCoefsFromChildren(*this->coefs);
+            mwTransform(Compression);
+        } else {
+            MatrixXd tmp = getCoefs();
+            copyScalingCoefsFromChildren(*this->coefs);
+            mwTransform(Compression);
+            getCoefs() += tmp;
+        }
+        this->setHasCoefs();
+        clearNorms();
+    }
 }
 
 /** Testing if the branch decending from this node differs from the branch

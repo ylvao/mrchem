@@ -1,8 +1,7 @@
 #ifndef GRIDADAPTOR_H
 #define GRIDADAPTOR_H
 
-template<int D> class MRGrid;
-template<int D> class FunctionTree;
+#include "mwrepr_declarations.h"
 
 template<int D>
 class GridAdaptor {
@@ -13,6 +12,7 @@ public:
     void setPrecision(double pr) { this->prec = pr; }
 
     void adaptGrid(MRGrid<D> &grid, FunctionTree<D> &tree);
+    MRNodeVector& splitNodeTable(MRNodeVector &nodeTable);
 
 protected:
     bool absPrec;

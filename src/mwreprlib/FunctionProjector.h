@@ -2,9 +2,7 @@
 #define FUNCTIONPROJECTOR_H
 
 #include "MWProjector.h"
-
-template<int D> class FunctionTree;
-template<int D> class RepresentableFunction;
+#include "mwrepr_declarations.h"
 
 template<int D>
 class FunctionProjector : public MWProjector<D> {
@@ -13,11 +11,12 @@ public:
     FunctionProjector(GridAdaptor<D> &a);
     virtual ~FunctionProjector();
 
-    void operator()(FunctionTree<D> &tree, RepresentableFunction<D> &func);
+    void operator()(FunctionTree<D> &t, RepresentableFunction<D> &f);
 
 protected:
-    RepresentableFunction<D> *function;
+    RepresentableFunction<D> *func;
 
+    void calcWaveletCoefs(MWNode<D> &node);
 };
 
 #endif // FUNCTIONPROJECTOR_H

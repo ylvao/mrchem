@@ -20,12 +20,14 @@ GridNode<D>::GridNode(MRTree<D> &t, const NodeIndex<D> &nIdx)
         : MRNode<D>(t, nIdx) {
     calcQuadPoints();
     calcQuadWeights();
+    this->setIsEndNode();
 }
 
 template<int D>
 GridNode<D>::GridNode(GridNode<D> *p, int cIdx) : MRNode<D>(p, cIdx) {
     calcQuadPoints();
     calcQuadWeights();
+    this->setIsEndNode();
 }
 
 template<int D>

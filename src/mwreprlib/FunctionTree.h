@@ -18,6 +18,7 @@
 template<int D> class FunctionNode;
 template<int D> class BoundingBox;
 template<int D> class NodeIndex;
+template<int D> class MWProjector;
 
 template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
@@ -62,6 +63,8 @@ public:
 
     template<int T>
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
+
+    friend class MWProjector<D>;
 
 private:
 //    HilbertPathTable<D> hilbertPathTable;

@@ -6,6 +6,7 @@
 
 #include "constants.h"
 #include "MWTree.h"
+#include "MWNode.h"
 #include "MRGrid.h"
 #include "FilterCache.h"
 #include "ScalingCache.h"
@@ -132,40 +133,38 @@ void MWTree<D>::setSplitType(int type) {
   * incomplete (e.g. within growTree), the missing nodes must be given in the
   * input work vector. Involves an MPI reduction operation. */
 template<int D>
-double MWTree<D>::calcTreeNorm(MRNodeVector *work)  {
-    NOT_IMPLEMENTED_ABORT;
-//    double treeNorm = 0.0;
-//    int nNodes = 0;
-//    if (work != 0) {
-//        nNodes = work->size();
-//    }
-//    for (int n = 0; n < nNodes; n++) {
-//        MWNode<D> *node = (*work)[n];
-//        if (not node->isForeign()) {
-//            assert(node->hasCoefs());
-//            treeNorm += node->getSquareNorm();
-//        }
-//    }
-//    for (int n = 0; n < (int) this->endNodeTable.size(); n++) {
-//        MWNode<D> *node = this->endNodeTable[n];
-//        if ( not node->isForeign()) {
-//            treeNorm += node->getSquareNorm();
-//        }
-//    }
-//    treeNorm = reduceNorm(treeNorm);
-//    return treeNorm;
+double MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
+    double treeNorm = 0.0;
+    int nNodes = 0;
+    if (nodeTable != 0) {
+        nNodes = nodeTable->size();
+    }
+    for (int n = 0; n < nNodes; n++) {
+        MWNode<D> *node = static_cast<MWNode<D> *>((*nodeTable)[n]);
+        if (not node->isForeign()) {
+            assert(node->hasCoefs());
+            treeNorm += node->getSquareNorm();
+        }
+    }
+    for (int n = 0; n < (int) this->endNodeTable.size(); n++) {
+        MWNode<D> *node = static_cast<MWNode<D> *>(this->endNodeTable[n]);
+        if ( not node->isForeign()) {
+            treeNorm += node->getSquareNorm();
+        }
+    }
+    this->squareNorm = reduceNorm(treeNorm);
+    return this->squareNorm;
 }
 
 /** Collect local treeNorms to global treeNorm. */
 template<int D>
 double MWTree<D>::reduceNorm(double treeNorm) {
-    NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
-//    if (isBuildDistributed()) {
-//        return mpi::all_reduce(node_group, treeNorm, std::plus<double>());
-//    }
-//#endif
-//    return treeNorm;
+#ifdef HAVE_MPI
+    if (isBuildDistributed()) {
+        return mpi::all_reduce(node_group, treeNorm, std::plus<double>());
+    }
+#endif
+    return treeNorm;
 }
 
 template<int D>
@@ -212,42 +211,24 @@ void MWTree<D>::crop(double thrs, bool absPrec) {
   * coefficients of BranchNodes (can be used after operator application). */
 template<int D>
 void MWTree<D>::mwTransformUp(bool overwrite) {
-    NOT_IMPLEMENTED_ABORT;
-//    vector<MWNodeVector > nodeTable;
-//    if (isScattered()) {
-//        this->makeLocalNodeTable(nodeTable);
-//    } else {
-//        makeNodeTable(nodeTable);
-//    }
-//    set<MWNode<D> *> missing;
-//    int start = nodeTable.size() - 2;
-//    for (int n = start; n >= 0; n--) {
-//        if (isScattered()) {
-//            missing.clear();
-//            findMissingChildren(nodeTable[n], missing);
-//            //communicate missing
-//            syncNodes(missing);
-//        }
-//        int n_nodes = nodeTable[n].size();
-//#pragma omp parallel firstprivate(n_nodes, overwrite) shared(nodeTable)
-//        {
-//#pragma omp for schedule(guided)
-//            for (int i = 0; i < n_nodes; i++) {
-//                MWNode<D> &node = *nodeTable[n][i];
-//                if (node.isBranchNode()) {
-//                    node.reCompress(overwrite);
-//                }
-//            }
-//        }
-//        // For some very strange reason the calcNorms routine cannot be called in the
-//        // above OMP loop.
-//        for (int i = 0; i < n_nodes; i++) {
-//            MWNode<D> &node = *nodeTable[n][i];
-//            if (node.isBranchNode()) {
-//                node.calcNorms();
-//            }
-//        }
-//    }
+    vector<MRNodeVector > nodeTable;
+    this->makeNodeTable(nodeTable);
+
+    int start = nodeTable.size() - 2;
+    for (int n = start; n >= 0; n--) {
+        int nNodes = nodeTable[n].size();
+#pragma omp parallel firstprivate(nNodes, overwrite) shared(nodeTable)
+        {
+#pragma omp for schedule(guided)
+            for (int i = 0; i < nNodes; i++) {
+                MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n][i]);
+                if (node.isBranchNode()) {
+                    node.reCompress(overwrite);
+                    node.calcNorms();
+                }
+            }
+        }
+    }
 }
 
 /** Regenerate all scaling coeffs by MW transformation of existing s/w-coeffs

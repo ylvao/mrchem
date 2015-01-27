@@ -15,6 +15,7 @@
 class InterpolatingBasis : public ScalingBasis {
 public:
     InterpolatingBasis(int order) :	 ScalingBasis(order) {
+        this->type = Interpol;
 //        initScalingBasis();
 //        preEvaluate();
     }

@@ -35,6 +35,7 @@ public:
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MRGrid<T> &grid);
+
     friend class GridGenerator<D>;
 protected:
     void initializeRootNodes();

@@ -16,9 +16,9 @@ MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : nodeIndex(nIdx) {
     this->parent = 0;
     this->status = 0;
     this->children = 0;
+    this->setRankId(this->tree->getRankId());
 
     setIsLeafNode();
-    setIsEndNode();
     setIsRootNode();
 
 #ifdef OPENMP
@@ -39,6 +39,7 @@ MRNode<D>::MRNode(MRNode<D> *p, int cIdx) {
         this->tree = this->parent->tree;
         this->tree->incrementNodeCount(getScale());
     }
+    this->setRankId(this->tree->getRankId());
     setIsLeafNode();
 #ifdef OPENMP
     omp_init_lock(&node_lock);

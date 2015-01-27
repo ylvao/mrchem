@@ -128,8 +128,8 @@ void testGrid() {
     // Setting up grid generator
     MolecularGridGenerator generator;
     generator.setUniformScale(-2);
-    generator.setAmplitude(5);
-    generator.setWidth(5);
+    generator.setAmplitude(2);
+    generator.setWidth(2);
     generator.setNuclearDependence(0);
 
     // Constructing initial grid
@@ -164,8 +164,8 @@ void testGrid() {
 //        xcGrad.setName("XC potential gradient");
 
         println(0, elDens);
-
-//        P(elDens, gaussDens);
+        P(elDens, gaussDens);
+        println(0, elDens);
 //        P_en(xcDens, elDens);
 //        P_pot(xcPot, elDens);
 //        P_grad(xcGrad, elDens);
@@ -180,18 +180,20 @@ void testGrid() {
 //        maxError = max(maxError, estErrorPotential);
 //        maxError = max(maxError, estErrorGrad);
 
-        double numCharge = 0.0;//elDens.integrate();
+        double numCharge = elDens.integrate();
         double realError = numCharge - charge;
         if (not absPrec) {
             realError *= 1.0/charge;
         }
 
-        println(0, grid);
+        println(0, endl);
 //        println(0, "Estimated error gradient    " << estErrorGradient);
 //        println(0, "Estimated error potential   " << estErrorPotential);
 //        println(0, "Estimated error energy      " << estErrorEnergy);
 //        println(0, "Estimated error charge      " << estErrorCharge);
-        println(0, "Integrated error charge     " << realError << endl);
+        println(0, "Analytic charge         " << setw(25) << charge);
+        println(0, "Integrated charge       " << setw(25) << numCharge);
+        println(0, "Integrated error charge " << setw(25) << realError << endl);
 
 //        adaptor.adaptGrid(grid, elDens);
 //        adaptor.adaptGrid(grid, xcDens);
@@ -220,6 +222,7 @@ void testGrid() {
     }
 
 
+    println(0, grid);
     println(0, "Quadrature points       " << points.rows() << " x " << points.cols());
     println(0, "Quadrature weights      " << weights.size());
     println(0, "Quadrature values       " << values.size() << endl);

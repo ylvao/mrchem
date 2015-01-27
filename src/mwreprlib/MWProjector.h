@@ -1,9 +1,7 @@
 #ifndef MWPROJECTOR_H
 #define MWPROJECTOR_H
 
-template<int D> class MRGrid;
-template<int D> class GridAdaptor;
-template<int D> class FunctionTree;
+#include "mwrepr_declarations.h"
 
 template<int D>
 class MWProjector {
@@ -13,9 +11,12 @@ public:
     virtual ~MWProjector();
 
 protected:
+    FunctionTree<D> *tree;
     GridAdaptor<D> *adaptor;
 
-    void buildTree(FunctionTree<D> &tree);
+    void buildTree();
+    void calcNodeTable(MRNodeVector &nodeTable);
+    virtual void calcWaveletCoefs(MWNode<D> &node) = 0;
 };
 
 #endif // MWPROJECTOR_H
