@@ -26,6 +26,8 @@
 #include "NodeIndex.h"
 #include "MRGrid.h"
 #include "FunctionTree.h"
+#include "FunctionProjector.h"
+#include "GridAdaptor.h"
 #include "MathUtils.h"
 
 #include "Intgrl.h"
@@ -58,8 +60,8 @@ int main(int argc, char **argv) {
 
     MREnv::initializeMRCPP(k, prec);
 
-//    testGrid();
-    testTrees();
+    testGrid();
+//    testTrees();
 
     MREnv::finalizeMRCPP(rolex.elapsed());
 
@@ -89,56 +91,113 @@ void testTrees() {
     BoundingBox<3> world_3D(idx_3D, nb, o);
     println(0, world_3D);
 
-    FunctionTree<1> *tree_1D = new FunctionTree<1>(type, k, &world_1D);
+    FunctionTree<1> *tree_1D = new FunctionTree<1>(&world_1D, k, type);
     delete tree_1D;
 
-    FunctionTree<2> *tree_2D = new FunctionTree<2>(type, k, &world_2D);
+    FunctionTree<2> *tree_2D = new FunctionTree<2>(&world_2D, k, type);
     delete tree_2D;
 
-    FunctionTree<3> *tree_3D = new FunctionTree<3>(type, k, &world_3D);
+    FunctionTree<3> *tree_3D = new FunctionTree<3>(&world_3D, k, type);
     delete tree_3D;
 }
 
 void testGrid() {
-    //Setting up world parameters
+    // Setting up molecular density expansion
+    Molecule molecule("he.xyz");
+    molecule.print();
+
+    Intgrl intgrl("he.bas");
+    MatrixXd D = MathUtils::readMatrixFile("he.dens");
+    DensExp densExp(intgrl, D);
+
+    GaussExp<3> gaussDens = densExp.getAODensExpansion();
+    gaussDens.calcScreening(25);
+    gaussDens.setScreen(true);
+
+    // Setting up world parameters
     int n = -3;
     int l[3] = {-1,-1,-1};
     int nb[3] = {2,2,2};
     double o[3] = {0.0,0.0,0.0};
     NodeIndex<3> idx(n, l);
 
-    //Constructing world box
+    // Constructing world box
     BoundingBox<3> world(idx, nb, o);
     println(0, world);
 
-    //Constructing initial grid
-    int k = 5;
-    MRGrid<3> grid(k, &world);
-    println(0, grid);
-
-    // Setting up molecular density
-    Molecule molecule("diamond_1.xyz");
-    molecule.print();
-
-    Intgrl intgrl("diamond_1.bas");
-    MatrixXd D = MathUtils::readMatrixFile("diamond_1.dens");
-    DensExp densExp(intgrl, D);
-
-    //Adapting grid to molecular geometry
+    // Setting up grid generator
     MolecularGridGenerator generator;
-    generator.setUniformScale(-1);
+    generator.setUniformScale(-2);
     generator.setAmplitude(5);
     generator.setWidth(5);
     generator.setNuclearDependence(0);
 
+    // Constructing initial grid
+    int k = 5;
+    MRGrid<3> grid(&world, k);
     generator.generateGrid(grid, molecule);
     println(0, grid);
 
-//    MWProjector P(grid);
-//    P.setAbsPrec(1.0e-3);
-//    P.setRelPrec(1.0e-6);
-//    P.setUniformDepth(0);
-//    P.setMaxRefinement(0);
+    bool absPrec = true;
+    double thrs = 1.0e-5;
+    double maxError = 1.0;
+    double charge = (double) molecule.getNElectrons();
+
+    GridAdaptor<3> adaptor(thrs, absPrec);
+    FunctionProjector<3> P;
+
+//    XCFun xcFun(2);
+//    xcFun.setFunctional("LDA");
+//    XCProjector P_en(xcFun, 0);
+//    XCProjector P_pot(xcFun, 1);
+//    XCProjector P_grad(xcFun, 2);
+
+//    while (maxError > thrs) {
+        FunctionTree<3> elDens(grid, Interpol);
+//        FunctionTree<3> xcDens(grid, Interpol);
+//        FunctionTree<3> xcPot(grid, Interpol);
+//        FunctionTree<3> xcGrad(grid, Interpol);
+
+        elDens.setName("Electron density");
+//        xcDens.setName("XC energy density");
+//        xcPot.setName("XC potential");
+//        xcGrad.setName("XC potential gradient");
+
+        println(0, elDens);
+
+//        P(elDens, gaussDens);
+//        P_en(xcDens, elDens);
+//        P_pot(xcPot, elDens);
+//        P_grad(xcGrad, elDens);
+
+//        double estErrorCharge = elDens.estimateError(absPrec);
+//        double estErrorEnergy = xcDens.estimateError(absPrec);
+//        double estErrorPotential = xcPot.estimateError(absPrec);
+//        double estErrorGradient = xcGrad.estimateError(absPrec);
+
+//        maxError = estErrorCharge;
+//        maxError = max(maxError, estErrorEnergy);
+//        maxError = max(maxError, estErrorPotential);
+//        maxError = max(maxError, estErrorGrad);
+
+        double numCharge = 0.0;//elDens.integrate();
+        double realError = numCharge - charge;
+        if (not absPrec) {
+            realError *= 1.0/charge;
+        }
+
+        println(0, grid);
+//        println(0, "Estimated error gradient    " << estErrorGradient);
+//        println(0, "Estimated error potential   " << estErrorPotential);
+//        println(0, "Estimated error energy      " << estErrorEnergy);
+//        println(0, "Estimated error charge      " << estErrorCharge);
+        println(0, "Integrated error charge     " << realError << endl);
+
+//        adaptor.adaptGrid(grid, elDens);
+//        adaptor.adaptGrid(grid, xcDens);
+//        adaptor.adaptGrid(grid, xcPot);
+//        adaptor.adaptGrid(grid, xcGrad);
+//    }
 
     //setting up quadrature data
     MatrixXd points;
@@ -149,20 +208,23 @@ void testGrid() {
     int nPoints = weights.size();
     VectorXd values = VectorXd::Zero(weights.size());
 
-    GaussExp<3> density = densExp.getAODensExpansion();
-    density.calcScreening(25);
-    density.setScreen(true);
     for (int n = 0; n < nPoints; n++) {
         double r[3] = { points(n,0), points(n,1), points(n,2) };
-        values(n) = density.evalf(r);
+        values(n) = gaussDens.evalf(r);
     }
 
-    double integral = weights.dot(values);
+    double quadCharge = weights.dot(values);
+    double quadError = quadCharge - charge;
+    if (not absPrec) {
+        quadError *= 1.0/charge;
+    }
 
-    println(0, "Quadrature points  " << points.rows() << " x " << points.cols());
-    println(0, "Quadrature weights " << weights.size());
-    println(0, "Quadrature values  " << values.size() << endl);
-    println(0, "Integrated charge  " << integral << endl);
 
+    println(0, "Quadrature points       " << points.rows() << " x " << points.cols());
+    println(0, "Quadrature weights      " << weights.size());
+    println(0, "Quadrature values       " << values.size() << endl);
+    println(0, "Analytic charge         " << setw(25) << charge);
+    println(0, "Integrated charge       " << setw(25) << quadCharge);
+    println(0, "Integrated charge error " << setw(25) << quadError << endl);
 }
 
