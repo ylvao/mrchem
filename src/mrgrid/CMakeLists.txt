@@ -15,13 +15,15 @@ set (mrgridlib_SOURCES
 	MolecularGridGenerator.h
         MREnv.cpp
         MREnv.h
+        XCFunctional.cpp
+        XCFunctional.h
 	)
 
 add_library(mrgrid STATIC 
         ${mrgridlib_SOURCES}
         )
 
-target_link_libraries(mrgrid mwrepr)
+target_link_libraries(mrgrid mwrepr xcfun)
 add_dependencies(mrgrid external-modules)
 
 install(TARGETS mrgrid

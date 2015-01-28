@@ -26,7 +26,7 @@ public:
         printLevel = i;
     }
     static void setPrecision(int i) {
-        assert(i > 1);
+        assert(i > 0);
         precision = i;
         *out << std::scientific << std::setprecision(i);
     }

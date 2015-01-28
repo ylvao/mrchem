@@ -30,7 +30,7 @@ install(TARGETS mwutils
 
 
 target_link_libraries(mwutils mrgrid mwrepr)
-add_dependencies(mwutils external-modules)
+#add_dependencies(mwutils external-modules)
 
 install(TARGETS mwutils
         ARCHIVE DESTINATION lib

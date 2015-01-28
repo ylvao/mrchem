@@ -46,6 +46,6 @@ set(tests
 foreach(test ${tests})
         add_executable(${test} ${test}.cpp)
         target_link_libraries(${test} ${TESTING_LIBS})
-        add_dependencies(${test} external-modules)
+        #add_dependencies(${test} external-modules)
 endforeach()
 
