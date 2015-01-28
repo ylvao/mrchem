@@ -8,6 +8,7 @@
 #include "MWNode.h"
 #include "MWTree.h"
 #include "QuadratureCache.h"
+#include "ScalingBasis.h"
 #include "NodeIndex.h"
 #include "MathUtils.h"
 #include "Filter.h"
@@ -296,53 +297,52 @@ void MWNode<D>::zeroCoefs() {
   *       representation, in oppose to s/d (scaling and wavelet). */
 template<int D>
 void MWNode<D>::cvTransform(int operation) {
-    NOT_IMPLEMENTED_ABORT;
-//    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
-//    if (sf.getType() != Interpol) {
-//        NOT_IMPLEMENTED_ABORT;
-//    }
+    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
+    if (sf.getType() != Interpol) {
+        NOT_IMPLEMENTED_ABORT;
+    }
 
-//    int quadratureOrder = sf.getQuadratureOrder();
-//    getQuadratureCache(qc);
+    int quadratureOrder = sf.getQuadratureOrder();
+    getQuadratureCache(qc);
 
-//    double two_scale = pow(2.0, getScale() + 1);
-//    VectorXd modWeights = qc.getWeights(quadratureOrder);
-//    switch (operation) {
-//        case Forward:
-//            modWeights = modWeights.array().inverse();
-//            modWeights *= two_scale;
-//            modWeights = modWeights.array().sqrt();
-//            break;
-//        case Backward:
-//            modWeights *= 1.0/two_scale;
-//            modWeights = modWeights.array().sqrt();
-//            break;
-//        default:
-//            MSG_FATAL("Invalid operation");
-//    }
+    double two_scale = pow(2.0, this->getScale() + 1);
+    VectorXd modWeights = qc.getWeights(quadratureOrder);
+    switch (operation) {
+    case Forward:
+        modWeights = modWeights.array().inverse();
+        modWeights *= two_scale;
+        modWeights = modWeights.array().sqrt();
+        break;
+    case Backward:
+        modWeights *= 1.0/two_scale;
+        modWeights = modWeights.array().sqrt();
+        break;
+    default:
+        MSG_FATAL("Invalid operation");
+    }
 
-//    VectorXd &coefs = getCoefs();
+    VectorXd &coefs = this->getCoefs();
 
-//    int kp1 = getKp1();
-//    int kp1_d = getKp1_d();
-//    int kp1_p[D];
-//    for (int i = 0; i < D; i++) {
-//        kp1_p[i] = MathUtils::ipow(getKp1(), i);
-//    }
+    int kp1 = this->getKp1();
+    int kp1_d = this->getKp1_d();
+    int kp1_p[D];
+    for (int d = 0; d < D; d++) {
+        kp1_p[d] = MathUtils::ipow(kp1, d);
+    }
 
-//    for (int m = 0; m < this->getTDim(); m++) {
-//        for (int p = 0; p < D; p++) {
-//            int n = 0;
-//            for (int i = 0; i < kp1_p[D - p - 1]; i++) {
-//                for (int j = 0; j < kp1; j++) {
-//                    for (int k = 0; k < kp1_p[p]; k++) {
-//                        coefs[m * kp1_d + n] *= modWeights[j];
-//                        n++;
-//                    }
-//                }
-//            }
-//        }
-//    }
+    for (int m = 0; m < this->getTDim(); m++) {
+        for (int p = 0; p < D; p++) {
+            int n = 0;
+            for (int i = 0; i < kp1_p[D - p - 1]; i++) {
+                for (int j = 0; j < kp1; j++) {
+                    for (int k = 0; k < kp1_p[p]; k++) {
+                        coefs[m * kp1_d + n] *= modWeights[j];
+                        n++;
+                    }
+                }
+            }
+        }
+    }
 }
 
 /** Multiwavelet transform: fast version
@@ -653,7 +653,6 @@ bool MWNode<D>::diffNorms(const MWNode<D> &rhs) const {
   * routine). */
 template<int D>
 void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
-    NOT_IMPLEMENTED_ABORT;
     if (not this->isAllocated()) {
         allocCoefs();
     }

@@ -8,20 +8,20 @@ using namespace std;
 
 template<int D>
 MWProjector<D>::MWProjector() {
-    this->tree = 0;
+    this->outTree = 0;
     this->adaptor = 0;
 }
 
 template<int D>
 MWProjector<D>::MWProjector(GridAdaptor<D> &a) {
-    this->tree = 0;
+    this->outTree = 0;
     this->adaptor = &a;
 }
 
 template<int D>
 MWProjector<D>::~MWProjector() {
     this->adaptor = 0;
-    if (this->tree != 0) {
+    if (this->outTree != 0) {
         MSG_ERROR("Projector not properly cleared");
     }
 }
@@ -30,13 +30,13 @@ template<int D>
 void MWProjector<D>::buildTree() {
     println(1, "  == Building tree");
     MRNodeVector nodeTable;
-    this->tree->copyEndNodeTable(nodeTable);
-    this->tree->clearEndNodeTable();
+    this->outTree->copyEndNodeTable(nodeTable);
+    this->outTree->clearEndNodeTable();
 
     int iteration = 1;
     while (nodeTable.size() > 0) {
         calcNodeTable(nodeTable);
-        this->tree->calcTreeNorm(&nodeTable);
+        this->outTree->calcTreeNorm(&nodeTable);
         if (this->adaptor != 0) {
             NOT_IMPLEMENTED_ABORT;
 //            nodeTable = this->adaptor->splitNodeTable(nodeTable);
@@ -45,7 +45,7 @@ void MWProjector<D>::buildTree() {
         }
         iteration++;
     }
-    this->tree->resetEndNodeTable();
+    this->outTree->resetEndNodeTable();
 }
 
 template<int D>

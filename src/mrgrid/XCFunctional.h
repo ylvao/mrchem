@@ -29,13 +29,6 @@ public:
 
     void setFunctional(const std::string &funcName, double coef = 1.0);
 
-    void evaluate(FunctionTree<3> **input);
-    void clear();
-
-    FunctionTree<3> &getOutputFunction(int i);
-    void fetchOutputFunction(int i, FunctionTree<3> **output);
-    void fetchOutputFunctions(FunctionTree<3> **output);
-
     int getInputLength() const { return this->inputLength; }
     int getOutputLength() const { return this->outputLength; }
 
@@ -44,45 +37,28 @@ public:
     bool isGGA() const;
     bool isSpinSeparated() const { return this->spinSeparated; }
 
-    void printInputSizes();
-    void printOutputSizes();
+    void setInputData(int i, Eigen::VectorXd &inpData);
+    void calcOutputData(int i, Eigen::VectorXd &outData);
 
 private:
     bool spinSeparated;
     int order;
     int type;
 
-    int outMode;
     int inputLength;
     int outputLength;
     int maxInputLength;
     int maxOutputLength;
 
     xc_functional func;
-
-    FunctionTree<3> **inputFunctions;
-    FunctionTree<3> **outputFunctions;
-
     Eigen::VectorXd ***inputData;
-    Eigen::VectorXd ***outputData;
-
-    Eigen::VectorXd &getInputData(int i);
-    Eigen::VectorXd &getOutputData(int i);
 
     void setup();
 
-    Eigen::VectorXd ***allocLocalData(int nFuncs);
-    void deleteLocalData();
+    Eigen::VectorXd ***allocInputData(int nFuncs);
+    void deleteInputData();
 
-    template<class T> T **allocPtrArray(int nFuncs);
-    void clearInputFunctions();
-    void clearOutputFunctions();
-
-    void calcInputData(const NodeIndex<3> &idx);
-    void calcInputFunctions(FunctionTree<3> **dens);
-
-    void calcXCValue(Eigen::VectorXd &densityValues);
-    void calcXCValues(Eigen::VectorXd &densityValues);
+    Eigen::VectorXd &getInputData(int i);
 };
 
 #endif /* XCFUN_H_ */

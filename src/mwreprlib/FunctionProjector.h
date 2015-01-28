@@ -11,10 +11,10 @@ public:
     FunctionProjector(GridAdaptor<D> &a);
     virtual ~FunctionProjector();
 
-    void operator()(FunctionTree<D> &t, RepresentableFunction<D> &f);
+    void operator()(FunctionTree<D> &out, RepresentableFunction<D> &inp);
 
 protected:
-    RepresentableFunction<D> *func;
+    RepresentableFunction<D> *inpFunc;
 
     void calcWaveletCoefs(MWNode<D> &node);
 };

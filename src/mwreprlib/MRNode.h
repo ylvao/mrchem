@@ -136,8 +136,8 @@ protected:
     bool diffBranch(const MRNode<D> &rhs) const;
     inline bool checkStatus(unsigned char mask) const;
 
-    virtual MRNode<D> *retrieveNode(int n, const double *r) = 0;
-    virtual MRNode<D> *retrieveNode(const NodeIndex<D> &idx) = 0;
+    virtual MRNode<D> *retrieveNode(int n, const double *r);
+    virtual MRNode<D> *retrieveNode(const NodeIndex<D> &idx);
 
     const MRNode<D> *retrieveNodeNoGen(const NodeIndex<D> &idx) const;
     MRNode<D> *retrieveNodeNoGen(const NodeIndex<D> &idx);

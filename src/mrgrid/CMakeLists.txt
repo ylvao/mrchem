@@ -17,6 +17,8 @@ set (mrgridlib_SOURCES
         MREnv.h
         XCFunctional.cpp
         XCFunctional.h
+        XCProjector.cpp
+        XCProjector.h
 	)
 
 add_library(mrgrid STATIC 

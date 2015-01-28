@@ -13,30 +13,30 @@ using namespace Eigen;
 
 template<int D>
 FunctionProjector<D>::FunctionProjector() {
-    this->func = 0;
+    this->inpFunc = 0;
 }
 
 template<int D>
 FunctionProjector<D>::FunctionProjector(GridAdaptor<D> &a) : MWProjector<D>(a) {
-    this->func = 0;
+    this->inpFunc = 0;
 }
 
 template<int D>
 FunctionProjector<D>::~FunctionProjector() {
-    if (this->func != 0) {
+    if (this->inpFunc != 0) {
         MSG_ERROR("Projector not properly cleared");
     }
 }
 
 template<int D>
-void FunctionProjector<D>::operator()(FunctionTree<D> &t,
-                                      RepresentableFunction<D> &f) {
-    this->tree = &t;
-    this->func = &f;
+void FunctionProjector<D>::operator()(FunctionTree<D> &out,
+                                      RepresentableFunction<D> &inp) {
+    this->outTree = &out;
+    this->inpFunc = &inp;
     this->buildTree();
-    this->tree->mwTransformUp();
-    this->tree = 0;
-    this->func = 0;
+    this->outTree->mwTransformUp();
+    this->outTree = 0;
+    this->inpFunc = 0;
 }
 
 template<int D>
@@ -76,7 +76,7 @@ void FunctionProjector<D>::calcWaveletCoefs(MWNode<D> &node) {
                 coef *= sqrt(wgts(indexCounter[j])) * sqrtScaleFactor;
             }
 
-            tmpvec(i) = coef * this->func->evalf(point);
+            tmpvec(i) = coef * this->inpFunc->evalf(point);
 
             indexCounter[0]++;
             for (int j = 0; j < D - 1; j++) {

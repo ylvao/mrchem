@@ -317,9 +317,9 @@ MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
   * This routine always returns the appropriate node, and will generate nodes
   * that does not exist. Recursion starts at at this node and ASSUMES the
   * requested node is in fact decending from this node. */
-//template<int D>
-//MWNode<D> *MWNode<D>::retrieveNode(int n, const double *r) {
-//    NOT_IMPLEMENTED_ABORT;
+template<int D>
+MRNode<D> *MRNode<D>::retrieveNode(int n, const double *r) {
+    NOT_IMPLEMENTED_ABORT;
 //    if (this->nodeIndex.scale() == n) {
 //        return this;
 //    }
@@ -337,7 +337,7 @@ MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
 //        return this->children[idx];
 //    }
 //    return this->children[idx]->retrieveNode(n, r);
-//}
+}
 
 /** Node retriever that ALWAYS returns the requested node, possibly without coefs.
   *
@@ -345,22 +345,21 @@ MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
   * routine always returns the appropriate node, and will generate nodes that
   * does not exist. Recursion starts at at this node and ASSUMES the requested
   * node is in fact decending from this node. */
-//template<int D>
-//MWNode<D> *MWNode<D>::retrieveNode(const NodeIndex<D> &idx, bool genEmpty) {
-//    NOT_IMPLEMENTED_ABORT;
-//    if (nodeIndex.scale() == idx.getScale()) { // we're done
-//        return this;
-//    }
-//    if (isEndNode()) {
-//        SET_NODE_LOCK();
-//        if (isLeafNode()) {
-//            genChildren(genEmpty);
-//        }
-//        UNSET_NODE_LOCK();
-//    }
-//    int cIdx = getChildIndex(idx);
-//    return children[cIdx]->retrieveNode(idx, genEmpty);
-//}
+template<int D>
+MRNode<D> *MRNode<D>::retrieveNode(const NodeIndex<D> &idx) {
+    if (getScale() == idx.getScale()) { // we're done
+        return this;
+    }
+    if (isEndNode()) {
+        SET_NODE_LOCK();
+        if (isLeafNode()) {
+            genChildren();
+        }
+        UNSET_NODE_LOCK();
+    }
+    int cIdx = getChildIndex(idx);
+    return this->children[cIdx]->retrieveNode(idx);
+}
 
 /** Test if a given coordinate is within the boundaries of the node. */
 template<int D>

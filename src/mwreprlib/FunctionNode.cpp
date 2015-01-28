@@ -66,16 +66,6 @@ FunctionNode<D> &FunctionNode<D>::operator=(const FunctionNode<D> &nd) {
     return *this;
 }
 
-template<int D>
-MRNode<D>* FunctionNode<D>::retrieveNode(int n, const double *r) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-MRNode<D>* FunctionNode<D>::retrieveNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 /** Function evaluation.
   * Evaluate all polynomials defined on the node. */
 template<int D>

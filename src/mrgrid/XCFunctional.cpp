@@ -24,40 +24,21 @@ XCFunctional::XCFunctional(bool spinSep, int k) {
     this->type = -1.0;
     this->order = k;
 
-    this->outMode = -1;
     this->inputLength = -1;
     this->outputLength = -1;
     this->maxInputLength = 5;
     this->maxOutputLength = 21;
 
     this->func = xc_new_functional();
-
-    this->inputFunctions = allocPtrArray<FunctionTree<3> >(this->maxInputLength);;
-    this->outputFunctions = allocPtrArray<FunctionTree<3> >(this->maxOutputLength);;
-
-    this->inputData = allocLocalData(this->maxInputLength);
-    this->outputData = allocLocalData(this->maxOutputLength);
+    this->inputData = allocInputData(this->maxInputLength);
 }
 
 XCFunctional::~XCFunctional() {
     xc_free_functional(func);
-
-    clearInputFunctions();
-    clearOutputFunctions();
-
-    delete[] this->inputFunctions;
-    delete[] this->outputFunctions;
-
-    deleteLocalData();
+    deleteInputData();
 }
 
-void XCFunctional::clear() {
-    this->outMode = -1;
-    clearInputFunctions();
-    clearOutputFunctions();
-}
-
-VectorXd*** XCFunctional::allocLocalData(int nFuncs) {
+VectorXd*** XCFunctional::allocInputData(int nFuncs) {
     if (nFuncs < 0) {
         return 0;
     }
@@ -72,19 +53,7 @@ VectorXd*** XCFunctional::allocLocalData(int nFuncs) {
     return data;
 }
 
-template<class T>
-T** XCFunctional::allocPtrArray(int nFuncs) {
-    if (nFuncs < 0) {
-        return 0;
-    }
-    T **funcs = new T*[nFuncs];
-    for (int i = 0; i < nFuncs; i++) {
-        funcs[i] = 0;
-    }
-    return funcs;
-}
-
-void XCFunctional::deleteLocalData() {
+void XCFunctional::deleteInputData() {
     int nThreads = omp_get_max_threads();
     int nInp = this->maxInputLength;
     for (int i = 0; i < nInp; i++) {
@@ -94,40 +63,15 @@ void XCFunctional::deleteLocalData() {
         delete[] this->inputData[i];
     }
     delete[] this->inputData;
-
-    int nOut = this->maxOutputLength;
-    for (int i = 0; i < nOut; i++) {
-        for (int j = 0; j < nThreads; j++) {
-            delete this->outputData[i][j];
-        }
-        delete[] this->outputData[i];
-    }
-    delete[] this->outputData;
 }
 
-void XCFunctional::clearInputFunctions() {
-    for (int i = 0; i < this->maxInputLength; i++) {
-        this->inputFunctions[i] = 0;
-    }
-}
-
-void XCFunctional::clearOutputFunctions() {
-    for (int i = 0; i < this->maxOutputLength; i++) {
-        if (this->outputFunctions[i] != 0) {
-            delete this->outputFunctions[i];
-            this->outputFunctions[i] = 0;
-        }
-    }
+void XCFunctional::setInputData(int i, VectorXd &inpData) {
+    getInputData(i) = inpData;
 }
 
 VectorXd& XCFunctional::getInputData(int i) {
     int thread = omp_get_thread_num();
     return *this->inputData[i][thread];
-}
-
-VectorXd& XCFunctional::getOutputData(int i) {
-    int thread = omp_get_thread_num();
-    return *this->outputData[i][thread];
 }
 
 bool XCFunctional::isLDA() const {
@@ -144,26 +88,6 @@ bool XCFunctional::isGGA() const {
     } else {
         return false;
     }
-}
-
-void XCFunctional::printInputSizes() {
-    println(0, endl << "Input functions");
-    for (int i = 0; i < this->maxInputLength; i++) {
-        if (this->inputFunctions[i] != 0) {
-            println(0, i << ": " << this->inputFunctions[i]->getNNodes());
-        }
-    }
-    println(0, "");
-}
-
-void XCFunctional::printOutputSizes() {
-    println(0, endl << "Output functions");
-    for (int i = 0; i < this->maxOutputLength; i++) {
-        if (this->outputFunctions[i] != 0) {
-            println(0, i << ": " << this->outputFunctions[i]->getNNodes());
-        }
-    }
-    println(0, "");
 }
 
 void XCFunctional::setFunctional(const string &funcName, double coef) {
@@ -279,26 +203,6 @@ void XCFunctional::setup() {
     }
 }
 
-void XCFunctional::evaluate(FunctionTree<3> **input) {
-    clearInputFunctions();
-    clearOutputFunctions();
-    for (int i = 0; i < this->inputLength; i++) {
-        if (input[i] == 0) {
-            MSG_ERROR("Invalid input");
-        }
-        this->inputFunctions[i] = input[i];
-    }
-    for (int i = 0; i < this->outputLength; i++) {
-        this->outMode = i;
-        this->outputFunctions[i] = new FunctionTree<3>;
-        NOT_IMPLEMENTED_ABORT;
-//        this->outputFunctions[i]->applyFunctional(*this);
-    }
-    printInputSizes();
-    printOutputSizes();
-    clearInputFunctions();
-}
-
 /** Computes the alpha and beta exchange-correlation potentials
  * from the xcfun output functions. For LDA's these are the second
  * and third output functions, respectively. For GGA's the potentials
@@ -330,92 +234,26 @@ void XCFunctional::evaluate(FunctionTree<3> **input) {
  *  \frac{\partial F_{xc}}{\partial \rho_z^\beta}
  *  \right) \f$
  */
-FunctionTree<3>& XCFunctional::getOutputFunction(int i) {
-    if (i < 0 or i > this->outputLength) {
-        MSG_ERROR("Invalid output function");
-    }
-    if (this->outputFunctions[i] == 0) {
-        MSG_ERROR("Output function is not calculated");
-    }
-    return *this->outputFunctions[i];
-}
 
-void XCFunctional::fetchOutputFunction(int i, FunctionTree<3> **output) {
-    if (i < 0 or i > this->outputLength) {
-        MSG_ERROR("Invalid output function");
-    }
-    if (this->outputFunctions[i] == 0) {
-        MSG_ERROR("Output function is not calculated");
-    }
-    output[i] = this->outputFunctions[i];
-    this->outputFunctions[i] = 0;
-}
-
-void XCFunctional::fetchOutputFunctions(FunctionTree<3> **output) {
-    for (int i = 0; i < this->outputLength; i++) {
-        if (this->outputFunctions[i] == 0) {
-            MSG_ERROR("Output function is not calculated");
+void XCFunctional::calcOutputData(int k, VectorXd &outData) {
+    int nPoints = outData.size();
+    double *in = new double[this->inputLength];
+    double *out = new double[this->outputLength];
+    double thrs = 1.0e-12;
+    for (int i = 0; i < nPoints; i++) {
+        for (int j = 0; j < this->inputLength; j++) {
+            in[j] = this->getInputData(j)[i];
+            if (in[j] < 0.0) {
+                in[j] = 0.0;
+            }
         }
-        output[i] = this->outputFunctions[i];
-        this->outputFunctions[i] = 0;
+        if (in[0] < thrs) {
+            break;
+        }
+        xc_eval(this->func, in, out);
+        outData[i] = out[k];
     }
+    delete[] in;
+    delete[] out;
 }
 
-//bool XCFunctional::checkSeedNode(MWNode<3> &node) {
-//    if (this->inputFunctions[0] == 0) {
-//        MSG_ERROR("No density for seeding");
-//    }
-//    return this->inputFunctions[0]->checkSeedNode(node);
-//}
-
-//void XCFunctional::calcWaveletCoefs(MWNode<3> &node) {
-//    calcInputData(node.getNodeIndex());
-//    calcXCValue(node.getCoefs());
-//    node.cvTransform(MWNode<3>::Backward);
-//    node.mwTransform(Compression);
-//    node.setHasCoefs();
-//    node.calcNorms();
-//}
-
-void XCFunctional::calcInputData(const NodeIndex<3> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    int nInp = this->inputLength;
-//    for (int i = 0; i < nInp; i++) {
-//        MRNode<3> &mrNode = this->inputFunctions[i]->getNode(idx);
-//        MWNode<3> &mwNode = static_cast<MWNode<3> &>(mrNode);
-//        VectorXd &locData = this->getInputData(i);
-//        mwNode.mwTransform(Reconstruction);
-//        mwNode.cvTransform(Forward);
-//        locData = mwNode.getCoefs();
-//        mwNode.cvTransform(Backward);
-//        mwNode.mwTransform(Compression);
-//    }
-}
-
-void XCFunctional::calcXCValue(VectorXd &outValues) {
-    NOT_IMPLEMENTED_ABORT;
-//    int nPoints = outValues.size();
-//    double *in = new double[this->inputLength];
-//    double *out = new double[this->outputLength];
-//    double thrs = 1.0e-12;
-//    for (int i = 0; i < nPoints; i++) {
-//        for (int j = 0; j < this->inputLength; j++) {
-//            in[j] = this->getInputData(j)[i];
-//            if (in[j] < 0.0) {
-//                in[j] = 0.0;
-//            }
-//        }
-//        if (in[0] < thrs) {
-//            outValues = VectorXd::Zero(nPoints);
-//            break;
-//        }
-//        xc_eval(this->func, in, out);
-//        outValues[i] = out[this->outMode];
-//    }
-//    delete[] in;
-//    delete[] out;
-}
-
-void XCFunctional::calcXCValues(VectorXd &IOValues) {
-    NOT_IMPLEMENTED_ABORT
-}

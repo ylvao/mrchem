@@ -49,9 +49,6 @@ protected:
     double integrateLegendre();
     double integrateInterpolating();
 
-    MRNode<D> *retrieveNode(int n, const double *r);
-    MRNode<D> *retrieveNode(const NodeIndex<D> &idx);
-
 private:
     friend class boost::serialization::access;
     template<class Archive>

@@ -11,7 +11,7 @@ public:
     virtual ~MWProjector();
 
 protected:
-    FunctionTree<D> *tree;
+    FunctionTree<D> *outTree;
     GridAdaptor<D> *adaptor;
 
     void buildTree();
