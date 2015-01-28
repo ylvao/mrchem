@@ -53,9 +53,13 @@ void MWProjector<D>::calcNodeTable(MRNodeVector &nodeTable) {
     int nNodes = nodeTable.size();
     printout(1, "  -- #" << setw(3) << " Calculated   ");
     printout(1, setw(6) << nNodes << " nodes" << endl);
-    for (int n = 0; n < nNodes; n++) {
-        MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n]);
-        calcWaveletCoefs(node);
+#pragma omp parallel shared(nodeTable) firstprivate(nNodes)
+    {
+    #pragma omp for schedule(guided)
+        for (int n = 0; n < nNodes; n++) {
+            MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n]);
+            calcWaveletCoefs(node);
+        }
     }
 }
 
