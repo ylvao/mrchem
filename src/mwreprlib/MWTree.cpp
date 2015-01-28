@@ -12,6 +12,7 @@
 #include "ScalingCache.h"
 #include "LegendreBasis.h"
 #include "InterpolatingBasis.h"
+#include "LebesgueIterator.h"
 
 using namespace std;
 using namespace Eigen;
@@ -106,6 +107,49 @@ void MWTree<D>::setDefaultScalingType(int type) {
     NOT_IMPLEMENTED_ABORT
 }
 
+template<int D>
+MWNode<D>& MWTree<D>::getRootMWNode(int rIdx) {
+    return static_cast<MWNode<D> &>(this->getRootNode(rIdx));
+}
+
+template<int D>
+const MWNode<D>& MWTree<D>::getRootMWNode(int rIdx) const {
+    return static_cast<const MWNode<D> &>(this->getRootNode(rIdx));
+}
+
+template<int D>
+MWNode<D>& MWTree<D>::getRootMWNode(const NodeIndex<D> &nIdx) {
+    return static_cast<MWNode<D> &>(this->getRootNode(nIdx));
+}
+
+template<int D>
+const MWNode<D>& MWTree<D>::getRootMWNode(const NodeIndex<D> &nIdx) const {
+    return static_cast<const MWNode<D> &>(this->getRootNode(nIdx));
+}
+
+template<int D>
+MWNode<D>& MWTree<D>::getEndMWNode(int i) {
+    return static_cast<MWNode<D> &>(this->getEndNode(i));
+}
+
+template<int D>
+const MWNode<D>& MWTree<D>::getEndMWNode(int i) const {
+    return static_cast<const MWNode<D> &>(this->getEndNode(i));
+}
+
+
+template<int D>
+double MWTree<D>::estimateError(bool absPrec) {
+    double totError = 0.0;
+    for (int i = 0; i < this->getNEndNodes(); i++) {
+        MWNode<D> &node = getEndMWNode(i);
+        double nodeError = node.estimateError(absPrec);
+        totError += nodeError*nodeError;
+    }
+    return totError;
+//    return sqrt(totError);
+}
+
 /** Set tree split type.
   * Determines the strictness of the accuracy criterion of the wavelet norm. */
 /*
@@ -146,10 +190,10 @@ double MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
             treeNorm += node->getSquareNorm();
         }
     }
-    for (int n = 0; n < (int) this->endNodeTable.size(); n++) {
-        MWNode<D> *node = static_cast<MWNode<D> *>(this->endNodeTable[n]);
-        if ( not node->isForeign()) {
-            treeNorm += node->getSquareNorm();
+    for (int n = 0; n < this->getNEndNodes(); n++) {
+        MWNode<D> &node = getEndMWNode(n);
+        if (not node.isForeign()) {
+            treeNorm += node.getSquareNorm();
         }
     }
     this->squareNorm = reduceNorm(treeNorm);
@@ -165,11 +209,6 @@ double MWTree<D>::reduceNorm(double treeNorm) {
     }
 #endif
     return treeNorm;
-}
-
-template<int D>
-void MWTree<D>::refine(double thrs, bool absPrec) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 /** Reduce the accuracy of the tree by deleting nodes

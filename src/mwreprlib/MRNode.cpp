@@ -251,15 +251,14 @@ const MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) const {
   * node and ASSUMES the requested node is in fact decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (getScale() == idx.getScale()) { // we're done
-//        return this;
-//    }
-//    if (this->isEndNode()) { // don't return GenNodes
-//        return 0;
-//    }
-//    int cIdx = getChildIndex(idx);
-//    return this->children[cIdx]->retrieveNodeNoGen(idx);
+    if (getScale() == idx.getScale()) { // we're done
+        return this;
+    }
+    if (this->isEndNode()) { // don't return GenNodes
+        return 0;
+    }
+    int cIdx = getChildIndex(idx);
+    return this->children[cIdx]->retrieveNodeNoGen(idx);
 }
 
 template<int D>

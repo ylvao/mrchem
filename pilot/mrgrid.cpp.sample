@@ -40,7 +40,8 @@
 using namespace std;
 using namespace Eigen;
 
-void testGrid();
+void testAdaptiveGrid();
+void testPureGrid();
 void testTrees();
 
 int main(int argc, char **argv) {
@@ -60,7 +61,8 @@ int main(int argc, char **argv) {
 
     MREnv::initializeMRCPP(k, prec);
 
-    testGrid();
+    testAdaptiveGrid();
+//    testPureGrid();
 //    testTrees();
 
     MREnv::finalizeMRCPP(rolex.elapsed());
@@ -101,7 +103,125 @@ void testTrees() {
     delete tree_3D;
 }
 
-void testGrid() {
+void testAdaptiveGrid() {
+    // Setting up molecular density expansion
+    Molecule molecule("alkane_1.xyz");
+    molecule.print();
+
+    Intgrl intgrl("alkane_1.bas");
+    MatrixXd D = MathUtils::readMatrixFile("alkane_1.dens");
+    DensExp densExp(intgrl, D);
+
+    GaussExp<3> gaussDens = densExp.getAODensExpansion();
+    gaussDens.calcScreening(25);
+    gaussDens.setScreen(true);
+
+    // Constructing world box
+    int n = -3;
+    int l[3] = {-1,-1,-1};
+    int nb[3] = {2,2,2};
+    double o[3] = {0.0,0.0,0.0};
+    NodeIndex<3> idx(n, l);
+    BoundingBox<3> world(idx, nb, o);
+    println(0, world);
+
+    // Setting up grid generator
+    MolecularGridGenerator generator;
+    generator.setUniformScale(-3);
+    generator.setAmplitude(1);
+    generator.setWidth(2);
+    generator.setNuclearDependence(0);
+
+    // Constructing initial grid
+    int k = 3;
+    MRGrid<3> grid(&world, k);
+    generator.generateGrid(grid, molecule);
+    println(0, grid);
+
+    // Setting up adaptive MW projection
+    bool absPrec = true;
+    double thrs = 1.0e-6;
+    GridAdaptor<3> adaptor(thrs, absPrec);
+    FunctionProjector<3> P;
+
+//    XCFun xcFun(2);
+//    xcFun.setFunctional("LDA");
+//    XCProjector P_en(xcFun, 0);
+//    XCProjector P_pot(xcFun, 1);
+//    XCProjector P_grad(xcFun, 2);
+
+    printout(0, " nNodes");
+    printout(0, "    nQuad");
+    printout(0, "         Charge");
+    printout(0, "         Error");
+    printout(0, "         XC Energy");
+    printout(0, "        rho");
+    printout(0, "       E_xc");
+    printout(0, "     dE_xc");
+    printout(0, "    ddE_xc");
+    printout(0, endl);
+    printout(0, endl);
+
+    double maxError = 1.0;
+    double charge = (double) molecule.getNElectrons();
+    while (true) {
+        FunctionTree<3> elDens(grid, Interpol);
+//        FunctionTree<3> xcDens(grid, Interpol);
+//        FunctionTree<3> xcPot(grid, Interpol);
+//        FunctionTree<3> xcGrad(grid, Interpol);
+
+        P(elDens, gaussDens);
+//        P_en(xcDens, elDens);
+//        P_pot(xcPot, elDens);
+//        P_grad(xcGrad, elDens);
+
+        double estErrorCharge = elDens.estimateError(absPrec);
+        double estErrorEnergy = 1.0;//xcDens.estimateError(absPrec);
+        double estErrorPotential = 1.0;//xcPot.estimateError(absPrec);
+        double estErrorGradient = 1.0;//xcGrad.estimateError(absPrec);
+
+        maxError = estErrorCharge;
+//        maxError = max(maxError, estErrorEnergy);
+//        maxError = max(maxError, estErrorPotential);
+//        maxError = max(maxError, estErrorGrad);
+
+        int nNodes = grid.getNEndNodes();
+        int nQuad = pow(2*(k+1), 3);
+        double numCharge = elDens.integrate();
+        double numEnergy = 1.0;//xcDens.integrate();
+        double realError = numCharge - charge;
+        if (not absPrec) {
+            realError *= 1.0/charge;
+        }
+
+        printout(0, setw(6) << nNodes);
+        printout(0, setw(10) << nNodes*nQuad);
+        SET_PRINT_PRECISION(10);
+        printout(0, setw(20) << numCharge);
+        SET_PRINT_PRECISION(1);
+        printout(0, setw(10) << realError);
+        SET_PRINT_PRECISION(10);
+        printout(0, setw(20) << numEnergy);
+        SET_PRINT_PRECISION(1);
+        printout(0, setw(10) << estErrorCharge);
+        printout(0, setw(10) << estErrorEnergy);
+        printout(0, setw(10) << estErrorPotential);
+        printout(0, setw(10) << estErrorGradient);
+        printout(0, endl);
+
+        if (maxError < thrs) {
+            break;
+        }
+
+        adaptor.adaptGrid(grid, elDens);
+//        adaptor.adaptGrid(grid, xcDens);
+//        adaptor.adaptGrid(grid, xcPot);
+//        adaptor.adaptGrid(grid, xcGrad);
+    }
+    println(0, grid);
+}
+
+void testPureGrid() {
     // Setting up molecular density expansion
     Molecule molecule("he.xyz");
     molecule.print();
@@ -127,79 +247,16 @@ void testGrid() {
 
     // Setting up grid generator
     MolecularGridGenerator generator;
-    generator.setUniformScale(-2);
-    generator.setAmplitude(2);
+    generator.setUniformScale(-3);
+    generator.setAmplitude(1);
     generator.setWidth(2);
     generator.setNuclearDependence(0);
 
     // Constructing initial grid
-    int k = 5;
+    int k = 3;
     MRGrid<3> grid(&world, k);
     generator.generateGrid(grid, molecule);
     println(0, grid);
-
-    bool absPrec = true;
-    double thrs = 1.0e-5;
-    double maxError = 1.0;
-    double charge = (double) molecule.getNElectrons();
-
-    GridAdaptor<3> adaptor(thrs, absPrec);
-    FunctionProjector<3> P;
-
-//    XCFun xcFun(2);
-//    xcFun.setFunctional("LDA");
-//    XCProjector P_en(xcFun, 0);
-//    XCProjector P_pot(xcFun, 1);
-//    XCProjector P_grad(xcFun, 2);
-
-//    while (maxError > thrs) {
-        FunctionTree<3> elDens(grid, Interpol);
-//        FunctionTree<3> xcDens(grid, Interpol);
-//        FunctionTree<3> xcPot(grid, Interpol);
-//        FunctionTree<3> xcGrad(grid, Interpol);
-
-        elDens.setName("Electron density");
-//        xcDens.setName("XC energy density");
-//        xcPot.setName("XC potential");
-//        xcGrad.setName("XC potential gradient");
-
-        println(0, elDens);
-        P(elDens, gaussDens);
-        println(0, elDens);
-//        P_en(xcDens, elDens);
-//        P_pot(xcPot, elDens);
-//        P_grad(xcGrad, elDens);
-
-//        double estErrorCharge = elDens.estimateError(absPrec);
-//        double estErrorEnergy = xcDens.estimateError(absPrec);
-//        double estErrorPotential = xcPot.estimateError(absPrec);
-//        double estErrorGradient = xcGrad.estimateError(absPrec);
-
-//        maxError = estErrorCharge;
-//        maxError = max(maxError, estErrorEnergy);
-//        maxError = max(maxError, estErrorPotential);
-//        maxError = max(maxError, estErrorGrad);
-
-        double numCharge = elDens.integrate();
-        double realError = numCharge - charge;
-        if (not absPrec) {
-            realError *= 1.0/charge;
-        }
-
-        println(0, endl);
-//        println(0, "Estimated error gradient    " << estErrorGradient);
-//        println(0, "Estimated error potential   " << estErrorPotential);
-//        println(0, "Estimated error energy      " << estErrorEnergy);
-//        println(0, "Estimated error charge      " << estErrorCharge);
-        println(0, "Analytic charge         " << setw(25) << charge);
-        println(0, "Integrated charge       " << setw(25) << numCharge);
-        println(0, "Integrated error charge " << setw(25) << realError << endl);
-
-//        adaptor.adaptGrid(grid, elDens);
-//        adaptor.adaptGrid(grid, xcDens);
-//        adaptor.adaptGrid(grid, xcPot);
-//        adaptor.adaptGrid(grid, xcGrad);
-//    }
 
     //setting up quadrature data
     MatrixXd points;
@@ -215,12 +272,13 @@ void testGrid() {
         values(n) = gaussDens.evalf(r);
     }
 
+    bool absPrec = true;
+    double charge = (double) molecule.getNElectrons();
     double quadCharge = weights.dot(values);
     double quadError = quadCharge - charge;
     if (not absPrec) {
         quadError *= 1.0/charge;
     }
-
 
     println(0, grid);
     println(0, "Quadrature points       " << points.rows() << " x " << points.cols());
@@ -230,4 +288,3 @@ void testGrid() {
     println(0, "Integrated charge       " << setw(25) << quadCharge);
     println(0, "Integrated charge error " << setw(25) << quadError << endl);
 }
-

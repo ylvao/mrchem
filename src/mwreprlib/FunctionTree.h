@@ -33,9 +33,6 @@ public:
     void clearGenNodes();
     void purgeGenNodes();
 
-    void initializeRootNodes();
-    void initializeNodesRecursive(const MRGrid<D> &grid);
-
     double integrate();
     virtual double innerProduct(FunctionTree<D> &tree);
     virtual double evalf(const double *r) const;
@@ -65,6 +62,10 @@ public:
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
 
     friend class MWProjector<D>;
+
+protected:
+    void initializeRootNodes();
+    void initializeNodesRecursive(const MRGrid<D> &grid);
 
 private:
 //    HilbertPathTable<D> hilbertPathTable;

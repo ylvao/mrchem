@@ -34,6 +34,7 @@ public:
     int getScalingType() const { return this->scalingType; }
     bool getAutoClean() const { return this->autoCleanGenerated; }
     double getSquareNorm() const { return this->squareNorm; }
+    double estimateError(bool absPrec);
 
     const Filter &getFilter() { return *this->filter; }
     const ScalingBasis &getScalingFunctions() const { return *this->scalingFunc; }
@@ -45,8 +46,16 @@ public:
     void mwTransformDown(bool overwrite = true);
     void mwTransformUp(bool overwrite = true);
 
-    void refine(double thrs = -1.0, bool absPrec = true);
     void crop(double thrs = -1.0, bool absPrec = true);
+
+    MWNode<D>& getRootMWNode(int rIdx);
+    MWNode<D>& getRootMWNode(const NodeIndex<D> &nIdx);
+
+    const MWNode<D>& getRootMWNode(int rIdx) const;
+    const MWNode<D>& getRootMWNode(const NodeIndex<D> &nIdx) const;
+
+    MWNode<D>& getEndMWNode(int i);
+    const MWNode<D>& getEndMWNode(int i) const;
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);

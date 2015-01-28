@@ -29,6 +29,7 @@ public:
     virtual double getComponentNorm(int i);
     inline double getSquareNorm() const;
     inline double getScalingNorm();
+    inline double getWaveletNorm();
 
     void calcNorms();
     void clearNorms();
@@ -50,6 +51,7 @@ public:
     virtual void calcComponentNorms() = 0;
     virtual void purgeGenerated() = 0;
 
+    double estimateError(bool absPrec);
     double getNodeWeight(int i) { return this->weight[i]; }
     void clearNodeWeight(int i) { this->weight[i] = 0.0;}
     virtual void incrementNodeWeight(int i, double w = 1.0) {
@@ -143,6 +145,11 @@ template<int D>
 double MWNode<D>::getScalingNorm() {
     assert(this->componentNorms != 0);
     return getComponentNorm(0);
+}
+
+template<int D>
+double MWNode<D>::getWaveletNorm() {
+    return calcWaveletNorm();
 }
 
 template<int D>

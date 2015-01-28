@@ -28,7 +28,7 @@ MWProjector<D>::~MWProjector() {
 
 template<int D>
 void MWProjector<D>::buildTree() {
-    println(0, "  == Building tree");
+    println(1, "  == Building tree");
     MRNodeVector nodeTable;
     this->tree->copyEndNodeTable(nodeTable);
     this->tree->clearEndNodeTable();
@@ -38,7 +38,8 @@ void MWProjector<D>::buildTree() {
         calcNodeTable(nodeTable);
         this->tree->calcTreeNorm(&nodeTable);
         if (this->adaptor != 0) {
-            nodeTable = this->adaptor->splitNodeTable(nodeTable);
+            NOT_IMPLEMENTED_ABORT;
+//            nodeTable = this->adaptor->splitNodeTable(nodeTable);
         } else {
             nodeTable.clear();
         }
@@ -50,8 +51,8 @@ void MWProjector<D>::buildTree() {
 template<int D>
 void MWProjector<D>::calcNodeTable(MRNodeVector &nodeTable) {
     int nNodes = nodeTable.size();
-    printout(0, "  -- #" << setw(3) << " Calculated   ");
-    printout(0, setw(6) << nNodes << " nodes" << endl);
+    printout(1, "  -- #" << setw(3) << " Calculated   ");
+    printout(1, setw(6) << nNodes << " nodes" << endl);
     for (int n = 0; n < nNodes; n++) {
         MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n]);
         calcWaveletCoefs(node);

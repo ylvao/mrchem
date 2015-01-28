@@ -11,12 +11,17 @@ public:
     void setAbsPrec(bool abs) { this->absPrec = abs; }
     void setPrecision(double pr) { this->prec = pr; }
 
-    void adaptGrid(MRGrid<D> &grid, FunctionTree<D> &tree);
-    MRNodeVector& splitNodeTable(MRNodeVector &nodeTable);
+    void adaptGrid(MRGrid<D> &g, FunctionTree<D> &t);
 
 protected:
     bool absPrec;
     double prec;
+    MRGrid<D> *grid;
+    FunctionTree<D> *tree;
+
+    void splitNodes(NodeIndexSet &splitSet, NodeIndexSet &gridSet);
+    bool splitCheck(MWNode<D> &node);
+    double getWaveletThreshold(int factor, int scale);
 };
 
 #endif // GRIDADAPTOR_H

@@ -111,6 +111,7 @@ public:
 
     friend class MRNode<D>;
     friend class GridNode<D>;
+    friend class GridAdaptor<D>;
 
 protected:
     // Parameters that are set in construction and should never change
@@ -157,6 +158,7 @@ protected:
 
     virtual void initializeRootNodes() = 0;
     void yieldChildren(MRNodeVector &nodeTable, const NodeIndexSet &idxSet);
+    void splitNodes(const NodeIndexSet &idxSet);
 
     void makeNodeTable(MRNodeVector &nodeTable);
     void makeNodeTable(std::vector<MRNodeVector > &nodeTable);

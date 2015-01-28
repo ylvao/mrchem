@@ -180,6 +180,21 @@ void MRTree<D>::yieldChildren(MRNodeVector &nodeTable, const NodeIndexSet &idxSe
 }
 
 template<int D>
+void MRTree<D>::splitNodes(const NodeIndexSet &idxSet) {
+    typename set<const NodeIndex<D> *>::iterator it;
+    for (it = idxSet.begin(); it != idxSet.end(); it++) {
+        MRNode<D> &node = getNode(**it);
+        int childDepth = node.getDepth() + 1;
+        if (this->maxDepth != 0 and childDepth > this->maxDepth) {
+            println(1, "+++ Maximum depth reached: " << childDepth);
+            node.setIsEndNode();
+        } else {
+            node.createChildren();
+        }
+    }
+}
+
+template<int D>
 void MRTree<D>::setDefaultOrder(int k) {
     assert(k > 0);
     NOT_IMPLEMENTED_ABORT

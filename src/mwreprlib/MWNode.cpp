@@ -455,11 +455,26 @@ double MWNode<D>::calcScalingNorm() {
 /** Calculate and return wavelet norm. */
 template<int D>
 double MWNode<D>::calcWaveletNorm() {
-    NOT_IMPLEMENTED_ABORT;
     assert(this->hasCoefs());
     int nCoefs = this->getNCoefs();
     int kp1_d = this->getKp1_d();
     return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
+}
+
+template<int D>
+double MWNode<D>::estimateError(bool absPrec) {
+    double tNorm = 1.0;
+    if (not absPrec) {
+        tNorm = sqrt(getMWTree().getSquareNorm());
+    }
+
+//    int factor = D;
+//    double expo = (0.5 * factor * this->getScale());
+//    double scaleFactor = max(2.0* MachinePrec, pow(2.0, expo));
+    double wNorm = this->calcWaveletNorm();
+
+    return wNorm / tNorm;
+//    return scaleFactor * wNorm / tNorm;
 }
 
 // Don't bother trying to inline the following functions; they are virtual
