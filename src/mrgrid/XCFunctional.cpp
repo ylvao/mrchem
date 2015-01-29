@@ -239,12 +239,12 @@ void XCFunctional::calcOutputData(int k, VectorXd &outData) {
     int nPoints = outData.size();
     double *in = new double[this->inputLength];
     double *out = new double[this->outputLength];
-    double thrs = 1.0e-12;
+    double thrs = 1.0e-08;
     for (int i = 0; i < nPoints; i++) {
         for (int j = 0; j < this->inputLength; j++) {
             in[j] = this->getInputData(j)[i];
-            if (in[j] < 0.0) {
-                in[j] = 0.0;
+            if (in[j] < thrs) {
+                in[j] = thrs;
             }
         }
         if (in[0] < thrs) {
@@ -252,6 +252,9 @@ void XCFunctional::calcOutputData(int k, VectorXd &outData) {
         }
         xc_eval(this->func, in, out);
         outData[i] = out[k];
+        if (k == 2) {
+            outData[i] *= in[0];
+        }
     }
     delete[] in;
     delete[] out;

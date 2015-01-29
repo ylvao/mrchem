@@ -21,7 +21,7 @@ public:
     MolecularGridGenerator(double wf = 1.0e2, double df = 1.0e1);
     virtual ~MolecularGridGenerator();
 
-    void setAmplitude(int a) { if (a < 0) a = 0; this->amplitude = a; }
+    void setDepth(int d) { if (d < 0) d = 0; this->depth = d; }
     void setWidth(int w) { if (w < 0) w = 0; this->width = w; }
     void setNuclearDependence(int n) { if (n < 0) n = 0; this->nucDep = n; }
 
@@ -29,7 +29,7 @@ public:
     void generateGrid(MRGrid<3> &grid, Atom &atom);
 
 protected:
-    int amplitude; ///< refinement scale for hydrogen 2^{-depth}
+    int depth; ///< refinement scale for hydrogen 2^{-depth}
     int width;
     int nucDep;
     std::vector<double *> coords;

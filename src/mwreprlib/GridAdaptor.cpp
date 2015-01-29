@@ -63,8 +63,8 @@ bool GridAdaptor<D>::splitCheck(MWNode<D> &node) {
        MSG_INFO("Maximum depth reached: " << scale);
        return false;
    }
-//   int fact = 1;
-//   double thr = getWaveletThreshold(fact, scale);
+   int fact = 1;
+   double thr = getWaveletThreshold(fact, scale);
    double w_norm = node.getWaveletNorm();
 
    if (w_norm > this->prec) {

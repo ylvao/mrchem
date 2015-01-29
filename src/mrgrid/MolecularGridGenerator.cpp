@@ -20,7 +20,7 @@ using namespace std;
 
 MolecularGridGenerator::MolecularGridGenerator(double wf, double df)
     : widthFac(wf), depthFac(df) {
-    this->amplitude = -1;
+    this->depth = -1;
     this->width = -1;
     this->nucDep = -1;
     this->molecule = 0;
@@ -164,7 +164,7 @@ double MolecularGridGenerator::calcCoef(int Z) const {
     if (uniform < rootScale) {
         uniform = rootScale;
     }
-    return nucFac*this->amplitude + uniform;
+    return nucFac*this->depth + uniform;
 }
 
 double MolecularGridGenerator::calcExp(int Z) const {
