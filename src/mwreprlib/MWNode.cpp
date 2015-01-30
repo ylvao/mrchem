@@ -468,7 +468,8 @@ double MWNode<D>::estimateError(bool absPrec) {
         tNorm = sqrt(getMWTree().getSquareNorm());
     }
 
-    double expo = (1.0 * this->getScale());
+    int n = this->getScale();
+    double expo = (0.5 * (n + 1));
     double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
     double wNorm = this->calcWaveletNorm();
 

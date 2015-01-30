@@ -58,16 +58,16 @@ bool GridAdaptor<D>::splitCheck(MWNode<D> &node) {
    if (this->prec < 0.0) {
        return false;
    }
-   int scale = node.getScale();
+   int scale = node.getScale() + 1;
    if (scale >= this->tree->getMaxScale()) {
        MSG_INFO("Maximum depth reached: " << scale);
        return false;
    }
    int fact = 1;
-   double thr = getWaveletThreshold(fact, scale);
+   double thrs = getWaveletThreshold(fact, scale);
    double w_norm = node.getWaveletNorm();
 
-   if (w_norm > this->prec) {
+   if (w_norm > thrs) {
        return true;
    }
    return false;
@@ -85,8 +85,9 @@ double GridAdaptor<D>::getWaveletThreshold(int factor, int scale) {
     if (not this->absPrec) {
         norm = sqrt(this->tree->getSquareNorm());
     }
+    double expo = (0.5 * (scale + 1));
     double thrs_1 = 2.0 * MachinePrec;
-    double thrs_2 = norm * this->prec * pow(2.0, -(0.5 * factor * scale));
+    double thrs_2 = norm * this->prec * pow(2.0, -expo);
     return max(thrs_1, thrs_2);
 }
 
