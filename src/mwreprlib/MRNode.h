@@ -112,8 +112,20 @@ public:
     bool testLock() { return TEST_NODE_LOCK(); }
 
     void setRankId(int n) { this->nodeIndex.setRankId(n); }
-    bool isForeign() const {
+    bool isLocal() const {
         if (this->getRankId() == this->tree->getRankId()) {
+            return true;
+        }
+        return false;
+    }
+    bool isCommon() const {
+        if (this->getRankId() < 0) {
+            return true;
+        }
+        return false;
+    }
+    bool isForeign() const {
+        if (isLocal() or isCommon()) {
             return false;
         }
         return true;
@@ -159,11 +171,10 @@ protected:
 
     void purgeGenerated();
 
+    void assignDecendantTags(int rank);
     void broadcastCoefs(int src, mpi::communicator *comm  = 0);
-    void sendCoefs(int who, int tag, mpi::communicator *comm = 0);
-    void receiveCoefs(int who, int tag, mpi::communicator *comm = 0);
-    mpi::request isendCoefs(int who, int tag, int comp = -1);
-    mpi::request ireceiveCoefs(int who, int tag, int comp = -1);
+    virtual mpi::request isendCoefs(int who, int tag, int comp = -1) = 0;
+    virtual mpi::request ireceiveCoefs(int who, int tag, int comp = -1) = 0;
 
     static const unsigned char FlagBranchNode =	B8(00000001);
     static const unsigned char FlagGenNode =	B8(00000010);

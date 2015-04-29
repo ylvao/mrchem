@@ -30,10 +30,12 @@ ProjectedNode<D>::ProjectedNode() : FunctionNode<D> () {
 template<int D>
 ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
         : FunctionNode<D> (t, gNode.getNodeIndex()) {
-    this->allocCoefs();
-    this->zeroCoefs();
-    this->zeroNorms();
     this->setIsEndNode();
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
 
     if (gNode.isBranchNode()) {
         this->allocKindergarten();
@@ -50,10 +52,13 @@ template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx,
                                 const GridNode<D> &gNode)
         : FunctionNode<D> (p, cIdx) {
-    this->allocCoefs();
-    this->zeroCoefs();
-    this->zeroNorms();
     this->setIsEndNode();
+    this->setRankId(gNode.getRankId());
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
 
     if (gNode.isBranchNode()) {
         this->allocKindergarten();

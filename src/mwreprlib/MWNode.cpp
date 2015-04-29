@@ -469,7 +469,7 @@ double MWNode<D>::estimateError(bool absPrec) {
     }
 
     int n = this->getScale();
-    double expo = (0.5 * (n + 1));
+    double expo = (1.0 * (n + 1));
     double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
     double wNorm = this->calcWaveletNorm();
 
@@ -707,6 +707,44 @@ void MWNode<D>::getChildrenQuadRoots(vector<MatrixXd *> &quadPts) {
     }
 }
 
+template<int D>
+mpi::request MWNode<D>::isendCoefs(int who, int tag, int comp) {
+    assert(hasCoefs());
+#ifdef HAVE_MPI
+    int nSend = this->getNCoefs();
+    const double *data = this->coefs->data();
+    if (comp > 0) {
+        assert(comp >= 0 and comp < this->getTDim());
+        nSend = this->getKp1_d();
+        data = data + comp * this->getKp1_d();
+    }
+    return node_group.isend(who, tag, data, nSend);
+#else
+    mpi::request dummy = 0;
+    return dummy;
+#endif
+}
+
+template<int D>
+mpi::request MWNode<D>::ireceiveCoefs(int who, int tag, int comp) {
+#ifdef HAVE_MPI
+    if (not this->isAllocated()) {
+        allocCoefs();
+    }
+    int nRecv = this->getNCoefs();
+    double *data = this->coefs->data();
+    if (comp > 0) {
+        assert(comp >= 0 and comp < this->getTDim());
+        nRecv = this->getKp1_d();
+        data = data + comp * this->getKp1_d();
+    }
+    this->setHasCoefs(true);
+    return node_group.irecv(who, tag, data, nRecv);
+#else
+    mpi::request dummy = 0;
+    return dummy;
+#endif
+}
 
 template class MWNode<1>;
 template class MWNode<2>;

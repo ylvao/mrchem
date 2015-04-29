@@ -80,7 +80,7 @@ public:
     void purgeGenerated();
 
     void broadcastTree();
-    void distributeEndNodes();
+    void distributeNodes(int depth = -1);
     void purgeForeignNodes(bool keepEndNodes = false);
 
     void lockTree() { SET_TREE_LOCK(); }
@@ -89,7 +89,6 @@ public:
 
     int getNThreads() const { return this->nThreads; }
     int getRankId() const { return this->rank; }
-    bool isScattered() const { return this->scattered; }
 
     bool diffTree(const MRTree<D> &tree) const;
     bool checkCompatible(const MRTree<D> &tree);
@@ -106,7 +105,7 @@ public:
     void checkGridOverlap(MRTree<D> &tree);
     void checkRankOverlap(MRTree<D> &tree);
 
-    static void setDefaultOrder(int _order);
+    static void setDefaultOrder(int k);
     static void setDefaultMaxDepth(int max_depth);
 
     friend class MRNode<D>;
@@ -124,7 +123,6 @@ protected:
     int kp1;
     int kp1_d;
     int maxScale;
-    bool scattered;
 
     // Parameters that are dynamic and can be set by user
     std::string name;
@@ -163,8 +161,8 @@ protected:
     void makeNodeTable(MRNodeVector &nodeTable);
     void makeNodeTable(std::vector<MRNodeVector > &nodeTable);
 
-    void makeLocalNodeTable(MRNodeVector &nodeTable);
-    void makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable);
+    void makeLocalNodeTable(MRNodeVector &nodeTable, bool common = false);
+    void makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable, bool common = false);
 
     void copyEndNodeTable(MRNodeVector &nodeTable);
     void resetEndNodeTable();
@@ -174,17 +172,20 @@ protected:
     void findMissingParents(MRNodeVector &nodeTable, std::set<MRNode<D> *> &missing);
     void findMissingChildren(MRNodeVector &nodeTable, std::set<MRNode<D> *> &missing);
 
-    void tagNodes(MRNodeVector &nodeList, int _rank);
+    void tagNodes(MRNodeVector &nodeList, int rank);
+    void tagDecendants(MRNodeVector &nodeList);
+    void distributeNodeTags(MRNodeVector &nodeList);
 
+    void syncNodes(const std::set<MRNode<D> *> &nodeList, int comp = -1);
+    int buildRequestLists(const std::set<MRNode<D> *> &list,
+                          std::vector<NodeIndex<D> > *myReqs,
+                          std::vector<NodeIndex<D> > *sReqs);
 //    void sendTree(int dest);
 //    void collectNodes(int dest, const MWNodeVector &nodeList);
 //    void sendNodes(int dest, const MWNodeVector &nodeList);
 //    void recvNodes(int src, MWNodeVector *nodeList = 0);
 //    void broadcastNodes(const MWNodeVector &nodeList);
 //    void broadcastIndexList(std::set<const NodeIndex<D> *, NodeIndexComp<D> > &idx);
-//    int buildRequestLists(const std::set<MWNode<D> *> &list,
-//                          std::vector<NodeIndex<D> > *myReqs,
-//                          std::vector<NodeIndex<D> > *sReqs);
 
 #ifdef OPENMP
     omp_lock_t tree_lock;

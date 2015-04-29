@@ -5,15 +5,15 @@
 
 using namespace std;
 
-void MREnv::initializeMRCPP(int k, double prec) {
-    omp_set_dynamic(0);
-    mpi::communicator world;
-
+void MREnv::initializeMRCPP() {
     int nThreads = omp_get_max_threads();
+    int nHosts = node_group.size();
+
+    omp_set_dynamic(0);
     Eigen::setNbThreads(1);
 
     int printLevel = 0;
-    bool teletype = 0;
+    bool teletype = true;
 
     TelePrompter::init(printLevel, teletype, "MRGRID");
 
@@ -31,15 +31,16 @@ void MREnv::initializeMRCPP(int k, double prec) {
     println(0, endl);
     println(0, "Print level  : " <<  printLevel << endl);
 
-    if (world.size() > 1 or nThreads > 1) {
+    if (nHosts > 1 or nThreads > 1) {
         println(0, "+++ Parallel execution: ");
-        println(0, "  Num MPI hosts available : " << world.size());
+        println(0, "  MPI hosts available     : " << nHosts);
         println(0, "  Threads/host            : " << nThreads);
-        println(0, "  Total used CPUs         : " << world.size()*nThreads);
+        println(0, "  Total used CPUs         : " << nHosts*nThreads);
         println(0, "");
     } else {
         println(0, "+++ Serial execution" << endl);
     }
+
 
     // initialize QuadratureCache globally to [0.1]
     //getQuadratureCache(qCache);

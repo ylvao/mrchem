@@ -152,6 +152,16 @@ void GridNode<D>::getExpandedWeights(Eigen::VectorXd &expandedWeights) const {
     MathUtils::tensorExpandCoefs(D, 0, kp1, kp1_d, primitiveWeights, expandedWeights);
 }
 
+template<int D>
+mpi::request GridNode<D>::isendCoefs(int who, int tag, int comp) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+template<int D>
+mpi::request GridNode<D>::ireceiveCoefs(int who, int tag, int comp) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
 template class GridNode<1>;
 template class GridNode<2>;
 template class GridNode<3>;

@@ -23,8 +23,8 @@ template<int D> class MWProjector;
 template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
-    FunctionTree(const BoundingBox<D> *box = 0, int k = -1,  int type = -1);
-    FunctionTree(const MRGrid<D> &grid, int type = -1);
+    FunctionTree(const BoundingBox<D> *box = 0, int k = -1,  int type = Interpol);
+    FunctionTree(const MRGrid<D> &grid, int type = Interpol);
     FunctionTree(const FunctionTree<D> &tree);
     FunctionTree<D> &operator=(const FunctionTree<D> &tree);
     virtual ~FunctionTree();

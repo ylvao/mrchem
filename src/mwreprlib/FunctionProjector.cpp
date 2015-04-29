@@ -34,7 +34,12 @@ void FunctionProjector<D>::operator()(FunctionTree<D> &out,
     this->outTree = &out;
     this->inpFunc = &inp;
     this->buildTree();
+    mpi::timer timer;
+    timer.restart();
+    println(0, "mwTransformUp");
     this->outTree->mwTransformUp();
+    double time = timer.elapsed();
+    println(0, "mwTransformUp done " << time);
     this->outTree = 0;
     this->inpFunc = 0;
 }

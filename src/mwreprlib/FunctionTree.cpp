@@ -217,16 +217,17 @@ const FunctionNode<D>& FunctionTree<D>::getRootFuncNode(const NodeIndex<D> &nIdx
 
 template<int D>
 double FunctionTree<D>::integrate() {
+    println(0, "Integrating");
     double result = 0.0;
     for (int i = 0; i < this->getNRootNodes(); i++) {
         FunctionNode<D> &fNode = getRootFuncNode(i);
         result += fNode.integrate();
     }
+    println(0, "Integrated locally " << result);
 #ifdef HAVE_MPI
-    if (this->isScattered()) {
-        return mpi::all_reduce(node_group, result, std::plus<double>());
-    }
+    result = mpi::all_reduce(node_group, result, std::plus<double>());
 #endif
+    println(0, "Reduced integral " << result);
     return result;
 }
 

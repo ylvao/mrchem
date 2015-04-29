@@ -204,9 +204,7 @@ double MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
 template<int D>
 double MWTree<D>::reduceNorm(double treeNorm) {
 #ifdef HAVE_MPI
-    if (isBuildDistributed()) {
-        return mpi::all_reduce(node_group, treeNorm, std::plus<double>());
-    }
+    return mpi::all_reduce(node_group, treeNorm, std::plus<double>());
 #endif
     return treeNorm;
 }
@@ -251,17 +249,24 @@ void MWTree<D>::crop(double thrs, bool absPrec) {
 template<int D>
 void MWTree<D>::mwTransformUp(bool overwrite) {
     vector<MRNodeVector > nodeTable;
-    this->makeNodeTable(nodeTable);
+    this->makeLocalNodeTable(nodeTable, true);
 
     int start = nodeTable.size() - 2;
     for (int n = start; n >= 0; n--) {
+        set<MRNode<D> *> missing;
+        println(0, "find missing");
+        findMissingChildren(nodeTable[n], missing);
+        //communicate missing
+        println(0, "sync " << missing.size() << " missing");
+        syncNodes(missing);
         int nNodes = nodeTable[n].size();
+        println(0, "looping over " << nNodes << " nodes");
 #pragma omp parallel firstprivate(nNodes, overwrite) shared(nodeTable)
         {
 #pragma omp for schedule(guided)
             for (int i = 0; i < nNodes; i++) {
                 MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n][i]);
-                if (node.isBranchNode()) {
+                if ((not node.isForeign()) and node.isBranchNode()) {
                     node.reCompress(overwrite);
                     node.calcNorms();
                 }

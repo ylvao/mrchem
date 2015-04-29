@@ -18,7 +18,6 @@
 int get_locale_index_range(int rank, int nWork, int &start, int &end);
 int get_locale_index(int nWork, int idx);
 bool locale_needs_sync(int nWork);
-int get_hosts_bitmap_size();
 
 #ifdef HAVE_OPENMP
 
@@ -42,12 +41,6 @@ int get_hosts_bitmap_size();
 namespace mpi = boost::mpi;
 #define BOOST_MPI_HOMOGENEOUS
 
-/** Return the number MPI hosts available. */
-inline int get_mpi_world_size() {
-    mpi::communicator world;
-    return world.size();
-}
-
 #else
 namespace mpi {
     struct communicator {
@@ -64,7 +57,9 @@ namespace mpi {
     };
     typedef int request;
 }
-inline int get_mpi_world_size() { return 0; }
 #endif
+
+extern mpi::communicator world;
+extern mpi::communicator node_group;
 
 #endif /* PARALLEL_H_ */

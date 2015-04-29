@@ -16,7 +16,6 @@ MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : nodeIndex(nIdx) {
     this->parent = 0;
     this->status = 0;
     this->children = 0;
-    this->setRankId(this->tree->getRankId());
 
     setIsLeafNode();
     setIsRootNode();
@@ -39,7 +38,7 @@ MRNode<D>::MRNode(MRNode<D> *p, int cIdx) {
         this->tree = this->parent->tree;
         this->tree->incrementNodeCount(getScale());
     }
-    this->setRankId(this->tree->getRankId());
+    this->setRankId(this->parent->getRankId());
     setIsLeafNode();
 #ifdef OPENMP
     omp_init_lock(&node_lock);
@@ -451,70 +450,12 @@ void MRNode<D>::broadcastCoefs(int src, mpi::communicator *comm) {
 }
 
 template<int D>
-void MRNode<D>::sendCoefs(int who, int tag, mpi::communicator *comm) {
-    NOT_IMPLEMENTED_ABORT;
-}
-template<int D>
-void MRNode<D>::receiveCoefs(int who, int tag, mpi::communicator *comm) {
-   NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
-
-//    if (comm != 0) {
-//        comm = &node_group;
-//    }
-//    if (not isAllocated()) {
-//        allocCoefs();
-//    }
-//    double *data = coefs->data();
-//    comm->recv(src, tag, data, getNCoefs());
-//    this->setRedundancy(src);
-//    this->setHasCoefs(true);
-//#endif
-}
-
-template<int D>
-mpi::request MRNode<D>::isendCoefs(int who, int tag, int comp) {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(hasCoefs());
-//#ifdef HAVE_MPI
-
-//    int nSend = getNCoefs();
-//    const double *data = coefs->data();
-//    if (comp > 0) {
-//        assert(comp >= 0 and comp < tDim);
-//        nSend = getKp1_d();
-//        data = data + comp * getKp1_d();
-//    }
-//    this->setRedundancy(dest);
-//    return node_group.isend(dest, tag, data, nSend);
-//#else
-//    mpi::request dummy = 0;
-//    return dummy;
-//#endif
-}
-
-template<int D>
-mpi::request MRNode<D>::ireceiveCoefs(int who, int tag, int comp) {
-    NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
-
-//    if (not isAllocated()) {
-//        allocCoefs();
-//    }
-//    int nRecv = getNCoefs();
-//    double *data = coefs->data();
-//    if (comp > 0) {
-//        assert(comp >= 0 and comp < tDim);
-//        nRecv = getKp1_d();
-//        data = data + comp * getKp1_d();
-//    }
-//    this->setRedundancy(src);
-//    this->setHasCoefs(true);
-//    return node_group.irecv(src, tag, data, nRecv);
-//#else
-//    mpi::request dummy = 0;
-//    return dummy;
-//#endif
+void MRNode<D>::assignDecendantTags(int rank) {
+    for (int n = 0; n < getNChildren(); n++) {
+        MRNode<D> &child = getChild(n);
+        child.setRankId(rank);
+        child.assignDecendantTags(rank);
+    }
 }
 
 template class MRNode<1>;

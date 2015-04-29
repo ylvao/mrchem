@@ -3,7 +3,7 @@
 
 class MREnv {
 public:
-    static void initializeMRCPP(int k, double prec);
+    static void initializeMRCPP();
     static void finalizeMRCPP(double t);
 
 private:

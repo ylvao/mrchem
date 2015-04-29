@@ -58,7 +58,9 @@ void MWProjector<D>::calcNodeTable(MRNodeVector &nodeTable) {
     #pragma omp for schedule(guided)
         for (int n = 0; n < nNodes; n++) {
             MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n]);
-            calcWaveletCoefs(node);
+            if (not node.isForeign()) {
+                calcWaveletCoefs(node);
+            }
         }
     }
 }

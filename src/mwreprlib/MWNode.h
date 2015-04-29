@@ -114,6 +114,9 @@ protected:
 
     void reCompress(bool overwrite = true);
 
+    mpi::request isendCoefs(int who, int tag, int comp = -1);
+    mpi::request ireceiveCoefs(int who, int tag, int comp = -1);
+
 private:
     friend class boost::serialization::access;
     template<class Archive>

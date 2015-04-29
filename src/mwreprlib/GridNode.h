@@ -48,6 +48,9 @@ protected:
 
     void calcQuadPoints();
     void calcQuadWeights();
+
+    mpi::request isendCoefs(int who, int tag, int comp = -1);
+    mpi::request ireceiveCoefs(int who, int tag, int comp = -1);
 };
 
 template<int D>

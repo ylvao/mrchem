@@ -33,10 +33,8 @@ MRTree<D>::MRTree(const BoundingBox<D> *box, int k) {
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 
-    mpi::communicator world;
-    this->rank = world.rank();
+    this->rank = node_group.rank();
     this->nThreads = omp_get_max_threads();
-    this->scattered = false;
     allocNodeCounters();
 
 #ifdef OPENMP
@@ -55,8 +53,7 @@ MRTree<D>::MRTree(const MRGrid<D> &grid) {
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 
-    mpi::communicator world;
-    this->rank = world.rank();
+    this->rank = grid.getRankId();
     this->nThreads = omp_get_max_threads();
     allocNodeCounters();
 
@@ -77,8 +74,7 @@ MRTree<D>::MRTree(const MRTree<D> &tree) {
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 
-    mpi::communicator world;
-    this->rank = world.rank();
+    this->rank = node_group.rank();
     this->nThreads = omp_get_max_threads();
     allocNodeCounters();
 
@@ -128,7 +124,6 @@ void MRTree<D>::copyTreeParams(const MRTree<D> &tree) {
     this->maxDepth = tree.maxDepth;
     this->maxScale = tree.maxScale;
     this->name = tree.name;
-    this->scattered = tree.scattered;
 }
 
 /** Updates nodeTable according to the indexTable of nodes to split.
@@ -508,20 +503,19 @@ void MRTree<D>::findMissingParents(MRNodeVector &nodeTable,
 template<int D>
 void MRTree<D>::findMissingChildren(
         MRNodeVector &nodeTable, set<MRNode<D> *> &missing) {
-    NOT_IMPLEMENTED_ABORT;
-//    for (unsigned int i = 0; i < nodeTable.size(); i++) {
-//        MWNode<D> &node = *nodeTable[i];
-//        if (node.isEndNode()) {
-//            continue;
-//        }
-//        for (int n = 0; n < node.getNChildren(); n++) {
-//            MWNode<D> &child = node.getMWChild(n);
-//            if (not child.hasCoefs()) {
-//                assert(this->getRankId() != child.getRankId());
-//                missing.insert(&child);
-//            }
-//        }
-//    }
+    for (unsigned int i = 0; i < nodeTable.size(); i++) {
+        MRNode<D> &node = *nodeTable[i];
+        if (node.isEndNode()) {
+            continue;
+        }
+        for (int n = 0; n < node.getNChildren(); n++) {
+            MRNode<D> &child = node.getChild(n);
+            if (not child.hasCoefs()) {
+                assert(this->getRankId() != child.getRankId());
+                missing.insert(&child);
+            }
+        }
+    }
 }
 
 /** Traverse tree along the Hilbert path and find nodes of any rankId.
@@ -564,40 +558,37 @@ void MRTree<D>::makeNodeTable(std::vector<MRNodeVector > &nodeTable) {
 /** Traverse tree along the Hilbert path and find nodes of local rankId.
   * Returns one nodeVector for the whole tree. GenNodes disregarded. */
 template<int D>
-void MRTree<D>::makeLocalNodeTable(MRNodeVector &nodeTable) {
-   NOT_IMPLEMENTED_ABORT;
-//    HilbertIterator<D> it(this);
-//    while (it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        if (node.isGenNode()) {
-//            continue;
-//        }
-
-//        if (not node.isForeign()) {
-//            nodeTable.push_back(&node);
-//        }
-//    }
+void MRTree<D>::makeLocalNodeTable(MRNodeVector &nodeTable, bool common) {
+    LebesgueIterator<D> it(this);
+    while (it.next()) {
+        MRNode<D> &node = it.getNode();
+        if (node.isGenNode()) {
+            continue;
+        }
+        if (node.isLocal() or (node.isCommon() and common)) {
+            nodeTable.push_back(&node);
+        }
+    }
 }
 
 /** Traverse tree along the Hilbert path and find nodes of local rankId.
   * Returns one nodeVector per scale. GenNodes disregarded. */
 template<int D>
-void MRTree<D>::makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable) {
-    NOT_IMPLEMENTED_ABORT;
-//    HilbertIterator<D> it(this);
-//    while (it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        if (node.isGenNode()) {
-//            continue;
-//        }
-//        int depth = node.getDepth();
-//        if (depth + 1 > nodeTable.size()) { // Add one more element
-//            nodeTable.push_back(MWNodeVector());
-//        }
-//        if (not node.isForeign()) {
-//            nodeTable[depth].push_back(&node);
-//        }
-//    }
+void MRTree<D>::makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable, bool common) {
+    LebesgueIterator<D> it(this);
+    while (it.next()) {
+        MRNode<D> &node = it.getNode();
+        if (node.isGenNode()) {
+            continue;
+        }
+        int depth = node.getDepth();
+        if (depth + 1 > nodeTable.size()) { // Add one more element
+            nodeTable.push_back(MRNodeVector());
+        }
+        if (node.isLocal() or (node.isCommon() and common)) {
+            nodeTable[depth].push_back(&node);
+        }
+    }
 }
 
 template<int D>
@@ -624,9 +615,33 @@ void MRTree<D>::resetEndNodeTable() {
 /** Set the rank id (node tag) for all nodes in list. */
 template<int D>
 void MRTree<D>::tagNodes(MRNodeVector &nodeList, int rank) {
-    for (int i=0; i < nodeList.size(); i++) {
+    for (int i = 0; i < nodeList.size(); i++) {
         MRNode<D> &node = *nodeList[i];
         node.setRankId(rank);
+    }
+}
+
+template<int D>
+void MRTree<D>::tagDecendants(MRNodeVector &nodeList) {
+    int nNodes = nodeList.size();
+    for (int i = 0; i < nNodes; i++) {
+        MRNode<D> &node = *nodeList[i];
+        node.assignDecendantTags(node.getRankId());
+    }
+}
+
+/** Tag each node with the rank who owns it. */
+template<int D>
+void MRTree<D>::distributeNodeTags(MRNodeVector &nodeList) {
+    int start, end;
+    int nNodes = nodeList.size();
+    int nHosts = node_group.size();
+    for (int k = 0; k < nHosts; k++) {
+        get_locale_index_range(k, nNodes, start, end);
+        for (int i = start; i < end; i++) {
+            MRNode<D> &node = *nodeList[i];
+            node.setRankId(k);
+        }
     }
 }
 
@@ -696,16 +711,15 @@ int MRTree<D>::countAllocNodes(int depth) {
 /** Print the number of nodes, sorted by depth and MPI rank. */
 template<int D>
 void MRTree<D>::printNodeRankCount() {
-    mpi::communicator world;
+    int nHosts = node_group.size();
     int mDepth = getDepth();
-    int count[mDepth + 1][world.size()];
+    int count[mDepth + 1][nHosts+1];
     for (int i = 0; i < mDepth + 1; i++) {
-        for (int j = 0; j < world.size(); j++) {
+        for (int j = 0; j < nHosts+1; j++) {
             count[i][j] = 0;
         }
     }
     LebesgueIterator<D> it(this);
-    int notDistributed = 0;
     while(it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.isGenNode()) {
@@ -714,17 +728,18 @@ void MRTree<D>::printNodeRankCount() {
         int depth = node.getDepth();
         int rank = node.getRankId();
         if (rank >= 0) {
-            count[depth][rank]++;
-            count[mDepth][rank]++;
+            count[depth][rank+1]++;
+            count[mDepth][rank+1]++;
         } else {
-            notDistributed++;
+            count[depth][0]++;
+            count[mDepth][0]++;
         }
     }
 
     println(0, endl);
     printout(0, "   |");
-    for (int j = 0; j < world.size(); j++) {
-        printout(0, setw(5) << j);
+    for (int j = -1; j < nHosts; j++) {
+        printout(0, setw(6) << j);
     }
     println(0, "|" << endl);
     for (int i = 0; i < mDepth + 1; i++) {
@@ -732,16 +747,12 @@ void MRTree<D>::printNodeRankCount() {
             printout(0, endl);
         }
         printout(0, setw(3) << i << "|");
-        for (int j = 0; j < world.size(); j++) {
-            printout(0, setw(5) << count[i][j]);
+        for (int j = 0; j < nHosts+1; j++) {
+            printout(0, setw(6) << count[i][j]);
         }
         println(0, "|");
     }
     println(0, endl);
-    if (notDistributed > 0) {
-        println(0, "There were " << notDistributed << " non-distributed nodes");
-        println(0, endl);
-    }
 }
 
 /** Communicate all nodes of the tree to all MPI ranks. Node ranks remain. */
@@ -889,14 +900,13 @@ void MWTree<D>::recvNodes(int src, MWNodeVector *nodeList) {
 */
 /** Use non-blocking communication to synchronize a set of nodes between
   * different locales */
-/*
 template<int D>
-void MWTree<D>::syncNodes(const set<MWNode<D> *> &nodeList, int comp) {
+void MRTree<D>::syncNodes(const set<MRNode<D> *> &nodeList, int comp) {
 #ifdef HAVE_MPI
-    int nLocales = node_group.size();
+    int nHosts = node_group.size();
 
-    vector<NodeIndex<D> > *myReqs = new vector<NodeIndex<D> >[nLocales];
-    vector<NodeIndex<D> > *sendReqs = new vector<NodeIndex<D> >[nLocales];
+    vector<NodeIndex<D> > *myReqs = new vector<NodeIndex<D> >[nHosts];
+    vector<NodeIndex<D> > *sendReqs = new vector<NodeIndex<D> >[nHosts];
 
     int totReqs = buildRequestLists(nodeList, myReqs, sendReqs);
     println(2, "  Total number of nodes to sync: " <<  totReqs);
@@ -904,17 +914,17 @@ void MWTree<D>::syncNodes(const set<MWNode<D> *> &nodeList, int comp) {
         mpi::request *reqs = new mpi::request[totReqs];
 
         int seq = 0;
-        for (int l = 0; l < nLocales; l++) {
+        for (int l = 0; l < nHosts; l++) {
             vector<NodeIndex<D> > &in = myReqs[l];
             for (unsigned int n = 0; n < in.size(); n++) {
-                MWNode<D> &node = this->getNode(in[n]);
+                MRNode<D> &node = this->getNode(in[n]);
                 assert(node.isForeign());
                 reqs[seq] = node.ireceiveCoefs(l, n, comp);
                 seq++;
             }
             vector<NodeIndex<D> > &out = sendReqs[l];
             for (unsigned int n = 0; n < out.size(); n++) {
-                MWNode<D> &node = this->getNode(out[n]);
+                MRNode<D> &node = this->getNode(out[n]);
                 assert(node.hasCoefs());
                 assert(not node.isForeign());
                 reqs[seq] = node.isendCoefs(l, n, comp);
@@ -923,11 +933,11 @@ void MWTree<D>::syncNodes(const set<MWNode<D> *> &nodeList, int comp) {
         }
         mpi::wait_all(reqs, reqs + totReqs);
 
-        for (int l = 0; l < nLocales; l++) {
+        for (int l = 0; l < nHosts; l++) {
             vector<NodeIndex<D> > &in = myReqs[l];
             for (unsigned int n = 0; n < in.size(); n++) {
-                MWNode<D> &node = this->getNode(in[n]);
-                node.calcNorms();
+                MRNode<D> &node = this->getNode(in[n]);
+                //node.calcNorms();
             }
         }
         delete [] reqs;
@@ -936,32 +946,31 @@ void MWTree<D>::syncNodes(const set<MWNode<D> *> &nodeList, int comp) {
     delete [] myReqs;
 #endif
 }
-*/
+
 /** Build the mpi::request vector for non-blocking communication. */
-/*
 template<int D>
-int MWTree<D>::buildRequestLists(
-        const set<MWNode<D> *> &list,
+int MRTree<D>::buildRequestLists(
+        const set<MRNode<D> *> &list,
         vector<NodeIndex<D> > *myReqs,
         vector<NodeIndex<D> > *sendReqs) {
     int totReqs = 0;
     totReqs = list.size();
 
 #ifdef HAVE_MPI
-    int nLocales = node_group.size();
+    int nHosts = node_group.size();
 
     // Make lists of nodes we want, one for each locale
-    typename set<MWNode<D> *>::const_iterator it;
+    typename set<MRNode<D> *>::const_iterator it;
     for (it = list.begin(); it != list.end(); it++) {
-        MWNode<D> *node = *it;
+        MRNode<D> *node = *it;
         int loc = node->getRankId();
         assert(node->isForeign());
         myReqs[loc].push_back(node->getNodeIndex());
     }
 
-    mpi::request *reqs = new mpi::request[nLocales * 2];
+    mpi::request *reqs = new mpi::request[nHosts * 2];
     int seq = 0;
-    for (int l = 0;  l < nLocales; l++) {
+    for (int l = 0;  l < nHosts; l++) {
         if (l == rank) { // not from our self though...
             continue;
         }
@@ -969,7 +978,7 @@ int MWTree<D>::buildRequestLists(
         seq++;
     }
 
-    for (int l = 0;  l < nLocales; l++) {
+    for (int l = 0;  l < nHosts; l++) {
         if (l == rank) { // not from our self though...
             continue;
         }
@@ -979,14 +988,12 @@ int MWTree<D>::buildRequestLists(
     mpi::wait_all(reqs, reqs + seq);
     delete [] reqs;
 
-    for (int l = 0;  l < nLocales; l++) {
+    for (int l = 0;  l < nHosts; l++) {
         totReqs += sendReqs[l].size();
     }
-
 #endif
     return totReqs;
 }
-*/
 
 /*
 template<int D>
@@ -1014,31 +1021,35 @@ void MWTree<D>::broadcastIndexList(set<const NodeIndex<D> *,
 }
 */
 
+/*
 template<int D>
 void MRTree<D>::distributeEndNodes() {
-    mpi::communicator world;
-    int nLocales = world.size();
+    int nHosts = node_group.size();
+    if (nHosts < 2) {
+        return;
+    }
+
     int nNodes = getNEndNodes();
     int tDim = getTDim();
     int nParents = nNodes/tDim;
 
-    int *distNodes = new int[nLocales];
-    for (int i = 0; i < nLocales; i++) {
+    int *distNodes = new int[nHosts];
+    for (int i = 0; i < nHosts; i++) {
         distNodes[i] = 0;
     }
 
     int rank = 0;
-    int nPerRank = nNodes/nLocales;
+    int nPerRank = nNodes/nHosts;
     println(0, "Number of nodes       " << nNodes);
     println(0, "Parents to distribute " << nParents);
-    println(0, "Number of MPI hosts   " << nLocales);
+    println(0, "Number of MPI hosts   " << nHosts);
     println(0, "Nodes per host        " << nPerRank);
     for (int n = 0; n < nNodes; n++) {
         MRNode<D> &parent = getEndNode(n).getParent();
         for (int i = 0; i < tDim; i++) {
             MRNode<D> &child = parent.getChild(i);
             if (child.isEndNode() and child.getRankId() < 0) {
-                assert(rank < nLocales);
+                assert(rank < nHosts);
                 child.setRankId(rank);
                 distNodes[rank]++;
             }
@@ -1048,14 +1059,35 @@ void MRTree<D>::distributeEndNodes() {
         }
     }
     int nDist = 0;
-    for (int i = 0; i < nLocales; i++) {
-        println(0, "MPI rank " << i << " has " << distNodes[i] << " nodes");
+    for (int i = 0; i < nHosts; i++) {
+        println(10, "MPI rank " << i << " has " << distNodes[i] << " nodes");
         nDist += distNodes[i];
     }
     if (nDist != nNodes) {
         MSG_ERROR("Not all endNodes were distributed");
     }
     delete[] distNodes;
+}
+*/
+
+template<int D>
+void MRTree<D>::distributeNodes(int depth) {
+    if (depth < 0) {
+        depth = getMaxDepth();
+    }
+    MRNodeVector nodeTable;
+    //HilbertIterator<D> it(this);
+    LebesgueIterator<D> it(this);
+    it.setReturnGenNodes(false);
+    it.setMaxDepth(depth);
+    while (it.next()) {
+        MRNode<D> &node = it.getNode();
+        if (node.isEndNode() or node.getDepth() == depth) {
+            nodeTable.push_back(&node);
+        }
+    }
+    distributeNodeTags(nodeTable);
+    tagDecendants(nodeTable);
 }
 
 /** Traverse tree and remove nodes of foreign rank.

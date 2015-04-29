@@ -283,6 +283,9 @@ double FunctionNode<D>::integrate() {
     if (this->isForeign()) {
         return 0.0;
     }
+    if (this->isCommon() and this->tree->getRankId() != 0) {
+        return 0.0;
+    }
     switch (getFuncTree().getScalingType()) {
     case Legendre:
         return integrateLegendre();
