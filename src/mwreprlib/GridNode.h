@@ -19,7 +19,7 @@ template<int D>
 class GridNode : public MRNode<D> {
 public:
     GridNode(MRTree<D> &t, const NodeIndex<D> &idx);
-    GridNode(GridNode<D> *p, int cIdx);
+    GridNode(GridNode<D> &p, int cIdx);
     virtual ~GridNode();
 
     const Eigen::MatrixXd &getQuadPoints() const { return this->roots; }

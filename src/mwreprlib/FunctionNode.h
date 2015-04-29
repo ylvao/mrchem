@@ -10,7 +10,7 @@ class FunctionNode : public MWNode<D> {
 public:
     FunctionNode();
     FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
-    FunctionNode(FunctionNode<D> *p, int cIdx);
+    FunctionNode(FunctionNode<D> &p, int cIdx);
     FunctionNode(const FunctionNode<D> &nd, FunctionNode<D> *p);
     FunctionNode(const FunctionNode<D> &nd, FunctionTree<D> *t);
     FunctionNode<D> &operator=(const FunctionNode<D> &nd);

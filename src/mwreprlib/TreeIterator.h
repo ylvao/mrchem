@@ -22,7 +22,37 @@ public:
         }
     }
 
-    virtual bool next() = 0;
+    bool next() {
+        if (not this->state) {
+	    return false;
+	}
+        if (this->mode == TopDown) {
+            if (this->tryNode()) {
+		return true;
+	    }
+	}
+	MRNode<D> &node = *this->state->node;
+	if ((node.getDepth() < this->maxDepth) and
+	        not (node.isEndNode() and not this->returnGenNodes)) {
+	    const int nChildren = 1 << D;
+	    for (int i = 0; i < nChildren; i++) {
+                int cIdx = getChildIndex(i);
+		if (this->tryChild(cIdx)) {
+		    return true;
+		}
+	    }
+	}
+        if (this->tryNextRoot()) {
+	    return true;
+	}
+        if (this->mode == BottomUp) {
+            if (this->tryNode()) {
+		return true;
+	    }
+	}
+        this->removeState();
+        return next();
+    }
 
     void setReturnGenNodes(bool i = true) { this->returnGenNodes = i; }
     void setMaxDepth(int depth) {
@@ -32,9 +62,7 @@ public:
         this->maxDepth = depth;
     }
 
-    inline MRNode<D> &getNode() { return *this->state->node; }
-    inline MRNode<D> &operator()() { return *this->state->node; }
-
+    MRNode<D> &getNode() { return *this->state->node; }
     friend class IteratorNode<D>;
 protected:
     int root;
@@ -44,6 +72,8 @@ protected:
     bool returnGenNodes;
     IteratorNode<D> *state;
     IteratorNode<D> *initialState;
+
+    virtual int getChildIndex(int i) const = 0;
 
     void init(MRTree<D> *tree) {
         this->root = 0;

@@ -26,18 +26,15 @@ MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : nodeIndex(nIdx) {
 }
 
 template<int D>
-MRNode<D>::MRNode(MRNode<D> *p, int cIdx) {
-    this->parent = p;
+MRNode<D>::MRNode(MRNode<D> &p, int cIdx) 
+        : hilbertPath(p.getHilbertPath(), cIdx) {
+    this->parent = &p;
     this->status = 0;
     this->children = 0;
 
-    if (this->parent == 0) {
-        NOT_IMPLEMENTED_ABORT;
-    } else {
-        this->parent->calcChildNodeIndex(this->nodeIndex, cIdx);
-        this->tree = this->parent->tree;
-        this->tree->incrementNodeCount(getScale());
-    }
+    this->parent->calcChildNodeIndex(this->nodeIndex, cIdx);
+    this->tree = this->parent->tree;
+    this->tree->incrementNodeCount(getScale());
     this->setRankId(this->parent->getRankId());
     setIsLeafNode();
 #ifdef OPENMP

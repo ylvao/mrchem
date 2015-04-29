@@ -12,7 +12,6 @@
 #include "ScalingCache.h"
 #include "LegendreBasis.h"
 #include "InterpolatingBasis.h"
-#include "LebesgueIterator.h"
 
 using namespace std;
 using namespace Eigen;
@@ -445,7 +444,7 @@ template<int D>
 void MWTree<D>::setZero(bool clearTreeNorm) {
     NOT_IMPLEMENTED_ABORT;
 //    purgeForeignNodes(false);
-//    LebesgueIterator<D> it(this);
+//    HilbertIterator<D> it(this);
 //    while(it.next()) {
 //        MWNode<D> &node = it.getNode();
 //        if (not node.isForeign()) {

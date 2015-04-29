@@ -245,7 +245,7 @@ double FunctionTree<D>::innerProduct(FunctionTree<D> &rhs) {
 //    }
 //#endif
 //    MWNodeVector nodeTable;
-//    LebesgueIterator<D> it(this);
+//    HilbertIterator<D> it(this);
 //    while(it.next()) {
 //        MWNode<D> &node = it.getNode();
 //        if (node.isGenNode()) {
@@ -332,7 +332,7 @@ template<int D>
 void FunctionTree<D>::findMissingInnerProd(FunctionTree<D> &fTree,
                                            set<FunctionNode<D> *> &missing) {
     NOT_IMPLEMENTED_ABORT;
-//    LebesgueIterator<D> it(&fTree);
+//    HilbertIterator<D> it(&fTree);
 //    while (it.next()) {
 //        MRNode<D> &fNode = it.getNode();
 //        if (fNode.isForeign() or fNode.isGenNode()) {

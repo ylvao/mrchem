@@ -19,7 +19,7 @@ class MWNode : public MRNode<D> {
 public:
     MWNode();
     MWNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
-    MWNode(MWNode<D> *p, int cIdx);
+    MWNode(MWNode<D> &p, int cIdx);
     MWNode(const MWNode<D> &nd, MWNode<D> *p);
     MWNode(const MWNode<D> &nd, MWTree<D> *t);
     MWNode<D> &operator=(const MWNode<D> &nd);
@@ -100,7 +100,6 @@ protected:
     virtual double calcWaveletNorm();
 
     void getChildrenQuadRoots(std::vector<Eigen::MatrixXd *> &quadPts);
-//    bool seedCheck(RepresentableObject<D> &func);
 
     void reallocCoefs(int nCoefs = -1);
     inline void allocComponentNorms();

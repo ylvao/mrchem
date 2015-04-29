@@ -35,7 +35,7 @@ FunctionNode<D>::FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
 /** FunctionNode constructor.
   * Creates an empty node given its parent and translation vector */
 template<int D>
-FunctionNode<D>::FunctionNode(FunctionNode<D> *p, int cIdx)
+FunctionNode<D>::FunctionNode(FunctionNode<D> &p, int cIdx)
         : MWNode<D> (p, cIdx) {
 }
 

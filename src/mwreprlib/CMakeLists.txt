@@ -50,6 +50,9 @@ set(mwrepr_SOURCES
 	TelePrompter.cpp
 	TelePrompter.h
 	TreeIterator.h
+	HilbertPath.cpp
+	HilbertPath.h
+	HilbertIterator.h
 	LebesgueIterator.h
 	GaussQuadrature.cpp
 	GaussQuadrature.h
@@ -64,9 +67,7 @@ set(mwrepr_SOURCES
 	Polynomial.h
         ScalingCache.h
         ScalingBasis.h
-        #LegendreBasis.cpp
         LegendreBasis.h
-        #InterpolatingBasis.cpp
         InterpolatingBasis.h
 	)
 

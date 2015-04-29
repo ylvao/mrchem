@@ -23,7 +23,7 @@ GenNode<D>::GenNode() : FunctionNode<D> () {
 /** GenNode constructor.
   * Creates an empty node given its parent and translation vector */
 template<int D>
-GenNode<D>::GenNode(FunctionNode<D> *p, int cIdx) : FunctionNode<D> (p, cIdx) {
+GenNode<D>::GenNode(FunctionNode<D> &p, int cIdx) : FunctionNode<D> (p, cIdx) {
     NOT_IMPLEMENTED_ABORT;
 //    this->setIsGenNode();
 //    if (this->parent->isGenNode()) {

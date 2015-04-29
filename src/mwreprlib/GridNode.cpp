@@ -24,7 +24,7 @@ GridNode<D>::GridNode(MRTree<D> &t, const NodeIndex<D> &nIdx)
 }
 
 template<int D>
-GridNode<D>::GridNode(GridNode<D> *p, int cIdx) : MRNode<D>(p, cIdx) {
+GridNode<D>::GridNode(GridNode<D> &p, int cIdx) : MRNode<D>(p, cIdx) {
     calcQuadPoints();
     calcQuadWeights();
     this->setIsEndNode();
@@ -41,7 +41,7 @@ GridNode<D>::~GridNode() {
 template<int D>
 void GridNode<D>::createChild(int cIdx) {
     assert(this->children[cIdx] == 0);
-    GridNode<D> *child = new GridNode<D> (this, cIdx);
+    GridNode<D> *child = new GridNode<D> (*this, cIdx);
     this->children[cIdx] = child;
     child->setIsEndNode();
 }
@@ -49,7 +49,7 @@ void GridNode<D>::createChild(int cIdx) {
 template<int D>
 void GridNode<D>::genChild(int cIdx) {
     assert(this->children[cIdx] == 0);
-    GridNode<D> *child = new GridNode<D> (this, cIdx);
+    GridNode<D> *child = new GridNode<D> (*this, cIdx);
     this->children[cIdx] = child;
     child->setIsGenNode();
     this->tree->incrementGenNodeCount();

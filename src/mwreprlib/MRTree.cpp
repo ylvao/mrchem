@@ -2,7 +2,7 @@
 #include "MRGrid.h"
 #include "MathUtils.h"
 #include "MRNode.h"
-#include "LebesgueIterator.h"
+#include "HilbertIterator.h"
 #include "TelePrompter.h"
 
 using namespace std;
@@ -540,8 +540,7 @@ void MRTree<D>::makeNodeTable(MRNodeVector &nodeTable) {
   * Returns one nodeVector per scale. GenNodes disregarded. */
 template<int D>
 void MRTree<D>::makeNodeTable(std::vector<MRNodeVector > &nodeTable) {
-//    HilbertIterator<D> it(this);
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     while (it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.isGenNode()) {
@@ -559,7 +558,7 @@ void MRTree<D>::makeNodeTable(std::vector<MRNodeVector > &nodeTable) {
   * Returns one nodeVector for the whole tree. GenNodes disregarded. */
 template<int D>
 void MRTree<D>::makeLocalNodeTable(MRNodeVector &nodeTable, bool common) {
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     while (it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.isGenNode()) {
@@ -575,7 +574,7 @@ void MRTree<D>::makeLocalNodeTable(MRNodeVector &nodeTable, bool common) {
   * Returns one nodeVector per scale. GenNodes disregarded. */
 template<int D>
 void MRTree<D>::makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable, bool common) {
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     while (it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.isGenNode()) {
@@ -602,7 +601,7 @@ void MRTree<D>::copyEndNodeTable(MRNodeVector &nodeTable) {
 template<int D>
 void MRTree<D>::resetEndNodeTable() {
     clearEndNodeTable();
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     it.setReturnGenNodes(false);
     while (it.next()) {
         MRNode<D> &node = it.getNode();
@@ -660,7 +659,7 @@ int MRTree<D>::countBranchNodes(int depth) {
 template<int D>
 int MRTree<D>::countLeafNodes(int depth) {
     int nNodes = 0;
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     while (it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.getDepth() == depth or depth < 0) {
@@ -676,7 +675,7 @@ int MRTree<D>::countLeafNodes(int depth) {
 template<int D>
 int MRTree<D>::countMyNodes(int depth) {
     NOT_IMPLEMENTED_ABORT;
-//    LebesgueIterator<D> it(this);
+//    HilbertIterator<D> it(this);
 //    int count = 0;
 //    while (it.next()) {
 //        MRNode<D> &node = it.getNode();
@@ -694,7 +693,7 @@ int MRTree<D>::countMyNodes(int depth) {
 template<int D>
 int MRTree<D>::countAllocNodes(int depth) {
     NOT_IMPLEMENTED_ABORT;
-//    LebesgueIterator<D> it(this);
+//    HilbertIterator<D> it(this);
 //    int count = 0;
 //    while (it.next()) {
 //        MWNode<D> &node = it.getNode();
@@ -719,7 +718,7 @@ void MRTree<D>::printNodeRankCount() {
             count[i][j] = 0;
         }
     }
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     while(it.next()) {
         MRNode<D> &node = it.getNode();
         if (node.isGenNode()) {
@@ -1076,8 +1075,7 @@ void MRTree<D>::distributeNodes(int depth) {
         depth = getMaxDepth();
     }
     MRNodeVector nodeTable;
-    //HilbertIterator<D> it(this);
-    LebesgueIterator<D> it(this);
+    HilbertIterator<D> it(this);
     it.setReturnGenNodes(false);
     it.setMaxDepth(depth);
     while (it.next()) {
@@ -1098,7 +1096,7 @@ void MRTree<D>::purgeForeignNodes(bool keepEndNodes) {
 //    if (not this->isScattered()) {
 //        return;
 //    }
-//    LebesgueIterator<D> it(this);
+//    HilbertIterator<D> it(this);
 
 //    while (it.next()) {
 //        MWNode<D> &node = it.getNode();

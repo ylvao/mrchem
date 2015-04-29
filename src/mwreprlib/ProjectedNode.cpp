@@ -44,12 +44,12 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
     }
     for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
         const GridNode<D> &gChild = gNode.getGridChild(cIdx);
-        this->children[cIdx] = new ProjectedNode(this, cIdx, gChild);
+        this->children[cIdx] = new ProjectedNode(*this, cIdx, gChild);
     }
 }
 
 template<int D>
-ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx,
+ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
                                 const GridNode<D> &gNode)
         : FunctionNode<D> (p, cIdx) {
     this->setIsEndNode();
@@ -67,7 +67,8 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx,
     }
     for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
         const GridNode<D> &gChild = gNode.getGridChild(cIdx);
-        this->children[cIdx] = new ProjectedNode(this, cIdx, gChild);
+        ProjectedNode<D> *child = new ProjectedNode(*this, cIdx, gChild);
+        this->children[cIdx] = child;
     }
 }
 
@@ -85,7 +86,7 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
 /** ProjectedNode constructor.
   * Creates an empty node given its parent and translation vector */
 template<int D>
-ProjectedNode<D>::ProjectedNode(ProjectedNode<D> *p, int cIdx)
+ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx) {
     NOT_IMPLEMENTED_ABORT;
 }

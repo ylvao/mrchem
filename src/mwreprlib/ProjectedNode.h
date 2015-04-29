@@ -18,8 +18,8 @@ public:
     ProjectedNode();
     ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode);
     ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
-    ProjectedNode(ProjectedNode<D> *p, int cIdx);
-    ProjectedNode(ProjectedNode<D> *p, int cIdx, const GridNode<D> &gNode);
+    ProjectedNode(ProjectedNode<D> &p, int cIdx);
+    ProjectedNode(ProjectedNode<D> &p, int cIdx, const GridNode<D> &gNode);
     ProjectedNode(const ProjectedNode<D> &nd, ProjectedNode<D> *p);
     ProjectedNode(const ProjectedNode<D> &nd, FunctionTree<D> *t);
     ProjectedNode<D> &operator=(const ProjectedNode<D> &nd);

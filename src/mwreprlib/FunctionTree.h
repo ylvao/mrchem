@@ -60,7 +60,6 @@ public:
 
     template<int T>
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
-
     friend class MWProjector<D>;
 
 protected:
@@ -68,8 +67,6 @@ protected:
     void initializeNodesRecursive(const MRGrid<D> &grid);
 
 private:
-//    HilbertPathTable<D> hilbertPathTable;
-
     void findMissingInnerProd(FunctionTree<D> &tree,
                               std::set<FunctionNode<D> *> &missing);
 

@@ -3,7 +3,6 @@
 #include "TelePrompter.h"
 #include "NodeBox.h"
 #include "GridNode.h"
-#include "LebesgueIterator.h"
 
 using namespace Eigen;
 using namespace std;

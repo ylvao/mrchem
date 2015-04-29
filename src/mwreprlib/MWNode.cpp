@@ -37,7 +37,7 @@ MWNode<D>::MWNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : MRNode<D>(t, nIdx) {
 /** MWNode constructor.
   * Creates an empty node given its parent and child index */
 template<int D>
-MWNode<D>::MWNode(MWNode<D> *p, int cIdx) : MRNode<D>(p, cIdx) {
+MWNode<D>::MWNode(MWNode<D> &p, int cIdx) : MRNode<D>(p, cIdx) {
     this->weight[0] = 0.0;
     this->weight[1] = 0.0;
     this->componentNorms = 0;

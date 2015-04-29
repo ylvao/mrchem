@@ -16,6 +16,7 @@
 #include "parallel.h"
 #include "mwrepr_declarations.h"
 #include "MRTree.h"
+#include "HilbertPath.h"
 
 #ifdef OPENMP
 #define SET_NODE_LOCK() omp_set_lock(&this->node_lock)
@@ -32,7 +33,7 @@ class MRNode {
 public:
     MRNode();
     MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
-    MRNode(MRNode<D> *p, int cIdx);
+    MRNode(MRNode<D> &p, int cIdx);
     MRNode(const MRNode<D> &nd, MRNode<D> *p);
     MRNode(const MRNode<D> &nd, MRTree<D> *t);
     MRNode<D> &operator=(const MRNode<D> &nd);
@@ -131,14 +132,15 @@ public:
         return true;
     }
 
+    const HilbertPath<D> &getHilbertPath() const { return this->hilbertPath; }
+
     friend class GridNode<D>;
-    //	friend class HilbertIterator<D>;
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
 
 protected:
-    //unsigned char hilbertPath;
+    HilbertPath<D> hilbertPath;
     NodeIndex<D> nodeIndex;
 
     MRTree<D> *tree;
@@ -158,9 +160,6 @@ protected:
     const MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx) const;
     MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
     MRNode<D> *retrieveNodeOrEndNode(const double *r, int depth);
-
-//    char getHilbertPath() const { return hilbertPath; }
-//    void setHilbertPath(char hilbertIdx) { hilbertPath = hilbertIdx; }
 
     void allocKindergarten();
     virtual void deleteChildren();
