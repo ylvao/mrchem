@@ -176,7 +176,7 @@ void MWTree<D>::setSplitType(int type) {
   * incomplete (e.g. within growTree), the missing nodes must be given in the
   * input work vector. Involves an MPI reduction operation. */
 template<int D>
-double MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
+void MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
     double treeNorm = 0.0;
     int nNodes = 0;
     if (nodeTable != 0) {
@@ -195,17 +195,11 @@ double MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
             treeNorm += node.getSquareNorm();
         }
     }
-    this->squareNorm = reduceNorm(treeNorm);
-    return this->squareNorm;
-}
-
-/** Collect local treeNorms to global treeNorm. */
-template<int D>
-double MWTree<D>::reduceNorm(double treeNorm) {
 #ifdef HAVE_MPI
-    return mpi::all_reduce(node_group, treeNorm, std::plus<double>());
+    this->squareNorm = mpi::all_reduce(node_group, treeNorm, std::plus<double>());
+#else
+    this->squareNorm = treeNorm;
 #endif
-    return treeNorm;
 }
 
 /** Reduce the accuracy of the tree by deleting nodes
@@ -253,13 +247,10 @@ void MWTree<D>::mwTransformUp(bool overwrite) {
     int start = nodeTable.size() - 2;
     for (int n = start; n >= 0; n--) {
         set<MRNode<D> *> missing;
-        println(0, "find missing");
         findMissingChildren(nodeTable[n], missing);
         //communicate missing
-        println(0, "sync " << missing.size() << " missing");
         syncNodes(missing);
         int nNodes = nodeTable[n].size();
-        println(0, "looping over " << nNodes << " nodes");
 #pragma omp parallel firstprivate(nNodes, overwrite) shared(nodeTable)
         {
 #pragma omp for schedule(guided)

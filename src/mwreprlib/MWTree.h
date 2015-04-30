@@ -84,8 +84,7 @@ protected:
     void allocWorkMemory();
     void freeWorkMemory();
 
-    double reduceNorm(double treeNorm);
-    double calcTreeNorm(MRNodeVector *work = 0);
+    void calcTreeNorm(MRNodeVector *work = 0);
 
 //    void updateMissingScalingPart(const MWNodeVector &nodeList);
 //    void setupWorkTable(MWNodeVector &wt);
