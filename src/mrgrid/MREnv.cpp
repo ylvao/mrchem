@@ -12,7 +12,7 @@ void MREnv::initializeMRCPP() {
     omp_set_dynamic(0);
     Eigen::setNbThreads(1);
 
-    int printLevel = 0;
+    int printLevel = 10;
     bool teletype = true;
 
     TelePrompter::init(printLevel, teletype, "MRGRID");

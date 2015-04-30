@@ -28,7 +28,7 @@ MWProjector<D>::~MWProjector() {
 
 template<int D>
 void MWProjector<D>::buildTree() {
-    println(1, "  == Building tree");
+    println(10, " == Building tree");
     MRNodeVector nodeTable;
     this->outTree->copyEndNodeTable(nodeTable);
     this->outTree->clearEndNodeTable();
@@ -51,8 +51,8 @@ void MWProjector<D>::buildTree() {
 template<int D>
 void MWProjector<D>::calcNodeTable(MRNodeVector &nodeTable) {
     int nNodes = nodeTable.size();
-    printout(1, "  -- #" << setw(3) << " Calculated   ");
-    printout(1, setw(6) << nNodes << " nodes" << endl);
+    printout(10, "  -- #  1: Calculated   ");
+    printout(10, setw(6) << nNodes << " nodes" << endl);
 #pragma omp parallel shared(nodeTable) firstprivate(nNodes)
     {
     #pragma omp for schedule(guided)

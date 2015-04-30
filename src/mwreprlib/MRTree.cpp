@@ -139,7 +139,7 @@ void MRTree<D>::yieldChildren(MRNodeVector &nodeTable, const NodeIndexSet &idxSe
         MRNode<D> &node = getNode(**it);
         int childDepth = node.getDepth() + 1;
         if (this->maxDepth != 0 and childDepth > this->maxDepth) {
-            println(1, "+++ Maximum depth reached: " << childDepth);
+            println(10, "+++ Maximum depth reached: " << childDepth);
             node.setIsEndNode();
         } else {
             node.createChildren();
@@ -181,7 +181,7 @@ void MRTree<D>::splitNodes(const NodeIndexSet &idxSet) {
         MRNode<D> &node = getNode(**it);
         int childDepth = node.getDepth() + 1;
         if (this->maxDepth != 0 and childDepth > this->maxDepth) {
-            println(1, "+++ Maximum depth reached: " << childDepth);
+            println(10, "+++ Maximum depth reached: " << childDepth);
             node.setIsEndNode();
         } else {
             node.createChildren();
@@ -908,7 +908,7 @@ void MRTree<D>::syncNodes(const set<MRNode<D> *> &nodeList, int comp) {
     vector<NodeIndex<D> > *sendReqs = new vector<NodeIndex<D> >[nHosts];
 
     int totReqs = buildRequestLists(nodeList, myReqs, sendReqs);
-    println(2, "  Total number of nodes to sync: " <<  totReqs);
+    println(20, "  Total number of nodes to sync: " <<  totReqs);
     if (totReqs != 0) {
         mpi::request *reqs = new mpi::request[totReqs];
 

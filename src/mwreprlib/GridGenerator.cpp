@@ -52,18 +52,18 @@ void GridGenerator<D>::clearGrid() {
 
 template<int D>
 void GridGenerator<D>::buildGrid() {
-    println(1, " == Building grid");
+    println(10, " == Building grid");
     MRNodeVector nodeTable;
     this->grid->copyEndNodeTable(nodeTable);
     this->grid->clearEndNodeTable();
 
-    int iteration = 1;
+    int iter = 1;
     while (nodeTable.size() > 0) {
         int nNodes = nodeTable.size();
         splitNodeTable(nodeTable);
-        println(1, "  -- #" << setw(3) << iteration << ": Generated    "
-                << setw(6) << nNodes << " nodes");
-        iteration++;
+        printout(10, "  -- #" << setw(3) << iter << ": Generated    ");
+        printout(10, setw(6) << nNodes << " nodes" << endl);
+        iter++;
     }
     this->grid->resetEndNodeTable();
 }
@@ -92,7 +92,6 @@ bool GridGenerator<D>::splitCheck(const MRNode<D> *node) {
         return false;
     }
     if (node->getDepth() < this->uniformDepth) {
-        //println(0, "uniform depth split " << node->getDepth() << " < " << this->uniformDepth);
         return true;
     }
     return false;

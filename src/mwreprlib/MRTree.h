@@ -132,7 +132,7 @@ protected:
     int *nGenNodes;
     int *nAllocGenNodes;
     NodeBox<D> *rootBox;            ///< The actual container of nodes
-    MRNodeVector endNodeTable;	     ///< Final projected node
+    MRNodeVector endNodeTable;	    ///< Final projected nodes
     std::vector<int> nodesAtDepth;  ///< Node counter
 
     // Static default parameters
