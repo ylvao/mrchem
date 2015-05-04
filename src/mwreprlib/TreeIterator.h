@@ -32,8 +32,7 @@ public:
 	    }
 	}
 	MRNode<D> &node = *this->state->node;
-	if ((node.getDepth() < this->maxDepth) and
-	        not (node.isEndNode() and not this->returnGenNodes)) {
+	if (checkDepth(node) and checkGenerated(node)) {
 	    const int nChildren = 1 << D;
 	    for (int i = 0; i < nChildren; i++) {
                 int cIdx = getChildIndex(i);
@@ -55,12 +54,7 @@ public:
     }
 
     void setReturnGenNodes(bool i = true) { this->returnGenNodes = i; }
-    void setMaxDepth(int depth) {
-        if (depth < 0) {
-            MSG_ERROR("Cannot have negative depth");
-        }
-        this->maxDepth = depth;
-    }
+    void setMaxDepth(int depth) { this->maxDepth = depth; }
 
     MRNode<D> &getNode() { return *this->state->node; }
     friend class IteratorNode<D>;
@@ -77,7 +71,7 @@ protected:
 
     void init(MRTree<D> *tree) {
         this->root = 0;
-        this->maxDepth = tree->getMaxDepth();
+        this->maxDepth = -1;
         this->nRoots = tree->getRootBox().getNBoxes();
         this->state = new IteratorNode<D>(&tree->getRootBox().getNode(root));
         // Save the first state so it can be properly deleted later
@@ -148,6 +142,22 @@ protected:
         default:
             MSG_FATAL("Invalid recursive direction!");
             break;
+        }
+    }
+    bool checkDepth(const MRNode<D> &node) const {
+        if (this->maxDepth < 0) {
+            return true;
+        } else if (node.getDepth() < this->maxDepth) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    bool checkGenerated(const MRNode<D> &node) const {
+        if (node.isEndNode() and not this->returnGenNodes) {
+            return false;
+        } else {
+            return true;
         }
     }
 };

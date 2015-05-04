@@ -60,7 +60,6 @@ public:
 
     template<int T>
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
-    friend class MWProjector<D>;
 
 protected:
     void initializeRootNodes();

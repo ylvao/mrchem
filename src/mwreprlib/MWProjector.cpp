@@ -1,8 +1,7 @@
 #include "MWProjector.h"
 #include "MWNode.h"
-#include "GridAdaptor.h"
-#include "MRGrid.h"
-#include "FunctionTree.h"
+#include "MWAdaptor.h"
+#include "MWTree.h"
 
 using namespace std;
 
@@ -13,7 +12,7 @@ MWProjector<D>::MWProjector() {
 }
 
 template<int D>
-MWProjector<D>::MWProjector(GridAdaptor<D> &a) {
+MWProjector<D>::MWProjector(MWAdaptor<D> &a) {
     this->outTree = 0;
     this->adaptor = &a;
 }
@@ -29,40 +28,71 @@ MWProjector<D>::~MWProjector() {
 template<int D>
 void MWProjector<D>::buildTree() {
     println(10, " == Building tree");
-    MRNodeVector nodeTable;
-    this->outTree->copyEndNodeTable(nodeTable);
-    this->outTree->clearEndNodeTable();
 
-    int iteration = 1;
-    while (nodeTable.size() > 0) {
-        calcNodeTable(nodeTable);
-        this->outTree->calcTreeNorm(&nodeTable);
+    MRNodeVector *workVec = this->outTree->copyEndNodeTable();
+    MRNodeVector *endVec = this->outTree->getEndNodeTable();
+    endVec->clear();
+
+    int iter = 1;
+    while (workVec->size() > 0) {
+        printout(10, "  -- #" << setw(3) << iter << ": Calculated   ");
+        workVec = clearForeignNodes(workVec);
+        calcNodeVector(*workVec);
+        double norm = sqrt(this->outTree->calcTreeNorm(workVec));
         if (this->adaptor != 0) {
-            NOT_IMPLEMENTED_ABORT;
-//            nodeTable = this->adaptor->splitNodeTable(nodeTable);
+            MRNodeVector splitVec;
+            this->adaptor->splitNodeVector(norm, *workVec, splitVec, *endVec);
+            NodeIndexSet *splitSet = getNodeIndexSet(splitVec);
+            broadcast_index_list<D>(*splitSet);
+            this->outTree->splitNodes(*splitSet, workVec);
+            delete splitSet;
         } else {
-            nodeTable.clear();
+            workVec->clear();
         }
-        iteration++;
+        iter++;
     }
+    delete workVec;
     this->outTree->resetEndNodeTable();
 }
 
 template<int D>
-void MWProjector<D>::calcNodeTable(MRNodeVector &nodeTable) {
-    int nNodes = nodeTable.size();
-    printout(10, "  -- #  1: Calculated   ");
+void MWProjector<D>::calcNodeVector(MRNodeVector &nodeVec) {
+    int nNodes = nodeVec.size();
     printout(10, setw(6) << nNodes << " nodes" << endl);
-#pragma omp parallel shared(nodeTable) firstprivate(nNodes)
-    {
-    #pragma omp for schedule(guided)
-        for (int n = 0; n < nNodes; n++) {
-            MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n]);
-            if (not node.isForeign()) {
-                calcWaveletCoefs(node);
-            }
+#pragma omp parallel shared(nodeVec) firstprivate(nNodes)
+{
+#pragma omp for schedule(guided)
+    for (int n = 0; n < nNodes; n++) {
+        MWNode<D> &node = static_cast<MWNode<D> &>(*nodeVec[n]);
+        calcWaveletCoefs(node);
+    }
+}
+}
+
+template<int D>
+MRNodeVector* MWProjector<D>::clearForeignNodes(MRNodeVector *oldVec) const {
+    MRNodeVector *newVec = new MRNodeVector;
+    for (int i = 0; i < oldVec->size(); i++) {
+        MRNode<D> *node = (*oldVec)[i];
+        if (node == 0) {
+            continue;
+        }
+        if (not node->isForeign()) {
+            newVec->push_back(node);
         }
     }
+    delete oldVec;
+    return newVec;
+}
+
+template<int D>
+NodeIndexSet* MWProjector<D>::getNodeIndexSet(const MRNodeVector &nodeVec) const {
+    NodeIndexSet *idxSet = new NodeIndexSet;
+    for (int i = 0; i < nodeVec.size(); i++) {
+        const NodeIndex<D> &idx = nodeVec[i]->getNodeIndex();
+        idxSet->insert(&idx);
+    }
+    return idxSet;
 }
 
 template class MWProjector<1>;

@@ -463,6 +463,12 @@ double MWNode<D>::calcWaveletNorm() {
 
 template<int D>
 double MWNode<D>::estimateError(bool absPrec) {
+    if (this->isForeign()) {
+        return 0.0;
+    }
+    if (this->isCommon() and this->tree->getRankId() != 0) {
+        return 0.0;
+    }
     double tNorm = 1.0;
     if (not absPrec) {
         tNorm = sqrt(getMWTree().getSquareNorm());
@@ -472,9 +478,8 @@ double MWNode<D>::estimateError(bool absPrec) {
     double expo = (1.0 * (n + 1));
     double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
     double wNorm = this->calcWaveletNorm();
-
-//    return wNorm / tNorm;
-    return scaleFactor * wNorm / tNorm;
+    double error = scaleFactor * wNorm / tNorm;
+    return error*error;
 }
 
 // Don't bother trying to inline the following functions; they are virtual

@@ -44,8 +44,6 @@ public:
     int getDim() const { return D; }
     int getTDim() const { return this->tDim; }
     int getNNodes(int depth = -1) const;
-    int getMaxDepth() const { return this->maxDepth; }
-    int getMaxScale() const { return this->maxScale; }
     int getNEndNodes() const { return this->endNodeTable.size(); }
     int getNAllocGenNodes();
     int getNGenNodes();
@@ -106,7 +104,6 @@ public:
     void checkRankOverlap(MRTree<D> &tree);
 
     static void setDefaultOrder(int k);
-    static void setDefaultMaxDepth(int max_depth);
 
     friend class MRNode<D>;
     friend class GridNode<D>;
@@ -115,14 +112,12 @@ public:
 protected:
     // Parameters that are set in construction and should never change
     int order;
-    int maxDepth;
     int rank;
     int nThreads;
 
     // Parameters that are derived internally and should not be set explicitly
     int kp1;
     int kp1_d;
-    int maxScale;
 
     // Parameters that are dynamic and can be set by user
     std::string name;
@@ -138,7 +133,6 @@ protected:
     // Static default parameters
     const static int tDim = (1 << D);
     static int defaultOrder;
-    static int defaultMaxDepth;
 
     int getRootIndex(const double *r) const { return this->rootBox->getBoxIndex(r); }
     int getRootIndex(const NodeIndex<D> &nIdx) { return this->rootBox->getBoxIndex(nIdx); }
@@ -155,8 +149,7 @@ protected:
     void decrementAllocGenNodeCount();
 
     virtual void initializeRootNodes() = 0;
-    void yieldChildren(MRNodeVector &nodeTable, const NodeIndexSet &idxSet);
-    void splitNodes(const NodeIndexSet &idxSet);
+    void splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec = 0);
 
     void makeNodeTable(MRNodeVector &nodeTable);
     void makeNodeTable(std::vector<MRNodeVector > &nodeTable);
@@ -164,7 +157,9 @@ protected:
     void makeLocalNodeTable(MRNodeVector &nodeTable, bool common = false);
     void makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable, bool common = false);
 
-    void copyEndNodeTable(MRNodeVector &nodeTable);
+    MRNodeVector* copyEndNodeTable();
+    MRNodeVector* getEndNodeTable() { return &this->endNodeTable; }
+
     void resetEndNodeTable();
     void clearEndNodeTable() { this->endNodeTable.clear(); }
 
@@ -185,7 +180,6 @@ protected:
 //    void sendNodes(int dest, const MWNodeVector &nodeList);
 //    void recvNodes(int src, MWNodeVector *nodeList = 0);
 //    void broadcastNodes(const MWNodeVector &nodeList);
-//    void broadcastIndexList(std::set<const NodeIndex<D> *, NodeIndexComp<D> > &idx);
 
 #ifdef OPENMP
     omp_lock_t tree_lock;

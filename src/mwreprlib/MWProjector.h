@@ -7,16 +7,19 @@ template<int D>
 class MWProjector {
 public:
     MWProjector();
-    MWProjector(GridAdaptor<D> &a);
+    MWProjector(MWAdaptor<D> &a);
     virtual ~MWProjector();
 
 protected:
-    FunctionTree<D> *outTree;
-    GridAdaptor<D> *adaptor;
+    MWTree<D> *outTree;
+    MWAdaptor<D> *adaptor;
 
     void buildTree();
-    void calcNodeTable(MRNodeVector &nodeTable);
+    void calcNodeVector(MRNodeVector &nodeVec);
     virtual void calcWaveletCoefs(MWNode<D> &node) = 0;
+
+    MRNodeVector* clearForeignNodes(MRNodeVector *oldVec) const;
+    NodeIndexSet* getNodeIndexSet(const MRNodeVector &nodeVec) const;
 };
 
 #endif // MWPROJECTOR_H

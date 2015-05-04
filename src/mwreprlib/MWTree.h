@@ -18,6 +18,7 @@
 
 class Filter;
 class ScalingBasis;
+template<int D> class MWProjector;
 
 template<int D>
 class MWTree : public MRTree<D> {
@@ -59,6 +60,7 @@ public:
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
+    friend class MWProjector<D>;
 
     static void setDefaultSplitType(int type);
     static void setDefaultScalingType(int type);
@@ -84,7 +86,7 @@ protected:
     void allocWorkMemory();
     void freeWorkMemory();
 
-    void calcTreeNorm(MRNodeVector *work = 0);
+    double calcTreeNorm(MRNodeVector *work = 0);
 
 //    void updateMissingScalingPart(const MWNodeVector &nodeList);
 //    void setupWorkTable(MWNodeVector &wt);

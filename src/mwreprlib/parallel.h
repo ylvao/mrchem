@@ -13,11 +13,14 @@
 
 #include <boost/serialization/serialization.hpp>
 
+#include "mwrepr_declarations.h"
 #include "config.h"
+#include "NodeIndex.h"
 
 int get_locale_index_range(int rank, int nWork, int &start, int &end);
 int get_locale_index(int nWork, int idx);
 bool locale_needs_sync(int nWork);
+template<int D> void broadcast_index_list(NodeIndexSet &idxSet);
 
 #ifdef HAVE_OPENMP
 
@@ -61,5 +64,29 @@ namespace mpi {
 
 extern mpi::communicator world;
 extern mpi::communicator node_group;
+
+template<int D>
+void broadcast_index_list(NodeIndexSet &idxSet) {
+#ifdef HAVE_MPI
+    if (node_group.size() > 1) {
+        static std::vector<std::vector<NodeIndex<D> > > commIdx;
+        commIdx.clear();
+
+        std::vector<NodeIndex<D> > tmpList;
+        typename std::set<const NodeIndex<D> *>::iterator it;
+        for (it = idxSet.begin(); it != idxSet.end(); it++) {
+            tmpList.push_back(**it);
+        }
+        mpi::all_gather(node_group, tmpList, commIdx);
+        idxSet.clear();
+        for (unsigned int i = 0; i < commIdx.size(); i++) {
+            for (unsigned int j = 0; j < commIdx[i].size(); j++) {
+                idxSet.insert(&commIdx[i][j]);
+            }
+        }
+    }
+#endif
+}
+
 
 #endif /* PARALLEL_H_ */

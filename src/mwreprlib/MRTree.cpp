@@ -8,7 +8,6 @@
 using namespace std;
 using namespace Eigen;
 
-template<int D> int MRTree<D>::defaultMaxDepth = 30;
 template<int D> int MRTree<D>::defaultOrder = 3;
 
 template<int D>
@@ -27,9 +26,6 @@ MRTree<D>::MRTree(const BoundingBox<D> *box, int k) {
     }
 
     this->name = "nn";
-    this->maxDepth = defaultMaxDepth;
-    this->maxScale = this->getRootScale() + this->maxDepth - 1;
-
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 
@@ -121,70 +117,26 @@ void MRTree<D>::copyTreeParams(const MRTree<D> &tree) {
     this->order = tree.order;
     this->kp1 = tree.kp1;
     this->kp1_d = tree.kp1_d;
-    this->maxDepth = tree.maxDepth;
-    this->maxScale = tree.maxScale;
     this->name = tree.name;
 }
 
-/** Updates nodeTable according to the indexTable of nodes to split.
+/** Split nodes according to a list of NodeIndices.
   *
-  * Given a list of NodeIndices to split, this routine collects the newly born
-  * children nodes in the sibling table. Children nodes are by default given
-  * the rank of their parent. Option to transfer scaling coefficients to the
-  * children through MW transform. */
+  * Given a list of NodeIndices to split, this routine creates the new children
+  * nodes. If a MRNodeVector is given the newly born (local) children nodes are 
+  * collected. Children nodes are by default given the rank of their parent.*/
 template<int D>
-void MRTree<D>::yieldChildren(MRNodeVector &nodeTable, const NodeIndexSet &idxSet) {
+void MRTree<D>::splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec) {
     typename set<const NodeIndex<D> *>::iterator it;
     for (it = idxSet.begin(); it != idxSet.end(); it++) {
         MRNode<D> &node = getNode(**it);
         int childDepth = node.getDepth() + 1;
-        if (this->maxDepth != 0 and childDepth > this->maxDepth) {
-            println(10, "+++ Maximum depth reached: " << childDepth);
-            node.setIsEndNode();
-        } else {
-            node.createChildren();
+        node.createChildren();
+        if (nVec != 0) {
             for (int i = 0; i < node.getNChildren(); i++) {
                 MRNode<D> *child = &node.getChild(i);
-                nodeTable.push_back(child);
+                nVec->push_back(child);
             }
-        }
-    }
-    //very old below?
-//    siblings.clear();
-//    typename set<const NodeIndex<D> *>::iterator it;
-//    for (it = idxTable.begin(); it != idxTable.end(); it++) {
-//        MWNode<D> &node = this->rootBox.getNode(**it);
-//        int nodeDepth = node.getScale() - getRootScale() + 1;
-//        if (this->maxDepth != 0 and nodeDepth > this->maxDepth) {
-//            println(1, "+++ Maximum depth reached: " << nodeDepth);
-//            node.setIsEndNode();
-//        } else {
-//            node.createChildren();
-//            for (int i = 0; i < node.getNChildren(); i++) {
-//                MWNode<D> &child = node.getMWChild(i);
-//                child.setRankId(node.getRankId());
-//                siblings.push_back(&child);
-//            }
-//            if (filter and not node.isForeign()) {
-//                assert(node.hasCoefs());
-//                node.giveChildrenScaling();
-//            }
-//        }
-//    }
-//    return siblings;
-}
-
-template<int D>
-void MRTree<D>::splitNodes(const NodeIndexSet &idxSet) {
-    typename set<const NodeIndex<D> *>::iterator it;
-    for (it = idxSet.begin(); it != idxSet.end(); it++) {
-        MRNode<D> &node = getNode(**it);
-        int childDepth = node.getDepth() + 1;
-        if (this->maxDepth != 0 and childDepth > this->maxDepth) {
-            println(10, "+++ Maximum depth reached: " << childDepth);
-            node.setIsEndNode();
-        } else {
-            node.createChildren();
         }
     }
 }
@@ -192,12 +144,6 @@ void MRTree<D>::splitNodes(const NodeIndexSet &idxSet) {
 template<int D>
 void MRTree<D>::setDefaultOrder(int k) {
     assert(k > 0);
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-void MRTree<D>::setDefaultMaxDepth(int max_depth) {
-    assert(max_depth > 0);
     NOT_IMPLEMENTED_ABORT
 }
 
@@ -274,7 +220,6 @@ template<int D>
 void MRTree<D>::incrementNodeCount(int scale) {
     int depth = scale - getRootScale();
     assert(depth >= 0);
-    assert(depth <= this->maxDepth);
     int n = this->nodesAtDepth.size() - 1;
     if (depth > n) {
         for (int i = 0; i < depth - n; i++) {
@@ -392,7 +337,6 @@ int MRTree<D>::getNGenNodes() {
   * appropriate rootNode. */
 template<int D>
 const MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) const {
-    assert(idx.getScale() <= getMaxScale());
     const MRNode<D> &root = getRootNode(idx);
     assert(root.isAncestor(idx));
     return root.retrieveNodeNoGen(idx);
@@ -406,7 +350,6 @@ const MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) const {
   * appropriate rootNode. */
 template<int D>
 MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) {
-    assert(idx.getScale() <= getMaxScale());
     MRNode<D> &root = getRootNode(idx);
     assert(root.isAncestor(idx));
     return root.retrieveNodeNoGen(idx);
@@ -437,7 +380,6 @@ MRNode<D>* MRTree<D>::findNode(const double *r, int depth) {
   * decends from this. Option to generate empty (deallocated) GenNodes. */
 template<int D>
 MRNode<D>& MRTree<D>::getNode(const NodeIndex<D> &idx) {
-    assert(idx.getScale() <= getMaxScale());
     MRNode<D> &root = getRootNode(idx);
     assert(root.isAncestor(idx));
     return *(root.retrieveNode(idx));
@@ -591,11 +533,13 @@ void MRTree<D>::makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable, bool c
 }
 
 template<int D>
-void MRTree<D>::copyEndNodeTable(MRNodeVector &nodeTable) {
+MRNodeVector* MRTree<D>::copyEndNodeTable() {
+    MRNodeVector *nVec = new MRNodeVector;
     for (int n = 0; n < getNEndNodes(); n++) {
         MRNode<D> &node = getEndNode(n);
-        nodeTable.push_back(&node);
+        nVec->push_back(&node);
     }
+    return nVec;
 }
 
 template<int D>
@@ -996,32 +940,6 @@ int MRTree<D>::buildRequestLists(
 
 /*
 template<int D>
-void MWTree<D>::broadcastIndexList(set<const NodeIndex<D> *,
-                                   NodeIndexComp<D> > &idx) {
-#ifdef HAVE_MPI
-    if (node_group.size() > 1) {
-        static vector<vector<NodeIndex<D> > > commIdx;
-        commIdx.clear();
-
-        vector<NodeIndex<D> > tmpList;
-        typename set<const NodeIndex<D> *>::iterator it;
-        for (it = idx.begin(); it != idx.end(); it++) {
-            tmpList.push_back(**it);
-        }
-        mpi::all_gather(node_group, tmpList, commIdx);
-        idx.clear();
-        for (unsigned int i = 0; i < commIdx.size(); i++) {
-            for (unsigned int j = 0; j < commIdx[i].size(); j++) {
-                idx.insert(&commIdx[i][j]);
-            }
-        }
-    }
-#endif
-}
-*/
-
-/*
-template<int D>
 void MRTree<D>::distributeEndNodes() {
     int nHosts = node_group.size();
     if (nHosts < 2) {
@@ -1071,9 +989,6 @@ void MRTree<D>::distributeEndNodes() {
 
 template<int D>
 void MRTree<D>::distributeNodes(int depth) {
-    if (depth < 0) {
-        depth = getMaxDepth();
-    }
     MRNodeVector nodeTable;
     HilbertIterator<D> it(this);
     it.setReturnGenNodes(false);

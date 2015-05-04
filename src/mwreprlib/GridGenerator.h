@@ -37,8 +37,7 @@ private:
     int quadOrder;
     int uniformDepth;
 
-    void splitNodeTable(MRNodeVector &nodeTable);
-    bool updateNodeTable(MRNodeVector &nodeTable, NodeIndexSet &idxSet);
+    MRNodeVector* splitNodeVector(MRNodeVector *nVec);
 };
 
 #endif /* GRID_GENERATOR_H_ */

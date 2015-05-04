@@ -17,6 +17,8 @@ set(mwrepr_SOURCES
 	GridGenerator.h
 	GridAdaptor.cpp
 	GridAdaptor.h
+	MWAdaptor.cpp
+	MWAdaptor.h
 	MRGrid.cpp
 	MRGrid.h
 	FunctionTree.cpp

@@ -27,6 +27,7 @@ ProjectedNode<D>::ProjectedNode() : FunctionNode<D> () {
     NOT_IMPLEMENTED_ABORT;
 }
 
+/* Recurcive root node construcor*/
 template<int D>
 ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
         : FunctionNode<D> (t, gNode.getNodeIndex()) {
@@ -48,6 +49,7 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
     }
 }
 
+/* Recurcive node constructor*/
 template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
                                 const GridNode<D> &gNode)
@@ -77,10 +79,12 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
 template<int D>
 ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
         : FunctionNode<D> (t, nIdx) {
-    this->allocCoefs();
-    this->zeroCoefs();
-    this->zeroNorms();
     this->setIsEndNode();
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
 }
 
 /** ProjectedNode constructor.
@@ -88,7 +92,13 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
 template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx) {
-    NOT_IMPLEMENTED_ABORT;
+    this->setIsEndNode();
+    this->setRankId(p.getRankId());
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
 }
 
 /** ProjectedNode copy constructor.
@@ -169,15 +179,14 @@ ProjectedNode<D> &ProjectedNode<D>::operator=(const ProjectedNode<D> &nd) {
   * appropriate translation and Hilbert path parameters. */
 template<int D>
 void ProjectedNode<D>::createChildren() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->children == 0) {
-//        this->allocKindergarten();
-//    }
-//    for (int i = 0; i < this->getTDim(); i++) {
-//        createChild(i);
-//    }
-//    this->setIsBranchNode();
-//    this->clearIsEndNode();
+    if (this->children == 0) {
+        this->allocKindergarten();
+    }
+    for (int i = 0; i < this->getTDim(); i++) {
+        createChild(i);
+    }
+    this->setIsBranchNode();
+    this->clearIsEndNode();
 }
 
 /** Allocating child node.
@@ -186,16 +195,10 @@ void ProjectedNode<D>::createChildren() {
   * with the appropriate translation and Hilbert path parameters. */
 template<int D>
 void ProjectedNode<D>::createChild(int i) {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->children != 0);
-//    assert(this->children[i] == 0);
-//    int l[D];
-//    this->calcChildTranslation(i, l);
-//    ProjectedNode<D> *child = new ProjectedNode<D> (this, l);
-//    int h = HilbertIterator<D>::getHilbertPathIndex(this->hilbertPath, i);
-//    child->setHilbertPath(h);
-//    this->children[i] = child;
-//    child->setIsEndNode();
+    assert(this->children != 0);
+    assert(this->children[i] == 0);
+    ProjectedNode<D> *child = new ProjectedNode<D>(*this, i);
+    this->children[i] = child;
 }
 
 /** Generating children nodes.
@@ -327,20 +330,6 @@ bool ProjectedNode<D>::splitCheck(double prec) {
 //        return true;
 //    }
 //    return false;
-}
-
-/** Calculate the threshold for the wavelet norm.
-  *
-  * Calculates the threshold that has to be met in the wavelet norm in order to
-  * guarantee the precision in the function representation. Depends on the
-  * square norm of the function and the requested relative accuracy. */
-template<int D>
-double ProjectedNode<D>::getWaveletThreshold(int factor, double prec) {
-    NOT_IMPLEMENTED_ABORT;
-//    double norm = sqrt(getFuncTree().getSquareNorm());
-//    double foo = 2.0 * MachinePrec;
-//    double bar = norm * prec * pow(2.0, -(0.5 * factor * this->getScale());
-//    return  max(foo, bar);
 }
 
 /** Clear coefficients of generated nodes.

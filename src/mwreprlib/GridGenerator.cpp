@@ -53,14 +53,12 @@ void GridGenerator<D>::clearGrid() {
 template<int D>
 void GridGenerator<D>::buildGrid() {
     println(10, " == Building grid");
-    MRNodeVector nodeTable;
-    this->grid->copyEndNodeTable(nodeTable);
-    this->grid->clearEndNodeTable();
+    MRNodeVector *nodeVector = this->grid->getEndNodeTable();
 
     int iter = 1;
-    while (nodeTable.size() > 0) {
-        int nNodes = nodeTable.size();
-        splitNodeTable(nodeTable);
+    while (nodeVector->size() > 0) {
+        int nNodes = nodeVector->size();
+        nodeVector = splitNodeVector(nodeVector);
         printout(10, "  -- #" << setw(3) << iter << ": Generated    ");
         printout(10, setw(6) << nNodes << " nodes" << endl);
         iter++;
@@ -69,21 +67,22 @@ void GridGenerator<D>::buildGrid() {
 }
 
 template<int D>
-void GridGenerator<D>::splitNodeTable(MRNodeVector &nodeTable) {
+MRNodeVector* GridGenerator<D>::splitNodeVector(MRNodeVector *nVec) {
     NodeIndexSet idxSet;
     NodeIndexSet tmpIdx;
 
-    int nNodes = nodeTable.size();
+    int nNodes = nVec->size();
     for (int n = 0; n < nNodes; n++) {
-        MRNode<D> *node = nodeTable[n];
+        MRNode<D> *node = (*nVec)[n];
         if (splitCheck(node)) {
             const NodeIndex<D> *idx = &node->getNodeIndex();
             tmpIdx.insert(idx);
         }
     }
     idxSet.insert(tmpIdx.begin(), tmpIdx.end());
-    nodeTable.clear();
-    this->grid->yieldChildren(nodeTable, idxSet);
+    nVec->clear();
+    this->grid->splitNodes(idxSet, nVec);
+    return nVec;
 }
 
 template<int D>

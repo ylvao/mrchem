@@ -8,7 +8,7 @@ template<int D>
 class FunctionProjector : public MWProjector<D> {
 public:
     FunctionProjector();
-    FunctionProjector(GridAdaptor<D> &a);
+    FunctionProjector(MWAdaptor<D> &a);
     virtual ~FunctionProjector();
 
     void operator()(FunctionTree<D> &out, RepresentableFunction<D> &inp);

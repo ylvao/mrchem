@@ -139,36 +139,16 @@ const MWNode<D>& MWTree<D>::getEndMWNode(int i) const {
 
 template<int D>
 double MWTree<D>::estimateError(bool absPrec) {
-    double totError = 0.0;
+    double error = 0.0;
     for (int i = 0; i < this->getNEndNodes(); i++) {
         MWNode<D> &node = getEndMWNode(i);
-        double nodeError = node.estimateError(absPrec);
-        totError += nodeError*nodeError;
+        error += node.estimateError(absPrec);
     }
-    return totError;
-//    return sqrt(totError);
+#ifdef HAVE_MPI
+    error = mpi::all_reduce(node_group, error, std::plus<double>());
+#endif
+    return error;
 }
-
-/** Set tree split type.
-  * Determines the strictness of the accuracy criterion of the wavelet norm. */
-/*
-template<int D>
-void MWTree<D>::setSplitType(int type) {
-    switch (type) {
-    case (ExactSplit):
-        this->splitType = ExactSplit;
-        break;
-    case (QuickSplit):
-        this->splitType = QuickSplit;
-        break;
-    case (FastSplit):
-        this->splitType = FastSplit;
-        break;
-    default:
-        MSG_ERROR("Invalid tree type: " << type)
-    }
-}
-*/
 
 /** Calculate the squared norm of a function represented as a tree.
   *
@@ -176,14 +156,14 @@ void MWTree<D>::setSplitType(int type) {
   * incomplete (e.g. within growTree), the missing nodes must be given in the
   * input work vector. Involves an MPI reduction operation. */
 template<int D>
-void MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
+double MWTree<D>::calcTreeNorm(MRNodeVector *nodeVec)  {
     double treeNorm = 0.0;
     int nNodes = 0;
-    if (nodeTable != 0) {
-        nNodes = nodeTable->size();
+    if (nodeVec != 0) {
+        nNodes = nodeVec->size();
     }
     for (int n = 0; n < nNodes; n++) {
-        MWNode<D> *node = static_cast<MWNode<D> *>((*nodeTable)[n]);
+        MWNode<D> *node = static_cast<MWNode<D> *>((*nodeVec)[n]);
         if (not node->isForeign()) {
             assert(node->hasCoefs());
             treeNorm += node->getSquareNorm();
@@ -200,6 +180,7 @@ void MWTree<D>::calcTreeNorm(MRNodeVector *nodeTable)  {
 #else
     this->squareNorm = treeNorm;
 #endif
+    return this->squareNorm;
 }
 
 /** Reduce the accuracy of the tree by deleting nodes

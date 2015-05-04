@@ -108,6 +108,10 @@ public:
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     int getChildIndex(const double *r) const;
 
+    virtual void genChildren();
+    virtual void createChildren();
+    virtual void deleteChildren();
+
     void lockNode() { SET_NODE_LOCK(); }
     void unlockNode() { UNSET_NODE_LOCK(); }
     bool testLock() { return TEST_NODE_LOCK(); }
@@ -162,10 +166,7 @@ protected:
     MRNode<D> *retrieveNodeOrEndNode(const double *r, int depth);
 
     void allocKindergarten();
-    virtual void deleteChildren();
-    virtual void createChildren();
     virtual void createChild(int i) = 0;
-    virtual void genChildren();
     virtual void genChild(int i) = 0;
 
     void purgeGenerated();

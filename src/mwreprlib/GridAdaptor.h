@@ -11,13 +11,13 @@ public:
     void setAbsPrec(bool abs) { this->absPrec = abs; }
     void setPrecision(double pr) { this->prec = pr; }
 
-    void adaptGrid(MRGrid<D> &g, FunctionTree<D> &t);
+    void adaptGrid(MRGrid<D> &g, MWTree<D> &t);
 
 protected:
     bool absPrec;
     double prec;
     MRGrid<D> *grid;
-    FunctionTree<D> *tree;
+    MWTree<D> *tree;
 
     void splitNodes(NodeIndexSet &splitSet, NodeIndexSet &gridSet);
     bool splitCheck(MWNode<D> &node);

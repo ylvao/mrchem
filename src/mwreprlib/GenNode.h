@@ -45,6 +45,9 @@ public:
     void incrementNodeWeight(int i, double w);
     double getComponentNorm(int i);
 
+    void createChildren();
+    void genChildren(bool genEmpty = false);
+
     /** Calculate GenNode component norms, ie. do nothing.
     We only have one component norm == squareNorm. The component norm is
     calculated lazily by getComponentNorm(), since we do not necessarily have
@@ -54,9 +57,6 @@ public:
     void allocCoefs(int nCoefs = -1);
 
 protected:
-    void createChildren();
-    void createChild(int i);
-    void genChildren(bool genEmpty = false);
     void giveChildrenScaling(bool overwrite = true);
     void giveSiblingsScaling(Eigen::VectorXd &coefs);
 
@@ -75,6 +75,7 @@ protected:
 private:
     ProjectedNode<D> *genRootNode;
 
+    void createChild(int i);
     void lockSiblings();
     void unlockSiblings();
     void regenerateCoefs();

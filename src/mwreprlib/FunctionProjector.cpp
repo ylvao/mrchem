@@ -1,9 +1,7 @@
 #include "FunctionProjector.h"
 #include "RepresentableFunction.h"
 #include "FunctionTree.h"
-#include "GridAdaptor.h"
-#include "MRGrid.h"
-#include "MRTree.h"
+#include "MWAdaptor.h"
 #include "MWNode.h"
 #include "ScalingBasis.h"
 #include "QuadratureCache.h"
@@ -17,7 +15,7 @@ FunctionProjector<D>::FunctionProjector() {
 }
 
 template<int D>
-FunctionProjector<D>::FunctionProjector(GridAdaptor<D> &a) : MWProjector<D>(a) {
+FunctionProjector<D>::FunctionProjector(MWAdaptor<D> &a) : MWProjector<D>(a) {
     this->inpFunc = 0;
 }
 

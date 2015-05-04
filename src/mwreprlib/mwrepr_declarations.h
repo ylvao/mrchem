@@ -21,10 +21,12 @@ template <int D> class MWNode;
 template <int D> class MRGrid;
 template <int D> class GridNode;
 
+template<int D> class MWAdaptor;
 template<int D> class GridAdaptor;
 template<int D> class FunctionTree;
 
 #define MRNodeVector std::vector<MRNode<D> *>
+#define MWNodeVector std::vector<MWNode<D> *>
 #define NodeIndexSet std::set<const NodeIndex<D> *, NodeIndexComp<D> >
 
 #endif /* MWREPR_DECLARATIONS_H_*/

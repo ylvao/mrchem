@@ -3,7 +3,8 @@
 #include "MRNode.h"
 #include "MWNode.h"
 #include "NodeIndex.h"
-#include "FunctionTree.h"
+#include "MWTree.h"
+#include "constants.h"
 
 using namespace std;
 
@@ -13,18 +14,18 @@ GridAdaptor<D>::GridAdaptor(double pr, bool abs) {
     this->absPrec = abs;
 }
 
+/* Adapt grid g based on wavelet norms of the tree t.*/
 template<int D>
-void GridAdaptor<D>::adaptGrid(MRGrid<D> &g, FunctionTree<D> &t) {
+void GridAdaptor<D>::adaptGrid(MRGrid<D> &g, MWTree<D> &t) {
     this->grid = &g;
     this->tree = &t;
 
-//    println(0, " == Adapting grid");
-    MRNodeVector gridVector;
-    this->grid->copyEndNodeTable(gridVector);
+    println(10, " == Adapting grid");
+    MRNodeVector *gridVec = this->grid->getEndNodeTable();
 
     NodeIndexSet gridSet;
-    for (int i= 0; i < gridVector.size(); i++) {
-        const NodeIndex<D> &idx = gridVector[i]->getNodeIndex();
+    for (int i= 0; i < gridVec->size(); i++) {
+        const NodeIndex<D> &idx = (*gridVec)[i]->getNodeIndex();
         gridSet.insert(&idx);
     }
 
@@ -59,10 +60,11 @@ bool GridAdaptor<D>::splitCheck(MWNode<D> &node) {
        return false;
    }
    int scale = node.getScale() + 1;
-   if (scale >= this->tree->getMaxScale()) {
-       MSG_INFO("Maximum depth reached: " << scale);
-       return false;
-   }
+   NOT_IMPLEMENTED_ABORT;
+   //if (scale >= this->tree->getMaxScale()) {
+   //    MSG_INFO("Maximum depth reached: " << scale);
+   //    return false;
+   //}
    int fact = 1;
    double thrs = getWaveletThreshold(fact, scale);
    double w_norm = node.getWaveletNorm();

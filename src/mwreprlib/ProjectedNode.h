@@ -32,26 +32,23 @@ public:
     bool splitCheck(double prec = -1.0);
     void calcComponentNorms();
 
-protected:
+    void genChildren(bool genEmpty = false);
     void createChildren();
     void deleteChildren() {
         MWNode<D>::deleteChildren();
         this->setIsEndNode();
     }
 
+protected:
     void copyRecursive(GridNode<D> &gNode);
-
-    void genChildren(bool genEmpty = false);
-    void genChild(int i);
-
     void calcComponentNorm(int i);
-    double getWaveletThreshold(int factor, double prec);
 
 //    void copyScalingCoefs(const ProjectedNode<D> &nd);
 //    void giveChildrenScaling(bool overwrite = true);
 
 private:
     void createChild(int i);
+    void genChild(int i);
 
     friend class boost::serialization::access;
     template<class Archive>
