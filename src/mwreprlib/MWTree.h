@@ -23,9 +23,9 @@ template<int D> class MWProjector;
 template<int D>
 class MWTree : public MRTree<D> {
 public:
-    MWTree(const BoundingBox<D> *box, int k, int type);
-    MWTree(const MRGrid<D> &grid, int type);
     MWTree(const MWTree<D> &tree);
+    MWTree(const MRTree<D> &tree, int type);
+    MWTree(const BoundingBox<D> &box, int k, int type);
     MWTree<D> &operator=(const MWTree<D> &tree);
     virtual ~MWTree();
 
@@ -62,9 +62,6 @@ public:
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
     friend class MWProjector<D>;
 
-    static void setDefaultSplitType(int type);
-    static void setDefaultScalingType(int type);
-
 protected:
     int scalingType;
     bool autoCleanGenerated;
@@ -76,9 +73,6 @@ protected:
     Eigen::MatrixXd **tmpCoefs;   ///< temp memory
     Eigen::VectorXd **tmpVector;  ///< temp memory
     Eigen::VectorXd **tmpMWCoefs; ///< temp memory
-
-    static int defaultSplitType;
-    static int defaultScalingType;
 
     void setupFilters(int type);
     void setupScalingBasis(int type);

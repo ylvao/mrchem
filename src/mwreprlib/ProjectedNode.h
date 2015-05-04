@@ -15,13 +15,8 @@
 template<int D>
 class ProjectedNode: public FunctionNode<D> {
 public:
-    ProjectedNode();
-    ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode);
     ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     ProjectedNode(ProjectedNode<D> &p, int cIdx);
-    ProjectedNode(ProjectedNode<D> &p, int cIdx, const GridNode<D> &gNode);
-    ProjectedNode(const ProjectedNode<D> &nd, ProjectedNode<D> *p);
-    ProjectedNode(const ProjectedNode<D> &nd, FunctionTree<D> *t);
     ProjectedNode<D> &operator=(const ProjectedNode<D> &nd);
     virtual ~ProjectedNode() { }
 
@@ -29,7 +24,6 @@ public:
     void clearGenerated();
     void purgeGenerated();
 
-    bool splitCheck(double prec = -1.0);
     void calcComponentNorms();
 
     void genChildren(bool genEmpty = false);
@@ -39,14 +33,8 @@ public:
         this->setIsEndNode();
     }
 
-protected:
-    void copyRecursive(GridNode<D> &gNode);
-    void calcComponentNorm(int i);
-
-//    void copyScalingCoefs(const ProjectedNode<D> &nd);
-//    void giveChildrenScaling(bool overwrite = true);
-
 private:
+    void calcComponentNorm(int i);
     void createChild(int i);
     void genChild(int i);
 

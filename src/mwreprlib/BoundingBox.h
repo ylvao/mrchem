@@ -20,6 +20,9 @@ public:
     BoundingBox(const BoundingBox<D> &box);
     BoundingBox<D> &operator=(const BoundingBox<D> &box);
 
+    bool operator==(const BoundingBox<D> &box) const { NOT_IMPLEMENTED_ABORT; }
+    bool operator!=(const BoundingBox<D> &box) const { NOT_IMPLEMENTED_ABORT; }
+
     void setCornerIndex(const NodeIndex<D> &idx);
     void setOrigin(const double *o);
     void setNBoxes(const int *nb);

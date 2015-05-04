@@ -101,7 +101,7 @@ protected:
         if (this->state->node->isLeafNode()) {
             return false;
         }
-        MRNode<D> *child = &this->state->node->getChild(i);
+        MRNode<D> *child = &this->state->node->getMRChild(i);
         this->state = new IteratorNode<D>(child, this->state);
         return next();
     }
@@ -116,7 +116,7 @@ protected:
         if (this->root >= this->nRoots) {
             return false;
         }
-        MRNode<D> *nextRoot = &state->node->getTree().getRootBox().getNode(root);
+        MRNode<D> *nextRoot = &state->node->getMRTree().getRootBox().getNode(root);
         this->state = new IteratorNode<D>(nextRoot, this->state);
         return next();
     }

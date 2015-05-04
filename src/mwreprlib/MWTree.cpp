@@ -16,45 +16,41 @@
 using namespace std;
 using namespace Eigen;
 
-template<int D> int MWTree<D>::defaultSplitType = NormalSplit;
-template<int D> int MWTree<D>::defaultScalingType = Interpol;
+/** MWTree copy constructor.
+  * Takes the parameters of the input tree, not it's data */
+template<int D>
+MWTree<D>::MWTree(const MWTree<D> &tree) : MRTree<D>(tree) {
+    this->squareNorm = 0.0;
+    this->nAllocGenNodes = 0;
+
+    setupScalingBasis(tree.scalingType);
+    setupFilters(tree.scalingType);
+
+    allocWorkMemory();
+}
+
+template<int D>
+MWTree<D>::MWTree(const MRTree<D> &tree, int type) : MRTree<D>(tree) {
+    this->squareNorm = 0.0;
+    this->autoCleanGenerated = true;
+
+    setupScalingBasis(type);
+    setupFilters(type);
+
+    allocWorkMemory();
+}
 
 /** MWTree constructor.
   * Creates an empty tree object. Node construction and assignment of most of
   * the parameters are done in derived classes. */
 template<int D>
-MWTree<D>::MWTree(const BoundingBox<D> *box, int k, int type)
+MWTree<D>::MWTree(const BoundingBox<D> &box, int k, int type)
         : MRTree<D>(box, k) {
     this->squareNorm = 0.0;
     this->autoCleanGenerated = true;
 
     setupScalingBasis(type);
     setupFilters(type);
-
-    allocWorkMemory();
-}
-
-template<int D>
-MWTree<D>::MWTree(const MRGrid<D> &grid, int type) : MRTree<D>(grid) {
-    this->squareNorm = 0.0;
-    this->autoCleanGenerated = true;
-
-    setupScalingBasis(type);
-    setupFilters(type);
-
-    allocWorkMemory();
-}
-
-/** MWTree copy constructor.
-  * Takes the parameters of the input tree, not it's data */
-template<int D>
-MWTree<D>::MWTree(const MWTree<D> &tree) : MRTree<D>(tree) {
-    NOT_IMPLEMENTED_ABORT;
-    this->squareNorm = 0.0;
-    this->nAllocGenNodes = 0;
-
-//    setupScalingBasis(tree.scalingType);
-//    setupFilters(tree.scalingType);
 
     allocWorkMemory();
 }
@@ -94,16 +90,6 @@ void MWTree<D>::freeWorkMemory() {
     delete[] this->tmpCoefs;
     delete[] this->tmpVector;
     delete[] this->tmpMWCoefs;
-}
-
-template<int D>
-void MWTree<D>::setDefaultSplitType(int type) {
-    NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-void MWTree<D>::setDefaultScalingType(int type) {
-    NOT_IMPLEMENTED_ABORT
 }
 
 template<int D>

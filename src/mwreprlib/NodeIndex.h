@@ -25,6 +25,7 @@ class NodeIndex {
 public:
     NodeIndex(int n = 0, const int *l = 0, int r = -1);
     NodeIndex(const NodeIndex<D> &idx);
+    NodeIndex(const NodeIndex<D> &pIdx, int cIdx);
     virtual ~NodeIndex() { }
 
     inline NodeIndex<D>& operator=(const NodeIndex<D> &idx);
@@ -70,6 +71,16 @@ NodeIndex<D>::NodeIndex(const NodeIndex<D> &idx) {
     this->N = idx.N;
     this->rankId = idx.rankId;
     setTranslation(idx.L);
+}
+
+template<int D>
+NodeIndex<D>::NodeIndex(const NodeIndex<D> &pIdx, int cIdx) {
+    this->N = pIdx.N + 1;
+    this->rankId = pIdx.rankId;
+    const int *l = pIdx.getTranslation(); 
+    for (int d = 0; d < D; d++) {
+        this->L[d] = (2 * l[d]) + ((cIdx >> d) & 1);
+    }
 }
 
 template<int D>

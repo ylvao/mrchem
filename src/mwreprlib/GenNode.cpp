@@ -13,13 +13,6 @@
 using namespace std;
 using namespace Eigen;
 
-/** GenNode default constructor.
-  * Creates an empty node. */
-template<int D>
-GenNode<D>::GenNode() : FunctionNode<D> () {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 /** GenNode constructor.
   * Creates an empty node given its parent and translation vector */
 template<int D>
@@ -32,61 +25,6 @@ GenNode<D>::GenNode(FunctionNode<D> &p, int cIdx) : FunctionNode<D> (p, cIdx) {
 //        this->genRootNode = static_cast<ProjectedNode<D> *>(parent);
 //    }
 //    this->tree->incrementGenNodeCount();
-}
-
-/** GenNode copy constructor.
-  *
-  * Make a detached copy of a node that is not accessible through any tree. The
-  * tree is still accessible from the node, as much of the node parameters are
-  * in fact stored in the tree. Copying coefficients is optional. Children
-  * nodes are NOT copied recursively.
-  *
-  * IMPORTANT: Detached nodes must have NULL tree pointer at the time of
-  *            destruction. This is the cleanest way to avoid tree locking in
-  *            OMP regarding (increment/decrement)NodeCount(). These nodes are
-  *            not incremented by construction, and a test on this->tree == 0
-  *            makes sure it is not decremented by destruction. */
-template<int D>
-GenNode<D>::GenNode(const GenNode<D> &nd, FunctionTree<D> *t)
-        : FunctionNode<D> (nd, t) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (copyCoefs) {
-//        if (not node.hasCoefs()) {
-//            node.regenerateCoefs();
-//        }
-//        this->setCoefs(node.getCoefs());
-//    }
-//    this->genRootNode = 0;
-}
-
-/** GenNode copy constructor.
-  * Make a copy of a node and assign it to another parent. Includes recursive
-  * copying of children nodes. Copying coefficients is optional. */
-template<int D>
-GenNode<D>::GenNode(const GenNode<D> &nd, FunctionNode<D> *p)
-        : FunctionNode<D> (nd, p) {
-    NOT_IMPLEMENTED_ABORT;
-//    this->tree->incrementGenNodeCount();
-//    if (this->parent->isGenNode()) {
-//        this->genRootNode = static_cast<GenNode<D> *>(parent)->getGenRootNode();
-//    } else {
-//        this->genRootNode = static_cast<ProjectedNode<D> *>(parent);
-//    }
-//    if (copyCoefs and node.hasCoefs()) {
-//        this->setCoefs(node.getCoefs());
-//    }
-//    if (this->isLeafNode()) {
-//        return;
-//    }
-
-//    for (int i = 0; i < this->tDim; i++) {
-//        assert(this->children != 0);
-//        if (node.hasChild(i)) {
-//            const GenNode<D> &child =
-//                    static_cast<const GenNode<D> &>(node.getMWChild(i));
-//            this->children[i] = new GenNode<D> (child, this, true);
-//        }
-//    }
 }
 
 /** GenNode equals operator.

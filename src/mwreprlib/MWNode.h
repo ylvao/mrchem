@@ -17,11 +17,8 @@ template<int D> class MWTree;
 template<int D>
 class MWNode : public MRNode<D> {
 public:
-    MWNode();
     MWNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
     MWNode(MWNode<D> &p, int cIdx);
-    MWNode(const MWNode<D> &nd, MWNode<D> *p);
-    MWNode(const MWNode<D> &nd, MWTree<D> *t);
     MWNode<D> &operator=(const MWNode<D> &nd);
     virtual ~MWNode();
 
@@ -30,6 +27,8 @@ public:
     inline double getSquareNorm() const;
     inline double getScalingNorm();
     inline double getWaveletNorm();
+
+    double estimateError(bool absPrec);
 
     void calcNorms();
     void clearNorms();
@@ -46,19 +45,9 @@ public:
     virtual void cvTransform(int kind);
     virtual void mwTransform(int kind);
 
-    virtual bool splitCheck(double prec = -1.0) = 0;
     virtual void allocCoefs(int nCoefs = -1);
     virtual void calcComponentNorms() = 0;
     virtual void purgeGenerated() = 0;
-
-    double estimateError(bool absPrec);
-    double getNodeWeight(int i) { return this->weight[i]; }
-    void clearNodeWeight(int i) { this->weight[i] = 0.0;}
-    virtual void incrementNodeWeight(int i, double w = 1.0) {
-        this->lockNode();
-        this->weight[i] += w;
-        this->unlockNode();
-    }
 
     inline MWTree<D>& getMWTree() {
         return static_cast<MWTree<D> &>(*this->tree);
@@ -85,10 +74,8 @@ public:
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);
 
 protected:
-    double weight[2];
     double squareNorm;
     double *componentNorms; ///< 2^D components
-
     Eigen::VectorXd *coefs;
 
     bool diffBranch(const MWNode<D> &rhs) const;

@@ -23,9 +23,9 @@ template<int D> class MWProjector;
 template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
-    FunctionTree(const BoundingBox<D> *box = 0, int k = -1,  int type = Interpol);
-    FunctionTree(const MRGrid<D> &grid, int type = Interpol);
     FunctionTree(const FunctionTree<D> &tree);
+    FunctionTree(const MRTree<D> &tree, int type = Interpol);
+    FunctionTree(const BoundingBox<D> &box, int k, int type = Interpol);
     FunctionTree<D> &operator=(const FunctionTree<D> &tree);
     virtual ~FunctionTree();
 
@@ -63,7 +63,7 @@ public:
 
 protected:
     void initializeRootNodes();
-    void initializeNodesRecursive(const MRGrid<D> &grid);
+    void initializeNodesRecursive(const MRTree<D> &tree);
 
 private:
     void findMissingInnerProd(FunctionTree<D> &tree,

@@ -27,13 +27,10 @@
 template<int D>
 class MRTree {
 public:
-    MRTree(const BoundingBox<D> *box, int k);
-    MRTree(const MRGrid<D> &grid);
     MRTree(const MRTree<D> &tree);
+    MRTree(const BoundingBox<D> &box, int k);
     virtual ~MRTree();
-
     virtual void clear() = 0;
-    void copyTreeParams(const MRTree<D> &tree);
 
     void setName(const std::string &n) { this->name = n; }
     const std::string &getName() const { return this->name; }
@@ -75,11 +72,10 @@ public:
     MRNode<D> &getRootNode(const double *r) { return this->rootBox->getNode(r); }
     MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox->getNode(nIdx); }
 
-    void purgeGenerated();
-
-    void broadcastTree();
     void distributeNodes(int depth = -1);
-    void purgeForeignNodes(bool keepEndNodes = false);
+
+    void purgeGenerated();
+    void purgeForeign(bool keepEndNodes = false);
 
     void lockTree() { SET_TREE_LOCK(); }
     void unlockTree() { UNSET_TREE_LOCK(); }
@@ -102,8 +98,6 @@ public:
 
     void checkGridOverlap(MRTree<D> &tree);
     void checkRankOverlap(MRTree<D> &tree);
-
-    static void setDefaultOrder(int k);
 
     friend class MRNode<D>;
     friend class GridNode<D>;
@@ -132,7 +126,6 @@ protected:
 
     // Static default parameters
     const static int tDim = (1 << D);
-    static int defaultOrder;
 
     int getRootIndex(const double *r) const { return this->rootBox->getBoxIndex(r); }
     int getRootIndex(const NodeIndex<D> &nIdx) { return this->rootBox->getBoxIndex(nIdx); }
@@ -175,12 +168,6 @@ protected:
     int buildRequestLists(const std::set<MRNode<D> *> &list,
                           std::vector<NodeIndex<D> > *myReqs,
                           std::vector<NodeIndex<D> > *sReqs);
-//    void sendTree(int dest);
-//    void collectNodes(int dest, const MWNodeVector &nodeList);
-//    void sendNodes(int dest, const MWNodeVector &nodeList);
-//    void recvNodes(int src, MWNodeVector *nodeList = 0);
-//    void broadcastNodes(const MWNodeVector &nodeList);
-
 #ifdef OPENMP
     omp_lock_t tree_lock;
 #endif

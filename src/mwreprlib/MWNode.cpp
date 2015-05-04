@@ -16,19 +16,10 @@
 using namespace std;
 using namespace Eigen;
 
-/** MWNode default constructor.
-  * Creates an empty node  */
-template<int D>
-MWNode<D>::MWNode() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 /** MWNode rootnode constructor.
   * Creates an empty rootnode given its tree and node index */
 template<int D>
 MWNode<D>::MWNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : MRNode<D>(t, nIdx) {
-    this->weight[0] = 0.0;
-    this->weight[1] = 0.0;
     this->componentNorms = 0;
     this->coefs = 0;
     clearNorms();
@@ -38,103 +29,9 @@ MWNode<D>::MWNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : MRNode<D>(t, nIdx) {
   * Creates an empty node given its parent and child index */
 template<int D>
 MWNode<D>::MWNode(MWNode<D> &p, int cIdx) : MRNode<D>(p, cIdx) {
-    this->weight[0] = 0.0;
-    this->weight[1] = 0.0;
     this->componentNorms = 0;
     this->coefs = 0;
     clearNorms();
-}
-
-/** MWNode copy constructor.
-  *
-  * Make a detached copy of a node that is not accessible through any tree. The
-  * tree is still accessible from the node, as much of the node parameters are
-  * in fact stored in the tree. Copying coefficients is optional. Children
-  * nodes are NOT copied recursively. */
-template<int D>
-MWNode<D>::MWNode(const MWNode<D> &nd, MWTree<D> *t) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (_tree == 0) {
-//        MSG_FATAL("Tree not defined!");
-//    }
-//    parent = 0;
-//    tree = _tree;
-//    nodeIndex = nd.nodeIndex;
-//    status = nd.status;
-//    hilbertPath = nd.hilbertPath;
-//    weight[0] = nd.weight[0];
-//    weight[1] = nd.weight[1];
-//    children = 0;
-//    coefs = 0;
-//    componentNorms = 0;
-
-//    if (copyCoefs) {
-//        if (nd.hasCoefs()) {
-//            coefs = new VectorXd(*nd.coefs);
-//            this->setHasCoefs(true);
-//        }
-//    } else if (nd.isAllocated()) {
-//        allocCoefs(nd.getNCoefs());
-//    }
-//    squareNorm = nd.squareNorm;
-//    if (nd.componentNorms != 0) {
-//        allocComponentNorms();
-//        for (int i = 0; i < tDim; i++) {
-//           assert(nd.componentNorms[i] >= 0.0);
-//           componentNorms[i] = nd.componentNorms[i];
-//        }
-//    }
-//    setIsLeafNode();
-
-//#ifdef OPENMP
-//    omp_init_lock(&node_lock);
-//#endif
-}
-
-/** MWNode copy constructor.
-  * Make a copy of a node and assign it to another parent.
-  * Copying coefficients is optional. */
-template<int D>
-MWNode<D>::MWNode(const MWNode<D> &nd, MWNode<D> *p) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (_parent == 0) {
-//        MSG_FATAL("Parent node not defined!");
-//    }
-//    parent = _parent;
-//    tree = parent->tree;
-//    nodeIndex = nd.nodeIndex;
-//    status = nd.status;
-//    hilbertPath = nd.hilbertPath;
-//    weight[0] = nd.weight[0];
-//    weight[1] = nd.weight[1];
-//    children = 0;
-//    coefs = 0;
-//    componentNorms = 0;
-
-//    if (copyCoefs) {
-//        if (nd.hasCoefs()) {
-//            coefs = new VectorXd(*nd.coefs);
-//            this->setHasCoefs(true);
-//        }
-//    } else if (nd.isAllocated()) {
-//        allocCoefs(nd.getNCoefs());
-//    }
-//    squareNorm = nd.squareNorm;
-//    if (nd.componentNorms != 0) {
-//        allocComponentNorms();
-//        for (int i = 0; i < tDim; i++) {
-//            assert(nd.componentNorms[i] >= 0.0);
-//            componentNorms[i] = nd.componentNorms[i];
-//        }
-//    }
-
-//    // MWNodes are abstract, so we defer the copying of children
-//    if (nd.isBranchNode()) {
-//        allocKindergarten();
-//    }
-//#ifdef OPENMP
-//    omp_init_lock(&node_lock);
-//#endif
 }
 
 /** MWNode equals operator.

@@ -8,11 +8,8 @@ template<int D> class FunctionTree;
 template<int D>
 class FunctionNode : public MWNode<D> {
 public:
-    FunctionNode();
     FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     FunctionNode(FunctionNode<D> &p, int cIdx);
-    FunctionNode(const FunctionNode<D> &nd, FunctionNode<D> *p);
-    FunctionNode(const FunctionNode<D> &nd, FunctionTree<D> *t);
     FunctionNode<D> &operator=(const FunctionNode<D> &nd);
     virtual ~FunctionNode() { }
 
@@ -22,18 +19,9 @@ public:
     virtual void clearGenerated() = 0;
     virtual void calcComponentNorms() = 0;
 
-    void operator*=(double c);
     double integrate();
     double scalingInnerProduct(FunctionNode<D> &inpNode);
     double waveletInnerProduct(FunctionNode<D> &inpNode);
-
-//    void addCoefs(Eigen::VectorXd &expCoefs, Eigen::MatrixXd &mwCoefs);
-//    void addCoefs(double a, FunctionNode<D> &lhNode,
-//                  double b, FunctionNode<D> &rhNode);
-
-//    void multiplyCoefs(Eigen::VectorXd &expCoefs, Eigen::MatrixXd &mwCoefs);
-//    void multiplyCoefs(double a, FunctionNode<D> &lhNode,
-//                       double b, FunctionNode<D> &rhNode);
 
     inline FunctionTree<D> &getFuncTree();
     inline FunctionNode<D> &getFuncParent();

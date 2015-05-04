@@ -6,20 +6,17 @@
 using namespace std;
 
 template<int D>
-MWProjector<D>::MWProjector() {
+MWProjector<D>::MWProjector() : adaptor() {
     this->outTree = 0;
-    this->adaptor = 0;
 }
 
 template<int D>
-MWProjector<D>::MWProjector(MWAdaptor<D> &a) {
+MWProjector<D>::MWProjector(MWAdaptor<D> &a) : adaptor(a) {
     this->outTree = 0;
-    this->adaptor = &a;
 }
 
 template<int D>
 MWProjector<D>::~MWProjector() {
-    this->adaptor = 0;
     if (this->outTree != 0) {
         MSG_ERROR("Projector not properly cleared");
     }
@@ -39,16 +36,12 @@ void MWProjector<D>::buildTree() {
         workVec = clearForeignNodes(workVec);
         calcNodeVector(*workVec);
         double norm = sqrt(this->outTree->calcTreeNorm(workVec));
-        if (this->adaptor != 0) {
-            MRNodeVector splitVec;
-            this->adaptor->splitNodeVector(norm, *workVec, splitVec, *endVec);
-            NodeIndexSet *splitSet = getNodeIndexSet(splitVec);
-            broadcast_index_list<D>(*splitSet);
-            this->outTree->splitNodes(*splitSet, workVec);
-            delete splitSet;
-        } else {
-            workVec->clear();
-        }
+        MRNodeVector splitVec;
+        this->adaptor.splitNodeVector(norm, *workVec, splitVec, *endVec);
+        NodeIndexSet *splitSet = getNodeIndexSet(splitVec);
+        broadcast_index_list<D>(*splitSet);
+        this->outTree->splitNodes(*splitSet, workVec);
+        delete splitSet;
         iter++;
     }
     delete workVec;

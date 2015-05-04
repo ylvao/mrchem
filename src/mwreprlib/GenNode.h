@@ -18,10 +18,7 @@ template<int D> class ProjectedNode;
 template<int D>
 class GenNode: public FunctionNode<D> {
 public:
-    GenNode();
     GenNode(FunctionNode<D> &p, int cIdx);
-    GenNode(const GenNode<D> &nd, FunctionTree<D> *t);
-    GenNode(const GenNode<D> &nd, FunctionNode<D> *p);
     GenNode<D> &operator=(const GenNode<D> &nd);
     virtual ~GenNode();
 

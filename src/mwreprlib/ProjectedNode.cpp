@@ -20,14 +20,34 @@ extern "C" {
 using namespace std;
 using namespace Eigen;
 
-/** FunctionNode default constructor.
-  * Creates an empty node. */
+/** Root node constructor. By default root nodes are initialized to
+  * represent functions which are constant zero. */
 template<int D>
-ProjectedNode<D>::ProjectedNode() : FunctionNode<D> () {
-    NOT_IMPLEMENTED_ABORT;
+ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
+        : FunctionNode<D> (t, nIdx) {
+    this->setIsEndNode();
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
+}
+
+/** ProjectedNode constructor.
+  * Creates an empty node given its parent and translation vector */
+template<int D>
+ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
+        : FunctionNode<D> (p, cIdx) {
+    this->setIsEndNode();
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
 }
 
 /* Recurcive root node construcor*/
+/*
 template<int D>
 ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
         : FunctionNode<D> (t, gNode.getNodeIndex()) {
@@ -48,11 +68,12 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
         this->children[cIdx] = new ProjectedNode(*this, cIdx, gChild);
     }
 }
-
+*/
 /* Recurcive node constructor*/
+/*
 template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
-                                const GridNode<D> &gNode)
+                                const MRNode<D> &gNode)
         : FunctionNode<D> (p, cIdx) {
     this->setIsEndNode();
     this->setRankId(gNode.getRankId());
@@ -73,78 +94,7 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
         this->children[cIdx] = child;
     }
 }
-
-/** Root node constructor. By default root nodes are initialized to
-  * represent functions which are constant zero. */
-template<int D>
-ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
-        : FunctionNode<D> (t, nIdx) {
-    this->setIsEndNode();
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
-}
-
-/** ProjectedNode constructor.
-  * Creates an empty node given its parent and translation vector */
-template<int D>
-ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
-        : FunctionNode<D> (p, cIdx) {
-    this->setIsEndNode();
-    this->setRankId(p.getRankId());
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
-}
-
-/** ProjectedNode copy constructor.
-  *
-  * Make a detached copy of a node that is not accessible through any tree. The
-  * tree is still accessible from the node, as much of the node parameters are
-  * in fact stored in the tree. Copying coefficients is optional. Children
-  * nodes are NOT copied recursively.
-  *
-  * IMPORTANT: Detached nodes must have NULL tree pointer at the time of
-  *            destruction. This is the cleanest way to avoid tree locking in
-  *            OMP regarding (increment/decrement)NodeCount(). These nodes are
-  *            not incremented by construction, and a test on this->tree == 0
-  *            makes sure it is not decremented by destruction. */
-template<int D>
-ProjectedNode<D>::ProjectedNode(const ProjectedNode<D> &nd, FunctionTree<D> *t)
-        : FunctionNode<D> (nd, t) {
-    NOT_IMPLEMENTED_ABORT;
-    assert(this->children == 0);
-    assert(this->parent == 0);
-}
-
-/** ProjectedNode copy constructor.
-  * Make a copy of a node and assign it to another parent. Includes recursive
-  * copying of children nodes. Copying coefficients is optional. */
-template<int D>
-ProjectedNode<D>::ProjectedNode(const ProjectedNode<D> &nd, ProjectedNode<D> *p)
-        : FunctionNode<D> (nd, p) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->isLeafNode()) {
-//        return;
-//    }
-//    assert(this->children != 0);
-//    for (int i = 0; i < this->tDim; i++) {
-//        if (this->isEndNode()) {
-//            const GenNode<D> &child =
-//                    static_cast<const GenNode<D> &>(node.getMWChild(i));
-//            this->children[i] = new GenNode<D>(child, this, true);
-//        } else {
-//            const ProjectedNode<D> &child =
-//                    static_cast<const ProjectedNode<D> &>(node.getMWChild(i));
-//            this->children[i] = new ProjectedNode<D>(child, this, true);
-//        }
-//    }
-}
-
+*/
 /** ProjectedNode equals operator.
   * Copying the content of a node, not its location. Includes recursive copying
   * of children nodes. */
@@ -291,45 +241,6 @@ void ProjectedNode<D>::calcComponentNorm(int i) {
 //    VectorXd &c = this->getCoefs();
 //    int kp1_d = this->getKp1_d();
 //    this->componentNorms[i] = c.segment(i*kp1_d, kp1_d).norm();
-}
-
-/** Test if the node must be split based on its wavelet norm.
-  *
-  * Uses the wavelet norm to determine if the function is adequately
-  * represented by the scaling basis on this node, wrt the square norm of the
-  * full function, and the requested relative precision. Different split types
-  * define how strict the thresholding should be. */
-template<int D>
-bool ProjectedNode<D>::splitCheck(double prec) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (prec < 0.0) {
-//        prec = this->tree->getRelPrec();
-//    }
-//    if (this->tree->checkMaxScaleReached(this->nodeIndex.scale())) {
-////		MSG_INFO("Maximum depth reached: " << this->nodeIndex)
-//        return false;
-//    }
-//    int fact;
-//    switch (this->tree->getSplitType()) {
-//    case (MWTree<D>::ExactSplit):
-//        fact = D;
-//        break;
-//    case (MWTree<D>::QuickSplit):
-//        fact = 1;
-//        break;
-//    case (MWTree<D>::FastSplit):
-//        fact = 0;
-//        break;
-//    default:
-//        fact = 0;
-//    }
-//    double thr = getWaveletThreshold(fact, prec);
-//    double w_norm = this->calcWaveletNorm();
-
-//    if (w_norm > thr) {
-//        return true;
-//    }
-//    return false;
 }
 
 /** Clear coefficients of generated nodes.

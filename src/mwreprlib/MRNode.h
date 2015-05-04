@@ -31,42 +31,36 @@
 template<int D>
 class MRNode {
 public:
-    MRNode();
     MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
     MRNode(MRNode<D> &p, int cIdx);
-    MRNode(const MRNode<D> &nd, MRNode<D> *p);
-    MRNode(const MRNode<D> &nd, MRTree<D> *t);
     MRNode<D> &operator=(const MRNode<D> &nd);
     virtual ~MRNode();
-
-    void clearTreePointer() { this->tree = 0; }
-    void clearParentPointer() { this->parent = 0; }
 
     int getTDim() const { return this->tree->getTDim(); }
     int getKp1() const { return this->tree->getKp1(); }
     int getKp1_d() const { return this->tree->getKp1_d(); }
     int getOrder() const { return this->tree->getOrder(); }
-    int getDepth() const { return this->nodeIndex.getScale()-this->tree->getRootScale(); }
-    int getScale() const { return this->nodeIndex.getScale(); }
-    int getRankId() const { return this->nodeIndex.getRankId(); }
+    int getDepth() const { return this->nodeIndex->getScale()-this->tree->getRootScale(); }
+    int getScale() const { return this->nodeIndex->getScale(); }
+    int getRankId() const { return this->nodeIndex->getRankId(); }
     int getNChildren() const { if (isBranchNode()) return getTDim(); return 0; }
 
-    const MRTree<D> &getTree() const {return *this->tree; }
-    const MRNode<D> &getParent() const { return *this->parent; }
-    const MRNode<D> &getChild(int i) const {
+    const MRTree<D> &getMRTree() const {return *this->tree; }
+    const MRNode<D> &getMRParent() const { return *this->parent; }
+    const MRNode<D> &getMRChild(int i) const {
         assert(this->children != 0);
         return *this->children[i];
     }
 
-    MRTree<D> &getTree() { return *this->tree; }
-    MRNode<D> &getParent() { return *this->parent; }
-    MRNode<D> &getChild(int i) {
+    MRTree<D> &getMRTree() { return *this->tree; }
+    MRNode<D> &getMRParent() { return *this->parent; }
+    MRNode<D> &getMRChild(int i) {
         assert(this->children != 0);
         return *this->children[i];
     }
 
-    const int *getTranslation() const { return nodeIndex.getTranslation(); }
-    const NodeIndex<D> &getNodeIndex() const { return nodeIndex; }
+    const int *getTranslation() const { return nodeIndex->getTranslation(); }
+    const NodeIndex<D> &getNodeIndex() const { return *nodeIndex; }
 
     void getCenter(double *r) const;
     void getLowerBounds(double *r) const;
@@ -116,7 +110,7 @@ public:
     void unlockNode() { UNSET_NODE_LOCK(); }
     bool testLock() { return TEST_NODE_LOCK(); }
 
-    void setRankId(int n) { this->nodeIndex.setRankId(n); }
+    void setRankId(int n) { this->nodeIndex->setRankId(n); }
     bool isLocal() const {
         if (this->getRankId() == this->tree->getRankId()) {
             return true;
@@ -136,7 +130,7 @@ public:
         return true;
     }
 
-    const HilbertPath<D> &getHilbertPath() const { return this->hilbertPath; }
+    const HilbertPath<D> &getHilbertPath() const { return *this->hilbertPath; }
 
     friend class GridNode<D>;
 
@@ -144,12 +138,12 @@ public:
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
 
 protected:
-    HilbertPath<D> hilbertPath;
-    NodeIndex<D> nodeIndex;
-
     MRTree<D> *tree;
     MRNode<D> *parent;	    ///< Parent node
     MRNode<D> **children;   ///< 2^D children
+
+    NodeIndex<D> *nodeIndex;
+    HilbertPath<D> *hilbertPath;
 
     bool diffBranch(const MRNode<D> &rhs) const;
     inline bool checkStatus(unsigned char mask) const;

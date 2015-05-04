@@ -2,6 +2,7 @@
 #define MWPROJECTOR_H
 
 #include "mwrepr_declarations.h"
+#include "MWAdaptor.h"
 
 template<int D>
 class MWProjector {
@@ -10,9 +11,11 @@ public:
     MWProjector(MWAdaptor<D> &a);
     virtual ~MWProjector();
 
+    MWAdaptor<D> &getAdaptor() { return this->adaptor; }
+
 protected:
     MWTree<D> *outTree;
-    MWAdaptor<D> *adaptor;
+    MWAdaptor<D> adaptor;
 
     void buildTree();
     void calcNodeVector(MRNodeVector &nodeVec);

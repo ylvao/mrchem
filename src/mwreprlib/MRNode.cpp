@@ -4,52 +4,43 @@
 using namespace std;
 
 template<int D>
-MRNode<D>::MRNode() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) : nodeIndex(nIdx) {
+MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) {
     this->tree = &t;
-    this->tree->incrementNodeCount(getScale());
-
     this->parent = 0;
-    this->status = 0;
     this->children = 0;
+    this->status = 0;
+
+    this->nodeIndex = new NodeIndex<D>(nIdx);
+    this->hilbertPath = new HilbertPath<D>;
+
+    this->tree->incrementNodeCount(getScale());
 
     setIsLeafNode();
     setIsRootNode();
-
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
 }
 
 template<int D>
-MRNode<D>::MRNode(MRNode<D> &p, int cIdx) 
-        : hilbertPath(p.getHilbertPath(), cIdx) {
+MRNode<D>::MRNode(MRNode<D> &p, int cIdx) {
+    this->tree = p.tree;
     this->parent = &p;
-    this->status = 0;
     this->children = 0;
+    this->status = 0;
 
-    this->parent->calcChildNodeIndex(this->nodeIndex, cIdx);
-    this->tree = this->parent->tree;
+    const HilbertPath<D> &pPath = p.getHilbertPath();
+    this->hilbertPath = new HilbertPath<D>(pPath, cIdx);
+
+    const NodeIndex<D> &pIdx = p.getNodeIndex();
+    this->nodeIndex = new NodeIndex<D>(pIdx, cIdx);
+
     this->tree->incrementNodeCount(getScale());
-    this->setRankId(this->parent->getRankId());
+
     setIsLeafNode();
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
-}
-
-template<int D>
-MRNode<D>::MRNode(const MRNode<D> &nd, MRNode<D> *p) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-MRNode<D>::MRNode(const MRNode<D> &nd, MRTree<D> *t) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -65,6 +56,8 @@ MRNode<D>::~MRNode() {
         deleteChildren();
     }
     this->tree->decrementNodeCount(getScale());
+    delete this->hilbertPath;
+    delete this->nodeIndex;
     unlockNode();
 #ifdef OPENMP
     omp_destroy_lock(&node_lock);
@@ -128,7 +121,7 @@ void MRNode<D>::purgeGenerated() {
         } else {
             for (int i = 0; i < getTDim(); i++) {
                 assert(this->children[i] != 0);
-                this->getChild(i).purgeGenerated();
+                this->getMRChild(i).purgeGenerated();
             }
         }
     }
@@ -161,7 +154,7 @@ template<int D>
 void MRNode<D>::calcChildTranslation(int *transl, int cIdx) const {
     assert(cIdx >= 0);
     assert(cIdx < getTDim());
-    const int *l = this->nodeIndex.getTranslation();
+    const int *l = getTranslation();
     for (int d = 0; d < D; d++) {
         transl[d] = (2 * l[d]) + ((cIdx >> d) & 1);
     }
@@ -449,7 +442,7 @@ void MRNode<D>::broadcastCoefs(int src, mpi::communicator *comm) {
 template<int D>
 void MRNode<D>::assignDecendantTags(int rank) {
     for (int n = 0; n < getNChildren(); n++) {
-        MRNode<D> &child = getChild(n);
+        MRNode<D> &child = getMRChild(n);
         child.setRankId(rank);
         child.assignDecendantTags(rank);
     }

@@ -19,12 +19,6 @@ extern "C" {
 using namespace std;
 using namespace Eigen;
 
-/** FunctionNode default constructor.
-  * Creates an empty node. */
-template<int D>
-FunctionNode<D>::FunctionNode() : MWNode<D> () {
-}
-
 /** Root node constructor. By default root nodes are initialized to
   * represent functions which are constant zero. */
 template<int D>
@@ -37,25 +31,6 @@ FunctionNode<D>::FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
 template<int D>
 FunctionNode<D>::FunctionNode(FunctionNode<D> &p, int cIdx)
         : MWNode<D> (p, cIdx) {
-}
-
-/** FunctionNode copy constructor.
-  * Make a copy of a node and assign it to another parent.
-  * Copying coefficients is optional. */
-template<int D>
-FunctionNode<D>::FunctionNode(const FunctionNode<D> &nd, FunctionNode<D> *p)
-        : MWNode<D> (nd, p) {
-}
-
-/** FunctionNode copy constructor.
-  *
-  * Make a detached copy of a node that is not accessible through any tree. The
-  * tree is still accessible from the node, as much of the node parameters are
-  * in fact stored in the tree. Copying coefficients is optional. Children
-  * nodes are NOT copied recursively. */
-template<int D>
-FunctionNode<D>::FunctionNode(const FunctionNode<D> &nd, FunctionTree<D> *t)
-        : MWNode<D> (nd, t) {
 }
 
 /** FunctionNode equals operator.
@@ -263,15 +238,6 @@ void FunctionNode<D>::multiplyCoefs(double a, FunctionNode<D> &lhNode,
 //    }
 }
 */
-/** Arithmetic multiplication by a constant.
-  * Componentwise multiplication of coefficients by a constant. */
-template<int D>
-void FunctionNode<D>::operator*=(double c) {
-    if (not this->isForeign() or this->hasCoefs()) {
-        this->getCoefs() *= c;
-        this->calcNorms();  //maybe not the most efficient way but safest....
-    }
-}
 
 /** Function integration.
   *
@@ -310,7 +276,7 @@ double FunctionNode<D>::integrate() {
 template<int D>
 double FunctionNode<D>::integrateLegendre() {
     double result = this->getCoefs()[0];
-    double n = (D*this->nodeIndex.getScale())/2.0;
+    double n = (D*this->getScale())/2.0;
     result *= pow(2.0, -n);
     return result;
 }

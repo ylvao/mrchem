@@ -10,7 +10,7 @@ using namespace std;
 using namespace Eigen;
 
 template<int D>
-FunctionProjector<D>::FunctionProjector() {
+FunctionProjector<D>::FunctionProjector() { 
     this->inpFunc = 0;
 }
 

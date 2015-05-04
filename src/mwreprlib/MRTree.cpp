@@ -8,22 +8,16 @@
 using namespace std;
 using namespace Eigen;
 
-template<int D> int MRTree<D>::defaultOrder = 3;
-
+/** MRTree copy constructor.
+  * Builds a copy of the input grid structure, not grid data */
 template<int D>
-MRTree<D>::MRTree(const BoundingBox<D> *box, int k) {
-    if (k < 0) {
-        k = defaultOrder;
-    }
-    this->order = k;
+MRTree<D>::MRTree(const MRTree<D> &tree) {
+    const BoundingBox<D> &box = tree.getRootBox();
+    this->rootBox = new NodeBox<D>(box);
+
+    this->order = tree.order;
     this->kp1 = this->order + 1;
     this->kp1_d = MathUtils::ipow(this->kp1, D);
-
-    if (box != 0) {
-        this->rootBox = new NodeBox<D>(*box);
-    } else {
-        NOT_IMPLEMENTED_ABORT
-    }
 
     this->name = "nn";
     this->nNodes = 0;
@@ -38,35 +32,15 @@ MRTree<D>::MRTree(const BoundingBox<D> *box, int k) {
 #endif
 }
 
-/** MRTree copy constructor.
-  * Builds a copy of the input grid structure, not grid data */
 template<int D>
-MRTree<D>::MRTree(const MRGrid<D> &grid) {
-    copyTreeParams(grid);
-
-    const BoundingBox<D> &box = grid.getRootBox();
+MRTree<D>::MRTree(const BoundingBox<D> &box, int k) {
     this->rootBox = new NodeBox<D>(box);
-    this->nNodes = 0;
-    this->nodesAtDepth.push_back(0);
 
-    this->rank = grid.getRankId();
-    this->nThreads = omp_get_max_threads();
-    allocNodeCounters();
+    this->order = k;
+    this->kp1 = this->order + 1;
+    this->kp1_d = MathUtils::ipow(this->kp1, D);
 
-#ifdef OPENMP
-    omp_init_lock(&tree_lock);
-#endif
-}
-
-/** MRTree copy constructor.
-  * Takes the parameters of the input tree, not it's data */
-template<int D>
-MRTree<D>::MRTree(const MRTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
-    copyTreeParams(tree);
-
-    const BoundingBox<D> &box = tree.getRootBox();
-    this->rootBox = new NodeBox<D>(box);
+    this->name = "nn";
     this->nNodes = 0;
     this->nodesAtDepth.push_back(0);
 
@@ -112,14 +86,6 @@ void MRTree<D>::deleteNodeCounters() {
     delete[] this->nAllocGenNodes;
 }
 
-template<int D>
-void MRTree<D>::copyTreeParams(const MRTree<D> &tree) {
-    this->order = tree.order;
-    this->kp1 = tree.kp1;
-    this->kp1_d = tree.kp1_d;
-    this->name = tree.name;
-}
-
 /** Split nodes according to a list of NodeIndices.
   *
   * Given a list of NodeIndices to split, this routine creates the new children
@@ -134,17 +100,11 @@ void MRTree<D>::splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec) {
         node.createChildren();
         if (nVec != 0) {
             for (int i = 0; i < node.getNChildren(); i++) {
-                MRNode<D> *child = &node.getChild(i);
+                MRNode<D> *child = &node.getMRChild(i);
                 nVec->push_back(child);
             }
         }
     }
-}
-
-template<int D>
-void MRTree<D>::setDefaultOrder(int k) {
-    assert(k > 0);
-    NOT_IMPLEMENTED_ABORT
 }
 
 /** Testing if THIS tree differs from another.
@@ -180,36 +140,17 @@ bool MRTree<D>::diffTree(const MRTree<D> &tree) const {
 
 template<int D>
 bool MRTree<D>::checkCompatible(const MRTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
-            /*
-    if (getRootScale() != tree.rootBox.getRootScale()) {
-        println(0, "root scale mismatch");
-        return false;
-    }
-    if (this->order != tree.order) {
+    if (this->order != tree.getOrder()) {
         println(0, "order mismatch");
         return false;
     }
-    if (this->scalingType != tree.scalingType) {
-        println(0, "scaling type mismatch");
-        return false;
-    }
-    if (checkPrec) {
-        if (this->relPrec != tree.relPrec) {
-            println(0, "relPrec mismatch");
-            return false;
-        }
-        if (this->absPrec != tree.absPrec) {
-            println(0, "absPrec mismatch");
-            return false;
-        }
-    }
-    if (not this->rootBox.compare(tree.rootBox)) {
+    const BoundingBox<D> &thisBox = getRootBox();
+    const BoundingBox<D> &thatBox = tree.getRootBox();
+    if (thisBox != thatBox) {
         println(0, "rootBox mismatch");
         return false;
     }
     return true;
-            */
 }
 
 /** Increment node counters for non-GenNodes. This routine is not thread
@@ -451,7 +392,7 @@ void MRTree<D>::findMissingChildren(
             continue;
         }
         for (int n = 0; n < node.getNChildren(); n++) {
-            MRNode<D> &child = node.getChild(n);
+            MRNode<D> &child = node.getMRChild(n);
             if (not child.hasCoefs()) {
                 assert(this->getRankId() != child.getRankId());
                 missing.insert(&child);
@@ -589,13 +530,6 @@ void MRTree<D>::distributeNodeTags(MRNodeVector &nodeList) {
 }
 
 template<int D>
-void MRTree<D>::purgeGenerated() {
-    for (int n = 0; n < getNEndNodes(); n++) {
-        getEndNode(n).purgeGenerated();
-    }
-}
-
-template<int D>
 int MRTree<D>::countBranchNodes(int depth) {
     NOT_IMPLEMENTED_ABORT;
 }
@@ -699,9 +633,9 @@ void MRTree<D>::printNodeRankCount() {
 }
 
 /** Communicate all nodes of the tree to all MPI ranks. Node ranks remain. */
-template<int D>
-void MRTree<D>::broadcastTree() {
-    NOT_IMPLEMENTED_ABORT;
+//template<int D>
+//void MRTree<D>::broadcastTree() {
+//    NOT_IMPLEMENTED_ABORT;
 //#ifdef HAVE_MPI
 //    if (scattered) {
 //        broadcastNodes(endNodeTable);
@@ -710,7 +644,7 @@ void MRTree<D>::broadcastTree() {
 //    }
 //    mwTransformUp();
 //#endif
-}
+//}
 /*
 template<int D>
 void MWTree<D>::sendTree(int who) {
@@ -938,55 +872,6 @@ int MRTree<D>::buildRequestLists(
     return totReqs;
 }
 
-/*
-template<int D>
-void MRTree<D>::distributeEndNodes() {
-    int nHosts = node_group.size();
-    if (nHosts < 2) {
-        return;
-    }
-
-    int nNodes = getNEndNodes();
-    int tDim = getTDim();
-    int nParents = nNodes/tDim;
-
-    int *distNodes = new int[nHosts];
-    for (int i = 0; i < nHosts; i++) {
-        distNodes[i] = 0;
-    }
-
-    int rank = 0;
-    int nPerRank = nNodes/nHosts;
-    println(0, "Number of nodes       " << nNodes);
-    println(0, "Parents to distribute " << nParents);
-    println(0, "Number of MPI hosts   " << nHosts);
-    println(0, "Nodes per host        " << nPerRank);
-    for (int n = 0; n < nNodes; n++) {
-        MRNode<D> &parent = getEndNode(n).getParent();
-        for (int i = 0; i < tDim; i++) {
-            MRNode<D> &child = parent.getChild(i);
-            if (child.isEndNode() and child.getRankId() < 0) {
-                assert(rank < nHosts);
-                child.setRankId(rank);
-                distNodes[rank]++;
-            }
-        }
-        if (distNodes[rank] >= nPerRank) {
-            rank++;
-        }
-    }
-    int nDist = 0;
-    for (int i = 0; i < nHosts; i++) {
-        println(10, "MPI rank " << i << " has " << distNodes[i] << " nodes");
-        nDist += distNodes[i];
-    }
-    if (nDist != nNodes) {
-        MSG_ERROR("Not all endNodes were distributed");
-    }
-    delete[] distNodes;
-}
-*/
-
 template<int D>
 void MRTree<D>::distributeNodes(int depth) {
     MRNodeVector nodeTable;
@@ -1006,7 +891,7 @@ void MRTree<D>::distributeNodes(int depth) {
 /** Traverse tree and remove nodes of foreign rank.
   * Option to keep all endNodes. */
 template<int D>
-void MRTree<D>::purgeForeignNodes(bool keepEndNodes) {
+void MRTree<D>::purgeForeign(bool keepEndNodes) {
     NOT_IMPLEMENTED_ABORT;
 //    if (not this->isScattered()) {
 //        return;
@@ -1024,6 +909,13 @@ void MRTree<D>::purgeForeignNodes(bool keepEndNodes) {
 //        }
 //        node.clearRedundancy();
 //    }
+}
+
+template<int D>
+void MRTree<D>::purgeGenerated() {
+    for (int n = 0; n < getNEndNodes(); n++) {
+        getEndNode(n).purgeGenerated();
+    }
 }
 
 template<int D>

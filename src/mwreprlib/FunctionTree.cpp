@@ -13,48 +13,37 @@
 using namespace std;
 using namespace Eigen;
 
+/** FunctionTree copy constructor.
+  * Makes a deepcopy of the tree. */
+template<int D>
+FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
+    initializeNodesRecursive(tree);
+    const double *lB = this->rootBox->getLowerBounds();
+    const double *uB = this->rootBox->getUpperBounds();
+    this->setBounds(lB, uB);
+    this->resetEndNodeTable();
+}
+
+template<int D>
+FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
+        : MWTree<D>(tree, type) {
+    initializeNodesRecursive(tree);
+    const double *lB = this->rootBox->getLowerBounds();
+    const double *uB = this->rootBox->getUpperBounds();
+    this->setBounds(lB, uB);
+    this->resetEndNodeTable();
+}
+
 /** FunctionTree constructor.
   * Initializes root nodes to represent the zero function. */
 template<int D>
-FunctionTree<D>::FunctionTree(const BoundingBox<D> *box, int k, int type)
+FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
         : MWTree<D> (box, k, type) {
     initializeRootNodes();
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
-
     this->resetEndNodeTable();
-}
-
-template<int D>
-FunctionTree<D>::FunctionTree(const MRGrid<D> &grid, int type)
-        : MWTree<D>(grid, type) {
-    initializeNodesRecursive(grid);
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
-    this->setBounds(lB, uB);
-
-    this->resetEndNodeTable();
-}
-
-/** FunctionTree copy constructor.
-  * Makes a deepcopy of the tree. */
-template<int D>
-FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
-    NOT_IMPLEMENTED_ABORT;
-//    this->maxScale = tree.maxScale;
-
-//    const double *lB = this->rootBox.getLowerBounds();
-//    const double *uB = this->rootBox.getUpperBounds();
-//    this->setBounds(lB, uB);
-
-//    // Initialize box as a root box and copy nodes
-//    this->rootBox.reInit(this);
-//    this->rootBox = tree.rootBox;
-
-//    this->resetEndNodeTable();
-//    this->doLoadBalance = tree.doLoadBalance;
-//    this->updateGenNodeCounts();
 }
 
 /** FunctionTree equals operator.
@@ -105,11 +94,12 @@ void FunctionTree<D>::initializeRootNodes() {
 }
 
 template<int D>
-void FunctionTree<D>::initializeNodesRecursive(const MRGrid<D> &grid) {
+void FunctionTree<D>::initializeNodesRecursive(const MRTree<D> &tree) {
+    NOT_IMPLEMENTED_ABORT;
     for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const GridNode<D> &gNode = grid.getRootGridNode(rIdx);
-        MRNode<D> *root = new ProjectedNode<D>(*this, gNode);
-        this->rootBox->setNode(rIdx, &root);
+        const MRNode<D> &node = tree.getRootNode(rIdx);
+        //MRNode<D> *root = new ProjectedNode<D>(*this, node);
+        //this->rootBox->setNode(rIdx, &root);
     }
 }
 

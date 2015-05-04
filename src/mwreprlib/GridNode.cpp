@@ -63,7 +63,7 @@ MRNode<D> *GridNode<D>::retrieveNode(int n, const double *r) {
 
 template<int D>
 MRNode<D> *GridNode<D>::retrieveNode(const NodeIndex<D> &idx) {
-    if (this->nodeIndex.getScale() == idx.getScale()) { // we're done
+    if (this->nodeIndex->getScale() == idx.getScale()) { // we're done
         return this;
     }
     SET_NODE_LOCK();
