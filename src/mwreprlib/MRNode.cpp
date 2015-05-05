@@ -44,8 +44,21 @@ MRNode<D>::MRNode(MRNode<D> &p, int cIdx) {
 }
 
 template<int D>
-MRNode<D>& MRNode<D>::operator=(const MRNode<D> &nd) {
-    NOT_IMPLEMENTED_ABORT;
+MRNode<D>::MRNode(MRNode<D> &n) {
+    this->tree = n.tree;
+    this->parent = 0;
+    this->children = 0;
+    this->status = 0;
+
+    const HilbertPath<D> &path = n.getHilbertPath();
+    this->hilbertPath = new HilbertPath<D>(path);
+
+    const NodeIndex<D> &idx = n.getNodeIndex();
+    this->nodeIndex = new NodeIndex<D>(idx);
+
+#ifdef OPENMP
+    omp_init_lock(&node_lock);
+#endif
 }
 
 template<int D>
@@ -69,45 +82,51 @@ void MRNode<D>::allocKindergarten() {
     assert(this->children == 0);
     int tDim = getTDim();
     this->children = new MRNode<D> *[tDim];
-    for (int i = 0; i < tDim; i++) {
-        this->children[i] = 0;
+    for (int cIdx = 0; cIdx < tDim; cIdx++) {
+        this->children[cIdx] = 0;
     }
+}
+
+template<int D>
+void MRNode<D>::createChildren() {
+    if (this->children == 0) {
+        this->allocKindergarten();
+    }
+    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+        createChild(cIdx);
+    }
+    this->setIsBranchNode();
 }
 
 /** Recurcive deallocation of children and all their decendants.
   * Leaves node as LeafNode and children[] as null pointer. */
 template<int D>
 void MRNode<D>::deleteChildren() {
-    assert(this->children != 0);
-    for (int n = 0; n < getTDim(); n++) {
-        assert(this->children[n] != 0);
-        delete this->children[n];
-        this->children[n] = 0;
+    if (this->children == 0) {
+        return ;
+    }
+    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+        if (this->children[cIdx] != 0) {
+            delete this->children[cIdx];
+            this->children[cIdx] = 0;
+        }
     }
     delete [] this->children;
     this->children = 0;
     this->setIsLeafNode();
 }
 
-
 template<int D>
-void MRNode<D>::createChildren() {
-    assert(this->children == 0);
-    this->allocKindergarten();
-    for (int n = 0; n < getTDim(); n++) {
-        createChild(n);
+void MRNode<D>::genChildren(bool empty) {
+    if (this->children == 0) {
+        this->allocKindergarten();
     }
-    this->setIsBranchNode();
-    this->clearIsEndNode();
-}
-
-template<int D>
-void MRNode<D>::genChildren() {
-    assert(this->children == 0);
-    this->allocKindergarten();
     int nChildren = this->getTDim();
-    for (int i = 0; i < nChildren; i++) {
-        genChild(i);
+    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
+        genChild(cIdx);
+    }
+    if (not empty) {
+        NOT_IMPLEMENTED_ABORT;
     }
     this->setIsBranchNode();
 }
@@ -119,9 +138,9 @@ void MRNode<D>::purgeGenerated() {
         if (this->isEndNode()) {
             this->deleteChildren();
         } else {
-            for (int i = 0; i < getTDim(); i++) {
-                assert(this->children[i] != 0);
-                this->getMRChild(i).purgeGenerated();
+            for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+                assert(this->children[cIdx] != 0);
+                this->getMRChild(cIdx).purgeGenerated();
             }
         }
     }
@@ -146,29 +165,6 @@ void MRNode<D>::getLowerBounds(double *r) const {
 template<int D>
 void MRNode<D>::getUpperBounds(double *r) const {
     NOT_IMPLEMENTED_ABORT;
-}
-
-/** Given the child index (between 0 and (2^D - 1)) calculate the translation
-  * index and store it in the *l argument. Assumes *l is allocated. */
-template<int D>
-void MRNode<D>::calcChildTranslation(int *transl, int cIdx) const {
-    assert(cIdx >= 0);
-    assert(cIdx < getTDim());
-    const int *l = getTranslation();
-    for (int d = 0; d < D; d++) {
-        transl[d] = (2 * l[d]) + ((cIdx >> d) & 1);
-    }
-}
-
-template<int D>
-void MRNode<D>::calcChildNodeIndex(NodeIndex<D> &nIdx, int cIdx) const {
-    int n = getScale() + 1;
-    int rank = getRankId();
-    int l[3];
-    calcChildTranslation(l, cIdx);
-    nIdx.setRankId(rank);
-    nIdx.setScale(n);
-    nIdx.setTranslation(l);
 }
 
 /** Routine to find the path along the tree.

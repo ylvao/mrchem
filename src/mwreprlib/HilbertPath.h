@@ -5,9 +5,10 @@ template<int D>
 class HilbertPath {
 public:
     HilbertPath() { this->path = 0; }
-    HilbertPath(const HilbertPath<D> &parent, int cIdx) {
-        int hIdx = parent.getHIndex(cIdx);
-        this->path = parent.getChildPath(hIdx);
+    HilbertPath(const HilbertPath<D> &p) { this->path = p.path; }
+    HilbertPath(const HilbertPath<D> &p, int cIdx) {
+        int hIdx = p.getHIndex(cIdx);
+        this->path = p.getChildPath(hIdx);
     }
     virtual ~HilbertPath() {}
 

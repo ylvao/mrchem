@@ -59,8 +59,8 @@ void FunctionProjector<D>::calcWaveletCoefs(MWNode<D> &node) {
     double point[D];
 
     for (int cIdx = 0; cIdx < tDim; cIdx++) {
-        int l[D];
-        node.calcChildTranslation(l, cIdx);
+        NodeIndex<D> nIdx(node.getNodeIndex(), cIdx);
+        const int *l = nIdx.getTranslation();
 
         int indexCounter[D];
         for (int i = 0; i < D; i++) {

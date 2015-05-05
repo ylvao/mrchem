@@ -33,7 +33,7 @@ class MRNode {
 public:
     MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
     MRNode(MRNode<D> &p, int cIdx);
-    MRNode<D> &operator=(const MRNode<D> &nd);
+    MRNode(MRNode<D> &n);
     virtual ~MRNode();
 
     int getTDim() const { return getMRTree().getTDim(); }
@@ -50,11 +50,13 @@ public:
     const MRNode<D> &getMRParent() const { return *this->parent; }
     const MRNode<D> &getMRChild(int i) const { return *this->children[i]; }
     const NodeIndex<D> &getNodeIndex() const { return *this->nodeIndex; }
+    const HilbertPath<D> &getHilbertPath() const { return *this->hilbertPath; }
 
     MRTree<D> &getMRTree() { return *this->tree; }
     MRNode<D> &getMRParent() { return *this->parent; }
     MRNode<D> &getMRChild(int i) { return *this->children[i]; }
     NodeIndex<D> &getNodeIndex() { return *this->nodeIndex; }
+    HilbertPath<D> &getHilbertPath() { return *this->hilbertPath; }
 
     void getCenter(double *r) const;
     void getLowerBounds(double *r) const;
@@ -86,22 +88,20 @@ public:
     bool isAncestor(const NodeIndex<D> &idx) const;
     bool isDecendant(const NodeIndex<D> &idx) const;
 
-    void calcChildTranslation(int *transl, int cIdx) const;
-    void calcChildNodeIndex(NodeIndex<D> &nIdx, int cIdx) const;
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     int getChildIndex(const double *r) const;
 
-    virtual void genChildren();
     virtual void createChildren();
     virtual void deleteChildren();
+    virtual void genChildren(bool empty = false);
 
     void lockNode() { SET_NODE_LOCK(); }
     void unlockNode() { UNSET_NODE_LOCK(); }
     bool testLock() { return TEST_NODE_LOCK(); }
 
-    void setRankId(int n) { this->nodeIndex->setRankId(n); }
+    void setRankId(int n) { getNodeIndex().setRankId(n); }
     bool isLocal() const {
-        if (this->getRankId() == this->tree->getRankId()) {
+        if (this->getRankId() == getMRTree().getRankId()) {
             return true;
         }
         return false;
@@ -119,12 +119,10 @@ public:
         return true;
     }
 
-    const HilbertPath<D> &getHilbertPath() const { return *this->hilbertPath; }
-
-    friend class GridNode<D>;
-
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
+
+    friend class GridNode<D>;
 
 protected:
     MRTree<D> *tree;
@@ -148,11 +146,11 @@ protected:
     MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
     MRNode<D> *retrieveNodeOrEndNode(const double *r, int depth);
 
-    void allocKindergarten();
-    virtual void createChild(int i) = 0;
-    virtual void genChild(int i) = 0;
-
     void purgeGenerated();
+    void allocKindergarten();
+
+    virtual void genChild(int i) = 0;
+    virtual void createChild(int i) = 0;
 
     void assignDecendantTags(int rank);
     void broadcastCoefs(int src, mpi::communicator *comm  = 0);

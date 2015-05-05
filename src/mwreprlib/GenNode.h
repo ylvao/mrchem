@@ -19,65 +19,45 @@ template<int D>
 class GenNode: public FunctionNode<D> {
 public:
     GenNode(FunctionNode<D> &p, int cIdx);
-    GenNode<D> &operator=(const GenNode<D> &nd);
+    GenNode(GenNode<D> &n);
     virtual ~GenNode();
 
     double evalf(const double *r);
+    double getComponentNorm(int i);
 
-    void clearCoefs();
-    Eigen::VectorXd &getCoefs();
-    const Eigen::VectorXd &getCoefs() const;
+    void clearGenerated();
+    void purgeGenerated();
+
     void setCoefs(const Eigen::VectorXd &c);
+    Eigen::VectorXd& getCoefs();
+    const Eigen::VectorXd& getCoefs() const;
 
     void mwTransform(int kind);
     void cvTransform(int kind);
 
-    int getGenRootCoefs(Eigen::VectorXd &c);
-    void clearGenerated();
-    void purgeGenerated();
-
     const ProjectedNode<D> *getGenRootNode() const { return this->genRootNode; }
     ProjectedNode<D> *getGenRootNode() { return this->genRootNode; }
 
-    void incrementNodeWeight(int i, double w);
-    double getComponentNorm(int i);
-
-    void createChildren();
-    void genChildren(bool genEmpty = false);
-
-    /** Calculate GenNode component norms, ie. do nothing.
-    We only have one component norm == squareNorm. The component norm is
-    calculated lazily by getComponentNorm(), since we do not necessarily have
-    any coefs yet. */
-    void calcComponentNorms() { }
-    bool splitCheck(double prec = -1.0) { return false; }
-    void allocCoefs(int nCoefs = -1);
-
 protected:
-    void giveChildrenScaling(bool overwrite = true);
-    void giveSiblingsScaling(Eigen::VectorXd &coefs);
-
-    /** Calculate GenNode component norms: ie. do nothing. */
-    void calcComponentNorm(int i) {}
+    void calcComponentNorms() { }
     inline double calcSquareNorm();
     inline double calcScalingNorm();
     inline double calcWaveletNorm() { return 0.0; }
 
-    Eigen::VectorXd &getCoefsNoLock();
-    void setCoefsNoLock(const Eigen::VectorXd &c);
-
     MWNode<D> *retrieveNode(int n, const double *r);
-    MWNode<D> *retrieveNode(const NodeIndex<D> &idx, bool genEmpty = false);
+    MWNode<D> *retrieveNode(const NodeIndex<D> &idx, bool empty = false);
 
 private:
     ProjectedNode<D> *genRootNode;
 
     void createChild(int i);
+    void genChild(int i);
+
     void lockSiblings();
     void unlockSiblings();
+
     void regenerateCoefs();
     void releaseCoefs();
-    void makeIndexList(int *idxList, int depth, const NodeIndex<D> &idx);
 
     friend class boost::serialization::access;
     template<class Archive>

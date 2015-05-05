@@ -17,24 +17,25 @@ class ProjectedNode: public FunctionNode<D> {
 public:
     ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     ProjectedNode(ProjectedNode<D> &p, int cIdx);
-    ProjectedNode<D> &operator=(const ProjectedNode<D> &nd);
-    virtual ~ProjectedNode() { }
+    ProjectedNode(ProjectedNode<D> &n);
+    virtual ~ProjectedNode() {}
 
-    int getGenRootCoefs(Eigen::VectorXd &c);
     void clearGenerated();
     void purgeGenerated();
 
-    void calcComponentNorms();
-
-    void genChildren(bool genEmpty = false);
-    void createChildren();
+    void createChildren() {
+        MWNode<D>::createChildren();
+        this->clearIsEndNode();
+    }
     void deleteChildren() {
         MWNode<D>::deleteChildren();
         this->setIsEndNode();
     }
 
 private:
-    void calcComponentNorm(int i);
+    void calcComponentNorms();
+    double calcComponentNorm(int i);
+
     void createChild(int i);
     void genChild(int i);
 

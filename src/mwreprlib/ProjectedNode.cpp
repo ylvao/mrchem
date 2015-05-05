@@ -9,7 +9,6 @@
  */
 
 #include "ProjectedNode.h"
-#include "GridNode.h"
 
 #ifdef HAVE_BLAS
 extern "C" {
@@ -39,6 +38,15 @@ template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx) {
     this->setIsEndNode();
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+        this->zeroNorms();
+    }
+}
+
+template<int D>
+ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &n) : FunctionNode<D>(n) {
     if (not this->isForeign()) {
         this->allocCoefs();
         this->zeroCoefs();
@@ -95,84 +103,17 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
     }
 }
 */
-/** ProjectedNode equals operator.
-  * Copying the content of a node, not its location. Includes recursive copying
-  * of children nodes. */
-template<int D>
-ProjectedNode<D> &ProjectedNode<D>::operator=(const ProjectedNode<D> &nd) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this == &node) {
-//        return *this;
-//    }
-//    FunctionNode<D>::operator=(node);
-//    copyRedundancyMap(node);
-//    if (this->isLeafNode()) {
-//        return *this;
-//    }
-//    for (int i = 0; i < this->tDim; i++) {
-//        if (this->isEndNode()) {
-//            const GenNode<D> &child =
-//                    static_cast<const GenNode<D> &>(node.getMWChild(i));
-//            this->children[i] = new GenNode<D>(child, this, true);
-//        } else {
-//            const ProjectedNode<D> &child =
-//                    static_cast<const ProjectedNode<D> &>(node.getMWChild(i));
-//            this->children[i] = new ProjectedNode<D>(child, this, true);
-//        }
-//    }
-//    return *this;
-}
-
-/** Allocating children nodes.
-  *
-  * This routine creates 2^D empty ProjectedNode children nodes with the
-  * appropriate translation and Hilbert path parameters. */
-template<int D>
-void ProjectedNode<D>::createChildren() {
-    if (this->children == 0) {
-        this->allocKindergarten();
-    }
-    for (int i = 0; i < this->getTDim(); i++) {
-        createChild(i);
-    }
-    this->setIsBranchNode();
-    this->clearIsEndNode();
-}
 
 /** Allocating child node.
   *
   * Given a child index, this routine creates an empty ProjectedNode child node
   * with the appropriate translation and Hilbert path parameters. */
 template<int D>
-void ProjectedNode<D>::createChild(int i) {
+void ProjectedNode<D>::createChild(int cIdx) {
     assert(this->children != 0);
-    assert(this->children[i] == 0);
-    ProjectedNode<D> *child = new ProjectedNode<D>(*this, i);
-    this->children[i] = child;
-}
-
-/** Generating children nodes.
-  *
-  * This routine creates 2^D children GenNodes with the appropriate translation
-  * and Hilbert path parameters. Option to calculate the children scaling coefs
-  * by MW transform. */
-template<int D>
-void ProjectedNode<D>::genChildren(bool genEmpty) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->children == 0) {
-//        this->allocKindergarten();
-//    }
-//    this->setIsBranchNode();
-//    for (int i = 0; i < this->tDim; i++) {
-//        genChild(i);
-//    }
-//    // On dist trees this is not always the case
-//    if (this->hasCoefs() and not genEmpty) {
-//        this->giveChildrenScaling();
-//        for (int i = 0; i < this->tDim; i++) {
-//            this->children[i]->calcNorms();
-//        }
-//    }
+    assert(this->children[cIdx] == 0);
+    ProjectedNode<D> *child = new ProjectedNode<D>(*this, cIdx);
+    this->children[cIdx] = child;
 }
 
 /** Generating child node.
@@ -190,36 +131,6 @@ void ProjectedNode<D>::genChild(int i) {
 //    return *child;
 }
 
-/** Given the scaling and wavelet coefficients of the node, do a wavelet
-  * transform and distribute scaling coefficient to all children. Option to
-  * overwrite or add up existing coefficients. */
-//template<int D>
-//void ProjectedNode<D>::giveChildrenScaling(bool overwrite) {
-//    NOT_IMPLEMENTED_ABORT;
-//    assert(this->isBranchNode());
-//    if (not this->hasCoefs()) {
-//        MSG_FATAL("No coefficients! You need to project first!")
-//    }
-//    ProjectedNode<D> tmpNode(*this, this->tree);
-//    tmpNode.mwTransform(Reconstruction);
-//    int kp1_d = this->getKp1_d();
-//    for (int i = 0; i < this->tDim; i++) {
-//        MWNode<D> &child = this->getMWChild(i);
-//        if (not child.hasCoefs()) {
-//            child.setCoefs(tmpNode.getCoefs().segment(i * kp1_d, kp1_d));
-//        } else if (overwrite) {
-//            child.getCoefs().segment(0, kp1_d) =
-//                tmpNode.getCoefs().segment(i * kp1_d, kp1_d);
-//        } else {
-//            child.getCoefs().segment(0, kp1_d) +=
-//                tmpNode.getCoefs().segment(i * kp1_d, kp1_d);
-//        }
-//        child.calcNorms();
-//    }
-//    tmpNode.clearTreePointer();
-//}
-
-
 /** Calculate all 2^D component norms (NOT squared norms!)*/
 template<int D>
 void ProjectedNode<D>::calcComponentNorms() {
@@ -235,7 +146,7 @@ void ProjectedNode<D>::calcComponentNorms() {
 
 /** Calculate the norm of one component (NOT the squared norm!). */
 template<int D>
-void ProjectedNode<D>::calcComponentNorm(int i) {
+double ProjectedNode<D>::calcComponentNorm(int i) {
     NOT_IMPLEMENTED_ABORT;
 //    assert(this->componentNorms != 0);
 //    VectorXd &c = this->getCoefs();
@@ -277,25 +188,6 @@ void ProjectedNode<D>::purgeGenerated() {
 //            }
 //        }
 //    }
-}
-
-/** Copies the coefs from the first ancestor that HAS coefs.
-  *
-  * Virtually resolved to stop recursion when a ProjectedNode is encountered.
-  * In that case it is assumed that the genRootNode has been communicated in
-  * MPI, otherwise you die. Returns the depth of the node it copied from. */
-template<int D>
-int ProjectedNode<D>::getGenRootCoefs(VectorXd &c) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (not this->hasCoefs()) {
-//        MSG_FATAL("If you're running MPI, you need to communicate the " <<
-//                  "genRootNodes prior to this function call. If you are " <<
-//                  "NOT running MPI, something is wrong")
-//    }
-//    c = VectorXd::Zero(this->getNCoefs());
-//    c = this->getCoefs();
-
-//    return this->getDepth();
 }
 
 template class ProjectedNode<1> ;

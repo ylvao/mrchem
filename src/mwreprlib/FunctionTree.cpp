@@ -34,8 +34,8 @@ FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
   * Does a recursive copy of the given tree structure, but initializes
   * the function to zero.*/
 template<int D>
-FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
-        : MWTree<D>(tree, type) {
+FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type) : MWTree<D>(tree, type) {
+    NOT_IMPLEMENTED_ABORT;
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
@@ -52,6 +52,7 @@ FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
   * the function to zero. Use = operator to copy data.*/
 template<int D>
 FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
+    NOT_IMPLEMENTED_ABORT;
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
@@ -66,11 +67,6 @@ FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
 /** FunctionTree destructor. */
 template<int D>
 FunctionTree<D>::~FunctionTree() {
-}
-
-template<int D>
-void FunctionTree<D>::initializeNodesRecursive(const MRTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -112,6 +108,7 @@ void FunctionTree<D>::purgeGenNodes() {
 //        }
 //    }
 }
+
 /** Write the tree structure to disk, for later use.
   * Argument file name will get a ".tree" file extension, and in MPI an
   * additional "-[rank]". */

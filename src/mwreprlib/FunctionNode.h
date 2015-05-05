@@ -2,26 +2,23 @@
 #define FUNCTIONNODE_H
 
 #include "MWNode.h"
-
-template<int D> class FunctionTree;
+#include "mwrepr_declarations.h"
 
 template<int D>
 class FunctionNode : public MWNode<D> {
 public:
     FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     FunctionNode(FunctionNode<D> &p, int cIdx);
-    FunctionNode<D> &operator=(const FunctionNode<D> &nd);
+    FunctionNode(FunctionNode<D> &n);
     virtual ~FunctionNode() { }
 
     virtual double evalf(const double *r);
-
-    virtual int getGenRootCoefs(Eigen::VectorXd &c) = 0;
     virtual void clearGenerated() = 0;
-    virtual void calcComponentNorms() = 0;
+    virtual void purgeGenerated() = 0;
 
     double integrate();
-    double scalingInnerProduct(FunctionNode<D> &inpNode);
-    double waveletInnerProduct(FunctionNode<D> &inpNode);
+    double dotScaling(FunctionNode<D> &inpNode);
+    double dotWavelet(FunctionNode<D> &inpNode);
 
     inline FunctionTree<D> &getFuncTree();
     inline FunctionNode<D> &getFuncParent();
