@@ -10,17 +10,17 @@ using namespace std;
 
 template<int D>
 MRGrid<D>::MRGrid(const BoundingBox<D> &box, int k) : MRTree<D>(box, k) {
-    initializeRootNodes();
-    this->resetEndNodeTable();
-}
-
-template<int D>
-void MRGrid<D>::initializeRootNodes() {
     for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
         NodeIndex<D> nIdx = this->getRootBox().getNodeIndex(rIdx);
         MRNode<D> *root = new GridNode<D>(*this, nIdx);
         this->rootBox->setNode(rIdx, &root);
     }
+    this->resetEndNodeTable();
+}
+
+template<int D>
+MRGrid<D>::MRGrid(const MRGrid<D> &grid) : MRTree<D>(grid) {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>

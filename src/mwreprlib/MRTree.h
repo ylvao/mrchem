@@ -141,7 +141,6 @@ protected:
     void incrementAllocGenNodeCount();
     void decrementAllocGenNodeCount();
 
-    virtual void initializeRootNodes() = 0;
     void splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec = 0);
 
     void makeNodeTable(MRNodeVector &nodeTable);

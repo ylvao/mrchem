@@ -57,10 +57,6 @@ public:
     template<int T>
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
 
-protected:
-    void initializeRootNodes();
-    void initializeNodesRecursive(const MRTree<D> &tree);
-
 private:
     friend class boost::serialization::access;
     template<class Archive>

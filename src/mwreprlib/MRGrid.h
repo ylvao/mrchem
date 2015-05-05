@@ -16,8 +16,8 @@
 template<int D>
 class MRGrid : public MRTree<D> {
 public:
-    MRGrid(const MRGrid<D> &grid);
     MRGrid(const BoundingBox<D> &box, int k);
+    MRGrid(const MRGrid<D> &grid);
     virtual ~MRGrid();
     void clear();
 
@@ -38,8 +38,6 @@ public:
     friend std::ostream& operator<<(std::ostream &o, MRGrid<T> &grid);
 
     friend class GridGenerator<D>;
-protected:
-    void initializeRootNodes();
 };
 
 template<int D>

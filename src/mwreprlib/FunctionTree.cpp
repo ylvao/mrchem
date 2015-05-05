@@ -14,35 +14,52 @@ using namespace std;
 using namespace Eigen;
 
 /** FunctionTree constructor.
-  * Initializes root nodes to represent the zero function. */
+  * Allocate the root FunctionNodes and fill in the empty slots of rootBox.
+  * Initializes rootNodes to represent the zero function. */
 template<int D>
 FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
         : MWTree<D> (box, k, type) {
-    initializeRootNodes();
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
+    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
+        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        this->rootBox->setNode(rIdx, &root);
+    }
+    this->resetEndNodeTable();
+}
+
+/** MRTree copy constructor.
+  * Does a recursive copy of the given tree structure, but initializes
+  * the function to zero.*/
+template<int D>
+FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
+        : MWTree<D>(tree, type) {
+    const double *lB = this->rootBox->getLowerBounds();
+    const double *uB = this->rootBox->getUpperBounds();
+    this->setBounds(lB, uB);
+    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+        const MRNode<D> &node = tree.getRootNode(rIdx);
+        //MRNode<D> *root = new ProjectedNode<D>(*this, node);
+        //this->rootBox->setNode(rIdx, &root);
+    }
     this->resetEndNodeTable();
 }
 
 /** FunctionTree copy constructor.
-  * Makes a deepcopy of the tree. */
+  * Does a recursive copy of the given tree structure, but initializes
+  * the function to zero. Use = operator to copy data.*/
 template<int D>
 FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
-    initializeRootNodes();
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
-    this->resetEndNodeTable();
-}
-
-template<int D>
-FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
-        : MWTree<D>(tree, type) {
-    initializeRootNodes();
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
-    this->setBounds(lB, uB);
+    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+        const MRNode<D> &node = tree.getRootNode(rIdx);
+        //MRNode<D> *root = new ProjectedNode<D>(*this, node);
+        //this->rootBox->setNode(rIdx, &root);
+    }
     this->resetEndNodeTable();
 }
 
@@ -51,25 +68,9 @@ template<int D>
 FunctionTree<D>::~FunctionTree() {
 }
 
-/** Allocate the root FunctionNodes and fill in the empty slots of rootBox.
-  * Initializes rootNodes to represent the zero function. */
-template<int D>
-void FunctionTree<D>::initializeRootNodes() {
-    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        NodeIndex<D> nIdx = this->rootBox->getNodeIndex(rIdx);
-        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        this->rootBox->setNode(rIdx, &root);
-    }
-}
-
 template<int D>
 void FunctionTree<D>::initializeNodesRecursive(const MRTree<D> &tree) {
     NOT_IMPLEMENTED_ABORT;
-    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const MRNode<D> &node = tree.getRootNode(rIdx);
-        //MRNode<D> *root = new ProjectedNode<D>(*this, node);
-        //this->rootBox->setNode(rIdx, &root);
-    }
 }
 
 template<int D>
