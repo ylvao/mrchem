@@ -8,14 +8,13 @@
 using namespace std;
 using namespace Eigen;
 
-/** MRTree copy constructor.
-  * Builds a copy of the input grid structure, not grid data */
+/** MRTree constructor.
+ *  Requires a world box and polynomial order. */
 template<int D>
-MRTree<D>::MRTree(const MRTree<D> &tree) {
-    const BoundingBox<D> &box = tree.getRootBox();
+MRTree<D>::MRTree(const BoundingBox<D> &box, int k) {
     this->rootBox = new NodeBox<D>(box);
 
-    this->order = tree.order;
+    this->order = k;
     this->kp1 = this->order + 1;
     this->kp1_d = MathUtils::ipow(this->kp1, D);
 
@@ -32,11 +31,14 @@ MRTree<D>::MRTree(const MRTree<D> &tree) {
 #endif
 }
 
+/** MRTree copy constructor.
+ *  Gets world box and polynomial order from another tree. */
 template<int D>
-MRTree<D>::MRTree(const BoundingBox<D> &box, int k) {
+MRTree<D>::MRTree(const MRTree<D> &tree) {
+    const BoundingBox<D> &box = tree.getRootBox();
     this->rootBox = new NodeBox<D>(box);
 
-    this->order = k;
+    this->order = tree.order;
     this->kp1 = this->order + 1;
     this->kp1_d = MathUtils::ipow(this->kp1, D);
 

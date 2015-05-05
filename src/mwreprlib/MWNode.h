@@ -22,13 +22,13 @@ public:
     MWNode<D> &operator=(const MWNode<D> &nd);
     virtual ~MWNode();
 
+    double estimateError(bool absPrec);
+
     inline bool hasComponentNorms() const;
     virtual double getComponentNorm(int i);
     inline double getSquareNorm() const;
     inline double getScalingNorm();
     inline double getWaveletNorm();
-
-    double estimateError(bool absPrec);
 
     void calcNorms();
     void clearNorms();

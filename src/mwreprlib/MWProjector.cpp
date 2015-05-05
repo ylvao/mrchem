@@ -35,7 +35,7 @@ void MWProjector<D>::buildTree() {
         printout(10, "  -- #" << setw(3) << iter << ": Calculated   ");
         workVec = clearForeignNodes(workVec);
         calcNodeVector(*workVec);
-        double norm = sqrt(this->outTree->calcTreeNorm(workVec));
+        double norm = sqrt(this->outTree->calcSquareNorm(workVec));
         MRNodeVector splitVec;
         this->adaptor.splitNodeVector(norm, *workVec, splitVec, *endVec);
         NodeIndexSet *splitSet = getNodeIndexSet(splitVec);

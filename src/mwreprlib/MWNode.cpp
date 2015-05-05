@@ -78,7 +78,7 @@ MWNode<D> &MWNode<D>::operator=(const MWNode<D> &nd) {
 //    if (nd.isAllocated()) {
 //        if (nd.hasCoefs()) {
 //            this->coefs = new VectorXd(*nd.coefs);
-//            this->setHasCoefs(true);
+//            this->setHasCoefs();
 //        } else {
 //            this->coefs = new VectorXd(nd.getNCoefs());
 //            this->setIsAllocated();
@@ -143,7 +143,7 @@ void MWNode<D>::allocCoefs(int nCoefs) {
         }
     }
     this->setIsAllocated();
-    this->setHasCoefs(false);
+    this->clearHasCoefs();
 }
 
 /** Allocate the coefs vector with nCoefs coefficients. If it is already
@@ -171,7 +171,7 @@ void MWNode<D>::freeCoefs() {
     if (this->coefs != 0) {
         delete this->coefs;
     }
-    this->setHasCoefs(false);
+    this->clearHasCoefs();
     this->clearIsAllocated();
     this->coefs = 0;
 }
@@ -180,7 +180,7 @@ template<int D>
 void MWNode<D>::zeroCoefs() {
     assert(this->coefs != 0);
     this->coefs->setZero();
-    this->setHasCoefs(true);
+    this->setHasCoefs();
 }
 
 /** Coefficient-Value transform
@@ -564,7 +564,7 @@ void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
         this->coefs->segment(nNew, this->getNCoefs() - nNew).setZero();
     }
     this->coefs->segment(0, nNew) = c;
-    this->setHasCoefs(true);
+    this->setHasCoefs();
 }
 
 /** Check if node should be seeded.
@@ -640,7 +640,7 @@ mpi::request MWNode<D>::ireceiveCoefs(int who, int tag, int comp) {
         nRecv = this->getKp1_d();
         data = data + comp * this->getKp1_d();
     }
-    this->setHasCoefs(true);
+    this->setHasCoefs();
     return node_group.irecv(who, tag, data, nRecv);
 #else
     mpi::request dummy = 0;

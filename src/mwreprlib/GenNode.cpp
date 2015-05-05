@@ -103,7 +103,7 @@ void GenNode<D>::allocCoefs(int nCoefs) {
 //    }
 //    this->coefs->setZero();
 //    this->setIsAllocated();
-//    this->setHasCoefs(false);
+//    this->clearHasCoefs();
 }
 
 

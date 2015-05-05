@@ -13,27 +13,6 @@
 using namespace std;
 using namespace Eigen;
 
-/** FunctionTree copy constructor.
-  * Makes a deepcopy of the tree. */
-template<int D>
-FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
-    initializeNodesRecursive(tree);
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
-    this->setBounds(lB, uB);
-    this->resetEndNodeTable();
-}
-
-template<int D>
-FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
-        : MWTree<D>(tree, type) {
-    initializeNodesRecursive(tree);
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
-    this->setBounds(lB, uB);
-    this->resetEndNodeTable();
-}
-
 /** FunctionTree constructor.
   * Initializes root nodes to represent the zero function. */
 template<int D>
@@ -46,35 +25,25 @@ FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
     this->resetEndNodeTable();
 }
 
-/** FunctionTree equals operator.
+/** FunctionTree copy constructor.
   * Makes a deepcopy of the tree. */
 template<int D>
-FunctionTree<D> &FunctionTree<D>::operator=(const FunctionTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (&tree == this) {
-//        return *this;
-//    }
-//    this->purgeGenNodes();
-//    this->freeWorkMemory();
-//    this->copyTreeParams(tree);
+FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
+    initializeRootNodes();
+    const double *lB = this->rootBox->getLowerBounds();
+    const double *uB = this->rootBox->getUpperBounds();
+    this->setBounds(lB, uB);
+    this->resetEndNodeTable();
+}
 
-//    this->setupScalingBasis(this->scalingType);
-//    this->setupFilters(this->scalingType);
-//    this->allocWorkMemory();
-
-//    this->squareNorm = tree.squareNorm;
-//    this->rootBox = tree.rootBox;
-
-//    this->nodesAtDepth = tree.nodesAtDepth;
-//    this->updateGenNodeCounts();
-
-//    const double *lB = this->rootBox.getLowerBounds();
-//    const double *uB = this->rootBox.getUpperBounds();
-//    this->setBounds(lB, uB); // RepresentableFunction -> get from box?
-//    this->resetEndNodeTable();
-//    this->doLoadBalance = tree.doLoadBalance;
-
-//    return *this;
+template<int D>
+FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type)
+        : MWTree<D>(tree, type) {
+    initializeRootNodes();
+    const double *lB = this->rootBox->getLowerBounds();
+    const double *uB = this->rootBox->getUpperBounds();
+    this->setBounds(lB, uB);
+    this->resetEndNodeTable();
 }
 
 /** FunctionTree destructor. */
@@ -219,7 +188,7 @@ double FunctionTree<D>::integrate() {
 }
 
 template<int D>
-double FunctionTree<D>::innerProduct(FunctionTree<D> &rhs) {
+double FunctionTree<D>::dot(FunctionTree<D> &ket) {
     NOT_IMPLEMENTED_ABORT;
 //    if (not this->checkCompatible(rhs)) {
 //        MSG_FATAL("Trees not compatible");
@@ -308,34 +277,6 @@ double FunctionTree<D>::evalf(const double *r) const {
 //    return val;
 }
 
-/** Obtain a list of nodes to communicate in order to perform an inner product.
-  *
-  * Parse the nodes of the input tree and find the nodes of THIS tree that is
-  * missing (because of MPI distribution) in order to calculate the inner
-  * product. For this calculation no GenNodes are needed, ever, and if a GenNode
-  * appears, either in THIS tree or in the input tree, the node is not
-  * considered. */
-template<int D>
-void FunctionTree<D>::findMissingInnerProd(FunctionTree<D> &fTree,
-                                           set<FunctionNode<D> *> &missing) {
-    NOT_IMPLEMENTED_ABORT;
-//    HilbertIterator<D> it(&fTree);
-//    while (it.next()) {
-//        MRNode<D> &fNode = it.getNode();
-//        if (fNode.isForeign() or fNode.isGenNode()) {
-//            continue;
-//        }
-//        const NodeIndex<D> &idx = fNode.getNodeIndex();
-//        MRNode<D> *thisNode = this->findNode(idx);
-//        if (thisNode != 0) {
-//            if (not thisNode->hasCoefs()) {
-//                assert(thisNode->isForeign());
-//                missing.insert(thisNode);
-//            }
-//        }
-//    }
-}
-
 template<int D>
 void FunctionTree<D>::square() {
     NOT_IMPLEMENTED_ABORT
@@ -351,7 +292,7 @@ void FunctionTree<D>::square() {
 //    }
 //    this->mwTransformUp();
 //    this->cropTree();
-//    this->squareNorm = this->calcTreeNorm();
+//    this->squareNorm = this->calcSquareNorm();
 }
 
 template<int D>
@@ -368,7 +309,7 @@ void FunctionTree<D>::power(double d) {
 //    }
 //    this->mwTransformUp();
 //    this->cropTree();
-//    this->squareNorm = this->calcTreeNorm();
+//    this->squareNorm = this->calcSquareNorm();
 }
 
 template<int D>
@@ -384,7 +325,7 @@ void FunctionTree<D>::orthogonalize(const FunctionTree<D> &tree) {
 //    this->purgeForeignNodes();
 //    tree.purgeGenNodes();
 //    tree.purgeForeignNodes();
-//    double innerProd = this->innerProduct(tree);
+//    double innerProd = this->dot(tree);
 //    double norm = tree.getSquareNorm();
 //    this->purgeGenNodes();
 //    this->purgeForeignNodes();

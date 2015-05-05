@@ -7,38 +7,14 @@
 #include "constants.h"
 #include "MWTree.h"
 #include "MWNode.h"
-#include "MRGrid.h"
 #include "FilterCache.h"
 #include "ScalingCache.h"
 #include "LegendreBasis.h"
 #include "InterpolatingBasis.h"
+#include "HilbertIterator.h"
 
 using namespace std;
 using namespace Eigen;
-
-/** MWTree copy constructor.
-  * Takes the parameters of the input tree, not it's data */
-template<int D>
-MWTree<D>::MWTree(const MWTree<D> &tree) : MRTree<D>(tree) {
-    this->squareNorm = 0.0;
-    this->nAllocGenNodes = 0;
-
-    setupScalingBasis(tree.scalingType);
-    setupFilters(tree.scalingType);
-
-    allocWorkMemory();
-}
-
-template<int D>
-MWTree<D>::MWTree(const MRTree<D> &tree, int type) : MRTree<D>(tree) {
-    this->squareNorm = 0.0;
-    this->autoCleanGenerated = true;
-
-    setupScalingBasis(type);
-    setupFilters(type);
-
-    allocWorkMemory();
-}
 
 /** MWTree constructor.
   * Creates an empty tree object. Node construction and assignment of most of
@@ -47,17 +23,38 @@ template<int D>
 MWTree<D>::MWTree(const BoundingBox<D> &box, int k, int type)
         : MRTree<D>(box, k) {
     this->squareNorm = 0.0;
-    this->autoCleanGenerated = true;
+    this->scalingType = type;
 
-    setupScalingBasis(type);
-    setupFilters(type);
+    setupScalingBasis(this->scalingType, this->order);
+    setupFilters(this->scalingType, this->order);
 
     allocWorkMemory();
 }
 
+/** MWTree copy constructor.
+  * Takes the parameters of the input tree, not it's data */
 template<int D>
-MWTree<D>& MWTree<D>::operator=(const MWTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
+MWTree<D>::MWTree(const MRTree<D> &tree, int type) : MRTree<D>(tree) {
+    this->squareNorm = 0.0;
+    this->scalingType = type;
+
+    setupScalingBasis(this->scalingType, this->order);
+    setupFilters(this->scalingType, this->order);
+
+    allocWorkMemory();
+}
+
+/** MWTree copy constructor.
+  * Takes the parameters of the input tree, not it's data */
+template<int D>
+MWTree<D>::MWTree(const MWTree<D> &tree) : MRTree<D>(tree) {
+    this->squareNorm = 0.0;
+    this->scalingType = tree.scalingType;
+
+    setupScalingBasis(this->scalingType, this->order);
+    setupFilters(this->scalingType, this->order);
+
+    allocWorkMemory();
 }
 
 /** MWTree destructor. */
@@ -142,7 +139,7 @@ double MWTree<D>::estimateError(bool absPrec) {
   * incomplete (e.g. within growTree), the missing nodes must be given in the
   * input work vector. Involves an MPI reduction operation. */
 template<int D>
-double MWTree<D>::calcTreeNorm(MRNodeVector *nodeVec)  {
+double MWTree<D>::calcSquareNorm(MRNodeVector *nodeVec)  {
     double treeNorm = 0.0;
     int nNodes = 0;
     if (nodeVec != 0) {
@@ -200,7 +197,7 @@ void MWTree<D>::crop(double thrs, bool absPrec) {
 //        }
 //    }
 //    resetEndNodeTable();
-//    this->squareNorm = calcTreeNorm();
+//    this->squareNorm = calcSquareNorm();
 //}
 
 /** Regenerate all s/d-coeffs by backtransformation, starting at the bottom and
@@ -287,88 +284,17 @@ void MWTree<D>::mwTransformDown(bool overwrite) {
 //    }
 }
 
-/** Initialize the work table with the root nodes (for initial
-  * projection without seeding) */
-/*
-template<int D>
-void MWTree<D>::setupWorkTable(MWNodeVector &wt) {
-    int nbox = this->rootBox.getNBoxes();
-    for (int i = 0; i < nbox; i++) {
-        MWNode<D> &nd = this->rootBox.getNode(i);
-        wt.push_back(&nd);
-    }
-}
-*/
-
-/** Search the nodeTable for OWN node that does not have coefficients,
-  * communicate their parents and give then scaling coeffs by MW transform. */
-/*
-template<int D>
-void MWTree<D>::updateMissingScalingPart(const MWNodeVector &nodeTable) {
-    set<MWNode<D> *> missing;
-
-    for (unsigned int i = 0; i < nodeTable.size(); i++) {
-        MWNode<D> &node = *nodeTable[i];
-        if (not node.isForeign() and (not node.hasCoefs())) {
-            missing.insert(&node.getMWParent());
-        }
-    }
-    syncNodes(missing);
-    typename set<MWNode<D> *>::iterator it;
-    for (it = missing.begin(); it != missing.end(); ++it) {
-        (*it)->giveChildrenScaling();
-    }
-}
-*/
-
-/** Tag each node with the rank who owns it. */
-/*
-template<int D>
-void MWTree<D>::assignNodeTags(MWNodeVector &workTable, int rank) {
-
-    int nNodes = workTable.size();
-    int start = 0;
-    int end = nNodes;
-    int nLocales = 1;
-
-    if (isBuildDistributed()) {
-        nLocales = node_group.size();
-    }
-*/
-    /* The default rank is -1, which tags nodes according to which locale
-        they belong to, if the tree is distributed */
-/*
-    int loc = rank;
-    if (rank < 0) {
-        loc = this->getRankId();
-    }
-    for (int k = 0; k < nLocales; k++) {
-        if (isBuildDistributed()) {
-            if (rank < 0) {
-                loc = k;
-            }
-            get_locale_index_range(k, nNodes, start, end);
-        }
-
-        for (int i = start; i < end; i++) {
-            MWNode<D> &node = *workTable[i];
-            node.setRankId(loc);
-        }
-    }
-}
-*/
-
 /** Initialize MW filter cache. */
 template<int D>
-void MWTree<D>::setupFilters(int type) {
+void MWTree<D>::setupFilters(int type, int k) {
     getLegendreFilterCache(lfilters);
     getInterpolatingFilterCache(ifilters);
     switch (type) {
     case Legendre:
-        this->filter = &lfilters.get(this->order);
+        this->filter = &lfilters.get(k);
         break;
     case Interpol:
-        this->filter = &ifilters.get(this->order);
+        this->filter = &ifilters.get(k);
         break;
     default:
         MSG_ERROR("Invalid scaling basis selected.")
@@ -377,16 +303,15 @@ void MWTree<D>::setupFilters(int type) {
 
 /** Initialize scaling basis cache. */
 template<int D>
-void MWTree<D>::setupScalingBasis(int type) {
-    this->scalingType = type;
+void MWTree<D>::setupScalingBasis(int type, int k) {
     getLegendreScalingCache(lsf);
     getInterpolatingScalingCache(isf);
     switch (type) {
     case Legendre:
-        this->scalingFunc = &lsf.get(this->order);
+        this->scalingFunc = &lsf.get(k);
         break;
     case Interpol:
-        this->scalingFunc = &isf.get(this->order);
+        this->scalingFunc = &isf.get(k);
         break;
     default:
         MSG_ERROR("Invalid scaling basis selected.")
@@ -396,36 +321,19 @@ void MWTree<D>::setupScalingBasis(int type) {
 /** Traverse tree and set all nodes to zero.
   *
   * Keeps the node structure of the tree, even though the zero function is
-  * representable at depth zero. Use cropTree to remove unnecessary nodes.
-  * Option to keep treeNorm (used after seed). */
+  * representable at depth zero. Use cropTree to remove unnecessary nodes.*/
 template<int D>
-void MWTree<D>::setZero(bool clearTreeNorm) {
-    NOT_IMPLEMENTED_ABORT;
-//    purgeForeignNodes(false);
-//    HilbertIterator<D> it(this);
-//    while(it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        if (not node.isForeign()) {
-//            node.getCoefs().setZero();
-//            node.calcNorms();
-//        }
-//    }
-//    if (clearTreeNorm) {
-//        this->squareNorm = 0.0;
-//    }
+void MWTree<D>::setZero() {
+    HilbertIterator<D> it(this);
+    while(it.next()) {
+        MWNode<D> &node = static_cast<MWNode<D> &>(it.getNode());
+        if (not node.isForeign()) {
+            node.getCoefs().setZero();
+            node.calcNorms();
+        }
+    }
+    this->squareNorm = 0.0;
 }
-
-
-/** Traverse tree and set all nodeWeights to zero. */
-//template<int D>
-//void MWTree<D>::clearNodeWeights() {
-//    HilbertIterator<D> it(this);
-//    while (it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        node.clearNodeWeight(0);
-//        node.clearNodeWeight(1);
-//    }
-//}
 
 template class MWTree<1>;
 template class MWTree<2>;

@@ -23,17 +23,15 @@ template<int D> class MWProjector;
 template<int D>
 class MWTree : public MRTree<D> {
 public:
-    MWTree(const MWTree<D> &tree);
-    MWTree(const MRTree<D> &tree, int type);
     MWTree(const BoundingBox<D> &box, int k, int type);
-    MWTree<D> &operator=(const MWTree<D> &tree);
+    MWTree(const MRTree<D> &tree, int type);
+    MWTree(const MWTree<D> &tree);
     virtual ~MWTree();
 
-    void setZero(bool clearTreeNorm = true);
-    void setAutoClean(bool clean = true) { this->autoCleanGenerated = clean; }
+    void setZero();
+    virtual void clear() = 0;
 
     int getScalingType() const { return this->scalingType; }
-    bool getAutoClean() const { return this->autoCleanGenerated; }
     double getSquareNorm() const { return this->squareNorm; }
     double estimateError(bool absPrec);
 
@@ -64,7 +62,6 @@ public:
 
 protected:
     int scalingType;
-    bool autoCleanGenerated;
     double squareNorm;
 
     Filter *filter;
@@ -74,39 +71,13 @@ protected:
     Eigen::VectorXd **tmpVector;  ///< temp memory
     Eigen::VectorXd **tmpMWCoefs; ///< temp memory
 
-    void setupFilters(int type);
-    void setupScalingBasis(int type);
+    void setupFilters(int type, int k);
+    void setupScalingBasis(int type, int k);
 
     void allocWorkMemory();
     void freeWorkMemory();
 
-    double calcTreeNorm(MRNodeVector *work = 0);
-
-//    void updateMissingScalingPart(const MWNodeVector &nodeList);
-//    void setupWorkTable(MWNodeVector &wt);
-//    void updateWorkTable(MWNodeVector &workTable);
-//    void calcWorkTable(RepresentableObject<D> &func, MWNodeVector &workTable);
-//    MWNodeVector &splitWorkNodes(RepresentableObject<D> &func, MWNodeVector &workTable);
-//    MWNodeVector &seedWorkTable(RepresentableObject<D> &func, MWNodeVector &workTable, bool filter = false);
-
-//    void seedTree(RepresentableObject<D> &func, bool _filter = false);
-//    void calcTree(RepresentableObject<D> &func);
-//    void growTree(RepresentableObject<D> &func, int maxIter = -1);
-
-//    template<typename Tree>
-//    std::vector<Tree> &copyVector(std::vector<Tree> &dest,
-//                                  const std::vector<Tree> &src) {
-//        dest.clear();
-//        dest.insert(dest.begin(), src.begin(), src.end());
-//        return dest;
-//    }
-
-//    template<typename Tree>
-//    std::vector<Tree> &appendVector(std::vector<Tree> &dest,
-//                                    const std::vector<Tree> &src) {
-//        dest.insert(dest.end(), src.begin(), src.end());
-//        return dest;
-//    }
+    double calcSquareNorm(MRNodeVector *work = 0);
 
 private:
     friend class boost::serialization::access;

@@ -36,31 +36,25 @@ public:
     MRNode<D> &operator=(const MRNode<D> &nd);
     virtual ~MRNode();
 
-    int getTDim() const { return this->tree->getTDim(); }
-    int getKp1() const { return this->tree->getKp1(); }
-    int getKp1_d() const { return this->tree->getKp1_d(); }
-    int getOrder() const { return this->tree->getOrder(); }
-    int getDepth() const { return this->nodeIndex->getScale()-this->tree->getRootScale(); }
-    int getScale() const { return this->nodeIndex->getScale(); }
-    int getRankId() const { return this->nodeIndex->getRankId(); }
+    int getTDim() const { return getMRTree().getTDim(); }
+    int getKp1() const { return getMRTree().getKp1(); }
+    int getKp1_d() const { return getMRTree().getKp1_d(); }
+    int getOrder() const { return getMRTree().getOrder(); }
+    int getDepth() const { return getNodeIndex().getScale()-getMRTree().getRootScale(); }
+    int getScale() const { return getNodeIndex().getScale(); }
+    int getRankId() const { return getNodeIndex().getRankId(); }
     int getNChildren() const { if (isBranchNode()) return getTDim(); return 0; }
+    const int *getTranslation() const { return getNodeIndex().getTranslation(); }
 
     const MRTree<D> &getMRTree() const {return *this->tree; }
     const MRNode<D> &getMRParent() const { return *this->parent; }
-    const MRNode<D> &getMRChild(int i) const {
-        assert(this->children != 0);
-        return *this->children[i];
-    }
+    const MRNode<D> &getMRChild(int i) const { return *this->children[i]; }
+    const NodeIndex<D> &getNodeIndex() const { return *this->nodeIndex; }
 
     MRTree<D> &getMRTree() { return *this->tree; }
     MRNode<D> &getMRParent() { return *this->parent; }
-    MRNode<D> &getMRChild(int i) {
-        assert(this->children != 0);
-        return *this->children[i];
-    }
-
-    const int *getTranslation() const { return nodeIndex->getTranslation(); }
-    const NodeIndex<D> &getNodeIndex() const { return *nodeIndex; }
+    MRNode<D> &getMRChild(int i) { return *this->children[i]; }
+    NodeIndex<D> &getNodeIndex() { return *this->nodeIndex; }
 
     void getCenter(double *r) const;
     void getLowerBounds(double *r) const;
@@ -75,22 +69,17 @@ public:
     inline bool isBranchNode() const;
     inline bool hasChild(int i) const;
 
+    void setHasCoefs() { SET_BITS(status, FlagHasCoefs | FlagAllocated); }
     void setIsEndNode() { SET_BITS(status, FlagEndNode); }
     void setIsGenNode() { SET_BITS(status, FlagGenNode); }
     void setIsRootNode() { SET_BITS(status, FlagRootNode); }
     void setIsLeafNode() { CLEAR_BITS(status, FlagBranchNode); }
     void setIsAllocated() { SET_BITS(status, FlagAllocated); }
     void setIsBranchNode() { SET_BITS(status, FlagBranchNode); }
+    void clearHasCoefs() { CLEAR_BITS(status, FlagHasCoefs);}
     void clearIsEndNode() { CLEAR_BITS(status, FlagEndNode); }
     void clearIsRootNode() { CLEAR_BITS(status, FlagRootNode); }
     void clearIsAllocated() { CLEAR_BITS(status, FlagAllocated); }
-    void setHasCoefs(bool flag = true) {
-        if (flag) {
-            SET_BITS(status, FlagHasCoefs | FlagAllocated);
-        } else {
-            CLEAR_BITS(status, FlagHasCoefs);
-        }
-    }
 
     bool hasCoord(const double *r) const;
     bool isCompatible(const MRNode<D> &node);
@@ -237,7 +226,7 @@ private:
            }
           } else {
            this->clearIsAllocated();
-           this->setHasCoefs(false);
+           this->clearHasCoefs();
           }
           clearNodeWeight(0);
           clearNodeWeight(1);

@@ -27,8 +27,8 @@
 template<int D>
 class MRTree {
 public:
-    MRTree(const MRTree<D> &tree);
     MRTree(const BoundingBox<D> &box, int k);
+    MRTree(const MRTree<D> &tree);
     virtual ~MRTree();
     virtual void clear() = 0;
 

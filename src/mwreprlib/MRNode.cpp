@@ -420,7 +420,7 @@ void MRNode<D>::broadcastCoefs(int src, mpi::communicator *comm) {
 //    assert(this->isAllocated());
 //    double *data = coefs->data();
 //    mpi::broadcast(*comm, data, getNCoefs(), src);
-//    this->setHasCoefs(true);
+//    this->setHasCoefs();
 //    this->setFullRedundancy();
 //#endif
 //}
