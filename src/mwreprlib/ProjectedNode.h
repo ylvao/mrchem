@@ -23,12 +23,13 @@ public:
     void clearGenerated();
     void purgeGenerated();
 
+    void copyChildren(const MRNode<D> &node);
     void createChildren() {
-        MWNode<D>::createChildren();
+        MRNode<D>::createChildren();
         this->clearIsEndNode();
     }
     void deleteChildren() {
-        MWNode<D>::deleteChildren();
+        MRNode<D>::deleteChildren();
         this->setIsEndNode();
     }
 

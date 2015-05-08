@@ -10,12 +10,8 @@ using namespace std;
 using namespace Eigen;
 
 template<int D>
-FunctionProjector<D>::FunctionProjector() { 
-    this->inpFunc = 0;
-}
-
-template<int D>
-FunctionProjector<D>::FunctionProjector(MWAdaptor<D> &a) : MWProjector<D>(a) {
+FunctionProjector<D>::FunctionProjector(const MWAdaptor<D> &a, int iter) 
+        : MWProjector<D>(a, iter) {
     this->inpFunc = 0;
 }
 
@@ -29,16 +25,14 @@ FunctionProjector<D>::~FunctionProjector() {
 template<int D>
 void FunctionProjector<D>::operator()(FunctionTree<D> &out,
                                       RepresentableFunction<D> &inp) {
-    this->outTree = &out;
     this->inpFunc = &inp;
-    this->buildTree();
-    this->outTree->mwTransformUp();
-    this->outTree = 0;
+    this->buildTree(out);
+    out.mwTransformUp();
     this->inpFunc = 0;
 }
 
 template<int D>
-void FunctionProjector<D>::calcWaveletCoefs(MWNode<D> &node) {
+void FunctionProjector<D>::calcNode(MWNode<D> &node) {
     const ScalingBasis &sf = node.getMWTree().getScalingFunctions();
     if (sf.getType() != Interpol) {
         NOT_IMPLEMENTED_ABORT;

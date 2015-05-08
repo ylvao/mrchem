@@ -6,7 +6,8 @@
 
 using namespace Eigen;
 
-XCProjector::XCProjector(XCFunctional &xc_fun, int k) : MWProjector<3>() {
+XCProjector::XCProjector(XCFunctional &xc_fun, int k, const MWAdaptor<3> &a) 
+     : MWProjector<3>(a, 0) {
     this->order = k;
     this->xcFun = &xc_fun;
 }
@@ -16,15 +17,13 @@ XCProjector::~XCProjector() {
 }
 
 void XCProjector::operator()(FunctionTree<3> &out, FunctionTree<3> &inp) {
-    this->outTree = &out;
     this->inpTree = &inp;
-    this->buildTree();
-    this->outTree->mwTransformUp();
-    this->outTree = 0;
+    this->buildTree(out);
+    out.mwTransformUp();
     this->inpTree = 0;
 }
 
-void XCProjector::calcWaveletCoefs(MWNode<3> &outNode) {
+void XCProjector::calcNode(MWNode<3> &outNode) {
     const NodeIndex<3> &nIdx = outNode.getNodeIndex();
     MWNode<3> &inpNode = static_cast<MWNode<3> &>(this->inpTree->getNode(nIdx));
 

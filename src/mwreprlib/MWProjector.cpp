@@ -1,51 +1,39 @@
 #include "MWProjector.h"
-#include "MWNode.h"
 #include "MWAdaptor.h"
 #include "MWTree.h"
+#include "MWNode.h"
 
 using namespace std;
 
 template<int D>
-MWProjector<D>::MWProjector() : adaptor() {
-    this->outTree = 0;
-}
-
-template<int D>
-MWProjector<D>::MWProjector(MWAdaptor<D> &a) : adaptor(a) {
-    this->outTree = 0;
-}
-
-template<int D>
-MWProjector<D>::~MWProjector() {
-    if (this->outTree != 0) {
-        MSG_ERROR("Projector not properly cleared");
-    }
-}
-
-template<int D>
-void MWProjector<D>::buildTree() {
+void MWProjector<D>::buildTree(MWTree<D> &outTree) {
     println(10, " == Building tree");
 
-    MRNodeVector *workVec = this->outTree->copyEndNodeTable();
-    MRNodeVector *endVec = this->outTree->getEndNodeTable();
+    NodeIndexSet *splitSet = 0;
+    MRNodeVector *splitVec = 0;
+    MRNodeVector *workVec = outTree.copyEndNodeTable();
+    MRNodeVector *endVec = outTree.getEndNodeTable();
     endVec->clear();
 
-    int iter = 1;
+    int iter = 0;
     while (workVec->size() > 0) {
         printout(10, "  -- #" << setw(3) << iter << ": Calculated   ");
         workVec = clearForeignNodes(workVec);
         calcNodeVector(*workVec);
-        double norm = sqrt(this->outTree->calcSquareNorm(workVec));
-        MRNodeVector splitVec;
-        this->adaptor.splitNodeVector(norm, *workVec, splitVec, *endVec);
-        NodeIndexSet *splitSet = getNodeIndexSet(splitVec);
+        double norm = outTree.calcSquareNorm(workVec);
+        if (maxIterReached(iter)) break;
+        splitVec = this->adaptor.splitNodeVector(*workVec, endVec);
+        splitSet = getNodeIndexSet(*splitVec);
         broadcast_index_list<D>(*splitSet);
-        this->outTree->splitNodes(*splitSet, workVec);
+        workVec->clear();
+        outTree.splitNodes(*splitSet, workVec);
         delete splitSet;
+        delete splitVec;
         iter++;
     }
     delete workVec;
-    this->outTree->resetEndNodeTable();
+    outTree.resetEndNodeTable();
+    outTree.calcSquareNorm();
 }
 
 template<int D>
@@ -57,7 +45,7 @@ void MWProjector<D>::calcNodeVector(MRNodeVector &nodeVec) {
 #pragma omp for schedule(guided)
     for (int n = 0; n < nNodes; n++) {
         MWNode<D> &node = static_cast<MWNode<D> &>(*nodeVec[n]);
-        calcWaveletCoefs(node);
+        calcNode(node);
     }
 }
 }

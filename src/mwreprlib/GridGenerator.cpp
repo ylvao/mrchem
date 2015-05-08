@@ -55,7 +55,7 @@ void GridGenerator<D>::buildGrid() {
     println(10, " == Building grid");
     MRNodeVector *nodeVector = this->grid->getEndNodeTable();
 
-    int iter = 1;
+    int iter = 0;
     while (nodeVector->size() > 0) {
         int nNodes = nodeVector->size();
         nodeVector = splitNodeVector(nodeVector);
@@ -65,7 +65,6 @@ void GridGenerator<D>::buildGrid() {
     }
     this->grid->resetEndNodeTable();
 }
-
 template<int D>
 MRNodeVector* GridGenerator<D>::splitNodeVector(MRNodeVector *nVec) {
     NodeIndexSet idxSet;
@@ -99,3 +98,4 @@ bool GridGenerator<D>::splitCheck(const MRNode<D> *node) {
 template class GridGenerator<1>;
 template class GridGenerator<2>;
 template class GridGenerator<3>;
+

@@ -91,8 +91,8 @@ void MRTree<D>::deleteNodeCounters() {
 /** Split nodes according to a list of NodeIndices.
   *
   * Given a list of NodeIndices to split, this routine creates the new children
-  * nodes. If a MRNodeVector is given the newly born (local) children nodes are 
-  * collected. Children nodes are by default given the rank of their parent.*/
+  * nodes. The newly born (local) children nodes are collected in a MRNodeVector.
+  * Children nodes are by default given the rank of their parent.*/
 template<int D>
 void MRTree<D>::splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec) {
     typename set<const NodeIndex<D> *>::iterator it;

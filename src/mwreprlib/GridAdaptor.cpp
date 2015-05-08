@@ -75,7 +75,6 @@ bool GridAdaptor<D>::splitCheck(MWNode<D> &node) {
    return false;
 }
 
-
 /** Calculate the threshold for the wavelet norm.
   *
   * Calculates the threshold that has to be met in the wavelet norm in order to
@@ -93,7 +92,7 @@ double GridAdaptor<D>::getWaveletThreshold(int factor, int scale) {
     return max(thrs_1, thrs_2);
 }
 
-
 template class GridAdaptor<1>;
 template class GridAdaptor<2>;
 template class GridAdaptor<3>;
+

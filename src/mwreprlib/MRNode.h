@@ -91,6 +91,7 @@ public:
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     int getChildIndex(const double *r) const;
 
+    virtual void copyChildren(const MRNode<D> &node) = 0;
     virtual void createChildren();
     virtual void deleteChildren();
     virtual void genChildren(bool empty = false);
@@ -313,7 +314,7 @@ bool MRNode<D>::checkStatus(unsigned char mask) const {
 template<int D>
 std::ostream& operator<<(std::ostream &o, const MRNode<D> &nd) {
     std::string flags ="      ";
-    o << nd.nodeIndex;
+    o << nd.getNodeIndex();
     if (nd.isRoot()) {
         flags[0] = 'R';
     }

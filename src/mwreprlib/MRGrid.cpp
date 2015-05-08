@@ -18,6 +18,8 @@ MRGrid<D>::MRGrid(const BoundingBox<D> &box, int k) : MRTree<D>(box, k) {
     this->resetEndNodeTable();
 }
 
+/** Recursive copy constructor.
+ *  Keeps the mpi ranks of the given grid. */
 template<int D>
 MRGrid<D>::MRGrid(const MRGrid<D> &grid) : MRTree<D>(grid) {
     NOT_IMPLEMENTED_ABORT;

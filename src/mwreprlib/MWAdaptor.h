@@ -11,17 +11,16 @@ public:
     void setAbsPrec(bool abs) { this->absPrec = abs; }
     void setPrecision(double pr) { this->prec = pr; }
 
-    void splitNodeVector(double norm, MRNodeVector &nodeVec,
-                                      MRNodeVector &splitVec,
-                                      MRNodeVector &noSplitVec);
+    MRNodeVector* splitNodeVector(MRNodeVector &nodeVec,
+                         MRNodeVector *noSplit = 0) const;
 
 protected:
     int maxScale;
     bool absPrec;
     double prec;
 
-    bool splitCheck(double norm, MWNode<D> &node);
-    double getWaveletThreshold(double norm, int scale);
+    bool splitNode(MWNode<D> &node) const;
+    double getWaveletThreshold(double norm, int scale) const;
 };
 
 #endif // MWADAPTOR_H

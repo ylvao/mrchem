@@ -30,36 +30,37 @@ FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
     this->resetEndNodeTable();
 }
 
-/** MRTree copy constructor.
-  * Does a recursive copy of the given tree structure, but initializes
-  * the function to zero.*/
+/** FunctionTree copy constructor.
+  * Copy complete tree structure of the given grid.
+  * Initializes the function to zero on this grid. */
 template<int D>
-FunctionTree<D>::FunctionTree(const MRTree<D> &tree, int type) : MWTree<D>(tree, type) {
-    NOT_IMPLEMENTED_ABORT;
+FunctionTree<D>::FunctionTree(const MRGrid<D> &grid, int type) : MWTree<D>(grid, type) {
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
     for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const MRNode<D> &node = tree.getRootNode(rIdx);
-        //MRNode<D> *root = new ProjectedNode<D>(*this, node);
-        //this->rootBox->setNode(rIdx, &root);
+        const MRNode<D> &yourRoot = grid.getRootNode(rIdx);
+        const NodeIndex<D> &nIdx = yourRoot.getNodeIndex();
+        MRNode<D> *myRoot = new ProjectedNode<D>(*this, nIdx);
+        myRoot->copyChildren(yourRoot);
+        this->rootBox->setNode(rIdx, &myRoot);
     }
     this->resetEndNodeTable();
 }
 
 /** FunctionTree copy constructor.
-  * Does a recursive copy of the given tree structure, but initializes
-  * the function to zero. Use = operator to copy data.*/
+  * Copy polynomial order and type, as well as the world box from the
+  * given tree, but only at root scale. Initializes the function to zero. 
+  * Use = operator to copy data.*/
 template<int D>
-FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
-    NOT_IMPLEMENTED_ABORT;
+FunctionTree<D>::FunctionTree(const MWTree<D> &tree) : MWTree<D> (tree) {
     const double *lB = this->rootBox->getLowerBounds();
     const double *uB = this->rootBox->getUpperBounds();
     this->setBounds(lB, uB);
     for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const MRNode<D> &node = tree.getRootNode(rIdx);
-        //MRNode<D> *root = new ProjectedNode<D>(*this, node);
-        //this->rootBox->setNode(rIdx, &root);
+        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
+        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        this->rootBox->setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
 }
@@ -69,14 +70,10 @@ template<int D>
 FunctionTree<D>::~FunctionTree() {
 }
 
+/** Leaves the tree inn the same state as after construction*/
 template<int D>
 void FunctionTree<D>::clear() {
     NOT_IMPLEMENTED_ABORT;
-//    this->rootBox.reInit(this);
-//    this->hilbertPathTable.clear();
-//    this->resetEndNodeTable();
-//    this->assignNodeTags(this->endNodeTable);
-//    this->setTreeState(MWTree<D>::UnSeeded);
 }
 
 /** Loop through endNodeTable and recursively clear all GenNode coefficients.

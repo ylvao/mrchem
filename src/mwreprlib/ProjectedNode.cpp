@@ -54,55 +54,25 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &n) : FunctionNode<D>(n) {
     }
 }
 
-/* Recurcive root node construcor*/
-/*
-template<int D>
-ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const GridNode<D> &gNode)
-        : FunctionNode<D> (t, gNode.getNodeIndex()) {
-    this->setIsEndNode();
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
-
-    if (gNode.isBranchNode()) {
-        this->allocKindergarten();
-        this->setIsBranchNode();
-        this->clearIsEndNode();
-    }
-    for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
-        const GridNode<D> &gChild = gNode.getGridChild(cIdx);
-        this->children[cIdx] = new ProjectedNode(*this, cIdx, gChild);
-    }
-}
-*/
 /* Recurcive node constructor*/
-/*
 template<int D>
-ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx,
-                                const MRNode<D> &gNode)
-        : FunctionNode<D> (p, cIdx) {
-    this->setIsEndNode();
-    this->setRankId(gNode.getRankId());
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
-
-    if (gNode.isBranchNode()) {
+void ProjectedNode<D>::copyChildren(const MRNode<D> &node) {
+    if (node.isBranchNode()) {
         this->allocKindergarten();
         this->setIsBranchNode();
         this->clearIsEndNode();
     }
-    for (int cIdx = 0; cIdx < gNode.getNChildren(); cIdx++) {
-        const GridNode<D> &gChild = gNode.getGridChild(cIdx);
-        ProjectedNode<D> *child = new ProjectedNode(*this, cIdx, gChild);
-        this->children[cIdx] = child;
+    int myRank = this->getRankId();
+    for (int cIdx = 0; cIdx < node.getNChildren(); cIdx++) {
+        const MRNode<D> &yourChild = node.getMRChild(cIdx);
+        int childRank = yourChild.getRankId();
+        this->setRankId(childRank); //Rank is copied from parent
+        ProjectedNode<D> *myChild = new ProjectedNode(*this, cIdx);
+        this->setRankId(myRank);
+        myChild->copyChildren(yourChild);
+        this->children[cIdx] = myChild;
     }
 }
-*/
 
 /** Allocating child node.
   *

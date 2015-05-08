@@ -22,6 +22,16 @@ public:
     GridNode(GridNode<D> &p, int cIdx);
     virtual ~GridNode();
 
+    void copyChildren(const MRNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
+    void createChildren() {
+        MRNode<D>::createChildren();
+        this->clearIsEndNode();
+    }
+    void deleteChildren() {
+        MRNode<D>::deleteChildren();
+        this->setIsEndNode();
+    }
+
     const Eigen::MatrixXd &getQuadPoints() const { return this->roots; }
     const Eigen::MatrixXd &getQuadWeights() const { return this->weights; }
 

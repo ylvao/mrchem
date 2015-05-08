@@ -24,7 +24,7 @@ template<int D>
 class MWTree : public MRTree<D> {
 public:
     MWTree(const BoundingBox<D> &box, int k, int type);
-    MWTree(const MRTree<D> &tree, int type);
+    MWTree(const MRGrid<D> &tree, int type);
     MWTree(const MWTree<D> &tree);
     virtual ~MWTree();
 

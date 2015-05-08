@@ -20,8 +20,8 @@ template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
     FunctionTree(const BoundingBox<D> &box, int k, int type = Interpol);
-    FunctionTree(const MRTree<D> &tree, int type = Interpol);
-    FunctionTree(const FunctionTree<D> &tree);
+    FunctionTree(const MRGrid<D> &grid, int type = Interpol);
+    FunctionTree(const MWTree<D> &tree);
     virtual ~FunctionTree();
 
     void clear();

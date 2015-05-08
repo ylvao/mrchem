@@ -7,8 +7,7 @@
 template<int D>
 class FunctionProjector : public MWProjector<D> {
 public:
-    FunctionProjector();
-    FunctionProjector(MWAdaptor<D> &a);
+    FunctionProjector(const MWAdaptor<D> &a = MWAdaptor<D>(), int iter = -1);
     virtual ~FunctionProjector();
 
     void operator()(FunctionTree<D> &out, RepresentableFunction<D> &inp);
@@ -16,7 +15,7 @@ public:
 protected:
     RepresentableFunction<D> *inpFunc;
 
-    void calcWaveletCoefs(MWNode<D> &node);
+    void calcNode(MWNode<D> &node);
 };
 
 #endif // FUNCTIONPROJECTOR_H
