@@ -1,8 +1,5 @@
 include_directories (${CMAKE_INSTALL_PREFIX}/include)
 
-link_directories (${CMAKE_INSTALL_PREFIX}/lib)
-link_directories (${Boost_LIBRARY_DIRS})
-
 set (mrgridlib_SOURCES
 	Atom.cpp
 	Atom.h

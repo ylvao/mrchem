@@ -84,9 +84,9 @@ if (MRCPP_INSTALL_FILTERS)
 endif ()
 
 if (ENABLE_TESTS)
-    set (PROJECT_REPOSITORY "git@repo.ctcc.no:mrcpp.git")
-    include(ConfigTesting)
-    add_subdirectory(test)
+    enable_testing()
+    include(CTest)
+    add_subdirectory(tests)
 endif()
 
 # Copy the examples in place for convenience 
