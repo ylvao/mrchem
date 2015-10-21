@@ -212,9 +212,9 @@ void MWTree<D>::mwTransformUp(bool overwrite) {
     int start = nodeTable.size() - 2;
     for (int n = start; n >= 0; n--) {
         set<MRNode<D> *> missing;
-        findMissingChildren(nodeTable[n], missing);
+        this->findMissingChildren(nodeTable[n], missing);
         //communicate missing
-        syncNodes(missing);
+        this->syncNodes(missing);
         int nNodes = nodeTable[n].size();
 #pragma omp parallel firstprivate(nNodes, overwrite) shared(nodeTable)
         {

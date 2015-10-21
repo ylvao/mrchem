@@ -20,9 +20,9 @@ public:
 
 private:
     short int path;
-    static constexpr short int pTable[][8];
-    static constexpr int zTable[][8];
-    static constexpr int hTable[][8];
+    static const short int pTable[][8];
+    static const int zTable[][8];
+    static const int hTable[][8];
 };
 
 #endif // HILBERTPATH_H

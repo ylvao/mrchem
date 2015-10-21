@@ -250,7 +250,7 @@ void MWNode<D>::calcNorms() {
 /** Calculate, store and return square norm. */
 template<int D>
 double MWNode<D>::calcSquareNorm() {
-    assert(this->isAllocated);
+    assert(this->isAllocated());
     assert(this->hasCoefs());
     return this->coefs->squaredNorm();
 }
@@ -258,7 +258,7 @@ double MWNode<D>::calcSquareNorm() {
 /** Calculate and return scaling norm. */
 template<int D>
 double MWNode<D>::calcScalingNorm() {
-    assert(this->isAllocated);
+    assert(this->isAllocated());
     assert(this->hasCoefs());
     return this->coefs->segment(0, this->getKp1_d()).norm();
 }
@@ -266,7 +266,7 @@ double MWNode<D>::calcScalingNorm() {
 /** Calculate and return wavelet norm. */
 template<int D>
 double MWNode<D>::calcWaveletNorm() {
-    assert(this->isAllocated);
+    assert(this->isAllocated());
     assert(this->hasCoefs());
     int nCoefs = this->getNCoefs();
     int kp1_d = this->getKp1_d();
@@ -365,7 +365,7 @@ bool MWNode<D>::crop(double prec, NodeIndexSet *cropIdx) {
 
 template<int D>
 mpi::request MWNode<D>::isendCoefs(int who, int tag, int comp) {
-    assert(hasCoefs());
+    assert(this->hasCoefs());
 #ifdef HAVE_MPI
     int nSend = this->getNCoefs();
     const double *data = this->coefs->data();
