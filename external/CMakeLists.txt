@@ -36,4 +36,6 @@ if (ENABLE_XCFUN)
     add_dependencies(external-modules submodule-xcfun)
 endif()
 
+include_directories(${PROJECT_SOURCE_DIR}/external/catch)
+
 # vim:et:sw=4:ts=4:
