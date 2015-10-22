@@ -43,7 +43,7 @@ public:
 
     void setDilation(double n) { this->N = n; }
     void setTranslation(double l) { this->L = l; }
-    virtual void rescale(double n, double l);
+    void rescale(double n, double l);
 
     int size() const { return this->coefs.size(); } ///< Length of coefs vector
     int getOrder() const;

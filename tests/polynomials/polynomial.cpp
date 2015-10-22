@@ -1,8 +1,5 @@
 #include "catch.hpp"
 
-#include <cmath>
-#include <iostream>
-
 #include "Polynomial.h"
 
 using namespace Eigen;
