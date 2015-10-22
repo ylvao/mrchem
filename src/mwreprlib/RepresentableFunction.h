@@ -18,8 +18,7 @@
 template<int D>
 class RepresentableFunction {
 public:
-    RepresentableFunction();
-    RepresentableFunction(const double *a, const double *b);
+    RepresentableFunction(const double *a = 0, const double *b = 0);
     RepresentableFunction(const RepresentableFunction<D> &func);
     RepresentableFunction<D> &operator=(const RepresentableFunction<D> &func);
     virtual ~RepresentableFunction();
@@ -32,11 +31,11 @@ public:
     bool isBounded() const { return this->bounded; }
     bool outOfBounds(const double *r) const;
 
-    virtual double getUpperBound(int i = 0) const { return this->B[i]; }
-    virtual double getLowerBound(int i = 0) const { return this->A[i]; }
+    double getLowerBound(int d) const { return this->A[d]; }
+    double getUpperBound(int d) const { return this->B[d]; }
 
-    virtual const double *getUpperBounds() const { return this->B; }
-    virtual const double *getLowerBounds() const { return this->A; }
+    const double *getLowerBounds() const { return this->A; }
+    const double *getUpperBounds() const { return this->B; }
 
     virtual void plotCleanup() { }
 

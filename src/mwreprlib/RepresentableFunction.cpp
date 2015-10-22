@@ -13,13 +13,6 @@
 using namespace std;
 
 template<int D>
-RepresentableFunction<D>::RepresentableFunction() {
-    this->bounded = false;
-    this->A = 0;
-    this->B = 0;
-}
-
-template<int D>
 RepresentableFunction<D>::RepresentableFunction(const double *a,
                                                 const double *b) {
     if (a == 0 or b == 0) {
