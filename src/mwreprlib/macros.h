@@ -11,8 +11,6 @@
 #ifndef MACROS_H_
 #define MACROS_H_
 
-#include "checks.h"
-
 #define  MAX(X,Y)   (((X) > (Y)) ? (X):(Y))
 #define  MIN(X,Y)   (((X) < (Y)) ? (X):(Y))
 #define  SQUARE(X)  ((X) * (X))
