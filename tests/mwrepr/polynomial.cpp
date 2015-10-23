@@ -10,7 +10,7 @@ TEST_CASE("Polynomial constructors", "[poly_constructor], [polynomials]") {
     Vector4d c = {0.0, 1.0, 0.0, 0.0};
     Polynomial P(c, &a, &b);
 
-    SECTION("Polynomial constructor") {
+    SECTION("Constructor") {
         REQUIRE( P.getOrder() == 1 );
         REQUIRE( P.getCoefs()[0] == Approx(0.0) );
         REQUIRE( P.getDilation() == Approx(1.0) );

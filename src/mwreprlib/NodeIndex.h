@@ -77,7 +77,7 @@ template<int D>
 NodeIndex<D>::NodeIndex(const NodeIndex<D> &pIdx, int cIdx) {
     this->N = pIdx.N + 1;
     this->rankId = pIdx.rankId;
-    const int *l = pIdx.getTranslation(); 
+    const int *l = pIdx.getTranslation();
     for (int d = 0; d < D; d++) {
         this->L[d] = (2 * l[d]) + ((cIdx >> d) & 1);
     }
@@ -97,10 +97,10 @@ NodeIndex<D>& NodeIndex<D>::operator=(const NodeIndex<D> &idx) {
 template<int D>
 void NodeIndex<D>::setTranslation(const int *l) {
     for (int d = 0; d < D; d++) {
-        if (l == 0) {
-            this->L[d] = 0;
-        } else {
+        if (l != 0) {
             this->L[d] = l[d];
+        } else {
+            this->L[d] = 0;
         }
     }
 }
@@ -141,6 +141,7 @@ template<int D>
 class NodeIndexComp {
 public:
     bool operator()(const NodeIndex<D> &a, const NodeIndex<D> &b) const {
+        NOT_IMPLEMENTED_ABORT;
         if (a.N < b.N) {
             return true;
         }
@@ -161,6 +162,7 @@ public:
     }
 
     bool operator()(const NodeIndex<D> *a, const NodeIndex<D> *b) const {
+        NOT_IMPLEMENTED_ABORT;
         if (a->N < b->N) {
             return true;
         }
