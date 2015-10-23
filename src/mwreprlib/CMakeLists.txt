@@ -1,6 +1,5 @@
 
 set(mwrepr_SOURCES 
-	checks.h
 	constants.h
 	eigen_disable_warnings.h
 	macros.h
