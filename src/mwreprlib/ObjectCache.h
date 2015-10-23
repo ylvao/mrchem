@@ -40,8 +40,8 @@ public:
     }
 
     virtual void clear() {
-        for (unsigned int i = 0; i < objs.size(); i++) {
-            if (objs[i] != 0) {
+        for (unsigned int i = 0; i < this->objs.size(); i++) {
+            if (this->objs[i] != 0) {
                 unload(i);
             }
         }
@@ -52,70 +52,62 @@ public:
     }
 
     void load(int id, T *new_o, int memory) {
-        if (id >= highWaterMark) {
-            for (int i = 0; i < id - highWaterMark + 1; i++) {
-                objs.push_back(0);
-                mem.push_back(0);
+        if (id >= this->highWaterMark) {
+            for (int i = 0; i < id - this->highWaterMark + 1; i++) {
+                this->objs.push_back(0);
+                this->mem.push_back(0);
             }
-            highWaterMark = id;
+            this->highWaterMark = id;
         }
-        if (objs[id] != 0)
+        if (this->objs[id] != 0)
             return;
-        mem[id] = memory;
-        memLoaded += memory;
-        objs[id] = new_o;
+        this->mem[id] = memory;
+        this->memLoaded += memory;
+        this->objs[id] = new_o;
 
     }
     virtual void unload(int id) {
-        if (id < 0 or id > highWaterMark) {
+        if (id < 0 or id > this->highWaterMark) {
             MSG_ERROR("Id out of bounds:" << id);
         }
-        if (objs[id] == 0) {
+        if (this->objs[id] == 0) {
             MSG_WARN ("Object not loaded.");
             return;
         }
-        memLoaded -= mem[id];
-        mem[id] = 0;
-        delete objs[id];
-        objs[id] = 0;
+        this->memLoaded -= this->mem[id];
+        this->mem[id] = 0;
+        delete this->objs[id];
+        this->objs[id] = 0;
     }
+
+    virtual T &operator[](int id) { return get(id); }
     virtual T &get(int id) {
         if (id < 0) {
             MSG_ERROR("Id out of bounds:" << id);
         }
-        if (objs[id] == 0) {
+        if (this->objs[id] == 0) {
             MSG_ERROR("Object not loaded!");
         }
-        return *(objs[id]);
-    }
-    virtual T &operator[](int id) {
-        return get(id);
+        return *(this->objs[id]);
     }
     bool hasId(int id) {
-        if (id > highWaterMark)
+        if (id > this->highWaterMark)
             return false;
-        if (objs[id] == 0)
+        if (this->objs[id] == 0)
             return false;
         return true;
     }
 
-    int getNObjs() {
-        return objs.size();
-    }
-
-    int getMem() {
-        return memLoaded;
-    }
-    int getMem(int id) {
-        return mem[id];
-    }
+    int getNObjs() { return this->objs.size(); }
+    int getMem() { return this->memLoaded; }
+    int getMem(int id) { return this->mem[id]; }
 
 protected:
     ObjectCache() {
-        highWaterMark = 0;
-        memLoaded = 0;
-        objs.push_back(0);
-        mem.push_back(0);
+        this->highWaterMark = 0;
+        this->memLoaded = 0;
+        this->objs.push_back(0);
+        this->mem.push_back(0);
 #ifdef OPENMP
         omp_init_lock(&cache_lock);
 #endif
@@ -129,11 +121,8 @@ protected:
         omp_destroy_lock(&cache_lock);
 #endif
     }
-    ObjectCache(ObjectCache<T> const &oc) {
-    }
-    ObjectCache<T> &operator=(ObjectCache<T> const &oc) {
-        return *this;
-    }
+    ObjectCache(ObjectCache<T> const &oc) { }
+    ObjectCache<T> &operator=(ObjectCache<T> const &oc) { return *this; }
 #ifdef OPENMP
     omp_lock_t cache_lock;
 #endif
