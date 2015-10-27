@@ -1,10 +1,7 @@
 [submodule "external/libgetkw"]
 	path = external/libgetkw
-	url = git://repo.ctcc.no/libgetkw.git
+	url = https://github.com/juselius/libgetkw.git
 [submodule "external/xcfun"]
 	path = external/xcfun
-	url = git://repo.ctcc.no/xcfun.git
-[submodule "external/google-test"]
-	path = external/google-test
-	url = git://repo.ctcc.no/gtest.git
+	url = git://repo.ctcc.no/xcfun.gi://github.com/dftlibs/xcfun.git 
 
