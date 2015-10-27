@@ -3,5 +3,5 @@
 	url = https://github.com/juselius/libgetkw.git
 [submodule "external/xcfun"]
 	path = external/xcfun
-	url = git://repo.ctcc.no/xcfun.gi://github.com/dftlibs/xcfun.git 
+	url = https://github.com/dftlibs/xcfun.git
 
