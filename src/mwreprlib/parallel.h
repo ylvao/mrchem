@@ -46,19 +46,19 @@ namespace mpi = boost::mpi;
 
 #else
 namespace mpi {
-    struct communicator {
-	int rank() const { return 0; }
-	int size() const { return 1; }
-	void barrier() const { }
-    };
-    struct environment {
-	environment(int argc, char **argv) { }
-    };
-    struct timer {
-	void restart() { }
-	double elapsed() { return 0.0; }
-    };
-    typedef int request;
+struct communicator {
+    int rank() const { return 0; }
+    int size() const { return 1; }
+    void barrier() const { }
+};
+struct environment {
+    environment(int argc, char **argv) { }
+};
+struct timer {
+    void restart() { }
+    double elapsed() { return 0.0; }
+};
+typedef int request;
 }
 #endif
 
@@ -67,6 +67,7 @@ extern mpi::communicator node_group;
 
 template<int D>
 void broadcast_index_list(NodeIndexSet &idxSet) {
+    NOT_IMPLEMENTED_ABORT;
 #ifdef HAVE_MPI
     if (node_group.size() > 1) {
         static std::vector<std::vector<NodeIndex<D> > > commIdx;

@@ -27,8 +27,8 @@ RepresentableFunction<D>::RepresentableFunction(const double *a,
             if (a[d] > b[d]) {
                 MSG_ERROR("Lower bound > Upper bound.");
             }
-            A[d] = a[d];
-            B[d] = b[d];
+            this->A[d] = a[d];
+            this->B[d] = b[d];
         }
     }
 }
@@ -84,8 +84,8 @@ void RepresentableFunction<D>::setBounds(const double *a, const double *b) {
         if (a[d] > b[d]) {
             MSG_ERROR("Lower bound > Upper bound.");
         }
-        A[d] = a[d];
-        B[d] = b[d];
+        this->A[d] = a[d];
+        this->B[d] = b[d];
     }
 }
 

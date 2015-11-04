@@ -37,8 +37,6 @@ public:
     const double *getLowerBounds() const { return this->A; }
     const double *getUpperBounds() const { return this->B; }
 
-    virtual void plotCleanup() { }
-
     virtual bool isVisibleAtScale(int scale, int nQuadPts) const { return true; }
     virtual bool isZeroOnInterval(const double *a, const double *b) const { return false; }
 
