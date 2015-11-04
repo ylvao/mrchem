@@ -1,5 +1,5 @@
 /*
- * 
+ *
  *
  *  \date Jul 22, 2009
  *  \author Jonas Juselius <jonas.juselius@uit.no> \n
@@ -22,55 +22,45 @@ static const int MaxQuadratureDim = 7;
 
 class GaussQuadrature {
 public:
-	GaussQuadrature(int order, double a = -1.0, double b = 1.0,
-			int intervals = 1);
-	virtual ~GaussQuadrature();
-	double integrate(const RepresentableFunction<1> &func) const;
-	double integrate(const RepresentableFunction<2> &func) const;
-	double integrate(const RepresentableFunction<3> &func) const;
-	void setIntervals(int i);
-	void setBounds(double a, double b);
-	int getIntervals() const {
-		return intervals;
-	}
-	double getUpperBound() const {
-		return B;
-	}
-	double getLowerBound() const {
-		return A;
-	}
-	const Eigen::VectorXd &getRoots() const {
-		return roots;
-	}
-	const Eigen::VectorXd &getWeights() const {
-		return weights;
-	}
-	const Eigen::VectorXd getRoots(double a, double b, int intervals = 1) const;
-	const Eigen::VectorXd
-			getWeights(double a, double b, int intervals = 1) const;
-	const Eigen::VectorXd &getUnscaledRoots() const {
-		return unscaledRoots;
-	}
-	const Eigen::VectorXd &getUnscaledWeights() const {
-		return unscaledWeights;
-	}
+    GaussQuadrature(int k, double a = -1.0, double b = 1.0, int inter = 1);
+    virtual ~GaussQuadrature() { }
+
+    double integrate(const RepresentableFunction<1> &func) const;
+    double integrate(const RepresentableFunction<2> &func) const;
+    double integrate(const RepresentableFunction<3> &func) const;
+
+    void setIntervals(int i);
+    void setBounds(double a, double b);
+
+    int getIntervals() const { return this->intervals; }
+    double getUpperBound() const { return this->B; }
+    double getLowerBound() const { return this->A; }
+
+    const Eigen::VectorXd &getRoots() const { return this->roots; }
+    const Eigen::VectorXd &getWeights() const { return this->weights; }
+    const Eigen::VectorXd getRoots(double a, double b, int inter = 1) const;
+    const Eigen::VectorXd getWeights(double a, double b, int inter = 1) const;
+    const Eigen::VectorXd &getUnscaledRoots() const { return this->unscaledRoots; }
+    const Eigen::VectorXd &getUnscaledWeights() const { return this->unscaledWeights; }
+
 protected:
-	int order;
-	double A;
-	double B;
-	int intervals;
-	int npts;
-	Eigen::VectorXd roots;
-	Eigen::VectorXd weights;
-	Eigen::VectorXd unscaledRoots;
-	Eigen::VectorXd unscaledWeights;
-	void rescaleRoots(Eigen::VectorXd &roots, double a, double b,
-			int intervals = 1) const;
-	void rescaleWeights(Eigen::VectorXd &weights, double a, double b,
-			int intervals = 1) const;
-	void calcScaledPtsWgts();
-	int calcGaussPtsWgts();
-	double integrate_nd(const RepresentableFunction<3> &func, int axis = 0) const;
+    int order;
+    double A;
+    double B;
+    int intervals;
+    int npts;
+    Eigen::VectorXd roots;
+    Eigen::VectorXd weights;
+    Eigen::VectorXd unscaledRoots;
+    Eigen::VectorXd unscaledWeights;
+
+    void rescaleRoots(Eigen::VectorXd &rts, double a, double b, int inter = 1) const;
+    void rescaleWeights(Eigen::VectorXd &wgts, double a, double b, int inter = 1) const;
+
+    void calcScaledPtsWgts();
+    int calcGaussPtsWgts();
+
+    double integrate_nd(const RepresentableFunction<3> &func, int axis = 0) const;
 };
 
 #endif /* GAUSSQUADRATURE_H_ */
