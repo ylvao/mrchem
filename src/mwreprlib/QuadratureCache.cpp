@@ -11,15 +11,18 @@
 #include "QuadratureCache.h"
 
 QuadratureCache::QuadratureCache() {
+    NOT_IMPLEMENTED_ABORT;
     A = 0.0;
     B = 1.0;
     intervals = 1;
 }
 
 QuadratureCache::~QuadratureCache() {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 void QuadratureCache::load(int order) {
+    NOT_IMPLEMENTED_ABORT;
     SET_CACHE_LOCK();
     if (not hasId(order)) {
         GaussQuadrature *gp = new GaussQuadrature(order, A, B, intervals);
@@ -30,6 +33,7 @@ void QuadratureCache::load(int order) {
 }
 
 GaussQuadrature &QuadratureCache::get(int order) {
+    NOT_IMPLEMENTED_ABORT;
     if (not hasId(order)) {
         load(order);
     }
@@ -37,6 +41,7 @@ GaussQuadrature &QuadratureCache::get(int order) {
 }
 
 void QuadratureCache::setBounds(double a, double b) {
+    NOT_IMPLEMENTED_ABORT;
     if (fabs(A - a) < MachineZero and fabs(B - b) < MachineZero) {
         return;
     }
@@ -53,6 +58,7 @@ void QuadratureCache::setBounds(double a, double b) {
 }
 
 void QuadratureCache::setIntervals(int ivals) {
+    NOT_IMPLEMENTED_ABORT;
     if (ivals == intervals) {
         return;
     }
