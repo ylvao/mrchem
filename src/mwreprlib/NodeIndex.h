@@ -141,7 +141,6 @@ template<int D>
 class NodeIndexComp {
 public:
     bool operator()(const NodeIndex<D> &a, const NodeIndex<D> &b) const {
-        NOT_IMPLEMENTED_ABORT;
         if (a.N < b.N) {
             return true;
         }
@@ -162,7 +161,6 @@ public:
     }
 
     bool operator()(const NodeIndex<D> *a, const NodeIndex<D> *b) const {
-        NOT_IMPLEMENTED_ABORT;
         if (a->N < b->N) {
             return true;
         }

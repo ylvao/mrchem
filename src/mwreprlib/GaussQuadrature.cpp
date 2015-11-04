@@ -16,9 +16,12 @@ using namespace std;
  * \param b Upper bound of validity
  * \param intervals Number of intervals to divde |a-b| into
  */
-GaussQuadrature::GaussQuadrature(int k, double a, double b, int inter) :
-    order(k), A(a), B(b), intervals(inter) {
-    NOT_IMPLEMENTED_ABORT;
+GaussQuadrature::GaussQuadrature(int k, double a, double b, int inter) {
+    this->order = k;
+    this->A = a;
+    this->B = b;
+    this->intervals = inter;
+
     if (this->order < 0 || this->order > MaxGaussOrder) {
         MSG_ERROR("Gauss quadrature order " << this->order <<
                 " is larger than the maximum of " << MaxGaussOrder);
@@ -42,7 +45,6 @@ GaussQuadrature::GaussQuadrature(int k, double a, double b, int inter) :
 }
 
 void GaussQuadrature::setBounds(double a, double b) {
-    NOT_IMPLEMENTED_ABORT;
     if (fabs(this->A - a) < MachineZero and fabs(this->B - b) < MachineZero) {
         return;
     }
@@ -55,7 +57,6 @@ void GaussQuadrature::setBounds(double a, double b) {
 }
 
 void GaussQuadrature::setIntervals(int i) {
-    NOT_IMPLEMENTED_ABORT;
     if (i == this->intervals) {
         return;
     }
@@ -70,7 +71,6 @@ void GaussQuadrature::setIntervals(int i) {
 }
 
 const VectorXd GaussQuadrature::getRoots(double a, double b, int inter) const {
-    NOT_IMPLEMENTED_ABORT;
     if (fabs(this->A - a) < MachineZero and fabs(this->B - b) < MachineZero) {
         return this->roots;
     }
@@ -80,7 +80,6 @@ const VectorXd GaussQuadrature::getRoots(double a, double b, int inter) const {
 }
 
 const VectorXd GaussQuadrature::getWeights(double a, double b, int inter) const {
-    NOT_IMPLEMENTED_ABORT;
     if (fabs(this->A - a) < MachineZero and fabs(this->B - b) < MachineZero) {
         return this->weights;
     }
@@ -94,8 +93,7 @@ const VectorXd GaussQuadrature::getWeights(double a, double b, int inter) const 
  * is scale*(order+1).
  */
 void GaussQuadrature::rescaleRoots(VectorXd &rts, double a, double b, int inter) const {
-    NOT_IMPLEMENTED_ABORT;
-    // lenght of one block
+    // length of one block
     double transl = (b - a) / (double) inter;
 
     int k = 0;
@@ -116,8 +114,7 @@ void GaussQuadrature::rescaleRoots(VectorXd &rts, double a, double b, int inter)
  * is scale*(order+1).
  */
 void GaussQuadrature::rescaleWeights(VectorXd &wgts, double a, double b, int inter) const {
-    NOT_IMPLEMENTED_ABORT;
-    // lenght of one block
+    // length of one block
     double transl = (b - a) / (double) inter;
 
     int k = 0;
@@ -138,8 +135,7 @@ void GaussQuadrature::rescaleWeights(VectorXd &wgts, double a, double b, int int
  * is scale*(order+1).
  */
 void GaussQuadrature::calcScaledPtsWgts() {
-    NOT_IMPLEMENTED_ABORT;
-    // lenght of one block
+    // length of one block
     double transl = (this->B - this->A) / (double) this->intervals;
 
     int k = 0;
@@ -165,7 +161,6 @@ void GaussQuadrature::calcScaledPtsWgts() {
  *
  */
 int GaussQuadrature::calcGaussPtsWgts() {
-    NOT_IMPLEMENTED_ABORT;
     double z, z1, xm, xl;
 
     int K;
@@ -211,7 +206,6 @@ int GaussQuadrature::calcGaussPtsWgts() {
 
 /** Integrate a 1D-function f(x) using quadrature */
 double GaussQuadrature::integrate(const RepresentableFunction<1> &func) const {
-    NOT_IMPLEMENTED_ABORT;
     double isum = 0.e0;
     double r[1];
     for (int i = 0; i < this->npts; i++) {
@@ -223,7 +217,6 @@ double GaussQuadrature::integrate(const RepresentableFunction<1> &func) const {
 
 /** Integrate a 2D-function f(x1, x2) using quadrature */
 double GaussQuadrature::integrate(const RepresentableFunction<2> &func) const {
-    NOT_IMPLEMENTED_ABORT;
     double jsum;
     double r[2];
     double isum = 0.e0;
@@ -242,7 +235,6 @@ double GaussQuadrature::integrate(const RepresentableFunction<2> &func) const {
 
 /** Integrate a 3D-function f(x1, x2, x3) using quadrature */
 double GaussQuadrature::integrate(const RepresentableFunction<3> &func) const {
-    NOT_IMPLEMENTED_ABORT;
     double isum, jsum, ksum;
     double r[3];
 

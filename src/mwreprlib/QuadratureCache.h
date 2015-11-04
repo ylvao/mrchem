@@ -16,51 +16,37 @@
 #include "GaussQuadrature.h"
 #include "ObjectCache.h"
 
-#define getQuadratureCache(X)\
-    QuadratureCache &X = QuadratureCache::getInstance()
+#define getQuadratureCache(X) QuadratureCache &X=QuadratureCache::getInstance()
 
 class QuadratureCache: public ObjectCache<GaussQuadrature> {
 public:
     static QuadratureCache &getInstance() {
-    NOT_IMPLEMENTED_ABORT;
         static QuadratureCache theQuadratureCache;
         return theQuadratureCache;
     }
-    virtual void load(int order);
-    virtual GaussQuadrature &get(int order);
-    virtual const Eigen::VectorXd &getRoots(int i) {
-    NOT_IMPLEMENTED_ABORT;
-        return get(i).getRoots();
-    }
-    virtual const Eigen::VectorXd &getWeights(int i) {
-    NOT_IMPLEMENTED_ABORT;
-        return get(i).getWeights();
-    }
+
+    void load(int order);
+    GaussQuadrature &get(int order);
+
+    const Eigen::VectorXd &getRoots(int i) { return get(i).getRoots(); }
+    const Eigen::VectorXd &getWeights(int i) { return get(i).getWeights(); }
+
     void setIntervals(int i);
     void setBounds(double a, double b);
-    int getIntervals() const {
-        return intervals;
-    }
-    double getUpperBound() const {
-        return B;
-    }
-    double getLowerBound() const {
-        return A;
-    }
+
+    int getIntervals() const { return this->intervals; }
+    double getUpperBound() const { return this->B; }
+    double getLowerBound() const { return this->A; }
 private:
     double A;
     double B;
     int intervals;
+
     QuadratureCache();
     virtual ~QuadratureCache();
-    QuadratureCache(QuadratureCache const &qc):
-        ObjectCache<GaussQuadrature>(qc) {
-    NOT_IMPLEMENTED_ABORT;
-    }
-    QuadratureCache &operator=(QuadratureCache const&) {
-    NOT_IMPLEMENTED_ABORT;
-        return *this;
-    }
+
+    QuadratureCache(QuadratureCache const &qc) : ObjectCache<GaussQuadrature>(qc) { }
+    QuadratureCache &operator=(QuadratureCache const&) { return *this; }
 };
 
 #endif /* QUADRATURECACHE_H_ */

@@ -11,45 +11,40 @@
 #include "QuadratureCache.h"
 
 QuadratureCache::QuadratureCache() {
-    NOT_IMPLEMENTED_ABORT;
-    A = 0.0;
-    B = 1.0;
-    intervals = 1;
+    this->A = 0.0;
+    this->B = 1.0;
+    this->intervals = 1;
 }
 
 QuadratureCache::~QuadratureCache() {
-    NOT_IMPLEMENTED_ABORT;
 }
 
-void QuadratureCache::load(int order) {
-    NOT_IMPLEMENTED_ABORT;
+void QuadratureCache::load(int k) {
     SET_CACHE_LOCK();
-    if (not hasId(order)) {
-        GaussQuadrature *gp = new GaussQuadrature(order, A, B, intervals);
-        int memo = 2 * order * sizeof(double);
-        ObjectCache<GaussQuadrature>::load(order, gp, memo);
+    if (not hasId(k)) {
+        GaussQuadrature *gp = new GaussQuadrature(k, this->A, this->B, this->intervals);
+        int memo = 2 * k * sizeof(double);
+        ObjectCache<GaussQuadrature>::load(k, gp, memo);
     }
     UNSET_CACHE_LOCK();
 }
 
-GaussQuadrature &QuadratureCache::get(int order) {
-    NOT_IMPLEMENTED_ABORT;
-    if (not hasId(order)) {
-        load(order);
+GaussQuadrature &QuadratureCache::get(int k) {
+    if (not hasId(k)) {
+        load(k);
     }
-    return ObjectCache<GaussQuadrature>::get(order);
+    return ObjectCache<GaussQuadrature>::get(k);
 }
 
 void QuadratureCache::setBounds(double a, double b) {
-    NOT_IMPLEMENTED_ABORT;
-    if (fabs(A - a) < MachineZero and fabs(B - b) < MachineZero) {
+    if (fabs(this->A - a) < MachineZero and fabs(this->B - b) < MachineZero) {
         return;
     }
     if (a >= b) {
         MSG_ERROR("Invalid Gauss interval, a > b.");
     }
-    A = a;
-    B = b;
+    this->A = a;
+    this->B = b;
     for (int i = 0; i < getNObjs(); i++) {
         if (hasId(i)) {
             ObjectCache<GaussQuadrature>::get(i).setBounds(a, b);
@@ -58,11 +53,10 @@ void QuadratureCache::setBounds(double a, double b) {
 }
 
 void QuadratureCache::setIntervals(int ivals) {
-    NOT_IMPLEMENTED_ABORT;
-    if (ivals == intervals) {
+    if (ivals == this->intervals) {
         return;
     }
-    if (intervals < 1) {
+    if (this->intervals < 1) {
         MSG_ERROR("Invalid number of intervals, intervals < 1");
     }
     for (int i = 0; i < getNObjs(); i++) {
@@ -70,5 +64,4 @@ void QuadratureCache::setIntervals(int ivals) {
             ObjectCache<GaussQuadrature>::get(i).setIntervals(ivals);
         }
     }
-
 }

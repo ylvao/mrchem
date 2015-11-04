@@ -67,7 +67,6 @@ void LegendrePoly::computeLegendrePolynomial(int k) {
  * the first derivative.
  */
 Vector2d LegendrePoly::firstDerivative(double x) const {
-    NOT_IMPLEMENTED_ABORT;
     double c1, c2, c4, ym, yp, y;
     double dy, dyp, dym;
 

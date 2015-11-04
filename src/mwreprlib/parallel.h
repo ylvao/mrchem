@@ -26,6 +26,7 @@ template<int D> void broadcast_index_list(NodeIndexSet &idxSet);
 
 #define OPENMP
 #include <omp.h>
+
 #else
 
 #define omp_get_max_threads() 1
@@ -39,12 +40,14 @@ template<int D> void broadcast_index_list(NodeIndexSet &idxSet);
 #endif
 
 #ifdef HAVE_MPI
+
 #include <boost/mpi.hpp>
 #include <boost/mpi/timer.hpp>
 namespace mpi = boost::mpi;
 #define BOOST_MPI_HOMOGENEOUS
 
 #else
+
 namespace mpi {
 struct communicator {
     int rank() const { return 0; }
@@ -60,6 +63,7 @@ struct timer {
 };
 typedef int request;
 }
+
 #endif
 
 extern mpi::communicator world;
@@ -67,7 +71,6 @@ extern mpi::communicator node_group;
 
 template<int D>
 void broadcast_index_list(NodeIndexSet &idxSet) {
-    NOT_IMPLEMENTED_ABORT;
 #ifdef HAVE_MPI
     if (node_group.size() > 1) {
         static std::vector<std::vector<NodeIndex<D> > > commIdx;
@@ -88,6 +91,5 @@ void broadcast_index_list(NodeIndexSet &idxSet) {
     }
 #endif
 }
-
 
 #endif /* PARALLEL_H_ */
