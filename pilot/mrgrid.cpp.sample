@@ -21,6 +21,8 @@
 #include "Atom.h"
 #include "Molecule.h"
 #include "MolecularGridGenerator.h"
+#include "XCFunctional.h"
+#include "XCProjector.h"
 
 #include "BoundingBox.h"
 #include "NodeIndex.h"
@@ -28,6 +30,9 @@
 #include "FunctionTree.h"
 #include "FunctionProjector.h"
 #include "GridAdaptor.h"
+#include "MWAdaptor.h"
+#include "HilbertIterator.h"
+#include "LebesgueIterator.h"
 #include "MathUtils.h"
 
 #include "Intgrl.h"
@@ -43,31 +48,69 @@ using namespace Eigen;
 void testAdaptiveGrid();
 void testPureGrid();
 void testTrees();
+void testMPI();
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
-    mpi::communicator world;
-    int rank = world.rank();
 
-    boost::timer delta;
     boost::timer rolex;
     rolex.restart();
 
     SET_PRINT_PRECISION(15);
     cout << scientific << setprecision(14);
 
-    int k = 5;
-    double prec = 1.0e-4;
+    MREnv::initializeMRCPP();
 
-    MREnv::initializeMRCPP(k, prec);
-
-    testAdaptiveGrid();
+    testMPI();
+//    testAdaptiveGrid();
 //    testPureGrid();
 //    testTrees();
 
     MREnv::finalizeMRCPP(rolex.elapsed());
 
     return 0;
+}
+
+void testMPI() {
+    // Constructing world box
+    int n = -4;
+    int l[3] = {0,0,0};
+    int nb[3] = {1,1,1};
+    double o[3] = {0.0,0.0,0.0};
+    NodeIndex<3> idx(n, l);
+    BoundingBox<3> world(idx, nb, o);
+    println(0, world);
+
+    // Setting up grid generator
+    GridGenerator<3> generator(-1);
+
+    // Constructing initial grid
+    int k = 3;
+    MRGrid<3> grid(world, k);
+    generator.generateGrid(grid);
+    grid.distributeNodes(3);
+    grid.printNodeRankCount();
+
+    // Setting up MW projection
+    double prec = 1.0e-5;
+    MWAdaptor<3> adaptor(prec);
+    FunctionProjector<3> P(adaptor, -1);
+
+    double alpha = 10.0;
+    double coef = pow(alpha/pi, 3.0/2.0);
+    double pos[3] = {8.0, 8.0, 8.0};
+    GaussFunc<3> gFunc(alpha, coef, pos);
+
+    FunctionTree<3> tree(grid);
+    tree.printNodeRankCount();
+    P(tree, gFunc);
+    tree.printNodeRankCount();
+
+    double int_1 = tree.integrate();
+    double err_1 = tree.estimateError(false);
+    println(0, endl);
+    println(0, "Gaussian integral " << int_1);
+    println(0, "Estimated error   " << err_1);
 }
 
 void testTrees() {
@@ -93,13 +136,13 @@ void testTrees() {
     BoundingBox<3> world_3D(idx_3D, nb, o);
     println(0, world_3D);
 
-    FunctionTree<1> *tree_1D = new FunctionTree<1>(&world_1D, k, type);
+    FunctionTree<1> *tree_1D = new FunctionTree<1>(world_1D, k, type);
     delete tree_1D;
 
-    FunctionTree<2> *tree_2D = new FunctionTree<2>(&world_2D, k, type);
+    FunctionTree<2> *tree_2D = new FunctionTree<2>(world_2D, k, type);
     delete tree_2D;
 
-    FunctionTree<3> *tree_3D = new FunctionTree<3>(&world_3D, k, type);
+    FunctionTree<3> *tree_3D = new FunctionTree<3>(world_3D, k, type);
     delete tree_3D;
 }
 
@@ -113,11 +156,11 @@ void testAdaptiveGrid() {
     DensExp densExp(intgrl, D);
 
     GaussExp<3> gaussDens = densExp.getAODensExpansion();
-    gaussDens.calcScreening(25);
+    gaussDens.calcScreening(15);
     gaussDens.setScreen(true);
 
     // Constructing world box
-    int n = -3;
+    int n = -4;
     int l[3] = {-1,-1,-1};
     int nb[3] = {2,2,2};
     double o[3] = {0.0,0.0,0.0};
@@ -128,27 +171,27 @@ void testAdaptiveGrid() {
     // Setting up grid generator
     MolecularGridGenerator generator;
     generator.setUniformScale(-3);
-    generator.setAmplitude(1);
-    generator.setWidth(2);
+    generator.setDepth(3);
+    generator.setWidth(0);
     generator.setNuclearDependence(0);
 
     // Constructing initial grid
     int k = 3;
-    MRGrid<3> grid(&world, k);
+    MRGrid<3> grid(world, k);
     generator.generateGrid(grid, molecule);
     println(0, grid);
 
     // Setting up adaptive MW projection
     bool absPrec = true;
-    double thrs = 1.0e-6;
+    double thrs = 1.0e-4;
     GridAdaptor<3> adaptor(thrs, absPrec);
     FunctionProjector<3> P;
 
-//    XCFun xcFun(2);
-//    xcFun.setFunctional("LDA");
-//    XCProjector P_en(xcFun, 0);
-//    XCProjector P_pot(xcFun, 1);
-//    XCProjector P_grad(xcFun, 2);
+    XCFunctional xcFunc(false, 2);
+    xcFunc.setFunctional("LDA");
+    XCProjector P_en(xcFunc, 0);
+    XCProjector P_pot(xcFunc, 1);
+    XCProjector P_grad(xcFunc, 2);
 
     printout(0, " nNodes");
     printout(0, "    nQuad");
@@ -165,30 +208,30 @@ void testAdaptiveGrid() {
     double maxError = 1.0;
     double charge = (double) molecule.getNElectrons();
     while (true) {
-        FunctionTree<3> elDens(grid, Interpol);
-//        FunctionTree<3> xcDens(grid, Interpol);
-//        FunctionTree<3> xcPot(grid, Interpol);
-//        FunctionTree<3> xcGrad(grid, Interpol);
+        FunctionTree<3> elDens(grid);
+        FunctionTree<3> xcDens(grid);
+        FunctionTree<3> xcPot(grid);
+        FunctionTree<3> xcGrad(grid);
 
         P(elDens, gaussDens);
-//        P_en(xcDens, elDens);
-//        P_pot(xcPot, elDens);
-//        P_grad(xcGrad, elDens);
+        P_en(xcDens, elDens);
+        P_pot(xcPot, elDens);
+        P_grad(xcGrad, elDens);
 
         double estErrorCharge = elDens.estimateError(absPrec);
-        double estErrorEnergy = 1.0;//xcDens.estimateError(absPrec);
-        double estErrorPotential = 1.0;//xcPot.estimateError(absPrec);
-        double estErrorGradient = 1.0;//xcGrad.estimateError(absPrec);
+        double estErrorEnergy = xcDens.estimateError(absPrec);
+        double estErrorPotential = xcPot.estimateError(absPrec);
+        double estErrorGradient = xcGrad.estimateError(absPrec);
 
         maxError = estErrorCharge;
-//        maxError = max(maxError, estErrorEnergy);
-//        maxError = max(maxError, estErrorPotential);
-//        maxError = max(maxError, estErrorGrad);
+        //maxError = max(maxError, estErrorEnergy);
+        //maxError = max(maxError, estErrorPotential);
+        //maxError = max(maxError, estErrorGradient);
 
         int nNodes = grid.getNEndNodes();
         int nQuad = pow(2*(k+1), 3);
         double numCharge = elDens.integrate();
-        double numEnergy = 1.0;//xcDens.integrate();
+        double numEnergy = xcDens.integrate();
         double realError = numCharge - charge;
         if (not absPrec) {
             realError *= 1.0/charge;
@@ -214,20 +257,20 @@ void testAdaptiveGrid() {
         }
 
         adaptor.adaptGrid(grid, elDens);
-//        adaptor.adaptGrid(grid, xcDens);
-//        adaptor.adaptGrid(grid, xcPot);
-//        adaptor.adaptGrid(grid, xcGrad);
+        //adaptor.adaptGrid(grid, xcDens);
+        //adaptor.adaptGrid(grid, xcPot);
+        //adaptor.adaptGrid(grid, xcGrad);
     }
     println(0, grid);
 }
 
 void testPureGrid() {
     // Setting up molecular density expansion
-    Molecule molecule("he.xyz");
+    Molecule molecule("diamond_1.xyz");
     molecule.print();
 
-    Intgrl intgrl("he.bas");
-    MatrixXd D = MathUtils::readMatrixFile("he.dens");
+    Intgrl intgrl("diamond_1.bas");
+    MatrixXd D = MathUtils::readMatrixFile("diamond_1.dens");
     DensExp densExp(intgrl, D);
 
     GaussExp<3> gaussDens = densExp.getAODensExpansion();
@@ -235,7 +278,7 @@ void testPureGrid() {
     gaussDens.setScreen(true);
 
     // Setting up world parameters
-    int n = -3;
+    int n = -4;
     int l[3] = {-1,-1,-1};
     int nb[3] = {2,2,2};
     double o[3] = {0.0,0.0,0.0};
@@ -248,13 +291,13 @@ void testPureGrid() {
     // Setting up grid generator
     MolecularGridGenerator generator;
     generator.setUniformScale(-3);
-    generator.setAmplitude(1);
+    generator.setDepth(1);
     generator.setWidth(2);
     generator.setNuclearDependence(0);
 
     // Constructing initial grid
     int k = 3;
-    MRGrid<3> grid(&world, k);
+    MRGrid<3> grid(world, k);
     generator.generateGrid(grid, molecule);
     println(0, grid);
 
