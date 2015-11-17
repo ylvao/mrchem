@@ -14,12 +14,12 @@
 
 class InterpolatingBasis : public ScalingBasis {
 public:
-    InterpolatingBasis(int order) :	 ScalingBasis(order) {
-        this->type = Interpol;
+    InterpolatingBasis(int k) : ScalingBasis(k, Interpol) {
 //        initScalingBasis();
 //        preEvaluate();
     }
-    virtual ~InterpolatingBasis() { }
+    virtual ~InterpolatingBasis() {
+    }
 
 //    Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<1> &func,
 //        int n, int l) const;

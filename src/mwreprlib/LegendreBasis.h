@@ -14,10 +14,10 @@
 
 class LegendreBasis : public ScalingBasis {
 public:
-    LegendreBasis(int order) : ScalingBasis(order) {
+    LegendreBasis(int k) : ScalingBasis(k, Legendre) {
         NOT_IMPLEMENTED_ABORT;
     }
-    ~LegendreBasis() {
+    virtual ~LegendreBasis() {
         NOT_IMPLEMENTED_ABORT;
     }
 

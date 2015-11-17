@@ -16,11 +16,11 @@
 
 class ScalingBasis {
 public:
-    ScalingBasis(int order) {
-        if (order < 1) MSG_ERROR("Invalid scaling order");
-        this->type = -1;
-        this->scalingOrder = order;
-        this->quadratureOrder = order + 1;
+    ScalingBasis(int k, int t) {
+        if (k < 1) MSG_ERROR("Invalid scaling order");
+        this->type = t;
+        this->scalingOrder = k;
+        this->quadratureOrder = k + 1;
 //        double lB = 0.0;
 //        double uB = 1.0;
 //        this->setAllBounds(&lB, &uB);
@@ -56,8 +56,8 @@ public:
 //            const int *l, Eigen::MatrixXd &cfs) const = 0;
 
 //    double getVal(int k, int i) const { return this->preVals(k, i); }
-    int getScalingOrder() const { return this->scalingOrder; }
     int getType() const { return this->type; }
+    int getScalingOrder() const { return this->scalingOrder; }
     int getQuadratureOrder() const { return this->quadratureOrder; }
 //    void setQuadratureOrder(int order) {
 //        if (order < 1) MSG_ERROR("Quadrature order < 1: " << order);
