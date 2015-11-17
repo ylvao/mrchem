@@ -19,10 +19,18 @@ using namespace Eigen;
 
 string MWFilter::default_filter_lib = MW_FILTER_DIR;
 
-MWFilter::MWFilter(int k, int t, const string &lib) :
-    Filter(k, t) {
-    if (this->order > MaxOrder) {
+MWFilter::MWFilter(int k, int t, const string &lib) {
+    this->type = t;
+    this->order = k;
+    if (this->order < 0 or this->order > MaxOrder) {
         MSG_FATAL("Invalid filter order " << this->order);
+    }
+    switch (this->type) {
+    case (Interpol):
+    case (Legendre):
+        break;
+    default:
+        MSG_ERROR("Unknown filter type: " << type);
     }
     char *ep = getenv("MRCPP_FILTER_DIR");
     if (ep != 0) {
@@ -38,14 +46,29 @@ MWFilter::MWFilter(int k, int t, const string &lib) :
     fillFilterBlocks();
 }
 
-MWFilter::MWFilter(int t, const MatrixXd &data) :
-    Filter(data.cols() / 2 - 1, t) {
-    if (this->order > MaxOrder) {
+MWFilter::MWFilter(int t, const MatrixXd &data) {
+    this->type = t;
+    this->order = data.cols()/2 - 1;
+    if (this->order < 0 or this->order > MaxOrder) {
         MSG_FATAL("Invalid filter order " << this->order);
+    }
+    switch (this->type) {
+    case (Interpol):
+    case (Legendre):
+        break;
+    default:
+        MSG_ERROR("Unknown filter type: " << type);
     }
 
     this->filter = data;
     fillFilterBlocks();
+}
+
+void MWFilter::setDefaultLibrary(const std::string &dir) {
+    if (dir.empty()) {
+        MSG_ERROR("No directory specified!");
+    }
+    default_filter_lib = dir;
 }
 
 void MWFilter::fillFilterBlocks() {

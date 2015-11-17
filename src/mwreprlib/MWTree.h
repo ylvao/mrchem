@@ -16,7 +16,7 @@
 
 #include "MRTree.h"
 
-class Filter;
+class MWFilter;
 class ScalingBasis;
 template<int D> class MWProjector;
 
@@ -35,7 +35,7 @@ public:
     double getSquareNorm() const { return this->squareNorm; }
     double estimateError(bool absPrec);
 
-    const Filter &getFilter() { return *this->filter; }
+    const MWFilter &getFilter() { return *this->filter; }
     const ScalingBasis &getScalingFunctions() const { return *this->scalingFunc; }
 
     inline Eigen::MatrixXd &getTmpScalingCoefs();
@@ -64,7 +64,7 @@ protected:
     int scalingType;
     double squareNorm;
 
-    Filter *filter;
+    MWFilter *filter;
     ScalingBasis *scalingFunc;
 
     Eigen::MatrixXd **tmpCoefs;   ///< temp memory

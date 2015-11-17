@@ -11,7 +11,7 @@
 #include "ScalingBasis.h"
 #include "NodeIndex.h"
 #include "MathUtils.h"
-#include "Filter.h"
+#include "MWFilter.h"
 
 using namespace std;
 using namespace Eigen;
@@ -190,7 +190,7 @@ void MWNode<D>::mwTransform(int operation) {
     int kp1 = this->getKp1();
     int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
     int kp1_d = this->getKp1_d();
-    const Filter &filter = getMWTree().getFilter();
+    const MWFilter &filter = getMWTree().getFilter();
     VectorXd &result = getMWTree().getTmpMWCoefs();
     bool overwrite = true;
 

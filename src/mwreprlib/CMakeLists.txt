@@ -36,7 +36,6 @@ set(mwrepr_SOURCES
 	MWProjector.h
 	FunctionProjector.cpp
 	FunctionProjector.h
-	Filter.h
 	FilterCache.cpp
 	FilterCache.h
 	FunctionNode.cpp
