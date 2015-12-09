@@ -8,14 +8,14 @@ set (mrgridlib_SOURCES
 	Molecule.h
 	PeriodicTable.cpp
 	PeriodicTable.h
-	MolecularGridGenerator.cpp
-	MolecularGridGenerator.h
+	#MolecularGridGenerator.cpp
+	#MolecularGridGenerator.h
         MREnv.cpp
         MREnv.h
-        XCFunctional.cpp
-        XCFunctional.h
-        XCProjector.cpp
-        XCProjector.h
+        #XCFunctional.cpp
+        #XCFunctional.h
+        #XCProjector.cpp
+        #XCProjector.h
 	)
 
 add_library(mrgrid STATIC 

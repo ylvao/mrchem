@@ -7,8 +7,6 @@
 #include "FunctionTree.h"
 #include "FunctionNode.h"
 #include "ProjectedNode.h"
-#include "MRGrid.h"
-#include "GridNode.h"
 
 using namespace std;
 using namespace Eigen;
@@ -33,6 +31,7 @@ FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
 /** FunctionTree copy constructor.
   * Copy complete tree structure of the given grid.
   * Initializes the function to zero on this grid. */
+/*
 template<int D>
 FunctionTree<D>::FunctionTree(const MRGrid<D> &grid, int type) : MWTree<D>(grid, type) {
     const double *lB = this->rootBox->getLowerBounds();
@@ -47,10 +46,10 @@ FunctionTree<D>::FunctionTree(const MRGrid<D> &grid, int type) : MWTree<D>(grid,
     }
     this->resetEndNodeTable();
 }
-
+*/
 /** FunctionTree copy constructor.
   * Copy polynomial order and type, as well as the world box from the
-  * given tree, but only at root scale. Initializes the function to zero. 
+  * given tree, but only at root scale. Initializes the function to zero.
   * Use = operator to copy data.*/
 template<int D>
 FunctionTree<D>::FunctionTree(const MWTree<D> &tree) : MWTree<D> (tree) {

@@ -7,7 +7,6 @@
 #include "constants.h"
 #include "MWTree.h"
 #include "MWNode.h"
-#include "MRGrid.h"
 #include "FilterCache.h"
 #include "ScalingCache.h"
 #include "LegendreBasis.h"
@@ -34,6 +33,7 @@ MWTree<D>::MWTree(const BoundingBox<D> &box, int k, int type)
 
 /** MWTree copy constructor.
   * Takes the parameters of the input tree, not it's data */
+/*
 template<int D>
 MWTree<D>::MWTree(const MRGrid<D> &grid, int type) : MRTree<D>(grid) {
     this->squareNorm = 0.0;
@@ -44,6 +44,7 @@ MWTree<D>::MWTree(const MRGrid<D> &grid, int type) : MRTree<D>(grid) {
 
     allocWorkMemory();
 }
+*/
 
 /** MWTree copy constructor.
   * Takes the parameters of the input tree, not it's data */

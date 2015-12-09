@@ -18,13 +18,13 @@
 
 class MWFilter;
 class ScalingBasis;
-template<int D> class MWProjector;
+template<int D> class TreeBuilder;
 
 template<int D>
 class MWTree : public MRTree<D> {
 public:
     MWTree(const BoundingBox<D> &box, int k, int type);
-    MWTree(const MRGrid<D> &tree, int type);
+//    MWTree(const MRGrid<D> &tree, int type);
     MWTree(const MWTree<D> &tree);
     virtual ~MWTree();
 
@@ -58,7 +58,8 @@ public:
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
-    friend class MWProjector<D>;
+
+    friend class TreeBuilder<D>;
 
 protected:
     int scalingType;

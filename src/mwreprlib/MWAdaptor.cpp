@@ -1,6 +1,7 @@
 #include "MWAdaptor.h"
 #include "MWTree.h"
 #include "MWNode.h"
+
 #include "constants.h"
 
 using namespace std;
@@ -10,21 +11,6 @@ MWAdaptor<D>::MWAdaptor(double pr, bool abs, int scale) {
     this->maxScale = scale;
     this->absPrec = abs;
     this->prec = pr;
-}
-
-template<int D>
-MRNodeVector* MWAdaptor<D>::splitNodeVector(MRNodeVector &nodeVec, 
-        MRNodeVector *noSplit) const {
-    MRNodeVector *split = new MRNodeVector;
-    for (int n = 0; n < nodeVec.size(); n++) {
-        MWNode<D> &node = static_cast<MWNode<D> &>(*nodeVec[n]);
-        if (splitNode(node)) {
-            split->push_back(&node);
-        } else if (noSplit != 0) {
-            noSplit->push_back(&node);
-        }
-    }
-    return split;
 }
 
 template<int D>

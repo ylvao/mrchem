@@ -1,25 +1,25 @@
-#ifndef MWPROJECTOR_H
-#define MWPROJECTOR_H
+#ifndef TREEBUILDER_H
+#define TREEBUILDER_H
 
 #include "mwrepr_declarations.h"
-#include "MWAdaptor.h"
+#include "TreeAdaptor.h"
+#include "TreeProjector.h"
 
 template<int D>
-class MWProjector {
+class TreeBuilder {
 public:
-    MWProjector(const MWAdaptor<D> &a, int iter) : adaptor(a), maxIter(iter) { }
-    virtual ~MWProjector() { }
+    TreeBuilder(TreeAdaptor<D> &a, int iter);
+    virtual ~TreeBuilder();
 
     void setMaxIter(int iter) { this->maxIter = iter; }
-    MWAdaptor<D> &getAdaptor() { return this->adaptor; }
 
 protected:
     int maxIter;
-    MWAdaptor<D> adaptor;
+    TreeAdaptor<D> *adaptor;
+    TreeProjector<D> *projector;
 
-    void buildTree(MWTree<D> &outTree);
-    void calcNodeVector(MRNodeVector &nodeVec);
-    virtual void calcNode(MWNode<D> &node) = 0;
+    void clearProjector();
+    void build(MWTree<D> &tree);
 
     MRNodeVector* clearForeignNodes(MRNodeVector *oldVec) const;
     NodeIndexSet* getNodeIndexSet(const MRNodeVector &nodeVec) const;
@@ -31,4 +31,4 @@ protected:
     }
 };
 
-#endif // MWPROJECTOR_H
+#endif // TREEBUILDER_H

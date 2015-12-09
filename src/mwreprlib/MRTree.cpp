@@ -1,5 +1,4 @@
 #include "MRTree.h"
-#include "MRGrid.h"
 #include "MathUtils.h"
 #include "MRNode.h"
 #include "HilbertIterator.h"

@@ -6,20 +6,10 @@ set(mwrepr_SOURCES
 	mwrepr_declarations.h
 	MathUtils.cpp
 	MathUtils.h
-	GridNode.cpp
-	GridNode.h
 	NodeBox.cpp
 	NodeBox.h
 	BoundingBox.cpp
 	BoundingBox.h
-	GridGenerator.cpp
-	GridGenerator.h
-	GridAdaptor.cpp
-	GridAdaptor.h
-	MWAdaptor.cpp
-	MWAdaptor.h
-	MRGrid.cpp
-	MRGrid.h
 	FunctionTree.cpp
 	FunctionTree.h
 	MRTree.cpp
@@ -32,9 +22,14 @@ set(mwrepr_SOURCES
 	MWNode.h
 	MWFilter.cpp
 	MWFilter.h
-	MWProjector.cpp
-	MWProjector.h
-	FunctionProjector.cpp
+	TreeProjector.h
+	AnalyticProjector.cpp
+	AnalyticProjector.h
+	TreeAdaptor.h
+	MWAdaptor.cpp
+	MWAdaptor.h
+	TreeBuilder.cpp
+	TreeBuilder.h
 	FunctionProjector.h
 	FilterCache.cpp
 	FilterCache.h

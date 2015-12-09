@@ -1,38 +1,16 @@
-#include "FunctionProjector.h"
-#include "RepresentableFunction.h"
-#include "FunctionTree.h"
-#include "MWAdaptor.h"
-#include "MWNode.h"
-#include "ScalingBasis.h"
+#include <Eigen/Core>
+
+#include "AnalyticProjector.h"
 #include "QuadratureCache.h"
+#include "ScalingBasis.h"
+#include "MWNode.h"
+#include "MWTree.h"
 
 using namespace std;
 using namespace Eigen;
 
 template<int D>
-FunctionProjector<D>::FunctionProjector(const MWAdaptor<D> &a, int iter) 
-        : MWProjector<D>(a, iter) {
-    this->inpFunc = 0;
-}
-
-template<int D>
-FunctionProjector<D>::~FunctionProjector() {
-    if (this->inpFunc != 0) {
-        MSG_ERROR("Projector not properly cleared");
-    }
-}
-
-template<int D>
-void FunctionProjector<D>::operator()(FunctionTree<D> &out,
-                                      RepresentableFunction<D> &inp) {
-    this->inpFunc = &inp;
-    this->buildTree(out);
-    out.mwTransformUp();
-    this->inpFunc = 0;
-}
-
-template<int D>
-void FunctionProjector<D>::calcNode(MWNode<D> &node) {
+void AnalyticProjector<D>::calcNode(MWNode<D> &node) const {
     const ScalingBasis &sf = node.getMWTree().getScalingFunctions();
     if (sf.getType() != Interpol) {
         NOT_IMPLEMENTED_ABORT;
@@ -68,7 +46,7 @@ void FunctionProjector<D>::calcNode(MWNode<D> &node) {
                 coef *= sqrt(wgts(indexCounter[j])) * sqrtScaleFactor;
             }
 
-            tmpvec(i) = coef * this->inpFunc->evalf(point);
+            tmpvec(i) = coef * this->func->evalf(point);
 
             indexCounter[0]++;
             for (int j = 0; j < D - 1; j++) {
@@ -85,6 +63,6 @@ void FunctionProjector<D>::calcNode(MWNode<D> &node) {
     node.calcNorms();
 }
 
-template class FunctionProjector<1>;
-template class FunctionProjector<2>;
-template class FunctionProjector<3>;
+template class AnalyticProjector<1>;
+template class AnalyticProjector<2>;
+template class AnalyticProjector<3>;

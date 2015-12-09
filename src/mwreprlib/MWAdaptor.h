@@ -2,17 +2,16 @@
 #define MWADAPTOR_H
 
 #include "mwrepr_declarations.h"
+#include "TreeAdaptor.h"
 
 template<int D>
-class MWAdaptor {
+class MWAdaptor : public TreeAdaptor<D> {
 public:
     MWAdaptor(double pr = -1.0, bool abs = false, int scale = 20);
 
+    void setMaxScale(int scale) { this->maxScale = scale; }
     void setAbsPrec(bool abs) { this->absPrec = abs; }
     void setPrecision(double pr) { this->prec = pr; }
-
-    MRNodeVector* splitNodeVector(MRNodeVector &nodeVec,
-                         MRNodeVector *noSplit = 0) const;
 
 protected:
     int maxScale;

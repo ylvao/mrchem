@@ -100,8 +100,8 @@ public:
     void checkRankOverlap(MRTree<D> &tree);
 
     friend class MRNode<D>;
-    friend class GridNode<D>;
-    friend class GridAdaptor<D>;
+    friend class TreeBuilder<D>;
+    friend class TreeAdaptor<D>;
 
 protected:
     // Parameters that are set in construction and should never change

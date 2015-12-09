@@ -23,12 +23,12 @@ template <int D> class FunctionNode;
 template <int D> class ProjectedNode;
 template <int D> class GenNode;
 
-template <int D> class MWProjector;
+template <int D> class TreeBuilder;
+template <int D> class TreeAdaptor;
+template <int D> class MWAdaptor;
+template <int D> class TreeProjector;
 template <int D> class FunctionProjector;
 
-template <int D> class MWAdaptor;
-template <int D> class GridAdaptor;
-template <int D> class GridGenerator;
 
 template <int D> class TreeIterator;
 template <int D> class LebesgueIterator;
