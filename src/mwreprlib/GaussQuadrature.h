@@ -38,8 +38,6 @@ public:
 
     const Eigen::VectorXd &getRoots() const { return this->roots; }
     const Eigen::VectorXd &getWeights() const { return this->weights; }
-    const Eigen::VectorXd getRoots(double a, double b, int inter = 1) const;
-    const Eigen::VectorXd getWeights(double a, double b, int inter = 1) const;
     const Eigen::VectorXd &getUnscaledRoots() const { return this->unscaledRoots; }
     const Eigen::VectorXd &getUnscaledWeights() const { return this->unscaledWeights; }
 

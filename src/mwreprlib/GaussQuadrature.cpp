@@ -70,24 +70,6 @@ void GaussQuadrature::setIntervals(int i) {
     calcScaledPtsWgts();
 }
 
-const VectorXd GaussQuadrature::getRoots(double a, double b, int inter) const {
-    if (fabs(this->A - a) < MachineZero and fabs(this->B - b) < MachineZero) {
-        return this->roots;
-    }
-    VectorXd newRoots(this->order * inter);
-    rescaleRoots(newRoots, a, b, inter);
-    return newRoots;
-}
-
-const VectorXd GaussQuadrature::getWeights(double a, double b, int inter) const {
-    if (fabs(this->A - a) < MachineZero and fabs(this->B - b) < MachineZero) {
-        return this->weights;
-    }
-    VectorXd newWeights(this->order * inter);
-    rescaleWeights(newWeights, a, b, inter);
-    return newWeights;
-}
-
 /** Calculate scaled distribution of roots for Gauss-Legendre
  * quadrature on on ]a,b[. The number of quadrature points on the interval
  * is scale*(order+1).

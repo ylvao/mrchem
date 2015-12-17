@@ -59,8 +59,9 @@ public:
             }
             this->highWaterMark = id;
         }
-        if (this->objs[id] != 0)
+        if (this->objs[id] != 0) {
             return;
+        }
         this->mem[id] = memory;
         this->memLoaded += memory;
         this->objs[id] = new_o;
@@ -80,7 +81,6 @@ public:
         this->objs[id] = 0;
     }
 
-    virtual T &operator[](int id) { return get(id); }
     virtual T &get(int id) {
         if (id < 0) {
             MSG_ERROR("Id out of bounds:" << id);

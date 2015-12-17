@@ -22,7 +22,7 @@ string MWFilter::default_filter_lib = MW_FILTER_DIR;
 MWFilter::MWFilter(int k, int t, const string &lib) {
     this->type = t;
     this->order = k;
-    if (this->order < 0 or this->order > MaxOrder) {
+    if (this->order < 1 or this->order > MaxOrder) {
         MSG_FATAL("Invalid filter order " << this->order);
     }
     switch (this->type) {
