@@ -14,29 +14,8 @@
 
 class InterpolatingBasis : public ScalingBasis {
 public:
-    InterpolatingBasis(int k) : ScalingBasis(k, Interpol) {
-//        initScalingBasis();
-//        preEvaluate();
-    }
-    virtual ~InterpolatingBasis() {
-    }
-
-//    Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<1> &func,
-//        int n, int l) const;
-//    Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<2> &func,
-//        int n, int l) const;
-//    Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<3> &func,
-//        int n, int l) const;
-
-//    void calcScalingCoefs(const SeparableFunction<1> &func, int n, const int *l,
-//        Eigen::MatrixXd &cfs) const;
-//    void calcScalingCoefs(const SeparableFunction<2> &func, int n, const int *l,
-//        Eigen::MatrixXd &cfs) const;
-//    void calcScalingCoefs(const SeparableFunction<3> &func, int n, const int *l,
-//        Eigen::MatrixXd &cfs) const;
-protected:
-//    void initScalingBasis();
-//    void preEvaluate();
+    InterpolatingBasis(int k) : ScalingBasis(k, Interpol) { }
+    virtual ~InterpolatingBasis() { }
 };
 
 #endif // INTERPOLATINGBASIS_H

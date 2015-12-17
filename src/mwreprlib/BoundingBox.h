@@ -89,31 +89,33 @@ int BoundingBox<D>::getNBoxes(int d) const {
 template<int T>
 std::ostream& operator<<(std::ostream &o, const BoundingBox<T> &box) {
     GET_PRINT_PRECISION(int pprec);
-    o << std::fixed;
+    o << std::fixed << std::setprecision(5);
     o << "*BoundingBox: " << std::endl;
-    o << "  corner index    = " << box.cornerIndex << std::endl;
-    o << "  unit box length = " << box.unitLength << std::endl;
-    o << "  origin          = [ ";
-    for (int i = 0; i < T; i++) {
-        o << std::setw(21) << box.origin[i] << " ";
-    }
-    o << "]" << std::endl;
-    o << "  lower bounds    = [ ";
-    for (int i = 0; i < T; i++) {
-        o << std::setw(21) << box.lowerBounds[i] << " ";
-    }
-    o << "]" << std::endl;
-    o << "  upper bounds    = [ ";
-    for (int i = 0; i < T; i++) {
-        o << std::setw(21) << box.upperBounds[i] << " ";
-    }
-    o << "]" << std::endl;
     o << "  boxes           = [ ";
     for (int i = 0; i < T; i++) {
-        o << std::setw(21) << box.nBoxes[i] << " ";
+        o << std::setw(11) << box.nBoxes[i] << " ";
     }
-    o << "]" << std::endl;
-    o << "  nBoxes          = " << box.nBoxes[T] << std::endl;
+    o << " ]" << std::endl;
+    o << "  unit box length = [ ";
+    for (int i = 0; i < T; i++) {
+        o << std::setw(11) << box.unitLength << " ";
+    }
+    o << " ]" << std::endl;
+    o << "  origin          = [ ";
+    for (int i = 0; i < T; i++) {
+        o << std::setw(11) << box.origin[i] << " ";
+    }
+    o << " ]" << std::endl;
+    o << "  lower bounds    = [ ";
+    for (int i = 0; i < T; i++) {
+        o << std::setw(11) << box.lowerBounds[i] << " ";
+    }
+    o << " ]" << std::endl;
+    o << "  upper bounds    = [ ";
+    for (int i = 0; i < T; i++) {
+        o << std::setw(11) << box.upperBounds[i] << " ";
+    }
+    o << " ]" << std::endl;
     o << std::scientific << std::setprecision(pprec);
     return o;
 }

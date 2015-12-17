@@ -14,29 +14,8 @@
 
 class LegendreBasis : public ScalingBasis {
 public:
-    LegendreBasis(int k) : ScalingBasis(k, Legendre) {
-        NOT_IMPLEMENTED_ABORT;
-    }
-    virtual ~LegendreBasis() {
-        NOT_IMPLEMENTED_ABORT;
-    }
-
-//	Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<1> &func,
-//		int n, int l) const;
-//	Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<2> &func,
-//		int n, int l) const;
-//	Eigen::VectorXd calcScalingCoefs(int axis, const SeparableFunction<3> &func,
-//		int n, int l) const;
-
-//	void calcScalingCoefs(const SeparableFunction<1> &func, int n, const int *l,
-//		Eigen::MatrixXd &cfs) const;
-//	void calcScalingCoefs(const SeparableFunction<2> &func, int n, const int *l,
-//		Eigen::MatrixXd &cfs) const;
-//	void calcScalingCoefs(const SeparableFunction<3> &func, int n, const int *l,
-//		Eigen::MatrixXd &cfs) const;
-protected:
-//	void initScalingBasis();
-//	void preEvaluate();
+    LegendreBasis(int k) : ScalingBasis(k, Legendre) { }
+    virtual ~LegendreBasis() { }
 };
 
 #endif // LEGENDREBASIS_H

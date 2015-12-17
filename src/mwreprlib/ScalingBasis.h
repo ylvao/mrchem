@@ -8,71 +8,49 @@
  * \breif
  */
 
-#ifndef SCALINGBASIS_H_
-#define SCALINGBASIS_H_
+#ifndef SCALINGBASIS_H
+#define SCALINGBASIS_H
 
 #include "TelePrompter.h"
 #include "constants.h"
 
 class ScalingBasis {
 public:
-    ScalingBasis(int k, int t) {
-        if (k < 1) MSG_ERROR("Invalid scaling order");
-        this->type = t;
-        this->scalingOrder = k;
-        this->quadratureOrder = k + 1;
-//        double lB = 0.0;
-//        double uB = 1.0;
-//        this->setAllBounds(&lB, &uB);
+    ScalingBasis(int k, int t) : type(t), order(k) {
+        if (this->order < 1) MSG_FATAL("Invalid scaling order");
     }
     virtual ~ScalingBasis() { }
 
-//    double evalf(int k, double x) const {
-//        NOT_IMPLEMENTED_ABORT;
-//        assert(k >= 0 and k <= this->scalingOrder);
-//        return this->getFunc(k).evalf(x);
-//    }
-//    void evalf(const double *x, Eigen::MatrixXd &vals) const {
-//        int dim = vals.cols();
-//        for (int i = 0; i < dim; i++) {
-//            for (int k = 0; k < this->scalingOrder + 1; k++) {
-//                vals(k, i) = this->getFunc(k).evalf(x[i]);
-//            }
-//        }
-//    }
-
-//    virtual Eigen::VectorXd calcScalingCoefs(int axis,
-//            const SeparableFunction<1> &func, int n, int l) const = 0;
-//    virtual Eigen::VectorXd calcScalingCoefs(int axis,
-//            const SeparableFunction<2> &func, int n, int l) const = 0;
-//    virtual Eigen::VectorXd calcScalingCoefs(int axis,
-//            const SeparableFunction<3> &func, int n, int l) const = 0;
-
-//    virtual void calcScalingCoefs(const SeparableFunction<1> &func, int n,
-//            const int *l, Eigen::MatrixXd &cfs) const = 0;
-//    virtual void calcScalingCoefs(const SeparableFunction<2> &func, int n,
-//            const int *l, Eigen::MatrixXd &cfs) const = 0;
-//    virtual void calcScalingCoefs(const SeparableFunction<3> &func, int n,
-//            const int *l, Eigen::MatrixXd &cfs) const = 0;
-
-//    double getVal(int k, int i) const { return this->preVals(k, i); }
     int getType() const { return this->type; }
-    int getScalingOrder() const { return this->scalingOrder; }
-    int getQuadratureOrder() const { return this->quadratureOrder; }
-//    void setQuadratureOrder(int order) {
-//        if (order < 1) MSG_ERROR("Quadrature order < 1: " << order);
-//        this->quadratureOrder = order;
-//        preEvaluate();
-//    }
+    int getScalingOrder() const { return this->order; }
+    int getQuadratureOrder() const { return this->order + 1; }
+
+    bool operator==(const ScalingBasis &basis) const {
+        if (this->type != basis.type) return false;
+        if (this->order != basis.order) return false;
+        return true;
+    }
+    bool operator!=(const ScalingBasis &basis) const {
+        if (this->type != basis.type) return true;
+        if (this->order != basis.order) return true;
+        return false;
+    }
+
+    friend std::ostream& operator<<(std::ostream &o, const ScalingBasis &bas) {
+        o << "*ScalingBasis:" << std::endl;
+        o << "  order           = " << bas.getScalingOrder() << std::endl;
+        if (bas.getType() == Legendre) {
+            o << "  type            = Legendre";
+        } else if (bas.getType() == Interpol) {
+            o << "  type            = Interpolating";
+        } else {
+            o << "  type            = Unknown";
+        }
+        return o;
+    }
 protected:
-    int type;
-    int scalingOrder;
-    int quadratureOrder;
-
-//    Eigen::MatrixXd preVals;
-
-//    virtual void initScalingBasis() = 0;
-//    virtual void preEvaluate() = 0;
+    const int type;
+    const int order;
 };
 
-#endif /* SCALINGBASIS_H_ */
+#endif /* SCALINGBASIS_H */
