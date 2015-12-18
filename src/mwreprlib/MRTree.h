@@ -50,7 +50,6 @@ public:
     const NodeBox<D> &getRootBox() const { return *this->rootBox; }
     int getRootScale() const { return this->rootBox->getRootScale(); }
     int getNRootNodes() const { return this->rootBox->getNBoxes(); }
-    const double *getOrigin() const { return this->rootBox->getOrigin(); }
     const double *getLowerBounds() const { return this->rootBox->getLowerBounds(); }
     const double *getUpperBounds() const { return this->rootBox->getUpperBounds(); }
 

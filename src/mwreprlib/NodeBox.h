@@ -15,11 +15,11 @@
 template<int D>
 class NodeBox : public BoundingBox<D> {
 public:
-    NodeBox(const NodeIndex<D> &idx, const int *nb = 0, const double *o = 0);
+    NodeBox(const NodeIndex<D> &idx, const int *nb = 0);
     NodeBox(const BoundingBox<D> &box);
     virtual ~NodeBox();
 
-    void initBox(const int *nbox, const double *origo);
+    void initBox(const int *nbox);
 
     void setNode(int idx, MRNode<D> **node);
     void removeNode(int idx);

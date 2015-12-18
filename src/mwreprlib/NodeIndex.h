@@ -107,23 +107,20 @@ void NodeIndex<D>::setTranslation(const int *l) {
 
 template<int D>
 bool NodeIndex<D>::operator==(const NodeIndex<D> &idx) const {
-    if (this->N != idx.N) {
-        return false;
-    }
+    if (this->N != idx.N) return false;
     for (int d = 0; d < D; d++) {
-        if (this->L[d] != idx.L[d]) {
-            return false;
-        }
+        if (this->L[d] != idx.L[d]) return false;
     }
     return true;
 }
 
 template<int D>
 bool NodeIndex<D>::operator!=(const NodeIndex<D> &idx) const {
-    if (*this == idx) {
-        return false;
+    if (this->N != idx.N) return true;
+    for (int d = 0; d < D; d++) {
+        if (this->L[d] != idx.L[d]) return true;
     }
-    return true;
+    return false;
 }
 
 template<int D>

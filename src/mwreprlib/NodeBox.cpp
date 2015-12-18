@@ -11,8 +11,8 @@
 using namespace std;
 
 template<int D>
-NodeBox<D>::NodeBox(const NodeIndex<D> &idx, const int *nb, const double *o)
-    : BoundingBox<D>(idx, nb, o) {
+NodeBox<D>::NodeBox(const NodeIndex<D> &idx, const int *nb)
+        : BoundingBox<D>(idx, nb) {
     this->nOccupied = 0;
     this->nodes = 0;
     allocNodePointers();

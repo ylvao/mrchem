@@ -152,8 +152,7 @@ void MRNode<D>::getCenter(double *r) const {
     double sFac = pow(2.0, -getScale());
     for (int d = 0; d < D; d++) {
         double l = (double) getTranslation()[d];
-        double o = this->tree->getOrigin()[d];
-        r[d] = sFac*(l + 0.5) - o;
+        r[d] = sFac*(l + 0.5);
     }
 }
 
@@ -197,10 +196,9 @@ int MRNode<D>::getChildIndex(const double *r) const {
     assert(hasCoord(r));
     int cIdx = 0;
     double sFac = pow(2.0, -getScale());
-    const double *o = this->tree->getOrigin();
     const int *l = getTranslation();
     for (int d = 0; d < D; d++) {
-        if (r[d] > (sFac*(l[d] + 0.5) + o[d])) {
+        if (r[d] > sFac*(l[d] + 0.5)) {
             cIdx = cIdx + (l[d] << d);
         }
     }
@@ -351,13 +349,11 @@ template<int D>
 bool MRNode<D>::hasCoord(const double *r) const {
     double sFac = pow(2.0, -getScale());
     const int *l = getTranslation();
-    const double *o = this->tree->getOrigin();
     println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
-    println(1, "[" << o[0] << "," << o[1] << "," << o[2] << "]");
     println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
     println(1, *this);
     for (int d = 0; d < D; d++) {
-        if (r[d] < (sFac*l[d] + o[d]) or r[d] > (sFac*(l[d] + 1)) + o[d]) {
+        if (r[d] < sFac*l[d] or r[d] > sFac*(l[d] + 1)) {
             println(1, "false");
             return false;
         }

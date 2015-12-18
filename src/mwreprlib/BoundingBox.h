@@ -14,18 +14,14 @@
 template<int D>
 class BoundingBox {
 public:
-    BoundingBox(const NodeIndex<D> &idx, const int *nb = 0, const double *o = 0);
+    BoundingBox(const NodeIndex<D> &idx, const int *nb = 0);
     virtual ~BoundingBox() { }
 
     BoundingBox(const BoundingBox<D> &box);
     BoundingBox<D> &operator=(const BoundingBox<D> &box);
 
-    bool operator==(const BoundingBox<D> &box) const { NOT_IMPLEMENTED_ABORT; }
-    bool operator!=(const BoundingBox<D> &box) const { NOT_IMPLEMENTED_ABORT; }
-
-    void setCornerIndex(const NodeIndex<D> &idx);
-    void setOrigin(const double *o);
-    void setNBoxes(const int *nb);
+    inline bool operator==(const BoundingBox<D> &box) const;
+    inline bool operator!=(const BoundingBox<D> &box) const;
 
     NodeIndex<D> getNodeIndex(const double *r) const;
     NodeIndex<D> getNodeIndex(int bIdx) const;
@@ -33,11 +29,14 @@ public:
     int getBoxIndex(const double *r) const;
     int getBoxIndex(const NodeIndex<D> &nIdx) const;
 
-    inline int getNBoxes(int d = -1) const;
+    int getNBoxes() const { return this->nBoxes[D]; }
+    int getNBoxes(int d) const { return this->nBoxes[d]; }
     int getRootScale() const { return this->cornerIndex.getScale(); }
     double getUnitLength() const { return this->unitLength; }
-    const double *getOrigin() const { return this->origin; }
-    const double *getBoxLength() const { return this->boxLength; }
+    double getBoxLength(int d) const { return this->boxLengths[d]; }
+    double getLowerBound(int d) const { return this->lowerBounds[d]; }
+    double getUpperBound(int d) const { return this->upperBounds[d]; }
+    const double *getBoxLengths() const { return this->boxLengths; }
     const double *getLowerBounds() const { return this->lowerBounds; }
     const double *getUpperBounds() const { return this->upperBounds; }
     const NodeIndex<D> &getCornerIndex() const { return this->cornerIndex; }
@@ -47,16 +46,16 @@ public:
 
 protected:
     // Fundamental parameters
-    int nBoxes[D+1];		///< Number of boxes in each dim, last entry total
-    double origin[D];		///< Relates box origin to real origin
+    int nBoxes[D+1];		        ///< Number of boxes in each dim, last entry total
     NodeIndex<D> cornerIndex;	///< Index defining the lower corner of the box
 
     // Derived parameters
-    double unitLength;		///< 1/2^initialScale
-    double boxLength[D];	///< Total length (unitLength times nBoxes)
-    double lowerBounds[D];	///< Box lower bound (not real)
-    double upperBounds[D];	///< Box upper bound (not real)
+    double unitLength;		    ///< 1/2^initialScale
+    double boxLengths[D];	        ///< Total length (unitLength times nBoxes)
+    double lowerBounds[D];	    ///< Box lower bound (not real)
+    double upperBounds[D];	    ///< Box upper bound (not real)
 
+    void setNBoxes(const int *nb);
     void setDerivedParameters();
 
 private:
@@ -64,26 +63,30 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version) {
         ar & nBoxes;
+        ar & cornerIndex;
         ar & unitLength;
-        ar & origin;
-        ar & boxLength;
+        ar & boxLengths;
         ar & lowerBounds;
         ar & upperBounds;
-        ar & cornerIndex;
     }
 };
 
+template<int D>
+bool BoundingBox<D>::operator==(const BoundingBox<D> &box) const {
+    if (getCornerIndex() != box.getCornerIndex()) return false;
+    for (int d = 0; d < 3; d++) {
+        if (getNBoxes(d) != box.getNBoxes(d)) return false;
+    }
+    return true;
+}
 
 template<int D>
-int BoundingBox<D>::getNBoxes(int d) const {
-    if (d < 0) {
-        return this->nBoxes[D];
-    } else if (d < D) {
-        return this->nBoxes[d];
-    } else {
-        MSG_ERROR("Invalid dimension argument");
-        return -1;
+bool BoundingBox<D>::operator!=(const BoundingBox<D> &box) const {
+    if (getCornerIndex() != box.getCornerIndex()) return true;
+    for (int d = 0; d < 3; d++) {
+        if (getNBoxes(d) != box.getNBoxes(d)) return true;
     }
+    return false;
 }
 
 template<int T>
@@ -91,29 +94,26 @@ std::ostream& operator<<(std::ostream &o, const BoundingBox<T> &box) {
     GET_PRINT_PRECISION(int pprec);
     o << std::fixed << std::setprecision(5);
     o << "*BoundingBox: " << std::endl;
+    o << "  unit length     = " << box.getUnitLength() << std::endl;
+    o << "  total boxes     = " << box.getNBoxes() << std::endl;
     o << "  boxes           = [ ";
     for (int i = 0; i < T; i++) {
-        o << std::setw(11) << box.nBoxes[i] << " ";
-    }
-    o << " ]" << std::endl;
-    o << "  unit box length = [ ";
-    for (int i = 0; i < T; i++) {
-        o << std::setw(11) << box.unitLength << " ";
-    }
-    o << " ]" << std::endl;
-    o << "  origin          = [ ";
-    for (int i = 0; i < T; i++) {
-        o << std::setw(11) << box.origin[i] << " ";
+        o << std::setw(11) << box.getNBoxes(i) << " ";
     }
     o << " ]" << std::endl;
     o << "  lower bounds    = [ ";
     for (int i = 0; i < T; i++) {
-        o << std::setw(11) << box.lowerBounds[i] << " ";
+        o << std::setw(11) << box.getLowerBound(i) << " ";
     }
     o << " ]" << std::endl;
     o << "  upper bounds    = [ ";
     for (int i = 0; i < T; i++) {
-        o << std::setw(11) << box.upperBounds[i] << " ";
+        o << std::setw(11) << box.getUpperBound(i) << " ";
+    }
+    o << " ]" << std::endl;
+    o << "  total length    = [ ";
+    for (int i = 0; i < T; i++) {
+        o << std::setw(11) << box.getBoxLength(i) << " ";
     }
     o << " ]" << std::endl;
     o << std::scientific << std::setprecision(pprec);

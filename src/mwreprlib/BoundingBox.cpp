@@ -12,67 +12,27 @@
 using namespace std;
 
 template<int D>
-BoundingBox<D>::BoundingBox(const NodeIndex<D> &idx, const int *nb,
-                            const double *o) : cornerIndex(idx) {
-    this->nBoxes[D] = 1;
-    for (int d = 0; d < D; d++) {
-        if (nb == 0) {
-            this->nBoxes[d] = 1;
-        } else {
-            assert(nb[d] > 0);
-            this->nBoxes[d] = nb[d];
-            this->nBoxes[D] *= this->nBoxes[d];
-        }
-        if (o == 0) {
-            this->origin[d] = 0.0;
-        } else {
-            this->origin[d] = o[d];
-        }
-    }
+BoundingBox<D>::BoundingBox(const NodeIndex<D> &idx, const int *nb)
+            : cornerIndex(idx) {
+    setNBoxes(nb);
     setDerivedParameters();
 }
 
 template<int D>
 BoundingBox<D>::BoundingBox(const BoundingBox<D> &box)
         : cornerIndex(box.cornerIndex) {
-    this->nBoxes[D] = box.nBoxes[D];
-    for (int d = 0; d < D; d++) {
-        assert(box.nBoxes[d] > 0);
-        this->nBoxes[d] = box.nBoxes[d];
-        this->origin[d] = box.origin[d];
-    }
+    setNBoxes(box.nBoxes);
     setDerivedParameters();
 }
 
 template<int D>
 BoundingBox<D> &BoundingBox<D>::operator=(const BoundingBox<D> &box) {
-    this->cornerIndex = box.cornerIndex;
-    this->nBoxes[D] = box.nBoxes[D];
-    for (int d = 0; d < D; d++) {
-        assert(box.nBoxes[d] > 0);
-        this->nBoxes[d] = box.nBoxes[d];
-        this->origin[d] = box.origin[d];
+    if (&box != this) {
+        this->cornerIndex = box.cornerIndex;
+        setNBoxes(box.nBoxes);
+        setDerivedParameters();
     }
-    setDerivedParameters();
     return *this;
-}
-
-template<int D>
-void BoundingBox<D>::setCornerIndex(const NodeIndex<D> &idx) {
-    this->cornerIndex = idx;
-    setDerivedParameters();
-}
-
-template<int D>
-void BoundingBox<D>::setOrigin(const double *o) {
-    for (int d = 0; d < D; d++) {
-        if (o == 0) {
-            this->origin[d] = 0.0;
-        } else {
-            this->origin[d] = o[d];
-        }
-    }
-    setDerivedParameters();
 }
 
 template<int D>
@@ -82,12 +42,11 @@ void BoundingBox<D>::setNBoxes(const int *nb) {
         if (nb == 0) {
             this->nBoxes[d] = 1;
         } else {
-            assert(nb[d] > 0);
+            if (nb[d] <= 0) MSG_ERROR("Invalid box size");
             this->nBoxes[d] = nb[d];
             this->nBoxes[D] *= this->nBoxes[d];
         }
     }
-    setDerivedParameters();
 }
 
 template<int D>
@@ -98,9 +57,9 @@ void BoundingBox<D>::setDerivedParameters() {
     this->unitLength = pow(2.0, -scale);
     for (int d = 0; d < D; d++) {
         assert(this->nBoxes[d] > 0);
-        this->boxLength[d] = this->unitLength * this->nBoxes[d];
+        this->boxLengths[d] = this->unitLength * this->nBoxes[d];
         this->lowerBounds[d] = l[d] * this->unitLength;
-        this->upperBounds[d] = this->lowerBounds[d] + this->boxLength[d];
+        this->upperBounds[d] = this->lowerBounds[d] + this->boxLengths[d];
     }
 }
 
@@ -114,7 +73,7 @@ NodeIndex<D> BoundingBox<D>::getNodeIndex(const double *r) const {
         assert(x < this->upperBounds[d]);
         double div = (x - this->lowerBounds[d]) / this->unitLength;
         double iint;
-        double ffloat = modf(div,&iint);
+        modf(div,&iint);
         idx[d] = (int) iint;
     }
 
@@ -173,7 +132,7 @@ int BoundingBox<1>::getBoxIndex(const double *r) const {
     assert(x < this->upperBounds[0]);
     double div = (x - this->lowerBounds[0]) / this->unitLength;
     double iint;
-    double ffloat = modf(div,&iint);
+    modf(div,&iint);
     return (int) iint;
 }
 
@@ -187,7 +146,7 @@ int BoundingBox<D>::getBoxIndex(const double *r) const {
         assert(x < this->upperBounds[d]);
         double div = (x - this->lowerBounds[d]) / this->unitLength;
         double iint;
-        double ffloat = modf(div,&iint);
+        modf(div,&iint);
         idx[d] = (int) iint;
     }
 
