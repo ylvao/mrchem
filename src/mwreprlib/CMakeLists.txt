@@ -1,54 +1,25 @@
 
 set(mwrepr_SOURCES 
+	macros.h
 	constants.h
 	eigen_disable_warnings.h
-	macros.h
 	mwrepr_declarations.h
+	parallel.cpp
+	parallel.h
 	MathUtils.cpp
 	MathUtils.h
+        MultiResolutionAnalysis.h
 	NodeBox.cpp
 	NodeBox.h
 	BoundingBox.cpp
 	BoundingBox.h
-	FunctionTree.cpp
-	FunctionTree.h
-	MRTree.cpp
-	MRTree.h
-	MWTree.cpp
-	MWTree.h
-	MRNode.cpp
-	MRNode.h
-	MWNode.cpp
-	MWNode.h
 	MWFilter.cpp
 	MWFilter.h
-	TreeProjector.h
-	AnalyticProjector.cpp
-	AnalyticProjector.h
-	TreeAdaptor.h
-	MWAdaptor.cpp
-	MWAdaptor.h
-	TreeBuilder.cpp
-	TreeBuilder.h
-	FunctionProjector.h
 	FilterCache.cpp
 	FilterCache.h
-	FunctionNode.cpp
-	FunctionNode.h
-	ProjectedNode.cpp
-	ProjectedNode.h
-	GenNode.cpp
-	GenNode.h
 	NodeIndex.h
-	parallel.cpp
-	parallel.h
 	TelePrompter.cpp
 	TelePrompter.h
-	TreeIterator.h
-	HilbertPath.cpp
-	HilbertPath.h
-	HilbertIterator.h
-	LebesgueIterator.h
 	GaussQuadrature.cpp
 	GaussQuadrature.h
 	QuadratureCache.cpp

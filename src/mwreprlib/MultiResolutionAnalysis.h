@@ -3,13 +3,17 @@
 
 #include "BoundingBox.h"
 #include "ScalingBasis.h"
+#include "FilterCache.h"
 
 template<int D>
 class MultiResolutionAnalysis {
 public:
     MultiResolutionAnalysis(BoundingBox<D> &bb, ScalingBasis &sb)
-        : world(bb), basis(sb) { }
+            : world(bb), basis(sb) {
+        setupFilter();
+    }
 
+    const MWFilter &getFilter() const { return *this->filter; }
     const ScalingBasis &getScalingBasis() const { return this->basis; }
     const BoundingBox<D> &getWorldBox() const { return this->world; }
 
@@ -41,6 +45,24 @@ public:
 protected:
     const ScalingBasis basis;
     const BoundingBox<D> world;
+    MWFilter *filter;
+
+    void setupFilter() {
+        getLegendreFilterCache(lfilters);
+        getInterpolatingFilterCache(ifilters);
+        int k = this->basis.getScalingOrder();
+        int type = this->basis.getScalingType();
+        switch (type) {
+        case Legendre:
+            this->filter = &lfilters.get(k);
+            break;
+        case Interpol:
+            this->filter = &ifilters.get(k);
+            break;
+        default:
+            MSG_ERROR("Invalid scaling basis selected.")
+        }
+    }
 };
 
 #endif // MULTIRESOLUTIONANALYSIS_H

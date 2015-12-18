@@ -21,7 +21,7 @@ public:
     }
     virtual ~ScalingBasis() { }
 
-    int getType() const { return this->type; }
+    int getScalingType() const { return this->type; }
     int getScalingOrder() const { return this->order; }
     int getQuadratureOrder() const { return this->order + 1; }
 
@@ -39,9 +39,9 @@ public:
     friend std::ostream& operator<<(std::ostream &o, const ScalingBasis &bas) {
         o << "*ScalingBasis:" << std::endl;
         o << "  order           = " << bas.getScalingOrder() << std::endl;
-        if (bas.getType() == Legendre) {
+        if (bas.getScalingType() == Legendre) {
             o << "  type            = Legendre";
-        } else if (bas.getType() == Interpol) {
+        } else if (bas.getScalingType() == Interpol) {
             o << "  type            = Interpolating";
         } else {
             o << "  type            = Unknown";
