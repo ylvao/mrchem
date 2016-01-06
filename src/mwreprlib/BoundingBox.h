@@ -14,6 +14,7 @@
 template<int D>
 class BoundingBox {
 public:
+    BoundingBox();
     BoundingBox(const NodeIndex<D> &idx, const int *nb = 0);
     virtual ~BoundingBox() { }
 
@@ -51,7 +52,7 @@ protected:
 
     // Derived parameters
     double unitLength;		    ///< 1/2^initialScale
-    double boxLengths[D];	        ///< Total length (unitLength times nBoxes)
+    double boxLengths[D];	    ///< Total length (unitLength times nBoxes)
     double lowerBounds[D];	    ///< Box lower bound (not real)
     double upperBounds[D];	    ///< Box upper bound (not real)
 

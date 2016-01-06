@@ -12,6 +12,12 @@
 using namespace std;
 
 template<int D>
+BoundingBox<D>::BoundingBox() {
+    setNBoxes(0);
+    setDerivedParameters();
+}
+
+template<int D>
 BoundingBox<D>::BoundingBox(const NodeIndex<D> &idx, const int *nb)
             : cornerIndex(idx) {
     setNBoxes(nb);
@@ -128,8 +134,8 @@ template<>
 int BoundingBox<1>::getBoxIndex(const double *r) const {
     assert(r != 0);
     double x = r[0];
-    assert(x >= this->lowerBounds[0]);
-    assert(x < this->upperBounds[0]);
+    if (x < this->lowerBounds[0]) return -1;
+    if (x >= this->upperBounds[0]) return -1;
     double div = (x - this->lowerBounds[0]) / this->unitLength;
     double iint;
     modf(div,&iint);
@@ -142,8 +148,8 @@ int BoundingBox<D>::getBoxIndex(const double *r) const {
     int idx[D];
     for (int d = 0; d < D; d++) {
         double x = r[d];
-        assert(x >= this->lowerBounds[d]);
-        assert(x < this->upperBounds[d]);
+        if (x < this->lowerBounds[d]) return -1;
+        if (x >= this->upperBounds[d]) return -1;
         double div = (x - this->lowerBounds[d]) / this->unitLength;
         double iint;
         modf(div,&iint);
@@ -168,8 +174,11 @@ int BoundingBox<1>::getBoxIndex(const NodeIndex<1> &nIdx) const {
     int cn = this->cornerIndex.getScale();
     int cl = this->cornerIndex.getTranslation(0);
     int relScale = n - cn;
-    assert(relScale >= 0);
-    return (l >> relScale) - cl;
+    if (relScale >= 0) {
+        return (l >> relScale) - cl;
+    } else {
+        return -1;
+    }
 }
 
 template<int D>
@@ -179,7 +188,7 @@ int BoundingBox<D>::getBoxIndex(const NodeIndex<D> &nIdx) const {
     const int *l = nIdx.getTranslation();
     const int *cl = this->cornerIndex.getTranslation();
     int relScale = n - cn;
-    assert(relScale >= 0);
+    if (relScale < 0) return -1;
 
     int bIdx = 0;
     for (int d = D - 1; d >= 0; d--) {
