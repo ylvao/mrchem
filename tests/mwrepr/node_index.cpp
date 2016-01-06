@@ -1,6 +1,5 @@
 #include "catch.hpp"
 
-#include "NodeIndex.h"
 #include "factory_functions.h"
 
 template<int D> void testConstructors();

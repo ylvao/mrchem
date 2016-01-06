@@ -1,6 +1,5 @@
 #include "catch.hpp"
 
-#include "BoundingBox.h"
 #include "factory_functions.h"
 
 template<int D> void testConstructors();

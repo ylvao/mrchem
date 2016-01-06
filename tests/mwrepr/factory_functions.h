@@ -78,5 +78,4 @@ template<int D> void testInitial(const BoundingBox<D> *box) {
     }
     REQUIRE( tot_boxes == box->getNBoxes() );
 }
-
 #endif //FACTORY_FUNCTIONS_H
