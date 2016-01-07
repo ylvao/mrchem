@@ -4,6 +4,8 @@
 
 using namespace Eigen;
 
+namespace mw_filter {
+
 TEST_CASE("Interpolating filters", "[mw_filter]") {
     int maxOrder = 40;
     getInterpolatingFilterCache(ifilters);
@@ -31,3 +33,5 @@ TEST_CASE("Interpolating filters", "[mw_filter]") {
         REQUIRE( off_diag_row == Approx(0.0) );
     }
 }
+
+} // namespace

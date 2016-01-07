@@ -2,6 +2,8 @@
 
 #include "factory_functions.h"
 
+namespace node_index {
+
 template<int D> void testConstructors();
 template<int D> void testCompare();
 
@@ -109,3 +111,5 @@ template<int D> void testCompare() {
     finalize(&aIdx);
     finalize(&bIdx);
 }
+
+} // namespace

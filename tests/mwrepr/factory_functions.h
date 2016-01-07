@@ -1,9 +1,11 @@
 #ifndef FACTORY_FUNCTIONS_H
 #define FACTORY_FUNCTIONS_H
 
-#include "BoundingBox.h"
+#include "NodeBox.h"
 #include "NodeIndex.h"
-#include "MRTree.h"
+#include "MultiResolutionAnalysis.h"
+#include "InterpolatingBasis.h"
+#include "MWTree.h"
 
 template<class T> void finalize(T **obj) {
     if (obj == 0) MSG_FATAL("Invalid argument");
@@ -49,7 +51,7 @@ template<int D> void initialize(BoundingBox<D> **box) {
         nb[d] = D-d;
     }
     NodeIndex<D> *nIdx = 0;
-    initialize<D>(&nIdx);
+    initialize(&nIdx);
 
     *box = new BoundingBox<D>(*nIdx, nb);
 }
@@ -73,9 +75,72 @@ template<int D> void testInitial(const BoundingBox<D> *box) {
     int tot_boxes = 1;
     for (int d = 0; d < D; d++) {
         const int nb = D-d;
-        REQUIRE( nb == box->getNBoxes(d) );
-        tot_boxes *= box->getNBoxes(d);
+        REQUIRE( nb == box->size(d) );
+        tot_boxes *= box->size(d);
     }
-    REQUIRE( tot_boxes == box->getNBoxes() );
+    REQUIRE( tot_boxes == box->size() );
 }
+
+template<int D> void initialize(NodeBox<D> **box) {
+    if (box == 0) MSG_FATAL("Invalid argument");
+    if (*box != 0) MSG_FATAL("Invalid argument");
+
+    int nb[D];
+    for (int d = 0; d < D; d++) {
+        nb[d] = D-d;
+    }
+    NodeIndex<D> *nIdx = 0;
+    initialize(&nIdx);
+
+    *box = new NodeBox<D>(*nIdx, nb);
+}
+
+template<int D> void testInitial(const NodeBox<D> *box) {
+    if (box == 0) MSG_FATAL("Invalid argument");
+
+    REQUIRE( box->getNOccupied() == 0 );
+}
+
+template<int D> void initialize(MRTree<D> **tree) {
+    if (tree == 0) MSG_FATAL("Invalid argument");
+    if (*tree != 0) MSG_FATAL("Invalid argument");
+
+    BoundingBox<D> *world = 0;
+    initialize(&world);
+
+    *tree = new MRTree<D>(*world);
+}
+
+template<int D> void testInitial(MRTree<D> *tree) {
+    if (tree == 0) MSG_FATAL("Invalid argument");
+
+    REQUIRE( tree->getDepth() == 1 );
+    REQUIRE( tree->getNNodes() == 0 );
+    REQUIRE( tree->getNEndNodes() == 0 );
+    REQUIRE( tree->getNGenNodes() == 0 );
+    REQUIRE( tree->getNAllocGenNodes() == 0 );
+}
+
+template<int D> void initialize(MWTree<D> **tree) {
+    if (tree == 0) MSG_FATAL("Invalid argument");
+    if (*tree != 0) MSG_FATAL("Invalid argument");
+
+    BoundingBox<D> *world = 0;
+    initialize(&world);
+
+    int k = 5;
+    InterpolatingBasis basis(k);
+
+    MultiResolutionAnalysis<D> mra(*world, basis);
+
+    *tree = new MWTree<D>(mra);
+}
+
+template<int D> void testInitial(const MWTree<D> *tree) {
+    if (tree == 0) MSG_FATAL("Invalid argument");
+
+    REQUIRE( tree->getSquareNorm() == Approx(0.0) );
+    REQUIRE( tree->getOrder() == 5 );
+}
+
 #endif //FACTORY_FUNCTIONS_H

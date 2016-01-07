@@ -1,5 +1,7 @@
 #include "catch.hpp"
 
+namespace function_node {
+
 TEST_CASE("FunctionNode constructor", "[function_node_constructor], [function_node], [nodes]") {
     SECTION("1D") {
         REQUIRE( false );
@@ -11,3 +13,5 @@ TEST_CASE("FunctionNode constructor", "[function_node_constructor], [function_no
         REQUIRE( false );
     }
 }
+
+} // namespace

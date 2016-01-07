@@ -64,6 +64,7 @@ void NodeBox<D>::deleteNodes() {
 
 template<int D>
 void NodeBox<D>::setNode(int bIdx, MRNode<D> **node) {
+    NOT_IMPLEMENTED_ABORT;
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     removeNode(bIdx);
@@ -88,18 +89,21 @@ void NodeBox<D>::removeNode(int bIdx) {
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) {
+    NOT_IMPLEMENTED_ABORT;
     int bIdx = this->getBoxIndex(nIdx);
     return getNode(bIdx);
 }
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(const double *r) {
+    NOT_IMPLEMENTED_ABORT;
     int bIdx = this->getBoxIndex(r);
     return getNode(bIdx);
 }
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(int bIdx) {
+    NOT_IMPLEMENTED_ABORT;
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     assert(this->nodes[bIdx] != 0);
@@ -108,18 +112,21 @@ MRNode<D>& NodeBox<D>::getNode(int bIdx) {
 
 template<int D>
 const MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) const {
+    NOT_IMPLEMENTED_ABORT;
     int bIdx = this->getBoxIndex(nIdx);
     return getNode(bIdx);
 }
 
 template<int D>
 const MRNode<D>& NodeBox<D>::getNode(const double *r) const {
+    NOT_IMPLEMENTED_ABORT;
     int bIdx = this->getBoxIndex(r);
     return getNode(bIdx);
 }
 
 template<int D>
 const MRNode<D>& NodeBox<D>::getNode(int bIdx) const {
+    NOT_IMPLEMENTED_ABORT;
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     assert(this->nodes[bIdx] != 0);

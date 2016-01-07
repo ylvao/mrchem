@@ -4,6 +4,8 @@
 
 using namespace Eigen;
 
+namespace polynomial {
+
 TEST_CASE("Polynomial constructors", "[poly_constructor], [polynomials]") {
     double a = 0.0;
     double b = 2.0;
@@ -277,3 +279,4 @@ SCENARIO("Bounded polynomials have inner products and norms", "[poly_norm], [pol
     }
 }
 
+} // namespace

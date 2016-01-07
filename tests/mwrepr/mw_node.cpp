@@ -1,5 +1,7 @@
 #include "catch.hpp"
 
+namespace mw_node {
+
 TEST_CASE("MWNode constructors", "[mw_node_constructor], [mr_node], [nodes]") {
     SECTION("1D") {
         REQUIRE( false );
@@ -11,3 +13,5 @@ TEST_CASE("MWNode constructors", "[mw_node_constructor], [mr_node], [nodes]") {
         REQUIRE( false );
     }
 }
+
+} // namespace

@@ -4,6 +4,8 @@
 
 using namespace std;
 
+namespace legendre_poly {
+
 TEST_CASE("Legendre polynomials", "[legendre_poly], [polynomials]") {
     int nLeg = 10;
     vector<LegendrePoly *> L;
@@ -36,3 +38,5 @@ TEST_CASE("Legendre polynomials", "[legendre_poly], [polynomials]") {
         }
     }
 }
+
+} // namespace
