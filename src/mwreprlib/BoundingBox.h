@@ -16,10 +16,9 @@ class BoundingBox {
 public:
     BoundingBox();
     BoundingBox(const NodeIndex<D> &idx, const int *nb = 0);
-    virtual ~BoundingBox() { }
-
     BoundingBox(const BoundingBox<D> &box);
     BoundingBox<D> &operator=(const BoundingBox<D> &box);
+    virtual ~BoundingBox() { }
 
     inline bool operator==(const BoundingBox<D> &box) const;
     inline bool operator!=(const BoundingBox<D> &box) const;
@@ -30,9 +29,9 @@ public:
     int getBoxIndex(const double *r) const;
     int getBoxIndex(const NodeIndex<D> &nIdx) const;
 
-    int getNBoxes() const { return this->nBoxes[D]; }
-    int getNBoxes(int d) const { return this->nBoxes[d]; }
-    int getRootScale() const { return this->cornerIndex.getScale(); }
+    int size() const { return this->nBoxes[D]; }
+    int size(int d) const { return this->nBoxes[d]; }
+    int getScale() const { return this->cornerIndex.getScale(); }
     double getUnitLength() const { return this->unitLength; }
     double getBoxLength(int d) const { return this->boxLengths[d]; }
     double getLowerBound(int d) const { return this->lowerBounds[d]; }
@@ -76,7 +75,7 @@ template<int D>
 bool BoundingBox<D>::operator==(const BoundingBox<D> &box) const {
     if (getCornerIndex() != box.getCornerIndex()) return false;
     for (int d = 0; d < 3; d++) {
-        if (getNBoxes(d) != box.getNBoxes(d)) return false;
+        if (this->size(d) != box.size(d)) return false;
     }
     return true;
 }
@@ -85,7 +84,7 @@ template<int D>
 bool BoundingBox<D>::operator!=(const BoundingBox<D> &box) const {
     if (getCornerIndex() != box.getCornerIndex()) return true;
     for (int d = 0; d < 3; d++) {
-        if (getNBoxes(d) != box.getNBoxes(d)) return true;
+        if (this->size(d) != box.size(d)) return true;
     }
     return false;
 }
@@ -96,10 +95,10 @@ std::ostream& operator<<(std::ostream &o, const BoundingBox<T> &box) {
     o << std::fixed << std::setprecision(5);
     o << "*BoundingBox: " << std::endl;
     o << "  unit length     = " << box.getUnitLength() << std::endl;
-    o << "  total boxes     = " << box.getNBoxes() << std::endl;
+    o << "  total boxes     = " << box.size() << std::endl;
     o << "  boxes           = [ ";
     for (int i = 0; i < T; i++) {
-        o << std::setw(11) << box.getNBoxes(i) << " ";
+        o << std::setw(11) << box.size(i) << " ";
     }
     o << " ]" << std::endl;
     o << "  lower bounds    = [ ";

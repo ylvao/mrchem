@@ -90,7 +90,7 @@ NodeIndex<D> BoundingBox<D>::getNodeIndex(const double *r) const {
         l[d] = idx[d] + cl[d];
     }
 
-    int n = getRootScale();
+    int n = getScale();
     NodeIndex<D> nIdx(n, l);
     return nIdx;
 }
@@ -98,7 +98,7 @@ NodeIndex<D> BoundingBox<D>::getNodeIndex(const double *r) const {
 template<>
 NodeIndex<1> BoundingBox<1>::getNodeIndex(int bIdx) const {
     assert(bIdx >= 0 and bIdx <= nBoxes[1]);
-    int n = getRootScale();
+    int n = getScale();
     int cl = this->cornerIndex.getTranslation(0);
     int l = bIdx + cl;
     NodeIndex<1> nIdx(n, &l);
@@ -121,7 +121,7 @@ NodeIndex<D> BoundingBox<D>::getNodeIndex(int bIdx) const {
         bIdx -= ncells * l[d];
     }
 
-    int n = getRootScale();
+    int n = getScale();
     const int *cl = this->cornerIndex.getTranslation();
     for (int d = 0; d < D; d++) {
         l[d] += cl[d];

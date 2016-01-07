@@ -15,8 +15,11 @@
 template<int D>
 class NodeBox : public BoundingBox<D> {
 public:
+    NodeBox() { NOT_IMPLEMENTED_ABORT; }
     NodeBox(const NodeIndex<D> &idx, const int *nb = 0);
+    NodeBox(const NodeBox<D> &box);
     NodeBox(const BoundingBox<D> &box);
+    NodeBox<D> &operator=(const NodeBox<D> &box) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NodeBox();
 
     void initBox(const int *nbox);
@@ -27,6 +30,10 @@ public:
     MRNode<D> &getNode(const NodeIndex<D> &idx);
     MRNode<D> &getNode(const double *r);
     MRNode<D> &getNode(int i = 0);
+
+    const MRNode<D> &getNode(const NodeIndex<D> &idx) const;
+    const MRNode<D> &getNode(const double *r) const;
+    const MRNode<D> &getNode(int i = 0) const;
 
     int getNOccupied() const { return this->nOccupied; }
     MRNode<D> **getNodes() { return this->nodes; }

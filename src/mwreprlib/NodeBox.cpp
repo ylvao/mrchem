@@ -12,23 +12,32 @@ using namespace std;
 
 template<int D>
 NodeBox<D>::NodeBox(const NodeIndex<D> &idx, const int *nb)
-        : BoundingBox<D>(idx, nb) {
-    this->nOccupied = 0;
-    this->nodes = 0;
+        : BoundingBox<D>(idx, nb),
+          nOccupied(0),
+          nodes(0) {
     allocNodePointers();
 }
 
 template<int D>
-NodeBox<D>::NodeBox(const BoundingBox<D> &box) : BoundingBox<D>(box) {
-    this->nOccupied = 0;
-    this->nodes = 0;
+NodeBox<D>::NodeBox(const BoundingBox<D> &box)
+        : BoundingBox<D>(box),
+          nOccupied(0),
+          nodes(0) {
+    allocNodePointers();
+}
+
+template<int D>
+NodeBox<D>::NodeBox(const NodeBox<D> &box)
+        : BoundingBox<D>(box),
+          nOccupied(0),
+          nodes(0) {
     allocNodePointers();
 }
 
 template<int D>
 void NodeBox<D>::allocNodePointers() {
     assert(this->nodes == 0);
-    int nNodes = this->getNBoxes();
+    int nNodes = this->size();
     this->nodes = new MRNode<D>*[nNodes];
     for (int n = 0; n < nNodes; n++) {
         this->nodes[n] = 0;
@@ -46,7 +55,7 @@ void NodeBox<D>::deleteNodes() {
     if (this->nodes == 0) {
         return;
     }
-    for (int n = 0; n < this->getNBoxes(); n++) {
+    for (int n = 0; n < this->size(); n++) {
         removeNode(n);
     }
     delete [] this->nodes;
@@ -91,6 +100,26 @@ MRNode<D>& NodeBox<D>::getNode(const double *r) {
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(int bIdx) {
+    assert(bIdx >= 0);
+    assert(bIdx < this->nBoxes[D]);
+    assert(this->nodes[bIdx] != 0);
+    return *this->nodes[bIdx];
+}
+
+template<int D>
+const MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) const {
+    int bIdx = this->getBoxIndex(nIdx);
+    return getNode(bIdx);
+}
+
+template<int D>
+const MRNode<D>& NodeBox<D>::getNode(const double *r) const {
+    int bIdx = this->getBoxIndex(r);
+    return getNode(bIdx);
+}
+
+template<int D>
+const MRNode<D>& NodeBox<D>::getNode(int bIdx) const {
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     assert(this->nodes[bIdx] != 0);

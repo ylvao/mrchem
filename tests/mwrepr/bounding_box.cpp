@@ -2,6 +2,8 @@
 
 #include "factory_functions.h"
 
+namespace bounding_box {
+
 template<int D> void testConstructors();
 template<int D> void testCompare();
 template<int D> void testFetch();
@@ -98,7 +100,7 @@ template<int D> void testFetch() {
             for (int d = 0; d < D; d++) {
                 r[d] = box->getUpperBound(d) - 1.0e-15;
             }
-            const int last = box->getNBoxes() - 1;
+            const int last = box->size() - 1;
             REQUIRE( box->getBoxIndex(r) == last );
         }
         SECTION("Out of bounds") {
@@ -122,4 +124,6 @@ template<int D> void testFetch() {
         }
     }
     finalize(&box);
+}
+
 }
