@@ -34,17 +34,18 @@ FunctionTree<D>::FunctionTree(const MultiResolutionAnalysis<D> &mra)
   * given tree, but only at root scale. Initializes the function to zero.
   * Use = operator to copy data.*/
 template<int D>
-FunctionTree<D>::FunctionTree(const MWTree<D> &tree) : MWTree<D> (tree) {
-    NOT_IMPLEMENTED_ABORT;
-//    const double *lB = this->rootBox->getLowerBounds();
-//    const double *uB = this->rootBox->getUpperBounds();
-//    this->setBounds(lB, uB);
-//    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-//        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
-//        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-//        this->rootBox->setNode(rIdx, &root);
-//    }
-//    this->resetEndNodeTable();
+FunctionTree<D>::FunctionTree(const MWTree<D> &tree)
+        : MWTree<D> (tree) {
+    const double *lB = this->rootBox.getLowerBounds();
+    const double *uB = this->rootBox.getUpperBounds();
+    this->setBounds(lB, uB);
+    for (int rIdx = 0; rIdx < this->rootBox.size(); rIdx++) {
+        const NodeIndex<D> &nIdx = this->rootBox.getNodeIndex(rIdx);
+        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        this->rootBox.setNode(rIdx, &root);
+    }
+    this->resetEndNodeTable();
+    this->calcSquareNorm();
 }
 
 /** FunctionTree copy constructor.
@@ -52,17 +53,18 @@ FunctionTree<D>::FunctionTree(const MWTree<D> &tree) : MWTree<D> (tree) {
   * given tree, but only at root scale. Initializes the function to zero.
   * Use = operator to copy data.*/
 template<int D>
-FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
-    NOT_IMPLEMENTED_ABORT;
-//    const double *lB = this->rootBox->getLowerBounds();
-//    const double *uB = this->rootBox->getUpperBounds();
-//    this->setBounds(lB, uB);
-//    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-//        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
-//        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-//        this->rootBox->setNode(rIdx, &root);
-//    }
-//    this->resetEndNodeTable();
+FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree)
+        : MWTree<D> (tree) {
+    const double *lB = this->rootBox.getLowerBounds();
+    const double *uB = this->rootBox.getUpperBounds();
+    this->setBounds(lB, uB);
+    for (int rIdx = 0; rIdx < this->rootBox.size(); rIdx++) {
+        const NodeIndex<D> &nIdx = this->rootBox.getNodeIndex(rIdx);
+        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        this->rootBox.setNode(rIdx, &root);
+    }
+    this->resetEndNodeTable();
+    this->calcSquareNorm();
 }
 
 template<int D>
