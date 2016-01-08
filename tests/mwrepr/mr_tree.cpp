@@ -28,7 +28,7 @@ template<int D> void testConstructors() {
 
     SECTION("Copy constructor") {
         MRTree<D> *tree_copy = new MRTree<D>(*tree);
-//        testInitial(tree_copy);
+        testInitial(tree_copy);
         finalize(&tree_copy);
     }
 

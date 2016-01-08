@@ -37,6 +37,9 @@ TEST_CASE("Legendre polynomials", "[legendre_poly], [polynomials]") {
             }
         }
     }
+    for (int k = 0; k < nLeg; k++) {
+        delete L[k];
+    }
 }
 
 } // namespace

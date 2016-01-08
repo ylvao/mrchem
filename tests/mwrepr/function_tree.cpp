@@ -1,17 +1,38 @@
 #include "catch.hpp"
 
+#include "factory_functions.h"
+
 namespace function_tree {
+
+template<int D> void testConstructors();
 
 TEST_CASE("FunctionTree constructor", "[function_tree_constructor], [function_tree], [trees]") {
     SECTION("1D") {
-        REQUIRE( false );
+        testConstructors<1>();
     }
     SECTION("2D") {
-        REQUIRE( false );
+        testConstructors<2>();
     }
     SECTION("3D") {
-        REQUIRE( false );
+        testConstructors<3>();
     }
+}
+
+template<int D> void testConstructors() {
+    FunctionTree<D> *tree = 0;
+    initialize(&tree);
+
+//    SECTION("Constructor") {
+//        testInitial(tree);
+//    }
+
+//    SECTION("Copy constructor") {
+//        FunctionTree<D> *tree_copy = new FunctionTree<D>(*tree);
+//        testInitial(tree_copy);
+//        finalize(&tree_copy);
+//    }
+
+    finalize(&tree);
 }
 
 } // namespace
