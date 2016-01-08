@@ -45,19 +45,19 @@ void LegendrePoly::computeLegendrePolynomial(int k) {
         this->coefs[1] = 1.0;
     } else {
         LegendreCache &Cache = LegendreCache::getInstance();
-        LegendrePoly &p1 = Cache.get(k - 1);
-        LegendrePoly &p2 = Cache.get(k - 2);
+        LegendrePoly &Lm1 = Cache.get(k - 1);
+        LegendrePoly &Lm2 = Cache.get(k - 2);
 
         double K = (double) k;
-        double c2_0 = p2.getCoefs()[0];
-        this->coefs[0] = -((K - 1.0)*c2_0)/K;
+        double cm2_0 = Lm2.getCoefs()[0];
+        this->coefs[0] = -(K - 1.0)*cm2_0/K;
         for (int j = 1; j < k + 1; j++) {
-            double c1_jm1 = p1.getCoefs()[j-1];
-            double c2_j = p2.getCoefs()[j];
+            double cm1_jm1 = Lm1.getCoefs()[j-1];
             if (j <= k - 2) {
-                this->coefs[j] = (((2.0*K - 1.0)*c1_jm1) - ((K - 1.0)*c2_j))/K;
+                double cm2_j = Lm2.getCoefs()[j];
+                this->coefs[j] = (2.0*K - 1.0)*cm1_jm1/K - (K - 1.0)*cm2_j/K;
             } else {
-                this->coefs[j] = (((2.0*K - 1.0)*c1_jm1))/K;
+                this->coefs[j] = (2.0*K - 1.0)*cm1_jm1/K;
             }
         }
     }
