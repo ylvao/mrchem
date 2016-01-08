@@ -1,14 +1,7 @@
 #include <Eigen/Core>
-#include <set>
 
-#include "MWNode.h"
 #include "FunctionNode.h"
 #include "FunctionTree.h"
-#include "QuadratureCache.h"
-#include "ScalingBasis.h"
-#include "MathUtils.h"
-#include "config.h"
-#include "eigen_disable_warnings.h"
 
 #ifdef HAVE_BLAS
 extern "C" {
@@ -19,23 +12,22 @@ extern "C" {
 using namespace std;
 using namespace Eigen;
 
-/** FunctionNode rootnode constructor.
-  * Creates an empty rootnode given its tree and node index */
 template<int D>
-FunctionNode<D>::FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx) 
-        : MWNode<D> (t, nIdx) {
-}
-
-/** FunctionNode constructor.
-  * Creates an empty node given its parent and child index */
-template<int D>
-FunctionNode<D>::FunctionNode(FunctionNode<D> &p, int cIdx) 
-        : MWNode<D> (p, cIdx) {
+FunctionNode<D>::FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
+        : MWNode<D>(t, nIdx) {
+    this->squareNorm = 0.0;
 }
 
 template<int D>
-FunctionNode<D>::FunctionNode(FunctionNode<D> &n) 
-        : MWNode<D> (n) {
+FunctionNode<D>::FunctionNode(FunctionNode<D> &p, int cIdx)
+        : MWNode<D>(p, cIdx) {
+    this->squareNorm = 0.0;
+}
+
+template<int D>
+FunctionNode<D>::FunctionNode(const FunctionNode<D> &n)
+        : MWNode<D>(n) {
+    this->squareNorm = 0.0;
 }
 
 /** Function evaluation.
@@ -52,22 +44,23 @@ double FunctionNode<D>::evalf(const double *r) {
   * full support of the node. */
 template<int D>
 double FunctionNode<D>::integrate() {
-    if (this->isForeign()) {
-        return 0.0;
-    }
-    if (this->isCommon() and this->tree->getRankId() != 0) {
-        return 0.0;
-    }
-    switch (getFuncTree().getScalingType()) {
-    case Legendre:
-        return integrateLegendre();
-        break;
-    case Interpol:
-        return integrateInterpolating();
-        break;
-    default:
-        MSG_FATAL("Invalid scalingType");
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->isForeign()) {
+//        return 0.0;
+//    }
+//    if (this->isCommon() and this->tree->getRankId() != 0) {
+//        return 0.0;
+//    }
+//    switch (getFuncTree().getScalingType()) {
+//    case Legendre:
+//        return integrateLegendre();
+//        break;
+//    case Interpol:
+//        return integrateInterpolating();
+//        break;
+//    default:
+//        MSG_FATAL("Invalid scalingType");
+//    }
 }
 
 /** Function integration, Legendre basis.
@@ -81,6 +74,7 @@ double FunctionNode<D>::integrate() {
   * coefficient is simply the integral of f(x). */
 template<int D>
 double FunctionNode<D>::integrateLegendre() {
+    NOT_IMPLEMENTED_ABORT;
     double result = this->getCoefs()[0];
     double n = (D*this->getScale())/2.0;
     result *= pow(2.0, -n);
@@ -94,40 +88,41 @@ double FunctionNode<D>::integrateLegendre() {
   * coupling of quadrature weights. */
 template<int D>
 double FunctionNode<D>::integrateInterpolating() {
-    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
-    VectorXd coefs = this->getCoefs();
+    NOT_IMPLEMENTED_ABORT;
+//    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
+//    VectorXd coefs = this->getCoefs();
 
-    int quadratureOrder = sf.getQuadratureOrder();
-    getQuadratureCache(qc);
-    const VectorXd &weights = qc.getWeights(quadratureOrder);
-    double sqWeights[this->getKp1()];
-    for (int i = 0; i < this->getKp1(); i++) {
-        sqWeights[i] = sqrt(weights[i]);
-    }
+//    int quadratureOrder = sf.getQuadratureOrder();
+//    getQuadratureCache(qc);
+//    const VectorXd &weights = qc.getWeights(quadratureOrder);
+//    double sqWeights[this->getKp1()];
+//    for (int i = 0; i < this->getKp1(); i++) {
+//        sqWeights[i] = sqrt(weights[i]);
+//    }
 
-    int kp1_p[D];
-    for (int i = 0; i < D; i++) {
-        kp1_p[i] = MathUtils::ipow(this->getKp1(), i);
-    }
+//    int kp1_p[D];
+//    for (int i = 0; i < D; i++) {
+//        kp1_p[i] = MathUtils::ipow(this->getKp1(), i);
+//    }
 
-    double result = 0.0;
-    for (int p = 0; p < D; p++) {
-        int n = 0;
-        for (int i = 0; i < kp1_p[D - p - 1]; i++) {
-            for (int j = 0; j < this->getKp1(); j++) {
-                for (int k = 0; k < kp1_p[p]; k++) {
-                    coefs[n] *= sqWeights[j];
-                    n++;
-                }
-            }
-        }
-    }
-    for (int i = 0; i < this->getKp1_d(); i++) {
-        result += coefs[i];
-    }
-    double n = (D * this->getScale()) / 2.0;
-    result *= pow(2.0, -n);
-    return result;
+//    double result = 0.0;
+//    for (int p = 0; p < D; p++) {
+//        int n = 0;
+//        for (int i = 0; i < kp1_p[D - p - 1]; i++) {
+//            for (int j = 0; j < this->getKp1(); j++) {
+//                for (int k = 0; k < kp1_p[p]; k++) {
+//                    coefs[n] *= sqWeights[j];
+//                    n++;
+//                }
+//            }
+//        }
+//    }
+//    for (int i = 0; i < this->getKp1_d(); i++) {
+//        result += coefs[i];
+//    }
+//    double n = (D * this->getScale()) / 2.0;
+//    result *= pow(2.0, -n);
+//    return result;
 }
 
 /** Inner product of the functions represented by the scaling basis of the nodes.
@@ -138,18 +133,19 @@ double FunctionNode<D>::integrateInterpolating() {
   * coefficient vectors. Assumes the nodes have identical support. */
 template<int D>
 double FunctionNode<D>::dotScaling(FunctionNode<D> &inpNode) {
-    int kp1_d = this->getKp1_d();
-    if (this->isForeign()) {
-        return 0.0;
-    }
-    assert(this->hasCoefs() and inpNode.hasCoefs());
-    VectorXd &a = this->getCoefs();
-    VectorXd &b = inpNode.getCoefs();
-#ifdef HAVE_BLAS
-    return cblas_ddot(kp1_d, a.data(), 1, b.data(), 1);
-#else
-    return a.segment(0, kp1_d).dot(b.segment(0, kp1_d));
-#endif
+    NOT_IMPLEMENTED_ABORT;
+//    int kp1_d = this->getKp1_d();
+//    if (this->isForeign()) {
+//        return 0.0;
+//    }
+//    assert(this->hasCoefs() and inpNode.hasCoefs());
+//    VectorXd &a = this->getCoefs();
+//    VectorXd &b = inpNode.getCoefs();
+//#ifdef HAVE_BLAS
+//    return cblas_ddot(kp1_d, a.data(), 1, b.data(), 1);
+//#else
+//    return a.segment(0, kp1_d).dot(b.segment(0, kp1_d));
+//#endif
 }
 
 /** Inner product of the functions represented by the wavelet basis of the nodes.
@@ -160,23 +156,24 @@ double FunctionNode<D>::dotScaling(FunctionNode<D> &inpNode) {
   * coefficient vectors. Assumes the nodes have identical support. */
 template<int D>
 double FunctionNode<D>::dotWavelet(FunctionNode<D> &inpNode) {
-    if (inpNode.isGenNode()) {
-        return 0.0;
-    }
-    int kp1_d = this->getKp1_d();
-    int nCoefs = (this->getTDim() - 1) * kp1_d;
-    if (this->isForeign()) {
-        return 0.0;
-    }
-    assert(this->hasCoefs() and inpNode.hasCoefs());
-    VectorXd &a = this->getCoefs();
-    VectorXd &b = inpNode.getCoefs();
-#ifdef HAVE_BLAS
-    return cblas_ddot(nCoefs, a.segment(kp1_d, nCoefs).data(), 1,
-                      b.segment(kp1_d, nCoefs).data(), 1);
-#else
-    return a.segment(kp1_d, nCoefs).dot(b.segment(kp1_d, nCoefs));
-#endif
+    NOT_IMPLEMENTED_ABORT;
+//    if (inpNode.isGenNode()) {
+//        return 0.0;
+//    }
+//    int kp1_d = this->getKp1_d();
+//    int nCoefs = (this->getTDim() - 1) * kp1_d;
+//    if (this->isForeign()) {
+//        return 0.0;
+//    }
+//    assert(this->hasCoefs() and inpNode.hasCoefs());
+//    VectorXd &a = this->getCoefs();
+//    VectorXd &b = inpNode.getCoefs();
+//#ifdef HAVE_BLAS
+//    return cblas_ddot(nCoefs, a.segment(kp1_d, nCoefs).data(), 1,
+//                      b.segment(kp1_d, nCoefs).data(), 1);
+//#else
+//    return a.segment(kp1_d, nCoefs).dot(b.segment(kp1_d, nCoefs));
+//#endif
 }
 
 template class FunctionNode<1>;

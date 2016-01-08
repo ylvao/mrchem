@@ -17,21 +17,16 @@ class ProjectedNode: public FunctionNode<D> {
 public:
     ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     ProjectedNode(ProjectedNode<D> &p, int cIdx);
-    ProjectedNode(ProjectedNode<D> &n);
-    virtual ~ProjectedNode() {}
+    ProjectedNode(const ProjectedNode<D> &n);
+    ProjectedNode& operator=(const ProjectedNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
+    virtual ~ProjectedNode() { }
 
     void clearGenerated();
     void purgeGenerated();
 
     void copyChildren(const MRNode<D> &node);
-    void createChildren() {
-        MRNode<D>::createChildren();
-        this->clearIsEndNode();
-    }
-    void deleteChildren() {
-        MRNode<D>::deleteChildren();
-        this->setIsEndNode();
-    }
+    void createChildren() { MRNode<D>::createChildren(); this->clearIsEndNode(); }
+    void deleteChildren() { MRNode<D>::deleteChildren(); this->setIsEndNode(); }
 
 private:
     void calcComponentNorms();

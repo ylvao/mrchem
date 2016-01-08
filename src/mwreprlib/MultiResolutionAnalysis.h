@@ -8,11 +8,20 @@
 template<int D>
 class MultiResolutionAnalysis {
 public:
-    MultiResolutionAnalysis(BoundingBox<D> &bb, ScalingBasis &sb)
-            : world(bb), basis(sb) {
+    MultiResolutionAnalysis(const MultiResolutionAnalysis<D> &mra)
+            : world(mra.world),
+              basis(mra.basis) {
         setupFilter();
     }
+    MultiResolutionAnalysis(const BoundingBox<D> &bb, const ScalingBasis &sb)
+            : world(bb),
+              basis(sb) {
+        setupFilter();
+    }
+    virtual ~MultiResolutionAnalysis() { }
 
+
+    int getOrder() const { return this->basis.getScalingOrder(); }
     const MWFilter &getFilter() const { return *this->filter; }
     const ScalingBasis &getScalingBasis() const { return this->basis; }
     const BoundingBox<D> &getWorldBox() const { return this->world; }

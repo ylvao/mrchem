@@ -22,8 +22,6 @@ public:
     NodeBox<D> &operator=(const NodeBox<D> &box) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NodeBox();
 
-    void initBox(const int *nbox);
-
     void setNode(int idx, MRNode<D> **node);
     void removeNode(int idx);
 

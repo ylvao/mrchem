@@ -15,58 +15,70 @@ using namespace Eigen;
   * Allocate the root FunctionNodes and fill in the empty slots of rootBox.
   * Initializes rootNodes to represent the zero function. */
 template<int D>
-FunctionTree<D>::FunctionTree(const BoundingBox<D> &box, int k, int type)
-        : MWTree<D> (box, k, type) {
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
+FunctionTree<D>::FunctionTree(const MultiResolutionAnalysis<D> &mra)
+        : MWTree<D> (mra) {
+    const double *lB = this->rootBox.getLowerBounds();
+    const double *uB = this->rootBox.getUpperBounds();
     this->setBounds(lB, uB);
-    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
+    for (int rIdx = 0; rIdx < this->rootBox.size(); rIdx++) {
+        const NodeIndex<D> &nIdx = this->rootBox.getNodeIndex(rIdx);
         MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        this->rootBox->setNode(rIdx, &root);
+        this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
+    this->calcSquareNorm();
 }
 
-/** FunctionTree copy constructor.
-  * Copy complete tree structure of the given grid.
-  * Initializes the function to zero on this grid. */
-/*
-template<int D>
-FunctionTree<D>::FunctionTree(const MRGrid<D> &grid, int type) : MWTree<D>(grid, type) {
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
-    this->setBounds(lB, uB);
-    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const MRNode<D> &yourRoot = grid.getRootNode(rIdx);
-        const NodeIndex<D> &nIdx = yourRoot.getNodeIndex();
-        MRNode<D> *myRoot = new ProjectedNode<D>(*this, nIdx);
-        myRoot->copyChildren(yourRoot);
-        this->rootBox->setNode(rIdx, &myRoot);
-    }
-    this->resetEndNodeTable();
-}
-*/
 /** FunctionTree copy constructor.
   * Copy polynomial order and type, as well as the world box from the
   * given tree, but only at root scale. Initializes the function to zero.
   * Use = operator to copy data.*/
 template<int D>
 FunctionTree<D>::FunctionTree(const MWTree<D> &tree) : MWTree<D> (tree) {
-    const double *lB = this->rootBox->getLowerBounds();
-    const double *uB = this->rootBox->getUpperBounds();
-    this->setBounds(lB, uB);
-    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
-        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
-        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        this->rootBox->setNode(rIdx, &root);
-    }
-    this->resetEndNodeTable();
+    NOT_IMPLEMENTED_ABORT;
+//    const double *lB = this->rootBox->getLowerBounds();
+//    const double *uB = this->rootBox->getUpperBounds();
+//    this->setBounds(lB, uB);
+//    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+//        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
+//        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+//        this->rootBox->setNode(rIdx, &root);
+//    }
+//    this->resetEndNodeTable();
+}
+
+/** FunctionTree copy constructor.
+  * Copy polynomial order and type, as well as the world box from the
+  * given tree, but only at root scale. Initializes the function to zero.
+  * Use = operator to copy data.*/
+template<int D>
+FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree) : MWTree<D> (tree) {
+    NOT_IMPLEMENTED_ABORT;
+//    const double *lB = this->rootBox->getLowerBounds();
+//    const double *uB = this->rootBox->getUpperBounds();
+//    this->setBounds(lB, uB);
+//    for (int rIdx = 0; rIdx < this->getNRootNodes(); rIdx++) {
+//        const NodeIndex<D> &nIdx = this->rootBox->getNodeIndex(rIdx);
+//        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+//        this->rootBox->setNode(rIdx, &root);
+//    }
+//    this->resetEndNodeTable();
+}
+
+template<int D>
+FunctionTree<D>& FunctionTree<D>::operator=(const FunctionTree<D> &tree) {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 /** FunctionTree destructor. */
 template<int D>
 FunctionTree<D>::~FunctionTree() {
+    MRNode<D> **rootNodes = this->rootBox.getNodes();
+    for (int i = 0; i < this->rootBox.size(); i++) {
+        ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(rootNodes[i]);
+        if (node != 0) delete node;
+        rootNodes[i] = 0;
+    }
 }
 
 /** Leaves the tree inn the same state as after construction*/
@@ -170,15 +182,16 @@ const FunctionNode<D>& FunctionTree<D>::getRootFuncNode(const NodeIndex<D> &nIdx
 
 template<int D>
 double FunctionTree<D>::integrate() {
-    double result = 0.0;
-    for (int i = 0; i < this->getNRootNodes(); i++) {
-        FunctionNode<D> &fNode = getRootFuncNode(i);
-        result += fNode.integrate();
-    }
-#ifdef HAVE_MPI
-    result = mpi::all_reduce(node_group, result, std::plus<double>());
-#endif
-    return result;
+    NOT_IMPLEMENTED_ABORT;
+//    double result = 0.0;
+//    for (int i = 0; i < this->getNRootNodes(); i++) {
+//        FunctionNode<D> &fNode = getRootFuncNode(i);
+//        result += fNode.integrate();
+//    }
+//#ifdef HAVE_MPI
+//    result = mpi::all_reduce(node_group, result, std::plus<double>());
+//#endif
+//    return result;
 }
 
 template<int D>
@@ -308,8 +321,9 @@ void FunctionTree<D>::power(double d) {
 
 template<int D>
 void FunctionTree<D>::normalize() {
-    double norm = sqrt(this->getSquareNorm());
-    *this *= (1.0/norm);
+    NOT_IMPLEMENTED_ABORT;
+//    double norm = sqrt(this->getSquareNorm());
+//    *this *= (1.0/norm);
 }
 
 template<int D>

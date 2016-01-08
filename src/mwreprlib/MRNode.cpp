@@ -4,17 +4,14 @@
 using namespace std;
 
 template<int D>
-MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) {
-    this->tree = &t;
-    this->parent = 0;
-    this->children = 0;
-    this->status = 0;
-
-    this->nodeIndex = new NodeIndex<D>(nIdx);
-    this->hilbertPath = new HilbertPath<D>;
-
+MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx)
+        : tree(&t),
+          parent(0),
+          children(0),
+          nodeIndex(nIdx),
+          hilbertPath(),
+          status(0) {
     this->tree->incrementNodeCount(getScale());
-
     setIsLeafNode();
     setIsRootNode();
 #ifdef OPENMP
@@ -23,20 +20,14 @@ MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx) {
 }
 
 template<int D>
-MRNode<D>::MRNode(MRNode<D> &p, int cIdx) {
-    this->tree = p.tree;
-    this->parent = &p;
-    this->children = 0;
-    this->status = 0;
-
-    const HilbertPath<D> &pPath = p.getHilbertPath();
-    this->hilbertPath = new HilbertPath<D>(pPath, cIdx);
-
-    const NodeIndex<D> &pIdx = p.getNodeIndex();
-    this->nodeIndex = new NodeIndex<D>(pIdx, cIdx);
-
+MRNode<D>::MRNode(MRNode<D> &p, int cIdx)
+        : tree(p.tree),
+          parent(&p),
+          children(0),
+          nodeIndex(p.getNodeIndex(), cIdx),
+          hilbertPath(p.getHilbertPath(), cIdx),
+          status(0) {
     this->tree->incrementNodeCount(getScale());
-
     setIsLeafNode();
 #ifdef OPENMP
     omp_init_lock(&node_lock);
@@ -44,18 +35,14 @@ MRNode<D>::MRNode(MRNode<D> &p, int cIdx) {
 }
 
 template<int D>
-MRNode<D>::MRNode(MRNode<D> &n) {
-    this->tree = n.tree;
-    this->parent = 0;
-    this->children = 0;
-    this->status = 0;
-
-    const HilbertPath<D> &path = n.getHilbertPath();
-    this->hilbertPath = new HilbertPath<D>(path);
-
-    const NodeIndex<D> &idx = n.getNodeIndex();
-    this->nodeIndex = new NodeIndex<D>(idx);
-
+MRNode<D>::MRNode(const MRNode<D> &n)
+        : tree(n.tree),
+          parent(0),
+          children(0),
+          nodeIndex(n.getNodeIndex()),
+          hilbertPath(n.getHilbertPath()),
+          status(0) {
+    NOT_IMPLEMENTED_ABORT;
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
@@ -69,8 +56,6 @@ MRNode<D>::~MRNode() {
         deleteChildren();
     }
     this->tree->decrementNodeCount(getScale());
-    delete this->hilbertPath;
-    delete this->nodeIndex;
     unlockNode();
 #ifdef OPENMP
     omp_destroy_lock(&node_lock);
@@ -79,81 +64,87 @@ MRNode<D>::~MRNode() {
 
 template<int D>
 void MRNode<D>::allocKindergarten() {
-    assert(this->children == 0);
-    int tDim = getTDim();
-    this->children = new MRNode<D> *[tDim];
-    for (int cIdx = 0; cIdx < tDim; cIdx++) {
-        this->children[cIdx] = 0;
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->children == 0);
+//    int tDim = getTDim();
+//    this->children = new MRNode<D> *[tDim];
+//    for (int cIdx = 0; cIdx < tDim; cIdx++) {
+//        this->children[cIdx] = 0;
+//    }
 }
 
 template<int D>
 void MRNode<D>::createChildren() {
-    if (this->children == 0) {
-        this->allocKindergarten();
-    }
-    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
-        createChild(cIdx);
-    }
-    this->setIsBranchNode();
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->children == 0) {
+//        this->allocKindergarten();
+//    }
+//    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+//        createChild(cIdx);
+//    }
+//    this->setIsBranchNode();
 }
 
 /** Recurcive deallocation of children and all their decendants.
   * Leaves node as LeafNode and children[] as null pointer. */
 template<int D>
 void MRNode<D>::deleteChildren() {
-    if (this->children == 0) {
-        return ;
-    }
-    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
-        if (this->children[cIdx] != 0) {
-            delete this->children[cIdx];
-            this->children[cIdx] = 0;
-        }
-    }
-    delete [] this->children;
-    this->children = 0;
-    this->setIsLeafNode();
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->children == 0) {
+//        return ;
+//    }
+//    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+//        if (this->children[cIdx] != 0) {
+//            delete this->children[cIdx];
+//            this->children[cIdx] = 0;
+//        }
+//    }
+//    delete [] this->children;
+//    this->children = 0;
+//    this->setIsLeafNode();
 }
 
 template<int D>
 void MRNode<D>::genChildren(bool empty) {
-    if (this->children == 0) {
-        this->allocKindergarten();
-    }
-    int nChildren = this->getTDim();
-    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
-        genChild(cIdx);
-    }
-    if (not empty) {
-        NOT_IMPLEMENTED_ABORT;
-    }
-    this->setIsBranchNode();
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->children == 0) {
+//        this->allocKindergarten();
+//    }
+//    int nChildren = this->getTDim();
+//    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
+//        genChild(cIdx);
+//    }
+//    if (not empty) {
+//        NOT_IMPLEMENTED_ABORT;
+//    }
+//    this->setIsBranchNode();
 }
 
 template<int D>
 void MRNode<D>::purgeGenerated() {
-    if (this->isBranchNode()) {
-        assert(this->children != 0);
-        if (this->isEndNode()) {
-            this->deleteChildren();
-        } else {
-            for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
-                assert(this->children[cIdx] != 0);
-                this->getMRChild(cIdx).purgeGenerated();
-            }
-        }
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->isBranchNode()) {
+//        assert(this->children != 0);
+//        if (this->isEndNode()) {
+//            this->deleteChildren();
+//        } else {
+//            for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+//                assert(this->children[cIdx] != 0);
+//                this->getMRChild(cIdx).purgeGenerated();
+//            }
+//        }
+//    }
 }
 
 template<int D>
 void MRNode<D>::getCenter(double *r) const {
-    assert(r != 0);
-    double sFac = pow(2.0, -getScale());
-    for (int d = 0; d < D; d++) {
-        double l = (double) getTranslation()[d];
-        r[d] = sFac*(l + 0.5);
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    assert(r != 0);
+//    double sFac = pow(2.0, -getScale());
+//    for (int d = 0; d < D; d++) {
+//        double l = (double) getTranslation()[d];
+//        r[d] = sFac*(l + 0.5);
+//    }
 }
 
 template<int D>
@@ -174,17 +165,18 @@ void MRNode<D>::getUpperBounds(double *r) const {
   * The index is obtained by bit manipulation of of the translation indices. */
 template<int D>
 int MRNode<D>::getChildIndex(const NodeIndex<D> &nIdx) const {
-    assert(isAncestor(nIdx));
-    int cIdx = 0;
-    int diffScale = nIdx.getScale() - getScale() - 1;
-    assert(diffScale >= 0);
-    for (int d = 0; d < D; d++) {
-        int bit = (nIdx.getTranslation()[d] >> (diffScale)) & 1;
-        cIdx = cIdx + (bit << d);
-    }
-    assert(cIdx >= 0);
-    assert(cIdx < getTDim());
-    return cIdx;
+    NOT_IMPLEMENTED_ABORT;
+//    assert(isAncestor(nIdx));
+//    int cIdx = 0;
+//    int diffScale = nIdx.getScale() - getScale() - 1;
+//    assert(diffScale >= 0);
+//    for (int d = 0; d < D; d++) {
+//        int bit = (nIdx.getTranslation()[d] >> (diffScale)) & 1;
+//        cIdx = cIdx + (bit << d);
+//    }
+//    assert(cIdx >= 0);
+//    assert(cIdx < getTDim());
+//    return cIdx;
 }
 
 /** Routine to find the path along the tree.
@@ -193,18 +185,19 @@ int MRNode<D>::getChildIndex(const NodeIndex<D> &nIdx) const {
   * to get to the corresponding terminal node. */
 template<int D>
 int MRNode<D>::getChildIndex(const double *r) const {
-    assert(hasCoord(r));
-    int cIdx = 0;
-    double sFac = pow(2.0, -getScale());
-    const int *l = getTranslation();
-    for (int d = 0; d < D; d++) {
-        if (r[d] > sFac*(l[d] + 0.5)) {
-            cIdx = cIdx + (l[d] << d);
-        }
-    }
-    assert(cIdx >= 0);
-    assert(cIdx < getTDim());
-    return cIdx;
+    NOT_IMPLEMENTED_ABORT;
+//    assert(hasCoord(r));
+//    int cIdx = 0;
+//    double sFac = pow(2.0, -getScale());
+//    const int *l = getTranslation();
+//    for (int d = 0; d < D; d++) {
+//        if (r[d] > sFac*(l[d] + 0.5)) {
+//            cIdx = cIdx + (l[d] << d);
+//        }
+//    }
+//    assert(cIdx >= 0);
+//    assert(cIdx < getTDim());
+//    return cIdx;
 }
 
 /** Const version of node retriever that NEVER generates.
@@ -234,14 +227,15 @@ const MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) const {
   * node and ASSUMES the requested node is in fact decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) {
-    if (getScale() == idx.getScale()) { // we're done
-        return this;
-    }
-    if (this->isEndNode()) { // don't return GenNodes
-        return 0;
-    }
-    int cIdx = getChildIndex(idx);
-    return this->children[cIdx]->retrieveNodeNoGen(idx);
+    NOT_IMPLEMENTED_ABORT;
+//    if (getScale() == idx.getScale()) { // we're done
+//        return this;
+//    }
+//    if (this->isEndNode()) { // don't return GenNodes
+//        return 0;
+//    }
+//    int cIdx = getChildIndex(idx);
+//    return this->children[cIdx]->retrieveNodeNoGen(idx);
 }
 
 template<int D>
@@ -330,36 +324,38 @@ MRNode<D> *MRNode<D>::retrieveNode(int n, const double *r) {
   * node is in fact decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNode(const NodeIndex<D> &idx) {
-    if (getScale() == idx.getScale()) { // we're done
-        return this;
-    }
-    if (isEndNode()) {
-        SET_NODE_LOCK();
-        if (isLeafNode()) {
-            genChildren();
-        }
-        UNSET_NODE_LOCK();
-    }
-    int cIdx = getChildIndex(idx);
-    return this->children[cIdx]->retrieveNode(idx);
+    NOT_IMPLEMENTED_ABORT;
+//    if (getScale() == idx.getScale()) { // we're done
+//        return this;
+//    }
+//    if (isEndNode()) {
+//        SET_NODE_LOCK();
+//        if (isLeafNode()) {
+//            genChildren();
+//        }
+//        UNSET_NODE_LOCK();
+//    }
+//    int cIdx = getChildIndex(idx);
+//    return this->children[cIdx]->retrieveNode(idx);
 }
 
 /** Test if a given coordinate is within the boundaries of the node. */
 template<int D>
 bool MRNode<D>::hasCoord(const double *r) const {
-    double sFac = pow(2.0, -getScale());
-    const int *l = getTranslation();
-    println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
-    println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
-    println(1, *this);
-    for (int d = 0; d < D; d++) {
-        if (r[d] < sFac*l[d] or r[d] > sFac*(l[d] + 1)) {
-            println(1, "false");
-            return false;
-        }
-    }
-    println(1, "true");
-    return true;
+    NOT_IMPLEMENTED_ABORT;
+//    double sFac = pow(2.0, -getScale());
+//    const int *l = getTranslation();
+//    println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
+//    println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
+//    println(1, *this);
+//    for (int d = 0; d < D; d++) {
+//        if (r[d] < sFac*l[d] or r[d] > sFac*(l[d] + 1)) {
+//            println(1, "false");
+//            return false;
+//        }
+//    }
+//    println(1, "true");
+//    return true;
 }
 
 /** Testing if nodes are compatible wrt NodeIndex and Tree (order, rootScale,
@@ -382,18 +378,19 @@ bool MRNode<D>::isCompatible(const MRNode<D> &node) {
   * overlapping support. */
 template<int D>
 bool MRNode<D>::isAncestor(const NodeIndex<D> &idx) const {
-    int relScale = idx.getScale() - getScale();
-    if (relScale < 0) {
-        return false;
-    }
-    const int *l = getTranslation();
-    for (int d = 0; d < D; d++) {
-        int reqTransl = idx.getTranslation()[d] >> relScale;
-        if (l[d] != reqTransl) {
-            return false;
-        }
-    }
-    return true;
+    NOT_IMPLEMENTED_ABORT;
+//    int relScale = idx.getScale() - getScale();
+//    if (relScale < 0) {
+//        return false;
+//    }
+//    const int *l = getTranslation();
+//    for (int d = 0; d < D; d++) {
+//        int reqTransl = idx.getTranslation()[d] >> relScale;
+//        if (l[d] != reqTransl) {
+//            return false;
+//        }
+//    }
+//    return true;
 }
 
 template<int D>
@@ -433,11 +430,12 @@ void MRNode<D>::broadcastCoefs(int src, mpi::communicator *comm) {
 
 template<int D>
 void MRNode<D>::assignDecendantTags(int rank) {
-    for (int n = 0; n < getNChildren(); n++) {
-        MRNode<D> &child = getMRChild(n);
-        child.setRankId(rank);
-        child.assignDecendantTags(rank);
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    for (int n = 0; n < getNChildren(); n++) {
+//        MRNode<D> &child = getMRChild(n);
+//        child.setRankId(rank);
+//        child.assignDecendantTags(rank);
+//    }
 }
 
 template class MRNode<1>;

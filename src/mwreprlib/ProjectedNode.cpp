@@ -37,41 +37,45 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
 template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx) {
-    this->setIsEndNode();
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    this->setIsEndNode();
+//    if (not this->isForeign()) {
+//        this->allocCoefs();
+//        this->zeroCoefs();
+//        this->zeroNorms();
+//    }
 }
 
 template<int D>
-ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &n) : FunctionNode<D>(n) {
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
+ProjectedNode<D>::ProjectedNode(const ProjectedNode<D> &n)
+        : FunctionNode<D>(n) {
+    NOT_IMPLEMENTED_ABORT;
+//    if (not this->isForeign()) {
+//        this->allocCoefs();
+//        this->zeroCoefs();
+//        this->zeroNorms();
+//    }
 }
 
 /* Recurcive node constructor*/
 template<int D>
 void ProjectedNode<D>::copyChildren(const MRNode<D> &node) {
-    if (node.isBranchNode()) {
-        this->allocKindergarten();
-        this->setIsBranchNode();
-        this->clearIsEndNode();
-    }
-    int myRank = this->getRankId();
-    for (int cIdx = 0; cIdx < node.getNChildren(); cIdx++) {
-        const MRNode<D> &yourChild = node.getMRChild(cIdx);
-        int childRank = yourChild.getRankId();
-        this->setRankId(childRank); //Rank is copied from parent
-        ProjectedNode<D> *myChild = new ProjectedNode(*this, cIdx);
-        this->setRankId(myRank);
-        myChild->copyChildren(yourChild);
-        this->children[cIdx] = myChild;
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    if (node.isBranchNode()) {
+//        this->allocKindergarten();
+//        this->setIsBranchNode();
+//        this->clearIsEndNode();
+//    }
+//    int myRank = this->getRankId();
+//    for (int cIdx = 0; cIdx < node.getNChildren(); cIdx++) {
+//        const MRNode<D> &yourChild = node.getMRChild(cIdx);
+//        int childRank = yourChild.getRankId();
+//        this->setRankId(childRank); //Rank is copied from parent
+//        ProjectedNode<D> *myChild = new ProjectedNode(*this, cIdx);
+//        this->setRankId(myRank);
+//        myChild->copyChildren(yourChild);
+//        this->children[cIdx] = myChild;
+//    }
 }
 
 /** Allocating child node.
@@ -80,10 +84,11 @@ void ProjectedNode<D>::copyChildren(const MRNode<D> &node) {
   * with the appropriate translation and Hilbert path parameters. */
 template<int D>
 void ProjectedNode<D>::createChild(int cIdx) {
-    assert(this->children != 0);
-    assert(this->children[cIdx] == 0);
-    ProjectedNode<D> *child = new ProjectedNode<D>(*this, cIdx);
-    this->children[cIdx] = child;
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->children != 0);
+//    assert(this->children[cIdx] == 0);
+//    ProjectedNode<D> *child = new ProjectedNode<D>(*this, cIdx);
+//    this->children[cIdx] = child;
 }
 
 /** Generating child node.

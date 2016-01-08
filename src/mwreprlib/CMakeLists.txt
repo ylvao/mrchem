@@ -17,6 +17,8 @@ set(mwrepr_SOURCES
 	MWFilter.h
 	FilterCache.cpp
 	FilterCache.h
+	HilbertPath.cpp
+	HilbertPath.h
 	NodeIndex.h
 	TelePrompter.cpp
 	TelePrompter.h
@@ -35,6 +37,20 @@ set(mwrepr_SOURCES
         ScalingBasis.h
         LegendreBasis.h
         InterpolatingBasis.h
+        MRTree.cpp
+        MRTree.h
+        MRNode.cpp
+        MRNode.h
+        MWTree.cpp
+        MWTree.h
+        MWNode.cpp
+        MWNode.h
+        FunctionTree.cpp
+        FunctionTree.h
+        FunctionNode.cpp
+        FunctionNode.h
+        ProjectedNode.cpp
+        ProjectedNode.h
 	)
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

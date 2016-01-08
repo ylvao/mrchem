@@ -10,9 +10,10 @@
 #ifndef MRTREE_H_
 #define MRTREE_H_
 
-#include "NodeBox.h"
 #include "parallel.h"
 #include "mwrepr_declarations.h"
+
+#include "NodeBox.h"
 
 #ifdef OPENMP
 #define SET_TREE_LOCK() omp_set_lock(&this->tree_lock)
@@ -27,49 +28,45 @@
 template<int D>
 class MRTree {
 public:
-    MRTree(const BoundingBox<D> &box, int k);
+    MRTree(const BoundingBox<D> &box);
     MRTree(const MRTree<D> &tree);
     virtual ~MRTree();
-    virtual void clear() = 0;
+
+    virtual void clear() { NOT_IMPLEMENTED_ABORT; }
 
     void setName(const std::string &n) { this->name = n; }
     const std::string &getName() const { return this->name; }
 
-    int getKp1() const { return this->kp1; }
-    int getKp1_d() const { return this->kp1_d; }
-    int getOrder() const { return this->order; }
     int getDim() const { return D; }
     int getTDim() const { return this->tDim; }
     int getNNodes(int depth = -1) const;
     int getNEndNodes() const { return this->endNodeTable.size(); }
     int getNAllocGenNodes();
     int getNGenNodes();
+    int getRootScale() const { return this->rootBox.getScale(); }
     virtual int getDepth() const { return this->nodesAtDepth.size(); }
 
-    NodeBox<D> &getRootBox() { return *this->rootBox; }
-    const NodeBox<D> &getRootBox() const { return *this->rootBox; }
-    int getRootScale() const { return this->rootBox->getRootScale(); }
-    int getNRootNodes() const { return this->rootBox->getNBoxes(); }
-    const double *getLowerBounds() const { return this->rootBox->getLowerBounds(); }
-    const double *getUpperBounds() const { return this->rootBox->getUpperBounds(); }
+    NodeBox<D> &getRootBox() { return this->rootBox; }
+    const NodeBox<D> &getRootBox() const { return this->rootBox; }
 
-    const MRNode<D> *findNode(const double *r, int depth = -1) const;
     const MRNode<D> *findNode(const NodeIndex<D> &nIdx) const;
+    const MRNode<D> *findNode(const double *r, int depth = -1) const;
     MRNode<D> *findNode(const NodeIndex<D> &nIdx);
     MRNode<D> *findNode(const double *r, int depth = -1);
     MRNode<D> &getNode(const NodeIndex<D> &nIdx);
+    const MRNode<D> &getNode(const double *r);
     MRNode<D> &getNode(const double *r, int depth = -1);
     MRNode<D> &getNodeNoGen(const NodeIndex<D> &nIdx);
 
     const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
-    const MRNode<D> &getRootNode(int i = 0) const { return this->rootBox->getNode(i); }
-    const MRNode<D> &getRootNode(const double *r) const { return this->rootBox->getNode(r); }
-    const MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) const { return this->rootBox->getNode(nIdx); }
+    const MRNode<D> &getRootNode(int i = 0) const { return this->rootBox.getNode(i); }
+    const MRNode<D> &getRootNode(const double *r) const { return this->rootBox.getNode(r); }
+    const MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) const { return this->rootBox.getNode(nIdx); }
 
     MRNode<D> &getEndNode(int i) { return *this->endNodeTable[i]; }
-    MRNode<D> &getRootNode(int i = 0) { return this->rootBox->getNode(i); }
-    MRNode<D> &getRootNode(const double *r) { return this->rootBox->getNode(r); }
-    MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox->getNode(nIdx); }
+    MRNode<D> &getRootNode(int i = 0) { return this->rootBox.getNode(i); }
+    MRNode<D> &getRootNode(const double *r) { return this->rootBox.getNode(r); }
+    MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox.getNode(nIdx); }
 
     void distributeNodes(int depth = -1);
 
@@ -86,8 +83,8 @@ public:
     bool diffTree(const MRTree<D> &tree) const;
     bool checkCompatible(const MRTree<D> &tree);
 
-    virtual bool saveTree(const std::string &file) = 0;
-    virtual bool loadTree(const std::string &file) = 0;
+    virtual bool saveTree(const std::string &file) { NOT_IMPLEMENTED_ABORT; }
+    virtual bool loadTree(const std::string &file) { NOT_IMPLEMENTED_ABORT; }
 
     int countBranchNodes(int depth = -1);
     int countLeafNodes(int depth = -1);
@@ -99,18 +96,10 @@ public:
     void checkRankOverlap(MRTree<D> &tree);
 
     friend class MRNode<D>;
-    friend class TreeBuilder<D>;
-    friend class TreeAdaptor<D>;
-
 protected:
     // Parameters that are set in construction and should never change
-    int order;
-    int rank;
-    int nThreads;
-
-    // Parameters that are derived internally and should not be set explicitly
-    int kp1;
-    int kp1_d;
+    const int rank;
+    const int nThreads;
 
     // Parameters that are dynamic and can be set by user
     std::string name;
@@ -119,15 +108,15 @@ protected:
     int nNodes;
     int *nGenNodes;
     int *nAllocGenNodes;
-    NodeBox<D> *rootBox;            ///< The actual container of nodes
-    MRNodeVector endNodeTable;	    ///< Final projected nodes
+    NodeBox<D> rootBox;            ///< The actual container of nodes
+    MRNodeVector endNodeTable;	   ///< Final projected nodes
     std::vector<int> nodesAtDepth;  ///< Node counter
 
     // Static default parameters
     const static int tDim = (1 << D);
 
-    int getRootIndex(const double *r) const { return this->rootBox->getBoxIndex(r); }
-    int getRootIndex(const NodeIndex<D> &nIdx) { return this->rootBox->getBoxIndex(nIdx); }
+    int getRootIndex(const double *r) const { return this->rootBox.getBoxIndex(r); }
+    int getRootIndex(const NodeIndex<D> &nIdx) { return this->rootBox.getBoxIndex(nIdx); }
 
     void allocNodeCounters();
     void deleteNodeCounters();

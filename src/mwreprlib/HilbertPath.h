@@ -4,13 +4,13 @@
 template<int D>
 class HilbertPath {
 public:
-    HilbertPath() { this->path = 0; }
-    HilbertPath(const HilbertPath<D> &p) { this->path = p.path; }
+    HilbertPath() : path(0) { }
+    HilbertPath(const HilbertPath<D> &p) : path(p.path) { }
     HilbertPath(const HilbertPath<D> &p, int cIdx) {
         int hIdx = p.getHIndex(cIdx);
         this->path = p.getChildPath(hIdx);
     }
-    virtual ~HilbertPath() {}
+    virtual ~HilbertPath() { }
 
     short int getPath() const { return this->path; }
     short int getChildPath(int hIdx) const { return this->pTable[this->path][hIdx]; }

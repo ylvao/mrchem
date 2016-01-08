@@ -15,28 +15,27 @@
 #include <Eigen/Core>
 
 #include "MRTree.h"
-
-class MWFilter;
-class ScalingBasis;
-template<int D> class TreeBuilder;
+#include "MWNode.h"
+#include "MultiResolutionAnalysis.h"
 
 template<int D>
 class MWTree : public MRTree<D> {
 public:
-    MWTree(const BoundingBox<D> &box, int k, int type);
-//    MWTree(const MRGrid<D> &tree, int type);
+    MWTree(const MultiResolutionAnalysis<D> &mra);
     MWTree(const MWTree<D> &tree);
     virtual ~MWTree();
 
     void setZero();
-    virtual void clear() = 0;
+    virtual void clear() { NOT_IMPLEMENTED_ABORT; }
 
-    int getScalingType() const { return this->scalingType; }
+    const MultiResolutionAnalysis<D> &getMRA() const { return this->MRA; }
+
     double getSquareNorm() const { return this->squareNorm; }
     double estimateError(bool absPrec);
 
-    const MWFilter &getFilter() { return *this->filter; }
-    const ScalingBasis &getScalingFunctions() const { return *this->scalingFunc; }
+    int getOrder() const { return this->order; }
+    int getKp1() const { return this->order + 1; }
+    int getKp1_d() const { return this->kp1_d; }
 
     inline Eigen::MatrixXd &getTmpScalingCoefs();
     inline Eigen::VectorXd &getTmpScalingVector();
@@ -47,38 +46,35 @@ public:
 
     void crop(double thrs = -1.0, bool absPrec = true);
 
-    MWNode<D>& getRootMWNode(int rIdx);
-    MWNode<D>& getRootMWNode(const NodeIndex<D> &nIdx);
+    MWNode<D> &getRootMWNode(const NodeIndex<D> &nIdx) { return static_cast<MWNode<D> &>(this->getRootNode(nIdx)); }
+    MWNode<D> &getRootMWNode(int rIdx) { return static_cast<MWNode<D> &>(this->getRootNode(rIdx)); }
+    MWNode<D> &getEndMWNode(int i) { return static_cast<MWNode<D> &>(this->getEndNode(i)); }
 
-    const MWNode<D>& getRootMWNode(int rIdx) const;
-    const MWNode<D>& getRootMWNode(const NodeIndex<D> &nIdx) const;
-
-    MWNode<D>& getEndMWNode(int i);
-    const MWNode<D>& getEndMWNode(int i) const;
+    const MWNode<D> &getRootMWNode(const NodeIndex<D> &nIdx) const { return static_cast<const MWNode<D> &>(this->getRootNode(nIdx)); }
+    const MWNode<D> &getRootMWNode(int rIdx) const { return static_cast<const MWNode<D> &>(this->getRootNode(rIdx)); }
+    const MWNode<D> &getEndMWNode(int i) const { return static_cast<const MWNode<D> &>(this->getEndNode(i)); }
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
 
-    friend class TreeBuilder<D>;
-
 protected:
-    int scalingType;
-    double squareNorm;
+    const MultiResolutionAnalysis<D> MRA;
 
-    MWFilter *filter;
-    ScalingBasis *scalingFunc;
+    // Constant parameters that are derived internally
+    const int order;
+    const int kp1_d;
+
+    // Tree data
+    double squareNorm;
 
     Eigen::MatrixXd **tmpCoefs;   ///< temp memory
     Eigen::VectorXd **tmpVector;  ///< temp memory
     Eigen::VectorXd **tmpMWCoefs; ///< temp memory
 
-    void setupFilters(int type, int k);
-    void setupScalingBasis(int type, int k);
-
     void allocWorkMemory();
     void freeWorkMemory();
 
-    double calcSquareNorm(MRNodeVector *work = 0);
+    void calcSquareNorm(const MRNodeVector *work = 0);
 
 private:
     friend class boost::serialization::access;
@@ -130,7 +126,6 @@ Eigen::VectorXd& MWTree<D>::getTmpMWCoefs() {
 template<int T>
 std::ostream& operator<<(std::ostream &o, MWTree<T> &tree) {
     o << "*MWTree: " << tree.name << std::endl;
-    o << "  scaling type: " << tree.scalingType << std::endl;
     o << "  order: " << tree.order << std::endl;
     o << "  nodes: " << tree.nNodes << std::endl;
     o << "  genNodes: " << tree.getNGenNodes() <<

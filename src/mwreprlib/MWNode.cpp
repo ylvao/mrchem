@@ -7,11 +7,6 @@
 
 #include "MWNode.h"
 #include "MWTree.h"
-#include "QuadratureCache.h"
-#include "ScalingBasis.h"
-#include "NodeIndex.h"
-#include "MathUtils.h"
-#include "MWFilter.h"
 
 using namespace std;
 using namespace Eigen;
@@ -19,26 +14,31 @@ using namespace Eigen;
 /** MWNode rootnode constructor.
   * Creates an empty rootnode given its tree and node index */
 template<int D>
-MWNode<D>::MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx) : MRNode<D>(t, nIdx) {
-    this->componentNorms = 0;
-    this->coefs = 0;
-    clearNorms();
+MWNode<D>::MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx)
+        : MRNode<D>(t, nIdx),
+          squareNorm(-1.0),
+          componentNorms(0),
+          coefs(0) {
 }
 
 /** MWNode constructor.
   * Creates an empty node given its parent and child index */
 template<int D>
-MWNode<D>::MWNode(MWNode<D> &p, int cIdx) : MRNode<D>(p, cIdx) {
-    this->componentNorms = 0;
-    this->coefs = 0;
-    clearNorms();
+MWNode<D>::MWNode(MWNode<D> &p, int cIdx)
+        : MRNode<D>(p, cIdx),
+          squareNorm(-1.0),
+          componentNorms(0),
+          coefs(0) {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
-MWNode<D>::MWNode(MWNode<D> &n) : MRNode<D>(n) {
-    this->componentNorms = 0;
-    this->coefs = 0;
-    clearNorms();
+MWNode<D>::MWNode(const MWNode<D> &n)
+        : MRNode<D>(n),
+          squareNorm(-1.0),
+          componentNorms(0),
+          coefs(0) {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 /** MWNode destructor.
@@ -71,12 +71,10 @@ void MWNode<D>::allocCoefs(int nCoefs) {
 /** Deallocation of coefficients. */
 template<int D>
 void MWNode<D>::freeCoefs() {
-    if (this->coefs != 0) {
-        delete this->coefs;
-    }
+    if (this->coefs != 0) delete this->coefs;
+    this->coefs = 0;
     this->clearHasCoefs();
     this->clearIsAllocated();
-    this->coefs = 0;
 }
 
 template<int D>
@@ -84,6 +82,7 @@ void MWNode<D>::zeroCoefs() {
     assert(this->coefs != 0);
     this->coefs->setZero();
     this->setHasCoefs();
+    zeroNorms();
 }
 
 /** Set coefficients of node.
@@ -95,16 +94,17 @@ void MWNode<D>::zeroCoefs() {
   * routine). */
 template<int D>
 void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
-    if (not this->isAllocated()) {
-        allocCoefs();
-    }
-    int nNew = c.size();
-    assert (nNew <= this->getNCoefs());
-    if (nNew < this->getNCoefs()) {
-        this->coefs->segment(nNew, this->getNCoefs() - nNew).setZero();
-    }
-    this->coefs->segment(0, nNew) = c;
-    this->setHasCoefs();
+    NOT_IMPLEMENTED_ABORT;
+//    if (not this->isAllocated()) {
+//        allocCoefs();
+//    }
+//    int nNew = c.size();
+//    assert (nNew <= this->getNCoefs());
+//    if (nNew < this->getNCoefs()) {
+//        this->coefs->segment(nNew, this->getNCoefs() - nNew).setZero();
+//    }
+//    this->coefs->segment(0, nNew) = c;
+//    this->setHasCoefs();
 }
 
 /** Coefficient-Value transform
@@ -118,52 +118,53 @@ void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
   *       representation, in oppose to s/d (scaling and wavelet). */
 template<int D>
 void MWNode<D>::cvTransform(int operation) {
-    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
-    if (sf.getType() != Interpol) {
-        NOT_IMPLEMENTED_ABORT;
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
+//    if (sf.getType() != Interpol) {
+//        NOT_IMPLEMENTED_ABORT;
+//    }
 
-    int quadratureOrder = sf.getQuadratureOrder();
-    getQuadratureCache(qc);
+//    int quadratureOrder = sf.getQuadratureOrder();
+//    getQuadratureCache(qc);
 
-    double two_scale = pow(2.0, this->getScale() + 1);
-    VectorXd modWeights = qc.getWeights(quadratureOrder);
-    switch (operation) {
-    case Forward:
-        modWeights = modWeights.array().inverse();
-        modWeights *= two_scale;
-        modWeights = modWeights.array().sqrt();
-        break;
-    case Backward:
-        modWeights *= 1.0/two_scale;
-        modWeights = modWeights.array().sqrt();
-        break;
-    default:
-        MSG_FATAL("Invalid operation");
-    }
+//    double two_scale = pow(2.0, this->getScale() + 1);
+//    VectorXd modWeights = qc.getWeights(quadratureOrder);
+//    switch (operation) {
+//    case Forward:
+//        modWeights = modWeights.array().inverse();
+//        modWeights *= two_scale;
+//        modWeights = modWeights.array().sqrt();
+//        break;
+//    case Backward:
+//        modWeights *= 1.0/two_scale;
+//        modWeights = modWeights.array().sqrt();
+//        break;
+//    default:
+//        MSG_FATAL("Invalid operation");
+//    }
 
-    VectorXd &coefs = this->getCoefs();
+//    VectorXd &coefs = this->getCoefs();
 
-    int kp1 = this->getKp1();
-    int kp1_d = this->getKp1_d();
-    int kp1_p[D];
-    for (int d = 0; d < D; d++) {
-        kp1_p[d] = MathUtils::ipow(kp1, d);
-    }
+//    int kp1 = this->getKp1();
+//    int kp1_d = this->getKp1_d();
+//    int kp1_p[D];
+//    for (int d = 0; d < D; d++) {
+//        kp1_p[d] = MathUtils::ipow(kp1, d);
+//    }
 
-    for (int m = 0; m < this->getTDim(); m++) {
-        for (int p = 0; p < D; p++) {
-            int n = 0;
-            for (int i = 0; i < kp1_p[D - p - 1]; i++) {
-                for (int j = 0; j < kp1; j++) {
-                    for (int k = 0; k < kp1_p[p]; k++) {
-                        coefs[m * kp1_d + n] *= modWeights[j];
-                        n++;
-                    }
-                }
-            }
-        }
-    }
+//    for (int m = 0; m < this->getTDim(); m++) {
+//        for (int p = 0; p < D; p++) {
+//            int n = 0;
+//            for (int i = 0; i < kp1_p[D - p - 1]; i++) {
+//                for (int j = 0; j < kp1; j++) {
+//                    for (int k = 0; k < kp1_p[p]; k++) {
+//                        coefs[m * kp1_d + n] *= modWeights[j];
+//                        n++;
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 /** Multiwavelet transform: fast version
@@ -187,44 +188,46 @@ void MWNode<D>::cvTransform(int operation) {
   * C++ version: Jonas Juselius, September 2009 */
 template<int D>
 void MWNode<D>::mwTransform(int operation) {
-    int kp1 = this->getKp1();
-    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
-    int kp1_d = this->getKp1_d();
-    const MWFilter &filter = getMWTree().getFilter();
-    VectorXd &result = getMWTree().getTmpMWCoefs();
-    bool overwrite = true;
+    NOT_IMPLEMENTED_ABORT;
+//    int kp1 = this->getKp1();
+//    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
+//    int kp1_d = this->getKp1_d();
+//    const MWFilter &filter = getMWTree().getFilter();
+//    VectorXd &result = getMWTree().getTmpMWCoefs();
+//    bool overwrite = true;
 
-    for (int i = 0; i < D; i++) {
-        int mask = 1 << i;
-        for (int gt = 0; gt < this->getTDim(); gt++) {
-            double *out = result.data() + gt * kp1_d;
-            for (int ft = 0; ft < this->getTDim(); ft++) {
-                /* Operate in direction i only if the bits along other
-                 * directions are identical. The bit of the direction we
-                 * operate on determines the appropriate filter/operator */
-                if ((gt | mask) == (ft | mask)) {
-                    double *in = this->coefs->data() + ft * kp1_d;
-                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
-                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
-                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
-                    overwrite = false;
-                }
-            }
-            overwrite = true;
-        }
-        this->coefs->swap(result);
-    }
+//    for (int i = 0; i < D; i++) {
+//        int mask = 1 << i;
+//        for (int gt = 0; gt < this->getTDim(); gt++) {
+//            double *out = result.data() + gt * kp1_d;
+//            for (int ft = 0; ft < this->getTDim(); ft++) {
+//                /* Operate in direction i only if the bits along other
+//                 * directions are identical. The bit of the direction we
+//                 * operate on determines the appropriate filter/operator */
+//                if ((gt | mask) == (ft | mask)) {
+//                    double *in = this->coefs->data() + ft * kp1_d;
+//                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
+//                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
+//                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
+//                    overwrite = false;
+//                }
+//            }
+//            overwrite = true;
+//        }
+//        this->coefs->swap(result);
+//    }
 }
 
 /** Set all norms to Undefined. */
 template<int D>
 void MWNode<D>::clearNorms() {
-    this->squareNorm = -1.0;
-    if (this->componentNorms != 0) {
-        for (int i = 0; i < this->getTDim(); i++) {
-            this->componentNorms[i] = -1.0;
-        }
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    this->squareNorm = -1.0;
+//    if (this->componentNorms != 0) {
+//        for (int i = 0; i < this->getTDim(); i++) {
+//            this->componentNorms[i] = -1.0;
+//        }
+//    }
 }
 
 /** Set all norms to zero. */
@@ -241,57 +244,62 @@ void MWNode<D>::zeroNorms() {
 /** Calculate and store square norm and component norms, if allocated. */
 template<int D>
 void MWNode<D>::calcNorms() {
-    this->squareNorm = calcSquareNorm();
-    if (this->componentNorms != 0) {
-        calcComponentNorms();
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    this->squareNorm = calcSquareNorm();
+//    if (this->componentNorms != 0) {
+//        calcComponentNorms();
+//    }
 }
 
 /** Calculate, store and return square norm. */
 template<int D>
 double MWNode<D>::calcSquareNorm() {
-    assert(this->isAllocated());
-    assert(this->hasCoefs());
-    return this->coefs->squaredNorm();
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->isAllocated());
+//    assert(this->hasCoefs());
+//    return this->coefs->squaredNorm();
 }
 
 /** Calculate and return scaling norm. */
 template<int D>
 double MWNode<D>::calcScalingNorm() {
-    assert(this->isAllocated());
-    assert(this->hasCoefs());
-    return this->coefs->segment(0, this->getKp1_d()).norm();
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->isAllocated());
+//    assert(this->hasCoefs());
+//    return this->coefs->segment(0, this->getKp1_d()).norm();
 }
 
 /** Calculate and return wavelet norm. */
 template<int D>
 double MWNode<D>::calcWaveletNorm() {
-    assert(this->isAllocated());
-    assert(this->hasCoefs());
-    int nCoefs = this->getNCoefs();
-    int kp1_d = this->getKp1_d();
-    return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->isAllocated());
+//    assert(this->hasCoefs());
+//    int nCoefs = this->getNCoefs();
+//    int kp1_d = this->getKp1_d();
+//    return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
 }
 
 template<int D>
 double MWNode<D>::estimateError(bool absPrec) {
-    if (this->isForeign()) {
-        return 0.0;
-    }
-    if (this->isCommon() and this->tree->getRankId() != 0) {
-        return 0.0;
-    }
-    double tNorm = 1.0;
-    if (not absPrec) {
-        tNorm = sqrt(getMWTree().getSquareNorm());
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->isForeign()) {
+//        return 0.0;
+//    }
+//    if (this->isCommon() and this->tree->getRankId() != 0) {
+//        return 0.0;
+//    }
+//    double tNorm = 1.0;
+//    if (not absPrec) {
+//        tNorm = sqrt(getMWTree().getSquareNorm());
+//    }
 
-    int n = this->getScale();
-    double expo = (1.0 * (n + 1));
-    double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
-    double wNorm = this->calcWaveletNorm();
-    double error = scaleFactor * wNorm / tNorm;
-    return error*error;
+//    int n = this->getScale();
+//    double expo = (1.0 * (n + 1));
+//    double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
+//    double wNorm = this->calcWaveletNorm();
+//    double error = scaleFactor * wNorm / tNorm;
+//    return error*error;
 }
 
 /** Update the coefficients of the node by a mw transform of the scaling
@@ -299,40 +307,42 @@ double MWNode<D>::estimateError(bool absPrec) {
   * coefficients. */
 template<int D>
 void MWNode<D>::reCompress(bool overwrite) {
-    if ((not this->isGenNode()) and this->isBranchNode()) {
-        if (not this->isAllocated()) {
-            // This happens for seeded nodes and on distributed trees
-            allocCoefs();
-        }
-        if (overwrite) {
-            copyCoefsFromChildren(*this->coefs);
-            mwTransform(Compression);
-        } else {
-            MatrixXd tmp = getCoefs();
-            copyCoefsFromChildren(*this->coefs);
-            mwTransform(Compression);
-            getCoefs() += tmp;
-        }
-        this->setHasCoefs();
-        clearNorms();
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    if ((not this->isGenNode()) and this->isBranchNode()) {
+//        if (not this->isAllocated()) {
+//            // This happens for seeded nodes and on distributed trees
+//            allocCoefs();
+//        }
+//        if (overwrite) {
+//            copyCoefsFromChildren(*this->coefs);
+//            mwTransform(Compression);
+//        } else {
+//            MatrixXd tmp = getCoefs();
+//            copyCoefsFromChildren(*this->coefs);
+//            mwTransform(Compression);
+//            getCoefs() += tmp;
+//        }
+//        this->setHasCoefs();
+//        clearNorms();
+//    }
 }
 
 /** Takes the scaling coefficients of the children and stores them consecutively
   * in the  given vector. */
 template<int D>
 void MWNode<D>::copyCoefsFromChildren(VectorXd &scaling) {
-    int kp1_d = this->getKp1_d();
-    assert(this->children != 0);
-    for (int i = 0; i < this->getTDim(); i++) {
-        MWNode<D> &child = getMWChild(i);
-        if (child.hasCoefs()) {
-            VectorXd &cc = child.getCoefs();
-            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
-        } else {
-            scaling.segment(i * kp1_d, kp1_d).setZero();
-        }
-    }
+    NOT_IMPLEMENTED_ABORT;
+//    int kp1_d = this->getKp1_d();
+//    assert(this->children != 0);
+//    for (int i = 0; i < this->getTDim(); i++) {
+//        MWNode<D> &child = getMWChild(i);
+//        if (child.hasCoefs()) {
+//            VectorXd &cc = child.getCoefs();
+//            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
+//        } else {
+//            scaling.segment(i * kp1_d, kp1_d).setZero();
+//        }
+//    }
 }
 
 /** Recurse down until an EndNode is found, and then crop children with
@@ -365,41 +375,43 @@ bool MWNode<D>::crop(double prec, NodeIndexSet *cropIdx) {
 
 template<int D>
 mpi::request MWNode<D>::isendCoefs(int who, int tag, int comp) {
-    assert(this->hasCoefs());
-#ifdef HAVE_MPI
-    int nSend = this->getNCoefs();
-    const double *data = this->coefs->data();
-    if (comp > 0) {
-        assert(comp >= 0 and comp < this->getTDim());
-        nSend = this->getKp1_d();
-        data = data + comp * this->getKp1_d();
-    }
-    return node_group.isend(who, tag, data, nSend);
-#else
-    mpi::request dummy = 0;
-    return dummy;
-#endif
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->hasCoefs());
+//#ifdef HAVE_MPI
+//    int nSend = this->getNCoefs();
+//    const double *data = this->coefs->data();
+//    if (comp > 0) {
+//        assert(comp >= 0 and comp < this->getTDim());
+//        nSend = this->getKp1_d();
+//        data = data + comp * this->getKp1_d();
+//    }
+//    return node_group.isend(who, tag, data, nSend);
+//#else
+//    mpi::request dummy = 0;
+//    return dummy;
+//#endif
 }
 
 template<int D>
 mpi::request MWNode<D>::ireceiveCoefs(int who, int tag, int comp) {
-#ifdef HAVE_MPI
-    if (not this->isAllocated()) {
-        allocCoefs();
-    }
-    int nRecv = this->getNCoefs();
-    double *data = this->coefs->data();
-    if (comp > 0) {
-        assert(comp >= 0 and comp < this->getTDim());
-        nRecv = this->getKp1_d();
-        data = data + comp * this->getKp1_d();
-    }
-    this->setHasCoefs();
-    return node_group.irecv(who, tag, data, nRecv);
-#else
-    mpi::request dummy = 0;
-    return dummy;
-#endif
+    NOT_IMPLEMENTED_ABORT;
+//#ifdef HAVE_MPI
+//    if (not this->isAllocated()) {
+//        allocCoefs();
+//    }
+//    int nRecv = this->getNCoefs();
+//    double *data = this->coefs->data();
+//    if (comp > 0) {
+//        assert(comp >= 0 and comp < this->getTDim());
+//        nRecv = this->getKp1_d();
+//        data = data + comp * this->getKp1_d();
+//    }
+//    this->setHasCoefs();
+//    return node_group.irecv(who, tag, data, nRecv);
+//#else
+//    mpi::request dummy = 0;
+//    return dummy;
+//#endif
 }
 
 template class MWNode<1>;

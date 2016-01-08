@@ -2,33 +2,31 @@
 #define FUNCTIONNODE_H
 
 #include "MWNode.h"
-#include "mwrepr_declarations.h"
 
 template<int D>
 class FunctionNode : public MWNode<D> {
 public:
     FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     FunctionNode(FunctionNode<D> &p, int cIdx);
-    FunctionNode(FunctionNode<D> &n);
+    FunctionNode(const FunctionNode<D> &n);
+    FunctionNode& operator=(const FunctionNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~FunctionNode() { }
 
     virtual double evalf(const double *r);
-    virtual void clearGenerated() = 0;
-    virtual void purgeGenerated() = 0;
+    virtual void clearGenerated() { NOT_IMPLEMENTED_ABORT; }
+    virtual void purgeGenerated() { NOT_IMPLEMENTED_ABORT; }
 
     double integrate();
     double dotScaling(FunctionNode<D> &inpNode);
     double dotWavelet(FunctionNode<D> &inpNode);
 
-    inline FunctionTree<D> &getFuncTree();
-    inline FunctionNode<D> &getFuncParent();
-    inline FunctionNode<D> &getFuncChild(int cIdx);
+    FunctionTree<D> &getFuncTree() { return static_cast<FunctionTree<D> &>(*this->tree); }
+    FunctionNode<D> &getFuncParent() { return static_cast<FunctionNode<D> &>(*this->parent); }
+    FunctionNode<D> &getFuncChild(int cIdx) { return static_cast<FunctionNode<D> &>(*this->children[cIdx]); }
 
-    inline const FunctionTree<D> &getFuncTree() const;
-    inline const FunctionNode<D> &getFuncParent() const;
-    inline const FunctionNode<D> &getFuncChild(int cIdx) const;
-
-    friend class FunctionTree<D>;
+    const FunctionTree<D> &getFuncTree() const { return static_cast<const FunctionTree<D> &>(*this->tree); }
+    const FunctionNode<D> &getFuncParent() const { return static_cast<const FunctionNode<D> &>(*this->parent); }
+    const FunctionNode<D> &getFuncChild(int cIdx) const { return static_cast<const FunctionNode<D> &>(*this->children[cIdx]); }
 
 protected:
     double integrateLegendre();
@@ -41,49 +39,5 @@ private:
         ar & boost::serialization::base_object<MWNode<D> >(*this);
     }
 };
-
-/** Static cast of MWTree reference to FunctionTree reference.
-  *
-  * FunctionTrees only contain FunctionNodes, and FunctionNodes are always part
-  * of a FunctionTree. Still the tree pointer of the node is defined in the
-  * MWNode base class, and thus its tree pointer must be of MWTree type. This
-  * routine returns the tree as a FunctionTree. */
-template<int D>
-const FunctionTree<D> &FunctionNode<D>::getFuncTree() const {
-    assert(this->tree != 0);
-    return static_cast<const FunctionTree<D> &>(*this->tree);
-}
-
-template<int D>
-FunctionTree<D> &FunctionNode<D>::getFuncTree() {
-    assert(this->tree != 0);
-    return static_cast<FunctionTree<D> &>(*this->tree);
-}
-
-template<int D>
-const FunctionNode<D> &FunctionNode<D>::getFuncChild(int cIdx) const {
-    assert(this->children != 0);
-    assert(this->children[cIdx] != 0);
-    return static_cast<const FunctionNode<D> &>(*this->children[cIdx]);
-}
-
-template<int D>
-FunctionNode<D> &FunctionNode<D>::getFuncChild(int cIdx) {
-    assert(this->children != 0);
-    assert(this->children[cIdx] != 0);
-    return static_cast<FunctionNode<D> &>(*this->children[cIdx]);
-}
-
-template<int D>
-const FunctionNode<D> &FunctionNode<D>::getFuncParent() const {
-    assert(this->parent != 0);
-    return static_cast<const FunctionNode<D> &>(*this->parent);
-}
-
-template<int D>
-FunctionNode<D> &FunctionNode<D>::getFuncParent() {
-    assert(this->parent != 0);
-    return static_cast<FunctionNode<D> &>(*this->parent);
-}
 
 #endif // FUNCTIONNODE_H

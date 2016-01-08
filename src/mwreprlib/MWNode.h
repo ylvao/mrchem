@@ -12,17 +12,20 @@
 
 #include "MRNode.h"
 
-template<int D> class MWTree;
-
 template<int D>
 class MWNode : public MRNode<D> {
 public:
     MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx);
     MWNode(MWNode<D> &p, int cIdx);
-    MWNode(MWNode<D> &n);
+    MWNode(const MWNode<D> &n);
+    MWNode& operator=(const MWNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~MWNode();
 
     double estimateError(bool absPrec);
+
+    int getKp1() const { return getMWTree().getKp1(); }
+    int getKp1_d() const { return getMWTree().getKp1_d(); }
+    int getOrder() const { return getMWTree().getOrder(); }
 
     inline bool hasComponentNorms() const;
     virtual double getComponentNorm(int i);
@@ -30,19 +33,10 @@ public:
     inline double getScalingNorm();
     inline double getWaveletNorm();
 
-    void calcNorms();
-    void zeroNorms();
-    void clearNorms();
-
-    virtual const Eigen::VectorXd &getCoefs() const { return *this->coefs; }
-    virtual Eigen::VectorXd &getCoefs() {
-        if (not this->isAllocated()) {
-            allocCoefs();
-        }
-        return *this->coefs;
-    }
-
     int getNCoefs() const { return this->coefs->size(); }
+    virtual Eigen::VectorXd &getCoefs() { if (not this->isAllocated()) allocCoefs(); return *this->coefs; }
+    virtual const Eigen::VectorXd &getCoefs() const { return *this->coefs; }
+
     virtual void setCoefs(const Eigen::VectorXd &c);
     virtual void freeCoefs();
     virtual void zeroCoefs();
@@ -50,32 +44,19 @@ public:
     virtual void cvTransform(int kind);
     virtual void mwTransform(int kind);
 
-    virtual void purgeGenerated() = 0;
-    virtual void clearGenerated() = 0;
+    virtual void purgeGenerated() { NOT_IMPLEMENTED_ABORT; }
+    virtual void clearGenerated() { NOT_IMPLEMENTED_ABORT; }
 
-    MWTree<D>& getMWTree() {
-        return static_cast<MWTree<D> &>(*this->tree);
-    }
-    MWNode<D>& getMWParent() {
-        return static_cast<MWNode<D> &>(*this->parent);
-    }
-    MWNode<D>& getMWChild(int i) {
-        return static_cast<MWNode<D> &>(*this->children[i]);
-    }
-    const MWTree<D>& getMWTree() const {
-        return static_cast<const MWTree<D> &>(*this->tree);
-    }
-    const MWNode<D>& getMWParent() const {
-        return static_cast<const MWNode<D> &>(*this->parent);
-    }
-    const MWNode<D>& getMWChild(int i) const { 
-        return static_cast<const MWNode<D> &>(*this->children[i]);
-    }
+    MWTree<D>& getMWTree() { return static_cast<MWTree<D> &>(*this->tree); }
+    MWNode<D>& getMWParent() { return static_cast<MWNode<D> &>(*this->parent); }
+    MWNode<D>& getMWChild(int i) { return static_cast<MWNode<D> &>(*this->children[i]); }
+
+    const MWTree<D>& getMWTree() const { return static_cast<const MWTree<D> &>(*this->tree); }
+    const MWNode<D>& getMWParent() const { return static_cast<const MWNode<D> &>(*this->parent); }
+    const MWNode<D>& getMWChild(int i) const { return static_cast<const MWNode<D> &>(*this->children[i]); }
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);
-
-    friend class MWTree<D>;
 
 protected:
     double squareNorm;
@@ -84,15 +65,19 @@ protected:
 
     virtual void allocCoefs(int nCoefs = -1);
 
+    void calcNorms();
+    void zeroNorms();
+    void clearNorms();
+
     virtual double calcSquareNorm();
     virtual double calcScalingNorm();
     virtual double calcWaveletNorm();
 
     inline void allocComponentNorms();
     inline void freeComponentNorms();
-    virtual void calcComponentNorms() = 0;
+    virtual void calcComponentNorms() { NOT_IMPLEMENTED_ABORT; }
 
-    virtual void giveChildrenScaling(bool overwrite = true) {}
+    virtual void giveChildrenScaling(bool overwrite = true) { }
     void copyCoefsFromChildren(Eigen::VectorXd &scoefs);
 
     bool crop(double prec, NodeIndexSet *cropIdx = 0);

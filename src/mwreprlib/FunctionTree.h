@@ -14,14 +14,14 @@
 
 #include "MWTree.h"
 #include "RepresentableFunction.h"
-#include "mwrepr_declarations.h"
 
 template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
-    FunctionTree(const BoundingBox<D> &box, int k, int type = Interpol);
-//    FunctionTree(const MRGrid<D> &grid, int type = Interpol);
+    FunctionTree(const MultiResolutionAnalysis<D> &mra);
     FunctionTree(const MWTree<D> &tree);
+    FunctionTree(const FunctionTree<D> &tree);
+    FunctionTree<D> &operator=(const FunctionTree<D> &tree);
     virtual ~FunctionTree();
 
     void clear();
@@ -68,7 +68,7 @@ private:
 template<int D>
 std::ostream& operator<<(std::ostream &o, FunctionTree<D> &tree) {
     o << std::endl << "*FunctionTree: " << tree.name << std::endl;
-    o << "  squareNorm: " << tree.squareNorm << std::endl;
+    o << "  square norm: " << tree.squareNorm << std::endl;
     o << "  root scale: " << tree.getRootScale() << std::endl;
     o << "  order: " << tree.order << std::endl;
     o << "  nodes: " << tree.getNNodes() << std::endl;

@@ -10,11 +10,11 @@ template <int D> struct IteratorNode;
 template<int D>
 class TreeIterator {
 public:
-    TreeIterator(MRTree<D> *tree, int dir = TopDown) {
-        this->mode = dir;
-        this->state = 0;
-        this->initialState = 0;
-        this->returnGenNodes = true;
+    TreeIterator(MRTree<D> *tree, int dir = TopDown)
+        : mode(dir),
+          state(0),
+          initialState(0),
+          returnGenNodes(true) {
     }
     virtual ~TreeIterator() {
         if (this->initialState != 0) {
@@ -24,31 +24,31 @@ public:
 
     bool next() {
         if (not this->state) {
-	    return false;
-	}
+            return false;
+        }
         if (this->mode == TopDown) {
             if (this->tryNode()) {
-		return true;
-	    }
-	}
-	MRNode<D> &node = *this->state->node;
-	if (checkDepth(node) and checkGenerated(node)) {
-	    const int nChildren = 1 << D;
-	    for (int i = 0; i < nChildren; i++) {
+                return true;
+            }
+        }
+        MRNode<D> &node = *this->state->node;
+        if (checkDepth(node) and checkGenerated(node)) {
+            const int nChildren = 1 << D;
+            for (int i = 0; i < nChildren; i++) {
                 int cIdx = getChildIndex(i);
-		if (this->tryChild(cIdx)) {
-		    return true;
-		}
-	    }
-	}
+                if (this->tryChild(cIdx)) {
+                    return true;
+                }
+            }
+        }
         if (this->tryNextRoot()) {
-	    return true;
-	}
+            return true;
+        }
         if (this->mode == BottomUp) {
             if (this->tryNode()) {
-		return true;
-	    }
-	}
+                return true;
+            }
+        }
         this->removeState();
         return next();
     }
@@ -72,7 +72,7 @@ protected:
     void init(MRTree<D> *tree) {
         this->root = 0;
         this->maxDepth = -1;
-        this->nRoots = tree->getRootBox().getNBoxes();
+        this->nRoots = tree->getRootBox().size();
         this->state = new IteratorNode<D>(&tree->getRootBox().getNode(root));
         // Save the first state so it can be properly deleted later
         this->initialState = this->state;
@@ -170,8 +170,10 @@ public:
     bool doneNode;
     bool doneChild[1 << D];
 
-    IteratorNode(MRNode<D> *_node, IteratorNode<D> *_next = 0) : node(_node), next(_next) {
-        this->doneNode = false;
+    IteratorNode(MRNode<D> *nd, IteratorNode<D> *nx = 0)
+            : node(nd),
+              next(nx),
+              doneNode(false) {
         int nChildren = 1 << D;
         for (int i = 0; i < nChildren; i++) {
             this->doneChild[i] = false;

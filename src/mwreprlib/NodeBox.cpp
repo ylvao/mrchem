@@ -64,7 +64,6 @@ void NodeBox<D>::deleteNodes() {
 
 template<int D>
 void NodeBox<D>::setNode(int bIdx, MRNode<D> **node) {
-    NOT_IMPLEMENTED_ABORT;
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     removeNode(bIdx);
@@ -103,7 +102,6 @@ MRNode<D>& NodeBox<D>::getNode(const double *r) {
 
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(int bIdx) {
-    NOT_IMPLEMENTED_ABORT;
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     assert(this->nodes[bIdx] != 0);

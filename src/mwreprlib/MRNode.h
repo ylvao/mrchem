@@ -11,10 +11,10 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/utility.hpp>
 
-#include "TelePrompter.h"
-#include "macros.h"
 #include "parallel.h"
+#include "macros.h"
 #include "mwrepr_declarations.h"
+
 #include "MRTree.h"
 #include "HilbertPath.h"
 
@@ -33,30 +33,27 @@ class MRNode {
 public:
     MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx);
     MRNode(MRNode<D> &p, int cIdx);
-    MRNode(MRNode<D> &n);
+    MRNode(const MRNode<D> &n);
+    MRNode& operator=(const MRNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~MRNode();
 
     int getTDim() const { return getMRTree().getTDim(); }
-    int getKp1() const { return getMRTree().getKp1(); }
-    int getKp1_d() const { return getMRTree().getKp1_d(); }
-    int getOrder() const { return getMRTree().getOrder(); }
     int getDepth() const { return getNodeIndex().getScale()-getMRTree().getRootScale(); }
     int getScale() const { return getNodeIndex().getScale(); }
     int getRankId() const { return getNodeIndex().getRankId(); }
     int getNChildren() const { if (isBranchNode()) return getTDim(); return 0; }
     const int *getTranslation() const { return getNodeIndex().getTranslation(); }
 
-    const MRTree<D> &getMRTree() const {return *this->tree; }
-    const MRNode<D> &getMRParent() const { return *this->parent; }
-    const MRNode<D> &getMRChild(int i) const { return *this->children[i]; }
-    const NodeIndex<D> &getNodeIndex() const { return *this->nodeIndex; }
-    const HilbertPath<D> &getHilbertPath() const { return *this->hilbertPath; }
-
     MRTree<D> &getMRTree() { return *this->tree; }
     MRNode<D> &getMRParent() { return *this->parent; }
     MRNode<D> &getMRChild(int i) { return *this->children[i]; }
-    NodeIndex<D> &getNodeIndex() { return *this->nodeIndex; }
-    HilbertPath<D> &getHilbertPath() { return *this->hilbertPath; }
+    NodeIndex<D> &getNodeIndex() { return this->nodeIndex; }
+
+    const MRTree<D> &getMRTree() const {return *this->tree; }
+    const MRNode<D> &getMRParent() const { return *this->parent; }
+    const MRNode<D> &getMRChild(int i) const { return *this->children[i]; }
+    const NodeIndex<D> &getNodeIndex() const { return this->nodeIndex; }
+    const HilbertPath<D> &getHilbertPath() const { return this->hilbertPath; }
 
     void getCenter(double *r) const;
     void getLowerBounds(double *r) const;
@@ -91,7 +88,7 @@ public:
     int getChildIndex(const NodeIndex<D> &nIdx) const;
     int getChildIndex(const double *r) const;
 
-    virtual void copyChildren(const MRNode<D> &node) = 0;
+    virtual void copyChildren(const MRNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
     virtual void createChildren();
     virtual void deleteChildren();
     virtual void genChildren(bool empty = false);
@@ -123,15 +120,13 @@ public:
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
 
-    friend class GridNode<D>;
-
 protected:
     MRTree<D> *tree;
     MRNode<D> *parent;	    ///< Parent node
     MRNode<D> **children;   ///< 2^D children
 
-    NodeIndex<D> *nodeIndex;
-    HilbertPath<D> *hilbertPath;
+    NodeIndex<D> nodeIndex;
+    const HilbertPath<D> hilbertPath;
 
     bool diffBranch(const MRNode<D> &rhs) const;
     inline bool checkStatus(unsigned char mask) const;
@@ -155,8 +150,8 @@ protected:
 
     void assignDecendantTags(int rank);
     void broadcastCoefs(int src, mpi::communicator *comm  = 0);
-    virtual mpi::request isendCoefs(int who, int tag, int comp = -1) = 0;
-    virtual mpi::request ireceiveCoefs(int who, int tag, int comp = -1) = 0;
+    virtual mpi::request isendCoefs(int who, int tag, int comp = -1) { NOT_IMPLEMENTED_ABORT; }
+    virtual mpi::request ireceiveCoefs(int who, int tag, int comp = -1) { NOT_IMPLEMENTED_ABORT; }
 
     static const unsigned char FlagBranchNode =	B8(00000001);
     static const unsigned char FlagGenNode =	B8(00000010);
