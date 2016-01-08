@@ -33,8 +33,8 @@ template<int D> void testConstructors() {
     }
 
     SECTION("Base class copy constructor") {
-        const MWTree<D> &mw_tree = static_cast<const MWTree<D> &>(*tree);
-        FunctionTree<D> *tree_copy = new FunctionTree<D>(mw_tree);
+        const MWTree<D> *mw_tree = static_cast<const MWTree<D> *>(tree);
+        FunctionTree<D> *tree_copy = new FunctionTree<D>(*mw_tree);
         testInitial(tree_copy);
         finalize(&tree_copy);
     }

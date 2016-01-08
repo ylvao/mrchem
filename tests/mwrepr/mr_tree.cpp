@@ -19,20 +19,28 @@ TEST_CASE("MRTree constructors", "[mr_tree_constructor], [mr_tree], [trees]") {
 }
 
 template<int D> void testConstructors() {
-    MRTree<D> *tree = 0;
-    initialize(&tree);
+    BoundingBox<D> *world = 0;
+    initialize(&world);
+
+    MRTree<D> tree(*world);
+    finalize(&world);
 
     SECTION("Constructor") {
-        testInitial(tree);
+        REQUIRE( tree.getDepth() == 1 );
+        REQUIRE( tree.getNNodes() == 0 );
+        REQUIRE( tree.getNEndNodes() == 0 );
+        REQUIRE( tree.getNGenNodes() == 0 );
+        REQUIRE( tree.getNAllocGenNodes() == 0 );
     }
 
     SECTION("Copy constructor") {
-        MRTree<D> *tree_copy = new MRTree<D>(*tree);
-        testInitial(tree_copy);
-        finalize(&tree_copy);
+        MRTree<D> tree_copy(tree);
+        REQUIRE( tree_copy.getDepth() == 1 );
+        REQUIRE( tree_copy.getNNodes() == 0 );
+        REQUIRE( tree_copy.getNEndNodes() == 0 );
+        REQUIRE( tree_copy.getNGenNodes() == 0 );
+        REQUIRE( tree_copy.getNAllocGenNodes() == 0 );
     }
-
-    finalize(&tree);
 }
 
 } // namespace
