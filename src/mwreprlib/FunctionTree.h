@@ -36,12 +36,6 @@ public:
     bool saveTree(const std::string &file);
     bool loadTree(const std::string &file);
 
-    FunctionNode<D> &getRootFuncNode(int rIdx);
-    FunctionNode<D> &getRootFuncNode(const NodeIndex<D> &nIdx);
-
-    const FunctionNode<D> &getRootFuncNode(int rIdx) const;
-    const FunctionNode<D> &getRootFuncNode(const NodeIndex<D> &nIdx) const;
-
     // In place operations
     void square();
     void power(double d);

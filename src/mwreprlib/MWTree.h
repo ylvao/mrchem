@@ -46,12 +46,7 @@ public:
 
     void crop(double thrs = -1.0, bool absPrec = true);
 
-    MWNode<D> &getRootMWNode(const NodeIndex<D> &nIdx) { return static_cast<MWNode<D> &>(this->getRootNode(nIdx)); }
-    MWNode<D> &getRootMWNode(int rIdx) { return static_cast<MWNode<D> &>(this->getRootNode(rIdx)); }
     MWNode<D> &getEndMWNode(int i) { return static_cast<MWNode<D> &>(this->getEndNode(i)); }
-
-    const MWNode<D> &getRootMWNode(const NodeIndex<D> &nIdx) const { return static_cast<const MWNode<D> &>(this->getRootNode(nIdx)); }
-    const MWNode<D> &getRootMWNode(int rIdx) const { return static_cast<const MWNode<D> &>(this->getRootNode(rIdx)); }
     const MWNode<D> &getEndMWNode(int i) const { return static_cast<const MWNode<D> &>(this->getEndNode(i)); }
 
     template<int T>

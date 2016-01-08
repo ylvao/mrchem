@@ -49,7 +49,7 @@ template<int D> void initialize(BoundingBox<D> **box) {
 
     int nb[D];
     for (int d = 0; d < D; d++) {
-        nb[d] = D-d;
+        nb[d] = d + 1;
     }
     NodeIndex<D> *nIdx = 0;
     initialize(&nIdx);
@@ -76,7 +76,7 @@ template<int D> void testInitial(const BoundingBox<D> *box) {
 
     int tot_boxes = 1;
     for (int d = 0; d < D; d++) {
-        const int nb = D-d;
+        const int nb = d + 1;
         REQUIRE( box->size(d) == nb );
         tot_boxes *= box->size(d);
     }
@@ -108,8 +108,8 @@ template<int D> void testInitial(FunctionTree<D> *tree) {
         tot_nodes *= D-d;
     }
 
-//    double r[3] = {0.5, 0.5, 0.5};
-//    REQUIRE( tree->evalf(r) == Approx(0.0) );
+    double r[3] = {0.5, 0.5, 0.5};
+    REQUIRE( tree->evalf(r) == Approx(0.0) );
     REQUIRE( tree->getSquareNorm() == Approx(0.0) );
     REQUIRE( tree->getOrder() == k );
     REQUIRE( tree->getDepth() == 1 );

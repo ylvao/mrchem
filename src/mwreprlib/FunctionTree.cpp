@@ -163,26 +163,6 @@ bool FunctionTree<D>::loadTree(const string &file) {
 }
 
 template<int D>
-FunctionNode<D>& FunctionTree<D>::getRootFuncNode(int rIdx) {
-    return static_cast<FunctionNode<D> &>(this->getRootNode(rIdx));
-}
-
-template<int D>
-const FunctionNode<D>& FunctionTree<D>::getRootFuncNode(int rIdx) const {
-    return static_cast<const FunctionNode<D> &>(this->getRootNode(rIdx));
-}
-
-template<int D>
-FunctionNode<D>& FunctionTree<D>::getRootFuncNode(const NodeIndex<D> &nIdx) {
-    return static_cast<FunctionNode<D> &>(this->getRootNode(nIdx));
-}
-
-template<int D>
-const FunctionNode<D>& FunctionTree<D>::getRootFuncNode(const NodeIndex<D> &nIdx) const {
-    return static_cast<const FunctionNode<D> &>(this->getRootNode(nIdx));
-}
-
-template<int D>
 double FunctionTree<D>::integrate() {
     NOT_IMPLEMENTED_ABORT;
 //    double result = 0.0;

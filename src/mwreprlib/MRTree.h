@@ -49,24 +49,19 @@ public:
     NodeBox<D> &getRootBox() { return this->rootBox; }
     const NodeBox<D> &getRootBox() const { return this->rootBox; }
 
-    const MRNode<D> *findNode(const NodeIndex<D> &nIdx) const;
-    const MRNode<D> *findNode(const double *r, int depth = -1) const;
     MRNode<D> *findNode(const NodeIndex<D> &nIdx);
-    MRNode<D> *findNode(const double *r, int depth = -1);
-    MRNode<D> &getNode(const NodeIndex<D> &nIdx);
-    const MRNode<D> &getNode(const double *r);
-    MRNode<D> &getNode(const double *r, int depth = -1);
-    MRNode<D> &getNodeNoGen(const NodeIndex<D> &nIdx);
+    const MRNode<D> *findNode(const NodeIndex<D> &nIdx) const;
 
-    const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
-    const MRNode<D> &getRootNode(int i = 0) const { return this->rootBox.getNode(i); }
-    const MRNode<D> &getRootNode(const double *r) const { return this->rootBox.getNode(r); }
-    const MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) const { return this->rootBox.getNode(nIdx); }
+    MRNode<D> &getNode(const NodeIndex<D> &nIdx);
+    MRNode<D> &getNodeOrEndNode(const NodeIndex<D> &nIdx);
+    const MRNode<D> &getNodeOrEndNode(const NodeIndex<D> &nIdx) const;
+
+    MRNode<D> &getNode(const double *r, int depth = -1);
+    MRNode<D> &getNodeOrEndNode(const double *r, int depth = -1);
+    const MRNode<D> &getNodeOrEndNode(const double *r, int depth = -1) const;
 
     MRNode<D> &getEndNode(int i) { return *this->endNodeTable[i]; }
-    MRNode<D> &getRootNode(int i = 0) { return this->rootBox.getNode(i); }
-    MRNode<D> &getRootNode(const double *r) { return this->rootBox.getNode(r); }
-    MRNode<D> &getRootNode(const NodeIndex<D> &nIdx) { return this->rootBox.getNode(nIdx); }
+    const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
 
     void distributeNodes(int depth = -1);
 

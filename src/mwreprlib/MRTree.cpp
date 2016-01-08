@@ -285,37 +285,41 @@ MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) {
 //    return root.retrieveNodeNoGen(idx);
 }
 
-/** Find and return the node at a given depth that contains a given coordinate.
-  *
-  * Recursive routine to find and return the node at a given depth that contains
-  * a coordinate. This routine returns the appropriate ProjectedNode, or a NULL
-  * pointer if the node does not exist, or if it is a GenNode. Recursion starts
-  * at the appropriate rootNode. */
-template<int D>
-const MRNode<D>* MRTree<D>::findNode(const double *r, int depth) const {
-    NOT_IMPLEMENTED_ABORT;
-//    const MRNode<D> &root = getRootNode(r);
-//    return root.retrieveNodeOrEndNode(r, depth);
-}
-
-template<int D>
-MRNode<D>* MRTree<D>::findNode(const double *r, int depth) {
-    NOT_IMPLEMENTED_ABORT;
-//    MRNode<D> &root = getRootNode(r);
-//    return root.retrieveNodeOrEndNode(r, depth);
-}
-
 /** Find and return the node with the given NodeIndex.
   *
   * This routine ALWAYS returns the node you ask for, and will generate nodes
   * that does not exist. Recursion starts at the appropriate rootNode and
-  * decends from this. Option to generate empty (deallocated) GenNodes. */
+  * decends from this.*/
 template<int D>
 MRNode<D>& MRTree<D>::getNode(const NodeIndex<D> &idx) {
     NOT_IMPLEMENTED_ABORT;
 //    MRNode<D> &root = getRootNode(idx);
 //    assert(root.isAncestor(idx));
 //    return *(root.retrieveNode(idx));
+}
+
+/** Find and return the node with the given NodeIndex.
+  *
+  * This routine returns the ProjectedNode you ask for, or the EndNode on
+  * the path to the requested node, and will never create or return GenNodes.
+  * Recursion starts at the appropriate rootNode and decends from this. */
+template<int D>
+MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) {
+    NOT_IMPLEMENTED_ABORT;
+//    MWNode<D> &rootNode = getRootMWNode(idx);
+//    return rootNode.getNodeNoGen(idx);
+}
+
+/** Find and return the node with the given NodeIndex.
+  *
+  * This routine returns the ProjectedNode you ask for, or the EndNode on
+  * the path to the requested node, and will never create or return GenNodes.
+  * Recursion starts at the appropriate rootNode and decends from this. */
+template<int D>
+const MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) const {
+    NOT_IMPLEMENTED_ABORT;
+//    MWNode<D> &rootNode = getRootMWNode(idx);
+//    return rootNode.getNodeNoGen(idx);
 }
 
 /** Find and return the node at a given depth that contains a given coordinate.
@@ -330,13 +334,25 @@ MRNode<D>& MRTree<D>::getNode(const double *r, int depth) {
 //    return rootNode.getNode(r, finalDepth);
 }
 
-/** Find and return the node with the given NodeIndex.
+/** Find and return the node at a given depth that contains a given coordinate.
   *
   * This routine returns the ProjectedNode you ask for, or the EndNode on
   * the path to the requested node, and will never create or return GenNodes.
   * Recursion starts at the appropriate rootNode and decends from this. */
 template<int D>
-MRNode<D>& MRTree<D>::getNodeNoGen(const NodeIndex<D> &idx) {
+MRNode<D>& MRTree<D>::getNodeOrEndNode(const double *r, int depth) {
+    NOT_IMPLEMENTED_ABORT;
+//    MWNode<D> &rootNode = getRootMWNode(idx);
+//    return rootNode.getNodeNoGen(idx);
+}
+
+/** Find and return the node at a given depth that contains a given coordinate.
+  *
+  * This routine returns the ProjectedNode you ask for, or the EndNode on
+  * the path to the requested node, and will never create or return GenNodes.
+  * Recursion starts at the appropriate rootNode and decends from this. */
+template<int D>
+const MRNode<D>& MRTree<D>::getNodeOrEndNode(const double *r, int depth) const {
     NOT_IMPLEMENTED_ABORT;
 //    MWNode<D> &rootNode = getRootMWNode(idx);
 //    return rootNode.getNodeNoGen(idx);
