@@ -32,6 +32,13 @@ template<int D> void testConstructors() {
         finalize(&box_copy);
     }
 
+    SECTION("Base class copy constructor") {
+        const BoundingBox<D> *b_box = static_cast<const BoundingBox<D> *>(box);
+        NodeBox<D> *box_copy = new NodeBox<D>(*b_box);
+        testInitial<D>(box_copy);
+        finalize(&box_copy);
+    }
+
     finalize(&box);
 }
 
