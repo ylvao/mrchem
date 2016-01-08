@@ -111,6 +111,8 @@ template<int D> void initialize(MRTree<D> **tree) {
     initialize(&world);
 
     *tree = new MRTree<D>(*world);
+
+    finalize(&world);
 }
 
 template<int D> void testInitial(MRTree<D> *tree) {
@@ -135,6 +137,8 @@ template<int D> void initialize(MWTree<D> **tree) {
 
     MultiResolutionAnalysis<D> mra(*world, basis);
     *tree = new MWTree<D>(mra);
+
+    finalize(&world);
 }
 
 template<int D> void testInitial(const MWTree<D> *tree) {
@@ -156,6 +160,8 @@ template<int D> void initialize(FunctionTree<D> **tree) {
 
     MultiResolutionAnalysis<D> mra(*world, basis);
     *tree = new FunctionTree<D>(mra);
+
+    finalize(&world);
 }
 
 template<int D> void testInitial(const FunctionTree<D> *tree) {

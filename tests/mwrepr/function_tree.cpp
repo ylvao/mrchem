@@ -22,9 +22,9 @@ template<int D> void testConstructors() {
     FunctionTree<D> *tree = 0;
     initialize(&tree);
 
-//    SECTION("Constructor") {
-//        testInitial(tree);
-//    }
+    SECTION("Constructor") {
+        testInitial(tree);
+    }
 
 //    SECTION("Copy constructor") {
 //        FunctionTree<D> *tree_copy = new FunctionTree<D>(*tree);
