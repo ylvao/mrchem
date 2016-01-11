@@ -97,6 +97,8 @@ void MRNode<D>::deleteChildren() {
             this->children[cIdx] = 0;
         }
     }
+    delete[] this->children;
+    this->children = 0;
     this->setIsLeafNode();
 }
 
