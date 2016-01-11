@@ -160,7 +160,7 @@ int BoundingBox<D>::getBoxIndex(const double *r) const {
     for (int i = D - 1; i >= 0; i--) {
         int ncells = 1;
         for (int j = 0; j < i; j++) {
-            ncells *= nBoxes[j];
+            ncells *= this->nBoxes[j];
         }
         bIdx += ncells * idx[i];
     }

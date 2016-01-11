@@ -89,7 +89,7 @@ void MRNode<D>::createChildren() {
 template<int D>
 void MRNode<D>::deleteChildren() {
     if (this->children == 0) {
-        return ;
+        return;
     }
     for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
         if (this->children[cIdx] != 0) {
