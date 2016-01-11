@@ -5,8 +5,9 @@
 namespace node_box {
 
 template<int D> void testConstructors();
+template<int D> void testNodeFetchers();
 
-TEST_CASE("NodeBox constructor", "[node_box_constructor], [node_box], [boxes]") {
+TEST_CASE("NodeBox: Constructor", "[node_box_constructor], [node_box], [boxes]") {
     SECTION("1D") {
         testConstructors<1>();
     }
@@ -15,6 +16,18 @@ TEST_CASE("NodeBox constructor", "[node_box_constructor], [node_box], [boxes]") 
     }
     SECTION("3D") {
         testConstructors<3>();
+    }
+}
+
+TEST_CASE("NodeBox: Fetching nodes", "[node_box_fetch], [node_box], [boxes]") {
+    SECTION("1D") {
+        testNodeFetchers<1>();
+    }
+    SECTION("2D") {
+        testNodeFetchers<2>();
+    }
+    SECTION("3D") {
+        testNodeFetchers<3>();
     }
 }
 
@@ -49,4 +62,47 @@ template<int D> void testConstructors() {
     }
 }
 
+template<int D> void testNodeFetchers() {
+    const double r[3] = {-0.3, 0.6, 1.9};
+
+    int cIdx = 1 << (D - 1);
+    NodeIndex<D> *root = 0;
+    initialize(&root);
+    const NodeIndex<D> idx_0(*root);
+    const NodeIndex<D> idx_1(idx_0, cIdx);
+    const NodeIndex<D> idx_2(idx_1, cIdx);
+    finalize(&root);
+
+    FunctionTree<D> *tree = 0;
+    initialize(&tree);
+
+    NodeBox<D> &node_box = tree->getRootBox();
+    const NodeBox<D> &const_box = tree->getRootBox();
+
+    // Fetch by NodeIndex
+    SECTION("Find root node by NodeIndex") {
+        MRNode<D> &node = node_box.getNode(idx_2);
+        REQUIRE( node.getDepth() == 0 );
+        REQUIRE( node.isAncestor(idx_2) );
+    }
+    SECTION("Find const root node by NodeIndex") {
+        const MRNode<D> &node = const_box.getNode(idx_2);
+        REQUIRE( node.getDepth() == 0 );
+        REQUIRE( node.isAncestor(idx_2) );
+    }
+
+    // Fetch by coordinate
+    SECTION("Get root node by coord: existing node") {
+        MRNode<D> &node = node_box.getNode(r);
+        REQUIRE( node.hasCoord(r) );
+        REQUIRE( node.getDepth() == 0 );
+    }
+    SECTION("Get node by coord: non-existing node") {
+        const MRNode<D> &node = const_box.getNode(r);
+        REQUIRE( node.hasCoord(r) );
+        REQUIRE( node.getDepth() == 0 );
+    }
+
+    finalize(&tree);
+}
 } // namespace

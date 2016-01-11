@@ -46,12 +46,12 @@ public:
 
     MRTree<D> &getMRTree() { return *this->tree; }
     MRNode<D> &getMRParent() { return *this->parent; }
-    MRNode<D> &getMRChild(int i) { return *this->children[i]; }
+    MRNode<D> &getMRChild(int i) { return this->children.getNode(i); }
     NodeIndex<D> &getNodeIndex() { return this->nodeIndex; }
 
     const MRTree<D> &getMRTree() const {return *this->tree; }
     const MRNode<D> &getMRParent() const { return *this->parent; }
-    const MRNode<D> &getMRChild(int i) const { return *this->children[i]; }
+    const MRNode<D> &getMRChild(int i) const { return this->children.getNode(i); }
     const NodeIndex<D> &getNodeIndex() const { return this->nodeIndex; }
     const HilbertPath<D> &getHilbertPath() const { return this->hilbertPath; }
 
@@ -59,14 +59,13 @@ public:
     void getLowerBounds(double *r) const;
     void getUpperBounds(double *r) const;
 
-    inline bool isRoot() const;
     inline bool hasCoefs() const;
+    inline bool isRootNode() const;
     inline bool isEndNode() const;
     inline bool isGenNode() const;
     inline bool isLeafNode() const;
     inline bool isAllocated() const;
     inline bool isBranchNode() const;
-    inline bool hasChild(int i) const;
 
     void setHasCoefs() { SET_BITS(status, FlagHasCoefs | FlagAllocated); }
     void setIsEndNode() { SET_BITS(status, FlagEndNode); }
@@ -85,13 +84,8 @@ public:
     bool isAncestor(const NodeIndex<D> &idx) const;
     bool isDecendant(const NodeIndex<D> &idx) const;
 
-    int getChildIndex(const NodeIndex<D> &nIdx) const;
-    int getChildIndex(const double *r) const;
-
-    virtual void copyChildren(const MRNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
-    virtual void createChildren();
-    virtual void deleteChildren();
-    virtual void genChildren(bool empty = false);
+//    int getChildIndex(const NodeIndex<D> &nIdx) const;
+//    int getChildIndex(const double *r) const;
 
     void lockNode() { SET_NODE_LOCK(); }
     void unlockNode() { UNSET_NODE_LOCK(); }
@@ -123,7 +117,7 @@ public:
 protected:
     MRTree<D> *tree;
     MRNode<D> *parent;	    ///< Parent node
-    MRNode<D> **children;   ///< 2^D children
+    NodeBox<D> children;    ///< 2^D children
 
     NodeIndex<D> nodeIndex;
     const HilbertPath<D> hilbertPath;
@@ -131,22 +125,28 @@ protected:
     bool diffBranch(const MRNode<D> &rhs) const;
     inline bool checkStatus(unsigned char mask) const;
 
-    virtual MRNode<D> *retrieveNode(int n, const double *r);
-    virtual MRNode<D> *retrieveNode(const NodeIndex<D> &idx);
+    MRNode<D> *retrieveNode(const double *r, int depth);
+    MRNode<D> *retrieveNode(const NodeIndex<D> &idx);
 
     const MRNode<D> *retrieveNodeNoGen(const NodeIndex<D> &idx) const;
     MRNode<D> *retrieveNodeNoGen(const NodeIndex<D> &idx);
 
     const MRNode<D> *retrieveNodeOrEndNode(const double *r, int depth) const;
-    const MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx) const;
-    MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
     MRNode<D> *retrieveNodeOrEndNode(const double *r, int depth);
 
-    void purgeGenerated();
-    void allocKindergarten();
+    const MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx) const;
+    MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
 
-    virtual void genChild(int i) = 0;
-    virtual void createChild(int i) = 0;
+    void purgeGenerated();
+//    void allocKindergarten();
+
+    virtual void copyChildren(const MRNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
+    virtual void createChildren();
+    virtual void deleteChildren();
+    void genChildren();
+
+    virtual void genChild(int cIdx) = 0;
+    virtual void createChild(int cIdx) = 0;
 
     void assignDecendantTags(int rank);
     void broadcastCoefs(int src, mpi::communicator *comm  = 0);
@@ -281,21 +281,11 @@ bool MRNode<D>::isEndNode() const {
 }
 
 template<int D>
-bool MRNode<D>::isRoot() const {
+bool MRNode<D>::isRootNode() const {
     if (this->status & FlagRootNode) {
         return true;
     }
     return false;
-}
-
-template<int D>
-bool MRNode<D>::hasChild(int i) const {
-    assert(i >= 0 and i < getTDim());
-    assert(this->children != 0);
-    if (this->children[i] == 0) {
-        return false;
-    }
-    return true;
 }
 
 template<int D>
@@ -310,7 +300,7 @@ template<int D>
 std::ostream& operator<<(std::ostream &o, const MRNode<D> &nd) {
     std::string flags ="      ";
     o << nd.getNodeIndex();
-    if (nd.isRoot()) {
+    if (nd.isRootNode()) {
         flags[0] = 'R';
     }
     if (nd.isEndNode()) {

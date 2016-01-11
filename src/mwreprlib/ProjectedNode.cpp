@@ -9,6 +9,7 @@
  */
 
 #include "ProjectedNode.h"
+#include "GenNode.h"
 
 #ifdef HAVE_BLAS
 extern "C" {
@@ -96,14 +97,10 @@ void ProjectedNode<D>::createChild(int cIdx) {
   * This routine creates 2^D children empty GenNodes with the appropriate
   * translation and Hilbert path parameters. */
 template<int D>
-void ProjectedNode<D>::genChild(int i) {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->children[i] == 0);
-//    int l[D];
-//    this->calcChildTranslation(i, l);
-//    FunctionNode<D> *child = new GenNode<D> (this, l);
-//    this->children[i] = child;
-//    return *child;
+void ProjectedNode<D>::genChild(int cIdx) {
+//    assert(this->children[cIdx] == 0);
+    MRNode<D> *child = new GenNode<D>(*this, cIdx);
+    this->children.setNode(cIdx, &child);
 }
 
 /** Calculate all 2^D component norms (NOT squared norms!)*/

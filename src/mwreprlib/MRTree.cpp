@@ -265,10 +265,9 @@ int MRTree<D>::getNGenNodes() {
   * appropriate rootNode. */
 template<int D>
 const MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT;
-//    const MRNode<D> &root = getRootNode(idx);
-//    assert(root.isAncestor(idx));
-//    return root.retrieveNodeNoGen(idx);
+    const MRNode<D> &root = getRootBox().getNode(idx);
+    assert(root.isAncestor(idx));
+    return root.retrieveNodeNoGen(idx);
 }
 
 /** Find and return the node with the given NodeIndex.
@@ -279,10 +278,9 @@ const MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) const {
   * appropriate rootNode. */
 template<int D>
 MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    MRNode<D> &root = getRootNode(idx);
-//    assert(root.isAncestor(idx));
-//    return root.retrieveNodeNoGen(idx);
+    MRNode<D> &root = this->rootBox.getNode(idx);
+    assert(root.isAncestor(idx));
+    return root.retrieveNodeNoGen(idx);
 }
 
 /** Find and return the node with the given NodeIndex.
@@ -292,10 +290,9 @@ MRNode<D>* MRTree<D>::findNode(const NodeIndex<D> &idx) {
   * decends from this.*/
 template<int D>
 MRNode<D>& MRTree<D>::getNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    MRNode<D> &root = getRootNode(idx);
-//    assert(root.isAncestor(idx));
-//    return *(root.retrieveNode(idx));
+    MRNode<D> &root = getRootBox().getNode(idx);
+    assert(root.isAncestor(idx));
+    return *root.retrieveNode(idx);
 }
 
 /** Find and return the node with the given NodeIndex.
@@ -305,9 +302,9 @@ MRNode<D>& MRTree<D>::getNode(const NodeIndex<D> &idx) {
   * Recursion starts at the appropriate rootNode and decends from this. */
 template<int D>
 MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    MWNode<D> &rootNode = getRootMWNode(idx);
-//    return rootNode.getNodeNoGen(idx);
+    MRNode<D> &root = getRootBox().getNode(idx);
+    assert(root.isAncestor(idx));
+    return *root.retrieveNodeOrEndNode(idx);
 }
 
 /** Find and return the node with the given NodeIndex.
@@ -317,9 +314,9 @@ MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) {
   * Recursion starts at the appropriate rootNode and decends from this. */
 template<int D>
 const MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT;
-//    MWNode<D> &rootNode = getRootMWNode(idx);
-//    return rootNode.getNodeNoGen(idx);
+    const MRNode<D> &root = getRootBox().getNode(idx);
+    assert(root.isAncestor(idx));
+    return *root.retrieveNodeOrEndNode(idx);
 }
 
 /** Find and return the node at a given depth that contains a given coordinate.
@@ -329,9 +326,8 @@ const MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) const {
   * decends from this. */
 template<int D>
 MRNode<D>& MRTree<D>::getNode(const double *r, int depth) {
-    NOT_IMPLEMENTED_ABORT;
-//    MWNode<D> &rootNode = getRootMWNode(r);
-//    return rootNode.getNode(r, finalDepth);
+    MRNode<D> &root = getRootBox().getNode(r);
+    return *root.retrieveNode(r, depth);
 }
 
 /** Find and return the node at a given depth that contains a given coordinate.
@@ -341,9 +337,8 @@ MRNode<D>& MRTree<D>::getNode(const double *r, int depth) {
   * Recursion starts at the appropriate rootNode and decends from this. */
 template<int D>
 MRNode<D>& MRTree<D>::getNodeOrEndNode(const double *r, int depth) {
-    NOT_IMPLEMENTED_ABORT;
-//    MWNode<D> &rootNode = getRootMWNode(idx);
-//    return rootNode.getNodeNoGen(idx);
+    MRNode<D> &root = getRootBox().getNode(r);
+    return *root.retrieveNodeOrEndNode(r, depth);
 }
 
 /** Find and return the node at a given depth that contains a given coordinate.
@@ -353,9 +348,8 @@ MRNode<D>& MRTree<D>::getNodeOrEndNode(const double *r, int depth) {
   * Recursion starts at the appropriate rootNode and decends from this. */
 template<int D>
 const MRNode<D>& MRTree<D>::getNodeOrEndNode(const double *r, int depth) const {
-    NOT_IMPLEMENTED_ABORT;
-//    MWNode<D> &rootNode = getRootMWNode(idx);
-//    return rootNode.getNodeNoGen(idx);
+    const MRNode<D> &root = getRootBox().getNode(r);
+    return *root.retrieveNodeOrEndNode(r, depth);
 }
 
 /** Traverse nodeTable and find all nodes of different rankId. */

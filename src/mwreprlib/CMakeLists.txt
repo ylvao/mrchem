@@ -51,6 +51,8 @@ set(mwrepr_SOURCES
         FunctionNode.h
         ProjectedNode.cpp
         ProjectedNode.h
+        GenNode.cpp
+        GenNode.h
 	)
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

@@ -46,7 +46,8 @@ void BoundingBox<D>::setNBoxes(const int *nb) {
     this->nBoxes[D] = 1;
     for (int d = 0; d < D; d++) {
         if (nb == 0) {
-            this->nBoxes[d] = 1;
+            this->nBoxes[d] = 2;
+            this->nBoxes[D] *= this->nBoxes[d];
         } else {
             if (nb[d] <= 0) MSG_ERROR("Invalid box size");
             this->nBoxes[d] = nb[d];

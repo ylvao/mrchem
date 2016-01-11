@@ -7,7 +7,7 @@ template<int D>
 MRNode<D>::MRNode(MRTree<D> &t, const NodeIndex<D> &nIdx)
         : tree(&t),
           parent(0),
-          children(0),
+          children(NodeIndex<D>(nIdx, 0)),
           nodeIndex(nIdx),
           hilbertPath(),
           status(0) {
@@ -23,8 +23,8 @@ template<int D>
 MRNode<D>::MRNode(MRNode<D> &p, int cIdx)
         : tree(p.tree),
           parent(&p),
-          children(0),
           nodeIndex(p.getNodeIndex(), cIdx),
+          children(NodeIndex<D>(NodeIndex<D>(p.getNodeIndex(), cIdx), 0)),
           hilbertPath(p.getHilbertPath(), cIdx),
           status(0) {
     this->tree->incrementNodeCount(getScale());
@@ -38,7 +38,7 @@ template<int D>
 MRNode<D>::MRNode(const MRNode<D> &n)
         : tree(n.tree),
           parent(0),
-          children(0),
+          children(n.children),
           nodeIndex(n.getNodeIndex()),
           hilbertPath(n.getHilbertPath()),
           status(0) {
@@ -52,7 +52,6 @@ template<int D>
 MRNode<D>::~MRNode() {
     lockNode();
     if (this->isBranchNode()) {
-        assert(this->children != 0);
         deleteChildren();
     }
     this->tree->decrementNodeCount(getScale());
@@ -62,16 +61,14 @@ MRNode<D>::~MRNode() {
 #endif
 }
 
-template<int D>
-void MRNode<D>::allocKindergarten() {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->children == 0);
-//    int tDim = getTDim();
-//    this->children = new MRNode<D> *[tDim];
-//    for (int cIdx = 0; cIdx < tDim; cIdx++) {
+//template<int D>
+//void MRNode<D>::allocKindergarten() {
+//    int nChildren = getTDim();
+//    this->children = new MRNode<D> *[nChildren];
+//    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
 //        this->children[cIdx] = 0;
 //    }
-}
+//}
 
 template<int D>
 void MRNode<D>::createChildren() {
@@ -89,35 +86,29 @@ void MRNode<D>::createChildren() {
   * Leaves node as LeafNode and children[] as null pointer. */
 template<int D>
 void MRNode<D>::deleteChildren() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->children == 0) {
-//        return ;
-//    }
-//    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
-//        if (this->children[cIdx] != 0) {
-//            delete this->children[cIdx];
-//            this->children[cIdx] = 0;
-//        }
-//    }
-//    delete [] this->children;
-//    this->children = 0;
-//    this->setIsLeafNode();
+    if (this->children.getNOccupied() == 0) {
+        return ;
+    }
+    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+        MRNode<D> **nodes = this->children.getNodes();
+        if (nodes[cIdx] != 0) {
+            delete nodes[cIdx];
+            nodes[cIdx] = 0;
+        }
+    }
+    this->setIsLeafNode();
 }
 
 template<int D>
-void MRNode<D>::genChildren(bool empty) {
-    NOT_IMPLEMENTED_ABORT;
+void MRNode<D>::genChildren() {
 //    if (this->children == 0) {
 //        this->allocKindergarten();
 //    }
-//    int nChildren = this->getTDim();
-//    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
-//        genChild(cIdx);
-//    }
-//    if (not empty) {
-//        NOT_IMPLEMENTED_ABORT;
-//    }
-//    this->setIsBranchNode();
+    int nChildren = this->getTDim();
+    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
+        genChild(cIdx);
+    }
+    this->setIsBranchNode();
 }
 
 template<int D>
@@ -163,9 +154,8 @@ void MRNode<D>::getUpperBounds(double *r) const {
   * to be followed at the current scale in oder to get to the requested
   * node at the final scale. The result is the index of the child needed.
   * The index is obtained by bit manipulation of of the translation indices. */
-template<int D>
-int MRNode<D>::getChildIndex(const NodeIndex<D> &nIdx) const {
-    NOT_IMPLEMENTED_ABORT;
+//template<int D>
+//int MRNode<D>::getChildIndex(const NodeIndex<D> &nIdx) const {
 //    assert(isAncestor(nIdx));
 //    int cIdx = 0;
 //    int diffScale = nIdx.getScale() - getScale() - 1;
@@ -177,15 +167,14 @@ int MRNode<D>::getChildIndex(const NodeIndex<D> &nIdx) const {
 //    assert(cIdx >= 0);
 //    assert(cIdx < getTDim());
 //    return cIdx;
-}
+//}
 
 /** Routine to find the path along the tree.
   *
   * Given a point in space, determines which child should be followed
   * to get to the corresponding terminal node. */
-template<int D>
-int MRNode<D>::getChildIndex(const double *r) const {
-    NOT_IMPLEMENTED_ABORT;
+//template<int D>
+//int MRNode<D>::getChildIndex(const double *r) const {
 //    assert(hasCoord(r));
 //    int cIdx = 0;
 //    double sFac = pow(2.0, -getScale());
@@ -195,10 +184,11 @@ int MRNode<D>::getChildIndex(const double *r) const {
 //            cIdx = cIdx + (l[d] << d);
 //        }
 //    }
+//    println(0, "Child index " << cIdx);
 //    assert(cIdx >= 0);
 //    assert(cIdx < getTDim());
 //    return cIdx;
-}
+//}
 
 /** Const version of node retriever that NEVER generates.
   *
@@ -208,15 +198,18 @@ int MRNode<D>::getChildIndex(const double *r) const {
   * node and ASSUMES the requested node is in fact decending from this node. */
 template<int D>
 const MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT;
-//    if (getScale() == idx.getScale()) { // we're done
-//        return this;
-//    }
-//    if (this->isEndNode()) { // don't return GenNodes
-//        return 0;
-//    }
+    if (getScale() == idx.getScale()) { // we're done
+        assert(getNodeIndex() == idx);
+        return this;
+    }
+    assert(this->isAncestor(idx));
+    if (this->isEndNode()) { // don't return GenNodes
+        return 0;
+    }
 //    int cIdx = getChildIndex(idx);
-//    return this->children[cIdx]->retrieveNodeNoGen(idx);
+//    assert(this->children[cIdx] != 0);
+    const MRNode<D> &child = this->children.getNode(idx);
+    return child.retrieveNodeNoGen(idx);
 }
 
 /** Node retriever that NEVER generates.
@@ -227,26 +220,27 @@ const MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) const {
   * node and ASSUMES the requested node is in fact decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeNoGen(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (getScale() == idx.getScale()) { // we're done
-//        return this;
-//    }
-//    if (this->isEndNode()) { // don't return GenNodes
-//        return 0;
-//    }
+    if (getScale() == idx.getScale()) { // we're done
+        assert(getNodeIndex() == idx);
+        return this;
+    }
+    assert(this->isAncestor(idx));
+    if (this->isEndNode()) { // don't return GenNodes
+        return 0;
+    }
 //    int cIdx = getChildIndex(idx);
-//    return this->children[cIdx]->retrieveNodeNoGen(idx);
+//    assert(this->children[cIdx] != 0);
+    MRNode<D> &child = this->children.getNode(idx);
+    return child.retrieveNodeNoGen(idx);
 }
 
 template<int D>
 const MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const double *r, int depth) const {
-    NOT_IMPLEMENTED_ABORT;
-//    if (getDepth() == depth or this->isEndNode()) {
-//        return this;
-//    }
-//    int cIdx = getChildIndex(r);
-//    const MRNode<D> &child = getChild(cIdx);
-//    return child.retrieveNodeOrEndNode(r, depth);
+    if (getDepth() == depth or this->isEndNode()) {
+        return this;
+    }
+    const MRNode<D> &child = this->children.getNode(r);
+    return child.retrieveNodeOrEndNode(r, depth);
 }
 
 /** Node retriever that return requested ProjectedNode or EndNode.
@@ -258,34 +252,47 @@ const MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const double *r, int depth) co
   * decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const double *r, int depth) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (getDepth() == depth or this->isEndNode()) {
-//        return this;
-//    }
-//    int cIdx = getChildIndex(r);
-//    MRNode<D> &child = getChild(cIdx);
-//    return child.retrieveNodeOrEndNode(r, depth);
+    if (getDepth() == depth or this->isEndNode()) {
+        return this;
+    }
+    MRNode<D> &child = this->children.getNode(r);
+    return child.retrieveNodeOrEndNode(r, depth);
 }
 
 template<int D>
 const MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT;
+    if (getScale() == idx.getScale()) { // we're done
+        assert(getNodeIndex() == idx);
+        return this;
+    }
+    assert(isAncestor(idx));
+    // We should in principle lock before read, but it makes things slower,
+    // and the EndNode status does not change (normally ;)
+    if (isEndNode()) {
+        return this;
+    }
+//    int cIdx = getChildIndex(idx);
+//    assert(children[cIdx] != 0);
+    const MRNode<D> &child = this->children.getNode(idx);
+    return child.retrieveNodeOrEndNode(idx);
 }
 
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (nodeIndex.scale() == idx.getScale()) { // we're done
-//        return this;
-//    }
-//    // We should in principle lock before read, but it makes things slower,
-//    // and the EndNode status does not change (normally ;)
-//    if (isEndNode()) {
-//        return this;
-//    }
+    if (getScale() == idx.getScale()) { // we're done
+        assert(getNodeIndex() == idx);
+        return this;
+    }
+    assert(isAncestor(idx));
+    // We should in principle lock before read, but it makes things slower,
+    // and the EndNode status does not change (normally ;)
+    if (isEndNode()) {
+        return this;
+    }
 //    int cIdx = getChildIndex(idx);
 //    assert(children[cIdx] != 0);
-//    return children[cIdx]->retrieveNodeOrEndNode(idx);
+    MRNode<D> &child = this->children.getNode(idx);
+    return child.retrieveNodeOrEndNode(idx);
 }
 
 /** Node retriever that ALWAYS returns the requested node.
@@ -295,25 +302,21 @@ MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
   * that does not exist. Recursion starts at at this node and ASSUMES the
   * requested node is in fact decending from this node. */
 template<int D>
-MRNode<D> *MRNode<D>::retrieveNode(int n, const double *r) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->nodeIndex.scale() == n) {
-//        return this;
-//    }
-//    int l[D];
-//    int idx = getChildIndex(r);
-//    calcChildTranslation(idx, l);
-//    // If we have reached an endNode, lock if necessary, and start generating
-//    // NB! retrieveNode() for GenNodes behave a bit differently.
-//    if (this->isEndNode()) {
-//        SET_NODE_LOCK();
-//        if (this->isLeafNode()) {
-//            genChildren();
-//        }
-//        UNSET_NODE_LOCK();
-//        return this->children[idx];
-//    }
-//    return this->children[idx]->retrieveNode(n, r);
+MRNode<D> *MRNode<D>::retrieveNode(const double *r, int depth) {
+    if (getDepth() == depth) {
+        return this;
+    }
+    assert(hasCoord(r));
+    // If we have reached an endNode, lock if necessary, and start generating
+    // NB! retrieveNode() for GenNodes behave a bit differently.
+    SET_NODE_LOCK();
+    if (this->isLeafNode()) {
+        genChildren();
+    }
+    UNSET_NODE_LOCK();
+//    int cIdx = getChildIndex(r);
+    MRNode<D> &child = this->children.getNode(r);
+    return child.retrieveNode(r, depth);
 }
 
 /** Node retriever that ALWAYS returns the requested node, possibly without coefs.
@@ -324,38 +327,38 @@ MRNode<D> *MRNode<D>::retrieveNode(int n, const double *r) {
   * node is in fact decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNode(const NodeIndex<D> &idx) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (getScale() == idx.getScale()) { // we're done
-//        return this;
-//    }
-//    if (isEndNode()) {
-//        SET_NODE_LOCK();
-//        if (isLeafNode()) {
-//            genChildren();
-//        }
-//        UNSET_NODE_LOCK();
-//    }
+    if (getScale() == idx.getScale()) { // we're done
+        assert(getNodeIndex() == idx);
+        return this;
+    }
+    assert(isAncestor(idx));
+    SET_NODE_LOCK();
+    if (isLeafNode()) {
+        genChildren();
+    }
+    UNSET_NODE_LOCK();
 //    int cIdx = getChildIndex(idx);
-//    return this->children[cIdx]->retrieveNode(idx);
+//    assert(this->children[cIdx] != 0);
+    MRNode<D> &child = this->children.getNode(idx);
+    return child.retrieveNode(idx);
 }
 
 /** Test if a given coordinate is within the boundaries of the node. */
 template<int D>
 bool MRNode<D>::hasCoord(const double *r) const {
-    NOT_IMPLEMENTED_ABORT;
-//    double sFac = pow(2.0, -getScale());
-//    const int *l = getTranslation();
+    double sFac = pow(2.0, -getScale());
+    const int *l = getTranslation();
 //    println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
 //    println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
 //    println(1, *this);
-//    for (int d = 0; d < D; d++) {
-//        if (r[d] < sFac*l[d] or r[d] > sFac*(l[d] + 1)) {
+    for (int d = 0; d < D; d++) {
+        if (r[d] < sFac*l[d] or r[d] > sFac*(l[d] + 1)) {
 //            println(1, "false");
-//            return false;
-//        }
-//    }
+            return false;
+        }
+    }
 //    println(1, "true");
-//    return true;
+    return true;
 }
 
 /** Testing if nodes are compatible wrt NodeIndex and Tree (order, rootScale,
@@ -378,19 +381,18 @@ bool MRNode<D>::isCompatible(const MRNode<D> &node) {
   * overlapping support. */
 template<int D>
 bool MRNode<D>::isAncestor(const NodeIndex<D> &idx) const {
-    NOT_IMPLEMENTED_ABORT;
-//    int relScale = idx.getScale() - getScale();
-//    if (relScale < 0) {
-//        return false;
-//    }
-//    const int *l = getTranslation();
-//    for (int d = 0; d < D; d++) {
-//        int reqTransl = idx.getTranslation()[d] >> relScale;
-//        if (l[d] != reqTransl) {
-//            return false;
-//        }
-//    }
-//    return true;
+    int relScale = idx.getScale() - getScale();
+    if (relScale < 0) {
+        return false;
+    }
+    const int *l = getTranslation();
+    for (int d = 0; d < D; d++) {
+        int reqTransl = idx.getTranslation()[d] >> relScale;
+        if (l[d] != reqTransl) {
+            return false;
+        }
+    }
+    return true;
 }
 
 template<int D>

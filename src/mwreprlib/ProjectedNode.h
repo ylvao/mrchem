@@ -24,6 +24,7 @@ public:
     void clearGenerated();
     void purgeGenerated();
 
+protected:
     void copyChildren(const MRNode<D> &node);
     void createChildren() { MRNode<D>::createChildren(); this->clearIsEndNode(); }
     void deleteChildren() { MRNode<D>::deleteChildren(); this->setIsEndNode(); }

@@ -18,8 +18,10 @@ template<int D> class ProjectedNode;
 template<int D>
 class GenNode: public FunctionNode<D> {
 public:
-    GenNode(FunctionNode<D> &p, int cIdx);
-    GenNode(GenNode<D> &n);
+    GenNode(ProjectedNode<D> &p, int cIdx);
+    GenNode(GenNode<D> &p, int cIdx);
+    GenNode(const GenNode<D> &n);
+    GenNode& operator=(const GenNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~GenNode();
 
     double evalf(const double *r);
@@ -40,12 +42,9 @@ public:
 
 protected:
     void calcComponentNorms() { }
-    inline double calcSquareNorm();
-    inline double calcScalingNorm();
-    inline double calcWaveletNorm() { return 0.0; }
-
-    MWNode<D> *retrieveNode(int n, const double *r);
-    MWNode<D> *retrieveNode(const NodeIndex<D> &idx, bool empty = false);
+    double calcSquareNorm();
+    double calcScalingNorm();
+    double calcWaveletNorm() { return 0.0; }
 
 private:
     ProjectedNode<D> *genRootNode;

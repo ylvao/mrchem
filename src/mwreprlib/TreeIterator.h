@@ -109,7 +109,7 @@ protected:
         if (not this->state) {
             return false;
         }
-        if (not this->state->node->isRoot()) {
+        if (not this->state->node->isRootNode()) {
             return false;
         }
         this->root++;

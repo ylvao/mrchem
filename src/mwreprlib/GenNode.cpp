@@ -8,24 +8,35 @@
  * \breif
  */
 
+#include "ProjectedNode.h"
 #include "GenNode.h"
 
 using namespace std;
 using namespace Eigen;
 
 template<int D>
-GenNode<D>::GenNode(FunctionNode<D> &p, int cIdx) : FunctionNode<D> (p, cIdx) {
-    NOT_IMPLEMENTED_ABORT;
+GenNode<D>::GenNode(ProjectedNode<D> &p, int cIdx)
+        : FunctionNode<D> (p, cIdx),
+          genRootNode(&p) {
+    this->setIsGenNode();
 }
 
 template<int D>
-GenNode<D>::GenNode(GenNode<D> &n) : FunctionNode<D> (n) {
+GenNode<D>::GenNode(GenNode<D> &p, int cIdx)
+        : FunctionNode<D> (p, cIdx),
+          genRootNode(p.genRootNode) {
+    this->setIsGenNode();
+}
+
+template<int D>
+GenNode<D>::GenNode(const GenNode<D> &n)
+        : FunctionNode<D> (n),
+          genRootNode(n.genRootNode) {
     NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 GenNode<D>::~GenNode() {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
@@ -34,8 +45,9 @@ void GenNode<D>::createChild(int i) {
 }
 
 template<int D>
-void GenNode<D>::genChild(int i) {
-    NOT_IMPLEMENTED_ABORT;
+void GenNode<D>::genChild(int cIdx) {
+    MRNode<D> *child = new GenNode<D>(*this, cIdx);
+    this->children.setNode(cIdx, &child);
 }
 
 template<int D>
@@ -45,16 +57,6 @@ void GenNode<D>::regenerateCoefs() {
 
 template<int D>
 void GenNode<D>::releaseCoefs() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-MWNode<D> *GenNode<D>::retrieveNode(int n, const double *r) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-MWNode<D> *GenNode<D>::retrieveNode(const NodeIndex<D> &idx, bool genEmpty) {
     NOT_IMPLEMENTED_ABORT;
 }
 

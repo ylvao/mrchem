@@ -29,7 +29,6 @@ MWNode<D>::MWNode(MWNode<D> &p, int cIdx)
           squareNorm(-1.0),
           componentNorms(0),
           coefs(0) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
