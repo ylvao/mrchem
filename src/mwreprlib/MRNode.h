@@ -46,12 +46,12 @@ public:
 
     MRTree<D> &getMRTree() { return *this->tree; }
     MRNode<D> &getMRParent() { return *this->parent; }
-    MRNode<D> &getMRChild(int i) { return this->children.getNode(i); }
+    MRNode<D> &getMRChild(int i) { return *this->children[i]; }
     NodeIndex<D> &getNodeIndex() { return this->nodeIndex; }
 
     const MRTree<D> &getMRTree() const {return *this->tree; }
     const MRNode<D> &getMRParent() const { return *this->parent; }
-    const MRNode<D> &getMRChild(int i) const { return this->children.getNode(i); }
+    const MRNode<D> &getMRChild(int i) const { return *this->children[i]; }
     const NodeIndex<D> &getNodeIndex() const { return this->nodeIndex; }
     const HilbertPath<D> &getHilbertPath() const { return this->hilbertPath; }
 
@@ -84,8 +84,8 @@ public:
     bool isAncestor(const NodeIndex<D> &idx) const;
     bool isDecendant(const NodeIndex<D> &idx) const;
 
-//    int getChildIndex(const NodeIndex<D> &nIdx) const;
-//    int getChildIndex(const double *r) const;
+    int getChildIndex(const NodeIndex<D> &nIdx) const;
+    int getChildIndex(const double *r) const;
 
     void lockNode() { SET_NODE_LOCK(); }
     void unlockNode() { UNSET_NODE_LOCK(); }
@@ -114,13 +114,25 @@ public:
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MRNode<T> &nd);
 
+    friend class MRTree<D>;
+
 protected:
     MRTree<D> *tree;
     MRNode<D> *parent;	    ///< Parent node
-    NodeBox<D> children;    ///< 2^D children
+    MRNode<D> **children;    ///< 2^D children
 
     NodeIndex<D> nodeIndex;
     const HilbertPath<D> hilbertPath;
+
+    void allocKindergarten();
+
+    virtual void copyChildren(const MRNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
+    virtual void createChildren();
+    virtual void deleteChildren();
+    void genChildren();
+
+    virtual void genChild(int cIdx) = 0;
+    virtual void createChild(int cIdx) = 0;
 
     bool diffBranch(const MRNode<D> &rhs) const;
     inline bool checkStatus(unsigned char mask) const;
@@ -138,15 +150,6 @@ protected:
     MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
 
     void purgeGenerated();
-//    void allocKindergarten();
-
-    virtual void copyChildren(const MRNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
-    virtual void createChildren();
-    virtual void deleteChildren();
-    void genChildren();
-
-    virtual void genChild(int cIdx) = 0;
-    virtual void createChild(int cIdx) = 0;
 
     void assignDecendantTags(int rank);
     void broadcastCoefs(int src, mpi::communicator *comm  = 0);
@@ -163,7 +166,6 @@ protected:
     omp_lock_t node_lock;
 #endif
 
-    friend class MRTree<D>;
 private:
     unsigned char status;
 

@@ -98,9 +98,9 @@ void ProjectedNode<D>::createChild(int cIdx) {
   * translation and Hilbert path parameters. */
 template<int D>
 void ProjectedNode<D>::genChild(int cIdx) {
-//    assert(this->children[cIdx] == 0);
+    assert(this->children[cIdx] == 0);
     MRNode<D> *child = new GenNode<D>(*this, cIdx);
-    this->children.setNode(cIdx, &child);
+    this->children[cIdx] = child;
 }
 
 /** Calculate all 2^D component norms (NOT squared norms!)*/

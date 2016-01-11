@@ -49,11 +49,11 @@ public:
 
     MWTree<D>& getMWTree() { return static_cast<MWTree<D> &>(*this->tree); }
     MWNode<D>& getMWParent() { return static_cast<MWNode<D> &>(*this->parent); }
-    MWNode<D>& getMWChild(int i) { return static_cast<MWNode<D> &>(this->children.getNode(i)); }
+    MWNode<D>& getMWChild(int i) { return static_cast<MWNode<D> &>(*this->children[i]); }
 
     const MWTree<D>& getMWTree() const { return static_cast<const MWTree<D> &>(*this->tree); }
     const MWNode<D>& getMWParent() const { return static_cast<const MWNode<D> &>(*this->parent); }
-    const MWNode<D>& getMWChild(int i) const { return static_cast<const MWNode<D> &>(this->children.getNode(i)); }
+    const MWNode<D>& getMWChild(int i) const { return static_cast<const MWNode<D> &>(*this->children[i]); }
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);

@@ -22,11 +22,11 @@ public:
 
     FunctionTree<D> &getFuncTree() { return static_cast<FunctionTree<D> &>(*this->tree); }
     FunctionNode<D> &getFuncParent() { return static_cast<FunctionNode<D> &>(*this->parent); }
-    FunctionNode<D> &getFuncChild(int i) { return static_cast<FunctionNode<D> &>(this->children.getNode(i)); }
+    FunctionNode<D> &getFuncChild(int i) { return static_cast<FunctionNode<D> &>(*this->children[i]); }
 
     const FunctionTree<D> &getFuncTree() const { return static_cast<const FunctionTree<D> &>(*this->tree); }
     const FunctionNode<D> &getFuncParent() const { return static_cast<const FunctionNode<D> &>(*this->parent); }
-    const FunctionNode<D> &getFuncChild(int i) const { return static_cast<const FunctionNode<D> &>(this->children.getNode(i)); }
+    const FunctionNode<D> &getFuncChild(int i) const { return static_cast<const FunctionNode<D> &>(*this->children[i]); }
 
 protected:
     double integrateLegendre();

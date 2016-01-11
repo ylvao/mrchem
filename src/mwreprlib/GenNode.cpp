@@ -46,8 +46,9 @@ void GenNode<D>::createChild(int i) {
 
 template<int D>
 void GenNode<D>::genChild(int cIdx) {
+    assert(this->children[cIdx] == 0);
     MRNode<D> *child = new GenNode<D>(*this, cIdx);
-    this->children.setNode(cIdx, &child);
+    this->children[cIdx] = child;
 }
 
 template<int D>
