@@ -7,38 +7,40 @@
  *
  */
 
-//#include "InterpolatingBasis.h"
-//#include "ScalingBasis.h"
-//#include "QuadratureCache.h"
-//#include "LegendrePoly.h"
+#include "InterpolatingBasis.h"
+#include "QuadratureCache.h"
+#include "LegendrePoly.h"
 
-//using namespace std;
-//using namespace Eigen;
+using namespace std;
+using namespace Eigen;
 
-//void InterpolatingBasis::initScalingBasis() {
-//	getQuadratureCache(qc);
-//	const VectorXd roots = qc.getRoots(scalingOrder + 1);
-//	const VectorXd wgts = qc.getWeights(scalingOrder + 1);
+void InterpolatingBasis::initScalingBasis() {
+    int qOrder = getQuadratureOrder();
+    int sOrder = getScalingOrder();
 
-//	vector<LegendrePoly> Lp;
-//	for (int i = 0; i < scalingOrder + 1; i++) {
-//		Lp.push_back(LegendrePoly(i, 0.0, 1.0));
-//	}
+    getQuadratureCache(qc);
+    const VectorXd roots = qc.getRoots(qOrder);
+    const VectorXd wgts = qc.getWeights(qOrder);
 
-//	for (int j = 0; j < scalingOrder + 1; j++) {
-//		// Can't add higher-order polynomials to lower-order ones, so I
-//		// changed the order of the loop
-//		Polynomial *Ip = new Polynomial(Lp[scalingOrder]);
-//		*Ip *= Lp[scalingOrder].evalf(roots(j)) * (2.0 * scalingOrder + 1);
+    vector<LegendrePoly> L_k;
+    for (int k = 0; k < qOrder; k++) {
+        L_k.push_back(LegendrePoly(k, 2.0, 1.0));
+    }
 
-//		for (int i = scalingOrder - 1; i >= 0; i--) {
-//			double val = Lp[i].evalf(roots(j)) * (2.0 * i + 1);
-//			Ip->addInPlace(Lp[i], val);
-//		}
-//		*Ip *= sqrt(wgts[j]);
-//		this->addFunc(Ip);
-//	}
-//}
+    for (int k = 0; k < qOrder; k++) {
+        // Can't add higher-order polynomials to lower-order ones, so I
+        // changed the order of the loop
+        Polynomial *I_k = new Polynomial(L_k[sOrder]);
+        *I_k *= L_k[sOrder].evalf(roots(k)) * (2.0 * sOrder + 1);
+
+        for (int i = qOrder - 2; i >= 0; i--) {
+            double val = L_k[i].evalf(roots(k)) * (2.0 * i + 1);
+            I_k->addInPlace(val, L_k[i]);
+        }
+        *I_k *= sqrt(wgts[k]);
+        this->funcs.push_back(I_k);
+    }
+}
 
 //void InterpolatingBasis::preEvaluate() {
 //	getQuadratureCache(qc);

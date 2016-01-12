@@ -303,6 +303,8 @@ MRNode<D> *MRNode<D>::retrieveNodeOrEndNode(const NodeIndex<D> &idx) {
   * requested node is in fact decending from this node. */
 template<int D>
 MRNode<D> *MRNode<D>::retrieveNode(const double *r, int depth) {
+    if (depth < 0) MSG_FATAL("Invalid argument");
+
     if (getDepth() == depth) {
         return this;
     }

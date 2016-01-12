@@ -51,7 +51,7 @@ public:
     //bool checkSeedNode(MWNode<D> &node);
     //void calcWaveletCoefs(MWNode<D> &node);
 
-    double evalf(const double *r) const;
+    double evalf(const double *r);
 
     GaussExp<D> differentiate(int dir);
 

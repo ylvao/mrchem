@@ -187,7 +187,7 @@ int GaussQuadrature::calcGaussPtsWgts() {
 }
 
 /** Integrate a 1D-function f(x) using quadrature */
-double GaussQuadrature::integrate(const RepresentableFunction<1> &func) const {
+double GaussQuadrature::integrate(RepresentableFunction<1> &func) const {
     double isum = 0.e0;
     double r[1];
     for (int i = 0; i < this->npts; i++) {
@@ -198,7 +198,7 @@ double GaussQuadrature::integrate(const RepresentableFunction<1> &func) const {
 }
 
 /** Integrate a 2D-function f(x1, x2) using quadrature */
-double GaussQuadrature::integrate(const RepresentableFunction<2> &func) const {
+double GaussQuadrature::integrate(RepresentableFunction<2> &func) const {
     double jsum;
     double r[2];
     double isum = 0.e0;
@@ -216,7 +216,7 @@ double GaussQuadrature::integrate(const RepresentableFunction<2> &func) const {
 }
 
 /** Integrate a 3D-function f(x1, x2, x3) using quadrature */
-double GaussQuadrature::integrate(const RepresentableFunction<3> &func) const {
+double GaussQuadrature::integrate(RepresentableFunction<3> &func) const {
     double isum, jsum, ksum;
     double r[3];
 
@@ -243,7 +243,7 @@ double GaussQuadrature::integrate(const RepresentableFunction<3> &func) const {
  *
  * This function has been implemented using a recursive algorithm.
  */
-double GaussQuadrature::integrate_nd(const RepresentableFunction<3> &func, int axis) const {
+double GaussQuadrature::integrate_nd(RepresentableFunction<3> &func, int axis) const {
     NOT_IMPLEMENTED_ABORT;
     NEEDS_TESTING
 

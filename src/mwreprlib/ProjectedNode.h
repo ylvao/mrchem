@@ -21,6 +21,8 @@ public:
     ProjectedNode& operator=(const ProjectedNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~ProjectedNode() { }
 
+    double evalf(const double *r) const;
+
     void clearGenerated();
     void purgeGenerated();
 

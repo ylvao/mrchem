@@ -2,6 +2,8 @@
 
 #include "FunctionNode.h"
 #include "FunctionTree.h"
+#include "MathUtils.h"
+#include "ScalingBasis.h"
 
 #ifdef HAVE_BLAS
 extern "C" {
@@ -34,8 +36,51 @@ FunctionNode<D>::FunctionNode(const FunctionNode<D> &n)
   * Evaluate all polynomials defined on the node. */
 template<int D>
 double FunctionNode<D>::evalf(const double *r) {
-    NOT_IMPLEMENTED_ABORT;
+    if (not this->hasCoefs()) MSG_ERROR("Evaluating node without coefs");
+    SET_NODE_LOCK();
+    if (this->isLeafNode()) {
+        this->genChildren();
+    }
+    UNSET_NODE_LOCK();
+    int cIdx = this->getChildIndex(r);
+    assert(this->children[cIdx] != 0);
+    return getFuncChild(cIdx).evalScaling(r);
 }
+
+template<int D>
+double FunctionNode<D>::evalScaling(const double *r) const {
+    if (not this->hasCoefs()) MSG_ERROR("Evaluating node without coefs");
+
+    double arg[D];
+    double n_factor = pow(2.0, this->getScale());
+    const int *l_factor = this->getTranslation();
+    for (int i = 0; i < D; i++) {
+        arg[i] = r[i] * n_factor - (double) l_factor[i];
+    }
+
+    int fact[D + 1];
+    for (int i = 0; i < D + 1; i++) {
+        fact[i] = MathUtils::ipow(this->getKp1(), i);
+    }
+
+    MatrixXd val(this->getKp1(), D);
+    const ScalingBasis &basis = this->getMWTree().getMRA().getScalingBasis();
+    basis.evalf(arg, val);
+
+    double result = 0.0;
+#pragma omp parallel for shared(fact) reduction(+:result)
+    for (int i = 0; i < this->getKp1_d(); i++) {
+        double temp = (*this->coefs)(i);
+        for (int j = 0; j < D; j++) {
+            int k = (i % fact[j + 1]) / fact[j];
+            temp *= val(k, j);
+        }
+        result += temp;
+    }
+    result *= pow(2.0, 0.5 * D * this->getScale());
+    return result;
+}
+
 
 /** Function integration.
   *

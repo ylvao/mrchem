@@ -26,7 +26,7 @@ public:
     virtual Gaussian<D> *copy() const = 0;
     virtual ~Gaussian();
 
-    virtual double evalf(const double *r) const = 0;
+    virtual double evalf(const double *r) = 0;
     virtual double evalf(double r, int dim) const = 0;
     void evalf(const Eigen::MatrixXd &points, Eigen::MatrixXd &values) const;
 

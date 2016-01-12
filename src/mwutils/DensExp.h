@@ -15,7 +15,7 @@ public:
     Eigen::MatrixXd &getDensityMatrix() { return this->densityMatrix; }
     GaussExp<3> getAODensExpansion();
 
-    double evalf(const double *r) const;
+    double evalf(const double *r);
     void calcScreening(double nStdDev);
     void setScreen(bool screen);
 

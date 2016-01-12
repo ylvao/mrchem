@@ -30,7 +30,7 @@ public:
 
     double integrate();
     virtual double dot(FunctionTree<D> &ket);
-    virtual double evalf(const double *r) const;
+    virtual double evalf(const double *r);
 
     void plotCleanup() { this->purgeGenNodes(); }
     bool saveTree(const std::string &file);

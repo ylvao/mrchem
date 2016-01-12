@@ -12,7 +12,7 @@ public:
     FunctionNode& operator=(const FunctionNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~FunctionNode() { }
 
-    virtual double evalf(const double *r);
+    double evalf(const double *r);
     virtual void clearGenerated() { NOT_IMPLEMENTED_ABORT; }
     virtual void purgeGenerated() { NOT_IMPLEMENTED_ABORT; }
 
@@ -29,6 +29,7 @@ public:
     const FunctionNode<D> &getFuncChild(int i) const { return static_cast<const FunctionNode<D> &>(*this->children[i]); }
 
 protected:
+    double evalScaling(const double *r) const;
     double integrateLegendre();
     double integrateInterpolating();
 

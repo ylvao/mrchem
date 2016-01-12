@@ -24,7 +24,6 @@ public:
     GenNode& operator=(const GenNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~GenNode();
 
-    double evalf(const double *r);
     double getComponentNorm(int i);
 
     void clearGenerated();

@@ -107,11 +107,6 @@ void GenNode<D>::unlockSiblings() {
 }
 
 template<int D>
-double GenNode<D>::evalf(const double *r) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
 double GenNode<D>::getComponentNorm(int i) {
     NOT_IMPLEMENTED_ABORT;
 }

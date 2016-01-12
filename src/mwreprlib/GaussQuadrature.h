@@ -25,9 +25,9 @@ public:
     GaussQuadrature(int k, double a = -1.0, double b = 1.0, int inter = 1);
     virtual ~GaussQuadrature() { }
 
-    double integrate(const RepresentableFunction<1> &func) const;
-    double integrate(const RepresentableFunction<2> &func) const;
-    double integrate(const RepresentableFunction<3> &func) const;
+    double integrate(RepresentableFunction<1> &func) const;
+    double integrate(RepresentableFunction<2> &func) const;
+    double integrate(RepresentableFunction<3> &func) const;
 
     void setIntervals(int i);
     void setBounds(double a, double b);
@@ -58,7 +58,7 @@ protected:
     void calcScaledPtsWgts();
     int calcGaussPtsWgts();
 
-    double integrate_nd(const RepresentableFunction<3> &func, int axis = 0) const;
+    double integrate_nd(RepresentableFunction<3> &func, int axis = 0) const;
 };
 
 #endif /* GAUSSQUADRATURE_H_ */

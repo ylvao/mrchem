@@ -25,7 +25,7 @@ TEST_CASE("Legendre polynomials", "[legendre_poly], [polynomials]") {
         }
     }
 
-    SECTION("The Legendre polynomials form an orthonormal set") {
+    SECTION("The Legendre polynomials form an orthogonal set") {
         for (int i = 0; i < nLeg; i++) {
             LegendrePoly &L_i = *L[i];
             double S_ii = L_i.innerProduct(L_i);

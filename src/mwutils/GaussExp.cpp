@@ -98,7 +98,7 @@ GaussExp<D> &GaussExp<D>::operator=(const GaussExp<D> &gexp) {
 }
 
 template<int D>
-double GaussExp<D>::evalf(const double *r) const {
+double GaussExp<D>::evalf(const double *r) {
     double val = 0.0;
     for (int i = 0; i < this->size(); i++) {
         val += this->getFunc(i).evalf(r);

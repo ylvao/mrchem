@@ -157,7 +157,7 @@ bool DensExp::checkSeedNode(MWNode<3> &node) {
     return false;
 }
 */
-double DensExp::evalf(const double *r) const {
+double DensExp::evalf(const double *r) {
     NOT_IMPLEMENTED_ABORT;
     /*
     double val = 0.0;

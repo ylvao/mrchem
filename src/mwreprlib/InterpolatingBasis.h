@@ -14,8 +14,13 @@
 
 class InterpolatingBasis : public ScalingBasis {
 public:
-    InterpolatingBasis(int k) : ScalingBasis(k, Interpol) { }
+    InterpolatingBasis(int k)
+            : ScalingBasis(k, Interpol) {
+        initScalingBasis();
+    }
     virtual ~InterpolatingBasis() { }
+
+    void initScalingBasis();
 };
 
 #endif // INTERPOLATINGBASIS_H

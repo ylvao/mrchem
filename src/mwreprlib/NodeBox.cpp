@@ -95,6 +95,7 @@ MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) {
 template<int D>
 MRNode<D>& NodeBox<D>::getNode(const double *r) {
     int bIdx = this->getBoxIndex(r);
+    if (bIdx < 0) MSG_ERROR("Coord out of bounds");
     return getNode(bIdx);
 }
 
@@ -115,6 +116,7 @@ const MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) const {
 template<int D>
 const MRNode<D>& NodeBox<D>::getNode(const double *r) const {
     int bIdx = this->getBoxIndex(r);
+    if (bIdx < 0) MSG_ERROR("Coord out of bounds");
     return getNode(bIdx);
 }
 

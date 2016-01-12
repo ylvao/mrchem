@@ -88,7 +88,7 @@ double GaussPoly<D>::calcSquareNorm() {
 }
 
 template<int D>
-double GaussPoly<D>::evalf(const double *r) const {
+double GaussPoly<D>::evalf(const double *r) {
     if (this->getScreen()) {
         for (int d = 0; d < D; d++) {
             if ((r[d] < this->A[d]) or (r[d] > this->B[d])) {

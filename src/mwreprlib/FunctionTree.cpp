@@ -75,11 +75,11 @@ FunctionTree<D>& FunctionTree<D>::operator=(const FunctionTree<D> &tree) {
 /** FunctionTree destructor. */
 template<int D>
 FunctionTree<D>::~FunctionTree() {
-    MRNode<D> **rootNodes = this->rootBox.getNodes();
+    MRNode<D> **roots = this->rootBox.getNodes();
     for (int i = 0; i < this->rootBox.size(); i++) {
-        ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(rootNodes[i]);
+        ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(roots[i]);
         if (node != 0) delete node;
-        rootNodes[i] = 0;
+        roots[i] = 0;
     }
 }
 
@@ -236,34 +236,31 @@ double FunctionTree<D>::dot(FunctionTree<D> &ket) {
 }
 
 template<int D>
-double FunctionTree<D>::evalf(const double *r) const {
+double FunctionTree<D>::evalf(const double *r) {
+    bool iAmMaster = false;
+    if (this->getRankId() == 0) iAmMaster = true;
+
+    double val;
+#ifdef HAVE_MPI
     NOT_IMPLEMENTED_ABORT;
-//    double val;
-//    FunctionTree &tree = const_cast<FunctionTree &> (*this);
-
-//    if (this->isScattered()) {
-//#ifdef HAVE_MPI
-
-//        MWNode<D> *pnode = tree.findNode(r);
-//        if (not pnode->isForeign()) {
-//            MWNode<D> &node = pnode->getNode(r);
-//            val = node.evalf(r);
-//            if (this->getRankId() != 0) {
-//                node_group.send(0, 0, val);
-//            }
-//        } else if (this->getRankId() == 0) {
-//            node_group.recv(mpi::any_source, 0, val);
-//        } else {
-//            val = 0.0;
-//        }
-//#else
-//        MSG_FATAL("Calling evalf() on scattered tree without MPI enabled!");
-//#endif
-//    } else {
-//        MWNode<D> &node = tree.getNode(r);
-//        val = node.evalf(r);
-//    }
-//    return val;
+    MRNode<D> &mw_node = this->getNodeOrEndNode(r, 1);
+    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
+    if (not f_node.isForeign() or (f_node.isCommon() and iAmMaster)) {
+        val = f_node.asFuncNode().evalf(r);
+        if (not iAmMaster) {
+            node_group.send(0, 0, val);
+        }
+    } else if (iAmMaster) {
+        node_group.recv(mpi::any_source, 0, val);
+    } else {
+        val = 0.0;
+    }
+#else
+    MRNode<D> &mw_node = this->getNodeOrEndNode(r);
+    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
+    val = f_node.evalf(r);
+#endif
+    return val;
 }
 
 template<int D>

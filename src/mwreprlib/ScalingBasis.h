@@ -11,15 +11,38 @@
 #ifndef SCALINGBASIS_H
 #define SCALINGBASIS_H
 
+#include <vector>
+
 #include "TelePrompter.h"
 #include "constants.h"
+#include "Polynomial.h"
 
 class ScalingBasis {
 public:
-    ScalingBasis(int k, int t) : type(t), order(k) {
+    ScalingBasis(int k, int t)
+            : type(t),
+              order(k) {
         if (this->order < 1) MSG_FATAL("Invalid scaling order");
     }
-    virtual ~ScalingBasis() { }
+    virtual ~ScalingBasis() {
+//        for (int k = 0; k < this->funcs.size(); k++) {
+//            if (this->funcs[k] != 0) delete this->funcs[k];
+//            this->funcs[k] = 0;
+//        }
+    }
+
+    void evalf(const double *r, Eigen::MatrixXd &vals) const {
+        if (vals.rows() != this->funcs.size()) MSG_ERROR("Invalid argument");
+
+        for (int d = 0; d < vals.cols(); d++) {
+            for (int k = 0; k < vals.rows(); k++) {
+                vals(k, d) = getFunc(k).evalf(r[d]);
+            }
+        }
+    }
+
+    Polynomial &getFunc(int k) { return *this->funcs[k]; }
+    const Polynomial &getFunc(int k) const { return *this->funcs[k]; }
 
     int getScalingType() const { return this->type; }
     int getScalingOrder() const { return this->order; }
@@ -49,6 +72,7 @@ public:
         return o;
     }
 protected:
+    std::vector<Polynomial *> funcs;
     const int type;
     const int order;
 };

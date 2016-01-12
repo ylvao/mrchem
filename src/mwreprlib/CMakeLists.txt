@@ -36,6 +36,7 @@ set(mwrepr_SOURCES
         ScalingCache.h
         ScalingBasis.h
         LegendreBasis.h
+        InterpolatingBasis.cpp
         InterpolatingBasis.h
         MRTree.cpp
         MRTree.h

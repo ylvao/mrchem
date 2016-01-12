@@ -327,7 +327,11 @@ const MRNode<D>& MRTree<D>::getNodeOrEndNode(const NodeIndex<D> &idx) const {
 template<int D>
 MRNode<D>& MRTree<D>::getNode(const double *r, int depth) {
     MRNode<D> &root = getRootBox().getNode(r);
-    return *root.retrieveNode(r, depth);
+    if (depth >= 0) {
+        return *root.retrieveNode(r, depth);
+    } else {
+        return *root.retrieveNodeOrEndNode(r, depth);
+    }
 }
 
 /** Find and return the node at a given depth that contains a given coordinate.
