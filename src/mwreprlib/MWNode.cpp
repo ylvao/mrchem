@@ -7,6 +7,7 @@
 
 #include "MWNode.h"
 #include "MWTree.h"
+#include "MathUtils.h"
 
 using namespace std;
 using namespace Eigen;
@@ -37,7 +38,6 @@ MWNode<D>::MWNode(const MWNode<D> &n)
           squareNorm(-1.0),
           componentNorms(0),
           coefs(0) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 /** MWNode destructor.
@@ -93,17 +93,37 @@ void MWNode<D>::zeroCoefs() {
   * routine). */
 template<int D>
 void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (not this->isAllocated()) {
-//        allocCoefs();
-//    }
-//    int nNew = c.size();
-//    assert (nNew <= this->getNCoefs());
-//    if (nNew < this->getNCoefs()) {
-//        this->coefs->segment(nNew, this->getNCoefs() - nNew).setZero();
-//    }
-//    this->coefs->segment(0, nNew) = c;
-//    this->setHasCoefs();
+    if (not this->isAllocated()) {
+        allocCoefs();
+    }
+    int nNew = c.size();
+    assert (nNew <= this->getNCoefs());
+    if (nNew < this->getNCoefs()) {
+        this->coefs->segment(nNew, this->getNCoefs() - nNew).setZero();
+    }
+    this->coefs->segment(0, nNew) = c;
+    this->setHasCoefs();
+}
+
+template<int D>
+void MWNode<D>::giveChildrenCoefs(bool overwrite) {
+     assert(this->isBranchNode());
+     if (not this->hasCoefs()) MSG_FATAL("No coefficients!")
+
+     ProjectedNode<D> copy(*this);
+     copy.mwTransform(Reconstruction);
+     int kp1_d = this->getKp1_d();
+     for (int i = 0; i < this->getTDim(); i++) {
+         MWNode<D> &child = this->getMWChild(i);
+         if (not child.hasCoefs()) {
+             child.setCoefs(copy.getCoefs().segment(i * kp1_d, kp1_d));
+         } else if (overwrite) {
+             child.getCoefs().segment(0, kp1_d) = copy.getCoefs().segment(i * kp1_d, kp1_d);
+         } else {
+             child.getCoefs().segment(0, kp1_d) += copy.getCoefs().segment(i * kp1_d, kp1_d);
+         }
+         child.clearNorms();
+     }
 }
 
 /** Coefficient-Value transform
@@ -187,46 +207,44 @@ void MWNode<D>::cvTransform(int operation) {
   * C++ version: Jonas Juselius, September 2009 */
 template<int D>
 void MWNode<D>::mwTransform(int operation) {
-    NOT_IMPLEMENTED_ABORT;
-//    int kp1 = this->getKp1();
-//    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
-//    int kp1_d = this->getKp1_d();
-//    const MWFilter &filter = getMWTree().getFilter();
-//    VectorXd &result = getMWTree().getTmpMWCoefs();
-//    bool overwrite = true;
+    int kp1 = this->getKp1();
+    int kp1_dm1 = MathUtils::ipow(kp1, D - 1);
+    int kp1_d = this->getKp1_d();
+    const MWFilter &filter = getMWTree().getMRA().getFilter();
+    VectorXd &result = getMWTree().getTmpMWCoefs();
+    bool overwrite = true;
 
-//    for (int i = 0; i < D; i++) {
-//        int mask = 1 << i;
-//        for (int gt = 0; gt < this->getTDim(); gt++) {
-//            double *out = result.data() + gt * kp1_d;
-//            for (int ft = 0; ft < this->getTDim(); ft++) {
-//                /* Operate in direction i only if the bits along other
-//                 * directions are identical. The bit of the direction we
-//                 * operate on determines the appropriate filter/operator */
-//                if ((gt | mask) == (ft | mask)) {
-//                    double *in = this->coefs->data() + ft * kp1_d;
-//                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
-//                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
-//                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
-//                    overwrite = false;
-//                }
-//            }
-//            overwrite = true;
-//        }
-//        this->coefs->swap(result);
-//    }
+    for (int i = 0; i < D; i++) {
+        int mask = 1 << i;
+        for (int gt = 0; gt < this->getTDim(); gt++) {
+            double *out = result.data() + gt * kp1_d;
+            for (int ft = 0; ft < this->getTDim(); ft++) {
+                /* Operate in direction i only if the bits along other
+                 * directions are identical. The bit of the direction we
+                 * operate on determines the appropriate filter/operator */
+                if ((gt | mask) == (ft | mask)) {
+                    double *in = this->coefs->data() + ft * kp1_d;
+                    int fIdx = 2 * ((gt >> i) & 1) + ((ft >> i) & 1);
+                    const MatrixXd &oper = filter.getSubFilter(fIdx, operation);
+                    MathUtils::applyFilter(out, in, oper, kp1, kp1_dm1, overwrite);
+                    overwrite = false;
+                }
+            }
+            overwrite = true;
+        }
+        this->coefs->swap(result);
+    }
 }
 
 /** Set all norms to Undefined. */
 template<int D>
 void MWNode<D>::clearNorms() {
-    NOT_IMPLEMENTED_ABORT;
-//    this->squareNorm = -1.0;
-//    if (this->componentNorms != 0) {
-//        for (int i = 0; i < this->getTDim(); i++) {
-//            this->componentNorms[i] = -1.0;
-//        }
-//    }
+    this->squareNorm = -1.0;
+    if (this->componentNorms != 0) {
+        for (int i = 0; i < this->getTDim(); i++) {
+            this->componentNorms[i] = -1.0;
+        }
+    }
 }
 
 /** Set all norms to zero. */

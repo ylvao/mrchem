@@ -194,41 +194,37 @@ void MRTree<D>::updateGenNodeCounts() {
 /** Adds a GenNode to the count. */
 template<int D>
 void MRTree<D>::incrementGenNodeCount() {
-    NOT_IMPLEMENTED_ABORT;
-//    int n = omp_get_thread_num();
-//    assert(n >= 0);
-//    assert(n < this->nThreads);
-//    this->nGenNodes[n]++;
+    int n = omp_get_thread_num();
+    assert(n >= 0);
+    assert(n < this->nThreads);
+    this->nGenNodes[n]++;
 }
 
 /** Removes a GenNode from the count. */
 template<int D>
 void MRTree<D>::decrementGenNodeCount() {
-    NOT_IMPLEMENTED_ABORT;
-//    int n = omp_get_thread_num();
-//    assert(n >= 0);
-//    assert(n < this->nThreads);
-//    this->nGenNodes[n]--;
+    int n = omp_get_thread_num();
+    assert(n >= 0);
+    assert(n < this->nThreads);
+    this->nGenNodes[n]--;
 }
 
 /** Adds an allocated GenNode to the count. */
 template<int D>
 void MRTree<D>::incrementAllocGenNodeCount() {
-    NOT_IMPLEMENTED_ABORT;
-//    int n = omp_get_thread_num();
-//    assert(n >= 0);
-//    assert(n < this->nThreads);
-//    this->nAllocGenNodes[n]++;
+    int n = omp_get_thread_num();
+    assert(n >= 0);
+    assert(n < this->nThreads);
+    this->nAllocGenNodes[n]++;
 }
 
 /** Removes an allocated GenNode from the count. */
 template<int D>
 void MRTree<D>::decrementAllocGenNodeCount() {
-    NOT_IMPLEMENTED_ABORT;
-//    int n = omp_get_thread_num();
-//    assert(n >= 0);
-//    assert(n < this->nThreads);
-//    this->nAllocGenNodes[n]--;
+    int n = omp_get_thread_num();
+    assert(n >= 0);
+    assert(n < this->nThreads);
+    this->nAllocGenNodes[n]--;
 }
 
 /** Get Node count. */
@@ -910,7 +906,7 @@ void MRTree<D>::distributeNodes(int depth) {
 /** Traverse tree and remove nodes of foreign rank.
   * Option to keep all endNodes. */
 template<int D>
-void MRTree<D>::purgeForeign(bool keepEndNodes) {
+void MRTree<D>::deleteForeign(bool keepEndNodes) {
     NOT_IMPLEMENTED_ABORT;
 //    if (not this->isScattered()) {
 //        return;
@@ -931,10 +927,20 @@ void MRTree<D>::purgeForeign(bool keepEndNodes) {
 }
 
 template<int D>
-void MRTree<D>::purgeGenerated() {
+void MRTree<D>::deleteGenerated() {
+    for (int n = 0; n < getNEndNodes(); n++) {
+        getEndNode(n).deleteGenerated();
+    }
+}
+
+/** Loop through endNodeTable and recursively clear all GenNode coefficients.
+  * Includes a static cast of endNodes from MWNode to FunctionNode*/
+template<int D>
+void MRTree<D>::clearGenerated() {
     NOT_IMPLEMENTED_ABORT;
-//    for (int n = 0; n < getNEndNodes(); n++) {
-//        getEndNode(n).purgeGenerated();
+//    for (int i = 0; i < this->endNodeTable.size(); i++) {
+//        FunctionNode<D> &node = static_cast<FunctionNode<D> &>(*this->endNodeTable[i]);
+//        node.clearGenerated();
 //    }
 }
 

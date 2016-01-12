@@ -17,6 +17,7 @@ class ProjectedNode: public FunctionNode<D> {
 public:
     ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     ProjectedNode(ProjectedNode<D> &p, int cIdx);
+    ProjectedNode(const MWNode<D> &n);
     ProjectedNode(const ProjectedNode<D> &n);
     ProjectedNode& operator=(const ProjectedNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~ProjectedNode() { }
@@ -24,7 +25,7 @@ public:
     double evalf(const double *r) const;
 
     void clearGenerated();
-    void purgeGenerated();
+    void deleteGenerated();
 
 protected:
     void copyChildren(const MRNode<D> &node);

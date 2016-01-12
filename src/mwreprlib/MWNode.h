@@ -11,6 +11,7 @@
 #include <Eigen/Core>
 
 #include "MRNode.h"
+#include "ProjectedNode.h"
 
 template<int D>
 class MWNode : public MRNode<D> {
@@ -44,9 +45,6 @@ public:
     virtual void cvTransform(int kind);
     virtual void mwTransform(int kind);
 
-    virtual void purgeGenerated() { NOT_IMPLEMENTED_ABORT; }
-    virtual void clearGenerated() { NOT_IMPLEMENTED_ABORT; }
-
     MWTree<D>& getMWTree() { return static_cast<MWTree<D> &>(*this->tree); }
     MWNode<D>& getMWParent() { return static_cast<MWNode<D> &>(*this->parent); }
     MWNode<D>& getMWChild(int i) { return static_cast<MWNode<D> &>(*this->children[i]); }
@@ -77,7 +75,7 @@ protected:
     inline void freeComponentNorms();
     virtual void calcComponentNorms() { NOT_IMPLEMENTED_ABORT; }
 
-    virtual void giveChildrenScaling(bool overwrite = true) { }
+    void giveChildrenCoefs(bool overwrite = true);
     void copyCoefsFromChildren(Eigen::VectorXd &scoefs);
 
     bool crop(double prec, NodeIndexSet *cropIdx = 0);

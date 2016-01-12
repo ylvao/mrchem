@@ -42,7 +42,8 @@ MRNode<D>::MRNode(const MRNode<D> &n)
           nodeIndex(n.getNodeIndex()),
           hilbertPath(n.getHilbertPath()),
           status(0) {
-    NOT_IMPLEMENTED_ABORT;
+    this->tree->incrementNodeCount(getScale());
+    setIsLeafNode();
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
@@ -114,20 +115,35 @@ void MRNode<D>::genChildren() {
     this->setIsBranchNode();
 }
 
+/** Clear coefficients of generated nodes.
+  *
+  * The node structure is kept, only the coefficients are cleared. */
 template<int D>
-void MRNode<D>::purgeGenerated() {
+void MRNode<D>::clearGenerated() {
     NOT_IMPLEMENTED_ABORT;
 //    if (this->isBranchNode()) {
 //        assert(this->children != 0);
-//        if (this->isEndNode()) {
-//            this->deleteChildren();
-//        } else {
-//            for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
-//                assert(this->children[cIdx] != 0);
-//                this->getMRChild(cIdx).purgeGenerated();
+//        for (int i = 0; i < this->getTDim(); i++) {
+//            if (this->children[i] != 0) {
+//                this->getFuncChild(i).clearGenerated();
 //            }
 //        }
 //    }
+}
+
+template<int D>
+void MRNode<D>::deleteGenerated() {
+    if (this->isBranchNode()) {
+        assert(this->children != 0);
+        if (this->isEndNode()) {
+            this->deleteChildren();
+        } else {
+            for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+                assert(this->children[cIdx] != 0);
+                this->getMRChild(cIdx).deleteGenerated();
+            }
+        }
+    }
 }
 
 template<int D>

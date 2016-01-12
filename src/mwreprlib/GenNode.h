@@ -26,9 +26,6 @@ public:
 
     double getComponentNorm(int i);
 
-    void clearGenerated();
-    void purgeGenerated();
-
     void setCoefs(const Eigen::VectorXd &c);
     Eigen::VectorXd& getCoefs();
     const Eigen::VectorXd& getCoefs() const;

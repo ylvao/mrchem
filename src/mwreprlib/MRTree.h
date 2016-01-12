@@ -64,9 +64,10 @@ public:
     const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
 
     void distributeNodes(int depth = -1);
+    void deleteForeign(bool keepEndNodes = false);
 
-    void purgeGenerated();
-    void purgeForeign(bool keepEndNodes = false);
+    void deleteGenerated();
+    void clearGenerated();
 
     void lockTree() { SET_TREE_LOCK(); }
     void unlockTree() { UNSET_TREE_LOCK(); }
@@ -91,6 +92,7 @@ public:
     void checkRankOverlap(MRTree<D> &tree);
 
     friend class MRNode<D>;
+    friend class GenNode<D>;
 protected:
     // Parameters that are set in construction and should never change
     const int rank;

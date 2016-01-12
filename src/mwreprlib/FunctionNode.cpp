@@ -27,6 +27,12 @@ FunctionNode<D>::FunctionNode(FunctionNode<D> &p, int cIdx)
 }
 
 template<int D>
+FunctionNode<D>::FunctionNode(const MWNode<D> &n)
+        : MWNode<D>(n) {
+    this->squareNorm = 0.0;
+}
+
+template<int D>
 FunctionNode<D>::FunctionNode(const FunctionNode<D> &n)
         : MWNode<D>(n) {
     this->squareNorm = 0.0;
@@ -40,6 +46,7 @@ double FunctionNode<D>::evalf(const double *r) {
     SET_NODE_LOCK();
     if (this->isLeafNode()) {
         this->genChildren();
+        this->giveChildrenCoefs();
     }
     UNSET_NODE_LOCK();
     int cIdx = this->getChildIndex(r);

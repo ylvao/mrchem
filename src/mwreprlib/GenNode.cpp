@@ -8,8 +8,9 @@
  * \breif
  */
 
-#include "ProjectedNode.h"
 #include "GenNode.h"
+#include "ProjectedNode.h"
+#include "MWTree.h"
 
 using namespace std;
 using namespace Eigen;
@@ -19,6 +20,7 @@ GenNode<D>::GenNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx),
           genRootNode(&p) {
     this->setIsGenNode();
+    this->tree->incrementGenNodeCount();
 }
 
 template<int D>
@@ -26,6 +28,7 @@ GenNode<D>::GenNode(GenNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx),
           genRootNode(p.genRootNode) {
     this->setIsGenNode();
+    this->tree->incrementGenNodeCount();
 }
 
 template<int D>
@@ -37,6 +40,10 @@ GenNode<D>::GenNode(const GenNode<D> &n)
 
 template<int D>
 GenNode<D>::~GenNode() {
+    this->tree->decrementGenNodeCount();
+    if (this->isAllocated()) {
+        this->tree->decrementAllocGenNodeCount();
+    }
 }
 
 template<int D>
@@ -63,7 +70,12 @@ void GenNode<D>::releaseCoefs() {
 
 template<int D>
 void GenNode<D>::setCoefs(const VectorXd &c) {
-    NOT_IMPLEMENTED_ABORT;
+    SET_NODE_LOCK();
+    if (not this->isAllocated()) {
+        this->getMWTree().incrementAllocGenNodeCount();
+    }
+    MWNode<D>::setCoefs(c);
+    UNSET_NODE_LOCK();
 }
 
 template<int D>
@@ -73,16 +85,6 @@ VectorXd& GenNode<D>::getCoefs() {
 
 template<int D>
 const VectorXd& GenNode<D>::getCoefs() const {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-void GenNode<D>::clearGenerated() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-void GenNode<D>::purgeGenerated() {
     NOT_IMPLEMENTED_ABORT;
 }
 

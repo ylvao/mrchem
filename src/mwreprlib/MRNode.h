@@ -149,7 +149,8 @@ protected:
     const MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx) const;
     MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
 
-    void purgeGenerated();
+    void clearGenerated();
+    void deleteGenerated();
 
     void assignDecendantTags(int rank);
     void broadcastCoefs(int src, mpi::communicator *comm  = 0);

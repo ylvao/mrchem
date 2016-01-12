@@ -89,36 +89,6 @@ void FunctionTree<D>::clear() {
     NOT_IMPLEMENTED_ABORT;
 }
 
-/** Loop through endNodeTable and recursively clear all GenNode coefficients.
-  * Includes a static cast of endNodes from MWNode to FunctionNode*/
-template<int D>
-void FunctionTree<D>::clearGenNodes() {
-    NOT_IMPLEMENTED_ABORT;
-//    for (unsigned int i = 0; i < this->endNodeTable.size(); i++) {
-//        FunctionNode<D> *node =
-//                static_cast<FunctionNode<D> *>(this->endNodeTable[i]);
-//        node->clearGenerated();
-//    }
-}
-
-/** Loop through endNodeTable and recursively delete all GenNodes.
-  * Includes a static cast of endNodes from MWNode to FunctionNode*/
-template<int D>
-void FunctionTree<D>::purgeGenNodes() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->nNodes == 0) {
-//        return;
-//    }
-//    int nEnd = this->endNodeTable.size();
-//#pragma omp parallel firstprivate(nEnd)
-//    {
-//#pragma omp for schedule(guided)
-//        for (int n = 0; n < nEnd; n++) {
-//            this->getEndNode(n).purgeGenerated();
-//        }
-//    }
-}
-
 /** Write the tree structure to disk, for later use.
   * Argument file name will get a ".tree" file extension, and in MPI an
   * additional "-[rank]". */
@@ -260,6 +230,7 @@ double FunctionTree<D>::evalf(const double *r) {
     FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
     val = f_node.evalf(r);
 #endif
+    this->deleteGenerated();
     return val;
 }
 

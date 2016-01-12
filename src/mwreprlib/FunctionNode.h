@@ -8,13 +8,12 @@ class FunctionNode : public MWNode<D> {
 public:
     FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
     FunctionNode(FunctionNode<D> &p, int cIdx);
+    FunctionNode(const MWNode<D> &n);
     FunctionNode(const FunctionNode<D> &n);
     FunctionNode& operator=(const FunctionNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~FunctionNode() { }
 
     double evalf(const double *r);
-    virtual void clearGenerated() { NOT_IMPLEMENTED_ABORT; }
-    virtual void purgeGenerated() { NOT_IMPLEMENTED_ABORT; }
 
     double integrate();
     double dotScaling(FunctionNode<D> &inpNode);

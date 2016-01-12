@@ -25,14 +25,11 @@ public:
     virtual ~FunctionTree();
 
     void clear();
-    void clearGenNodes();
-    void purgeGenNodes();
 
     double integrate();
     virtual double dot(FunctionTree<D> &ket);
     virtual double evalf(const double *r);
 
-    void plotCleanup() { this->purgeGenNodes(); }
     bool saveTree(const std::string &file);
     bool loadTree(const std::string &file);
 

@@ -48,6 +48,22 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
 }
 
 template<int D>
+ProjectedNode<D>::ProjectedNode(const MWNode<D> &n)
+        : FunctionNode<D>(n) {
+    if (not this->isForeign()) {
+        this->allocCoefs();
+        this->zeroCoefs();
+    }
+
+    const VectorXd &c = n.getCoefs();
+    int nCoefs = n.getCoefs().size();
+    assert (nCoefs <= this->getNCoefs());
+    this->coefs->segment(0, nCoefs) = c;
+    this->setHasCoefs();
+}
+
+
+template<int D>
 ProjectedNode<D>::ProjectedNode(const ProjectedNode<D> &n)
         : FunctionNode<D>(n) {
     NOT_IMPLEMENTED_ABORT;
@@ -125,43 +141,6 @@ double ProjectedNode<D>::calcComponentNorm(int i) {
 //    int kp1_d = this->getKp1_d();
 //    this->componentNorms[i] = c.segment(i*kp1_d, kp1_d).norm();
 }
-
-/** Clear coefficients of generated nodes.
-  *
-  * The node structure is kept, only the coefficients are cleared. */
-template<int D>
-void ProjectedNode<D>::clearGenerated() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->isBranchNode()) {
-//        assert(this->children != 0);
-//        for (int i = 0; i < this->getTDim(); i++) {
-//            if (this->children[i] != 0) {
-//                this->getFuncChild(i).clearGenerated();
-//            }
-//        }
-//    }
-}
-
-/** Remove all generated nodes recursively
-  *
-  * All generated nodes are removed (nothing is kept) */
-template<int D>
-void ProjectedNode<D>::purgeGenerated() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->isBranchNode()) {
-//        assert(this->children != 0);
-//        if (this->isEndNode()) {
-//            this->deleteChildren();
-//        } else {
-//            for (int i = 0; i < this->getTDim(); i++) {
-//                if (this->children[i] != 0) {
-//                    this->getFuncChild(i).purgeGenerated();
-//                }
-//            }
-//        }
-//    }
-}
-
 template class ProjectedNode<1> ;
 template class ProjectedNode<2> ;
 template class ProjectedNode<3> ;
