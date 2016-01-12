@@ -30,14 +30,14 @@ void InterpolatingBasis::initScalingBasis() {
     for (int k = 0; k < qOrder; k++) {
         // Can't add higher-order polynomials to lower-order ones, so I
         // changed the order of the loop
-        Polynomial *I_k = new Polynomial(L_k[sOrder]);
-        *I_k *= L_k[sOrder].evalf(roots(k)) * (2.0 * sOrder + 1);
+        Polynomial I_k(L_k[sOrder]);
+        I_k *= L_k[sOrder].evalf(roots(k)) * (2.0 * sOrder + 1);
 
         for (int i = qOrder - 2; i >= 0; i--) {
             double val = L_k[i].evalf(roots(k)) * (2.0 * i + 1);
-            I_k->addInPlace(val, L_k[i]);
+            I_k.addInPlace(val, L_k[i]);
         }
-        *I_k *= sqrt(wgts[k]);
+        I_k *= sqrt(wgts[k]);
         this->funcs.push_back(I_k);
     }
 }

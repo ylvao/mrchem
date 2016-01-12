@@ -24,12 +24,7 @@ public:
               order(k) {
         if (this->order < 1) MSG_FATAL("Invalid scaling order");
     }
-    virtual ~ScalingBasis() {
-//        for (int k = 0; k < this->funcs.size(); k++) {
-//            if (this->funcs[k] != 0) delete this->funcs[k];
-//            this->funcs[k] = 0;
-//        }
-    }
+    virtual ~ScalingBasis() { }
 
     void evalf(const double *r, Eigen::MatrixXd &vals) const {
         if (vals.rows() != this->funcs.size()) MSG_ERROR("Invalid argument");
@@ -41,8 +36,8 @@ public:
         }
     }
 
-    Polynomial &getFunc(int k) { return *this->funcs[k]; }
-    const Polynomial &getFunc(int k) const { return *this->funcs[k]; }
+    Polynomial &getFunc(int k) { return this->funcs[k]; }
+    const Polynomial &getFunc(int k) const { return this->funcs[k]; }
 
     int getScalingType() const { return this->type; }
     int getScalingOrder() const { return this->order; }
@@ -72,7 +67,7 @@ public:
         return o;
     }
 protected:
-    std::vector<Polynomial *> funcs;
+    std::vector<Polynomial> funcs;
     const int type;
     const int order;
 };

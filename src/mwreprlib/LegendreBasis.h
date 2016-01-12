@@ -23,8 +23,8 @@ public:
 
     void initScalingBasis() {
         for (int k = 0; k < getScalingOrder() + 1; k++) {
-            LegendrePoly *L_k = new LegendrePoly(k, 2.0, 1.0);
-            *L_k *= sqrt(2.0 * k + 1.0); // exact normalization
+            LegendrePoly L_k(k, 2.0, 1.0);
+            L_k *= sqrt(2.0 * k + 1.0); // exact normalization
             this->funcs.push_back(L_k);
         }
     }
