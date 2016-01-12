@@ -60,6 +60,7 @@ ProjectedNode<D>::ProjectedNode(const MWNode<D> &n)
     assert (nCoefs <= this->getNCoefs());
     this->coefs->segment(0, nCoefs) = c;
     this->setHasCoefs();
+    this->calcNorms();
 }
 
 

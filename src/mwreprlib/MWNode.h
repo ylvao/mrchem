@@ -67,9 +67,9 @@ protected:
     void zeroNorms();
     void clearNorms();
 
-    virtual double calcSquareNorm();
-    virtual double calcScalingNorm();
-    virtual double calcWaveletNorm();
+    virtual double calcSquareNorm() const;
+    virtual double calcScalingNorm() const;
+    virtual double calcWaveletNorm() const;
 
     inline void allocComponentNorms();
     inline void freeComponentNorms();

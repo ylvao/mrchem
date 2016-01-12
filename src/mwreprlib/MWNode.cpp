@@ -261,25 +261,23 @@ void MWNode<D>::zeroNorms() {
 /** Calculate and store square norm and component norms, if allocated. */
 template<int D>
 void MWNode<D>::calcNorms() {
-    NOT_IMPLEMENTED_ABORT;
-//    this->squareNorm = calcSquareNorm();
-//    if (this->componentNorms != 0) {
-//        calcComponentNorms();
-//    }
+    this->squareNorm = calcSquareNorm();
+    if (this->componentNorms != 0) {
+        calcComponentNorms();
+    }
 }
 
 /** Calculate, store and return square norm. */
 template<int D>
-double MWNode<D>::calcSquareNorm() {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->isAllocated());
-//    assert(this->hasCoefs());
-//    return this->coefs->squaredNorm();
+double MWNode<D>::calcSquareNorm() const {
+    assert(this->isAllocated());
+    assert(this->hasCoefs());
+    return this->coefs->squaredNorm();
 }
 
 /** Calculate and return scaling norm. */
 template<int D>
-double MWNode<D>::calcScalingNorm() {
+double MWNode<D>::calcScalingNorm() const {
     NOT_IMPLEMENTED_ABORT;
 //    assert(this->isAllocated());
 //    assert(this->hasCoefs());
@@ -288,7 +286,7 @@ double MWNode<D>::calcScalingNorm() {
 
 /** Calculate and return wavelet norm. */
 template<int D>
-double MWNode<D>::calcWaveletNorm() {
+double MWNode<D>::calcWaveletNorm() const {
     NOT_IMPLEMENTED_ABORT;
 //    assert(this->isAllocated());
 //    assert(this->hasCoefs());
