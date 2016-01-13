@@ -279,7 +279,6 @@ void MathUtils::applyFilter(double *out, double *in,
     } else {
         g += f.transpose() * filter;
     }
-
 #endif
 }
 
