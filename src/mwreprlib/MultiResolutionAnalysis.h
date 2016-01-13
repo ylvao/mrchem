@@ -26,12 +26,12 @@ public:
     const ScalingBasis &getScalingBasis() const { return this->basis; }
     const BoundingBox<D> &getWorldBox() const { return this->world; }
 
-    bool operator==(MultiResolutionAnalysis<D> &mra) const {
+    bool operator==(const MultiResolutionAnalysis<D> &mra) const {
         if (this->basis != mra.basis) return false;
         if (this->world != mra.world) return false;
         return true;
     }
-    bool operator!=(MultiResolutionAnalysis<D> &mra) const {
+    bool operator!=(const MultiResolutionAnalysis<D> &mra) const {
         if (this->basis != mra.basis) return true;
         if (this->world != mra.world) return true;
         return false;

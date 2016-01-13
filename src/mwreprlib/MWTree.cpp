@@ -168,6 +168,20 @@ void MWTree<D>::crop(double thrs, bool absPrec) {
 //    this->squareNorm = calcSquareNorm();
 //}
 
+template<int D>
+void MWTree<D>::mwTransform(int type, bool overwrite) {
+    switch(type) {
+    case TopDown:
+        mwTransformDown(overwrite);
+        break;
+    case BottomUp:
+        mwTransformUp(overwrite);
+        break;
+    default:
+        MSG_FATAL("Invalid wavelet transform");
+    }
+}
+
 /** Regenerate all s/d-coeffs by backtransformation, starting at the bottom and
   * thus purifying all coefficients. Option to overwrite or add up existing
   * coefficients of BranchNodes (can be used after operator application). */

@@ -15,9 +15,9 @@ public:
 
     double evalf(const double *r);
 
-    double integrate();
-    double dotScaling(FunctionNode<D> &inpNode);
-    double dotWavelet(FunctionNode<D> &inpNode);
+    double integrate() const;
+    double dotScaling(const FunctionNode<D> &ket) const;
+    double dotWavelet(const FunctionNode<D> &ket) const;
 
     FunctionTree<D> &getFuncTree() { return static_cast<FunctionTree<D> &>(*this->tree); }
     FunctionNode<D> &getFuncParent() { return static_cast<FunctionNode<D> &>(*this->parent); }
@@ -29,8 +29,8 @@ public:
 
 protected:
     double evalScaling(const double *r) const;
-    double integrateLegendre();
-    double integrateInterpolating();
+    double integrateLegendre() const;
+    double integrateInterpolating() const;
 
 private:
     friend class boost::serialization::access;

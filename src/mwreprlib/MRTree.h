@@ -32,8 +32,6 @@ public:
     MRTree(const MRTree<D> &tree);
     virtual ~MRTree();
 
-    virtual void clear() { NOT_IMPLEMENTED_ABORT; }
-
     void setName(const std::string &n) { this->name = n; }
     const std::string &getName() const { return this->name; }
 
@@ -63,21 +61,12 @@ public:
     MRNode<D> &getEndNode(int i) { return *this->endNodeTable[i]; }
     const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
 
-    void distributeNodes(int depth = -1);
-    void deleteForeign(bool keepEndNodes = false);
-
-    void deleteGenerated();
-    void clearGenerated();
-
     void lockTree() { SET_TREE_LOCK(); }
     void unlockTree() { UNSET_TREE_LOCK(); }
     bool testLock() { return TEST_TREE_LOCK(); }
 
     int getNThreads() const { return this->nThreads; }
     int getRankId() const { return this->rank; }
-
-    bool diffTree(const MRTree<D> &tree) const;
-    bool checkCompatible(const MRTree<D> &tree);
 
     virtual bool saveTree(const std::string &file) { NOT_IMPLEMENTED_ABORT; }
     virtual bool loadTree(const std::string &file) { NOT_IMPLEMENTED_ABORT; }
@@ -144,14 +133,16 @@ protected:
     void findMissingParents(MRNodeVector &nodeTable, std::set<MRNode<D> *> &missing);
     void findMissingChildren(MRNodeVector &nodeTable, std::set<MRNode<D> *> &missing);
 
+    void distributeNodes(int depth = -1);
+    void deleteForeign(bool keepEndNodes = false);
+
     void tagNodes(MRNodeVector &nodeList, int rank);
     void tagDecendants(MRNodeVector &nodeList);
     void distributeNodeTags(MRNodeVector &nodeList);
 
-    void syncNodes(const std::set<MRNode<D> *> &nodeList, int comp = -1);
-    int buildRequestLists(const std::set<MRNode<D> *> &list,
-                          std::vector<NodeIndex<D> > *myReqs,
-                          std::vector<NodeIndex<D> > *sReqs);
+    void deleteGenerated();
+    void clearGenerated();
+
 #ifdef OPENMP
     omp_lock_t tree_lock;
 #endif

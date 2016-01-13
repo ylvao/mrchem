@@ -10,7 +10,7 @@ template<int D>
 class HilbertIterator: public TreeIterator<D> {
 public:
     HilbertIterator(MRTree<D> *tree, int dir = TopDown)
-            : TreeIterator<D>(tree, dir) {
+            : TreeIterator<D>(dir) {
         this->init(tree);
     }
     virtual ~HilbertIterator() { }

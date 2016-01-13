@@ -26,31 +26,26 @@ public:
     virtual ~MWTree();
 
     void setZero();
-    virtual void clear() { NOT_IMPLEMENTED_ABORT; }
-
-    const MultiResolutionAnalysis<D> &getMRA() const { return this->MRA; }
-
     double getSquareNorm() const { return this->squareNorm; }
     double estimateError(bool absPrec);
 
     int getOrder() const { return this->order; }
     int getKp1() const { return this->order + 1; }
     int getKp1_d() const { return this->kp1_d; }
-
-    inline Eigen::MatrixXd &getTmpScalingCoefs();
-    inline Eigen::VectorXd &getTmpScalingVector();
-    inline Eigen::VectorXd &getTmpMWCoefs();
-
-    void mwTransformDown(bool overwrite = true);
-    void mwTransformUp(bool overwrite = true);
+    const MultiResolutionAnalysis<D> &getMRA() const { return this->MRA; }
 
     void crop(double thrs = -1.0, bool absPrec = true);
+    void mwTransform(int type, bool overwrite = true);
 
     MWNode<D> &getEndMWNode(int i) { return static_cast<MWNode<D> &>(this->getEndNode(i)); }
+    MWNode<D> &getRootMWNode(int i) { return static_cast<MWNode<D> &>(this->rootBox.getNode(i)); }
+
     const MWNode<D> &getEndMWNode(int i) const { return static_cast<const MWNode<D> &>(this->getEndNode(i)); }
+    const MWNode<D> &getRootMWNode(int i) const { return static_cast<const MWNode<D> &>(this->rootBox.getNode(i)); }
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
+    friend class MWNode<D>;
 
 protected:
     const MultiResolutionAnalysis<D> MRA;
@@ -69,7 +64,14 @@ protected:
     void allocWorkMemory();
     void freeWorkMemory();
 
+    inline Eigen::MatrixXd &getTmpScalingCoefs();
+    inline Eigen::VectorXd &getTmpScalingVector();
+    inline Eigen::VectorXd &getTmpMWCoefs();
+
     void calcSquareNorm(const MRNodeVector *work = 0);
+
+    void mwTransformDown(bool overwrite = true);
+    void mwTransformUp(bool overwrite = true);
 
 private:
     friend class boost::serialization::access;

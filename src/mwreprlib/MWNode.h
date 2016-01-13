@@ -27,6 +27,7 @@ public:
     int getKp1() const { return getMWTree().getKp1(); }
     int getKp1_d() const { return getMWTree().getKp1_d(); }
     int getOrder() const { return getMWTree().getOrder(); }
+    int getScalingType() const { return getMWTree().getMRA().getScalingBasis().getScalingType(); }
 
     inline bool hasComponentNorms() const;
     virtual double getComponentNorm(int i);

@@ -7,6 +7,7 @@
 #include "FunctionTree.h"
 #include "FunctionNode.h"
 #include "ProjectedNode.h"
+#include "HilbertIterator.h"
 
 using namespace std;
 using namespace Eigen;
@@ -133,44 +134,40 @@ bool FunctionTree<D>::loadTree(const string &file) {
 }
 
 template<int D>
-double FunctionTree<D>::integrate() {
-    NOT_IMPLEMENTED_ABORT;
-//    double result = 0.0;
-//    for (int i = 0; i < this->getNRootNodes(); i++) {
-//        FunctionNode<D> &fNode = getRootFuncNode(i);
-//        result += fNode.integrate();
-//    }
-//#ifdef HAVE_MPI
-//    result = mpi::all_reduce(node_group, result, std::plus<double>());
-//#endif
-//    return result;
+double FunctionTree<D>::integrate() const {
+    double result = 0.0;
+    for (int i = 0; i < this->rootBox.size(); i++) {
+        const FunctionNode<D> &fNode = getRootFuncNode(i);
+        result += fNode.integrate();
+    }
+#ifdef HAVE_MPI
+    result = mpi::all_reduce(node_group, result, std::plus<double>());
+#endif
+    return result;
 }
 
 template<int D>
-double FunctionTree<D>::dot(FunctionTree<D> &ket) {
+double FunctionTree<D>::dot(const FunctionTree<D> &ket) {
+    const FunctionTree<D> &bra = *this;
+    if (bra.getMRA() != ket.getMRA()) MSG_FATAL("Trees not compatible");
+#ifdef HAVE_MPI
     NOT_IMPLEMENTED_ABORT;
-//    if (not this->checkCompatible(rhs)) {
-//        MSG_FATAL("Trees not compatible");
-//    }
-//#ifdef HAVE_MPI
 //    if (this->isScattered() or rhs.isScattered()) {
 //        set<MWNode<D> *> missing;
 //        rhs.findMissingInnerProd(*this, missing);
 //        rhs.syncNodes(missing);
 //    }
-//#endif
-//    MWNodeVector nodeTable;
-//    HilbertIterator<D> it(this);
-//    while(it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        if (node.isGenNode()) {
-//            continue;
-//        }
-//        nodeTable.push_back(&node);
-//    }
-//    int n_nodes = nodeTable.size();
-//    double result = 0.0;
-//    double locResult = 0.0;
+#endif
+    MRNodeVector nodeTable;
+    HilbertIterator<D> it(this);
+    it.setReturnGenNodes(false);
+    while(it.next()) {
+        MRNode<D> &node = it.getNode();
+        nodeTable.push_back(&node);
+    }
+    int nNodes = nodeTable.size();
+    double result = 0.0;
+    double locResult = 0.0;
 //OMP is disabled in order to get EXACT results (to the very last digit), the
 //order of summation makes the result different beyond the 14th digit or so.
 //OMP does improve the performace, but its not worth it for the time being.
@@ -178,31 +175,29 @@ double FunctionTree<D>::dot(FunctionTree<D> &ket) {
 //		shared(nodeTable,rhs,result)
 //    {
 //#pragma omp for schedule(guided)
-//    for (int n = 0; n < n_nodes; n++) {
-//        FunctionNode<D> *nodeA = static_cast<FunctionNode<D> *>
-//                (nodeTable[n]);
-//        FunctionNode<D> *nodeB = static_cast<FunctionNode<D> *>
-//                (rhs.findNode(nodeA->getNodeIndex()));
-//        if (nodeB == 0) {
-//        continue;
-//        }
-//            if (nodeA->isRoot()) {
-//            locResult += nodeA->scalingInnerProduct(*nodeB);
-//        }
-//        locResult += nodeA->waveletInnerProduct(*nodeB);
-//    }
-//#pragma omp critical
-//    result += locResult;
-//    }
-//#ifdef HAVE_MPI
-//    if (this->isScattered()) {
+    for (int n = 0; n < nNodes; n++) {
+        const FunctionNode<D> &braNode = static_cast<const FunctionNode<D> &>(*nodeTable[n]);
+        const MRNode<D> *mrNode = ket.findNode(braNode.getNodeIndex());
+        if (mrNode == 0) continue;
 
+        const FunctionNode<D> &ketNode = static_cast<const FunctionNode<D> &>(*mrNode);
+        if (braNode.isRootNode()) {
+            locResult += braNode.dotScaling(ketNode);
+        }
+        locResult += braNode.dotWavelet(ketNode);
+    }
+//#pragma omp critical
+    result += locResult;
+//    }
+#ifdef HAVE_MPI
+    NOT_IMPLEMENTED_ABORT;
+//    if (this->isScattered()) {
 //        return mpi::all_reduce(node_group, result, std::plus<double>());
 //    }
-//#endif
+#endif
 //    this->purgeGenNodes();
 //    rhs.purgeGenNodes();
-//    return result;
+    return result;
 }
 
 template<int D>

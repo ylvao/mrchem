@@ -10,7 +10,7 @@ template <int D> struct IteratorNode;
 template<int D>
 class TreeIterator {
 public:
-    TreeIterator(MRTree<D> *tree, int dir = TopDown)
+    TreeIterator(int dir = TopDown)
         : mode(dir),
           state(0),
           initialState(0),
@@ -73,7 +73,7 @@ protected:
         this->root = 0;
         this->maxDepth = -1;
         this->nRoots = tree->getRootBox().size();
-        this->state = new IteratorNode<D>(&tree->getRootBox().getNode(root));
+        this->state = new IteratorNode<D>(&tree->getRootBox().getNode(this->root));
         // Save the first state so it can be properly deleted later
         this->initialState = this->state;
     }

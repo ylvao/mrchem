@@ -93,49 +93,6 @@ void MRTree<D>::splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec) {
 //    }
 }
 
-/** Testing if THIS tree differs from another.
-  * Includes recursive testing of nodes. Returns true if trees differ. */
-template<int D>
-bool MRTree<D>::diffTree(const MRTree<D> &tree) const {
-    NOT_IMPLEMENTED_ABORT;
- //    bool differ = false;
-//    if (this->squareNorm != rhs.squareNorm) {
-//        println(1, "SquareNorm differ:");
-//        println(1, this->squareNorm);
-//        println(1, rhs.squareNorm << endl);
-//        differ = true;
-//    }
-//    if (this->getNNodes() != rhs.getNNodes()) {
-//        println(1, "Number of nodes differ:");
-//        println(1, getNNodes());
-//        println(1, rhs.getNNodes() << endl);
-//        differ = true;
-//    }
-//    for (int i = 0; i < this->rootBox.getNBoxes(); i++) {
-//        MWNode<D> &lhsRoot = this->rootBox.getNode(i);
-//        MWNode<D> &rhsRoot = rhs.rootBox.getNode(i);
-//        if (lhsRoot.diffBranch(rhsRoot)) {
-//            differ = true;
-//        }
-//    }
-//    if (differ) {
-//        println(1, "Trees differ!");
-//    }
-//    return differ;   NOT_IMPLEMENTED_ABORT
-}
-
-template<int D>
-bool MRTree<D>::checkCompatible(const MRTree<D> &tree) {
-    NOT_IMPLEMENTED_ABORT;
-//    const BoundingBox<D> &thisBox = getRootBox();
-//    const BoundingBox<D> &thatBox = tree.getRootBox();
-//    if (thisBox != thatBox) {
-//        println(0, "rootBox mismatch");
-//        return false;
-//    }
-//    return true;
-}
-
 /** Increment node counters for non-GenNodes. This routine is not thread
   * safe, and must NEVER be called outside a critical region in parallel.
   * It's way. way too expensive to lock the tree, so don't even think
@@ -503,42 +460,6 @@ void MRTree<D>::resetEndNodeTable() {
     }
 }
 
-/** Set the rank id (node tag) for all nodes in list. */
-template<int D>
-void MRTree<D>::tagNodes(MRNodeVector &nodeList, int rank) {
-    NOT_IMPLEMENTED_ABORT;
-//    for (int i = 0; i < nodeList.size(); i++) {
-//        MRNode<D> &node = *nodeList[i];
-//        node.setRankId(rank);
-//    }
-}
-
-template<int D>
-void MRTree<D>::tagDecendants(MRNodeVector &nodeList) {
-    NOT_IMPLEMENTED_ABORT;
-//    int nNodes = nodeList.size();
-//    for (int i = 0; i < nNodes; i++) {
-//        MRNode<D> &node = *nodeList[i];
-//        node.assignDecendantTags(node.getRankId());
-//    }
-}
-
-/** Tag each node with the rank who owns it. */
-template<int D>
-void MRTree<D>::distributeNodeTags(MRNodeVector &nodeList) {
-    NOT_IMPLEMENTED_ABORT;
-//    int start, end;
-//    int nNodes = nodeList.size();
-//    int nHosts = node_group.size();
-//    for (int k = 0; k < nHosts; k++) {
-//        get_locale_index_range(k, nNodes, start, end);
-//        for (int i = start; i < end; i++) {
-//            MRNode<D> &node = *nodeList[i];
-//            node.setRankId(k);
-//        }
-//    }
-}
-
 template<int D>
 int MRTree<D>::countBranchNodes(int depth) {
     NOT_IMPLEMENTED_ABORT;
@@ -644,248 +565,6 @@ void MRTree<D>::printNodeRankCount() {
 //    println(0, endl);
 }
 
-/** Communicate all nodes of the tree to all MPI ranks. Node ranks remain. */
-//template<int D>
-//void MRTree<D>::broadcastTree() {
-//    NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
-//    if (scattered) {
-//        broadcastNodes(endNodeTable);
-//        scattered = false;
-//        resetEndNodeTable();
-//    }
-//    mwTransformUp();
-//#endif
-//}
-/*
-template<int D>
-void MWTree<D>::sendTree(int who) {
-#ifdef HAVE_MPI
-    MWNodeVector endNodes;
-    copyVector(endNodes, endNodeTable);
-
-    collectNodes(who, endNodes);
-    if (who == this->rank) {
-        scattered = false;
-        resetEndNodeTable();
-    }
-#endif
-}
-*/
-
-/** Communicate a list of nodes of the tree to all MPI ranks.
-  * Node ranks remain. */
-/*
-template<int D>
-void MWTree<D>::broadcastNodes(const MWNodeVector &nodeList) {
-#ifdef HAVE_MPI
-    int nLocales = node_group.size();
-    for (int i = 0; i < nLocales; i++) {
-        int nSend = 0;
-        if (i == rank) {
-            nSend = nodeList.size();
-            println(3, " broadcastNodes() @" << rank << " n=" << nSend);
-        }
-        mpi::broadcast(node_group, nSend, i);
-
-        for (int n = 0; n < nSend; n++) {
-            if (i == rank) {
-                MWNode<D> &node = *nodeList[n];
-                NodeIndex<D> idx = node.getNodeIndex();
-                mpi::broadcast(node_group, idx, i);
-                assert(node.hasCoefs());
-                println(5, "  send from @" << rank << " " << idx);
-                node.broadcastCoefs(i, &node_group);
-            } else {
-                NodeIndex<D> idx;
-                mpi::broadcast(node_group, idx, i);
-                MWNode<D> &node = getNode(idx);
-                if (not node.isAllocated()) {
-                    node.allocCoefs();
-                }
-                node.broadcastCoefs(i, &node_group);
-                node.setHasCoefs();
-                //				node.setRankId(this->rank); // We now "own" this node
-                node.calcNorms();
-            }
-        }
-    }
-#endif
-}
-*/
-/** Collect nodes in nodeList from all ranks into dest */
-/*
-template<int D>
-void MWTree<D>::collectNodes(int dest, const MWNodeVector &nodeList) {
-#ifdef HAVE_MPI
-    int nLocales = node_group.size();
-    int tag = rank * 10;
-    int nSend = 0;
-    if (rank == dest) {
-        for (int i = 0; i < nLocales; i++) {
-            if (i == rank) {
-                continue;
-            }
-            tag = i * 10;
-            node_group.recv(i, tag + 1, nSend);
-
-            for (int n = 0; n < nSend; n++) {
-                NodeIndex<D> idx;
-                node_group.recv(i, tag + 2, idx);
-                MWNode<D> &node = getNode(idx);
-                node.receiveCoefs(i, tag + 3 + n, &node_group);
-                node.calcNorms();
-            }
-        }
-    } else {
-        nSend = nodeList.size();
-        node_group.send(dest, tag + 1, nSend);
-        for (int n = 0; n < nSend; n++) {
-            MWNode<D> &node = *nodeList[n];
-            const NodeIndex<D> &idx = node.getNodeIndex();
-            node_group.send(dest, tag + 2, idx);
-            node.sendCoefs(dest, tag + 3 + n, &node_group);
-        }
-    }
-#endif
-}
-*/
-/** Send nodes in nodeList to dest */
-/*
-template<int D>
-void MWTree<D>::sendNodes(int dest, const MWNodeVector &nodeList) {
-#ifdef HAVE_MPI
-    int nSend = nodeList.size();
-    node_group.send(dest, 1, nSend);
-    for (int n = 0; n < nSend; n++) {
-        MWNode<D> &node = *nodeList[n];
-        const NodeIndex<D> &idx = node.getNodeIndex();
-        node_group.send(dest, 2, idx);
-        node.sendCoefs(dest, 3 + n, &node_group);
-    }
-#endif
-}
-*/
-/** Receive nodes from src */
-/*
-template<int D>
-void MWTree<D>::recvNodes(int src, MWNodeVector *nodeList) {
-#ifdef HAVE_MPI
-    int nSend = 0;
-    node_group.recv(src, 1, nSend);
-
-    for (int n = 0; n < nSend; n++) {
-        NodeIndex<D> idx;
-        node_group.recv(src, 2, idx);
-        MWNode<D> &node = getNode(idx);
-        if (nodeList != 0) {
-            nodeList->push_back(&node);
-        }
-        node.receiveCoefs(src, 3 + n, &node_group);
-        node.calcNorms();
-    }
-#endif
-}
-*/
-/** Use non-blocking communication to synchronize a set of nodes between
-  * different locales */
-template<int D>
-void MRTree<D>::syncNodes(const set<MRNode<D> *> &nodeList, int comp) {
-    NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
-//    int nHosts = node_group.size();
-
-//    vector<NodeIndex<D> > *myReqs = new vector<NodeIndex<D> >[nHosts];
-//    vector<NodeIndex<D> > *sendReqs = new vector<NodeIndex<D> >[nHosts];
-
-//    int totReqs = buildRequestLists(nodeList, myReqs, sendReqs);
-//    println(20, "  Total number of nodes to sync: " <<  totReqs);
-//    if (totReqs != 0) {
-//        mpi::request *reqs = new mpi::request[totReqs];
-
-//        int seq = 0;
-//        for (int l = 0; l < nHosts; l++) {
-//            vector<NodeIndex<D> > &in = myReqs[l];
-//            for (unsigned int n = 0; n < in.size(); n++) {
-//                MRNode<D> &node = this->getNode(in[n]);
-//                assert(node.isForeign());
-//                reqs[seq] = node.ireceiveCoefs(l, n, comp);
-//                seq++;
-//            }
-//            vector<NodeIndex<D> > &out = sendReqs[l];
-//            for (unsigned int n = 0; n < out.size(); n++) {
-//                MRNode<D> &node = this->getNode(out[n]);
-//                assert(node.hasCoefs());
-//                assert(not node.isForeign());
-//                reqs[seq] = node.isendCoefs(l, n, comp);
-//                seq++;
-//            }
-//        }
-//        mpi::wait_all(reqs, reqs + totReqs);
-
-//        for (int l = 0; l < nHosts; l++) {
-//            vector<NodeIndex<D> > &in = myReqs[l];
-//            for (unsigned int n = 0; n < in.size(); n++) {
-//                MRNode<D> &node = this->getNode(in[n]);
-//                //node.calcNorms();
-//            }
-//        }
-//        delete [] reqs;
-//    }
-//    delete [] sendReqs;
-//    delete [] myReqs;
-//#endif
-}
-
-/** Build the mpi::request vector for non-blocking communication. */
-template<int D>
-int MRTree<D>::buildRequestLists(
-        const set<MRNode<D> *> &list,
-        vector<NodeIndex<D> > *myReqs,
-        vector<NodeIndex<D> > *sendReqs) {
-    NOT_IMPLEMENTED_ABORT;
-//    int totReqs = 0;
-//    totReqs = list.size();
-
-//#ifdef HAVE_MPI
-//    int nHosts = node_group.size();
-
-//    // Make lists of nodes we want, one for each locale
-//    typename set<MRNode<D> *>::const_iterator it;
-//    for (it = list.begin(); it != list.end(); it++) {
-//        MRNode<D> *node = *it;
-//        int loc = node->getRankId();
-//        assert(node->isForeign());
-//        myReqs[loc].push_back(node->getNodeIndex());
-//    }
-
-//    mpi::request *reqs = new mpi::request[nHosts * 2];
-//    int seq = 0;
-//    for (int l = 0;  l < nHosts; l++) {
-//        if (l == rank) { // not from our self though...
-//            continue;
-//        }
-//        reqs[seq] = node_group.irecv(l, 0, sendReqs[l]);
-//        seq++;
-//    }
-
-//    for (int l = 0;  l < nHosts; l++) {
-//        if (l == rank) { // not from our self though...
-//            continue;
-//        }
-//        reqs[seq] = node_group.isend(l, 0, myReqs[l]);
-//        seq++;
-//    }
-//    mpi::wait_all(reqs, reqs + seq);
-//    delete [] reqs;
-
-//    for (int l = 0;  l < nHosts; l++) {
-//        totReqs += sendReqs[l].size();
-//    }
-//#endif
-//    return totReqs;
-}
-
 template<int D>
 void MRTree<D>::distributeNodes(int depth) {
     NOT_IMPLEMENTED_ABORT;
@@ -901,6 +580,42 @@ void MRTree<D>::distributeNodes(int depth) {
 //    }
 //    distributeNodeTags(nodeTable);
 //    tagDecendants(nodeTable);
+}
+
+/** Tag each node with the rank who owns it. */
+template<int D>
+void MRTree<D>::distributeNodeTags(MRNodeVector &nodeList) {
+    NOT_IMPLEMENTED_ABORT;
+//    int start, end;
+//    int nNodes = nodeList.size();
+//    int nHosts = node_group.size();
+//    for (int k = 0; k < nHosts; k++) {
+//        get_locale_index_range(k, nNodes, start, end);
+//        for (int i = start; i < end; i++) {
+//            MRNode<D> &node = *nodeList[i];
+//            node.setRankId(k);
+//        }
+//    }
+}
+
+/** Set the rank id (node tag) for all nodes in list. */
+template<int D>
+void MRTree<D>::tagNodes(MRNodeVector &nodeList, int rank) {
+    NOT_IMPLEMENTED_ABORT;
+//    for (int i = 0; i < nodeList.size(); i++) {
+//        MRNode<D> &node = *nodeList[i];
+//        node.setRankId(rank);
+//    }
+}
+
+template<int D>
+void MRTree<D>::tagDecendants(MRNodeVector &nodeList) {
+    NOT_IMPLEMENTED_ABORT;
+//    int nNodes = nodeList.size();
+//    for (int i = 0; i < nNodes; i++) {
+//        MRNode<D> &node = *nodeList[i];
+//        node.assignDecendantTags(node.getRankId());
+//    }
 }
 
 /** Traverse tree and remove nodes of foreign rank.

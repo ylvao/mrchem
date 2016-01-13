@@ -9,7 +9,7 @@ template<int D>
 class LebesgueIterator: public TreeIterator<D> {
 public:
     LebesgueIterator(MRTree<D> *tree, int dir = TopDown):
-        TreeIterator<D>(tree, dir) {
+        TreeIterator<D>(dir) {
         this->init(tree);
     }
     virtual ~LebesgueIterator() {}
