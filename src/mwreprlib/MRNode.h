@@ -8,6 +8,7 @@
 #ifndef MRNODE_H_
 #define MRNODE_H_
 
+#include <Eigen/Core>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/utility.hpp>
 
@@ -134,6 +135,9 @@ protected:
     virtual void genChild(int cIdx) = 0;
     virtual void createChild(int cIdx) = 0;
 
+    virtual void giveChildrenCoefs(bool overwrite = true) = 0;
+    virtual void copyCoefsFromChildren(Eigen::VectorXd &c) = 0;
+
     bool diffBranch(const MRNode<D> &rhs) const;
     inline bool checkStatus(unsigned char mask) const;
 
@@ -149,7 +153,7 @@ protected:
     const MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx) const;
     MRNode<D> *retrieveNodeOrEndNode(const NodeIndex<D> &idx);
 
-    void clearGenerated();
+    virtual void clearGenerated();
     void deleteGenerated();
 
     void assignDecendantTags(int rank);

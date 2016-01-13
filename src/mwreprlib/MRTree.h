@@ -61,6 +61,9 @@ public:
     MRNode<D> &getEndNode(int i) { return *this->endNodeTable[i]; }
     const MRNode<D> &getEndNode(int i) const { return *this->endNodeTable[i]; }
 
+    void deleteGenerated();
+    void clearGenerated();
+
     void lockTree() { SET_TREE_LOCK(); }
     void unlockTree() { UNSET_TREE_LOCK(); }
     bool testLock() { return TEST_TREE_LOCK(); }
@@ -139,9 +142,6 @@ protected:
     void tagNodes(MRNodeVector &nodeList, int rank);
     void tagDecendants(MRNodeVector &nodeList);
     void distributeNodeTags(MRNodeVector &nodeList);
-
-    void deleteGenerated();
-    void clearGenerated();
 
 #ifdef OPENMP
     omp_lock_t tree_lock;

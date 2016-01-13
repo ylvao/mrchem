@@ -652,11 +652,9 @@ void MRTree<D>::deleteGenerated() {
   * Includes a static cast of endNodes from MWNode to FunctionNode*/
 template<int D>
 void MRTree<D>::clearGenerated() {
-    NOT_IMPLEMENTED_ABORT;
-//    for (int i = 0; i < this->endNodeTable.size(); i++) {
-//        FunctionNode<D> &node = static_cast<FunctionNode<D> &>(*this->endNodeTable[i]);
-//        node.clearGenerated();
-//    }
+    for (int i = 0; i < this->endNodeTable.size(); i++) {
+        getEndNode(i).clearGenerated();
+    }
 }
 
 template<int D>

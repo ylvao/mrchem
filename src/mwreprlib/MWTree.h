@@ -26,8 +26,9 @@ public:
     virtual ~MWTree();
 
     void setZero();
-    double getSquareNorm() const { return this->squareNorm; }
+
     double estimateError(bool absPrec);
+    double getSquareNorm() const { return this->squareNorm; }
 
     int getOrder() const { return this->order; }
     int getKp1() const { return this->order + 1; }

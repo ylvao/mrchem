@@ -120,15 +120,14 @@ void MRNode<D>::genChildren() {
   * The node structure is kept, only the coefficients are cleared. */
 template<int D>
 void MRNode<D>::clearGenerated() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->isBranchNode()) {
-//        assert(this->children != 0);
-//        for (int i = 0; i < this->getTDim(); i++) {
-//            if (this->children[i] != 0) {
-//                this->getFuncChild(i).clearGenerated();
-//            }
-//        }
-//    }
+    if (this->isBranchNode()) {
+        assert(this->children != 0);
+        for (int cIdx = 0; cIdx < this->getTDim(); cIdx++) {
+            if (this->children[cIdx] != 0) {
+                this->getMRChild(cIdx).clearGenerated();
+            }
+        }
+    }
 }
 
 template<int D>
@@ -330,6 +329,7 @@ MRNode<D> *MRNode<D>::retrieveNode(const double *r, int depth) {
     SET_NODE_LOCK();
     if (this->isLeafNode()) {
         genChildren();
+        giveChildrenCoefs();
     }
     UNSET_NODE_LOCK();
     int cIdx = getChildIndex(r);
@@ -353,6 +353,7 @@ MRNode<D> *MRNode<D>::retrieveNode(const NodeIndex<D> &idx) {
     SET_NODE_LOCK();
     if (isLeafNode()) {
         genChildren();
+        giveChildrenCoefs();
     }
     UNSET_NODE_LOCK();
     int cIdx = getChildIndex(idx);

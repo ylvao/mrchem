@@ -64,8 +64,18 @@ void GenNode<D>::regenerateCoefs() {
 }
 
 template<int D>
-void GenNode<D>::releaseCoefs() {
-    NOT_IMPLEMENTED_ABORT;
+void GenNode<D>::freeCoefs() {
+    if (not this->isAllocated()) {
+        return;
+    }
+    if (this->hasCoefs()) {
+        // Calculate norms if they have not been calculated yet
+        if (this->squareNorm < 0.0) {
+            this->squareNorm = this->calcSquareNorm();
+        }
+    }
+    MWNode<D>::freeCoefs();
+    this->tree->decrementAllocGenNodeCount();
 }
 
 template<int D>
@@ -81,11 +91,35 @@ void GenNode<D>::setCoefs(const VectorXd &c) {
 template<int D>
 VectorXd& GenNode<D>::getCoefs() {
     NOT_IMPLEMENTED_ABORT;
+    lockSiblings();
+    if (not this->hasCoefs()) {
+        regenerateCoefs();
+    }
+    unlockSiblings();
+    return MWNode<D>::getCoefs();
+}
+
+/** Get coefficients of GenNode, regenerate if needed, without locking. */
+template<int D>
+VectorXd& GenNode<D>::getCoefsNoLock() {
+    if (not this->hasCoefs()) {
+        regenerateCoefs();
+    }
+    return MWNode<D>::getCoefs();
 }
 
 template<int D>
 const VectorXd& GenNode<D>::getCoefs() const {
-    NOT_IMPLEMENTED_ABORT;
+    assert(this->hasCoefs());
+    return MWNode<D>::getCoefs();
+}
+
+/** Clear coefficients of generated nodes.
+  * The node structure is kept, only the coefficients are cleared. */
+template<int D>
+void GenNode<D>::clearGenerated() {
+    this->freeCoefs();
+    MRNode<D>::clearGenerated();
 }
 
 template<int D>
@@ -105,21 +139,6 @@ void GenNode<D>::lockSiblings() {
 
 template<int D>
 void GenNode<D>::unlockSiblings() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-double GenNode<D>::getComponentNorm(int i) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-double GenNode<D>::calcSquareNorm() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-double GenNode<D>::calcScalingNorm() {
     NOT_IMPLEMENTED_ABORT;
 }
 

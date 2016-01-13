@@ -24,18 +24,12 @@ public:
 
     double evalf(const double *r) const;
 
-    void clearGenerated();
-    void deleteGenerated();
-
 protected:
     void copyChildren(const MRNode<D> &node);
     void createChildren() { MRNode<D>::createChildren(); this->clearIsEndNode(); }
     void deleteChildren() { MRNode<D>::deleteChildren(); this->setIsEndNode(); }
 
 private:
-    void calcComponentNorms();
-    double calcComponentNorm(int i);
-
     void createChild(int i);
     void genChild(int i);
 

@@ -202,31 +202,30 @@ double FunctionTree<D>::dot(const FunctionTree<D> &ket) {
 
 template<int D>
 double FunctionTree<D>::evalf(const double *r) {
-    bool iAmMaster = false;
-    if (this->getRankId() == 0) iAmMaster = true;
-
-    double val;
+    double result;
 #ifdef HAVE_MPI
     NOT_IMPLEMENTED_ABORT;
-    MRNode<D> &mw_node = this->getNodeOrEndNode(r, 1);
-    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
-    if (not f_node.isForeign() or (f_node.isCommon() and iAmMaster)) {
-        val = f_node.asFuncNode().evalf(r);
-        if (not iAmMaster) {
-            node_group.send(0, 0, val);
-        }
-    } else if (iAmMaster) {
-        node_group.recv(mpi::any_source, 0, val);
-    } else {
-        val = 0.0;
-    }
+//    bool iAmMaster = false;
+//    if (this->getRankId() == 0) iAmMaster = true;
+//    MRNode<D> &mw_node = this->getNodeOrEndNode(r, 1);
+//    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
+//    if (not f_node.isForeign() or (f_node.isCommon() and iAmMaster)) {
+//        result = f_node.asFuncNode().evalf(r);
+//        if (not iAmMaster) {
+//            node_group.send(0, 0, result);
+//        }
+//    } else if (iAmMaster) {
+//        node_group.recv(mpi::any_source, 0, result);
+//    } else {
+//        result = 0.0;
+//    }
 #else
-    MRNode<D> &mw_node = this->getNodeOrEndNode(r);
-    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
-    val = f_node.evalf(r);
+    MRNode<D> &mr_node = this->getNodeOrEndNode(r);
+    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mr_node);
+    result = f_node.evalf(r);
 #endif
     this->deleteGenerated();
-    return val;
+    return result;
 }
 
 template<int D>

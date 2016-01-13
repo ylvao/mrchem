@@ -107,24 +107,45 @@ void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
 
 template<int D>
 void MWNode<D>::giveChildrenCoefs(bool overwrite) {
-     assert(this->isBranchNode());
-     if (not this->hasCoefs()) MSG_FATAL("No coefficients!")
+    assert(this->isBranchNode());
+    if (not this->hasCoefs()) MSG_FATAL("No coefficients!");
 
-     ProjectedNode<D> copy(*this);
-     copy.mwTransform(Reconstruction);
-     int kp1_d = this->getKp1_d();
-     for (int i = 0; i < this->getTDim(); i++) {
-         MWNode<D> &child = this->getMWChild(i);
-         if (not child.hasCoefs()) {
-             child.setCoefs(copy.getCoefs().segment(i * kp1_d, kp1_d));
-         } else if (overwrite) {
-             child.getCoefs().segment(0, kp1_d) = copy.getCoefs().segment(i * kp1_d, kp1_d);
-         } else {
-             child.getCoefs().segment(0, kp1_d) += copy.getCoefs().segment(i * kp1_d, kp1_d);
-         }
-         child.clearNorms();
-     }
+    ProjectedNode<D> copy(*this);
+    copy.mwTransform(Reconstruction);
+    const VectorXd &c = copy.getCoefs();
+
+    int kp1_d = this->getKp1_d();
+    for (int i = 0; i < this->getTDim(); i++) {
+        MWNode<D> &child = this->getMWChild(i);
+        if (not child.hasCoefs()) {
+            child.setCoefs(c.segment(i*kp1_d, kp1_d));
+        } else if (overwrite) {
+            child.getCoefs().segment(0, kp1_d) = c.segment(i*kp1_d, kp1_d);
+        } else {
+            child.getCoefs().segment(0, kp1_d) += c.segment(i*kp1_d, kp1_d);
+        }
+        child.clearNorms();
+    }
 }
+
+/** Takes the scaling coefficients of the children and stores them consecutively
+  * in the  given vector. */
+template<int D>
+void MWNode<D>::copyCoefsFromChildren(VectorXd &c) {
+    NOT_IMPLEMENTED_ABORT;
+//    int kp1_d = this->getKp1_d();
+//    assert(this->children != 0);
+//    for (int i = 0; i < this->getTDim(); i++) {
+//        MWNode<D> &child = getMWChild(i);
+//        if (child.hasCoefs()) {
+//            VectorXd &cc = child.getCoefs();
+//            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
+//        } else {
+//            scaling.segment(i * kp1_d, kp1_d).setZero();
+//        }
+//    }
+}
+
 
 /** Coefficient-Value transform
   *
@@ -295,6 +316,29 @@ double MWNode<D>::calcWaveletNorm() const {
 //    return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
 }
 
+/** Calculate all 2^D component norms (NOT squared norms!)*/
+template<int D>
+void MWNode<D>::calcComponentNorms() {
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->hasCoefs());
+//    if (this->componentNorms == 0) {
+//        this->allocComponentNorms();
+//    }
+//    for (int i = 0; i < this->getTDim(); i++) {
+//        this->componentNodems[i] = this->calcComponentNorm(i);
+//    }
+}
+
+/** Calculate the norm of one component (NOT the squared norm!). */
+template<int D>
+double MWNode<D>::calcComponentNorm(int i) const {
+    NOT_IMPLEMENTED_ABORT;
+//    assert(this->componentNorms != 0);
+//    VectorXd &c = this->getCoefs();
+//    int kp1_d = this->getKp1_d();
+//    this->componentNorms[i] = c.segment(i*kp1_d, kp1_d).norm();
+}
+
 template<int D>
 double MWNode<D>::estimateError(bool absPrec) {
     NOT_IMPLEMENTED_ABORT;
@@ -339,24 +383,6 @@ void MWNode<D>::reCompress(bool overwrite) {
 //        }
 //        this->setHasCoefs();
 //        clearNorms();
-//    }
-}
-
-/** Takes the scaling coefficients of the children and stores them consecutively
-  * in the  given vector. */
-template<int D>
-void MWNode<D>::copyCoefsFromChildren(VectorXd &scaling) {
-    NOT_IMPLEMENTED_ABORT;
-//    int kp1_d = this->getKp1_d();
-//    assert(this->children != 0);
-//    for (int i = 0; i < this->getTDim(); i++) {
-//        MWNode<D> &child = getMWChild(i);
-//        if (child.hasCoefs()) {
-//            VectorXd &cc = child.getCoefs();
-//            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
-//        } else {
-//            scaling.segment(i * kp1_d, kp1_d).setZero();
-//        }
 //    }
 }
 

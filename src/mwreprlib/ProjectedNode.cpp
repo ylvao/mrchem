@@ -54,11 +54,10 @@ ProjectedNode<D>::ProjectedNode(const MWNode<D> &n)
         this->allocCoefs();
         this->zeroCoefs();
     }
-
     const VectorXd &c = n.getCoefs();
-    int nCoefs = n.getCoefs().size();
-    assert (nCoefs <= this->getNCoefs());
-    this->coefs->segment(0, nCoefs) = c;
+    int cSize = c.size();
+    assert (cSize <= this->getNCoefs());
+    this->coefs->segment(0, cSize) = c;
     this->setHasCoefs();
     this->calcNorms();
 }
@@ -120,28 +119,6 @@ void ProjectedNode<D>::genChild(int cIdx) {
     this->children[cIdx] = child;
 }
 
-/** Calculate all 2^D component norms (NOT squared norms!)*/
-template<int D>
-void ProjectedNode<D>::calcComponentNorms() {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->hasCoefs());
-//    if (this->componentNorms == 0) {
-//        this->allocComponentNorms();
-//    }
-//    for (int i = 0; i < this->getTDim(); i++) {
-//        this->calcComponentNorm(i);
-//    }
-}
-
-/** Calculate the norm of one component (NOT the squared norm!). */
-template<int D>
-double ProjectedNode<D>::calcComponentNorm(int i) {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->componentNorms != 0);
-//    VectorXd &c = this->getCoefs();
-//    int kp1_d = this->getKp1_d();
-//    this->componentNorms[i] = c.segment(i*kp1_d, kp1_d).norm();
-}
 template class ProjectedNode<1> ;
 template class ProjectedNode<2> ;
 template class ProjectedNode<3> ;

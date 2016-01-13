@@ -107,8 +107,8 @@ template<int D> void testNodeFetchers() {
     SECTION("Get node by NodeIndex: non-existing node") {
         MRNode<D> &node = tree->getNode(idx_2);
         REQUIRE( node.getNodeIndex() == idx_2 );
-        REQUIRE_FALSE( node.isAllocated() );
-        REQUIRE_FALSE( node.hasCoefs() );
+        REQUIRE( node.isAllocated() );
+        REQUIRE( node.hasCoefs() );
         REQUIRE( node.isGenNode() );
     }
     SECTION("Get node or end node by NodeIndex: existing node") {
@@ -155,8 +155,8 @@ template<int D> void testNodeFetchers() {
         int depth = 3;
         MRNode<D> &node = tree->getNode(r, depth);
         REQUIRE( node.hasCoord(r) );
-        REQUIRE_FALSE( node.isAllocated() );
-        REQUIRE_FALSE( node.hasCoefs() );
+        REQUIRE( node.isAllocated() );
+        REQUIRE( node.hasCoefs() );
         REQUIRE( node.getDepth() == depth );
     }
     SECTION("Get node or end node by coord: existing node") {
@@ -195,6 +195,101 @@ template<int D> void testNodeFetchers() {
     }
 
     finalize(&tree);
+}
+
+SCENARIO("MRTree: Generating nodes", "[mr_tree_generating], [mr_tree], [trees]") {
+    const double r[3] = {-0.3, 0.6, 1.9};
+    const int depth = 3;
+    GIVEN("a default function in 1D") {
+        FunctionTree<1> *tree = 0;
+        initialize(&tree);
+        THEN("there are no GenNodes") {
+            REQUIRE( tree->getNGenNodes() == 0 );
+            REQUIRE( tree->getNAllocGenNodes() == 0 );
+        }
+        WHEN("a non-existing node is fetched") {
+            MRNode<1> &node = tree->getNode(r, depth);
+            THEN("there will be allocated GenNodes") {
+                REQUIRE( tree->getNGenNodes() > 0 );
+                REQUIRE( tree->getNAllocGenNodes() > 0 );
+            }
+            AND_WHEN("the GenNodes are cleared") {
+                tree->clearGenerated();
+                THEN("there will be un-allocated GenNodes") {
+                    REQUIRE( tree->getNGenNodes() > 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+            AND_WHEN("the GenNodes are deleted") {
+                tree->deleteGenerated();
+                THEN("there will be no GenNodes") {
+                    REQUIRE( tree->getNGenNodes() == 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+        }
+        finalize(&tree);
+    }
+    GIVEN("a default function in 2D") {
+        FunctionTree<2> *tree = 0;
+        initialize(&tree);
+        THEN("there are no GenNodes") {
+            REQUIRE( tree->getNGenNodes() == 0 );
+            REQUIRE( tree->getNAllocGenNodes() == 0 );
+        }
+        WHEN("a non-existing node is fetched") {
+            MRNode<2> &node = tree->getNode(r, depth);
+            THEN("there will be allocated GenNodes") {
+                REQUIRE( tree->getNGenNodes() > 0 );
+                REQUIRE( tree->getNAllocGenNodes() > 0 );
+            }
+            AND_WHEN("the GenNodes are cleared") {
+                tree->clearGenerated();
+                THEN("there will be un-allocated GenNodes") {
+                    REQUIRE( tree->getNGenNodes() > 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+            AND_WHEN("the GenNodes are deleted") {
+                tree->deleteGenerated();
+                THEN("there will be no GenNodes") {
+                    REQUIRE( tree->getNGenNodes() == 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+        }
+        finalize(&tree);
+    }
+    GIVEN("a default function in 3D") {
+        FunctionTree<3> *tree = 0;
+        initialize(&tree);
+        THEN("there are no GenNodes") {
+            REQUIRE( tree->getNGenNodes() == 0 );
+            REQUIRE( tree->getNAllocGenNodes() == 0 );
+        }
+        WHEN("a non-existing node is fetched") {
+            MRNode<3> &node = tree->getNode(r, depth);
+            THEN("there will be allocated GenNodes") {
+                REQUIRE( tree->getNGenNodes() > 0 );
+                REQUIRE( tree->getNAllocGenNodes() > 0 );
+            }
+            AND_WHEN("the GenNodes are cleared") {
+                tree->clearGenerated();
+                THEN("there will be un-allocated GenNodes") {
+                    REQUIRE( tree->getNGenNodes() > 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+            AND_WHEN("the GenNodes are deleted") {
+                tree->deleteGenerated();
+                THEN("there will be no GenNodes") {
+                    REQUIRE( tree->getNGenNodes() == 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+        }
+        finalize(&tree);
+    }
 }
 
 } // namespace

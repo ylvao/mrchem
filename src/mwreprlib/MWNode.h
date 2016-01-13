@@ -8,8 +8,6 @@
 #ifndef MWNODE_H_
 #define MWNODE_H_
 
-#include <Eigen/Core>
-
 #include "MRNode.h"
 #include "ProjectedNode.h"
 
@@ -29,18 +27,17 @@ public:
     int getOrder() const { return getMWTree().getOrder(); }
     int getScalingType() const { return getMWTree().getMRA().getScalingBasis().getScalingType(); }
 
-    inline bool hasComponentNorms() const;
-    virtual double getComponentNorm(int i);
-    inline double getSquareNorm() const;
-    inline double getScalingNorm();
-    inline double getWaveletNorm();
+    double getSquareNorm() const { return this->squareNorm; }
+    double getScalingNorm() const { return calcScalingNorm(); }
+    double getWaveletNorm() const { return calcWaveletNorm(); }
+    double getComponentNorm(int i) const { return this->componentNorms[i]; }
+    bool hasComponentNorms() const;
 
     int getNCoefs() const { return this->coefs->size(); }
     virtual Eigen::VectorXd &getCoefs() { if (not this->isAllocated()) allocCoefs(); return *this->coefs; }
     virtual const Eigen::VectorXd &getCoefs() const { return *this->coefs; }
 
     virtual void setCoefs(const Eigen::VectorXd &c);
-    virtual void freeCoefs();
     virtual void zeroCoefs();
 
     virtual void cvTransform(int kind);
@@ -63,21 +60,24 @@ protected:
     Eigen::VectorXd *coefs;
 
     virtual void allocCoefs(int nCoefs = -1);
+    virtual void freeCoefs();
 
     void calcNorms();
     void zeroNorms();
     void clearNorms();
 
-    virtual double calcSquareNorm() const;
-    virtual double calcScalingNorm() const;
+    double calcSquareNorm() const;
+    double calcScalingNorm() const;
     virtual double calcWaveletNorm() const;
+
+    void calcComponentNorms();
+    virtual double calcComponentNorm(int i) const;
 
     inline void allocComponentNorms();
     inline void freeComponentNorms();
-    virtual void calcComponentNorms() { NOT_IMPLEMENTED_ABORT; }
 
     void giveChildrenCoefs(bool overwrite = true);
-    void copyCoefsFromChildren(Eigen::VectorXd &scoefs);
+    void copyCoefsFromChildren(Eigen::VectorXd &c);
 
     bool crop(double prec, NodeIndexSet *cropIdx = 0);
     void reCompress(bool overwrite = true);
@@ -97,31 +97,6 @@ private:
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER();
 };
-
-template<int D>
-double MWNode<D>::getComponentNorm(int i) {
-    assert(i >= 0 and i < this->getTDim());
-    assert(this->componentNorms != 0);
-    assert(this->componentNorms[i] != -1.0);
-    return this->componentNorms[i];
-}
-
-template<int D>
-double MWNode<D>::getSquareNorm() const {
-    assert(this->squareNorm >= 0.0);
-    return this->squareNorm;
-}
-
-template<int D>
-double MWNode<D>::getScalingNorm() {
-    assert(this->componentNorms != 0);
-    return getComponentNorm(0);
-}
-
-template<int D>
-double MWNode<D>::getWaveletNorm() {
-    return calcWaveletNorm();
-}
 
 template<int D>
 bool MWNode<D>::hasComponentNorms() const {

@@ -28,6 +28,7 @@ public:
 
     void setCoefs(const Eigen::VectorXd &c);
     Eigen::VectorXd& getCoefs();
+    Eigen::VectorXd& getCoefsNoLock();
     const Eigen::VectorXd& getCoefs() const;
 
     void mwTransform(int kind);
@@ -37,10 +38,17 @@ public:
     ProjectedNode<D> *getGenRootNode() { return this->genRootNode; }
 
 protected:
-    void calcComponentNorms() { }
-    double calcSquareNorm();
-    double calcScalingNorm();
-    double calcWaveletNorm() { return 0.0; }
+    double calcWaveletNorm() const { return 0.0; }
+    double calcComponentNorm(int i) const {
+        if (i == 0) {
+            return this->calcScalingNorm();
+        } else {
+            return 0.0;
+        }
+    }
+
+    virtual void freeCoefs();
+    virtual void clearGenerated();
 
 private:
     ProjectedNode<D> *genRootNode;
@@ -52,7 +60,6 @@ private:
     void unlockSiblings();
 
     void regenerateCoefs();
-    void releaseCoefs();
 
     friend class boost::serialization::access;
     template<class Archive>

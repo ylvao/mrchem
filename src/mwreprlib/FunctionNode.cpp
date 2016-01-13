@@ -80,8 +80,9 @@ double FunctionNode<D>::evalScaling(const double *r) const {
         }
         result += temp;
     }
-    result *= pow(2.0, 0.5 * D * this->getScale());
-    return result;
+    double n = (D * this->getScale()) / 2.0;
+    double two_n = pow(2.0, n);
+    return two_n * result;
 }
 
 
