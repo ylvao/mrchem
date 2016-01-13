@@ -25,12 +25,10 @@ using namespace Eigen;
 template<int D>
 ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
         : FunctionNode<D> (t, nIdx) {
+    this->allocCoefs();
+    this->zeroCoefs();
+    this->zeroNorms();
     this->setIsEndNode();
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-        this->zeroNorms();
-    }
 }
 
 /** ProjectedNode constructor.
@@ -50,15 +48,17 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
 template<int D>
 ProjectedNode<D>::ProjectedNode(const MWNode<D> &n)
         : FunctionNode<D>(n) {
-    if (not this->isForeign()) {
-        this->allocCoefs();
-        this->zeroCoefs();
-    }
+    if (this->isForeign()) NOT_IMPLEMENTED_ABORT;
+
+    this->allocCoefs();
+    this->zeroCoefs();
+
     const VectorXd &c = n.getCoefs();
     int cSize = c.size();
     assert (cSize <= this->getNCoefs());
     this->coefs->segment(0, cSize) = c;
     this->setHasCoefs();
+
     this->calcNorms();
 }
 

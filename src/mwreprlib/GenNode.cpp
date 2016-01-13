@@ -69,10 +69,7 @@ void GenNode<D>::freeCoefs() {
         return;
     }
     if (this->hasCoefs()) {
-        // Calculate norms if they have not been calculated yet
-        if (this->squareNorm < 0.0) {
-            this->squareNorm = this->calcSquareNorm();
-        }
+        this->calcNorms();
     }
     MWNode<D>::freeCoefs();
     this->tree->decrementAllocGenNodeCount();

@@ -28,7 +28,7 @@ public:
     int getScalingType() const { return getMWTree().getMRA().getScalingBasis().getScalingType(); }
 
     double getSquareNorm() const { return this->squareNorm; }
-    double getScalingNorm() const { return calcScalingNorm(); }
+    double getScalingNorm() const { return this->componentNorms[0]; }
     double getWaveletNorm() const { return calcWaveletNorm(); }
     double getComponentNorm(int i) const { return this->componentNorms[i]; }
     bool hasComponentNorms() const;
@@ -56,7 +56,7 @@ public:
 
 protected:
     double squareNorm;
-    double *componentNorms; ///< 2^D components
+    double componentNorms[1<<D]; ///< 2^D components
     Eigen::VectorXd *coefs;
 
     virtual void allocCoefs(int nCoefs = -1);
@@ -67,14 +67,8 @@ protected:
     void clearNorms();
 
     double calcSquareNorm() const;
-    double calcScalingNorm() const;
     virtual double calcWaveletNorm() const;
-
-    void calcComponentNorms();
     virtual double calcComponentNorm(int i) const;
-
-    inline void allocComponentNorms();
-    inline void freeComponentNorms();
 
     void giveChildrenCoefs(bool overwrite = true);
     void copyCoefsFromChildren(Eigen::VectorXd &c);
@@ -97,35 +91,6 @@ private:
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER();
 };
-
-template<int D>
-bool MWNode<D>::hasComponentNorms() const {
-    if (this->componentNorms != 0) {
-        if (this->componentNorms[0] == -1.0) {
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-template<int D>
-void MWNode<D>::allocComponentNorms() {
-    if (this->componentNorms == 0) {
-        this->componentNorms = new double[this->getTDim()];
-        for (int i = 0; i < this->getTDim(); i++) {
-            this->componentNorms[i] = -1.0;
-        }
-    }
-}
-
-template<int D>
-void MWNode<D>::freeComponentNorms() {
-    if (this->componentNorms != 0) {
-        delete [] this->componentNorms;
-        this->componentNorms = 0;
-    }
-}
 
 template<int D>
 std::ostream& operator<<(std::ostream &o, const MWNode<D> &nd) {

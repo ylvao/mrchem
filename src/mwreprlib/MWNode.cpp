@@ -18,8 +18,8 @@ template<int D>
 MWNode<D>::MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx)
         : MRNode<D>(t, nIdx),
           squareNorm(-1.0),
-          componentNorms(0),
           coefs(0) {
+    clearNorms();
 }
 
 /** MWNode constructor.
@@ -28,16 +28,16 @@ template<int D>
 MWNode<D>::MWNode(MWNode<D> &p, int cIdx)
         : MRNode<D>(p, cIdx),
           squareNorm(-1.0),
-          componentNorms(0),
           coefs(0) {
+    clearNorms();
 }
 
 template<int D>
 MWNode<D>::MWNode(const MWNode<D> &n)
         : MRNode<D>(n),
           squareNorm(-1.0),
-          componentNorms(0),
           coefs(0) {
+    clearNorms();
 }
 
 /** MWNode destructor.
@@ -45,7 +45,6 @@ MWNode<D>::MWNode(const MWNode<D> &n)
 template<int D>
 MWNode<D>::~MWNode() {
     freeCoefs();
-    freeComponentNorms();
 }
 
 /** Allocate the coefs vector. If it is already allocated, clear the
@@ -103,6 +102,7 @@ void MWNode<D>::setCoefs(const Eigen::VectorXd &c) {
     }
     this->coefs->segment(0, nNew) = c;
     this->setHasCoefs();
+    this->clearNorms();
 }
 
 template<int D>
@@ -124,7 +124,7 @@ void MWNode<D>::giveChildrenCoefs(bool overwrite) {
         } else {
             child.getCoefs().segment(0, kp1_d) += c.segment(i*kp1_d, kp1_d);
         }
-        child.clearNorms();
+        child.calcNorms();
     }
 }
 
@@ -261,10 +261,8 @@ void MWNode<D>::mwTransform(int operation) {
 template<int D>
 void MWNode<D>::clearNorms() {
     this->squareNorm = -1.0;
-    if (this->componentNorms != 0) {
-        for (int i = 0; i < this->getTDim(); i++) {
-            this->componentNorms[i] = -1.0;
-        }
+    for (int i = 0; i < this->getTDim(); i++) {
+        this->componentNorms[i] = -1.0;
     }
 }
 
@@ -272,10 +270,8 @@ void MWNode<D>::clearNorms() {
 template<int D>
 void MWNode<D>::zeroNorms() {
     this->squareNorm = 0.0;
-    if (this->componentNorms != 0) {
-        for (int i = 0; i < this->getTDim(); i++) {
-            this->componentNorms[i] = 0.0;
-        }
+    for (int i = 0; i < this->getTDim(); i++) {
+        this->componentNorms[i] = 0.0;
     }
 }
 
@@ -283,8 +279,8 @@ void MWNode<D>::zeroNorms() {
 template<int D>
 void MWNode<D>::calcNorms() {
     this->squareNorm = calcSquareNorm();
-    if (this->componentNorms != 0) {
-        calcComponentNorms();
+    for (int i = 0; i < this->getTDim(); i++) {
+        this->componentNorms[i] = calcComponentNorm(i);
     }
 }
 
@@ -294,15 +290,6 @@ double MWNode<D>::calcSquareNorm() const {
     assert(this->isAllocated());
     assert(this->hasCoefs());
     return this->coefs->squaredNorm();
-}
-
-/** Calculate and return scaling norm. */
-template<int D>
-double MWNode<D>::calcScalingNorm() const {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->isAllocated());
-//    assert(this->hasCoefs());
-//    return this->coefs->segment(0, this->getKp1_d()).norm();
 }
 
 /** Calculate and return wavelet norm. */
@@ -316,27 +303,14 @@ double MWNode<D>::calcWaveletNorm() const {
 //    return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
 }
 
-/** Calculate all 2^D component norms (NOT squared norms!)*/
-template<int D>
-void MWNode<D>::calcComponentNorms() {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->hasCoefs());
-//    if (this->componentNorms == 0) {
-//        this->allocComponentNorms();
-//    }
-//    for (int i = 0; i < this->getTDim(); i++) {
-//        this->componentNodems[i] = this->calcComponentNorm(i);
-//    }
-}
-
 /** Calculate the norm of one component (NOT the squared norm!). */
 template<int D>
 double MWNode<D>::calcComponentNorm(int i) const {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->componentNorms != 0);
-//    VectorXd &c = this->getCoefs();
-//    int kp1_d = this->getKp1_d();
-//    this->componentNorms[i] = c.segment(i*kp1_d, kp1_d).norm();
+    assert(this->isAllocated());
+    assert(this->hasCoefs());
+    const VectorXd &c = this->getCoefs();
+    int kp1_d = this->getKp1_d();
+    return c.segment(i*kp1_d, kp1_d).norm();
 }
 
 template<int D>

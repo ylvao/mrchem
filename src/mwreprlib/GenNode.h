@@ -24,8 +24,6 @@ public:
     GenNode& operator=(const GenNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~GenNode();
 
-    double getComponentNorm(int i);
-
     void setCoefs(const Eigen::VectorXd &c);
     Eigen::VectorXd& getCoefs();
     Eigen::VectorXd& getCoefsNoLock();
@@ -41,7 +39,7 @@ protected:
     double calcWaveletNorm() const { return 0.0; }
     double calcComponentNorm(int i) const {
         if (i == 0) {
-            return this->calcScalingNorm();
+            return MWNode<D>::calcComponentNorm(0);
         } else {
             return 0.0;
         }
