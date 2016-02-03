@@ -16,28 +16,14 @@
 #include "constants.h"
 #include "MREnv.h"
 #include "TelePrompter.h"
-
-#include "PeriodicTable.h"
-#include "Atom.h"
-#include "Molecule.h"
-#include "MolecularGridGenerator.h"
-#include "XCFunctional.h"
-#include "XCProjector.h"
+#include "MathUtils.h"
 
 #include "BoundingBox.h"
 #include "NodeIndex.h"
-#include "MRGrid.h"
+#include "MultiResolutionAnalysis.h"
+#include "InterpolatingBasis.h"
 #include "FunctionTree.h"
-#include "FunctionProjector.h"
-#include "GridAdaptor.h"
-#include "MWAdaptor.h"
-#include "HilbertIterator.h"
-#include "LebesgueIterator.h"
-#include "MathUtils.h"
 
-#include "Intgrl.h"
-#include "DensExp.h"
-#include "OrbExp.h"
 #include "GaussExp.h"
 #include "GaussFunc.h"
 
@@ -45,10 +31,10 @@
 using namespace std;
 using namespace Eigen;
 
-void testAdaptiveGrid();
-void testPureGrid();
+//void testAdaptiveGrid();
+//void testPureGrid();
 void testTrees();
-void testMPI();
+//void testMPI();
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
@@ -61,16 +47,49 @@ int main(int argc, char **argv) {
 
     MREnv::initializeMRCPP();
 
-    testMPI();
-//    testAdaptiveGrid();
-//    testPureGrid();
-//    testTrees();
+    testTrees();
 
     MREnv::finalizeMRCPP(rolex.elapsed());
 
     return 0;
 }
 
+void testTrees() {
+    //Setting up world parameters
+    int n = -1;
+    int l[3] = {0,-1,-2};
+    int nb[3] = {1,2,4};
+
+    //Constructing world boxes
+    NodeIndex<1> idx_1D(n, l);
+    BoundingBox<1> world_1D(idx_1D, nb);
+
+    NodeIndex<2> idx_2D(n, l);
+    BoundingBox<2> world_2D(idx_2D, nb);
+
+    NodeIndex<3> idx_3D(n, l);
+    BoundingBox<3> world_3D(idx_3D, nb);
+
+    //Setting up scaling basis
+    int k = 5;
+    InterpolatingBasis basis(k);
+
+    //Setting up MRA
+    MultiResolutionAnalysis<1> MRA_1D(world_1D, basis);
+    MultiResolutionAnalysis<2> MRA_2D(world_2D, basis);
+    MultiResolutionAnalysis<3> MRA_3D(world_3D, basis);
+
+    FunctionTree<1> *tree_1D = new FunctionTree<1>(MRA_1D);
+    delete tree_1D;
+
+    FunctionTree<2> *tree_2D = new FunctionTree<2>(MRA_2D);
+    delete tree_2D;
+
+    FunctionTree<3> *tree_3D = new FunctionTree<3>(MRA_3D);
+    delete tree_3D;
+}
+
+/*
 void testMPI() {
     // Constructing world box
     int n = -4;
@@ -111,39 +130,6 @@ void testMPI() {
     println(0, endl);
     println(0, "Gaussian integral " << int_1);
     println(0, "Estimated error   " << err_1);
-}
-
-void testTrees() {
-    //Setting up world parameters
-    int k = 5;
-    int type = Interpol;
-
-    int n = -1;
-    int l[3] = {0,-1,-2};
-    int nb[3] = {1,2,4};
-    double o[3] = {0.0,0.0,0.0};
-
-    //Constructing world box
-    NodeIndex<1> idx_1D(n, l);
-    BoundingBox<1> world_1D(idx_1D, nb, o);
-
-    //Constructing world box
-    NodeIndex<2> idx_2D(n, l);
-    BoundingBox<2> world_2D(idx_2D, nb, o);
-
-    //Constructing world box
-    NodeIndex<3> idx_3D(n, l);
-    BoundingBox<3> world_3D(idx_3D, nb, o);
-    println(0, world_3D);
-
-    FunctionTree<1> *tree_1D = new FunctionTree<1>(world_1D, k, type);
-    delete tree_1D;
-
-    FunctionTree<2> *tree_2D = new FunctionTree<2>(world_2D, k, type);
-    delete tree_2D;
-
-    FunctionTree<3> *tree_3D = new FunctionTree<3>(world_3D, k, type);
-    delete tree_3D;
 }
 
 void testAdaptiveGrid() {
@@ -331,3 +317,4 @@ void testPureGrid() {
     println(0, "Integrated charge       " << setw(25) << quadCharge);
     println(0, "Integrated charge error " << setw(25) << quadError << endl);
 }
+*/
