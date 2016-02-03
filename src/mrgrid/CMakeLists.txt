@@ -1,13 +1,13 @@
 include_directories (${CMAKE_INSTALL_PREFIX}/include)
 
 set (mrgridlib_SOURCES
-	Atom.cpp
-	Atom.h
-	AtomicElement.h
-	Molecule.cpp
-	Molecule.h
-	PeriodicTable.cpp
-	PeriodicTable.h
+	#Atom.cpp
+	#Atom.h
+	#AtomicElement.h
+	#Molecule.cpp
+	#Molecule.h
+	#PeriodicTable.cpp
+	#PeriodicTable.h
 	#MolecularGridGenerator.cpp
 	#MolecularGridGenerator.h
         MREnv.cpp

@@ -90,13 +90,13 @@ if (ENABLE_TESTS)
 endif()
 
 # Copy the examples in place for convenience 
-if (NOT EXISTS ${CMAKE_BINARY_DIR}/mrgrid.inp)
+#if (NOT EXISTS ${CMAKE_BINARY_DIR}/mrgrid.inp)
     #set(_dir ${CMAKE_SOURCE_DIR}/examples)
     #file(COPY ${_dir}/mrchem.inp ${_dir}
         #DESTINATION ${CMAKE_BINARY_DIR}
         #)
     #unset(_dir)
-endif()
+#endif()
 
 
 find_package(Doxygen)

@@ -37,6 +37,7 @@ public:
         return false;
     }
 
+    /*
     template<int T>
     friend std::ostream& operator<<(std::ostream &o,
                                     const MultiResolutionAnalysis<T> &mra) {
@@ -51,6 +52,7 @@ public:
         o << std::endl;
         return o;
     }
+    */
 protected:
     const ScalingBasis basis;
     const BoundingBox<D> world;

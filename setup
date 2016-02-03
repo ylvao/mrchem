@@ -175,7 +175,7 @@ if not args.builddir:
     if args.debug and args.release:
         args.builddir = root_directory + 'relwithdeb/'
     elif args.release:
-        args.builddir = root_directory + 'release/'
+        args.builddir = root_directory + 'build/'
     else:
         args.builddir = root_directory + 'debug/'
 elif args.builddir[0] not in '/~':

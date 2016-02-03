@@ -1,22 +1,18 @@
 
 set(mwrepr_SOURCES 
-	macros.h
-	constants.h
-	eigen_disable_warnings.h
-	mwrepr_declarations.h
 	parallel.cpp
 	parallel.h
+	constants.h
+	macros.h
 	MathUtils.cpp
 	MathUtils.h
-        MultiResolutionAnalysis.h
-	NodeBox.cpp
-	NodeBox.h
 	BoundingBox.cpp
 	BoundingBox.h
+	NodeBox.cpp
+	NodeBox.h
+        MultiResolutionAnalysis.h
 	MWFilter.cpp
 	MWFilter.h
-	FilterCache.cpp
-	FilterCache.h
 	HilbertPath.cpp
 	HilbertPath.h
 	NodeIndex.h
@@ -24,16 +20,18 @@ set(mwrepr_SOURCES
 	TelePrompter.h
 	GaussQuadrature.cpp
 	GaussQuadrature.h
+	ObjectCache.h
+	FilterCache.cpp
+	FilterCache.h
+        ScalingCache.h
 	QuadratureCache.cpp
 	QuadratureCache.h
 	RepresentableFunction.cpp
 	RepresentableFunction.h
-	ObjectCache.h
 	LegendrePoly.cpp
 	LegendrePoly.h
 	Polynomial.cpp
 	Polynomial.h
-        ScalingCache.h
         ScalingBasis.h
         LegendreBasis.h
         InterpolatingBasis.cpp

@@ -12,12 +12,10 @@ template <int D> class NodeIndexComp;
 template <int D> class RepresentableFunction;
 
 template <int D> class MRTree;
-template <int D> class MRGrid;
 template <int D> class MWTree;
 template <int D> class FunctionTree;
 
 template <int D> class MRNode;
-template <int D> class GridNode;
 template <int D> class MWNode;
 template <int D> class FunctionNode;
 template <int D> class ProjectedNode;
