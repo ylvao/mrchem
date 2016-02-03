@@ -114,7 +114,7 @@ bool Gaussian<D>::isZeroOnInterval(const double *a, const double *b) const {
 }
 
 template<int D>
-void Gaussian<D>::evalf(const MatrixXd &points, MatrixXd &values) {
+void Gaussian<D>::evalf(const MatrixXd &points, MatrixXd &values) const {
     assert(points.cols() == D);
     assert(points.cols() == values.cols());
     assert(points.rows() == values.rows());
