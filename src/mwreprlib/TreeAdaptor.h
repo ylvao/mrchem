@@ -2,12 +2,16 @@
 #define TREEADAPTOR_H
 
 #include "mwrepr_declarations.h"
+#include "TelePrompter.h"
 
 template<int D>
 class TreeAdaptor {
 public:
     TreeAdaptor() { }
+    TreeAdaptor(const TreeAdaptor<D> &adap) { }
     virtual ~TreeAdaptor() { }
+
+    virtual TreeAdaptor<D> *copy() const { return new TreeAdaptor<D>(*this); }
 
     MRNodeVector* splitNodeVector(MRNodeVector &nodeVec,
                                   MRNodeVector *no_split = 0) const {
@@ -25,7 +29,7 @@ public:
     }
 
 protected:
-    virtual bool splitNode(MWNode<D> &node) const = 0;
+    virtual bool splitNode(MWNode<D> &node) const { return false; }
 };
 
 #endif // TREEADAPTOR_H

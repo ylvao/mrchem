@@ -7,15 +7,10 @@
 template<int D>
 class TreeCalculator {
 public:
-    TreeCalculator() {
-        NOT_IMPLEMENTED_ABORT;
-    }
-    virtual ~TreeCalculator() {
-        NOT_IMPLEMENTED_ABORT;
-    }
+    TreeCalculator() { }
+    virtual ~TreeCalculator() { }
 
     void calcNodeVector(MRNodeVector &nodeVec) const {
-        NOT_IMPLEMENTED_ABORT;
         int nNodes = nodeVec.size();
         printout(10, std::setw(6) << nNodes << " nodes" << std::endl);
 #pragma omp parallel shared(nodeVec) firstprivate(nNodes)
@@ -29,7 +24,9 @@ public:
     }
 
 protected:
-    virtual void calcNode(MWNode<D> &node) const = 0;
+    virtual void calcNode(MWNode<D> &node) const {
+        NOT_IMPLEMENTED_ABORT;
+    }
 };
 
 #endif // TREEPROJECTOR_H

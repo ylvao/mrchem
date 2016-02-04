@@ -8,7 +8,6 @@ using namespace std;
 
 template<int D>
 bool WaveletAdaptor<D>::splitNode(MWNode<D> &node) const {
-    NOT_IMPLEMENTED_ABORT;
     if (this->prec < 0.0) {
         return false;
     }
@@ -37,7 +36,6 @@ bool WaveletAdaptor<D>::splitNode(MWNode<D> &node) const {
   * square norm of the function and the requested relative accuracy. */
 template<int D>
 double WaveletAdaptor<D>::getWaveletThreshold(double norm, int scale) const {
-    NOT_IMPLEMENTED_ABORT;
     double expo = (0.5 * (scale + 1));
     double thrs_1 = 2.0 * MachinePrec;
     double thrs_2 = norm * this->prec * pow(2.0, -expo);

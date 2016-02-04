@@ -11,7 +11,6 @@ using namespace Eigen;
 
 template<int D>
 void AnalyticCalculator<D>::calcNode(MWNode<D> &node) const {
-    NOT_IMPLEMENTED_ABORT;
     const ScalingBasis &sf = node.getMWTree().getMRA().getScalingBasis();
     if (sf.getScalingType() != Interpol) {
         NOT_IMPLEMENTED_ABORT;

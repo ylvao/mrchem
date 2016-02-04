@@ -187,29 +187,28 @@ void MWTree<D>::mwTransform(int type, bool overwrite) {
   * coefficients of BranchNodes (can be used after operator application). */
 template<int D>
 void MWTree<D>::mwTransformUp(bool overwrite) {
-    NOT_IMPLEMENTED_ABORT;
-//    vector<MRNodeVector > nodeTable;
-//    this->makeLocalNodeTable(nodeTable, true);
+    vector<MRNodeVector > nodeTable;
+    this->makeLocalNodeTable(nodeTable, true);
 
-//    int start = nodeTable.size() - 2;
-//    for (int n = start; n >= 0; n--) {
+    int start = nodeTable.size() - 2;
+    for (int n = start; n >= 0; n--) {
 //        set<MRNode<D> *> missing;
 //        this->findMissingChildren(nodeTable[n], missing);
-//        //communicate missing
+        //communicate missing
 //        this->syncNodes(missing);
-//        int nNodes = nodeTable[n].size();
-//#pragma omp parallel firstprivate(nNodes, overwrite) shared(nodeTable)
-//        {
-//#pragma omp for schedule(guided)
-//            for (int i = 0; i < nNodes; i++) {
-//                MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n][i]);
-//                if ((not node.isForeign()) and node.isBranchNode()) {
-//                    node.reCompress(overwrite);
-//                    node.calcNorms();
-//                }
-//            }
-//        }
-//    }
+        int nNodes = nodeTable[n].size();
+#pragma omp parallel firstprivate(nNodes, overwrite) shared(nodeTable)
+        {
+#pragma omp for schedule(guided)
+            for (int i = 0; i < nNodes; i++) {
+                MWNode<D> &node = static_cast<MWNode<D> &>(*nodeTable[n][i]);
+                if ((not node.isForeign()) and node.isBranchNode()) {
+                    node.reCompress(overwrite);
+                    node.calcNorms();
+                }
+            }
+        }
+    }
 }
 
 /** Regenerate all scaling coeffs by MW transformation of existing s/w-coeffs

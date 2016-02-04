@@ -79,18 +79,17 @@ void MRTree<D>::deleteNodeCounters() {
   * Children nodes are by default given the rank of their parent.*/
 template<int D>
 void MRTree<D>::splitNodes(const NodeIndexSet &idxSet, MRNodeVector *nVec) {
-    NOT_IMPLEMENTED_ABORT;
-//    typename set<const NodeIndex<D> *>::iterator it;
-//    for (it = idxSet.begin(); it != idxSet.end(); it++) {
-//        MRNode<D> &node = getNode(**it);
-//        node.createChildren();
-//        if (nVec != 0) {
-//            for (int i = 0; i < node.getNChildren(); i++) {
-//                MRNode<D> *child = &node.getMRChild(i);
-//                nVec->push_back(child);
-//            }
-//        }
-//    }
+    typename set<const NodeIndex<D> *>::iterator it;
+    for (it = idxSet.begin(); it != idxSet.end(); it++) {
+        MRNode<D> &node = getNode(**it);
+        node.createChildren();
+        if (nVec != 0) {
+            for (int i = 0; i < node.getNChildren(); i++) {
+                MRNode<D> *child = &node.getMRChild(i);
+                nVec->push_back(child);
+            }
+        }
+    }
 }
 
 /** Increment node counters for non-GenNodes. This routine is not thread
@@ -419,32 +418,30 @@ void MRTree<D>::makeLocalNodeTable(MRNodeVector &nodeTable, bool common) {
   * Returns one nodeVector per scale. GenNodes disregarded. */
 template<int D>
 void MRTree<D>::makeLocalNodeTable(std::vector<MRNodeVector > &nodeTable, bool common) {
-    NOT_IMPLEMENTED_ABORT;
-//    HilbertIterator<D> it(this);
-//    while (it.next()) {
-//        MRNode<D> &node = it.getNode();
-//        if (node.isGenNode()) {
-//            continue;
-//        }
-//        int depth = node.getDepth();
-//        if (depth + 1 > nodeTable.size()) { // Add one more element
-//            nodeTable.push_back(MRNodeVector());
-//        }
-//        if (node.isLocal() or (node.isCommon() and common)) {
-//            nodeTable[depth].push_back(&node);
-//        }
-//    }
+    HilbertIterator<D> it(this);
+    while (it.next()) {
+        MRNode<D> &node = it.getNode();
+        if (node.isGenNode()) {
+            continue;
+        }
+        int depth = node.getDepth();
+        if (depth + 1 > nodeTable.size()) { // Add one more element
+            nodeTable.push_back(MRNodeVector());
+        }
+        if (node.isLocal() or (node.isCommon() and common)) {
+            nodeTable[depth].push_back(&node);
+        }
+    }
 }
 
 template<int D>
 MRNodeVector* MRTree<D>::copyEndNodeTable() {
-    NOT_IMPLEMENTED_ABORT;
-//    MRNodeVector *nVec = new MRNodeVector;
-//    for (int n = 0; n < getNEndNodes(); n++) {
-//        MRNode<D> &node = getEndNode(n);
-//        nVec->push_back(&node);
-//    }
-//    return nVec;
+    MRNodeVector *nVec = new MRNodeVector;
+    for (int n = 0; n < getNEndNodes(); n++) {
+        MRNode<D> &node = getEndNode(n);
+        nVec->push_back(&node);
+    }
+    return nVec;
 }
 
 template<int D>

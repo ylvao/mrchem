@@ -55,6 +55,7 @@ public:
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);
 
     friend class AnalyticCalculator<D>;
+    friend class MWTree<D>;
 
 protected:
     double squareNorm;

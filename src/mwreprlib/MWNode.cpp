@@ -132,18 +132,17 @@ void MWNode<D>::giveChildrenCoefs(bool overwrite) {
   * in the  given vector. */
 template<int D>
 void MWNode<D>::copyCoefsFromChildren(VectorXd &c) {
-    NOT_IMPLEMENTED_ABORT;
-//    int kp1_d = this->getKp1_d();
-//    assert(this->children != 0);
-//    for (int i = 0; i < this->getTDim(); i++) {
-//        MWNode<D> &child = getMWChild(i);
-//        if (child.hasCoefs()) {
-//            VectorXd &cc = child.getCoefs();
-//            scaling.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
-//        } else {
-//            scaling.segment(i * kp1_d, kp1_d).setZero();
-//        }
-//    }
+    int kp1_d = this->getKp1_d();
+    assert(this->children != 0);
+    for (int i = 0; i < this->getTDim(); i++) {
+        MWNode<D> &child = getMWChild(i);
+        if (child.hasCoefs()) {
+            VectorXd &cc = child.getCoefs();
+            c.segment(i * kp1_d, kp1_d) = cc.segment(0, kp1_d);
+        } else {
+            c.segment(i * kp1_d, kp1_d).setZero();
+        }
+    }
 }
 
 
@@ -295,12 +294,11 @@ double MWNode<D>::calcSquareNorm() const {
 /** Calculate and return wavelet norm. */
 template<int D>
 double MWNode<D>::calcWaveletNorm() const {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->isAllocated());
-//    assert(this->hasCoefs());
-//    int nCoefs = this->getNCoefs();
-//    int kp1_d = this->getKp1_d();
-//    return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
+    assert(this->isAllocated());
+    assert(this->hasCoefs());
+    int nCoefs = this->getNCoefs();
+    int kp1_d = this->getKp1_d();
+    return this->coefs->segment(kp1_d, nCoefs - kp1_d).norm();
 }
 
 /** Calculate the norm of one component (NOT the squared norm!). */
@@ -340,24 +338,23 @@ double MWNode<D>::estimateError(bool absPrec) {
   * coefficients. */
 template<int D>
 void MWNode<D>::reCompress(bool overwrite) {
-    NOT_IMPLEMENTED_ABORT;
-//    if ((not this->isGenNode()) and this->isBranchNode()) {
-//        if (not this->isAllocated()) {
-//            // This happens for seeded nodes and on distributed trees
-//            allocCoefs();
-//        }
-//        if (overwrite) {
-//            copyCoefsFromChildren(*this->coefs);
-//            mwTransform(Compression);
-//        } else {
-//            MatrixXd tmp = getCoefs();
-//            copyCoefsFromChildren(*this->coefs);
-//            mwTransform(Compression);
-//            getCoefs() += tmp;
-//        }
-//        this->setHasCoefs();
-//        clearNorms();
-//    }
+    if ((not this->isGenNode()) and this->isBranchNode()) {
+        if (not this->isAllocated()) {
+            // This happens for seeded nodes and on distributed trees
+            allocCoefs();
+        }
+        if (overwrite) {
+            copyCoefsFromChildren(*this->coefs);
+            mwTransform(Compression);
+        } else {
+            MatrixXd tmp = getCoefs();
+            copyCoefsFromChildren(*this->coefs);
+            mwTransform(Compression);
+            getCoefs() += tmp;
+        }
+        this->setHasCoefs();
+        clearNorms();
+    }
 }
 
 /** Recurse down until an EndNode is found, and then crop children with

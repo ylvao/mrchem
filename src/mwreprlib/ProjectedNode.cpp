@@ -36,13 +36,11 @@ ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
 template<int D>
 ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx) {
-    NOT_IMPLEMENTED_ABORT;
-//    this->setIsEndNode();
-//    if (not this->isForeign()) {
-//        this->allocCoefs();
-//        this->zeroCoefs();
-//        this->zeroNorms();
-//    }
+    if (this->isForeign()) NOT_IMPLEMENTED_ABORT;
+    this->allocCoefs();
+    this->zeroCoefs();
+    this->zeroNorms();
+    this->setIsEndNode();
 }
 
 template<int D>
@@ -101,11 +99,10 @@ void ProjectedNode<D>::copyChildren(const MRNode<D> &node) {
   * with the appropriate translation and Hilbert path parameters. */
 template<int D>
 void ProjectedNode<D>::createChild(int cIdx) {
-    NOT_IMPLEMENTED_ABORT;
-//    assert(this->children != 0);
-//    assert(this->children[cIdx] == 0);
-//    ProjectedNode<D> *child = new ProjectedNode<D>(*this, cIdx);
-//    this->children[cIdx] = child;
+    assert(this->children != 0);
+    assert(this->children[cIdx] == 0);
+    ProjectedNode<D> *child = new ProjectedNode<D>(*this, cIdx);
+    this->children[cIdx] = child;
 }
 
 /** Generating child node.

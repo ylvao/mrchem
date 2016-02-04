@@ -11,8 +11,13 @@ public:
             : prec(pr),
               absPrec(abs),
               maxScale(scale) { }
-
+    WaveletAdaptor(const WaveletAdaptor<D> &adap)
+            : prec(adap.prec),
+              absPrec(adap.absPrec),
+              maxScale(adap.maxScale) { }
     virtual ~WaveletAdaptor() { }
+
+    virtual TreeAdaptor<D> *copy() const { return new WaveletAdaptor<D>(*this); }
 
     void setPrecision(double pr) { this->prec = pr; }
     void setAbsPrec(bool abs) { this->absPrec = abs; }

@@ -75,14 +75,13 @@ void MRNode<D>::allocKindergarten() {
 
 template<int D>
 void MRNode<D>::createChildren() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (this->children == 0) {
-//        this->allocKindergarten();
-//    }
-//    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
-//        createChild(cIdx);
-//    }
-//    this->setIsBranchNode();
+    if (this->children == 0) {
+        this->allocKindergarten();
+    }
+    for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
+        createChild(cIdx);
+    }
+    this->setIsBranchNode();
 }
 
 /** Recurcive deallocation of children and all their decendants.
