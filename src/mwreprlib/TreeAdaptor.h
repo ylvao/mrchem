@@ -7,6 +7,7 @@ template<int D>
 class TreeAdaptor {
 public:
     TreeAdaptor() { }
+    virtual ~TreeAdaptor() { }
 
     MRNodeVector* splitNodeVector(MRNodeVector &nodeVec,
                                   MRNodeVector *no_split = 0) const {

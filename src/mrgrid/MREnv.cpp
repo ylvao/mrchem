@@ -20,7 +20,7 @@ void MREnv::initializeMRCPP() {
     println(0, endl << endl);
     println(0, "************************************************************");
     println(0, "***                                                      ***");
-    println(0, "***    MRGrid " << PROJECT_VERSION << " (rev. " <<
+    println(0, "***    MRCPP " << PROJECT_VERSION << " (rev. " <<
             GIT_REVISION << ")                       ***");
     println(0, "***                                                      ***");
     println(0, "***    Stig Rune Jensen <stig.r.jensen@uit.no>           ***");
@@ -101,7 +101,7 @@ void MREnv::finalizeMRCPP(double t) {
     println(0, endl);
     println(0, "************************************************************");
     println(0, "***                                                      ***");
-    println(0, "***                     Exiting MRGrid                   ***");
+    println(0, "***                     Exiting MRCPP                    ***");
     println(0, "***                                                      ***");
     println(0, "***               World clock: " << t << "               ***");
     println(0, "***                                                      ***");

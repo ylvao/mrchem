@@ -85,6 +85,7 @@ public:
 
     friend class MRNode<D>;
     friend class GenNode<D>;
+    friend class TreeBuilder<D>;
 protected:
     // Parameters that are set in construction and should never change
     const int rank;

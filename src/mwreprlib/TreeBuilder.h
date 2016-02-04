@@ -2,13 +2,11 @@
 #define TREEBUILDER_H
 
 #include "mwrepr_declarations.h"
-#include "TreeAdaptor.h"
-#include "TreeProjector.h"
 
 template<int D>
 class TreeBuilder {
 public:
-    TreeBuilder(TreeAdaptor<D> &a, int iter);
+    TreeBuilder(int iter);
     virtual ~TreeBuilder();
 
     void setMaxIter(int iter) { this->maxIter = iter; }
@@ -16,9 +14,11 @@ public:
 protected:
     int maxIter;
     TreeAdaptor<D> *adaptor;
-    TreeProjector<D> *projector;
+    TreeCalculator<D> *calculator;
 
-    void clearProjector();
+    void clearCalculator();
+    void clearAdaptor();
+
     void build(MWTree<D> &tree);
 
     MRNodeVector* clearForeignNodes(MRNodeVector *oldVec) const;

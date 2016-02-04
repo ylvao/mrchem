@@ -46,7 +46,10 @@ public:
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
+
     friend class MWNode<D>;
+    friend class TreeBuilder<D>;
+    friend class AnalyticCalculator<D>;
 
 protected:
     const MultiResolutionAnalysis<D> MRA;

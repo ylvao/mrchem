@@ -1,5 +1,5 @@
 #include "TreeBuilder.h"
-#include "TreeProjector.h"
+#include "TreeCalculator.h"
 #include "TreeAdaptor.h"
 #include "MWTree.h"
 #include "MWNode.h"
@@ -7,28 +7,42 @@
 using namespace std;
 
 template<int D>
-TreeBuilder<D>::TreeBuilder(TreeAdaptor<D> &a, int iter) {
-    this->projector = 0;
-    this->adaptor = &a;
-    this->maxIter = iter;
+TreeBuilder<D>::TreeBuilder(int iter)
+        : adaptor(0),
+          calculator(0),
+          maxIter(iter) {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 template<int D>
 TreeBuilder<D>::~TreeBuilder() {
-    clearProjector();
+    NOT_IMPLEMENTED_ABORT;
+    if (this->adaptor != 0) MSG_ERROR("Adaptor not deallocated");
+    if (this->calculator != 0) MSG_ERROR("Calculator not deallocated");
 }
 
 template<int D>
-void TreeBuilder<D>::clearProjector() {
-    if (this->projector != 0) {
-        delete this->projector;
-        this->projector = 0;
+void TreeBuilder<D>::clearAdaptor() {
+    NOT_IMPLEMENTED_ABORT;
+    if (this->adaptor != 0) {
+        delete this->adaptor;
+        this->adaptor = 0;
+    }
+}
+
+template<int D>
+void TreeBuilder<D>::clearCalculator() {
+    NOT_IMPLEMENTED_ABORT;
+    if (this->calculator != 0) {
+        delete this->calculator;
+        this->calculator = 0;
     }
 }
 
 template<int D>
 void TreeBuilder<D>::build(MWTree<D> &tree) {
-    if (this->projector == 0) MSG_ERROR("Projector not initialized");
+    NOT_IMPLEMENTED_ABORT;
+    if (this->calculator == 0) MSG_ERROR("Calculator not initialized");
     if (this->adaptor == 0) MSG_ERROR("Adaptor not initialized");
     println(10, " == Building tree");
 
@@ -42,7 +56,7 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
     while (workVec->size() > 0) {
         printout(10, "  -- #" << setw(3) << iter << ": Calculated   ");
         workVec = clearForeignNodes(workVec);
-        this->projector->calcNodeVector(*workVec);
+        this->calculator->calcNodeVector(*workVec);
         tree.calcSquareNorm(workVec);
         if (maxIterReached(iter)) break;
         splitVec = this->adaptor->splitNodeVector(*workVec, endVec);
@@ -61,6 +75,7 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
 
 template<int D>
 MRNodeVector* TreeBuilder<D>::clearForeignNodes(MRNodeVector *oldVec) const {
+    NOT_IMPLEMENTED_ABORT;
     MRNodeVector *newVec = new MRNodeVector;
     for (int i = 0; i < oldVec->size(); i++) {
         MRNode<D> *node = (*oldVec)[i];
@@ -77,6 +92,7 @@ MRNodeVector* TreeBuilder<D>::clearForeignNodes(MRNodeVector *oldVec) const {
 
 template<int D>
 NodeIndexSet* TreeBuilder<D>::getNodeIndexSet(const MRNodeVector &nodeVec) const {
+    NOT_IMPLEMENTED_ABORT;
     NodeIndexSet *idxSet = new NodeIndexSet;
     for (int i = 0; i < nodeVec.size(); i++) {
         const NodeIndex<D> &idx = nodeVec[i]->getNodeIndex();

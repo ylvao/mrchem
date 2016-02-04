@@ -1,8 +1,8 @@
 #include <Eigen/Core>
 
-#include "AnalyticProjector.h"
+#include "AnalyticCalculator.h"
 #include "QuadratureCache.h"
-#include "ScalingBasis.h"
+#include "MultiResolutionAnalysis.h"
 #include "MWNode.h"
 #include "MWTree.h"
 
@@ -10,9 +10,10 @@ using namespace std;
 using namespace Eigen;
 
 template<int D>
-void AnalyticProjector<D>::calcNode(MWNode<D> &node) const {
-    const ScalingBasis &sf = node.getMWTree().getScalingFunctions();
-    if (sf.getType() != Interpol) {
+void AnalyticCalculator<D>::calcNode(MWNode<D> &node) const {
+    NOT_IMPLEMENTED_ABORT;
+    const ScalingBasis &sf = node.getMWTree().getMRA().getScalingBasis();
+    if (sf.getScalingType() != Interpol) {
         NOT_IMPLEMENTED_ABORT;
     }
     int quadratureOrder = sf.getQuadratureOrder();
@@ -63,6 +64,6 @@ void AnalyticProjector<D>::calcNode(MWNode<D> &node) const {
     node.calcNorms();
 }
 
-template class AnalyticProjector<1>;
-template class AnalyticProjector<2>;
-template class AnalyticProjector<3>;
+template class AnalyticCalculator<1>;
+template class AnalyticCalculator<2>;
+template class AnalyticCalculator<3>;

@@ -5,12 +5,17 @@
 #include "TelePrompter.h"
 
 template<int D>
-class TreeProjector {
+class TreeCalculator {
 public:
-    TreeProjector() { }
-    virtual ~TreeProjector() { }
+    TreeCalculator() {
+        NOT_IMPLEMENTED_ABORT;
+    }
+    virtual ~TreeCalculator() {
+        NOT_IMPLEMENTED_ABORT;
+    }
 
     void calcNodeVector(MRNodeVector &nodeVec) const {
+        NOT_IMPLEMENTED_ABORT;
         int nNodes = nodeVec.size();
         printout(10, std::setw(6) << nNodes << " nodes" << std::endl);
 #pragma omp parallel shared(nodeVec) firstprivate(nNodes)

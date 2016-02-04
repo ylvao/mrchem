@@ -22,10 +22,19 @@ template <int D> class ProjectedNode;
 template <int D> class GenNode;
 
 template <int D> class TreeBuilder;
+template <int D> class TreeCleaner;
+template <int D> class GridGenerator;
+template <int D> class MWProjector;
+template <int D> class MWAdder;
+template <int D> class MWMultiplier;
+
+template <int D> class TreeCalculator;
+template <int D> class AnalyticCalculator;
+
 template <int D> class TreeAdaptor;
-template <int D> class MWAdaptor;
-template <int D> class TreeProjector;
-template <int D> class FunctionProjector;
+template <int D> class WaveletAdaptor;
+template <int D> class CopyAdaptor;
+template <int D> class AnalyticAdaptor;
 
 
 template <int D> class TreeIterator;

@@ -54,6 +54,8 @@ public:
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);
 
+    friend class AnalyticCalculator<D>;
+
 protected:
     double squareNorm;
     double componentNorms[1<<D]; ///< 2^D components
