@@ -14,7 +14,7 @@ using namespace Eigen;
 
 /** FunctionTree constructor.
   * Allocate the root FunctionNodes and fill in the empty slots of rootBox.
-  * Initializes rootNodes to represent the zero function. */
+  * Gives an uninitializes function. */
 template<int D>
 FunctionTree<D>::FunctionTree(const MultiResolutionAnalysis<D> &mra)
         : MWTree<D> (mra) {
@@ -27,12 +27,11 @@ FunctionTree<D>::FunctionTree(const MultiResolutionAnalysis<D> &mra)
         this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
-    this->calcSquareNorm();
 }
 
 /** FunctionTree copy constructor.
   * Copy polynomial order and type, as well as the world box from the
-  * given tree, but only at root scale. Initializes the function to zero.
+  * given tree, but only at root scale. Uninitialized function.
   * Use = operator to copy data.*/
 template<int D>
 FunctionTree<D>::FunctionTree(const MWTree<D> &tree)
@@ -46,12 +45,11 @@ FunctionTree<D>::FunctionTree(const MWTree<D> &tree)
         this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
-    this->calcSquareNorm();
 }
 
 /** FunctionTree copy constructor.
   * Copy polynomial order and type, as well as the world box from the
-  * given tree, but only at root scale. Initializes the function to zero.
+  * given tree, but only at root scale. Uninitializedfunction.
   * Use = operator to copy data.*/
 template<int D>
 FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree)
@@ -65,7 +63,6 @@ FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree)
         this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
-    this->calcSquareNorm();
 }
 
 template<int D>

@@ -69,6 +69,7 @@ template<int D> void testNodeFetchers() {
 
     FunctionTree<D> *tree = 0;
     initialize(&tree);
+    tree->setZero();
 
     const FunctionTree<D> *const_tree = const_cast<const FunctionTree<D> *>(tree);
 
@@ -203,6 +204,7 @@ SCENARIO("MRTree: Generating nodes", "[mr_tree_generating], [mr_tree], [trees]")
     GIVEN("a default function in 1D") {
         FunctionTree<1> *tree = 0;
         initialize(&tree);
+        tree->setZero();
         THEN("there are no GenNodes") {
             REQUIRE( tree->getNGenNodes() == 0 );
             REQUIRE( tree->getNAllocGenNodes() == 0 );
@@ -233,6 +235,7 @@ SCENARIO("MRTree: Generating nodes", "[mr_tree_generating], [mr_tree], [trees]")
     GIVEN("a default function in 2D") {
         FunctionTree<2> *tree = 0;
         initialize(&tree);
+        tree->setZero();
         THEN("there are no GenNodes") {
             REQUIRE( tree->getNGenNodes() == 0 );
             REQUIRE( tree->getNAllocGenNodes() == 0 );
@@ -263,6 +266,7 @@ SCENARIO("MRTree: Generating nodes", "[mr_tree_generating], [mr_tree], [trees]")
     GIVEN("a default function in 3D") {
         FunctionTree<3> *tree = 0;
         initialize(&tree);
+        tree->setZero();
         THEN("there are no GenNodes") {
             REQUIRE( tree->getNGenNodes() == 0 );
             REQUIRE( tree->getNAllocGenNodes() == 0 );

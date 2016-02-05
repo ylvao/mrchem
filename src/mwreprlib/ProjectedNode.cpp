@@ -26,8 +26,6 @@ template<int D>
 ProjectedNode<D>::ProjectedNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx)
         : FunctionNode<D> (t, nIdx) {
     this->allocCoefs();
-    this->zeroCoefs();
-    this->zeroNorms();
     this->setIsEndNode();
 }
 
@@ -38,8 +36,6 @@ ProjectedNode<D>::ProjectedNode(ProjectedNode<D> &p, int cIdx)
         : FunctionNode<D> (p, cIdx) {
     if (this->isForeign()) NOT_IMPLEMENTED_ABORT;
     this->allocCoefs();
-    this->zeroCoefs();
-    this->zeroNorms();
     this->setIsEndNode();
 }
 

@@ -77,10 +77,12 @@ void MWNode<D>::freeCoefs() {
 
 template<int D>
 void MWNode<D>::zeroCoefs() {
-    assert(this->coefs != 0);
+    if (not this->isAllocated()) {
+        allocCoefs();
+    }
     this->coefs->setZero();
+    this->zeroNorms();
     this->setHasCoefs();
-    zeroNorms();
 }
 
 /** Set coefficients of node.

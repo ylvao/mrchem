@@ -47,6 +47,7 @@ SCENARIO("FunctionTree: Zero function", "[function_tree_zero], [function_tree], 
     GIVEN("a zero function in 1D") {
         FunctionTree<1> *tree = 0;
         initialize(&tree);
+        tree->setZero();
         THEN("its value in an arbitrary point is zero") {
             REQUIRE( tree->evalf(r) == Approx(0.0) );
         }
@@ -61,6 +62,7 @@ SCENARIO("FunctionTree: Zero function", "[function_tree_zero], [function_tree], 
     GIVEN("a zero function in 2D") {
         FunctionTree<2> *tree = 0;
         initialize(&tree);
+        tree->setZero();
         THEN("its value in an arbitrary point is zero") {
             REQUIRE( tree->evalf(r) == Approx(0.0) );
         }
@@ -75,6 +77,7 @@ SCENARIO("FunctionTree: Zero function", "[function_tree_zero], [function_tree], 
     GIVEN("a zero function in 3D") {
         FunctionTree<3> *tree = 0;
         initialize(&tree);
+        tree->setZero();
         THEN("its value in an arbitrary point is zero") {
             REQUIRE( tree->evalf(r) == Approx(0.0) );
         }

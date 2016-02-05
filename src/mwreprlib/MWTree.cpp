@@ -6,6 +6,7 @@
 
 #include "MWTree.h"
 #include "MultiResolutionAnalysis.h"
+#include "HilbertIterator.h"
 #include "MathUtils.h"
 
 using namespace std;
@@ -272,16 +273,14 @@ void MWTree<D>::mwTransformDown(bool overwrite) {
   * representable at depth zero. Use cropTree to remove unnecessary nodes.*/
 template<int D>
 void MWTree<D>::setZero() {
-    NOT_IMPLEMENTED_ABORT;
-//    HilbertIterator<D> it(this);
-//    while(it.next()) {
-//        MWNode<D> &node = static_cast<MWNode<D> &>(it.getNode());
-//        if (not node.isForeign()) {
-//            node.getCoefs().setZero();
-//            node.calcNorms();
-//        }
-//    }
-//    this->squareNorm = 0.0;
+    HilbertIterator<D> it(this);
+    while(it.next()) {
+        MWNode<D> &node = static_cast<MWNode<D> &>(it.getNode());
+        if (not node.isForeign()) {
+            node.zeroCoefs();
+        }
+    }
+    this->squareNorm = 0.0;
 }
 
 template class MWTree<1>;

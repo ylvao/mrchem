@@ -108,7 +108,7 @@ template<int D> void testInitial(FunctionTree<D> *tree) {
         tot_nodes *= D-d;
     }
 
-    REQUIRE( tree->getSquareNorm() == Approx(0.0) );
+    REQUIRE( tree->getSquareNorm() == Approx(-1.0) );
     REQUIRE( tree->getOrder() == k );
     REQUIRE( tree->getDepth() == 1 );
     REQUIRE( tree->getNNodes() == tot_nodes );
