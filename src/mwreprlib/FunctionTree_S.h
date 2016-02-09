@@ -14,6 +14,7 @@
 
 template<int D> class MultiResolutionAnalysis;
 template<int D> class ProjectedNode;
+template<int D> class MWTree;
 template<int D> class FunctionTree;
 template<int D> class FunctionNode;
 
@@ -23,7 +24,7 @@ public:
     FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int maxNumberOfNodes);
     virtual ~FunctionTree_S();
 
-    FunctionTree<D> &getTree() { return *this->funcTree_p; }
+    FunctionTree<D> &getTree() { return static_cast<FunctionTree<D> &>(*this->mwTree_p); }
 
 protected:
     int sizeTreeMeta; //The first part of the Tree is filled with metadata; reserved size:
@@ -33,7 +34,7 @@ protected:
 
     double* tree_S_array; //Tree is defined as array of doubles, because C++ does not like void malloc
 
-    FunctionTree<D>* funcTree_p;
+    MWTree<D>* mwTree_p;
     ProjectedNode<D>* lastNode;//pointer to the last active node
 
     ProjectedNode<D>* allocNodes(int Nalloc);

@@ -6,6 +6,7 @@
 
 #include "FunctionTree_S.h"
 #include "MWNode.h"
+#include "MWTree.h"
 #include "FunctionTree.h"
 #include "FunctionNode.h"
 #include "ProjectedNode.h"
@@ -19,7 +20,12 @@ using namespace Eigen;
 template<int D>
 FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int maxNumberOfNodes)
         : nNodes(0),
-          maxNodes(maxNumberOfNodes) {
+          lastNode(0),
+          mwTree_p(0),
+          tree_S_array(0),
+          maxNodes(maxNumberOfNodes),
+          sizeTreeMeta(0),
+          sizeNode(0) {
     //The first part of the Tree is filled with metadata; reserved size:
     sizeTreeMeta = (sizeof(FunctionTree<D>)+7)/sizeof(double);
     //The dynamical part of the tree is filled with nodes of size:
@@ -28,22 +34,20 @@ FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int max
 
     //Tree is defined as array of doubles, because C++ does not like void malloc
     this->tree_S_array = new double[this->sizeTreeMeta + maxNumberOfNodes*this->sizeNode];
-
     this->lastNode = (ProjectedNode<D>*) (this->tree_S_array + this->sizeTreeMeta + this->nNodes*this->sizeNode);
 
-    this->funcTree_p = new (this->tree_S_array) FunctionTree<D>(mra);//put a MWTree at start of array
-//    this->funcTree_p = new FunctionTree<D>(mra);//put a MWTree at start of array
+    this->mwTree_p = new (this->tree_S_array) MWTree<D>(mra);//put a MWTree at start of array
+    //this->funcTree_p = new FunctionTree<D>(mra);//put a MWTree at start of array
 
-    this->lastNode = allocNodes(this->funcTree_p->getRootBox().size());
+    //this->lastNode = allocNodes(this->mwTree_p->getRootBox().size());
 
-    for (int rIdx = 0; rIdx < this->funcTree_p->getRootBox().size(); rIdx++) {
-        const NodeIndex<D> &nIdx = this->funcTree_p->getRootBox().getNodeIndex(rIdx);
-        MWNode<D> *fNode  = new (this->lastNode) ProjectedNode<D>(*((FunctionTree<D>*) this->funcTree_p), nIdx);
-//        MWNode<D> *fNode  = new ProjectedNode<D>(*((FunctionTree<D>*) this->funcTree_p), nIdx);
-        this->funcTree_p->getRootBox().setNode(rIdx, &fNode);
-        this->lastNode++;
-    }
-    this->funcTree_p->resetEndNodeTable();
+    //for (int rIdx = 0; rIdx < this->mwTree_p->getRootBox().size(); rIdx++) {
+        //const NodeIndex<D> &nIdx = this->mwTree_p->getRootBox().getNodeIndex(rIdx);
+        //MWNode<D> *fNode  = new (this->lastNode) ProjectedNode<D>(getTree(), nIdx);
+        //this->mwTree_p->getRootBox().setNode(rIdx, &fNode);
+        //this->lastNode++;
+    //}
+    //this->mwTree_p->resetEndNodeTable();
 }
 
 //return pointer to the last active node or NULL if failed
@@ -62,8 +66,8 @@ ProjectedNode<D>* FunctionTree_S<D>::allocNodes(int nAlloc) {
 /** FunctionTree_S destructor. */
 template<int D>
 FunctionTree_S<D>::~FunctionTree_S() {
+    this->mwTree_p->~MWTree();
     delete[] this->tree_S_array;
-    //delete this->funcTree_p;
 }
 
 template class FunctionTree_S<1> ;
