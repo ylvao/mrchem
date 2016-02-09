@@ -12,16 +12,35 @@
 #ifndef FUNCTIONTREE_H_
 #define FUNCTIONTREE_H_
 
-#include "MWTree_S.h"
+#include "ProjectedNode.h"
 
 template<int D>
-class FunctionTree_S: public MWTree_S<D> {
+class FunctionTree_S  {
  public:
     FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int MaxNumberofNodes);
-    FunctionTree_S(const MWTree_S<D> &tree);
     FunctionTree_S(const FunctionTree_S<D> &tree);
     FunctionTree_S<D> &operator=(const FunctionTree_S<D> &tree);
     virtual ~FunctionTree_S();
+
+  //The first part of the Tree is filled with metadata; reserved size:
+  int SizeTreeMeta;
+  //The dynamical part of the tree is filled with nodes of size:
+  int SizeNode;
+
+  //Tree is defined as array of doubles, because C++ does not like void malloc
+  double* Tree_S_array;
+
+  FunctionTree<D>* FunctionTree_p;
+
+  int MaxNnodes;//max number of nodes that can be defined
+  int Nnodes;//number of nodes already defined
+  
+  ProjectedNode<D>* LastNode;//pointer to the last active node
+
+  ProjectedNode<D>* AllocNodes(int Nalloc);
+  
+  // Static default parameters
+  const static int tDim = (1 << D);
 
     void clear();
 
@@ -44,11 +63,11 @@ class FunctionTree_S: public MWTree_S<D> {
     FunctionTree_S<D>& operator +=(const FunctionTree_S<D> &tree);
     FunctionTree_S<D>& operator -=(const FunctionTree_S<D> &tree);
 
-    FunctionNode<D> &getEndFuncNode(int i) { return static_cast<FunctionNode<D> &>(this->MWTree_p->getEndNode(i)); }
-    FunctionNode<D> &getRootFuncNode(int i) { return static_cast<FunctionNode<D> &>(this->MWTree_p->rootBox.getNode(i)); }
+    FunctionNode<D> &getEndFuncNode(int i) { return static_cast<FunctionNode<D> &>(this->FunctionTree_p->getEndNode(i)); }
+    FunctionNode<D> &getRootFuncNode(int i) { return static_cast<FunctionNode<D> &>(this->FunctionTree_p->rootBox.getNode(i)); }
 
-    const FunctionNode<D> &getEndFuncNode(int i) const { return static_cast<const FunctionNode<D> &>(this->MWTree_p->getEndNode(i)); }
-    const FunctionNode<D> &getRootFuncNode(int i) const { return static_cast<const FunctionNode<D> &>(this->MWTree_p->rootBox.getNode(i)); }
+    const FunctionNode<D> &getEndFuncNode(int i) const { return static_cast<const FunctionNode<D> &>(this->FunctionTree_p->getEndNode(i)); }
+    const FunctionNode<D> &getRootFuncNode(int i) const { return static_cast<const FunctionNode<D> &>(this->FunctionTree_p->rootBox.getNode(i)); }
 
     template<int T>
     friend std::ostream& operator <<(std::ostream &o, FunctionTree_S<T> &tree);

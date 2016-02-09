@@ -26,7 +26,7 @@ MWTree_S<D>::MWTree_S(const MultiResolutionAnalysis<D> &mra , int MaxNumberofNod
   
   LastNode = (ProjectedNode<D>*) (MWTree_S_array + SizeTreeMeta + Nnodes*SizeNode);
 
-  MWTree<D> *  f_tree_S_start = new (MWTree_S_array) MWTree<D>(mra);//put a MWTree at start of array
+  MWTree<D> *  f_tree_S_start = new (MWTree_S_array) FunctionTree<D>(mra);//put a MWTree at start of array
   
   // Static default parameters
   const static int tDim = (1 << D);

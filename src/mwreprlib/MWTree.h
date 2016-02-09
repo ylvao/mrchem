@@ -20,7 +20,6 @@
 #include "NodeBox.h"
 #include "MWNode.h"
 #include "MultiResolutionAnalysis.h"
-template <int D> class MWTree_S;
 template <int D> class FunctionTree_S;
 
 #ifdef OPENMP
@@ -119,7 +118,6 @@ public:
     friend class MWNode<D>;
     friend class TreeBuilder<D>;
     friend class AnalyticCalculator<D>;
-    friend class MWTree_S<D>;
     friend class FunctionTree_S<D>;
 
 protected:

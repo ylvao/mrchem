@@ -4,11 +4,10 @@
  *          CTCC, University of Tromsø
  */
 
-#include "MWTree_S.h"
 #include "FunctionTree_S.h"
-#include "MRNode.h"
 #include "MWNode.h"
 #include "FunctionNode.h"
+#include "FunctionTree.h"
 #include "ProjectedNode.h"
 //#include "HilbertIterator.h"
 
@@ -19,37 +18,39 @@ using namespace Eigen;
   * Allocate the root FunctionNodes and fill in the empty slots of rootBox.
   * Initializes rootNodes to represent the zero function. */
 template<int D>
-FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int MaxNumberofNodes)
-  : MWTree_S<D> (mra, MaxNumberofNodes) {
-    this->LastNode = this->AllocNodes(this->MWTree_p->getRootBox().size());
-    for (int rIdx = 0; rIdx < this->MWTree_p->getRootBox().size(); rIdx++) {
-        const NodeIndex<D> &nIdx = this->MWTree_p->getRootBox().getNodeIndex(rIdx);
+FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int MaxNumberofNodes){
+  
+  //The first part of the Tree is filled with metadata; reserved size:
+  SizeTreeMeta = (sizeof(FunctionTree<D>)+7)/sizeof(double);
+  //The dynamical part of the tree is filled with nodes of size:
+  SizeNode = (sizeof(ProjectedNode<D>)+7)/sizeof(double);
+  cout<<"SizeNode "<<sizeof(ProjectedNode<D>)<<endl;
+
+  //Tree is defined as array of doubles, because C++ does not like void malloc
+  Tree_S_array = new double[SizeTreeMeta + MaxNumberofNodes*SizeNode];
+
+  FunctionTree_p = ( FunctionTree<D>*) Tree_S_array;
+
+  MaxNnodes = MaxNumberofNodes;//max number of nodes that can be defined
+  Nnodes = 0;//number of nodes already defined
+  
+  LastNode = (ProjectedNode<D>*) (Tree_S_array + SizeTreeMeta + Nnodes*SizeNode);
+
+  FunctionTree<D> *  f_tree_S_start = new (Tree_S_array) FunctionTree<D>(mra);//put a MWTree at start of array
+  
+  this->LastNode = this->AllocNodes(this->FunctionTree_p->getRootBox().size());
+
+    for (int rIdx = 0; rIdx < this->FunctionTree_p->getRootBox().size(); rIdx++) {
+        const NodeIndex<D> &nIdx = this->FunctionTree_p->getRootBox().getNodeIndex(rIdx);
 	//        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        MRNode<D> *  f_Node  = new (this->LastNode) ProjectedNode<D>(*((FunctionTree<D>*) this->MWTree_p), nIdx);
-        this->MWTree_p->getRootBox().setNode(rIdx, &f_Node);
+        MWNode<D> *  f_Node  = new (this->LastNode) ProjectedNode<D>(*((FunctionTree<D>*) this->FunctionTree_p), nIdx);
+        this->FunctionTree_p->getRootBox().setNode(rIdx, &f_Node);
 	this->LastNode++;
     }
-    this->MWTree_p->resetEndNodeTable();
-    this->MWTree_p->calcSquareNorm();
-}
-
-/** FunctionTree copy constructor.
-  * Copy polynomial order and type, as well as the world box from the
-  * given tree, but only at root scale. Initializes the function to zero.
-  * Use = operator to copy data.*/
-template<int D>
-FunctionTree_S<D>::FunctionTree_S(const MWTree_S<D> &tree)
-        : MWTree_S<D> (tree) {
-    this->LastNode = this->AllocNodes(this->MWTree_p->getRootBox().size());
-    for (int rIdx = 0; rIdx < this->MWTree_p->getRootBox().size(); rIdx++) {
-        const NodeIndex<D> &nIdx = this->MWTree_p->getRootBox().getNodeIndex(rIdx);
-        //MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-	MRNode<D> *  f_tree_S_start  = new (this->LastNode) ProjectedNode<D>(*((FunctionTree<D>*) this->MWTree_p), nIdx);
-       this->MWTree_p->getRootBox().setNode(rIdx, &f_tree_S_start);
-       this->LastNode++;
-    }
-    this->MWTree_p->resetEndNodeTable();
-    this->MWTree_p->calcSquareNorm();
+    this->FunctionTree_p->resetEndNodeTable();
+    this->FunctionTree_p->calcSquareNorm();
+  // Static default parameters
+  const static int tDim = (1 << D);
 }
 
 /** FunctionTree copy constructor.
@@ -58,17 +59,17 @@ FunctionTree_S<D>::FunctionTree_S(const MWTree_S<D> &tree)
   * Use = operator to copy data.*/
 template<int D>
 FunctionTree_S<D>::FunctionTree_S(const FunctionTree_S<D> &tree)
-        : MWTree_S<D> (tree) {
-    this->LastNode = this->AllocNodes(this->MWTree_p->getRootBox().size());
-    for (int rIdx = 0; rIdx < this->MWTree_p->getRootBox().size(); rIdx++) {
-      const NodeIndex<D> &nIdx = this->MWTree_p->getRootBox().getNodeIndex(rIdx);
+        : FunctionTree_S<D> (tree) {
+    this->LastNode = this->AllocNodes(this->FunctionTree_p->getRootBox().size());
+    for (int rIdx = 0; rIdx < this->FunctionTree_p->getRootBox().size(); rIdx++) {
+      const NodeIndex<D> &nIdx = this->FunctionTree_p->getRootBox().getNodeIndex(rIdx);
 	//        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
-        MRNode<D> *  f_tree_S_start  = new (this->LastNode) ProjectedNode<D>(*((FunctionTree<D>*) this->MWTree_p), nIdx);
-        this->MWTree_p->getRootBox().setNode(rIdx, &f_tree_S_start);
+        MWNode<D> *  f_tree_S_start  = new (this->LastNode) ProjectedNode<D>(*((FunctionTree<D>*) this->FunctionTree_p), nIdx);
+        this->FunctionTree_p->getRootBox().setNode(rIdx, &f_tree_S_start);
 	this->LastNode++;
     }
-    this->MWTree_p->resetEndNodeTable();
-    this->MWTree_p->calcSquareNorm();
+    this->FunctionTree_p->resetEndNodeTable();
+    this->FunctionTree_p->calcSquareNorm();
 }
 
 template<int D>
@@ -76,10 +77,24 @@ FunctionTree_S<D>& FunctionTree_S<D>::operator=(const FunctionTree_S<D> &tree) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-/** FunctionTree destructor. Not relevant for MWTree_S*/
+//return pointer to the last active node or NULL if failed
 template<int D>
-FunctionTree_S<D>::~FunctionTree_S() {
-  
+ProjectedNode<D>* FunctionTree_S<D>::AllocNodes(int Nalloc) {    
+  Nnodes += Nalloc;
+  if(Nnodes > MaxNnodes){
+    Nnodes -= Nalloc;
+    return NULL;
+  }else{    
+    LastNode += Nalloc*SizeNode;
+    cout<<"new size "<<Nnodes<<endl;
+    return LastNode-Nalloc*SizeNode;
+  }
+}
+/** FunctionTree_S destructor. */
+template<int D>
+ FunctionTree_S<D>::~ FunctionTree_S() {
+  delete this->FunctionTree_p;
+  delete this->MWTree_S_array;
 }
 
 /** Leaves the tree inn the same state as after construction*/
