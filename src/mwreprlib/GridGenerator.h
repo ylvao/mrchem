@@ -19,7 +19,7 @@ public:
 //        this->clearAdaptor();
 //        NOT_IMPLEMENTED_ABORT;
 //    }
-    void operator()(FunctionTree<D> &out, MRTree<D> &inp) {
+    void operator()(FunctionTree<D> &out, MWTree<D> &inp) {
 //        this->adaptor = new CopyAdaptor<D>(inp);
         NOT_IMPLEMENTED_ABORT;
         this->clearAdaptor();

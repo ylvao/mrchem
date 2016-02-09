@@ -1,8 +1,8 @@
 #ifndef TREEITERATOR_H
 #define TREEITERATOR_H
 
-#include "MRTree.h"
-#include "MRNode.h"
+#include "MWTree.h"
+#include "MWNode.h"
 #include "constants.h"
 
 template <int D> struct IteratorNode;
@@ -31,7 +31,7 @@ public:
                 return true;
             }
         }
-        MRNode<D> &node = *this->state->node;
+        MWNode<D> &node = *this->state->node;
         if (checkDepth(node) and checkGenerated(node)) {
             const int nChildren = 1 << D;
             for (int i = 0; i < nChildren; i++) {
@@ -56,7 +56,7 @@ public:
     void setReturnGenNodes(bool i = true) { this->returnGenNodes = i; }
     void setMaxDepth(int depth) { this->maxDepth = depth; }
 
-    MRNode<D> &getNode() { return *this->state->node; }
+    MWNode<D> &getNode() { return *this->state->node; }
     friend class IteratorNode<D>;
 protected:
     int root;
@@ -69,7 +69,7 @@ protected:
 
     virtual int getChildIndex(int i) const = 0;
 
-    void init(MRTree<D> *tree) {
+    void init(MWTree<D> *tree) {
         this->root = 0;
         this->maxDepth = -1;
         this->nRoots = tree->getRootBox().size();
@@ -101,7 +101,7 @@ protected:
         if (this->state->node->isLeafNode()) {
             return false;
         }
-        MRNode<D> *child = &this->state->node->getMRChild(i);
+        MWNode<D> *child = &this->state->node->getMWChild(i);
         this->state = new IteratorNode<D>(child, this->state);
         return next();
     }
@@ -116,7 +116,7 @@ protected:
         if (this->root >= this->nRoots) {
             return false;
         }
-        MRNode<D> *nextRoot = &state->node->getMRTree().getRootBox().getNode(root);
+        MWNode<D> *nextRoot = &state->node->getMWTree().getRootBox().getNode(root);
         this->state = new IteratorNode<D>(nextRoot, this->state);
         return next();
     }
@@ -144,7 +144,7 @@ protected:
             break;
         }
     }
-    bool checkDepth(const MRNode<D> &node) const {
+    bool checkDepth(const MWNode<D> &node) const {
         if (this->maxDepth < 0) {
             return true;
         } else if (node.getDepth() < this->maxDepth) {
@@ -153,7 +153,7 @@ protected:
             return false;
         }
     }
-    bool checkGenerated(const MRNode<D> &node) const {
+    bool checkGenerated(const MWNode<D> &node) const {
         if (node.isEndNode() and not this->returnGenNodes) {
             return false;
         } else {
@@ -165,12 +165,12 @@ protected:
 template<int D>
 class IteratorNode {
 public:
-    MRNode<D> *node;
+    MWNode<D> *node;
     IteratorNode<D> *next;
     bool doneNode;
     bool doneChild[1 << D];
 
-    IteratorNode(MRNode<D> *nd, IteratorNode<D> *nx = 0)
+    IteratorNode(MWNode<D> *nd, IteratorNode<D> *nx = 0)
             : node(nd),
               next(nx),
               doneNode(false) {

@@ -1,15 +1,15 @@
 #ifndef HILBERTITERATOR_H
 #define HILBERTITERATOR_H
 
-#include "MRTree.h"
-#include "MRNode.h"
+#include "MWTree.h"
+#include "MWNode.h"
 #include "TreeIterator.h"
 #include "HilbertPath.h"
 
 template<int D>
 class HilbertIterator: public TreeIterator<D> {
 public:
-    HilbertIterator(MRTree<D> *tree, int dir = TopDown)
+    HilbertIterator(MWTree<D> *tree, int dir = TopDown)
             : TreeIterator<D>(dir) {
         this->init(tree);
     }
@@ -17,7 +17,7 @@ public:
 
 protected:
     int getChildIndex(int i) const {
-        const MRNode<D> &node = *this->state->node;
+        const MWNode<D> &node = *this->state->node;
         const HilbertPath<D> &h = node.getHilbertPath();
         return h.getZIndex(i);
     }

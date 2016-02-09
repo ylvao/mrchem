@@ -81,24 +81,24 @@ template<int D> void testNodeFetchers() {
 
     // Fetch by NodeIndex
     SECTION("Find root node by NodeIndex") {
-        MRNode<D> &node = node_box.getNode(idx_2);
+        MWNode<D> &node = node_box.getNode(idx_2);
         REQUIRE( node.getDepth() == 0 );
         REQUIRE( node.isAncestor(idx_2) );
     }
     SECTION("Find const root node by NodeIndex") {
-        const MRNode<D> &node = const_box.getNode(idx_2);
+        const MWNode<D> &node = const_box.getNode(idx_2);
         REQUIRE( node.getDepth() == 0 );
         REQUIRE( node.isAncestor(idx_2) );
     }
 
     // Fetch by coordinate
     SECTION("Get root node by coord: existing node") {
-        MRNode<D> &node = node_box.getNode(r);
+        MWNode<D> &node = node_box.getNode(r);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.getDepth() == 0 );
     }
     SECTION("Get node by coord: non-existing node") {
-        const MRNode<D> &node = const_box.getNode(r);
+        const MWNode<D> &node = const_box.getNode(r);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.getDepth() == 0 );
     }

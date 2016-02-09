@@ -23,7 +23,7 @@ FunctionTree<D>::FunctionTree(const MultiResolutionAnalysis<D> &mra)
     this->setBounds(lB, uB);
     for (int rIdx = 0; rIdx < this->rootBox.size(); rIdx++) {
         const NodeIndex<D> &nIdx = this->rootBox.getNodeIndex(rIdx);
-        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        MWNode<D> *root = new ProjectedNode<D>(*this, nIdx);
         this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
@@ -41,7 +41,7 @@ FunctionTree<D>::FunctionTree(const MWTree<D> &tree)
     this->setBounds(lB, uB);
     for (int rIdx = 0; rIdx < this->rootBox.size(); rIdx++) {
         const NodeIndex<D> &nIdx = this->rootBox.getNodeIndex(rIdx);
-        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        MWNode<D> *root = new ProjectedNode<D>(*this, nIdx);
         this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
@@ -59,7 +59,7 @@ FunctionTree<D>::FunctionTree(const FunctionTree<D> &tree)
     this->setBounds(lB, uB);
     for (int rIdx = 0; rIdx < this->rootBox.size(); rIdx++) {
         const NodeIndex<D> &nIdx = this->rootBox.getNodeIndex(rIdx);
-        MRNode<D> *root = new ProjectedNode<D>(*this, nIdx);
+        MWNode<D> *root = new ProjectedNode<D>(*this, nIdx);
         this->rootBox.setNode(rIdx, &root);
     }
     this->resetEndNodeTable();
@@ -73,7 +73,7 @@ FunctionTree<D>& FunctionTree<D>::operator=(const FunctionTree<D> &tree) {
 /** FunctionTree destructor. */
 template<int D>
 FunctionTree<D>::~FunctionTree() {
-    MRNode<D> **roots = this->rootBox.getNodes();
+    MWNode<D> **roots = this->rootBox.getNodes();
     for (int i = 0; i < this->rootBox.size(); i++) {
         ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(roots[i]);
         if (node != 0) delete node;
@@ -155,11 +155,11 @@ double FunctionTree<D>::dot(const FunctionTree<D> &ket) {
 //        rhs.syncNodes(missing);
 //    }
 #endif
-    MRNodeVector nodeTable;
+    MWNodeVector nodeTable;
     HilbertIterator<D> it(this);
     it.setReturnGenNodes(false);
     while(it.next()) {
-        MRNode<D> &node = it.getNode();
+        MWNode<D> &node = it.getNode();
         nodeTable.push_back(&node);
     }
     int nNodes = nodeTable.size();
@@ -174,7 +174,7 @@ double FunctionTree<D>::dot(const FunctionTree<D> &ket) {
 //#pragma omp for schedule(guided)
     for (int n = 0; n < nNodes; n++) {
         const FunctionNode<D> &braNode = static_cast<const FunctionNode<D> &>(*nodeTable[n]);
-        const MRNode<D> *mrNode = ket.findNode(braNode.getNodeIndex());
+        const MWNode<D> *mrNode = ket.findNode(braNode.getNodeIndex());
         if (mrNode == 0) continue;
 
         const FunctionNode<D> &ketNode = static_cast<const FunctionNode<D> &>(*mrNode);
@@ -204,7 +204,7 @@ double FunctionTree<D>::evalf(const double *r) {
     NOT_IMPLEMENTED_ABORT;
 //    bool iAmMaster = false;
 //    if (this->getRankId() == 0) iAmMaster = true;
-//    MRNode<D> &mw_node = this->getNodeOrEndNode(r, 1);
+//    MWNode<D> &mw_node = this->getNodeOrEndNode(r, 1);
 //    FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mw_node);
 //    if (not f_node.isForeign() or (f_node.isCommon() and iAmMaster)) {
 //        result = f_node.asFuncNode().evalf(r);
@@ -217,7 +217,7 @@ double FunctionTree<D>::evalf(const double *r) {
 //        result = 0.0;
 //    }
 #else
-    MRNode<D> &mr_node = this->getNodeOrEndNode(r);
+    MWNode<D> &mr_node = this->getNodeOrEndNode(r);
     FunctionNode<D> &f_node = static_cast<FunctionNode<D> &>(mr_node);
     result = f_node.evalf(r);
 #endif

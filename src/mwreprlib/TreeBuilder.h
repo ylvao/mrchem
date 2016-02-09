@@ -21,8 +21,8 @@ protected:
 
     void build(MWTree<D> &tree);
 
-    MRNodeVector* clearForeignNodes(MRNodeVector *oldVec) const;
-    NodeIndexSet* getNodeIndexSet(const MRNodeVector &nodeVec) const;
+    MWNodeVector* clearForeignNodes(MWNodeVector *oldVec) const;
+    NodeIndexSet* getNodeIndexSet(const MWNodeVector &nodeVec) const;
 
     bool maxIterReached(int iter) const {
         if (this->maxIter < 0) return false;

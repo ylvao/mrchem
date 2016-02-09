@@ -70,7 +70,7 @@ ProjectedNode<D>::ProjectedNode(const ProjectedNode<D> &n)
 
 /* Recurcive node constructor*/
 template<int D>
-void ProjectedNode<D>::copyChildren(const MRNode<D> &node) {
+void ProjectedNode<D>::copyChildren(const MWNode<D> &node) {
     NOT_IMPLEMENTED_ABORT;
 //    if (node.isBranchNode()) {
 //        this->allocKindergarten();
@@ -79,7 +79,7 @@ void ProjectedNode<D>::copyChildren(const MRNode<D> &node) {
 //    }
 //    int myRank = this->getRankId();
 //    for (int cIdx = 0; cIdx < node.getNChildren(); cIdx++) {
-//        const MRNode<D> &yourChild = node.getMRChild(cIdx);
+//        const MWNode<D> &yourChild = node.getMWChild(cIdx);
 //        int childRank = yourChild.getRankId();
 //        this->setRankId(childRank); //Rank is copied from parent
 //        ProjectedNode<D> *myChild = new ProjectedNode(*this, cIdx);
@@ -108,7 +108,7 @@ void ProjectedNode<D>::createChild(int cIdx) {
 template<int D>
 void ProjectedNode<D>::genChild(int cIdx) {
     assert(this->children[cIdx] == 0);
-    MRNode<D> *child = new GenNode<D>(*this, cIdx);
+    MWNode<D> *child = new GenNode<D>(*this, cIdx);
     this->children[cIdx] = child;
 }
 

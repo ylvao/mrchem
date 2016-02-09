@@ -10,7 +10,7 @@ public:
     TreeCalculator() { }
     virtual ~TreeCalculator() { }
 
-    void calcNodeVector(MRNodeVector &nodeVec) const {
+    void calcNodeVector(MWNodeVector &nodeVec) const {
         int nNodes = nodeVec.size();
         printout(10, std::setw(6) << nNodes << " nodes" << std::endl);
 #pragma omp parallel shared(nodeVec) firstprivate(nNodes)

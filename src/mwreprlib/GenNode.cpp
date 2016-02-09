@@ -54,7 +54,7 @@ void GenNode<D>::createChild(int i) {
 template<int D>
 void GenNode<D>::genChild(int cIdx) {
     assert(this->children[cIdx] == 0);
-    MRNode<D> *child = new GenNode<D>(*this, cIdx);
+    MWNode<D> *child = new GenNode<D>(*this, cIdx);
     this->children[cIdx] = child;
 }
 
@@ -116,7 +116,7 @@ const VectorXd& GenNode<D>::getCoefs() const {
 template<int D>
 void GenNode<D>::clearGenerated() {
     this->freeCoefs();
-    MRNode<D>::clearGenerated();
+    MWNode<D>::clearGenerated();
 }
 
 template<int D>

@@ -25,9 +25,9 @@ public:
     double evalf(const double *r) const;
 
 protected:
-    void copyChildren(const MRNode<D> &node);
-    void createChildren() { MRNode<D>::createChildren(); this->clearIsEndNode(); }
-    void deleteChildren() { MRNode<D>::deleteChildren(); this->setIsEndNode(); }
+    void copyChildren(const MWNode<D> &node);
+    void createChildren() { MWNode<D>::createChildren(); this->clearIsEndNode(); }
+    void deleteChildren() { MWNode<D>::deleteChildren(); this->setIsEndNode(); }
 
 private:
     void createChild(int i);

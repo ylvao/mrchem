@@ -22,23 +22,23 @@ public:
     NodeBox<D> &operator=(const NodeBox<D> &box) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NodeBox();
 
-    void setNode(int idx, MRNode<D> **node);
+    void setNode(int idx, MWNode<D> **node);
     void removeNode(int idx);
 
-    MRNode<D> &getNode(const NodeIndex<D> &idx);
-    MRNode<D> &getNode(const double *r);
-    MRNode<D> &getNode(int i = 0);
+    MWNode<D> &getNode(const NodeIndex<D> &idx);
+    MWNode<D> &getNode(const double *r);
+    MWNode<D> &getNode(int i = 0);
 
-    const MRNode<D> &getNode(const NodeIndex<D> &idx) const;
-    const MRNode<D> &getNode(const double *r) const;
-    const MRNode<D> &getNode(int i = 0) const;
+    const MWNode<D> &getNode(const NodeIndex<D> &idx) const;
+    const MWNode<D> &getNode(const double *r) const;
+    const MWNode<D> &getNode(int i = 0) const;
 
     int getNOccupied() const { return this->nOccupied; }
-    MRNode<D> **getNodes() { return this->nodes; }
+    MWNode<D> **getNodes() { return this->nodes; }
 
 protected:
     int nOccupied;      ///< Number of non-zero pointers in box
-    MRNode<D> **nodes;  ///< Container of nodes
+    MWNode<D> **nodes;  ///< Container of nodes
 
     void allocNodePointers();
     void deleteNodes();

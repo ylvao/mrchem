@@ -6,7 +6,7 @@
  */
 
 #include "NodeBox.h"
-#include "MRNode.h"
+#include "MWNode.h"
 
 using namespace std;
 
@@ -38,7 +38,7 @@ template<int D>
 void NodeBox<D>::allocNodePointers() {
     assert(this->nodes == 0);
     int nNodes = this->size();
-    this->nodes = new MRNode<D>*[nNodes];
+    this->nodes = new MWNode<D>*[nNodes];
     for (int n = 0; n < nNodes; n++) {
         this->nodes[n] = 0;
     }
@@ -63,7 +63,7 @@ void NodeBox<D>::deleteNodes() {
 }
 
 template<int D>
-void NodeBox<D>::setNode(int bIdx, MRNode<D> **node) {
+void NodeBox<D>::setNode(int bIdx, MWNode<D> **node) {
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     removeNode(bIdx);
@@ -87,20 +87,20 @@ void NodeBox<D>::removeNode(int bIdx) {
 }
 
 template<int D>
-MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) {
+MWNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) {
     int bIdx = this->getBoxIndex(nIdx);
     return getNode(bIdx);
 }
 
 template<int D>
-MRNode<D>& NodeBox<D>::getNode(const double *r) {
+MWNode<D>& NodeBox<D>::getNode(const double *r) {
     int bIdx = this->getBoxIndex(r);
     if (bIdx < 0) MSG_ERROR("Coord out of bounds");
     return getNode(bIdx);
 }
 
 template<int D>
-MRNode<D>& NodeBox<D>::getNode(int bIdx) {
+MWNode<D>& NodeBox<D>::getNode(int bIdx) {
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     assert(this->nodes[bIdx] != 0);
@@ -108,20 +108,20 @@ MRNode<D>& NodeBox<D>::getNode(int bIdx) {
 }
 
 template<int D>
-const MRNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) const {
+const MWNode<D>& NodeBox<D>::getNode(const NodeIndex<D> &nIdx) const {
     int bIdx = this->getBoxIndex(nIdx);
     return getNode(bIdx);
 }
 
 template<int D>
-const MRNode<D>& NodeBox<D>::getNode(const double *r) const {
+const MWNode<D>& NodeBox<D>::getNode(const double *r) const {
     int bIdx = this->getBoxIndex(r);
     if (bIdx < 0) MSG_ERROR("Coord out of bounds");
     return getNode(bIdx);
 }
 
 template<int D>
-const MRNode<D>& NodeBox<D>::getNode(int bIdx) const {
+const MWNode<D>& NodeBox<D>::getNode(int bIdx) const {
     assert(bIdx >= 0);
     assert(bIdx < this->nBoxes[D]);
     assert(this->nodes[bIdx] != 0);

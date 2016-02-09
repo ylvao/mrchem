@@ -42,9 +42,9 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
     println(10, " == Building tree");
 
     NodeIndexSet *splitSet = 0;
-    MRNodeVector *splitVec = 0;
-    MRNodeVector *workVec = tree.copyEndNodeTable();
-    MRNodeVector *endVec = tree.getEndNodeTable();
+    MWNodeVector *splitVec = 0;
+    MWNodeVector *workVec = tree.copyEndNodeTable();
+    MWNodeVector *endVec = tree.getEndNodeTable();
     endVec->clear();
 
     int iter = 0;
@@ -69,10 +69,10 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
 }
 
 template<int D>
-MRNodeVector* TreeBuilder<D>::clearForeignNodes(MRNodeVector *oldVec) const {
-    MRNodeVector *newVec = new MRNodeVector;
+MWNodeVector* TreeBuilder<D>::clearForeignNodes(MWNodeVector *oldVec) const {
+    MWNodeVector *newVec = new MWNodeVector;
     for (int i = 0; i < oldVec->size(); i++) {
-        MRNode<D> *node = (*oldVec)[i];
+        MWNode<D> *node = (*oldVec)[i];
         if (node == 0) {
             continue;
         }
@@ -85,7 +85,7 @@ MRNodeVector* TreeBuilder<D>::clearForeignNodes(MRNodeVector *oldVec) const {
 }
 
 template<int D>
-NodeIndexSet* TreeBuilder<D>::getNodeIndexSet(const MRNodeVector &nodeVec) const {
+NodeIndexSet* TreeBuilder<D>::getNodeIndexSet(const MWNodeVector &nodeVec) const {
     NodeIndexSet *idxSet = new NodeIndexSet;
     for (int i = 0; i < nodeVec.size(); i++) {
         const NodeIndex<D> &idx = nodeVec[i]->getNodeIndex();

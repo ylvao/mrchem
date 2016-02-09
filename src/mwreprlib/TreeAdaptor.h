@@ -13,9 +13,9 @@ public:
 
     virtual TreeAdaptor<D> *copy() const { return new TreeAdaptor<D>(*this); }
 
-    MRNodeVector* splitNodeVector(MRNodeVector &nodeVec,
-                                  MRNodeVector *no_split = 0) const {
-        MRNodeVector *split = new MRNodeVector;
+    MWNodeVector* splitNodeVector(MWNodeVector &nodeVec,
+                                  MWNodeVector *no_split = 0) const {
+        MWNodeVector *split = new MWNodeVector;
         int nNodes = nodeVec.size();
         for (int n = 0; n < nNodes; n++) {
             MWNode<D> &node = static_cast<MWNode<D> &>(*nodeVec[n]);

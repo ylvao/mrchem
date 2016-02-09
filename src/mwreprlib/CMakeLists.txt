@@ -36,10 +36,6 @@ set(mwrepr_SOURCES
             LegendreBasis.h
             InterpolatingBasis.cpp
             InterpolatingBasis.h
-            MRTree.cpp
-            MRTree.h
-            MRNode.cpp
-            MRNode.h
             MWTree.cpp
             MWTree.h
             MWNode.cpp

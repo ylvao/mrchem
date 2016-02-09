@@ -1,14 +1,14 @@
 #ifndef LEBESGUEITERATOR_H
 #define LEBESGUEITERATOR_H
 
-#include "MRTree.h"
-#include "MRNode.h"
+#include "MWTree.h"
+#include "MWNode.h"
 #include "TreeIterator.h"
 
 template<int D>
 class LebesgueIterator: public TreeIterator<D> {
 public:
-    LebesgueIterator(MRTree<D> *tree, int dir = TopDown):
+    LebesgueIterator(MWTree<D> *tree, int dir = TopDown):
         TreeIterator<D>(dir) {
         this->init(tree);
     }
