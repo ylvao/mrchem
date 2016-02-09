@@ -138,8 +138,8 @@ public:
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);
 
-    friend class AnalyticCalculator<D>;
     friend class MWTree<D>;
+    friend class AnalyticCalculator<D>;
 
 protected:
     MWTree<D> *tree;
