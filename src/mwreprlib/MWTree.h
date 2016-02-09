@@ -20,6 +20,8 @@
 #include "NodeBox.h"
 #include "MWNode.h"
 #include "MultiResolutionAnalysis.h"
+template <int D> class MWTree_S;
+template <int D> class FunctionTree_S;
 
 #ifdef OPENMP
 #define SET_TREE_LOCK() omp_set_lock(&this->tree_lock)
@@ -117,6 +119,8 @@ public:
     friend class MWNode<D>;
     friend class TreeBuilder<D>;
     friend class AnalyticCalculator<D>;
+    friend class MWTree_S<D>;
+    friend class FunctionTree_S<D>;
 
 protected:
     // Parameters that are set in construction and should never change

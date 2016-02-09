@@ -38,10 +38,14 @@ set(mwrepr_SOURCES
             InterpolatingBasis.h
             MWTree.cpp
             MWTree.h
+            MWTree_S.cpp
+            MWTree_S.h
             MWNode.cpp
             MWNode.h
             FunctionTree.cpp
             FunctionTree.h
+            FunctionTree_S.cpp
+            FunctionTree_S.h
             FunctionNode.cpp
             FunctionNode.h
             ProjectedNode.cpp
