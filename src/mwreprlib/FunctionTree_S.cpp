@@ -27,27 +27,28 @@ FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int max
           sizeTreeMeta(0),
           sizeNode(0) {
     //The first part of the Tree is filled with metadata; reserved size:
-    sizeTreeMeta = (sizeof(FunctionTree<D>)+7)/sizeof(double);
+    this->sizeTreeMeta = (sizeof(FunctionTree<D>)+7)/sizeof(double);
     //The dynamical part of the tree is filled with nodes of size:
-    sizeNode = (sizeof(ProjectedNode<D>)+7)/sizeof(double);
+    this->sizeNode = (sizeof(ProjectedNode<D>)+7)/sizeof(double);
     cout<<"SizeNode "<<sizeof(ProjectedNode<D>)<<endl;
 
     //Tree is defined as array of doubles, because C++ does not like void malloc
     this->tree_S_array = new double[this->sizeTreeMeta + maxNumberOfNodes*this->sizeNode];
-    this->lastNode = (ProjectedNode<D>*) (this->tree_S_array + this->sizeTreeMeta + this->nNodes*this->sizeNode);
+    this->lastNode = (ProjectedNode<D>*) (this->tree_S_array + this->sizeTreeMeta);
 
     this->mwTree_p = new (this->tree_S_array) MWTree<D>(mra);//put a MWTree at start of array
     //this->funcTree_p = new FunctionTree<D>(mra);//put a MWTree at start of array
 
-    //this->lastNode = allocNodes(this->mwTree_p->getRootBox().size());
+    ProjectedNode<D> *node_p = allocNodes(this->mwTree_p->getRootBox().size());
 
-    //for (int rIdx = 0; rIdx < this->mwTree_p->getRootBox().size(); rIdx++) {
-        //const NodeIndex<D> &nIdx = this->mwTree_p->getRootBox().getNodeIndex(rIdx);
-        //MWNode<D> *fNode  = new (this->lastNode) ProjectedNode<D>(getTree(), nIdx);
-        //this->mwTree_p->getRootBox().setNode(rIdx, &fNode);
-        //this->lastNode++;
-    //}
-    //this->mwTree_p->resetEndNodeTable();
+    NodeBox<D> &rBox = this->mwTree_p->getRootBox();
+    MWNode<D> **roots = rBox.getNodes();
+    for (int rIdx = 0; rIdx < rBox.size(); rIdx++) {
+        const NodeIndex<D> &nIdx = rBox.getNodeIndex(rIdx);
+        roots[rIdx] = new ProjectedNode<D>(getTree(), nIdx);
+        node_p++;
+    }
+    this->mwTree_p->resetEndNodeTable();
 }
 
 //return pointer to the last active node or NULL if failed
@@ -59,13 +60,19 @@ ProjectedNode<D>* FunctionTree_S<D>::allocNodes(int nAlloc) {
         return 0;
     } else {
         this->lastNode += nAlloc*this->sizeNode;
-        cout<<"new size "<<this->nNodes<<endl;
-        return this->lastNode-nAlloc*this->sizeNode;
+        cout << "new size " << this->nNodes << endl;
+        return this->lastNode - nAlloc*this->sizeNode;
     }
 }
 /** FunctionTree_S destructor. */
 template<int D>
 FunctionTree_S<D>::~FunctionTree_S() {
+    MWNode<D> **roots = this->mwTree_p->getRootBox().getNodes();
+    for (int i = 0; i < this->mwTree_p->getRootBox().size(); i++) {
+        ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(roots[i]);
+        node->~ProjectedNode();
+        roots[i] = 0;
+    }
     this->mwTree_p->~MWTree();
     delete[] this->tree_S_array;
 }
