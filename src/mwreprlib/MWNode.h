@@ -144,7 +144,7 @@ public:
 protected:
     MWTree<D> *tree;
     MWNode<D> *parent;	    ///< Parent node
-    MWNode<D> **children;    ///< 2^D children
+    MWNode<D> *children[1<<D];    ///< 2^D children
 
     NodeIndex<D> nodeIndex;
     const HilbertPath<D> hilbertPath;
@@ -167,7 +167,7 @@ protected:
     bool crop(double prec, NodeIndexSet *cropIdx = 0);
     void reCompress(bool overwrite = true);
 
-    void allocKindergarten();
+    //void allocKindergarten();
 
     virtual void copyChildren(const MWNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
     virtual void createChildren();

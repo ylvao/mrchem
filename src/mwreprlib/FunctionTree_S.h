@@ -26,6 +26,8 @@ public:
 
     FunctionTree<D> &getTree() { return static_cast<FunctionTree<D> &>(*this->mwTree_p); }
 
+    ProjectedNode<D>* allocNodes(int Nalloc);
+
 protected:
     int sizeTreeMeta; //The first part of the Tree is filled with metadata; reserved size:
     int sizeNode;     //The dynamical part of the tree is filled with nodes of size:
@@ -37,7 +39,6 @@ protected:
     MWTree<D>* mwTree_p;
     ProjectedNode<D>* lastNode;//pointer to the last active node
 
-    ProjectedNode<D>* allocNodes(int Nalloc);
 };
 
 #endif /* FUNCTIONTREE_S_H_*/

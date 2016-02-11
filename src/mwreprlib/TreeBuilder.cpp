@@ -51,14 +51,14 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
     while (workVec->size() > 0) {
         printout(10, "  -- #" << setw(3) << iter << ": Calculated   ");
         workVec = clearForeignNodes(workVec);
-        this->calculator->calcNodeVector(*workVec);
+        this->calculator->calcNodeVector(*workVec);//set all coefficients 
         tree.calcSquareNorm(workVec);
         if (maxIterReached(iter)) break;
         splitVec = this->adaptor->splitNodeVector(*workVec, endVec);
         splitSet = getNodeIndexSet(*splitVec);
         broadcast_index_list<D>(*splitSet);
         workVec->clear();
-        tree.splitNodes(*splitSet, workVec);
+        tree.splitNodes(*splitSet, workVec);//allocate new nodes
         delete splitSet;
         delete splitVec;
         iter++;

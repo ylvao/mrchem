@@ -19,7 +19,6 @@ template<int D>
 MWNode<D>::MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx)
         : tree(&t),
           parent(0),
-          children(0),
           nodeIndex(nIdx),
           hilbertPath(),
           squareNorm(-1.0),
@@ -29,6 +28,9 @@ MWNode<D>::MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx)
     setIsLeafNode();
     setIsRootNode();
     clearNorms();
+    for (int i = 0; i < getTDim(); i++) {
+      this->children[i] = 0;
+    }
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
@@ -40,7 +42,6 @@ template<int D>
 MWNode<D>::MWNode(MWNode<D> &p, int cIdx)
         : tree(p.tree),
           parent(&p),
-          children(0),
           nodeIndex(p.getNodeIndex(), cIdx),
           hilbertPath(p.getHilbertPath(), cIdx),
           squareNorm(-1.0),
@@ -49,6 +50,9 @@ MWNode<D>::MWNode(MWNode<D> &p, int cIdx)
     this->tree->incrementNodeCount(getScale());
     setIsLeafNode();
     clearNorms();
+    for (int i = 0; i < getTDim(); i++) {
+      this->children[i] = 0;
+    }
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
@@ -58,7 +62,6 @@ template<int D>
 MWNode<D>::MWNode(const MWNode<D> &n)
         : tree(n.tree),
           parent(0),
-          children(0),
           nodeIndex(n.getNodeIndex()),
           hilbertPath(n.getHilbertPath()),
           squareNorm(-1.0),
@@ -67,6 +70,9 @@ MWNode<D>::MWNode(const MWNode<D> &n)
     this->tree->incrementNodeCount(getScale());
     clearNorms();
     setIsLeafNode();
+    for (int i = 0; i < getTDim(); i++) {
+      this->children[i] = 0;
+    }
 #ifdef OPENMP
     omp_init_lock(&node_lock);
 #endif
@@ -469,7 +475,7 @@ mpi::request MWNode<D>::ireceiveCoefs(int who, int tag, int comp) {
 //#endif
 }
 
-template<int D>
+/*template<int D>
 void MWNode<D>::allocKindergarten() {
     assert(this->children == 0);
     int nChildren = getTDim();
@@ -477,13 +483,13 @@ void MWNode<D>::allocKindergarten() {
     for (int cIdx = 0; cIdx < nChildren; cIdx++) {
         this->children[cIdx] = 0;
     }
-}
+    }*/
 
 template<int D>
 void MWNode<D>::createChildren() {
-    if (this->children == 0) {
+  /*    if (this->children == 0) {
         this->allocKindergarten();
-    }
+	}*/
     for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
         createChild(cIdx);
     }
@@ -494,25 +500,22 @@ void MWNode<D>::createChildren() {
   * Leaves node as LeafNode and children[] as null pointer. */
 template<int D>
 void MWNode<D>::deleteChildren() {
-    if (this->children == 0) {
-        return;
-    }
     for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
         if (this->children[cIdx] != 0) {
-            delete this->children[cIdx];
-            this->children[cIdx] = 0;
+	  ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(this->children[cIdx]);
+	  node->~ProjectedNode();
+	  //this->children[cIdx]->~ProjectedNode();
+	  this->children[cIdx] = 0;
         }
     }
-    delete[] this->children;
-    this->children = 0;
     this->setIsLeafNode();
 }
 
 template<int D>
 void MWNode<D>::genChildren() {
-    if (this->children == 0) {
+  /*if (this->children == 0) {
         this->allocKindergarten();
-    }
+	}*/
     int nChildren = this->getTDim();
     for (int cIdx = 0; cIdx < nChildren; cIdx++) {
         genChild(cIdx);

@@ -108,6 +108,8 @@ public:
     void checkGridOverlap(MWTree<D> &tree);
     void checkRankOverlap(MWTree<D> &tree);
 
+    FunctionTree_S<D> * tree_S;
+
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
 

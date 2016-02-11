@@ -49,6 +49,7 @@ FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int max
         node_p++;
     }
     this->mwTree_p->resetEndNodeTable();
+    this->mwTree_p->tree_S = this;
 }
 
 //return pointer to the last active node or NULL if failed
@@ -59,9 +60,9 @@ ProjectedNode<D>* FunctionTree_S<D>::allocNodes(int nAlloc) {
         this->nNodes -= nAlloc;
         return 0;
     } else {
-        this->lastNode += nAlloc*this->sizeNode;
+        this->lastNode += nAlloc;
         cout << "new size " << this->nNodes << endl;
-        return this->lastNode - nAlloc*this->sizeNode;
+        return this->lastNode - nAlloc;
     }
 }
 /** FunctionTree_S destructor. */

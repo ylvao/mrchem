@@ -25,7 +25,8 @@ MWTree<D>::MWTree(const MultiResolutionAnalysis<D> &mra)
           kp1_d(MathUtils::ipow(mra.getOrder() + 1, D)),
           squareNorm(-1.0),
           name("nn"),
-          nNodes(0) {
+          nNodes(0),
+          tree_S(NULL){
     this->nodesAtDepth.push_back(0);
     allocNodeCounters();
     allocWorkMemory();
@@ -46,7 +47,8 @@ MWTree<D>::MWTree(const MWTree<D> &tree)
           kp1_d(tree.kp1_d),
           squareNorm(-1.0),
           name("nn"),
-          nNodes(0) {
+          nNodes(0),
+          tree_S(NULL) {
     this->nodesAtDepth.push_back(0);
     allocNodeCounters();
     allocWorkMemory();
