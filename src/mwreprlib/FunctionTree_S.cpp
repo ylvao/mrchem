@@ -45,7 +45,7 @@ FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int max
     MWNode<D> **roots = rBox.getNodes();
     for (int rIdx = 0; rIdx < rBox.size(); rIdx++) {
         const NodeIndex<D> &nIdx = rBox.getNodeIndex(rIdx);
-        roots[rIdx] = new ProjectedNode<D>(getTree(), nIdx);
+        roots[rIdx] = new (node_p) ProjectedNode<D>(getTree(), nIdx);
         node_p++;
     }
     this->mwTree_p->resetEndNodeTable();
