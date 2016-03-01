@@ -7,7 +7,7 @@ Welcome to MRChem's documentation!
 ==================================
 
    Based on the original MRChem program by Luca Frediani and
-   Eirik Fossgård, with contributions from Stig-Rune Jensen,
+   Eirik Fossgaard, with contributions from Stig-Rune Jensen,
    Peter Wind and Jonas Juselius
 
 
@@ -16,6 +16,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   userguide
+   installation
 
 
 Indices and tables
