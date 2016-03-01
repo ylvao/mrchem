@@ -1,10 +1,4 @@
-/**
- *  \date Oct 12, 2009
- *  \author Jonas Juselius <jonas.juselius@uit.no> \n
- *          CTCC, University of Tromsø
- */
-
-#include "FunctionTree_S.h"
+#include "TreeAllocator.h"
 #include "MWNode.h"
 #include "MWTree.h"
 #include "FunctionTree.h"
@@ -18,7 +12,7 @@ using namespace Eigen;
   * Allocate the root FunctionNodes and fill in the empty slots of rootBox.
   * Initializes rootNodes to represent the zero function. */
 template<int D>
-FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int maxNumberOfNodes)
+TreeAllocator<D>::TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNumberOfNodes)
         : nNodes(0),
           lastNode(0),
           mwTree_p(0),
@@ -49,12 +43,12 @@ FunctionTree_S<D>::FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int max
         node_p++;
     }
     this->mwTree_p->resetEndNodeTable();
-    this->mwTree_p->tree_S = this;
+    this->mwTree_p->allocator = this;
 }
 
 //return pointer to the last active node or NULL if failed
 template<int D>
-ProjectedNode<D>* FunctionTree_S<D>::allocNodes(int nAlloc) {
+ProjectedNode<D>* TreeAllocator<D>::allocNodes(int nAlloc) {
     this->nNodes += nAlloc;
     if (this->nNodes > this->maxNodes){
         this->nNodes -= nAlloc;
@@ -65,9 +59,9 @@ ProjectedNode<D>* FunctionTree_S<D>::allocNodes(int nAlloc) {
         return this->lastNode - nAlloc;
     }
 }
-/** FunctionTree_S destructor. */
+/** TreeAllocator destructor. */
 template<int D>
-FunctionTree_S<D>::~FunctionTree_S() {
+TreeAllocator<D>::~TreeAllocator() {
     MWNode<D> **roots = this->mwTree_p->getRootBox().getNodes();
     for (int i = 0; i < this->mwTree_p->getRootBox().size(); i++) {
         ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(roots[i]);
@@ -78,6 +72,6 @@ FunctionTree_S<D>::~FunctionTree_S() {
     delete[] this->tree_S_array;
 }
 
-template class FunctionTree_S<1> ;
-template class FunctionTree_S<2> ;
-template class FunctionTree_S<3> ;
+template class TreeAllocator<1> ;
+template class TreeAllocator<2> ;
+template class TreeAllocator<3> ;

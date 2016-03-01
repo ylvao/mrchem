@@ -10,7 +10,7 @@
 
 #include "ProjectedNode.h"
 #include "GenNode.h"
-#include "FunctionTree_S.h"
+#include "TreeAllocator.h"
 
 #ifdef HAVE_BLAS
 extern "C" {
@@ -99,10 +99,10 @@ void ProjectedNode<D>::createChild(int cIdx) {
     assert(this->children != 0);
     assert(this->children[cIdx] == 0);
     ProjectedNode<D> *child;
-    if(this->tree->tree_S == 0){
+    if(this->tree->allocator == 0){
       child = new ProjectedNode<D>(*this, cIdx);
     }else{
-            child = new (this->tree->tree_S->allocNodes(1))ProjectedNode<D>(*this, cIdx);
+            child = new (this->tree->allocator->allocNodes(1))ProjectedNode<D>(*this, cIdx);
      // child = new ProjectedNode<D>(*this, cIdx);
     }
     this->children[cIdx] = child;

@@ -19,10 +19,10 @@ template<int D> class FunctionTree;
 template<int D> class FunctionNode;
 
 template<int D>
-class FunctionTree_S  {
+class TreeAllocator  {
 public:
-    FunctionTree_S(const MultiResolutionAnalysis<D> &mra, int maxNumberOfNodes);
-    virtual ~FunctionTree_S();
+    TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNumberOfNodes);
+    virtual ~TreeAllocator();
 
     FunctionTree<D> &getTree() { return static_cast<FunctionTree<D> &>(*this->mwTree_p); }
 

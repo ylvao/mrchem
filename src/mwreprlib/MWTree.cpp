@@ -26,7 +26,7 @@ MWTree<D>::MWTree(const MultiResolutionAnalysis<D> &mra)
           squareNorm(-1.0),
           name("nn"),
           nNodes(0),
-          tree_S(NULL){
+          allocator(0){
     this->nodesAtDepth.push_back(0);
     allocNodeCounters();
     allocWorkMemory();
@@ -48,7 +48,7 @@ MWTree<D>::MWTree(const MWTree<D> &tree)
           squareNorm(-1.0),
           name("nn"),
           nNodes(0),
-          tree_S(NULL) {
+          allocator(0) {
     this->nodesAtDepth.push_back(0);
     allocNodeCounters();
     allocWorkMemory();

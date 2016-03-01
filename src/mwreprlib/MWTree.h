@@ -20,7 +20,7 @@
 #include "NodeBox.h"
 #include "MWNode.h"
 #include "MultiResolutionAnalysis.h"
-template <int D> class FunctionTree_S;
+template <int D> class TreeAllocator;
 
 #ifdef OPENMP
 #define SET_TREE_LOCK() omp_set_lock(&this->tree_lock)
@@ -105,7 +105,7 @@ public:
     void checkGridOverlap(MWTree<D> &tree);
     void checkRankOverlap(MWTree<D> &tree);
 
-    FunctionTree_S<D> * tree_S;
+    TreeAllocator<D> *allocator;
 
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
@@ -113,8 +113,9 @@ public:
     friend class MWNode<D>;
     friend class GenNode<D>;
     friend class TreeBuilder<D>;
+    friend class TreeAllocator<D>;
     friend class AnalyticCalculator<D>;
-    friend class FunctionTree_S<D>;
+    friend class TreeAllocator<D>;
 
 protected:
     // Parameters that are set in construction and should never change

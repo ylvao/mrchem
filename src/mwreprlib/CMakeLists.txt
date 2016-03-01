@@ -42,8 +42,8 @@ set(mwrepr_SOURCES
             MWNode.h
             FunctionTree.cpp
             FunctionTree.h
-            FunctionTree_S.cpp
-            FunctionTree_S.h
+            TreeAllocator.cpp
+            TreeAllocator.h
             FunctionNode.cpp
             FunctionNode.h
             ProjectedNode.cpp
