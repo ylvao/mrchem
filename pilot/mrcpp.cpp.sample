@@ -23,7 +23,8 @@
 #include "MultiResolutionAnalysis.h"
 #include "InterpolatingBasis.h"
 #include "FunctionTree.h"
-#include "FunctionProjector.h"
+#include "FunctionTree_S.h"
+#include "MWProjector.h"
 #include "GridGenerator.h"
 #include "WaveletAdaptor.h"
 
@@ -33,8 +34,8 @@
 using namespace std;
 using namespace Eigen;
 
-void testTrees();
 void testProjection();
+void testTrees();
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
@@ -80,16 +81,65 @@ void testTrees() {
     MultiResolutionAnalysis<2> MRA_2D(world_2D, basis);
     MultiResolutionAnalysis<3> MRA_3D(world_3D, basis);
 
-    FunctionTree<1> *tree_1D = new FunctionTree<1>(MRA_1D);
+    // Setting up GridGenerators
+    GridGenerator<1> G_1D(MRA_1D);
+    GridGenerator<2> G_2D(MRA_2D);
+    GridGenerator<3> G_3D(MRA_3D);
+
+    // Constructing uninizialized trees
+    FunctionTree<1> *tree_1D = G_1D();
+    FunctionTree<2> *tree_2D = G_2D();
+    FunctionTree<3> *tree_3D = G_3D();
+
+    // Deleting uninizialized trees
     delete tree_1D;
-
-    FunctionTree<2> *tree_2D = new FunctionTree<2>(MRA_2D);
     delete tree_2D;
-
-    FunctionTree<3> *tree_3D = new FunctionTree<3>(MRA_3D);
     delete tree_3D;
 }
 
+/*
+void testMPI() {
+    // Constructing world box
+    int n = -4;
+    int l[3] = {0,0,0};
+    int nb[3] = {1,1,1};
+    double o[3] = {0.0,0.0,0.0};
+    NodeIndex<3> idx(n, l);
+    BoundingBox<3> world(idx, nb, o);
+    println(0, world);
+
+    // Setting up grid generator
+    GridGenerator<3> generator(-1);
+
+    // Constructing initial grid
+    int k = 3;
+    MRGrid<3> grid(world, k);
+    generator.generateGrid(grid);
+    grid.distributeNodes(3);
+    grid.printNodeRankCount();
+
+    // Setting up MW projection
+    double prec = 1.0e-5;
+    MWAdaptor<3> adaptor(prec);
+    FunctionProjector<3> P(adaptor, -1);
+
+    double alpha = 10.0;
+    double coef = pow(alpha/pi, 3.0/2.0);
+    double pos[3] = {8.0, 8.0, 8.0};
+    GaussFunc<3> gFunc(alpha, coef, pos);
+
+    FunctionTree<3> tree(grid);
+    tree.printNodeRankCount();
+    P(tree, gFunc);
+    tree.printNodeRankCount();
+
+    double int_1 = tree.integrate();
+    double err_1 = tree.estimateError(false);
+    println(0, endl);
+    println(0, "Gaussian integral " << int_1);
+    println(0, "Estimated error   " << err_1);
+}
+*/
 
 void testProjection() {
     // Constructing world box
@@ -111,22 +161,90 @@ void testProjection() {
     int pow[3] = {0, 0, 0};
     GaussFunc<3> f_func(beta, alpha, pos, pow);
 
-    // Initializing tree
-    FunctionTree<3> f_tree(MRA);
-
     // Setting up adaptor
-    double prec = 1.0e-5;
+    double prec = 1.0e-3;
     WaveletAdaptor<3> w_adaptor(prec);
 
     // Setting up projector
-    FunctionProjector<3> P(w_adaptor);
-    P(f_tree, f_func);
+    MWProjector<3> Q(MRA, w_adaptor);
+    FunctionTree<3> *f_tree = Q(f_func);
 
-    double integral = f_tree.integrate();
-    double sq_norm = f_tree.getSquareNorm();
+    double integral = f_tree->integrate();
+    double sq_norm = f_tree->getSquareNorm();
 
     println(0, endl);
     println(0, "Integral     " << integral);
     println(0, "Square norm  " << sq_norm);
+
+    delete f_tree;
 }
 
+/*
+void testPureGrid() {
+    // Setting up molecular density expansion
+    Molecule molecule("diamond_1.xyz");
+    molecule.print();
+
+    Intgrl intgrl("diamond_1.bas");
+    MatrixXd D = MathUtils::readMatrixFile("diamond_1.dens");
+    DensExp densExp(intgrl, D);
+
+    GaussExp<3> gaussDens = densExp.getAODensExpansion();
+    gaussDens.calcScreening(25);
+    gaussDens.setScreen(true);
+
+    // Setting up world parameters
+    int n = -4;
+    int l[3] = {-1,-1,-1};
+    int nb[3] = {2,2,2};
+    double o[3] = {0.0,0.0,0.0};
+    NodeIndex<3> idx(n, l);
+
+    // Constructing world box
+    BoundingBox<3> world(idx, nb, o);
+    println(0, world);
+
+    // Setting up grid generator
+    MolecularGridGenerator generator;
+    generator.setUniformScale(-3);
+    generator.setDepth(1);
+    generator.setWidth(2);
+    generator.setNuclearDependence(0);
+
+    // Constructing initial grid
+    int k = 3;
+    MRGrid<3> grid(world, k);
+    generator.generateGrid(grid, molecule);
+    println(0, grid);
+
+    //setting up quadrature data
+    MatrixXd points;
+    VectorXd weights;
+    grid.getQuadPoints(points);
+    grid.getQuadWeights(weights);
+
+    int nPoints = weights.size();
+    VectorXd values = VectorXd::Zero(weights.size());
+
+    for (int n = 0; n < nPoints; n++) {
+        double r[3] = { points(n,0), points(n,1), points(n,2) };
+        values(n) = gaussDens.evalf(r);
+    }
+
+    bool absPrec = true;
+    double charge = (double) molecule.getNElectrons();
+    double quadCharge = weights.dot(values);
+    double quadError = quadCharge - charge;
+    if (not absPrec) {
+        quadError *= 1.0/charge;
+    }
+
+    println(0, grid);
+    println(0, "Quadrature points       " << points.rows() << " x " << points.cols());
+    println(0, "Quadrature weights      " << weights.size());
+    println(0, "Quadrature values       " << values.size() << endl);
+    println(0, "Analytic charge         " << setw(25) << charge);
+    println(0, "Integrated charge       " << setw(25) << quadCharge);
+    println(0, "Integrated charge error " << setw(25) << quadError << endl);
+}
+*/
