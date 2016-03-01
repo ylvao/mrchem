@@ -4,11 +4,11 @@
 #include "TreeCalculator.h"
 
 template<int D>
-class AnalyticCalculator : public TreeCalculator<D> {
+class ProjectionCalculator : public TreeCalculator<D> {
 public:
-    AnalyticCalculator(RepresentableFunction<D> &inp_func)
+    ProjectionCalculator(RepresentableFunction<D> &inp_func)
             : func(&inp_func) { }
-    virtual ~AnalyticCalculator() { }
+    virtual ~ProjectionCalculator() { }
 
 protected:
     RepresentableFunction<D> *func;

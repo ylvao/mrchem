@@ -66,8 +66,8 @@ set(mwrepr_SOURCES
             WaveletAdaptor.cpp
             WaveletAdaptor.h
             TreeCalculator.h
-            AnalyticCalculator.cpp
-            AnalyticCalculator.h
+            ProjectionCalculator.cpp
+            ProjectionCalculator.h
         )
 
 add_library(mwrepr STATIC ${mwrepr_SOURCES})

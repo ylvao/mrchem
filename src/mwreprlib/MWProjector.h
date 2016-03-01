@@ -2,7 +2,7 @@
 #define MWPROJECTOR_H
 
 #include "TreeBuilder.h"
-#include "AnalyticCalculator.h"
+#include "ProjectionCalculator.h"
 #include "FunctionTree.h"
 
 template<int D>
@@ -28,7 +28,7 @@ public:
     }
 
     void operator()(FunctionTree<D> &out, RepresentableFunction<D> &inp) {
-        this->calculator = new AnalyticCalculator<D>(inp);
+        this->calculator = new ProjectionCalculator<D>(inp);
         this->build(out);
         out.mwTransform(BottomUp);
         this->clearCalculator();
