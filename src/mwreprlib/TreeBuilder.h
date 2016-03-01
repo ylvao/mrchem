@@ -6,7 +6,7 @@
 template<int D>
 class TreeBuilder {
 public:
-    TreeBuilder(int iter);
+    TreeBuilder(const MultiResolutionAnalysis<D> &mra, int iter);
     virtual ~TreeBuilder();
 
     void setMaxIter(int iter) { this->maxIter = iter; }
@@ -15,6 +15,7 @@ protected:
     int maxIter;
     TreeAdaptor<D> *adaptor;
     TreeCalculator<D> *calculator;
+    const MultiResolutionAnalysis<D> MRA;
 
     void clearCalculator();
     void clearAdaptor();

@@ -35,10 +35,7 @@ template <int D> class FunctionTree_S;
 template<int D>
 class MWTree {
 public:
-    MWTree(const MultiResolutionAnalysis<D> &mra);
-    MWTree(const MWTree<D> &tree);
     virtual ~MWTree();
-
     void setZero();
 
     double estimateError(bool absPrec);
@@ -147,6 +144,10 @@ protected:
     Eigen::MatrixXd **tmpCoefs;   ///< temp memory
     Eigen::VectorXd **tmpVector;  ///< temp memory
     Eigen::VectorXd **tmpMWCoefs; ///< temp memory
+
+    // Constructors are protected, use TreeBuilders
+    MWTree(const MultiResolutionAnalysis<D> &mra);
+    MWTree(const MWTree<D> &tree);
 
     void allocWorkMemory();
     void freeWorkMemory();

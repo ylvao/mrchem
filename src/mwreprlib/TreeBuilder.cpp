@@ -7,9 +7,10 @@
 using namespace std;
 
 template<int D>
-TreeBuilder<D>::TreeBuilder(int iter)
+TreeBuilder<D>::TreeBuilder(const MultiResolutionAnalysis<D> &mra, int iter)
         : adaptor(0),
           calculator(0),
+          MRA(mra),
           maxIter(iter) {
 }
 
@@ -51,7 +52,7 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
     while (workVec->size() > 0) {
         printout(10, "  -- #" << setw(3) << iter << ": Calculated   ");
         workVec = clearForeignNodes(workVec);
-        this->calculator->calcNodeVector(*workVec);//set all coefficients 
+        this->calculator->calcNodeVector(*workVec);//set all coefficients
         tree.calcSquareNorm(workVec);
         if (maxIterReached(iter)) break;
         splitVec = this->adaptor->splitNodeVector(*workVec, endVec);

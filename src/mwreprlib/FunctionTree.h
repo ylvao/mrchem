@@ -18,10 +18,6 @@
 template<int D>
 class FunctionTree: public MWTree<D>, public RepresentableFunction<D> {
 public:
-    FunctionTree(const MultiResolutionAnalysis<D> &mra);
-    FunctionTree(const MWTree<D> &tree);
-    FunctionTree(const FunctionTree<D> &tree);
-    FunctionTree<D> &operator=(const FunctionTree<D> &tree);
     virtual ~FunctionTree();
 
     void clear();
@@ -53,6 +49,16 @@ public:
 
     template<int T>
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
+
+    friend class GridGenerator<D>;
+    friend class GridCleaner<D>;
+    friend class MWProjector<D>;
+
+protected:
+    FunctionTree(const MultiResolutionAnalysis<D> &mra);
+    FunctionTree(const MWTree<D> &tree);
+    FunctionTree(const FunctionTree<D> &tree);
+    FunctionTree<D> &operator=(const FunctionTree<D> &tree);
 
 private:
     friend class boost::serialization::access;

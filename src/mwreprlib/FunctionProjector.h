@@ -1,23 +1,30 @@
-#ifndef FUNCTIONPROJECTOR_H
-#define FUNCTIONPROJECTOR_H
+#ifndef MWPROJECTOR_H
+#define MWPROJECTOR_H
 
 #include "TreeBuilder.h"
 #include "AnalyticCalculator.h"
 #include "FunctionTree.h"
 
 template<int D>
-class FunctionProjector : public TreeBuilder<D> {
+class MWProjector : public TreeBuilder<D> {
 public:
-    FunctionProjector()
-            : TreeBuilder<D>(-1) {
+    MWProjector(const MultiResolutionAnalysis<D> &mra)
+            : TreeBuilder<D>(mra, -1) {
         this->adaptor = new TreeAdaptor<D>();
     }
-    FunctionProjector(const TreeAdaptor<D> &a, int iter = -1)
-            : TreeBuilder<D>(iter) {
+    MWProjector(const MultiResolutionAnalysis<D> &mra,
+                const TreeAdaptor<D> &a, int iter = -1)
+            : TreeBuilder<D>(mra, iter) {
        this->adaptor = a.copy();
     }
-    virtual ~FunctionProjector() {
+    virtual ~MWProjector() {
         this->clearAdaptor();
+    }
+
+    FunctionTree<D> *operator()(RepresentableFunction<D> &inp) {
+        FunctionTree<D> *out = new FunctionTree<D>(this->MRA);
+        (*this)(*out, inp);
+        return out;
     }
 
     void operator()(FunctionTree<D> &out, RepresentableFunction<D> &inp) {
@@ -28,4 +35,4 @@ public:
     }
 };
 
-#endif // FUNCTIONPROJECTOR_H
+#endif // MWPROJECTOR_H
