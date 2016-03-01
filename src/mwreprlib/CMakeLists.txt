@@ -60,7 +60,7 @@ set(mwrepr_SOURCES
             GaussExp.h
             TreeBuilder.cpp
             TreeBuilder.h
-            FunctionProjector.h
+            MWProjector.h
             GridGenerator.h
             TreeAdaptor.h
             WaveletAdaptor.cpp
