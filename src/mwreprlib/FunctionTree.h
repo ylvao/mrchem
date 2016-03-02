@@ -51,7 +51,10 @@ public:
     friend std::ostream& operator <<(std::ostream &o, FunctionTree<T> &tree);
 
     friend class GridGenerator<D>;
+    friend class GridCleaner<D>;
     friend class MWProjector<D>;
+    friend class MWAdder<D>;
+    friend class MWMultiplier<D>;
 
 protected:
     FunctionTree(const MultiResolutionAnalysis<D> &mra);

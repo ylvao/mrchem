@@ -61,8 +61,12 @@ set(mwrepr_SOURCES
             TreeBuilder.cpp
             TreeBuilder.h
             MWProjector.h
+            MWAdder.h
+            MWMultiplier.h
+            GridCleaner.h
             GridGenerator.h
             TreeAdaptor.h
+            CopyAdaptor.h
             WaveletAdaptor.cpp
             WaveletAdaptor.h
             TreeCalculator.h
