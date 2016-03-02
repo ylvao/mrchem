@@ -2,7 +2,9 @@
 #define GRIDGENERATOR_H
 
 #include "TreeBuilder.h"
+#include "TreeCalculator.h"
 #include "AnalyticAdaptor.h"
+#include "CopyAdaptor.h"
 
 template<int D>
 class GridGenerator : public TreeBuilder<D> {

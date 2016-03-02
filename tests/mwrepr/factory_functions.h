@@ -7,6 +7,7 @@
 #include "InterpolatingBasis.h"
 #include "LegendreBasis.h"
 #include "FunctionTree.h"
+#include "GridGenerator.h"
 
 template<class T> void finalize(T **obj) {
     if (obj == 0) MSG_FATAL("Invalid argument");
@@ -94,7 +95,8 @@ template<int D> void initialize(FunctionTree<D> **tree) {
     InterpolatingBasis basis(k);
 
     MultiResolutionAnalysis<D> mra(*world, basis);
-    *tree = new FunctionTree<D>(mra);
+    GridGenerator<D> G(mra);
+    *tree = G();
 
     finalize(&world);
 }
