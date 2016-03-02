@@ -23,7 +23,6 @@
 #include "MultiResolutionAnalysis.h"
 #include "InterpolatingBasis.h"
 #include "FunctionTree.h"
-#include "FunctionTree_S.h"
 #include "MWProjector.h"
 #include "GridGenerator.h"
 #include "WaveletAdaptor.h"
@@ -67,21 +66,21 @@ void testTrees() {
     InterpolatingBasis basis(k);
 
     {   //Testing 1D
-        //NodeIndex<1> idx(n, l);
-        //BoundingBox<1> world(idx, nb);
-        //MultiResolutionAnalysis<1> MRA(world, basis);
-        //GridGenerator<1> G(MRA);
-        //FunctionTree<1> *tree = G();
-        //delete tree;
+        NodeIndex<1> idx(n, l);
+        BoundingBox<1> world(idx, nb);
+        MultiResolutionAnalysis<1> MRA(world, basis);
+        GridGenerator<1> G(MRA);
+        FunctionTree<1> *tree = G();
+        delete tree;
     }
 
     {   //Testing 2D
-        //NodeIndex<2> idx(n, l);
-        //BoundingBox<2> world(idx, nb);
-        //MultiResolutionAnalysis<2> MRA(world, basis);
-        //GridGenerator<2> G(MRA);
-        //FunctionTree<2> *tree = G();
-        //delete tree;
+        NodeIndex<2> idx(n, l);
+        BoundingBox<2> world(idx, nb);
+        MultiResolutionAnalysis<2> MRA(world, basis);
+        GridGenerator<2> G(MRA);
+        FunctionTree<2> *tree = G();
+        delete tree;
     }
 
     
@@ -134,9 +133,4 @@ void testProjection() {
 
     delete f_tree;
 }
-
-    // Initializing tree
-    //FunctionTree<3> f_tree(MRA);
-    //FunctionTree_S<3> f_tree_s(MRA, 1024);
-    //FunctionTree<3> &f_tree = f_tree_s.getTree();
 
