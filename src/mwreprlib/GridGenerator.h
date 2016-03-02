@@ -2,6 +2,7 @@
 #define GRIDGENERATOR_H
 
 #include "TreeBuilder.h"
+#include "AnalyticAdaptor.h"
 
 template<int D>
 class GridGenerator : public TreeBuilder<D> {
@@ -31,15 +32,15 @@ public:
     }
 
     void operator()(FunctionTree<D> &out, const RepresentableFunction<D> &inp) {
-        NOT_IMPLEMENTED_ABORT;
-//        this->adaptor = new AnalyticAdaptor<D>(inp);
-//        this->clearAdaptor();
+        this->adaptor = new AnalyticAdaptor<D>(inp);
+        this->build(out);
+        this->clearAdaptor();
     }
 
     void operator()(FunctionTree<D> &out, const FunctionTree<D> &inp) {
-        NOT_IMPLEMENTED_ABORT;
-//        this->adaptor = new CopyAdaptor<D>(inp);
-//        this->clearAdaptor();
+        this->adaptor = new CopyAdaptor<D>(inp);
+        this->build(out);
+        this->clearAdaptor();
     }
 };
 

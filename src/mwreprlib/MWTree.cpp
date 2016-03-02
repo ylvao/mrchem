@@ -610,18 +610,14 @@ void MWTree<D>::findMissingChildren(
   * Returns one nodeVector for the whole tree. GenNodes disregarded. */
 template<int D>
 void MWTree<D>::makeNodeTable(MWNodeVector &nodeTable) {
-    NOT_IMPLEMENTED_ABORT;
-//    HilbertIterator<D> it(this);
-//    while (it.next()) {
-//        MWNode<D> &node = it.getNode();
-//        if (node.isGenNode()) {
-//            continue;
-//        }
-//        if (not root and node.isRoot()) {
-//            continue;
-//        }
-//        nodeTable.push_back(&node);
-//    }
+    HilbertIterator<D> it(this);
+    while (it.next()) {
+        MWNode<D> &node = it.getNode();
+        if (node.isGenNode()) {
+            continue;
+        }
+        nodeTable.push_back(&node);
+    }
 }
 
 /** Traverse tree along the Hilbert path and find nodes of any rankId.

@@ -66,6 +66,7 @@ set(mwrepr_SOURCES
             GridCleaner.h
             GridGenerator.h
             TreeAdaptor.h
+            AnalyticAdaptor.h
             CopyAdaptor.h
             WaveletAdaptor.cpp
             WaveletAdaptor.h

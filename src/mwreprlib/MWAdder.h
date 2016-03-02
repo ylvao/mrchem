@@ -23,6 +23,7 @@ public:
 
     FunctionTree<D>* operator()(int a, FunctionTree<D> &a_tree,
                                 int b, FunctionTree<D> &b_tree) {
+        if (this->adaptor == 0) NOT_IMPLEMENTED_ABORT;
         FunctionTree<D> *out = new FunctionTree<D>(this->MRA);
         (*this)(*out, a, a_tree, b, b_tree);
         return out;
@@ -30,6 +31,7 @@ public:
 
     FunctionTree<D>* operator()(std::vector<int> coefs,
                                 std::vector<FunctionTree<D> *> trees) {
+        if (this->adaptor == 0) NOT_IMPLEMENTED_ABORT;
         FunctionTree<D> *out = new FunctionTree<D>(this->MRA);
         (*this)(*out, coefs, trees);
         return out;

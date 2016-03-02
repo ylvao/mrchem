@@ -10,7 +10,6 @@ class MWProjector : public TreeBuilder<D> {
 public:
     MWProjector(const MultiResolutionAnalysis<D> &mra)
             : TreeBuilder<D>(mra, -1) {
-        this->adaptor = new TreeAdaptor<D>();
     }
     MWProjector(const MultiResolutionAnalysis<D> &mra,
                 const TreeAdaptor<D> &a, int iter = -1)

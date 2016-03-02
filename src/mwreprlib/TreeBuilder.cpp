@@ -39,7 +39,6 @@ void TreeBuilder<D>::clearCalculator() {
 template<int D>
 void TreeBuilder<D>::build(MWTree<D> &tree) {
     if (this->calculator == 0) MSG_ERROR("Calculator not initialized");
-    if (this->adaptor == 0) MSG_ERROR("Adaptor not initialized");
     println(10, " == Building tree");
 
     NodeIndexSet *splitSet = 0;
@@ -54,14 +53,14 @@ void TreeBuilder<D>::build(MWTree<D> &tree) {
         workVec = clearForeignNodes(workVec);
         this->calculator->calcNodeVector(*workVec);//set all coefficients
         tree.calcSquareNorm(workVec);
-        if (maxIterReached(iter)) break;
+        if (maxIterReached(iter) or this->adaptor == 0) break;
         splitVec = this->adaptor->splitNodeVector(*workVec, endVec);
         splitSet = getNodeIndexSet(*splitVec);
         broadcast_index_list<D>(*splitSet);
         workVec->clear();
         tree.splitNodes(*splitSet, workVec);//allocate new nodes
-        delete splitSet;
         delete splitVec;
+        delete splitSet;
         iter++;
     }
     delete workVec;

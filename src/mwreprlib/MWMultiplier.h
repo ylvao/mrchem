@@ -24,12 +24,14 @@ public:
     FunctionTree<D>* operator()(int coef,
                                 FunctionTree<D> &a_tree,
                                 FunctionTree<D> &b_tree) {
+        if (this->adaptor == 0) NOT_IMPLEMENTED_ABORT;
         FunctionTree<D> *out = new FunctionTree<D>(this->MRA);
         (*this)(*out, coef, a_tree, b_tree);
         return out;
     }
 
     FunctionTree<D>* operator()(int coef, std::vector<FunctionTree<D> *> trees) {
+        if (this->adaptor == 0) NOT_IMPLEMENTED_ABORT;
         FunctionTree<D> *out = new FunctionTree<D>(this->MRA);
         (*this)(*out, coef, trees);
         return out;

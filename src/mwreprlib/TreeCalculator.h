@@ -12,7 +12,7 @@ public:
 
     void calcNodeVector(MWNodeVector &nodeVec) const {
         int nNodes = nodeVec.size();
-        printout(10, std::setw(6) << nNodes << " nodes" << std::endl);
+        printout(10, std::setw(6) << nNodes << " nodes\n");
 #pragma omp parallel shared(nodeVec) firstprivate(nNodes)
 {
 #pragma omp for schedule(guided)
@@ -25,7 +25,8 @@ public:
 
 protected:
     virtual void calcNode(MWNode<D> &node) const {
-        NOT_IMPLEMENTED_ABORT;
+        node.clearHasCoefs();
+        node.clearNorms();
     }
 };
 

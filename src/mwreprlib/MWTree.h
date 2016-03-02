@@ -111,6 +111,7 @@ public:
     friend class GenNode<D>;
     friend class ProjectedNode<D>;
     friend class TreeBuilder<D>;
+    friend class GridCleaner<D>;
     friend class ProjectionCalculator<D>;
 
 protected:
@@ -154,6 +155,7 @@ protected:
     inline Eigen::VectorXd &getTmpMWCoefs();
 
     void calcSquareNorm(const MWNodeVector *work = 0);
+    void clearSquareNorm() { this->squareNorm = -1.0; }
 
     void mwTransformDown(bool overwrite = true);
     void mwTransformUp(bool overwrite = true);

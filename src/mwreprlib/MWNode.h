@@ -52,8 +52,7 @@ public:
     const HilbertPath<D> &getHilbertPath() const { return this->hilbertPath; }
 
     void getCenter(double *r) const;
-    void getLowerBounds(double *r) const;
-    void getUpperBounds(double *r) const;
+    void getBounds(double *lb, double *ub) const;
 
     inline bool hasCoefs() const;
     inline bool isRootNode() const;
@@ -134,6 +133,7 @@ public:
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, const MWNode<T> &nd);
 
+    friend class TreeCalculator<D>;
     friend class ProjectionCalculator<D>;
     friend class MWTree<D>;
 

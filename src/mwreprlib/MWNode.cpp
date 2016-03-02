@@ -546,13 +546,14 @@ void MWNode<D>::getCenter(double *r) const {
 }
 
 template<int D>
-void MWNode<D>::getLowerBounds(double *r) const {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-template<int D>
-void MWNode<D>::getUpperBounds(double *r) const {
-    NOT_IMPLEMENTED_ABORT;
+void MWNode<D>::getBounds(double *lb, double *ub) const {
+    int n = getScale();
+    double p = pow(2.0, -n);
+    const int *l = getTranslation();
+    for (int i = 0; i < D; i++) {
+        lb[i] = p * l[i];
+        ub[i] = p * (l[i] + 1);
+    }
 }
 
 /** Routine to find the path along the tree.
