@@ -105,16 +105,15 @@ public:
     void checkGridOverlap(MWTree<D> &tree);
     void checkRankOverlap(MWTree<D> &tree);
 
-    TreeAllocator<D> *allocator;
-
     template<int T>
     friend std::ostream& operator<<(std::ostream &o, MWTree<T> &tree);
 
     friend class MWNode<D>;
     friend class GenNode<D>;
+    friend class ProjectedNode<D>;
     friend class TreeBuilder<D>;
     friend class TreeAllocator<D>;
-    friend class AnalyticCalculator<D>;
+    friend class ProjectionCalculator<D>;
     friend class TreeAllocator<D>;
 
 protected:
