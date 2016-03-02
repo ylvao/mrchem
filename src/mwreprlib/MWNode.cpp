@@ -29,7 +29,7 @@ MWNode<D>::MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx)
     setIsRootNode();
     clearNorms();
     for (int i = 0; i < getTDim(); i++) {
-      this->children[i] = 0;
+        this->children[i] = 0;
     }
 #ifdef OPENMP
     omp_init_lock(&node_lock);
@@ -51,7 +51,7 @@ MWNode<D>::MWNode(MWNode<D> &p, int cIdx)
     setIsLeafNode();
     clearNorms();
     for (int i = 0; i < getTDim(); i++) {
-      this->children[i] = 0;
+        this->children[i] = 0;
     }
 #ifdef OPENMP
     omp_init_lock(&node_lock);
@@ -71,7 +71,7 @@ MWNode<D>::MWNode(const MWNode<D> &n)
     clearNorms();
     setIsLeafNode();
     for (int i = 0; i < getTDim(); i++) {
-      this->children[i] = 0;
+        this->children[i] = 0;
     }
 #ifdef OPENMP
     omp_init_lock(&node_lock);
@@ -85,7 +85,6 @@ MWNode<D>::~MWNode() {
     lockNode();
     freeCoefs();
     if (this->isBranchNode()) {
-        assert(this->children != 0);
         deleteChildren();
     }
     this->tree->decrementNodeCount(getScale());
@@ -182,7 +181,6 @@ void MWNode<D>::giveChildrenCoefs(bool overwrite) {
 template<int D>
 void MWNode<D>::copyCoefsFromChildren(VectorXd &c) {
     int kp1_d = this->getKp1_d();
-    assert(this->children != 0);
     for (int i = 0; i < this->getTDim(); i++) {
         MWNode<D> &child = getMWChild(i);
         if (child.hasCoefs()) {
@@ -207,52 +205,52 @@ void MWNode<D>::copyCoefsFromChildren(VectorXd &c) {
 template<int D>
 void MWNode<D>::cvTransform(int operation) {
     NOT_IMPLEMENTED_ABORT;
-//    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
-//    if (sf.getType() != Interpol) {
-//        NOT_IMPLEMENTED_ABORT;
-//    }
+    //    const ScalingBasis &sf = this->getMWTree().getScalingFunctions();
+    //    if (sf.getType() != Interpol) {
+    //        NOT_IMPLEMENTED_ABORT;
+    //    }
 
-//    int quadratureOrder = sf.getQuadratureOrder();
-//    getQuadratureCache(qc);
+    //    int quadratureOrder = sf.getQuadratureOrder();
+    //    getQuadratureCache(qc);
 
-//    double two_scale = pow(2.0, this->getScale() + 1);
-//    VectorXd modWeights = qc.getWeights(quadratureOrder);
-//    switch (operation) {
-//    case Forward:
-//        modWeights = modWeights.array().inverse();
-//        modWeights *= two_scale;
-//        modWeights = modWeights.array().sqrt();
-//        break;
-//    case Backward:
-//        modWeights *= 1.0/two_scale;
-//        modWeights = modWeights.array().sqrt();
-//        break;
-//    default:
-//        MSG_FATAL("Invalid operation");
-//    }
+    //    double two_scale = pow(2.0, this->getScale() + 1);
+    //    VectorXd modWeights = qc.getWeights(quadratureOrder);
+    //    switch (operation) {
+    //    case Forward:
+    //        modWeights = modWeights.array().inverse();
+    //        modWeights *= two_scale;
+    //        modWeights = modWeights.array().sqrt();
+    //        break;
+    //    case Backward:
+    //        modWeights *= 1.0/two_scale;
+    //        modWeights = modWeights.array().sqrt();
+    //        break;
+    //    default:
+    //        MSG_FATAL("Invalid operation");
+    //    }
 
-//    VectorXd &coefs = this->getCoefs();
+    //    VectorXd &coefs = this->getCoefs();
 
-//    int kp1 = this->getKp1();
-//    int kp1_d = this->getKp1_d();
-//    int kp1_p[D];
-//    for (int d = 0; d < D; d++) {
-//        kp1_p[d] = MathUtils::ipow(kp1, d);
-//    }
+    //    int kp1 = this->getKp1();
+    //    int kp1_d = this->getKp1_d();
+    //    int kp1_p[D];
+    //    for (int d = 0; d < D; d++) {
+    //        kp1_p[d] = MathUtils::ipow(kp1, d);
+    //    }
 
-//    for (int m = 0; m < this->getTDim(); m++) {
-//        for (int p = 0; p < D; p++) {
-//            int n = 0;
-//            for (int i = 0; i < kp1_p[D - p - 1]; i++) {
-//                for (int j = 0; j < kp1; j++) {
-//                    for (int k = 0; k < kp1_p[p]; k++) {
-//                        coefs[m * kp1_d + n] *= modWeights[j];
-//                        n++;
-//                    }
-//                }
-//            }
-//        }
-//    }
+    //    for (int m = 0; m < this->getTDim(); m++) {
+    //        for (int p = 0; p < D; p++) {
+    //            int n = 0;
+    //            for (int i = 0; i < kp1_p[D - p - 1]; i++) {
+    //                for (int j = 0; j < kp1; j++) {
+    //                    for (int k = 0; k < kp1_p[p]; k++) {
+    //                        coefs[m * kp1_d + n] *= modWeights[j];
+    //                        n++;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
 }
 
 /** Multiwavelet transform: fast version
@@ -363,23 +361,23 @@ double MWNode<D>::calcComponentNorm(int i) const {
 template<int D>
 double MWNode<D>::estimateError(bool absPrec) {
     NOT_IMPLEMENTED_ABORT;
-//    if (this->isForeign()) {
-//        return 0.0;
-//    }
-//    if (this->isCommon() and this->tree->getRankId() != 0) {
-//        return 0.0;
-//    }
-//    double tNorm = 1.0;
-//    if (not absPrec) {
-//        tNorm = sqrt(getMWTree().getSquareNorm());
-//    }
+    //    if (this->isForeign()) {
+    //        return 0.0;
+    //    }
+    //    if (this->isCommon() and this->tree->getRankId() != 0) {
+    //        return 0.0;
+    //    }
+    //    double tNorm = 1.0;
+    //    if (not absPrec) {
+    //        tNorm = sqrt(getMWTree().getSquareNorm());
+    //    }
 
-//    int n = this->getScale();
-//    double expo = (1.0 * (n + 1));
-//    double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
-//    double wNorm = this->calcWaveletNorm();
-//    double error = scaleFactor * wNorm / tNorm;
-//    return error*error;
+    //    int n = this->getScale();
+    //    double expo = (1.0 * (n + 1));
+    //    double scaleFactor = max(2.0* MachinePrec, pow(2.0, -expo));
+    //    double wNorm = this->calcWaveletNorm();
+    //    double error = scaleFactor * wNorm / tNorm;
+    //    return error*error;
 }
 
 /** Update the coefficients of the node by a mw transform of the scaling
@@ -411,85 +409,71 @@ void MWNode<D>::reCompress(bool overwrite) {
 template<int D>
 bool MWNode<D>::crop(double prec, NodeIndexSet *cropIdx) {
     NOT_IMPLEMENTED_ABORT;
-//    if (this->isEndNode()) {
-//        return true;
-//    } else {
-//        assert(children != 0);
-//        for (int i = 0; i < this->tDim; i++) {
-//            MWNode<D> &child = *this->children[i];
-//            if (child.cropChildren(prec, cropIdx)) {
-//                if (not this->isForeign()) {
-//                    if (this->splitCheck(prec) == false) {
-//                        if (cropIdx != 0) {
-//                            cropIdx->insert(&this->getNodeIndex());
-//                        } else {
-//                            this->deleteChildren();
-//                        }
-//                        return true;
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    return false;
+    //    if (this->isEndNode()) {
+    //        return true;
+    //    } else {
+    //        for (int i = 0; i < this->tDim; i++) {
+    //            MWNode<D> &child = *this->children[i];
+    //            if (child.cropChildren(prec, cropIdx)) {
+    //                if (not this->isForeign()) {
+    //                    if (this->splitCheck(prec) == false) {
+    //                        if (cropIdx != 0) {
+    //                            cropIdx->insert(&this->getNodeIndex());
+    //                        } else {
+    //                            this->deleteChildren();
+    //                        }
+    //                        return true;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //    return false;
 }
 
 template<int D>
 mpi::request MWNode<D>::isendCoefs(int who, int tag, int comp) {
     NOT_IMPLEMENTED_ABORT;
-//    assert(this->hasCoefs());
-//#ifdef HAVE_MPI
-//    int nSend = this->getNCoefs();
-//    const double *data = this->coefs->data();
-//    if (comp > 0) {
-//        assert(comp >= 0 and comp < this->getTDim());
-//        nSend = this->getKp1_d();
-//        data = data + comp * this->getKp1_d();
-//    }
-//    return node_group.isend(who, tag, data, nSend);
-//#else
-//    mpi::request dummy = 0;
-//    return dummy;
-//#endif
+    //    assert(this->hasCoefs());
+    //#ifdef HAVE_MPI
+    //    int nSend = this->getNCoefs();
+    //    const double *data = this->coefs->data();
+    //    if (comp > 0) {
+    //        assert(comp >= 0 and comp < this->getTDim());
+    //        nSend = this->getKp1_d();
+    //        data = data + comp * this->getKp1_d();
+    //    }
+    //    return node_group.isend(who, tag, data, nSend);
+    //#else
+    //    mpi::request dummy = 0;
+    //    return dummy;
+    //#endif
 }
 
 template<int D>
 mpi::request MWNode<D>::ireceiveCoefs(int who, int tag, int comp) {
     NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
-//    if (not this->isAllocated()) {
-//        allocCoefs();
-//    }
-//    int nRecv = this->getNCoefs();
-//    double *data = this->coefs->data();
-//    if (comp > 0) {
-//        assert(comp >= 0 and comp < this->getTDim());
-//        nRecv = this->getKp1_d();
-//        data = data + comp * this->getKp1_d();
-//    }
-//    this->setHasCoefs();
-//    return node_group.irecv(who, tag, data, nRecv);
-//#else
-//    mpi::request dummy = 0;
-//    return dummy;
-//#endif
+    //#ifdef HAVE_MPI
+    //    if (not this->isAllocated()) {
+    //        allocCoefs();
+    //    }
+    //    int nRecv = this->getNCoefs();
+    //    double *data = this->coefs->data();
+    //    if (comp > 0) {
+    //        assert(comp >= 0 and comp < this->getTDim());
+    //        nRecv = this->getKp1_d();
+    //        data = data + comp * this->getKp1_d();
+    //    }
+    //    this->setHasCoefs();
+    //    return node_group.irecv(who, tag, data, nRecv);
+    //#else
+    //    mpi::request dummy = 0;
+    //    return dummy;
+    //#endif
 }
-
-/*template<int D>
-void MWNode<D>::allocKindergarten() {
-    assert(this->children == 0);
-    int nChildren = getTDim();
-    this->children = new MWNode<D> *[nChildren];
-    for (int cIdx = 0; cIdx < nChildren; cIdx++) {
-        this->children[cIdx] = 0;
-    }
-    }*/
 
 template<int D>
 void MWNode<D>::createChildren() {
-  /*    if (this->children == 0) {
-        this->allocKindergarten();
-	}*/
     for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
         createChild(cIdx);
     }
@@ -502,11 +486,11 @@ template<int D>
 void MWNode<D>::deleteChildren() {
     for (int cIdx = 0; cIdx < getTDim(); cIdx++) {
         if (this->children[cIdx] != 0) {
-	  ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(this->children[cIdx]);
-          delete node;
-	  //node->~ProjectedNode();
-	  //this->children[cIdx]->~ProjectedNode();
-	  this->children[cIdx] = 0;
+            ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(this->children[cIdx]);
+            delete node;
+            //node->~ProjectedNode();
+            //this->children[cIdx]->~ProjectedNode();
+            this->children[cIdx] = 0;
         }
     }
     this->setIsLeafNode();
@@ -514,9 +498,6 @@ void MWNode<D>::deleteChildren() {
 
 template<int D>
 void MWNode<D>::genChildren() {
-  /*if (this->children == 0) {
-        this->allocKindergarten();
-	}*/
     int nChildren = this->getTDim();
     for (int cIdx = 0; cIdx < nChildren; cIdx++) {
         genChild(cIdx);
@@ -542,7 +523,6 @@ void MWNode<D>::clearGenerated() {
 template<int D>
 void MWNode<D>::deleteGenerated() {
     if (this->isBranchNode()) {
-        assert(this->children != 0);
         if (this->isEndNode()) {
             this->deleteChildren();
         } else {
@@ -557,12 +537,12 @@ void MWNode<D>::deleteGenerated() {
 template<int D>
 void MWNode<D>::getCenter(double *r) const {
     NOT_IMPLEMENTED_ABORT;
-//    assert(r != 0);
-//    double sFac = pow(2.0, -getScale());
-//    for (int d = 0; d < D; d++) {
-//        double l = (double) getTranslation()[d];
-//        r[d] = sFac*(l + 0.5);
-//    }
+    //    assert(r != 0);
+    //    double sFac = pow(2.0, -getScale());
+    //    for (int d = 0; d < D; d++) {
+    //        double l = (double) getTranslation()[d];
+    //        r[d] = sFac*(l + 0.5);
+    //    }
 }
 
 template<int D>
@@ -775,16 +755,16 @@ template<int D>
 bool MWNode<D>::hasCoord(const double *r) const {
     double sFac = pow(2.0, -getScale());
     const int *l = getTranslation();
-//    println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
-//    println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
-//    println(1, *this);
+    //    println(1, "[" << r[0] << "," << r[1] << "," << r[2] << "]");
+    //    println(1, "[" << l[0] << "," << l[1] << "," << l[2] << "]");
+    //    println(1, *this);
     for (int d = 0; d < D; d++) {
         if (r[d] < sFac*l[d] or r[d] > sFac*(l[d] + 1)) {
-//            println(1, "false");
+            //            println(1, "false");
             return false;
         }
     }
-//    println(1, "true");
+    //    println(1, "true");
     return true;
 }
 
@@ -793,15 +773,15 @@ bool MWNode<D>::hasCoord(const double *r) const {
 template<int D>
 bool MWNode<D>::isCompatible(const MWNode<D> &node) {
     NOT_IMPLEMENTED_ABORT;
-//    if (nodeIndex != node.nodeIndex) {
-//        println(0, "nodeIndex mismatch" << std::endl);
-//        return false;
-//    }
-//    if (not this->tree->checkCompatible(*node.tree)) {
-//        println(0, "tree type mismatch" << std::endl);
-//        return false;
-//    }
-//    return true;
+    //    if (nodeIndex != node.nodeIndex) {
+    //        println(0, "nodeIndex mismatch" << std::endl);
+    //        return false;
+    //    }
+    //    if (not this->tree->checkCompatible(*node.tree)) {
+    //        println(0, "tree type mismatch" << std::endl);
+    //        return false;
+    //    }
+    //    return true;
 }
 
 /** Test if the node is decending from a given NodeIndex, that is, if they have
@@ -830,41 +810,41 @@ bool MWNode<D>::isDecendant(const NodeIndex<D> &idx) const {
 template<int D>
 void MWNode<D>::broadcastCoefs(int src, mpi::communicator *comm) {
     NOT_IMPLEMENTED_ABORT;
-//#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
 
-//    if (comm != 0) {
-//        comm = &node_group;
-//    }
-//    assert(this->isAllocated());
-//    double *data = coefs->data();
-//    mpi::broadcast(*comm, data, getNCoefs(), src);
-//    this->setHasCoefs();
-//    this->setFullRedundancy();
-//#endif
-//}
+    //    if (comm != 0) {
+    //        comm = &node_group;
+    //    }
+    //    assert(this->isAllocated());
+    //    double *data = coefs->data();
+    //    mpi::broadcast(*comm, data, getNCoefs(), src);
+    //    this->setHasCoefs();
+    //    this->setFullRedundancy();
+    //#endif
+    //}
 
-//template<int D>
-//void MWNode<D>::sendCoefs(int dest, int tag,
-//                             mpi::communicator *comm) {
-//#ifdef HAVE_MPI
+    //template<int D>
+    //void MWNode<D>::sendCoefs(int dest, int tag,
+    //                             mpi::communicator *comm) {
+    //#ifdef HAVE_MPI
 
-//    if (comm != 0) {
-//        comm = &node_group;
-//    }
-//    const double *data = coefs->data();
-//    comm->send(dest, tag, data, getNCoefs());
-//    this->setRedundancy(dest);
-//#endif
+    //    if (comm != 0) {
+    //        comm = &node_group;
+    //    }
+    //    const double *data = coefs->data();
+    //    comm->send(dest, tag, data, getNCoefs());
+    //    this->setRedundancy(dest);
+    //#endif
 }
 
 template<int D>
 void MWNode<D>::assignDecendantTags(int rank) {
     NOT_IMPLEMENTED_ABORT;
-//    for (int n = 0; n < getNChildren(); n++) {
-//        MWNode<D> &child = getMWChild(n);
-//        child.setRankId(rank);
-//        child.assignDecendantTags(rank);
-//    }
+    //    for (int n = 0; n < getNChildren(); n++) {
+    //        MWNode<D> &child = getMWChild(n);
+    //        child.setRankId(rank);
+    //        child.assignDecendantTags(rank);
+    //    }
 }
 template class MWNode<1>;
 template class MWNode<2>;

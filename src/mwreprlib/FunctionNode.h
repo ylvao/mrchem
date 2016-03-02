@@ -6,11 +6,6 @@
 template<int D>
 class FunctionNode : public MWNode<D> {
 public:
-    FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
-    FunctionNode(FunctionNode<D> &p, int cIdx);
-    FunctionNode(const MWNode<D> &n);
-    FunctionNode(const FunctionNode<D> &n);
-    FunctionNode& operator=(const FunctionNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~FunctionNode() { }
 
     double evalf(const double *r);
@@ -28,6 +23,12 @@ public:
     const FunctionNode<D> &getFuncChild(int i) const { return static_cast<const FunctionNode<D> &>(*this->children[i]); }
 
 protected:
+    FunctionNode(FunctionTree<D> &t, const NodeIndex<D> &nIdx);
+    FunctionNode(FunctionNode<D> &p, int cIdx);
+    FunctionNode(const MWNode<D> &n);
+    FunctionNode(const FunctionNode<D> &n);
+    FunctionNode& operator=(const FunctionNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
+
     double evalScaling(const double *r) const;
     double integrateLegendre() const;
     double integrateInterpolating() const;

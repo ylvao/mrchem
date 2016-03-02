@@ -20,7 +20,6 @@
 #include "NodeBox.h"
 #include "MWNode.h"
 #include "MultiResolutionAnalysis.h"
-template <int D> class TreeAllocator;
 
 #ifdef OPENMP
 #define SET_TREE_LOCK() omp_set_lock(&this->tree_lock)
@@ -112,9 +111,7 @@ public:
     friend class GenNode<D>;
     friend class ProjectedNode<D>;
     friend class TreeBuilder<D>;
-    friend class TreeAllocator<D>;
     friend class ProjectionCalculator<D>;
-    friend class TreeAllocator<D>;
 
 protected:
     // Parameters that are set in construction and should never change

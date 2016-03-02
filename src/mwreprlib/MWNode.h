@@ -32,10 +32,6 @@
 template<int D>
 class MWNode {
 public:
-    MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx);
-    MWNode(MWNode<D> &p, int cIdx);
-    MWNode(const MWNode<D> &n);
-    MWNode& operator=(const MWNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~MWNode();
 
     double estimateError(bool absPrec);
@@ -153,6 +149,11 @@ protected:
     double componentNorms[1<<D]; ///< 2^D components
     Eigen::VectorXd *coefs;
 
+    MWNode(MWTree<D> &t, const NodeIndex<D> &nIdx);
+    MWNode(MWNode<D> &p, int cIdx);
+    MWNode(const MWNode<D> &n);
+    MWNode& operator=(const MWNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
+
     virtual void allocCoefs(int nCoefs = -1);
     virtual void freeCoefs();
 
@@ -166,8 +167,6 @@ protected:
 
     bool crop(double prec, NodeIndexSet *cropIdx = 0);
     void reCompress(bool overwrite = true);
-
-    //void allocKindergarten();
 
     virtual void copyChildren(const MWNode<D> &node) { NOT_IMPLEMENTED_ABORT; }
     virtual void createChildren();

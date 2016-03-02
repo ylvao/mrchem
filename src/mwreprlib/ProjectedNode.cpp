@@ -96,7 +96,6 @@ void ProjectedNode<D>::copyChildren(const MWNode<D> &node) {
   * with the appropriate translation and Hilbert path parameters. */
 template<int D>
 void ProjectedNode<D>::createChild(int cIdx) {
-    assert(this->children != 0);
     assert(this->children[cIdx] == 0);
 //    ProjectedNode<D> *child;
 //    if (this->tree->allocator == 0){

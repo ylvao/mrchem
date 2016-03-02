@@ -20,6 +20,8 @@ TreeAllocator<D>::TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNu
           maxNodes(maxNumberOfNodes),
           sizeTreeMeta(0),
           sizeNode(0) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
     //The first part of the Tree is filled with metadata; reserved size:
     this->sizeTreeMeta = (sizeof(FunctionTree<D>)+7)/sizeof(double);
     //The dynamical part of the tree is filled with nodes of size:
@@ -44,11 +46,14 @@ TreeAllocator<D>::TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNu
     }
     this->mwTree_p->resetEndNodeTable();
 //    this->mwTree_p->allocator = this;
+    */
 }
 
 //return pointer to the last active node or NULL if failed
 template<int D>
 ProjectedNode<D>* TreeAllocator<D>::allocNodes(int nAlloc) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
     this->nNodes += nAlloc;
     if (this->nNodes > this->maxNodes){
         this->nNodes -= nAlloc;
@@ -58,10 +63,13 @@ ProjectedNode<D>* TreeAllocator<D>::allocNodes(int nAlloc) {
         cout << "new size " << this->nNodes << endl;
         return this->lastNode - nAlloc;
     }
+    */
 }
 /** TreeAllocator destructor. */
 template<int D>
 TreeAllocator<D>::~TreeAllocator() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
     MWNode<D> **roots = this->mwTree_p->getRootBox().getNodes();
     for (int i = 0; i < this->mwTree_p->getRootBox().size(); i++) {
         ProjectedNode<D> *node = static_cast<ProjectedNode<D> *>(roots[i]);
@@ -70,6 +78,7 @@ TreeAllocator<D>::~TreeAllocator() {
     }
     this->mwTree_p->~MWTree();
     delete[] this->dataArray;
+    */
 }
 
 template class TreeAllocator<1> ;

@@ -18,10 +18,6 @@ template<int D> class ProjectedNode;
 template<int D>
 class GenNode: public FunctionNode<D> {
 public:
-    GenNode(ProjectedNode<D> &p, int cIdx);
-    GenNode(GenNode<D> &p, int cIdx);
-    GenNode(const GenNode<D> &n);
-    GenNode& operator=(const GenNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
     virtual ~GenNode();
 
     void setCoefs(const Eigen::VectorXd &c);
@@ -35,7 +31,14 @@ public:
     const ProjectedNode<D> *getGenRootNode() const { return this->genRootNode; }
     ProjectedNode<D> *getGenRootNode() { return this->genRootNode; }
 
+    friend class ProjectedNode<D>;
+
 protected:
+    GenNode(ProjectedNode<D> &p, int cIdx);
+    GenNode(GenNode<D> &p, int cIdx);
+    GenNode(const GenNode<D> &n);
+    GenNode& operator=(const GenNode<D> &n) { NOT_IMPLEMENTED_ABORT; }
+
     double calcWaveletNorm() const { return 0.0; }
     double calcComponentNorm(int i) const {
         if (i == 0) {
