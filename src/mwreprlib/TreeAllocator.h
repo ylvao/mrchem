@@ -1,16 +1,7 @@
-/**
-*
-*
-*  \date Aug 14, 2009
-*  \author Jonas Juselius <jonas.juselius@uit.no> \n
-*  CTCC, University of Tromsø
-*
-*  Basic class for representing functions in a multiwavelet
-* representation.
-*/
+#ifndef TREEALLOCATOR_H_
+#define TREEALLOCATOR_H_
 
-#ifndef FUNCTIONTREE_S_H_
-#define FUNCTIONTREE_S_H_
+#include <memory>
 
 template<int D> class MultiResolutionAnalysis;
 template<int D> class ProjectedNode;
@@ -34,11 +25,12 @@ protected:
     int maxNodes;     //max number of nodes that can be defined
     int nNodes;       //number of nodes already defined
 
-    double* tree_S_array; //Tree is defined as array of doubles, because C++ does not like void malloc
+    double *dataArray; //Tree is defined as array of doubles, because C++ does not like void malloc
 
-    MWTree<D>* mwTree_p;
-    ProjectedNode<D>* lastNode;//pointer to the last active node
+    MWTree<D> *mwTree_p;
+    ProjectedNode<D> *lastNode;//pointer to the last active node
+    std::allocator<ProjectedNode<D> > nodeAllocator;
 
 };
 
-#endif /* FUNCTIONTREE_S_H_*/
+#endif /* TREEALLOCATOR_H_*/

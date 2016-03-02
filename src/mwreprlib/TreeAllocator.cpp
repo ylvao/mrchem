@@ -16,7 +16,7 @@ TreeAllocator<D>::TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNu
         : nNodes(0),
           lastNode(0),
           mwTree_p(0),
-          tree_S_array(0),
+          dataArray(0),
           maxNodes(maxNumberOfNodes),
           sizeTreeMeta(0),
           sizeNode(0) {
@@ -27,10 +27,10 @@ TreeAllocator<D>::TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNu
     cout<<"SizeNode "<<sizeof(ProjectedNode<D>)<<endl;
 
     //Tree is defined as array of doubles, because C++ does not like void malloc
-    this->tree_S_array = new double[this->sizeTreeMeta + maxNumberOfNodes*this->sizeNode];
-    this->lastNode = (ProjectedNode<D>*) (this->tree_S_array + this->sizeTreeMeta);
+    this->dataArray = new double[this->sizeTreeMeta + maxNumberOfNodes*this->sizeNode];
+    this->lastNode = (ProjectedNode<D>*) (this->dataArray + this->sizeTreeMeta);
 
-    this->mwTree_p = new (this->tree_S_array) MWTree<D>(mra);//put a MWTree at start of array
+    this->mwTree_p = new (this->dataArray) MWTree<D>(mra);//put a MWTree at start of array
     //this->funcTree_p = new FunctionTree<D>(mra);//put a MWTree at start of array
 
     ProjectedNode<D> *node_p = allocNodes(this->mwTree_p->getRootBox().size());
@@ -43,7 +43,7 @@ TreeAllocator<D>::TreeAllocator(const MultiResolutionAnalysis<D> &mra, int maxNu
         node_p++;
     }
     this->mwTree_p->resetEndNodeTable();
-    this->mwTree_p->allocator = this;
+//    this->mwTree_p->allocator = this;
 }
 
 //return pointer to the last active node or NULL if failed
@@ -69,7 +69,7 @@ TreeAllocator<D>::~TreeAllocator() {
         roots[i] = 0;
     }
     this->mwTree_p->~MWTree();
-    delete[] this->tree_S_array;
+    delete[] this->dataArray;
 }
 
 template class TreeAllocator<1> ;
