@@ -1,4 +1,4 @@
-/** \mainpage The MRGrid program
+/** \mainpage The MRCPP program
  *
  * \author Stig Rune Jensen
  *
@@ -24,7 +24,11 @@
 #include "InterpolatingBasis.h"
 #include "FunctionTree.h"
 #include "MWProjector.h"
+#include "MWAdder.h"
+#include "MWMultiplier.h"
 #include "GridGenerator.h"
+#include "GridCleaner.h"
+#include "CopyAdaptor.h"
 #include "WaveletAdaptor.h"
 
 #include "GaussFunc.h"
@@ -33,8 +37,15 @@
 using namespace std;
 using namespace Eigen;
 
-void testTrees();
+void testZeroTree();
 void testProjection();
+void testAddition();
+void testMultiplication();
+void testGridGenerator();
+void testTreeCleaner();
+
+template<int D> MultiResolutionAnalysis<D>* initializeMRA(int order);
+template<int D> GaussFunc<D>* initializeGauss();
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
@@ -47,90 +58,272 @@ int main(int argc, char **argv) {
 
     MREnv::initializeMRCPP();
 
-    testTrees();
-    //testProjection();
+    testZeroTree();
+    testProjection();
+    testGridGenerator();
+    testTreeCleaner();
 
     MREnv::finalizeMRCPP(rolex.elapsed());
 
     return 0;
 }
 
-void testTrees() {
-    //Setting up world parameters
-    int n = -1;
-    int l[3] = {0,-1,-2};
-    int nb[3] = {1,2,4};
-
-    //Setting up scaling basis
-    int k = 5;
-    InterpolatingBasis basis(k);
-
-    {   //Testing 1D
-        NodeIndex<1> idx(n, l);
-        BoundingBox<1> world(idx, nb);
-        MultiResolutionAnalysis<1> MRA(world, basis);
-        GridGenerator<1> G(MRA);
-        FunctionTree<1> *tree = G();
-        delete tree;
-    }
-
-    {   //Testing 2D
-        NodeIndex<2> idx(n, l);
-        BoundingBox<2> world(idx, nb);
-        MultiResolutionAnalysis<2> MRA(world, basis);
-        GridGenerator<2> G(MRA);
-        FunctionTree<2> *tree = G();
-        delete tree;
-    }
-
-    
-    {   //Testing 3D
-        NodeIndex<3> idx(n, l);
-        BoundingBox<3> world(idx, nb);
-        MultiResolutionAnalysis<3> MRA(world, basis);
-        GridGenerator<3> G(MRA);
-        FunctionTree<3> *tree = G();
-        tree->setZero();
-        delete tree;
-    }
-}
-
-
-void testProjection() {
+template<int D>
+MultiResolutionAnalysis<D>* initializeMRA(int order) {
     // Constructing world box
     int n = -4;
     int l[3] = {-1,-1,-1};
     int nb[3] = {2,2,2};
-    NodeIndex<3> idx(n, l);
-    BoundingBox<3> world(idx, nb);
+    NodeIndex<D> idx(n, l);
+    BoundingBox<D> world(idx, nb);
+
+    // Constructing scaling basis
+    InterpolatingBasis basis(order);
 
     // Initializing MRA
-    int k = 5;
-    InterpolatingBasis basis(k);
-    MultiResolutionAnalysis<3> MRA(world, basis);
+    return new MultiResolutionAnalysis<D>(world, basis);
+}
 
+template<int D>
+GaussFunc<D>* initializeGauss() {
     // Constructing analytic function
     double beta = 20.0;
-    double alpha = pow(beta/pi, 3.0/2.0);
+    double alpha = pow(beta/pi, D/2.0);
     double pos[3] = {0.0, 0.0, 0.0};
     int pow[3] = {0, 0, 0};
-    GaussFunc<3> f_func(beta, alpha, pos, pow);
+    return new GaussFunc<D>(beta, alpha, pos, pow);
+}
 
-    // Setting up adaptor
+void testZeroTree() {
+    println(0, "\n\n========= Testing default ==========\n");
+    println(0, "\n1D\n");
+    {
+        MultiResolutionAnalysis<1> *MRA = initializeMRA<1>(2);
+        GridGenerator<1> G(*MRA);
+        FunctionTree<1> *tree = G();
+        tree->setZero();
+
+        double integral = tree->integrate();
+        double sq_norm = tree->getSquareNorm();
+        println(0, "Integral     " << integral);
+        println(0, "Square norm  " << sq_norm);
+
+        delete tree;
+        delete MRA;
+    }
+    println(0, "\n2D\n");
+    {
+        MultiResolutionAnalysis<2> *MRA = initializeMRA<2>(3);
+        GridGenerator<2> G(*MRA);
+        FunctionTree<2> *tree = G();
+        tree->setZero();
+
+        double integral = tree->integrate();
+        double sq_norm = tree->getSquareNorm();
+        println(0, "Integral     " << integral);
+        println(0, "Square norm  " << sq_norm);
+
+        delete tree;
+        delete MRA;
+    }
+    println(0, "\n3D\n");
+    {
+        MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(4);
+        GridGenerator<3> G(*MRA);
+        FunctionTree<3> *tree = G();
+        tree->setZero();
+
+        double integral = tree->integrate();
+        double sq_norm = tree->getSquareNorm();
+        println(0, "Integral     " << integral);
+        println(0, "Square norm  " << sq_norm);
+
+        delete tree;
+        delete MRA;
+    }
+    println(0, "\n\n====================================\n\n");
+}
+
+void testProjection() {
+    println(0, "\n\n======== Testing MWProjector =======\n");
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+    GaussFunc<3> *f_func = initializeGauss<3>();
+
+    // Setting up adaptor and projector
     double prec = 1.0e-3;
     WaveletAdaptor<3> w_adaptor(prec);
+    MWProjector<3> Q(*MRA, w_adaptor);
 
-    // Setting up projector
-    MWProjector<3> Q(MRA, w_adaptor);
-    FunctionTree<3> *f_tree = Q(f_func);
+    println(0, "\n\nProjecting function adaptively\n");
+    FunctionTree<3> *f_tree = Q(*f_func);
 
     double integral = f_tree->integrate();
     double sq_norm = f_tree->getSquareNorm();
-
     println(0, endl);
     println(0, "Integral     " << integral);
     println(0, "Square norm  " << sq_norm);
 
     delete f_tree;
+    delete f_func;
+    delete MRA;
+    println(0, "\n\n====================================\n\n");
+}
+
+void testGridGenerator() {
+    println(0, "\n\n======= Testing GridGenerator ======\n");
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+    GaussFunc<3> *f_func = initializeGauss<3>();
+
+    double prec = 1.0e-3;
+    WaveletAdaptor<3> w_adaptor(prec);
+    GridGenerator<3> G(*MRA);
+    MWProjector<3> Q(*MRA);
+    MWProjector<3> Q_adap(*MRA, w_adaptor);
+
+    FunctionTree<3> *f_tree = 0;
+    FunctionTree<3> *g_tree = 0;
+    FunctionTree<3> *h_tree = 0;
+
+    {
+        println(0, "\n\nAdapting analytic function\n");
+        f_tree = G(*f_func);
+        println(0, "\n\nSetting function to zero");
+        f_tree->setZero();
+
+        double integral = f_tree->integrate();
+        double sq_norm = f_tree->getSquareNorm();
+        println(0, endl);
+        println(0, "Integral     " << integral);
+        println(0, "Square norm  " << sq_norm);
+    }
+    println(0, "\n\n------------------------------------");
+    {
+        println(0, "\n\nAdapting grid\n");
+        g_tree = G(*f_tree);
+        println(0, "\n\nProjecting function\n");
+        Q(*g_tree, *f_func);
+
+        double integral = g_tree->integrate();
+        double sq_norm = g_tree->getSquareNorm();
+        println(0, endl);
+        println(0, "Integral     " << integral);
+        println(0, "Square norm  " << sq_norm);
+    }
+    println(0, "\n\n------------------------------------");
+    {
+        println(0, "\n\nCopying grid\n");
+        h_tree = G();
+        G(*h_tree, *g_tree);
+        println(0, "\n\nProjecting function adaptively\n");
+        Q_adap(*h_tree, *f_func);
+
+        double integral = h_tree->integrate();
+        double sq_norm = h_tree->getSquareNorm();
+        println(0, endl);
+        println(0, "Integral     " << integral);
+        println(0, "Square norm  " << sq_norm);
+    }
+
+    if (h_tree != 0) delete h_tree;
+    if (g_tree != 0) delete g_tree;
+    if (f_tree != 0) delete f_tree;
+    if (f_func != 0) delete f_func;
+    if (MRA != 0) delete MRA;
+    println(0, "\n\n====================================\n\n");
+}
+
+void testTreeCleaner() {
+    println(0, "\n\n======== Testing TreeCleaner =======\n");
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+    GaussFunc<3> *f_func = initializeGauss<3>();
+
+    double prec = 1.0e-3;
+    WaveletAdaptor<3> w_adaptor(prec);
+
+    MWProjector<3> Q(*MRA);
+    GridCleaner<3> C(*MRA, w_adaptor);
+    GridGenerator<3> G(*MRA);
+
+    FunctionTree<3> *f_tree = G();
+
+    int n_nodes = 1;
+    while (n_nodes > 0) {
+        Q(*f_tree, *f_func);
+        n_nodes = C(*f_tree);
+    }
+    Q(*f_tree, *f_func);
+
+    double integral = f_tree->integrate();
+    double sq_norm = f_tree->getSquareNorm();
+    println(0, endl);
+    println(0, "Integral     " << integral);
+    println(0, "Square norm  " << sq_norm);
+
+    delete f_tree;
+    delete f_func;
+    delete MRA;
+    println(0, "\n\n====================================\n\n");
+}
+
+void testAddition() {
+    println(0, "\n\nTesting MWAdder\n");
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+
+    double prec = 1.0e-3;
+    WaveletAdaptor<3> w_adaptor(prec);
+
+    MWProjector<3> Q(*MRA, w_adaptor);
+    MWAdder<3> add(*MRA);
+
+    GaussFunc<3> *f_func = initializeGauss<3>();
+    GaussFunc<3> *g_func = initializeGauss<3>();
+
+    FunctionTree<3> *f_tree = Q(*f_func);
+    FunctionTree<3> *g_tree = Q(*g_func);
+    FunctionTree<3> *h_tree = add(1.0, *f_tree, -2.0, *g_tree);
+
+    double integral = f_tree->integrate();
+    double sq_norm = f_tree->getSquareNorm();
+    println(0, endl);
+    println(0, "Integral     " << integral);
+    println(0, "Square norm  " << sq_norm);
+
+    delete f_tree;
+    delete g_tree;
+    delete h_tree;
+    delete f_func;
+    delete g_func;
+    delete MRA;
+}
+
+void testMultiplication() {
+    println(0, "\n\nTesting MWMultiplier\n");
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+
+    double prec = 1.0e-3;
+    WaveletAdaptor<3> w_adaptor(prec);
+
+    MWProjector<3> Q(*MRA, w_adaptor);
+    MWMultiplier<3> mult(*MRA, w_adaptor);
+
+    GaussFunc<3> *f_func = initializeGauss<3>();
+    GaussFunc<3> *g_func = initializeGauss<3>();
+
+    FunctionTree<3> *f_tree = Q(*f_func);
+    FunctionTree<3> *g_tree = Q(*g_func);
+    FunctionTree<3> *h_tree = mult(2.0, *f_tree, *g_tree);
+
+    double integral = f_tree->integrate();
+    double sq_norm = f_tree->getSquareNorm();
+    println(0, endl);
+    println(0, "Integral     " << integral);
+    println(0, "Square norm  " << sq_norm);
+
+    delete f_tree;
+    delete g_tree;
+    delete h_tree;
+    delete f_func;
+    delete g_func;
+    delete MRA;
 }
 
