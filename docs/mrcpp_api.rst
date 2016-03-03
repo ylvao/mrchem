@@ -35,7 +35,7 @@ A very important analytic function is the Cartesian Gaussian
 
 which is initialized in the following way (in 3D)
 
-.. code-block:: c
+.. code-block:: c++
 
     double alpha, beta;
     double pos[3] = {x_0, y_0, z_0};
