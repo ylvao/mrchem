@@ -119,7 +119,7 @@ using a small Gaussian basis set, which is specified in this section
     }
 Currently, only HF (Hartree-Fock) and LDA can be used as ``<wave function 
 method>``, and the
-*<basis set>* must be quite small, as MRChem can only read s- p- and 
+*<basis set>* **<eller slik>** must be quite small, as MRChem can only read s- p- and 
 (uncontracted) d-functions. Option to run LSDalton or not.
 
 \subsection{Properties}
