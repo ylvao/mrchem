@@ -52,7 +52,7 @@ GaussExp
 
 A GaussExp is a collection of Gaussian in the form 
 
-math::
+.. math::
 
     G(r) = \sum_i c_i g_i(r)
 
@@ -151,8 +151,8 @@ possible and even necessary. In the latter case it is important to be able to
 reuse the existing grids in e.g. iterative algorithms without excessive
 allocation/deallocation of memory.
 
- TreeBuilder
-=============
+TreeBuilder
+===========
 
 This is the class that is responsible for the construction of 
 FunctionTrees, which involves allocating memory, growing a tree structure and 
@@ -176,8 +176,8 @@ FunctionTree. All TreeBuilders take an MRA as the first argument in their
 constructor, and all FunctionTrees produced by this TreeBuilder will get the
 same MRA.
 
- TreeCalculator
-================
+TreeCalculator
+==============
 
 This class operates on the node level, computing MW coefficients based on the
 proper input data (analytic functions in the case of projection,
@@ -190,8 +190,8 @@ of the MW-types of TreeBuilder:
 * MultiplicationCalculator
 * OperationCalculator
 
- TreeAdaptor
-=============
+TreeAdaptor
+===========
 
 Like the TreeCalculator, this class operates on the node level, but instead of
 computing coefficients, it decides whether each node needs to be split into
@@ -207,8 +207,8 @@ where the WaveletAdaptor tests the wavelet norm, the
 AnalyticAdaptor use some known information of an analytic function, and the
 CopyAdaptor will copy the node structure of another tree. 
 
- MWProjector
-=============
+MWProjector
+===========
 
 Given an analytic D-dimensional function f\_func, we can obtain its 
 numerical MW representation by projecting it onto the MW basis. For this we 
@@ -231,8 +231,8 @@ The WaveletAdaptor will automatically construct the necessary grid needed to
 represent the function to the given precision, based on the wavelet norm of 
 the representation. 
 
- Arithmetic operations
-=======================
+Arithmetic operations
+=====================
 
 Given two functions :math:`f` and :math:`g` in MW representation 
 (FunctionTrees), we can compute the sum (e.g. :math:`h = f - 2g`) or 
@@ -296,8 +296,8 @@ where the former constructs empty grids from scratch and the latter clears the
 MW coefficients on an existing FunctionTree. The end result is in both cases an
 empty tree skeleton with no MW coefficients (undefined function).
 
- GridGenerator
-===============
+GridGenerator
+=============
 
 Sometimes it is useful to construct an empty grid based on some available 
 information of the function that is about to be represented. This can be e.g.
@@ -360,8 +360,8 @@ and one can make the grids of two functions equal to their union::
     G(g_tree, f_tree);
 
 
- GridCleaner
-=============
+GridCleaner
+===========
 
 Given a FunctionTree that is a valid function representation we can clear its 
 MW expansion coefficients (while keeping the grid refinement) with the 
