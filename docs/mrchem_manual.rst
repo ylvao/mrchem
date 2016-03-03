@@ -1,7 +1,9 @@
-User manual
-==================================
+===================
+MRChem: User manual
+===================
 
-   
+
+---------------------
 The mrchem input file
 ---------------------
 
@@ -196,8 +198,4 @@ orbitals. Option to use localized orbitals in the response solver (independent
 of the localize option for the ground state calculation). You can also set the 
 length of the iterative history that is used in the KAIN accelerator in the 
 response solver. 
-
-
-
-
 

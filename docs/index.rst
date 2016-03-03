@@ -18,7 +18,7 @@ Contents:
 
    installation
    mrcpp_api
-   userguide
+   mrchem_manual
 
 
 Indices and tables
