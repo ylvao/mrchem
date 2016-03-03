@@ -45,7 +45,7 @@ spin restricted (alpha and beta spins are forced to occupy the same spatial
 orbitals) or not. When running DFT we must also specify the functional to be 
 used in a separate DFT section (for HF this section should be omitted)
 
-.. code-block:: python
+.. code-block:: c
 
     WaveFunction {
         method = <wave function method>
@@ -55,10 +55,10 @@ used in a separate DFT section (for HF this section should be omitted)
     DFT {
         spin = False
         exact_exchange = 0.0
-        \$functionals
+        $functionals
         <func1>     <coef1>
         <func2>     <coef2>
-        \$end
+        $end
     }
 
 You can specify as many functionals as you want, and they will be added on top
