@@ -37,26 +37,6 @@ rel_prec = 1.0e-3, and order = 13 for rel_prec = 1.0e-9, and interpolate in
 between).
 
 
-World
------
-
-This section will specify the computational domain
-
-.. code-block:: python
-
-     World {
-        scale = -5
-        world_origin = [0.0, 0.0, 0.0]
-        gauge_origin = [0.0, 0.0, 0.0]
-    }
-
-where scale gives the size of the domain as :math:`2^{-scale}`. This will be symmetric 
-around zero, so the above will define a computational domain of :math:`[-16,16]^3`.
-The computational World should be large enough so that the electron density
-vanishes at the boundaries. The world origin can be used to translate the domain
-away from the symmetric box around the origin. The gauge origin can also be
-specified (relevant for magnetic properties).
-
 WaveFunction
 ------------
 
@@ -86,6 +66,26 @@ of each other with the given coefficient. For hybrid functionals you must
 specify the amount of exact Hartree-Fock
 exchange that should be used (0.2 for B3LYP and 0.25 for PBE0 etc.). Option to
 use spin-density functional theory (for open-shell systems).
+
+World
+-----
+
+This section will specify the computational domain
+
+.. code-block:: python
+
+     World {
+        scale = -5
+        world_origin = [0.0, 0.0, 0.0]
+        gauge_origin = [0.0, 0.0, 0.0]
+    }
+
+where scale gives the size of the domain as :math:`2^{-scale}`. This will 
+be symmetric around zero, so the above will define a computational domain of 
+:math:`[-16,16]^3`. The computational World should be large enough so that the 
+electron density vanishes at the boundaries. The world origin can be used to 
+translate the domain away from the symmetric box around the origin. The gauge 
+origin can also be specified (relevant for magnetic properties).
 
 Molecule
 --------
