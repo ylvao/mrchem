@@ -57,25 +57,6 @@ vanishes at the boundaries. The world origin can be used to translate the domain
 away from the symmetric box around the origin. The gauge origin can also be
 specified (relevant for magnetic properties).
 
-Molecule
---------
-
-This input section specifies the geometry, charge and spin multiplicity of the 
-molecule, e.g. for the water molecule
-   
-.. code-block:: python
-
-    Molecule {
-        charge = 0
-        multiplicity = 1
-        angstrom = false
-        $coords
-        O   0.0000     0.0000     0.0000
-        H   0.0000     1.4375     1.1500
-        H   0.0000    -1.4375     1.1500
-        $end
-    }
-
 WaveFunction
 ------------
 
@@ -88,11 +69,11 @@ used in a separate DFT section (for HF this section should be omitted)
 
     WaveFunction {
         method = <wave function method>
-        restricted = true
+        restricted = True
     }
 
     DFT {
-        spin = false
+        spin = False
         exact_exchange = 0.0
         $functionals
         <func1>     <coef1>
@@ -106,6 +87,25 @@ specify the amount of exact Hartree-Fock
 exchange that should be used (0.2 for B3LYP and 0.25 for PBE0 etc.). Option to
 use spin-density functional theory (for open-shell systems).
 
+Molecule
+--------
+
+This input section specifies the geometry, charge and spin multiplicity of the 
+molecule, e.g. for the water molecule
+   
+.. code-block:: python
+
+    Molecule {
+        charge = 0
+        multiplicity = 1
+        angstrom = False
+        $coords
+        O   0.0000     0.0000     0.0000
+        H   0.0000     1.4375     1.1500
+        H   0.0000    -1.4375     1.1500
+        $end
+    }
+
 LSDalton
 --------
 
@@ -115,7 +115,7 @@ using a small Gaussian basis set, which is specified in this section
 .. code-block:: python
 
     LSDalton {
-        run = true
+        run = True
         method = <wave function method>
         basis = <basis set>
     }
@@ -132,14 +132,14 @@ Specify which properties to compute. Currently the following are available
 .. code-block:: python
 
     Properties {
-        ground_state = true
-        dipole_moment = true
-        quadrupole_moment = true
-        polarizability = true
-        magnetizability = true
-        optrot_electric = true
-        optrot_magnetic = true
-        nmr_shielding = true
+        ground_state = True
+        dipole_moment = True
+        quadrupole_moment = True
+        polarizability = True
+        magnetizability = True
+        optrot_electric = True
+        optrot_magnetic = True
+        nmr_shielding = True
         nmr_nuclei = [<nuc1>, <nuc2>, ...]
         frequencies = [<omega1>, <omega2>, ...]
     }
@@ -165,8 +165,8 @@ function
         orbital_thrs = 1.0e-3
         history = 4
         rotation = 50
-        localize = false
-        write_orbitals = false
+        localize = False
+        write_orbitals = False
         initial_guess = <initial>
     }
 
@@ -192,7 +192,7 @@ are computed.
         property_thrs = 1.0e-4
         orbital_thrs = 1.0e-3
         history = 6
-        localize = false
+        localize = False
     }
 
 Convergence thresholds are specified for the molecular propery and the perturbed
