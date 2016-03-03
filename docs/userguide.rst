@@ -1,11 +1,9 @@
-===================
-MRChem: User manual
-===================
+User manual
+==================================
 
    
------------------------
- The mrchem input file
------------------------
+The mrchem input file
+---------------------
 
 The input file is organized in sections and keywords that can be of different
 type:: 
