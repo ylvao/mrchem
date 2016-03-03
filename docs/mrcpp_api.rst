@@ -29,9 +29,7 @@ GaussFunc
 
 A very important analytic function is the Cartesian Gaussian
 
-.. math::
-
-    f(r) = \alpha (x-x_0)^a (y-y_0)^b (z-z_0)^c e^{-\beta |r-r_0|^2}
+.. math:: f(r) = \alpha (x-x_0)^a (y-y_0)^b (z-z_0)^c e^{-\beta \|r-r_0\|^2}
 
 which is initialized in the following way (in 3D)
 
@@ -48,24 +46,18 @@ GaussPoly
 GaussPoly is a generalization of the GaussFunc, where there is an arbitrary
 polynomial in front of the exponential
 
-.. math::
-
-    f(r) = \alpha P(r-r_0) e^{-\beta |r-r_0|^2}
+.. math:: f(r) = \alpha P(r-r_0) e^{-\beta \|r-r_0\|^2}
 
 GaussExp
 --------
 
 A GaussExp is a collection of Gaussian in the form 
 
-.. math::
-
-    G(r) = \sum_i c_i g_i(r)
+.. math:: G(r) = \sum_i c_i g_i(r)
 
 where :math:`g_i` can be either GaussFunc or GaussPoly
 
-.. math::
-
-    g_i(r) =  \alpha_i P_i(r-r_i)e^{-\beta_i|r-r_i|^2}
+.. math:: g_i(r) =  \alpha_i P_i(r-r_i)e^{-\beta_i\|r-r_i\|^2}
 
 PositionFunction
 ----------------
@@ -73,9 +65,7 @@ PositionFunction
 There is also a very simple analytic function for the Cartesian coordinate in D
 dimensions relative to an origin, e.g. the z coordinate in 3D
 
-.. math::
-
-    f(x, y, z) = z - z_0
+.. math:: f(x, y, z) = z - z_0
 
 This PositionFunction is available as
 
