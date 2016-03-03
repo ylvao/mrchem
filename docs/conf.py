@@ -31,8 +31,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # ones.
 extensions = [
     'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
-    'sphinxcontrib.bibtex'
+    'sphinx.ext.mathjax'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -41,16 +40,9 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-# Markdown support
-
-from recommonmark.parser import CommonMarkParser
 
 # The suffix of source filenames.
-source_suffix = ['.rst', '.md']
-
-source_parsers = {
-            '.md': CommonMarkParser,
-            }
+source_suffix = ['.rst']
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
