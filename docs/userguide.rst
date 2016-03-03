@@ -18,6 +18,16 @@ type
        keyword_5 = True
     }
 
+.. highlight:: c
+    
+     Section {
+       keyword_1 = 1
+       keyword_2 = 3.14
+       keyword_3 = [1, 2, 3]
+       keyword_4 = "foo"
+       keyword_5 = True
+    }
+
 
 The main input section contain two important keywords that specify the
 polynomial order of the multiwavelet basis set, and the relative precision that
