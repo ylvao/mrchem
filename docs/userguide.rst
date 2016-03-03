@@ -10,9 +10,9 @@ type
 
 
      Section {
-        keyword_1 = 1
-        keyword_2 = 3.14
-        keyword_3 = [1, 2, 3]
-        keyword_4 = "foo"
-        keyword_5 = True
-     }
+|       keyword_1 = 1
+|       keyword_2 = 3.14
+|       keyword_3 = [1, 2, 3]
+|      keyword_4 = "foo"
+|       keyword_5 = True
+|    }
