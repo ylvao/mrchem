@@ -26,7 +26,7 @@ GaussFunc
 
 A very important analytic function is the Cartesian Gaussian
 
-math::
+.. math::
 
     f(r) = \alpha (x-x_0)^a (y-y_0)^b (z-z_0)^c e^{-\beta |r-r_0|^2}
 
@@ -43,7 +43,8 @@ GaussPoly
 GaussPoly is a generalization of the GaussFunc, where there is an arbitrary
 polynomial in front of the exponential
 
-math::
+.. math::
+
     f(r) = \alpha P(r-r_0) e^{-\beta |r-r_0|^2}
 
 GaussExp
@@ -57,7 +58,8 @@ math::
 
 where :math:`g_i` can be either GaussFunc or GaussPoly
 
-math::
+.. math::
+
     g_i(r) =  \alpha_i P_i(r-r_i)e^{-\beta_i|r-r_i|^2}
 
 PositionFunction
@@ -66,7 +68,8 @@ PositionFunction
 There is also a very simple analytic function for the Cartesian coordinate in D
 dimensions relative to an origin, e.g. the z coordinate in 3D
 
-math::
+.. math::
+
     f(x, y, z) = z - z_0
 
 This PositionFunction is available as::
@@ -103,7 +106,7 @@ which is combined with a ScalingBasis to give an MRA::
 
 Two polynomial types are supported (Legendre and Interpol), and they are 
 both available at orders :math:`k=1,2,\dots,40` (note that some operators are 
-constructed using intermediates of order $2k$, so in that case the maximum 
+constructed using intermediates of order :math:`2k`, so in that case the maximum 
 order available is :math:`k=20`).
 
 --------------------------
@@ -148,9 +151,8 @@ possible and even necessary. In the latter case it is important to be able to
 reuse the existing grids in e.g. iterative algorithms without excessive
 allocation/deallocation of memory.
 
--------------
  TreeBuilder
--------------
+=============
 
 This is the class that is responsible for the construction of 
 FunctionTrees, which involves allocating memory, growing a tree structure and 
@@ -174,9 +176,8 @@ FunctionTree. All TreeBuilders take an MRA as the first argument in their
 constructor, and all FunctionTrees produced by this TreeBuilder will get the
 same MRA.
 
-----------------
  TreeCalculator
-----------------
+================
 
 This class operates on the node level, computing MW coefficients based on the
 proper input data (analytic functions in the case of projection,
@@ -189,9 +190,8 @@ of the MW-types of TreeBuilder:
 * MultiplicationCalculator
 * OperationCalculator
 
--------------
  TreeAdaptor
--------------
+=============
 
 Like the TreeCalculator, this class operates on the node level, but instead of
 computing coefficients, it decides whether each node needs to be split into
