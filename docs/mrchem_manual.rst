@@ -37,36 +37,6 @@ rel_prec = 1.0e-3, and order = 13 for rel_prec = 1.0e-9, and interpolate in
 between).
 
 
-WaveFunction
-------------
-
-Here we give the wavefunction method (HF or DFT) and whether we run
-spin restricted (alpha and beta spins are forced to occupy the same spatial 
-orbitals) or not. When running DFT we must also specify the functional to be 
-used in a separate DFT section (for HF this section should be omitted)
-
-.. code-block:: bash
-
-    WaveFunction {
-        method = <wavefunction_method>
-        restricted = True
-    }
-
-    DFT {
-        spin = False
-        exact_exchange = 0.0
-        $functionals
-        <func1>     <coef1>
-        <func2>     <coef2>
-        $end
-    }
-
-You can specify as many functionals as you want, and they will be added on top
-of each other with the given coefficient. For hybrid functionals you must 
-specify the amount of exact Hartree-Fock
-exchange that should be used (0.2 for B3LYP and 0.25 for PBE0 etc.). Option to
-use spin-density functional theory (for open-shell systems).
-
 World
 -----
 
@@ -105,6 +75,36 @@ molecule, e.g. for the water molecule
         H   0.0000    -1.4375     1.1500
         $end
     }
+
+WaveFunction
+------------
+
+Here we give the wavefunction method (HF or DFT) and whether we run
+spin restricted (alpha and beta spins are forced to occupy the same spatial 
+orbitals) or not. When running DFT we must also specify the functional to be 
+used in a separate DFT section (for HF this section should be omitted)
+
+.. code-block:: bash
+
+    WaveFunction {
+        method = <wavefunction_method>
+        restricted = True
+    }
+
+    DFT {
+        spin = False
+        exact_exchange = 0.0
+        $functionals
+        <func1>     <coef1>
+        <func2>     <coef2>
+        $end
+    }
+
+You can specify as many functionals as you want, and they will be added on top
+of each other with the given coefficient. For hybrid functionals you must 
+specify the amount of exact Hartree-Fock
+exchange that should be used (0.2 for B3LYP and 0.25 for PBE0 etc.). Option to
+use spin-density functional theory (for open-shell systems).
 
 LSDalton
 --------
