@@ -35,7 +35,7 @@ A very important analytic function is the Cartesian Gaussian
 
 which is initialized in the following way (in 3D)
 
-.. code-block:: c++
+.. code-block:: cpp
 
     double alpha, beta;
     double pos[3] = {x_0, y_0, z_0};
@@ -79,7 +79,7 @@ dimensions relative to an origin, e.g. the z coordinate in 3D
 
 This PositionFunction is available as
 
-.. code-block:: c
+.. code-block:: cpp
 
     double r_0[3] = {0.0, 0.0, 0.0};
     PositionFunction<3> r_func(r_0);
@@ -98,7 +98,7 @@ constructors, and only functions and operators with compatible MRAs can be
 combined in subsequent calculations. An MRA is defined in two steps, first the
 computational domain is given by a BoundingBox (D is the dimension)
 
-.. code-block:: c
+.. code-block:: cpp
 
     int n;                          // Root scale
     int l[D];                       // Translation of first box
@@ -108,7 +108,7 @@ computational domain is given by a BoundingBox (D is the dimension)
 
 which is combined with a ScalingBasis to give an MRA
 
-.. code-block:: c
+.. code-block:: cpp
 
     int k;                          // Polynomial order
     int type;                       // Polynomial type
@@ -146,7 +146,7 @@ methods of the FunctionTree are estimating the error in the representation
 function, as well as its integral and dot product with another FunctionTree
 (both over the full computational domain)
 
-.. code-block:: c
+.. code-block:: cpp
 
     double error = f_tree.estimateError();
     double sq_norm = f_tree.getSquareNorm();
@@ -228,7 +228,7 @@ Given an analytic D-dimensional function f\_func, we can obtain its
 numerical MW representation by projecting it onto the MW basis. For this we 
 have the MWProjector
 
-.. code-block:: c
+.. code-block:: cpp
 
     MWProjector<D> Q(MRA);
     FunctionTree<D> *f_tree = Q(f_func);
@@ -238,7 +238,7 @@ defined by its root nodes, with no regard on grid adaptivity. If you want to
 control the accuracy of the approximation you need to add an adaptor to 
 the projector
 
-.. code-block:: c
+.. code-block:: cpp
 
     double prec;
     WaveletAdaptor<D> w_adaptor(prec);
@@ -256,7 +256,7 @@ Given two functions :math:`f` and :math:`g` in MW representation
 (FunctionTrees), we can compute the sum (e.g. :math:`h = f - 2g`) or 
 product (e.g. :math:`h = f\times 2g`)
 
-.. code-block:: c
+.. code-block:: cpp
 
     MWAdder<D> add(MRA);
     FunctionTree<D> *h_tree = add(1.0, f_tree, -2.0, g_tree)
@@ -277,7 +277,7 @@ transformation among a set of functions).
 When more than two functions are involved in the arithmetics it might
 be beneficial to combine them into a single operation using the STL vector
 
-.. code-block:: c
+.. code-block:: cpp
 
     vector<double> coefs;
     vector<FunctionTree<D> *> trees;
@@ -287,7 +287,7 @@ be beneficial to combine them into a single operation using the STL vector
 
 A number of in-place operations are also available
 
-.. code-block:: c
+.. code-block:: cpp
 
     f_tree *= 2.0;
     f_tree *= g_tree;
@@ -336,7 +336,7 @@ In such cases we use a GridGenerator to build the initial tree structure.
 A special case of the GridGenerator (with no argument) corresponds to the 
 default constructor of the FunctionTree
 
-.. code-block:: c
+.. code-block:: cpp
 
     GridGenerator<D> G(MRA);
     FunctionTree<D> *f_tree = G();
@@ -347,13 +347,13 @@ Passing an analytic function as argument to the generator will build a grid
 based on some predefined knowledge of the function (if there are any, otherwise
 it is identical to the default constructor)
 
-.. code-block:: c
+.. code-block:: cpp
 
     FunctionTree<D> *f_tree = G(f_func);
 
 while passing a FunctionTree to the generator will copy its grid
 
-.. code-block:: c
+.. code-block:: cpp
 
     FunctionTree<D> *f_tree = G(g_tree);
 
@@ -361,7 +361,7 @@ Both of these will produce a skeleton FunctionTree with empty nodes. In order
 to define a function in the new tree it is passed as the first argument to the 
 regular TreeBuilders presented above, e.g for projection
 
-.. code-block:: c
+.. code-block:: cpp
 
     GridGenerator<D> G(MRA);
     MWProjector Q(MRA);
@@ -376,7 +376,7 @@ operation on the one given (the given tree is used as starting point for the
 TreeBuilder, and further grid refinements can occur if a TreeAdaptor is
 present), e.g. the grid copy can be done in two steps as
 
-.. code-block:: c
+.. code-block:: cpp
 
     FunctionTree<D> *f_tree = G();
     G(*f_tree, g_tree);
@@ -385,14 +385,14 @@ Actually, the effect of the GridGenerator is to `extend` the existing grid
 with any missing nodes relative to the input. This means that we can build the
 union of two grids by successive application of the generator
 
-.. code-block:: c
+.. code-block:: cpp
 
     G(f_tree, g_tree);
     G(f_tree, h_tree);
 
 and one can make the grids of two functions equal to their union
 
-.. code-block:: c
+.. code-block:: cpp
 
     G(f_tree, g_tree);
     G(g_tree, f_tree);
@@ -406,7 +406,7 @@ MW expansion coefficients (while keeping the grid refinement) with the
 GridCleaner (unlike the other TreeBuilders, the GridCleaner will not return a 
 FunctionTree pointer, as it would always be the same as the argument)
 
-.. code-block:: c
+.. code-block:: cpp
 
     GridCleaner<D> C(MRA);
     C(f_tree);
@@ -419,7 +419,7 @@ projector and the wavelet adaptor. For this we can combine the GridCleaner
 with an adaptor, which will adaptively refine the grid \emph{before} it is 
 cleared
 
-.. code-block:: c
+.. code-block:: cpp
 
     double prec;
     WaveletAdaptor<D> w_adaptor(prec);
@@ -433,7 +433,7 @@ preparation for the next iteration. The following is equivalent to the adaptive
 projection above (the cleaner returns the number of new nodes that were created
 in the process) 
 
-.. code-block:: c
+.. code-block:: cpp
 
     double prec;
     WaveletAdaptor<D> w_adaptor(prec);
