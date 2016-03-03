@@ -49,7 +49,7 @@ This section will specify the computational domain
     }
 
 where scale gives the size of the domain as :math:`2^{-scale}`. This will be symmetric 
-around zero, so the above will define a computational domain of $[-16,16]^3$.
+around zero, so the above will define a computational domain of :math:`[-16,16]^3`.
 The computational World should be large enough so that the electron density
 vanishes at the boundaries. The world origin can be used to translate the domain
 away from the symmetric box around the origin. The gauge origin can also be
