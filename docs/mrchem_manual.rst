@@ -55,6 +55,10 @@ used in a separate DFT section (for HF this section should be omitted)
     DFT {
         spin = False
         exact_exchange = 0.0
+        \$functionals
+        <func1>     <coef1>
+        <func2>     <coef2>
+        \$end
     }
 
 You can specify as many functionals as you want, and they will be added on top
