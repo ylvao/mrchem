@@ -1,6 +1,9 @@
+============
 Installation
 ============
 
+
+-------------------
 Build prerequisites
 -------------------
 
@@ -14,6 +17,8 @@ put them in your ``.bashrc`` or ``.zshrc`` they will be loaded automatically)::
     $ module load boost
     $ module load python
 
+
+-------------------------------
 Obtaining and building the code
 -------------------------------
 
@@ -39,6 +44,8 @@ build the code::
 Feel free to do whatever you like with your pilot code, but it is your own
 personal playground so don't add this file to git.
 
+
+-------------------
 Running the program
 -------------------
 

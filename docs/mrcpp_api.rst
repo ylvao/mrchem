@@ -327,7 +327,7 @@ Sometimes it is useful to construct an empty grid based on some available
 information of the function that is about to be represented. This can be e.g.
 that you want to copy the grid of an existing FunctionTree or that an analytic
 function has more or less known grid requirements (like Gaussians). Sometimes it
-is even necessary to force the grid refinement beyond the coasest scales in 
+is even necessary to force the grid refinement beyond the coarsest scales in 
 order for the WaveletAdaptor to detect a wavelet "signal" that allows it to do
 its job properly (this happens for narrow Gaussians where non of the initial
 quadrature points hits a function value significantly different from zero).
@@ -364,7 +364,7 @@ regular TreeBuilders presented above, e.g for projection
 .. code-block:: cpp
 
     GridGenerator<D> G(MRA);
-    MWProjector Q(MRA);
+    MWProjector<D> Q(MRA);
     FunctionTree<D> *f_tree = G(f_func);
     Q(*f_tree, f_func);
 
