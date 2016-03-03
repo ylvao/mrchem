@@ -9,6 +9,7 @@ The input file is organized in sections and keywords that can be of different
 type 
 
 .. code-block:: c
+    
      Section {
        keyword_1 = 1
        keyword_2 = 3.14
