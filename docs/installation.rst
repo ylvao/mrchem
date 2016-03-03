@@ -44,8 +44,9 @@ Running the program
 
 By following the instructions above the code will be compiled in both MPI and 
 OpenMP parallel. At the moment it is only recommended to run in OpenMP parallel, 
-and you should use as many threads as you can spare (`unset OMP_NUM_THREADS` 
-will give you all threads available, otherwise use `export OMP_NUM_THREADS N`)::
+and you should use as many threads as you can spare (``unset OMP_NUM_THREADS`` 
+will give you all threads available, otherwise use 
+``export OMP_NUM_THREADS N``)::
 
     $ unset OMP_NUM_THREADS
     $ ./mrcpp
