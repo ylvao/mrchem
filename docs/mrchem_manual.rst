@@ -45,7 +45,7 @@ spin restricted (alpha and beta spins are forced to occupy the same spatial
 orbitals) or not. When running DFT we must also specify the functional to be 
 used in a separate DFT section (for HF this section should be omitted)
 
-.. code-block:: c
+.. code-block:: bash
 
     WaveFunction {
         method = <wave function method>
