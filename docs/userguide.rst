@@ -18,20 +18,18 @@ type
        keyword_5 = True
     }
 
-.. highlight:: c
+
     
-     Section {
-       keyword_1 = 1
-       keyword_2 = 3.14
-       keyword_3 = [1, 2, 3]
-       keyword_4 = "foo"
-       keyword_5 = True
-    }
-
-
 The main input section contain two important keywords that specify the
 polynomial order of the multiwavelet basis set, and the relative precision that
 will be guaranteed in the calculation. The main input section is not specified
 by name, just write the keywords directly, e.g
 
+.. code-block:: c
 
+    order = 7 
+    rel_prec = 1.0e-5
+
+Increased precision requires higher polynomial order (use e.g order = 5 for
+rel_prec = 1.0e-3, and order = 13 for rel_prec = 1.0e-9, and interpolate in
+between).
