@@ -10,7 +10,7 @@ The mrchem input file
 The input file is organized in sections and keywords that can be of different
 type 
 
-.. code-block:: sh
+.. code-block:: bash
     
      Section {
         keyword_1 = 1
@@ -27,7 +27,7 @@ polynomial order of the multiwavelet basis set, and the relative precision that
 will be guaranteed in the calculation. The main input section is not specified
 by name, just write the keywords directly, e.g
 
-.. code-block:: sh
+.. code-block:: bash
 
     order = 7 
     rel_prec = 1.0e-5
@@ -45,10 +45,10 @@ spin restricted (alpha and beta spins are forced to occupy the same spatial
 orbitals) or not. When running DFT we must also specify the functional to be 
 used in a separate DFT section (for HF this section should be omitted)
 
-.. code-block:: sh
+.. code-block:: bash
 
     WaveFunction {
-        method = <wave function method>
+        method = <wavefunction_method>
         restricted = True
     }
 
@@ -72,7 +72,7 @@ World
 
 This section will specify the computational domain
 
-.. code-block:: sh
+.. code-block:: bash
 
      World {
         scale = -5
@@ -93,7 +93,7 @@ Molecule
 This input section specifies the geometry, charge and spin multiplicity of the 
 molecule, e.g. for the water molecule
    
-.. code-block:: sh
+.. code-block:: bash
 
     Molecule {
         charge = 0
@@ -112,24 +112,24 @@ LSDalton
 MRChem can use the LSDalton program to obtain an initial guess for the orbitals,
 using a small Gaussian basis set, which is specified in this section
     
-.. code-block:: sh
+.. code-block:: bash
 
     LSDalton {
         run = True
-        method = <wave function method>
-        basis = <basis set>
+        method = <wavefunction_method>
+        basis = <basis_set>
     }
-Currently, only HF (Hartree-Fock) and LDA can be used as <wave function 
-method>, and the
-<basis set> must be quite small, as MRChem can only read s- p- and 
-(uncontracted) d-functions. Option to run LSDalton or not.
+Currently, only HF (Hartree-Fock) and LDA can be used as 
+``<wavefunction_method>``, and the ``<basis_set>`` must be quite small, as 
+MRChem can only read s- p- and (uncontracted) d-functions. Option to run 
+LSDalton or not.
 
 Properties
 ----------
 
 Specify which properties to compute. Currently the following are available
 
-.. code-block:: sh
+.. code-block:: bash
 
     Properties {
         ground_state = True
@@ -158,7 +158,7 @@ SCF
 Specify the parameters for the SCF optimization of the ground state wave 
 function
 
-.. code-block:: sh
+.. code-block:: bash
  
     SCF {
         property_thrs = 1.0e-4
@@ -167,7 +167,7 @@ function
         rotation = 50
         localize = False
         write_orbitals = False
-        initial_guess = <initial>
+        initial_guess = <guess>
     }
 
 Here we specify the convergence thresholds for the orbitals and the property 
@@ -186,7 +186,7 @@ Specify the parameters for the SCF optimization of the linear response wave
 function. This section must be included if any linear response properties 
 are computed.
 
-.. code-block:: sh
+.. code-block:: bash
    
     Response {
         property_thrs = 1.0e-4
