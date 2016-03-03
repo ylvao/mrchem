@@ -1,0 +1,29 @@
+#!/bin/sh -l
+##
+##   Written by Jonas Juselius <jonas@iki.fi>
+##
+###-------- PBS parameters ----------
+#PBS -N mrchem.run
+#PBS -o run.out 
+#PBS -e qsub.out
+#PBS -lnodes=8:ppn=1:ib
+#PBS -lwalltime=01:00:00
+#PBS -lpvmem=15000MB
+##PBS -q gpu
+###-------- end PBS parameters ----------
+
+. ~jonas/bin/intel-xe.sh
+
+#export OMP_NUM_THREADS=8
+#module load ipm
+cd $PBS_O_WORKDIR
+
+#./mrchem -D mrchem.inp
+cmd="./mrchem"
+
+#impirun $cmd
+#mpitune -hf $PBS_NODEFILE -a \"mpiexec -n 8 $cmd\" -of tune.out 
+#mpirun -trace -n 8 $cmd
+
+###------ END  ------###
+# vim:syntax=sh:filetype=sh

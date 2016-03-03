@@ -1,0 +1,6 @@
+To enable the pilot code:
+
+1) Copy example.cpp to mrchem.cpp
+2) Run cmake
+3) make
+
