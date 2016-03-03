@@ -1,6 +1,8 @@
 Installation of MRChem
+======================
+
 Build prerequisites
-===================
+-------------------
 
 On Stallo the supplied setup script should be able to configure things 
 correctly, provided all the necessary modules have been loaded (if you 
@@ -13,7 +15,7 @@ put them in your ``.bashrc`` or ``.zshrc`` they will be loaded automatically)::
     $ module load python
 
 Obtaining and building the code
-===============================
+-------------------------------
 
 An experimental version of MRCPP is available on GitHub. There is no official
 main program yet, but you can write your own in a file called ``mrcpp.cpp`` in 
@@ -38,7 +40,7 @@ Feel free to do whatever you like with your pilot code, but it is your own
 personal playground so don't add this file to git.
 
 Running the program
-===================
+-------------------
 
 By following the instructions above the code will be compiled in both MPI and 
 OpenMP parallel. At the moment it is only recommended to run in OpenMP parallel, 
