@@ -10,7 +10,7 @@ The mrchem input file
 The input file is organized in sections and keywords that can be of different
 type 
 
-.. code-block:: python
+.. code-block:: bash
     
      Section {
         keyword_1 = 1
@@ -27,7 +27,7 @@ polynomial order of the multiwavelet basis set, and the relative precision that
 will be guaranteed in the calculation. The main input section is not specified
 by name, just write the keywords directly, e.g
 
-.. code-block:: python
+.. code-block:: bash
 
     order = 7 
     rel_prec = 1.0e-5
@@ -72,7 +72,7 @@ World
 
 This section will specify the computational domain
 
-.. code-block:: python
+.. code-block:: bash
 
      World {
         scale = -5
@@ -93,7 +93,7 @@ Molecule
 This input section specifies the geometry, charge and spin multiplicity of the 
 molecule, e.g. for the water molecule
    
-.. code-block:: python
+.. code-block:: bash
 
     Molecule {
         charge = 0
@@ -112,7 +112,7 @@ LSDalton
 MRChem can use the LSDalton program to obtain an initial guess for the orbitals,
 using a small Gaussian basis set, which is specified in this section
     
-.. code-block:: python
+.. code-block:: bash
 
     LSDalton {
         run = True
@@ -129,7 +129,7 @@ Properties
 
 Specify which properties to compute. Currently the following are available
 
-.. code-block:: python
+.. code-block:: bash
 
     Properties {
         ground_state = True
@@ -158,7 +158,7 @@ SCF
 Specify the parameters for the SCF optimization of the ground state wave 
 function
 
-.. code-block:: python
+.. code-block:: bash
  
     SCF {
         property_thrs = 1.0e-4
@@ -186,7 +186,7 @@ Specify the parameters for the SCF optimization of the linear response wave
 function. This section must be included if any linear response properties 
 are computed.
 
-.. code-block:: python
+.. code-block:: bash
    
     Response {
         property_thrs = 1.0e-4
