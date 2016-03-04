@@ -2,7 +2,6 @@
 MRCPP: Application Program Interface
 ====================================
 
-
 ------------
 Introduction
 ------------
@@ -15,10 +14,9 @@ to the numerical representations there are a limited number of analytic
 functions that are usually used as starting point for the numerical
 computations.
 
-
-----------------
-AnalyticFunction
-----------------
+------------------
+Analytic functions
+------------------
 
 Note that all these analytic functions needs to be projected onto the MW basis 
 before they can be used in numerical computations (see below).
