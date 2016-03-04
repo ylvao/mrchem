@@ -28,12 +28,3 @@ Chemistry <http://www.ctcc.no/>`_ (CTCC) at
    installation
    mrcpp_api
 
-
-==================
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
