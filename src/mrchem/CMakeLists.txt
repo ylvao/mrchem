@@ -9,7 +9,7 @@ add_library(mrchem STATIC
         ${mrchem_SOURCES}
         )
 
-target_link_libraries(mrchem mrcpp xcfun)
+target_link_libraries(mrchem mrcpp)
 add_dependencies(mrchem external-modules)
 
 install(TARGETS mrchem

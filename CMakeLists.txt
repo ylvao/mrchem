@@ -11,8 +11,8 @@ set (PROJECT_VERSION
     ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 option(MRCPP_INSTALL_FILTERS "Install MW filters" OFF)
-option(ENABLE_TESTS "Enable test suite" OFF)
-option(ENABLE_XCFUN "Use XCFun library" ON)
+option(ENABLE_TESTS "Enable test suite" ON)
+option(ENABLE_XCFUN "Use XCFun library" OFF)
 option(ENABLE_BLAS "Use BLAS backend for linear algebra" ON)
 option(ENABLE_MPI "Enable MPI parallelization" OFF)
 option(ENABLE_OPENMP "Enable OpenMP parallelization" OFF)
