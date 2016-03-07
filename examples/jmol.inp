@@ -1,5 +1,0 @@
-load "coord.xyz"
-hide all
-#isosurface is0 cutoff 0.05 "test.cube" color 0.0 1.0 "map.cube" translucent
-isosurface is0 cutoff 0.05 "test.cube" 
-
