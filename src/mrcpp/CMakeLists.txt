@@ -1,5 +1,5 @@
 
-set(mwrepr_SOURCES
+set(mrcpp_SOURCES
             parallel.cpp
             parallel.h
             constants.h
@@ -75,9 +75,9 @@ set(mwrepr_SOURCES
             ProjectionCalculator.h
         )
 
-add_library(mwrepr STATIC ${mwrepr_SOURCES})
+add_library(mrcpp STATIC ${mrcpp_SOURCES})
 
-install(TARGETS mwrepr
+install(TARGETS mrcpp
         ARCHIVE DESTINATION lib
         CONFIGURATIONS Debug-devel Release-devel
         )

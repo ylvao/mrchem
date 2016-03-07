@@ -1,6 +1,5 @@
 @Boost_INCLUDE_DIR@/include
 @EIGEN3_INCLUDE_DIR@
 external/include
-src/mwreprlib
-src/mwoperlib
+src/mrchem
 src/mrcpp

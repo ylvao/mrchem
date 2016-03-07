@@ -1,7 +1,7 @@
 include(DefaultPathsMRCPP)
-include_directories(mwreprlib)
-include_directories(mrgrid)
+include_directories(mrcpp)
+include_directories(mrchem)
 
-add_subdirectory(mwreprlib)
-add_subdirectory(mrgrid)
+add_subdirectory(mrcpp)
+add_subdirectory(mrchem)
 

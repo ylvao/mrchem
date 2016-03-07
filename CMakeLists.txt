@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
-project(MRCPP CXX C)
+project(MRCHEM CXX C)
 enable_language(CXX)
 
 set (PROJECT_VERSION_MAJOR 1)
@@ -9,7 +9,6 @@ set (PROJECT_VERSION_MINOR 0)
 set (PROJECT_VERSION_PATCH 0)
 set (PROJECT_VERSION 
     ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
-
 
 option(MRCPP_INSTALL_FILTERS "Install MW filters" OFF)
 option(ENABLE_TESTS "Enable test suite" OFF)
@@ -113,10 +112,10 @@ find_package(Git REQUIRED)
 
 # Configure CPack
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-    "MRCPP: Multi-Resoluton Chemistry Program Package")
+    "MRCHEM: MultiResoluton Chemistry program package")
 set(CPACK_PACKAGE_VENDOR "CTCC")
 set(CPACK_PACKAGE_CONTACT "Jonas Juselius <jonas.juselius@uit.no>")
-set(CPACK_PACKAGE_EXECUTABLES "mrcpp" "The MRCPP program")
+set(CPACK_PACKAGE_EXECUTABLES "mrchem" "The MRCHEM program")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INSTALL.rst")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
