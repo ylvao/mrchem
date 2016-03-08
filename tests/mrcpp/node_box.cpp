@@ -19,18 +19,6 @@ TEST_CASE("NodeBox: Constructor", "[node_box_constructor], [node_box], [boxes]")
     }
 }
 
-TEST_CASE("NodeBox: Fetching nodes", "[node_box_fetch], [node_box], [boxes]") {
-    SECTION("1D") {
-        testNodeFetchers<1>();
-    }
-    SECTION("2D") {
-        testNodeFetchers<2>();
-    }
-    SECTION("3D") {
-        testNodeFetchers<3>();
-    }
-}
-
 template<int D> void testConstructors() {
     int nb[D];
     int tot_boxes = 1;
@@ -62,6 +50,18 @@ template<int D> void testConstructors() {
     }
 }
 
+TEST_CASE("NodeBox: Fetching nodes", "[node_box_fetch], [node_box], [boxes]") {
+    SECTION("1D") {
+        testNodeFetchers<1>();
+    }
+    SECTION("2D") {
+        testNodeFetchers<2>();
+    }
+    SECTION("3D") {
+        testNodeFetchers<3>();
+    }
+}
+
 template<int D> void testNodeFetchers() {
     const double r[3] = {-0.3, 0.6, 1.9};
 
@@ -73,8 +73,11 @@ template<int D> void testNodeFetchers() {
     const NodeIndex<D> idx_2(idx_1, cIdx);
     finalize(&root);
 
-    FunctionTree<D> *tree = 0;
-    initialize(&tree);
+    MultiResolutionAnalysis<D> *mra = 0;
+    initialize(&mra);
+    GridGenerator<D> G(*mra);
+    FunctionTree<D> *tree = G();
+    finalize(&mra);
 
     NodeBox<D> &node_box = tree->getRootBox();
     const NodeBox<D> &const_box = tree->getRootBox();
@@ -103,6 +106,7 @@ template<int D> void testNodeFetchers() {
         REQUIRE( node.getDepth() == 0 );
     }
 
-    finalize(&tree);
+    delete tree;
 }
+
 } // namespace

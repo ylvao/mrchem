@@ -8,6 +8,7 @@
 #include "LegendreBasis.h"
 #include "FunctionTree.h"
 #include "GridGenerator.h"
+#include "GaussFunc.h"
 
 template<class T> void finalize(T **obj) {
     if (obj == 0) MSG_FATAL("Invalid argument");
@@ -84,39 +85,25 @@ template<int D> void testInitial(const BoundingBox<D> *box) {
     REQUIRE( box->size() == tot_boxes );
 }
 
-template<int D> void initialize(FunctionTree<D> **tree) {
-    if (tree == 0) MSG_FATAL("Invalid argument");
-    if (*tree != 0) MSG_FATAL("Invalid argument");
-
-    BoundingBox<D> *world = 0;
-    initialize(&world);
+template<int D> void initialize(MultiResolutionAnalysis<D> **mra) {
+    if (mra == 0) MSG_FATAL("Invalid argument");
+    if (*mra != 0) MSG_FATAL("Invalid argument");
 
     int k = 5;
     InterpolatingBasis basis(k);
-
-    MultiResolutionAnalysis<D> mra(*world, basis);
-    GridGenerator<D> G(mra);
-    *tree = G();
-
+    BoundingBox<D> *world = 0;
+    initialize(&world);
+    *mra = new MultiResolutionAnalysis<D>(*world, basis);
     finalize(&world);
 }
 
-template<int D> void testInitial(FunctionTree<D> *tree) {
-    if (tree == 0) MSG_FATAL("Invalid argument");
-
-    int k = 5;
-    int tot_nodes = 1;
-    for (int d = 0; d < D; d++) {
-        tot_nodes *= D-d;
-    }
-
-    REQUIRE( tree->getSquareNorm() == Approx(-1.0) );
-    REQUIRE( tree->getOrder() == k );
-    REQUIRE( tree->getDepth() == 1 );
-    REQUIRE( tree->getNNodes() == tot_nodes );
-    REQUIRE( tree->getNEndNodes() == tot_nodes );
-    REQUIRE( tree->getNGenNodes() == 0 );
-    REQUIRE( tree->getNAllocGenNodes() == 0 );
+/* Initializing a D-dimensional Gaussian of unit charge */
+template<int D> void initialize(GaussFunc<D> **func) {
+    double beta = 1.0e4;
+    double alpha = pow(beta/pi, D/2.0);
+    double pos[3] = {-0.2, 0.5, 1.0};
+    int pow[3] = {0, 0, 0};
+    *func = new GaussFunc<D>(beta, alpha, pos, pow);
 }
 
 #endif //FACTORY_FUNCTIONS_H

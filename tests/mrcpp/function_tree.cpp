@@ -4,91 +4,102 @@
 
 namespace function_tree {
 
-template<int D> void testConstructors();
+template<int D> void testZeroFunction();
+template<int D> void testGeneratedNodes();
 
-TEST_CASE("FunctionTree: Constructor", "[function_tree_constructor], [function_tree], [trees]") {
-    SECTION("1D") {
-        testConstructors<1>();
+SCENARIO("Zero FunctionTree", "[function_tree_zero], [function_tree], [trees]") {
+    GIVEN("a default function in 1D") {
+        testZeroFunction<1>();
     }
-    SECTION("2D") {
-        testConstructors<2>();
+    GIVEN("a default function in 2D") {
+        testZeroFunction<2>();
     }
-    SECTION("3D") {
-        testConstructors<3>();
+    GIVEN("a default function in 3D") {
+        testZeroFunction<3>();
     }
 }
 
-template<int D> void testConstructors() {
-    FunctionTree<D> *tree = 0;
-    initialize(&tree);
+template<int D> void testZeroFunction() {
+    MultiResolutionAnalysis<D> *mra = 0;
+    initialize(&mra);
+    GridGenerator<D> G(*mra);
+    finalize(&mra);
 
-    SECTION("Constructor") {
-        testInitial(tree);
+    FunctionTree<D> *tree = G();
+    WHEN("the function is set to zero") {
+        tree->setZero();
+        THEN("its value in an arbitrary point is zero") {
+            double r[3] = {-0.2, 0.6, 0.76};
+            REQUIRE( tree->evalf(r) == Approx(0.0) );
+        }
+        THEN("its squared norm is zero") {
+            REQUIRE( tree->getSquareNorm() == Approx(0.0) );
+        }
+        THEN("it integrates to zero") {
+            REQUIRE( tree->integrate() == Approx(0.0) );
+        }
+        THEN("the dot product with itself is zero") {
+            REQUIRE( tree->dot(*tree) == Approx(0.0) );
+        }
     }
-
-//    SECTION("Copy constructor") {
-//        FunctionTree<D> *tree_copy = new FunctionTree<D>(*tree);
-//        testInitial(tree_copy);
-//        finalize(&tree_copy);
-//    }
-
-//    SECTION("Base class copy constructor") {
-//        const MWTree<D> *mw_tree = static_cast<const MWTree<D> *>(tree);
-//        FunctionTree<D> *tree_copy = new FunctionTree<D>(*mw_tree);
-//        testInitial(tree_copy);
-//        finalize(&tree_copy);
-//    }
-
-    finalize(&tree);
+    delete tree;
 }
 
-SCENARIO("FunctionTree: Zero function", "[function_tree_zero], [function_tree], [trees]") {
-    double r[3] = {-0.2, 0.6, 0.76};
-    GIVEN("a zero function in 1D") {
-        FunctionTree<1> *tree = 0;
-        initialize(&tree);
-        tree->setZero();
-        THEN("its value in an arbitrary point is zero") {
-            REQUIRE( tree->evalf(r) == Approx(0.0) );
-        }
-        THEN("it integrates to zero") {
-            REQUIRE( tree->integrate() == Approx(0.0) );
-        }
-        THEN("the dot product with itself is zero") {
-            REQUIRE( tree->dot(*tree) == Approx(0.0) );
-        }
-        finalize(&tree);
+SCENARIO("Generating FunctionTree nodes", "[function_tree_generating], [function_tree], [trees]") {
+    GIVEN("a default function in 1D") {
+        testGeneratedNodes<1>();
     }
-    GIVEN("a zero function in 2D") {
-        FunctionTree<2> *tree = 0;
-        initialize(&tree);
-        tree->setZero();
-        THEN("its value in an arbitrary point is zero") {
-            REQUIRE( tree->evalf(r) == Approx(0.0) );
-        }
-        THEN("it integrates to zero") {
-            REQUIRE( tree->integrate() == Approx(0.0) );
-        }
-        THEN("the dot product with itself is zero") {
-            REQUIRE( tree->dot(*tree) == Approx(0.0) );
-        }
-        finalize(&tree);
+    GIVEN("a default function in 2D") {
+        testGeneratedNodes<2>();
     }
-    GIVEN("a zero function in 3D") {
-        FunctionTree<3> *tree = 0;
-        initialize(&tree);
-        tree->setZero();
-        THEN("its value in an arbitrary point is zero") {
-            REQUIRE( tree->evalf(r) == Approx(0.0) );
-        }
-        THEN("it integrates to zero") {
-            REQUIRE( tree->integrate() == Approx(0.0) );
-        }
-        THEN("the dot product with itself is zero") {
-            REQUIRE( tree->dot(*tree) == Approx(0.0) );
-        }
-        finalize(&tree);
+    GIVEN("a default function in 3D") {
+        testGeneratedNodes<3>();
     }
+}
+
+template<int D> void testGeneratedNodes() {
+    const double r[3] = {-0.3, 0.6, 1.9};
+    const int depth = 3;
+
+    MultiResolutionAnalysis<D> *mra = 0;
+    initialize(&mra);
+    GridGenerator<D> G(*mra);
+    finalize(&mra);
+
+    FunctionTree<D> *tree = G();
+    tree->setZero();
+
+    THEN("there are no GenNodes") {
+        REQUIRE( tree->getNGenNodes() == 0 );
+        REQUIRE( tree->getNAllocGenNodes() == 0 );
+    }
+
+    WHEN("a non-existing node is fetched") {
+        MWNode<D> &node = tree->getNode(r, depth);
+
+        THEN("there will be allocated GenNodes") {
+            REQUIRE( tree->getNGenNodes() > 0 );
+            REQUIRE( tree->getNAllocGenNodes() > 0 );
+
+            AND_WHEN("the GenNodes are cleared") {
+                tree->clearGenerated();
+
+                THEN("there will be un-allocated GenNodes") {
+                    REQUIRE( tree->getNGenNodes() > 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+
+            AND_WHEN("the GenNodes are deleted") {
+                tree->deleteGenerated();
+                THEN("there will be no GenNodes") {
+                    REQUIRE( tree->getNGenNodes() == 0 );
+                    REQUIRE( tree->getNAllocGenNodes() == 0 );
+                }
+            }
+        }
+    }
+    delete tree;
 }
 
 } // namespace
