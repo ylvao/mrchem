@@ -21,12 +21,11 @@ template<int D> void initialize(NodeIndex<D> **idx) {
     if (idx == 0) MSG_FATAL("Invalid argument");
     if (*idx != 0) MSG_FATAL("Invalid argument");
     int scale = 1;
-    int rank = 1;
     int l[D];
     for (int d = 0; d < D; d++) {
         l[d] = d-1;
     }
-    *idx = new NodeIndex<D>(scale, l, rank);
+    *idx = new NodeIndex<D>(scale, l);
 }
 
 template<int D> void testInitial(const NodeIndex<D> *idx) {
@@ -34,9 +33,6 @@ template<int D> void testInitial(const NodeIndex<D> *idx) {
 
     const int scale = 1;
     REQUIRE( scale == idx->getScale() );
-
-    const int rank = 1;
-    REQUIRE( rank == idx->getRankId() );
 
     for (int d = 0; d < D; d++) {
         const int l = d-1;

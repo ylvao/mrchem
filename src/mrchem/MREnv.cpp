@@ -1,4 +1,5 @@
 #include "MREnv.h"
+#include "Timer.h"
 
 using namespace std;
 
@@ -39,14 +40,19 @@ void MREnv::initializeMRCPP() {
     }
 }
 
-void MREnv::finalizeMRCPP(double t) {
-    SET_PRINT_PRECISION(5);
+void MREnv::finalizeMRCPP(Timer t) {
+    double wt = t.getWallTime();
+    double ut = t.getUserTime();
+    double st = t.getSystemTime();
+    SET_PRINT_PRECISION(6);
     println(0,endl);
     println(0,"************************************************************");
     println(0,"***                                                      ***");
-    println(0,"***                     Exiting MRCPP                    ***");
+    println(0,"***                    Exiting MRChem                    ***");
     println(0,"***                                                      ***");
-    println(0,"***               World clock: " << t << "               ***");
+    println(0,"***                 Wall:   " << wt << "                 ***");
+    println(0,"***                 User:   " << ut << "                 ***");
+    println(0,"***                 System: " << st << "                 ***");
     println(0,"***                                                      ***");
     println(0,"************************************************************");
     println(0,endl);

@@ -5,13 +5,12 @@
 
 #include "parallel.h"
 #include "constants.h"
-
-#include "TelePrompter.h"
+#include "Timer.h"
 
 class MREnv {
 public:
     static void initializeMRCPP();
-    static void finalizeMRCPP(double t);
+    static void finalizeMRCPP(Timer t);
 };
 
 #endif // MRENV_H

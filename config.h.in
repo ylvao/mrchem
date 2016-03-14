@@ -16,7 +16,5 @@
 
 #cmakedefine HAVE_BLAS
 
-#cmakedefine HAVE_GTEST
-
 #cmakedefine HAVE_XCFUN
 

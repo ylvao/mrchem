@@ -49,13 +49,11 @@ template<int D> void testConstructors() {
         int i = D;
         NodeIndex<D> *cIdx = new NodeIndex<D>(*nIdx, i);
         REQUIRE( cIdx->getScale() == (nIdx->getScale() + 1) );
-        REQUIRE( cIdx->getRankId() == nIdx->getRankId() );
         finalize(&cIdx);
     }
 
     SECTION("Default constructor") {
         NodeIndex<D> *cIdx = new NodeIndex<D>();
-        REQUIRE( cIdx->getRankId() < 0 );
         SECTION("Assignment operator") {
             *cIdx = *nIdx;
             testInitial<D>(cIdx);
@@ -86,13 +84,6 @@ template<int D> void testCompare() {
         THEN("aIdx != bIdx") {
             REQUIRE( *aIdx != *bIdx );
             REQUIRE_FALSE( *aIdx == *bIdx );
-        }
-    }
-    WHEN("aIdx is given a different rank") {
-        aIdx->setRankId(5);
-        THEN("aIdx == bIdx") {
-            REQUIRE( *aIdx == *bIdx );
-            REQUIRE_FALSE( *aIdx != *bIdx );
         }
     }
     WHEN("aIdx is given a different translation") {
