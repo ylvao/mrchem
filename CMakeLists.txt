@@ -30,7 +30,7 @@ include(ConfigCompilerFlags)
 
 find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
-find_package(Boost REQUIRED serialization)
+find_package(Boost REQUIRED serialization system timer)
 
 if (ENABLE_MPI)
     find_package(MPI)
@@ -64,7 +64,7 @@ endif ()
 include_directories(${PROJECT_BINARY_DIR})
 
 if (NOT DEFINED ${MW_FILTER_DIR})
-    set (MW_FILTER_DIR C"/home/jonas/dev/MultiwaveletFilters"
+    set (MW_FILTER_DIR "/home/jonas/dev/MultiwaveletFilters"
         CACHE STRING "Path to MW filters and cross-correlation coefs")
 endif()
 

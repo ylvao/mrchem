@@ -1,18 +1,29 @@
 include_directories (${CMAKE_INSTALL_PREFIX}/include)
 
-set (mrchem_SOURCES
-        MREnv.cpp
-        MREnv.h
-	)
+link_directories (${CMAKE_INSTALL_PREFIX}/lib)
+link_directories (${Boost_LIBRARY_DIRS})
+
+add_executable(mrchem.x mrchem.cpp)
+add_dependencies(mrchem.x external-modules)
 
 add_library(mrchem STATIC 
-        ${mrchem_SOURCES}
+        mrchem.cpp
+        MREnv.cpp
+        MREnv.h
         )
 
-target_link_libraries(mrchem mrcpp)
+target_link_libraries(mrchem mrcpp getkw)
 add_dependencies(mrchem external-modules)
 
-install(TARGETS mrchem
-        ARCHIVE DESTINATION lib
-        CONFIGURATIONS Debug-devel Release-devel
+target_link_libraries(mrchem.x mrchem mrcpp getkw
+	${Boost_LIBRARIES} ${BLAS_LIBRARIES}
         )
+
+
+option (MRCHEM_DRIVER_DEBUG "Debug the driver (extmod)" OFF)
+
+set (MRCHEM_EXECUTABLE ${CMAKE_INSTALL_PREFIX}/bin/mrchem.x)
+
+install(TARGETS mrchem.x
+	RUNTIME DESTINATION bin
+	)
