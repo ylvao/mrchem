@@ -1,6 +1,7 @@
 include(DefaultPathsMRCPP)
-include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwarithmetics)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
     add_executable(mrchem-pilot.x mrchem.cpp)
