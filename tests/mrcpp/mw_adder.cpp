@@ -5,7 +5,6 @@
 #include "MWProjector.h"
 #include "MWAdder.h"
 #include "WaveletAdaptor.h"
-#include "CopyAdaptor.h"
 
 namespace mw_adder {
 
