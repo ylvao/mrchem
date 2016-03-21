@@ -57,7 +57,7 @@ template<int D> void testMultiplication() {
     const double ref_int = ref_tree->integrate();
     const double ref_norm = ref_tree->getSquareNorm();
 
-    MultiplicationVector<D> prod_vec;
+    FunctionTreeVector<D> prod_vec;
     WHEN("the functions are multiplied") {
         prod_vec.push_back(*a_tree);
         prod_vec.push_back(*b_tree);

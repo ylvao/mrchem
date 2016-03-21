@@ -68,10 +68,10 @@ template<int D> void testAddition() {
     const double ref_int = ref_tree->integrate();
     const double ref_norm = ref_tree->getSquareNorm();
 
-    AdditionVector<D> sum_vec;
+    FunctionTreeVector<D> sum_vec;
     WHEN("the functions are added") {
-        sum_vec.push_back(*a_tree, a_coef);
-        sum_vec.push_back(*b_tree, b_coef);
+        sum_vec.push_back(a_coef, *a_tree);
+        sum_vec.push_back(b_coef, *b_tree);
         FunctionTree<D> *c_tree = add(sum_vec);
         sum_vec.clear();
 
@@ -92,7 +92,7 @@ template<int D> void testAddition() {
 
         AND_WHEN("the first function is subtracted") {
             sum_vec.push_back(*c_tree);
-            sum_vec.push_back(*a_tree, -1.0);
+            sum_vec.push_back(-1.0, *a_tree);
             FunctionTree<D> *d_tree = add(sum_vec);
             sum_vec.clear();
 
@@ -104,7 +104,7 @@ template<int D> void testAddition() {
 
             AND_WHEN("the second function is subtracted") {
                 sum_vec.push_back(*d_tree);
-                sum_vec.push_back(*b_tree, -b_coef);
+                sum_vec.push_back(-b_coef, *b_tree);
                 FunctionTree<D> *e_tree = add(sum_vec);
                 sum_vec.clear();
 
