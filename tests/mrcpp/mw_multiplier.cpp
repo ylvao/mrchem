@@ -75,6 +75,7 @@ template<int D> void testMultiplication() {
 
         delete c_tree;
     }
+    delete ref_tree;
     delete b_tree;
     delete a_tree;
 
