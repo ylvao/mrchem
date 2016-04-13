@@ -55,8 +55,7 @@ template<int D> void testProjectFunction() {
     }
     WHEN("the function is projected with guaranteed precision") {
         const double prec = 1.0e-4;
-        WaveletAdaptor<D> w_adap(prec);
-        MWProjector<D> Q_adap(*mra, w_adap);
+        MWProjector<D> Q_adap(*mra, prec);
         FunctionTree<D> *f_tree = Q_adap(*func);
         THEN("it integrates to approximately one") {
             REQUIRE( f_tree->integrate() == Approx(1.0).epsilon(1.0e-8) );

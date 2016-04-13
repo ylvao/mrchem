@@ -46,9 +46,8 @@ template<int D> void testAddition() {
 
     // Setting up adaptor and TreeBuilders
     double prec = 1.0e-4;
-    WaveletAdaptor<D> w_adaptor(prec);
     GridGenerator<D> G(*mra);
-    MWProjector<D> Q(*mra, w_adaptor);
+    MWProjector<D> Q(*mra, prec);
     MWAdder<D> add(*mra);
 
     // Build initial empty grid
