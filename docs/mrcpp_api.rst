@@ -112,34 +112,16 @@ order available is :math:`k=20`).
 Function representations
 ------------------------
 
-MW representations of functions are called FunctionTrees, and are in principle 
+MW representations of functions are called ``FunctionTrees``, and are in principle 
 available in any dimension using the template parameter D (in practice D=1,2,3).
-Constructing a full grown FunctionTree involves a number of steps, including
-setting up a memory allocator, constructing root nodes, building a tree
-structure, distributing memory among MPI hosts and computing MW
-coefficients. For this reason the FunctionTree constructor is made protected,
-and all construction is done by TreeBuilder objects.
-
-There are tree different ways of constructing MW functions (computing the 
+There are three different ways of constructing MW functions (computing the 
 expansion coefficients in the MW basis)
 
 * Projection of analytic function
 * Arithmetic operations
 * Application of MW operator
 
-and these will be described in the following sections. Integrals are
-computed very efficiently in the orthonormal MW basis, and among the important
-methods of the FunctionTree are estimating the error in the representation
-(based on the wavelet norm), obtaining the squared :math:`L^2`-norm of the
-function, as well as its integral and dot product with another FunctionTree
-(both over the full computational domain)
-
-.. code-block:: cpp
-
-    double error = f_tree.estimateError();
-    double sq_norm = f_tree.getSquareNorm();
-    double integral = f_tree.integrate();
-    double dot_prod = f_tree.dot(g_tree);
+and these will be described in the following sections. 
 
 The interface for constructing MW representations has a dual focus: on the one
 hand we want a simple, intuitive way of producing adaptive numerical
@@ -152,40 +134,130 @@ possible and even necessary. In the latter case it is important to be able to
 reuse the existing grids in e.g. iterative algorithms without excessive
 allocation/deallocation of memory.
 
+FunctionTree
+------------
+
+Constructing a full grown ``FunctionTree`` involves a number of steps, including
+setting up a memory allocator, constructing root nodes according to the given
+MRA, building a tree structure and computing MW coefficients. For this reason 
+the ``FunctionTree`` constructor is made protected, and all construction is done 
+indirectly through ``TreeBuilder`` objects:
+
+.. code-block:: cpp
+
+    FunctionTree<D> *tree = builder();
+
+where ``builder`` is any of the ``TreeBuilders`` presented below which may or may not
+take any arguments for the construction. Details on how the tree structure is
+built and how the MW coefficients are computed are specified in each particular
+``TreeBuilder``.
+
+Integrals are computed very efficiently in the orthonormal MW basis, and among 
+the important methods of the ``FunctionTree`` are estimating the error in the 
+representation (based on the wavelet norm), obtaining the squared 
+:math:`L^2`-norm of the function, as well as its integral and dot product with 
+another ``FunctionTree`` (both over the full computational domain)
+
+.. code-block:: cpp
+
+    double error = f_tree.estimateError();
+    double sq_norm = f_tree.getSquareNorm();
+    double integral = f_tree.integrate();
+    double dot_prod = f_tree.dot(g_tree);
+
+FunctionTreeVector
+------------------
+
+The ``FunctionTreeVector`` is a convenience class for a collection of ``FunctionTrees`` 
+which basically consists of two STL vectors, one containing pointers to 
+``FunctionTrees`` and one with corresponding numerical coefficients.
+Elements can be appended to the vector
+
+.. code-block:: cpp
+
+    FunctionTreeVector<D> tree_vec;
+    tree_vec.push_back(2.0, tree_a);
+    tree_vec.push_back(tree_b);
+    tree_vec.clear();
+
+where ``tree_b`` will be appended with a default coefficient of 1.0. Clearing the
+vector means removing all its elements. Note that the vector holds only pointers 
+to ``FunctionTrees``, so clearing its content will `not` delete the ``FunctionTrees``.
+This means that a particular tree can be part of several vectors, and the 
+construction/destruction of the tree must be handled outside.
 
 TreeBuilder
 -----------
 
 This is the class that is responsible for the construction of 
-FunctionTrees, which involves allocating memory, growing a tree structure and 
-calculating MW coefficients. The TreeBuilder has two important members: a
-TreeCalculator that defines how the MW coefficients are computed, and a
-TreeAdaptor that defines how the tree structure is grown. There are four 
+``FunctionTrees``, which involves allocating memory, growing a tree structure and 
+calculating MW coefficients. The ``TreeBuilder`` has two important members: a
+``TreeCalculator`` that defines how the MW coefficients are computed, and a
+``TreeAdaptor`` that defines how the tree structure is grown. There are four 
 different ways of computing MW coefficients (projection, addition,
 multiplication and operator application), and we have the corresponding
-TreeBuilders (the MW prefix indicates that they compute MW coefficients) 
+``TreeBuilders`` (the MW prefix indicates that they compute MW coefficients) 
 
 * MWProjector
 * MWAdder
 * MWMultiplier
 * MWOperator
 
-Each of these is a specialization of the TreeBuilder class that differs in the
-type of TreeCalculator, and can be combined with any TreeAdaptor. The interface
-of these classes is mainly the ``operator()``, which is overloaded with the 
-proper input argument(s) and will return a pointer to the newly constructed 
-FunctionTree. All TreeBuilders take an MRA as the first argument in their
-constructor, and all FunctionTrees produced by this TreeBuilder will get the
-same MRA.
+Each of these is a specialization of the ``TreeBuilder`` class that differs in the
+type of ``TreeCalculator``, and they all contain a ``WaveletAdaptor`` that controls the
+accuracy of the function representations they build. All ``TreeBuilders`` have the
+same fundamental building algorithm: 
+
+    1. Start with an initial guess for the grid
+    2. Compute the output function on the current grid
+    3. Use the ``WaveletAdaptor`` to refine the grid where needed
+    4. Iterate point 2 and 3 until the grid is converged
+
+All builders are constructed using the same arguments
+
+.. code-block:: cpp
+
+    int max_iter;
+    double prec;
+    MultiResolutionAnalysis<D> MRA;
+    TreeBuilder<D> builder(MRA, prec, max_iter);
+
+Where the ``MRA`` defines the computational domain and type of MW basis,
+``prec`` defines the relative precision used by the ``WaveletAdaptor`` and
+``max_iter`` will stop
+the grid refinement even if the accuracy criterion is not met. The last two
+arguments have negative defaults, which for ``prec`` means that no
+refinement will take place beyond the initial grid, and for ``max_iter`` it
+means that the number of iterations is unbounded.
+
+The interface for the ``TreeBuilders`` is mainly the ``operator()``, which comes in
+two versions
+
+.. code-block:: cpp
+
+    out = builder(inp);
+    builder(out, inp);
+
+where the former is a constructor that returns a pointer to a new
+``FunctionTree``, 
+while the latter will work on an already existing tree. The main difference
+between the two is the choice of initial grid: the former will automatically 
+construct a default grid based on the operation that is taking place (e.g.
+arithmetic operators will copy the grids of the input functions); the latter
+will use whatever grid is already present in the output tree structure which
+allows for more detailed control for the user, however the grids needs to be
+prepared in advance, either using a ``GridGenerator`` to construct an empty grid or 
+a ``GridCleaner`` to clear an existing function representation (see advanced 
+initialization below). 
 
 TreeCalculator
 --------------
 
 This class operates on the node level, computing MW coefficients based on the
 proper input data (analytic functions in the case of projection,
-FunctionTrees in the case of operators). The TreeCalculator is hidden within the
-TreeBuilder, and is not part of its interface. There is one calculator for each 
-of the MW-types of TreeBuilder:
+``FunctionTrees`` in the case of operators). The ``TreeCalculator`` is hidden within the
+``TreeBuilder``, and is not part of its interface. There is one calculator for each 
+of the MW-types of ``TreeBuilder``:
 
 * ProjectionCalculator
 * AdditionCalculator
@@ -195,109 +267,96 @@ of the MW-types of TreeBuilder:
 TreeAdaptor
 -----------
 
-Like the TreeCalculator, this class operates on the node level, but instead of
+Like the ``TreeCalculator``, this class operates on the node level, but instead of
 computing coefficients, it decides whether each node needs to be split into
 :math:`2^D` children nodes. There can be different reasons for splitting nodes, 
 the most important being to reduce the wavelet norm of the representation. 
-There are three different TreeAdaptors: 
+There are three different ``TreeAdaptors``: 
 
 * WaveletAdaptor
 * AnalyticAdaptor
 * CopyAdaptor
 
-where the WaveletAdaptor tests the wavelet norm, the
-AnalyticAdaptor use some known information of an analytic function, and the
-CopyAdaptor will copy the node structure of another tree. 
+where the ``WaveletAdaptor`` tests the wavelet norm, the
+``AnalyticAdaptor`` use some known information of an analytic function, and the
+``CopyAdaptor`` will copy the node structure of another tree. 
 
 MWProjector
 -----------
 
-Given an analytic D-dimensional function f\_func, we can obtain its 
+Given an analytic D-dimensional function ``f_func``, we can obtain its 
 numerical MW representation by projecting it onto the MW basis. For this we 
-have the MWProjector
+have the ``MWProjector``
 
 .. code-block:: cpp
 
-    MWProjector<D> Q(MRA);
+    MWProjector<D> Q(MRA, prec, max_iter);
     FunctionTree<D> *f_tree = Q(f_func);
 
-The default projector will simply project the function onto the grid that is
-defined by its root nodes, with no regard on grid adaptivity. If you want to 
-control the accuracy of the approximation you need to add an adaptor to 
-the projector
-
-.. code-block:: cpp
-
-    double prec;
-    WaveletAdaptor<D> w_adaptor(prec);
-    MWProjector<D> Q(MRA, w_adaptor);
-    FunctionTree<D> *f_tree = Q(f_func);
-
-The WaveletAdaptor will automatically construct the necessary grid needed to 
+The projector will construct an
+initial grid based on the analytic function (this is meant as a way to make sure
+that the projection starts on a grid where the function is actually visible,
+as for very narrow Gaussians, it's `not` meant to be a good approximation of the
+final grid). The default projector (``prec`` and ``max_iter`` negative) will
+simply do the projection on the initial grid with no further grid refinement.
+By specifying a positive ``prec`` the grid will automatically be adapted to
 represent the function to the given precision, based on the wavelet norm of 
-the representation. 
+the representation. You can also allow the grid to be refined only a certain number
+of iterations beyond the initial grid by specifying a positive ``max_iter``
+(this will of course not guarantee the accuracy of the representation).
 
 Arithmetic operations
 ---------------------
 
-Given two functions :math:`f` and :math:`g` in MW representation 
-(FunctionTrees), we can compute the sum (e.g. :math:`h = f - 2g`) or 
-product (e.g. :math:`h = f\times 2g`)
+Arithmetic operations in the MW representation are performed using the
+``FunctionTreeVector``, and the general sum :math:`g = \sum_i c_i f_i(x)` and
+product :math:`h = \prod_i c_i f_i(x)` are done in the following way
 
 .. code-block:: cpp
 
-    MWAdder<D> add(MRA);
-    FunctionTree<D> *h_tree = add(1.0, f_tree, -2.0, g_tree)
+    FunctionTreeVector inp_vec;
+    inp_vec.push_back(c_1, f_tree_1);
+    inp_vec.push_back(c_2, f_tree_2);
+    inp_vec.push_back(c_3, f_tree_3);
 
-    double prec;
-    WaveletAdaptor<D> w_adaptor(prec);
-    MWMultiplier<D> mult(MRA, w_adaptor);
-    FunctionTree<D> *h_tree = mult(2.0, f_tree, g_tree)
+    MWAdder<D> add(MRA, prec, max_iter);
+    FunctionTree<D> *g_tree = add(inp_vec);
 
-where the addition is using a CopyAdaptor that will perform the addition on the 
-union grid of the input functions. The WaveletAdaptor will build the product tree
-adaptively based on the wavelet norm for the multiplication. Note that any
-adaptor can in principle be used for any TreeBuilder, and the CopyAdaptor is the
-default for the arithmetic operations, but there are situations where the
-WaveletAdaptor is appropriate (e.g. when the addition corresponds to a unitary
-transformation among a set of functions).
+    MWMultiplier<D> mult(MRA, prec, max_iter);
+    FunctionTree<D> *h_tree = mult(inp_vec);
 
-When more than two functions are involved in the arithmetics it might
-be beneficial to combine them into a single operation using the STL vector
+The default initial grid for the arithmetic operators is the union of the grids
+of the input functions.
 
-.. code-block:: cpp
+Note that in the case of addition there is no extra information to be gained 
+by going beyond the finest refinement levels of the input functions, so the
+union grid summation is simply the best you can do, and adding a positive 
+``prec`` will not make a difference (there are situations where
+you want to use a `smaller` grid, and this is discussed below under advanced
+initialization).
 
-    vector<double> coefs;
-    vector<FunctionTree<D> *> trees;
-
-    FunctionTree<D> *h_tree = add(coefs, trees);
-    FunctionTree<D> *h_tree = mult(coefs, trees);
-
-A number of in-place operations are also available
-
-.. code-block:: cpp
-
-    f_tree *= 2.0;
-    f_tree *= g_tree;
-    f_tree += g_tree;
-    f_tree -= g_tree;
-    f_tree.square();
-    f_tree.pow(3.0/2.0);
-    f_tree.normalize();
-    f_tree.orthogonalize(g_tree);
+In the case of multiplication, however, there might be a loss of accuracy if 
+the product is restricted to the union grid. The reason for this is that the 
+product will contain signals of higher frequency than each of the input 
+functions, which require a higher grid refinement for accurate representation.
+By specifying a positive ``prec`` you will allow the grid to adapt to the higher
+frequencies, but it is usually a good idea to restrict to one extra refinement
+level (by setting ``max_iter=1``) as the grids are not guaranteed to
+converge for such local operations (like arithmetics, derivatives and
+function mappings).
 
 -----------------------
 Advanced initialization
 -----------------------
 
-The TreeBuilders, as presented above, have a clear and limited interface, but 
+The ``TreeBuilders``, as presented above, have a clear and limited interface, but 
 there is one important drawback: every operation require the construction
-of a new FunctionTree from scratch (including extensive memory allocation). 
+of a new ``FunctionTree`` from scratch (including extensive memory allocation). 
 In many practical applications however (e.g. iterative algorithms), we are 
 recalculating the same functions over and over, where the requirements on the
 numerical grids change only little between each iteration. In such situations it 
 will be beneficial to be able to reuse the existing grids without reallocating
-the memory. For this purpose we have the following additional TreeBuilder 
+the memory. For this purpose we have the following additional ``TreeBuilder`` 
 sub-classes (the Grid prefix indicates that they do not compute MW 
 coefficients):
 
@@ -305,7 +364,7 @@ coefficients):
 * GridCleaner
 
 where the former constructs empty grids from scratch and the latter clears the
-MW coefficients on an existing FunctionTree. The end result is in both cases an
+MW coefficients on an existing ``FunctionTree``. The end result is in both cases an
 empty tree skeleton with no MW coefficients (undefined function).
 
 GridGenerator
@@ -313,25 +372,26 @@ GridGenerator
 
 Sometimes it is useful to construct an empty grid based on some available 
 information of the function that is about to be represented. This can be e.g.
-that you want to copy the grid of an existing FunctionTree or that an analytic
+that you want to copy the grid of an existing ``FunctionTree`` or that an analytic
 function has more or less known grid requirements (like Gaussians). Sometimes it
 is even necessary to force the grid refinement beyond the coarsest scales in 
-order for the WaveletAdaptor to detect a wavelet "signal" that allows it to do
+order for the ``WaveletAdaptor`` to detect a wavelet "signal" that allows it to do
 its job properly (this happens for narrow Gaussians where non of the initial
 quadrature points hits a function value significantly different from zero).
-In such cases we use a GridGenerator to build the initial tree structure.
+In such cases we use a ``GridGenerator`` to build the initial tree structure.
 
-A special case of the GridGenerator (with no argument) corresponds to the 
-default constructor of the FunctionTree
+A special case of the ``GridGenerator`` (with no argument) corresponds to the 
+default constructor of the ``FunctionTree`` 
 
 .. code-block:: cpp
 
     GridGenerator<D> G(MRA);
     FunctionTree<D> *f_tree = G();
 
-which will construct a new FunctionTree with empty nodes (undefined
+which will construct a new ``FunctionTree`` with empty nodes (undefined
 function with no MW coefs), containing only the root nodes of the given MRA.
-Passing an analytic function as argument to the generator will build a grid 
+Passing an analytic function as argument to the generator will use an
+``AnalyticAdaptor`` to build a grid 
 based on some predefined knowledge of the function (if there are any, otherwise
 it is identical to the default constructor)
 
@@ -339,37 +399,47 @@ it is identical to the default constructor)
 
     FunctionTree<D> *f_tree = G(f_func);
 
-while passing a FunctionTree to the generator will copy its grid
+while passing a ``FunctionTree`` to the generator will copy its grid using 
+a ``CopyAdaptor``
 
 .. code-block:: cpp
 
     FunctionTree<D> *f_tree = G(g_tree);
 
-Both of these will produce a skeleton FunctionTree with empty nodes. In order 
+Both of these will produce a skeleton ``FunctionTree`` with empty nodes. In order 
 to define a function in the new tree it is passed as the first argument to the 
-regular TreeBuilders presented above, e.g for projection
+regular ``TreeBuilders`` presented above, e.g for projection
 
 .. code-block:: cpp
 
     GridGenerator<D> G(MRA);
-    MWProjector<D> Q(MRA);
+    MWProjector<D> Q(MRA, prec, max_iter);
     FunctionTree<D> *f_tree = G(f_func);
     Q(*f_tree, f_func);
 
 This will first produce an empty grid suited for representing the analytic
-function f\_func and then perform the projection on the given numerical grid.
-Similar notation applies for all TreeBuilders, if an undefined FunctionTree is 
-given as first argument, it will not construct a new tree but perform the 
-operation on the one given (the given tree is used as starting point for the 
-TreeBuilder, and further grid refinements can occur if a TreeAdaptor is
-present), e.g. the grid copy can be done in two steps as
+function ``f_func`` and then perform the projection on the given numerical grid.
+This will in fact be identical to the default projection
+
+.. code-block:: cpp
+
+    MWProjector<D> Q(MRA, prec, max_iter);
+    FunctionTree<D> *f_tree = Q(f_func);
+
+as the same ``GridGenerator`` and ``AnalyticAdaptor`` is used under the hood to 
+construct the default
+initial grid. Similar notation applies for all ``TreeBuilders``, if an undefined 
+``FunctionTree`` is given as first argument, it will not construct a new tree 
+but perform the operation on the one given (the given tree is used as starting 
+point for the ``TreeBuilder``, and further grid refinements can occur if a 
+``TreeAdaptor`` is present), e.g. the grid copy can be done in two steps as
 
 .. code-block:: cpp
 
     FunctionTree<D> *f_tree = G();
     G(*f_tree, g_tree);
 
-Actually, the effect of the GridGenerator is to `extend` the existing grid 
+Actually, the effect of the ``GridGenerator`` is to `extend` the existing grid 
 with any missing nodes relative to the input. This means that we can build the
 union of two grids by successive application of the generator
 
@@ -385,33 +455,97 @@ and one can make the grids of two functions equal to their union
     G(f_tree, g_tree);
     G(g_tree, f_tree);
 
+The union grid of several trees can be constructed using a ``FunctionTreeVector``
+
+.. code-block:: cpp
+
+    FunctionTreeVector<D> inp_vec;
+    inp_vec.push_back(tree_1);
+    inp_vec.push_back(tree_2);
+    inp_vec.push_back(tree_3);
+    FunctionTree<D> *f_tree = G(inp_vec);
+
+If you don't want to use the default starting grids (e.g. union grid for 
+arithmetic operations) you can use the ``GridGenerator`` to construct the grid 
+you want. To multiply functions adaptively based on the wavelet norm, 
+you specify the precision of the ``MWMultiplier`` and start from a default 
+grid of root nodes
+
+.. code-block:: cpp
+
+    double prec;
+    MWMultiplier<D> mult(MRA, prec);
+    GridGenerator<D> G(MRA);
+
+    FunctionTree<D> *f_tree = G();  // Construct empty grid of root nodes
+    mult(*f_tree, inp_vec);         // Build result based on wavelet norm
+
+If you have a summation over several functions but want to perform the 
+addition on the grid given by the `first` input function, you first copy the
+wanted grid and then perform the operation on that grid
+
+.. code-block:: cpp
+
+    FunctionTreeVector<D> inp_vec;
+    inp_vec.push_back(coef_1, tree_1);
+    inp_vec.push_back(coef_2, tree_2);
+    inp_vec.push_back(coef_3, tree_3);
+
+    MWAdder<D> add(MRA);
+    GridGenerator<D> G(MRA);
+
+    FunctionTree<D> *f_tree = G(tree_1); // Copy grid of first input function
+    add(*f_tree, inp_vec);               // Perform addition on given grid
+
+In the last example you can of course also add a ``prec`` to the ``MWAdder``,
+and the resulting function will be built adaptively starting from the given 
+initial grid. This in useful e.g. when performing a uniform transformation 
+among a set of ``FunctionTrees`` where you usually don't want to construct `all`
+the output functions on the union grid of `all` the input functions. To allow for
+individual grid adaptivity for the output functions you start all additions from
+the root node and let the ``WaveletAdaptor`` build customized grids for each
+function based on the precision
+
+.. code-block:: cpp
+
+    MWAdder<D> add(MRA, prec);
+    GridGenerator<D> G(MRA);
+
+    FunctionTreeVector<D> inp_vec;
+    inp_vec.push_back(coef_1, inp_tree_1);
+    inp_vec.push_back(coef_2, inp_tree_2);
+    inp_vec.push_back(coef_3, inp_tree_3);
+
+    FunctionTree<D> *out_tree = G(); // Start from simple grid of root nodes
+    add(*out_tree, inp_vec);         // Refine adaptively based on precision
+
 
 GridCleaner
 -----------
 
-Given a FunctionTree that is a valid function representation we can clear its 
+Given a ``FunctionTree`` that is a valid function representation we can clear its 
 MW expansion coefficients (while keeping the grid refinement) with the 
-GridCleaner (unlike the other TreeBuilders, the GridCleaner will not return a 
-FunctionTree pointer, as it would always be the same as the argument)
+``GridCleaner`` (unlike the other ``TreeBuilders``, the ``GridCleaner`` will not return a 
+``FunctionTree`` pointer, as it would always be the same as the argument)
 
 .. code-block:: cpp
 
     GridCleaner<D> C(MRA);
     C(f_tree);
 
-This action will leave the FunctionTree in the same state as the GridGenerator
+This action will leave the ``FunctionTree`` in the same state as the ``GridGenerator``
 (uninitialized function), and its coefficients can now be re-computed. 
 
-In certain situations might be desireable to separate the actions of the 
-projector and the wavelet adaptor. For this we can combine the GridCleaner 
-with an adaptor, which will adaptively refine the grid \emph{before} it is 
-cleared
+In certain situations it might be desireable to separate the actions of the 
+``TreeCalculator`` and the ``TreeAdaptor``. For this we can combine the 
+``GridCleaner`` with a ``WaveletAdaptor``, which will adaptively refine the 
+grid (based on the wavelet norm and the given precision with ``max_iter=1``) 
+`before` it is cleared
 
 .. code-block:: cpp
 
     double prec;
-    WaveletAdaptor<D> w_adaptor(prec);
-    GridCleaner<D> C(MRA, w_adaptor);
+    GridCleaner<D> C(MRA, prec);
     C(f_tree);
 
 One example where this might be
@@ -424,9 +558,8 @@ in the process)
 .. code-block:: cpp
 
     double prec;
-    WaveletAdaptor<D> w_adaptor(prec);
-    GridCleaner<D> C(MRA, w_adaptor);     // The adaptor is passed as argument
-    MWProjector<D> Q(MRA);                // to the cleaner, not the projector
+    GridCleaner<D> C(MRA, prec); // The precision parameter is passed as
+    MWProjector<D> Q(MRA);       // argument to the cleaner, not the projector
 
     int n_nodes = 1;
     while (n_nodes > 0) {
