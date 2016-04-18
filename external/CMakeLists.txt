@@ -20,6 +20,7 @@ ExternalProject_Add(submodule-libgetkw
 add_dependencies(submodule-libgetkw git-submodule-init)
 add_dependencies(external-modules submodule-libgetkw)
 
+option(ENABLE_XCFUN "Use XCFun library" OFF)
 if (ENABLE_XCFUN)
     enable_language(Fortran)
     ExternalProject_Add(submodule-xcfun
