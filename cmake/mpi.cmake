@@ -1,0 +1,10 @@
+option(ENABLE_MPI "Enable MPI parallelization" OFF)
+
+if(ENABLE_MPI)
+    find_package(MPI)
+    if(MPI_FOUND)
+        find_package(Boost REQUIRED mpi)
+        set(HAVE_MPI TRUE)
+        include_directories(${MPI_INCLUDE_PATH})
+    endif()
+endif()
