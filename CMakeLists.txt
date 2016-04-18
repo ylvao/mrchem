@@ -45,10 +45,6 @@ if (ENABLE_OPENMP)
     endif()
 endif ()
 
-if (ENABLE_CUDA)
-    find_package(CUDA)
-endif ()
-
 if (ENABLE_BLAS)
     if (BLAS_TYPE)
         find_package(BLAS COMPONENTS ${BLAS_TYPE})
