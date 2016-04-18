@@ -10,7 +10,6 @@ set (PROJECT_VERSION_PATCH 0)
 set (PROJECT_VERSION 
     ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
-option(ENABLE_XCFUN "Use XCFun library" OFF)
 option(ENABLE_CODE_COVERAGE "Compile with code coverage turned on" OFF)
 
 include(GNUInstallDirs)
