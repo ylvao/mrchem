@@ -4,14 +4,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 project(MRCHEM CXX C)
 enable_language(CXX)
 
-set (PROJECT_VERSION_MAJOR 1)
-set (PROJECT_VERSION_MINOR 0)
-set (PROJECT_VERSION_PATCH 0)
-set (PROJECT_VERSION 
-    ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
-
-option(ENABLE_CODE_COVERAGE "Compile with code coverage turned on" OFF)
-
+include(code_coverage)
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
@@ -21,24 +14,9 @@ find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
 find_package(Boost REQUIRED serialization system timer)
 
-option(ENABLE_MPI "Enable MPI parallelization" OFF)
-if (ENABLE_MPI)
-    find_package(MPI)
-    if (MPI_FOUND)
-        find_package(Boost REQUIRED mpi)
-        set(HAVE_MPI TRUE)
-        include_directories(${MPI_INCLUDE_PATH})
-    endif()
-endif ()
-
-option(ENABLE_OPENMP "Enable OpenMP parallelization" OFF)
-if (ENABLE_OPENMP)
-    find_package(OpenMP)
-    if (OPENMP_FOUND)
-        set(HAVE_OPENMP TRUE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    endif()
-endif ()
+include(mpi)
+include(omp)
+include(blas)
 
 option(ENABLE_BLAS "Use BLAS backend for linear algebra" ON)
 if (ENABLE_BLAS)
@@ -63,13 +41,7 @@ add_subdirectory(src)
 add_subdirectory(pilot)
 add_subdirectory(tools EXCLUDE_FROM_ALL)
 
-option(MRCPP_INSTALL_FILTERS "Install MW filters" OFF)
-if (MRCPP_INSTALL_FILTERS)
-    install(DIRECTORY ${MW_FILTER_DIR}
-        DESTINATION share
-        )
-    set (MW_FILTER_DIR ${CMAKE_INSTALL_PREFIX}/share/MultiwaveletFilters)
-endif ()
+include(mw_filters)
 
 option(ENABLE_TESTS "Enable test suite" ON)
 if (ENABLE_TESTS)
