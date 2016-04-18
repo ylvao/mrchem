@@ -40,13 +40,7 @@ add_subdirectory(src)
 add_subdirectory(pilot)
 add_subdirectory(tools EXCLUDE_FROM_ALL)
 
-option(MRCPP_INSTALL_FILTERS "Install MW filters" OFF)
-if (MRCPP_INSTALL_FILTERS)
-    install(DIRECTORY ${MW_FILTER_DIR}
-        DESTINATION share
-        )
-    set (MW_FILTER_DIR ${CMAKE_INSTALL_PREFIX}/share/MultiwaveletFilters)
-endif ()
+include(mw_filters)
 
 option(ENABLE_TESTS "Enable test suite" ON)
 if (ENABLE_TESTS)
