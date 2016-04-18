@@ -24,10 +24,6 @@ include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigCompilerFlags)
 
-#find_package(Python REQUIRED)
-#set(PYTHON_SITE_INSTALL_DIR
-#        lib/python${PYTHON_VERSION}/site-packages)
-
 find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
 find_package(Boost REQUIRED serialization system timer)
@@ -88,16 +84,6 @@ if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
 
-# Copy the examples in place for convenience 
-#if (NOT EXISTS ${CMAKE_BINARY_DIR}/mrgrid.inp)
-    #set(_dir ${CMAKE_SOURCE_DIR}/examples)
-    #file(COPY ${_dir}/mrchem.inp ${_dir}
-        #DESTINATION ${CMAKE_BINARY_DIR}
-        #)
-    #unset(_dir)
-#endif()
-
-
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
     add_subdirectory(doc EXCLUDE_FROM_ALL)
@@ -127,4 +113,3 @@ feature_summary(
    DESCRIPTION "Found packages:" 
    WHAT PACKAGES_FOUND
    )
-
