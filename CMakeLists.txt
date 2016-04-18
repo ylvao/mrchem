@@ -24,10 +24,6 @@ include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigCompilerFlags)
 
-#find_package(Python REQUIRED)
-#set(PYTHON_SITE_INSTALL_DIR
-#        lib/python${PYTHON_VERSION}/site-packages)
-
 find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
 find_package(Boost REQUIRED serialization system timer)
@@ -47,10 +43,6 @@ if (ENABLE_OPENMP)
         set(HAVE_OPENMP TRUE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     endif()
-endif ()
-
-if (ENABLE_CUDA)
-    find_package(CUDA)
 endif ()
 
 if (ENABLE_BLAS)
@@ -88,16 +80,6 @@ if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
 
-# Copy the examples in place for convenience 
-#if (NOT EXISTS ${CMAKE_BINARY_DIR}/mrgrid.inp)
-    #set(_dir ${CMAKE_SOURCE_DIR}/examples)
-    #file(COPY ${_dir}/mrchem.inp ${_dir}
-        #DESTINATION ${CMAKE_BINARY_DIR}
-        #)
-    #unset(_dir)
-#endif()
-
-
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
     add_subdirectory(doc EXCLUDE_FROM_ALL)
@@ -116,8 +98,8 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
 set(CPACK_PACKAGE_VENDOR "CTCC")
 set(CPACK_PACKAGE_CONTACT "Jonas Juselius <jonas.juselius@uit.no>")
 set(CPACK_PACKAGE_EXECUTABLES "mrchem" "The MRCHEM program")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INSTALL.rst")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 set(CPACK_GENERATOR TGZ RPM DEB)
 include(ConfigPackaging) 
@@ -127,4 +109,3 @@ feature_summary(
    DESCRIPTION "Found packages:" 
    WHAT PACKAGES_FOUND
    )
-
