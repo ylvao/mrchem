@@ -4,8 +4,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 project(MRCHEM CXX C)
 enable_language(CXX)
 
-option(ENABLE_CODE_COVERAGE "Compile with code coverage turned on" OFF)
-
+include(code_coverage)
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
