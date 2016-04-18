@@ -11,7 +11,6 @@ set (PROJECT_VERSION
     ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 option(ENABLE_XCFUN "Use XCFun library" OFF)
-option(ENABLE_CUDA "Enable CUDA GPU acceleration support" OFF)
 option(ENABLE_CODE_COVERAGE "Compile with code coverage turned on" OFF)
 
 include(GNUInstallDirs)
