@@ -16,6 +16,7 @@ find_package(Boost REQUIRED serialization system timer)
 
 include(mpi)
 include(omp)
+include(blas)
 
 option(ENABLE_BLAS "Use BLAS backend for linear algebra" ON)
 if (ENABLE_BLAS)
