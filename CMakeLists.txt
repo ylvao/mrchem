@@ -93,15 +93,6 @@ configure_file (
 find_package(Git REQUIRED)
 
 # Configure CPack
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-    "MRCHEM: MultiResoluton Chemistry program package")
-set(CPACK_PACKAGE_VENDOR "CTCC")
-set(CPACK_PACKAGE_CONTACT "Jonas Juselius <jonas.juselius@uit.no>")
-set(CPACK_PACKAGE_EXECUTABLES "mrchem" "The MRCHEM program")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
-set(CPACK_GENERATOR TGZ RPM DEB)
 include(ConfigPackaging) 
 
 include(FeatureSummary)
