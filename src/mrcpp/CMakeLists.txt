@@ -14,8 +14,10 @@ set(mrcpp_SOURCES
     GaussQuadrature.h
     Gaussian.h
     GenNode.h
+	GreensKernel.h
     GridCleaner.h
     GridGenerator.h
+    HelmholtzKernel.h
     HilbertIterator.h
     HilbertPath.h
     InterpolatingBasis.h
@@ -31,6 +33,7 @@ set(mrcpp_SOURCES
     NodeBox.h
     NodeIndex.h
     ObjectCache.h
+    PoissonKernel.h
     Polynomial.h
     ProjectedNode.h
     ProjectionCalculator.h
@@ -56,7 +59,9 @@ set(mrcpp_SOURCES
     GaussQuadrature.cpp
     Gaussian.cpp
     GenNode.cpp
+	GreensKernel.cpp
     GridCleaner.cpp
+    HelmholtzKernel.cpp
     HilbertPath.cpp
     InterpolatingBasis.cpp
     LegendreBasis.cpp
@@ -66,6 +71,7 @@ set(mrcpp_SOURCES
     MWTree.cpp
     MathUtils.cpp
     NodeBox.cpp
+    PoissonKernel.cpp
     Polynomial.cpp
     ProjectedNode.cpp
     ProjectionCalculator.cpp
