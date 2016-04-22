@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "FilterCache.h"
+#include "constants.h"
 
 using namespace Eigen;
 
