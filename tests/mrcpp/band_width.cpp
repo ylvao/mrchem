@@ -14,7 +14,7 @@ TEST_CASE("BandWidth", "[band_width]") {
         REQUIRE( bw.getDepth() == depth );
         for (int n = 0; n < 2*depth; n++) {
             REQUIRE( bw.isEmpty(n) );
-            REQUIRE( bw.getMaxBandWidth(n) == -1 );
+            REQUIRE( bw.getMaxWidth(n) == -1 );
         }
     }
 
@@ -32,11 +32,11 @@ TEST_CASE("BandWidth", "[band_width]") {
         REQUIRE( bw.getDepth() == depth );
         REQUIRE_FALSE( bw.isEmpty(0) );
         REQUIRE_FALSE( bw.isEmpty(1) );
-        REQUIRE( bw.getMaxBandWidth(0) == 3 );
-        REQUIRE( bw.getMaxBandWidth(1) == 5 );
+        REQUIRE( bw.getMaxWidth(0) == 3 );
+        REQUIRE( bw.getMaxWidth(1) == 5 );
         for (int n = 2; n < 2*depth; n++) {
             REQUIRE( bw.isEmpty(n) );
-            REQUIRE( bw.getMaxBandWidth(n) == -1 );
+            REQUIRE( bw.getMaxWidth(n) == -1 );
         }
     }
 }
