@@ -93,6 +93,22 @@ template<int D> void initialize(MultiResolutionAnalysis<D> **mra) {
     finalize(&world);
 }
 
+template<int D> void initializeKernel(MultiResolutionAnalysis<D> **mra) {
+    if (mra == 0) MSG_FATAL("Invalid argument");
+    if (*mra != 0) MSG_FATAL("Invalid argument");
+    if (D != 1) MSG_FATAL("Kernels live in 1D");
+
+    int n = -1;
+    int l = -2;
+    int nbox = 4;
+    NodeIndex<D> idx(n, &l);
+    BoundingBox<D> box(idx, &nbox);
+
+    int k = 11;
+    InterpolatingBasis basis(k);
+    *mra = new MultiResolutionAnalysis<D>(box, basis);
+}
+
 /* Initializing a D-dimensional Gaussian of unit charge */
 template<int D> void initialize(GaussFunc<D> **func) {
     double beta = 1.0e4;
