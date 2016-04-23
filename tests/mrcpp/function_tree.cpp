@@ -11,14 +11,12 @@ SCENARIO("Zero FunctionTree", "[function_tree_zero], [function_tree], [trees]") 
     GIVEN("a default function in 1D") {
         testZeroFunction<1>();
     }
-    /*
     GIVEN("a default function in 2D") {
         testZeroFunction<2>();
     }
     GIVEN("a default function in 3D") {
         testZeroFunction<3>();
     }
-    */
 }
 
 template<int D> void testZeroFunction() {
