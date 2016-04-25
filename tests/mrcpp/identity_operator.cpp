@@ -2,6 +2,7 @@
 
 #include "factory_functions.h"
 #include "MWProjector.h"
+#include "IdentityOperator.h"
 #include "IdentityKernel.h"
 #include "CrossCorrelationGenerator.h"
 #include "OperatorTree.h"
@@ -35,10 +36,15 @@ TEST_CASE("Initialize identity operator", "[identity_operator], [mw_operator]") 
 
                 oper_tree->calcBandWidth(1.0);
                 BandWidth bw_1 = oper_tree->getBandWidth();
+                oper_tree->clearBandWidth();
+
                 oper_tree->calcBandWidth(0.001);
                 BandWidth bw_2 = oper_tree->getBandWidth();
+                oper_tree->clearBandWidth();
+
                 oper_tree->calcBandWidth(-1.0);
                 BandWidth bw_3 = oper_tree->getBandWidth();
+                oper_tree->clearBandWidth();
 
                 for (int i = 0; i < oper_tree->getDepth(); i++) {
                     REQUIRE( bw_1.getMaxWidth(i) <= bw_2.getMaxWidth(i) );
@@ -52,7 +58,30 @@ TEST_CASE("Initialize identity operator", "[identity_operator], [mw_operator]") 
             finalize(&kern_mra);
         }
     }
+}
 
+TEST_CASE("Apply identity operator", "[apply_identity], [mw_operator]") {
+    double proj_prec = 1.0e-4;
+    double apply_prec = 1.0e-3;
+    double build_prec = 1.0e-4;
+    MultiResolutionAnalysis<1> *mra = 0;
+    initialize(&mra);
+
+    GaussFunc<1> *fFunc = 0;
+    initialize(&fFunc);
+
+    MWProjector<1> Q(*mra, proj_prec);
+    FunctionTree<1> *fTree = Q(*fFunc);
+
+    GridGenerator<1> G(*mra);
+    FunctionTree<1> *gTree = G();
+
+    IdentityOperator<1> I(*mra, -1.0, build_prec);
+    I(*gTree, *fTree);
+
+    REQUIRE( gTree->getDepth() <= fTree->getDepth() );
+    REQUIRE( gTree->getNNodes() <= fTree->getNNodes() );
+    REQUIRE( gTree->integrate() == Approx(fTree->integrate()).epsilon(apply_prec) );
 }
 
 } // namespace
