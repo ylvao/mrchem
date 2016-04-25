@@ -82,6 +82,11 @@ TEST_CASE("Apply identity operator", "[apply_identity], [mw_operator]") {
     REQUIRE( gTree->getDepth() <= fTree->getDepth() );
     REQUIRE( gTree->getNNodes() <= fTree->getNNodes() );
     REQUIRE( gTree->integrate() == Approx(fTree->integrate()).epsilon(apply_prec) );
+
+    delete gTree;
+    delete fTree;
+    finalize(&fFunc);
+    finalize(&mra);
 }
 
 } // namespace
