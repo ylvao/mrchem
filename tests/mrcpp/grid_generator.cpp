@@ -24,7 +24,7 @@ template<int D> void testGridGenerator() {
 
     MultiResolutionAnalysis<D> *mra = 0;
     initialize(&mra);
-    GridGenerator<D> G(*mra);
+    GridGenerator<D> G(*mra, 2);
 
     WHEN("the GridGenerator is given no argument") {
         FunctionTree<D> *f_tree = G();
@@ -41,7 +41,7 @@ template<int D> void testGridGenerator() {
 
                 THEN("the empty tree gets adapted") {
                     REQUIRE( f_tree->getSquareNorm() == Approx(-1.0) );
-                    REQUIRE( f_tree->getDepth() > 1 );
+                    REQUIRE( f_tree->getDepth() == 3 );
                     REQUIRE( f_tree->getNNodes() > f_tree->getNEndNodes() );
                     REQUIRE( f_tree->getNGenNodes() == 0 );
                     REQUIRE( f_tree->getNAllocGenNodes() == 0 );
@@ -56,7 +56,7 @@ template<int D> void testGridGenerator() {
 
         THEN("we get an empty adapted tree structure") {
             REQUIRE( f_tree->getSquareNorm() == Approx(-1.0) );
-            REQUIRE( f_tree->getDepth() > 1 );
+            REQUIRE( f_tree->getDepth() == 3 );
             REQUIRE( f_tree->getNNodes() > f_tree->getNEndNodes() );
             REQUIRE( f_tree->getNGenNodes() == 0 );
             REQUIRE( f_tree->getNAllocGenNodes() == 0 );
