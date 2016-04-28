@@ -10,7 +10,9 @@
 
 namespace identity_operator {
 
-TEST_CASE("Initialize identity operator", "[identity_operator], [mw_operator]") {
+template<int D> void applyIdentity();
+
+TEST_CASE("Initialize identity operator", "[init_identity], [mw_operator]") {
     double exp_prec  = 1.0e-6;
     double proj_prec = 1.0e-6;
     double ccc_prec  = 1.0e-4;
@@ -22,9 +24,11 @@ TEST_CASE("Initialize identity operator", "[identity_operator], [mw_operator]") 
         SECTION("Project identity kernel") {
             MultiResolutionAnalysis<1> *kern_mra = 0;
             initializeKernel(&kern_mra);
+            GridGenerator<1> G(*kern_mra);
             MWProjector<1> Q(*kern_mra, proj_prec);
 
-            FunctionTree<1> *kern_tree = Q(id_kern);
+            FunctionTree<1> *kern_tree = G(id_kern);
+            Q(*kern_tree, id_kern);
             REQUIRE( kern_tree->integrate() == Approx(1.0).epsilon(proj_prec) );
 
             SECTION("Build operator tree by cross correlation") {
@@ -61,22 +65,34 @@ TEST_CASE("Initialize identity operator", "[identity_operator], [mw_operator]") 
 }
 
 TEST_CASE("Apply identity operator", "[apply_identity], [mw_operator]") {
-    double proj_prec = 1.0e-4;
+    SECTION("1D") {
+        applyIdentity<1>();
+    }
+    SECTION("2D") {
+        applyIdentity<2>();
+    }
+    SECTION("3D") {
+        applyIdentity<3>();
+    }
+}
+
+template<int D> void applyIdentity() {
+    double proj_prec = 1.0e-3;
     double apply_prec = 1.0e-3;
     double build_prec = 1.0e-4;
-    MultiResolutionAnalysis<1> *mra = 0;
+
+    MultiResolutionAnalysis<D> *mra = 0;
+    GaussFunc<D> *fFunc = 0;
+    initialize(&fFunc);
     initialize(&mra);
 
-    GaussFunc<1> *fFunc = 0;
-    initialize(&fFunc);
+    MWProjector<D> Q(*mra, proj_prec);
+    FunctionTree<D> *fTree = Q(*fFunc);
 
-    MWProjector<1> Q(*mra, proj_prec);
-    FunctionTree<1> *fTree = Q(*fFunc);
+    GridGenerator<D> G(*mra);
+    FunctionTree<D> *gTree = G();
 
-    GridGenerator<1> G(*mra);
-    FunctionTree<1> *gTree = G();
-
-    IdentityOperator<1> I(*mra, -1.0, build_prec);
+    IdentityOperator<D> I(*mra, apply_prec, build_prec);
     I(*gTree, *fTree);
 
     REQUIRE( gTree->getDepth() <= fTree->getDepth() );
