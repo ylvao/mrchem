@@ -12,30 +12,41 @@ namespace identity_operator {
 
 template<int D> void applyIdentity();
 
-TEST_CASE("Initialize identity operator", "[init_identity], [mw_operator]") {
+TEST_CASE("Initialize identity operator", "[init_identity], [identity_operator], [mw_operator]") {
     double exp_prec  = 1.0e-6;
     double proj_prec = 1.0e-6;
     double ccc_prec  = 1.0e-4;
+
+    const int n = -6;
+    const int k = 5;
 
     SECTION("Initialize identity kernel") {
         IdentityKernel id_kern(exp_prec);
         REQUIRE( id_kern.size() == 1 );
 
         SECTION("Project identity kernel") {
-            MultiResolutionAnalysis<1> *kern_mra = 0;
-            initializeKernel(&kern_mra);
-            GridGenerator<1> G(*kern_mra);
-            MWProjector<1> Q(*kern_mra, proj_prec);
+            int l = -1;
+            int nbox = 2;
+            NodeIndex<1> idx(n, &l);
+            BoundingBox<1> box(idx, &nbox);
+
+            InterpolatingBasis basis(2*k+1);
+            MultiResolutionAnalysis<1> kern_mra(box, basis);
+            GridGenerator<1> G(kern_mra);
+            MWProjector<1> Q(kern_mra, proj_prec);
 
             FunctionTree<1> *kern_tree = G(id_kern);
             Q(*kern_tree, id_kern);
             REQUIRE( kern_tree->integrate() == Approx(1.0).epsilon(proj_prec) );
 
             SECTION("Build operator tree by cross correlation") {
-                MultiResolutionAnalysis<2> *oper_mra = 0;
-                initializeOperator(&oper_mra);
+                NodeIndex<2> idx(n);
+                BoundingBox<2> box(idx);
 
-                CrossCorrelationGenerator G(*oper_mra, ccc_prec);
+                InterpolatingBasis basis(k);
+                MultiResolutionAnalysis<2> oper_mra(box, basis);
+
+                CrossCorrelationGenerator G(oper_mra, ccc_prec);
                 OperatorTree *oper_tree = G(*kern_tree);
 
                 oper_tree->calcBandWidth(1.0);
@@ -56,15 +67,13 @@ TEST_CASE("Initialize identity operator", "[init_identity], [mw_operator]") {
                 }
 
                 delete oper_tree;
-                finalize(&oper_mra);
             }
             delete kern_tree;
-            finalize(&kern_mra);
         }
     }
 }
 
-TEST_CASE("Apply identity operator", "[apply_identity], [mw_operator]") {
+TEST_CASE("Apply identity operator", "[apply_identity], [identity_operator], [mw_operator]") {
     SECTION("1D") {
         applyIdentity<1>();
     }
