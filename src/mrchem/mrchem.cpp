@@ -19,7 +19,10 @@ int main(int argc, char **argv) {
     Timer rolex;
     rolex.restart();
 
-    MREnv::initializeMRCPP();
+    int printlevel = 0;
+    int printprec = 15;
+    bool teletype = false;
+    MREnv::initializeMRCPP(printlevel, printprec, teletype);
     MREnv::finalizeMRCPP(rolex);
 
     return 0;

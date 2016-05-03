@@ -3,17 +3,15 @@
 
 using namespace std;
 
-void MREnv::initializeMRCPP() {
+void MREnv::initializeMRCPP(int printlevel, int printprec, bool teletype) {
     int nThreads = omp_get_max_threads();
     int nHosts = node_group.size();
 
     omp_set_dynamic(0);
     Eigen::setNbThreads(1);
 
-    int printLevel = 10;
-    bool teletype = true;
-
-    TelePrompter::init(printLevel, teletype, "MRChem");
+    TelePrompter::init(printlevel, teletype, "MRChem");
+    TelePrompter::setPrecision(printprec);
 
     println(0,endl << endl);
     println(0,"************************************************************");
@@ -27,7 +25,7 @@ void MREnv::initializeMRCPP() {
     println(0,"***                                                      ***");
     println(0,"************************************************************");
     println(0,endl);
-    println(0,"Print level  : " <<  printLevel << endl);
+    println(0,"Print level  : " <<  printlevel << endl);
 
     if (nHosts > 1 or nThreads > 1) {
         println(0,"+++ Parallel execution: ");
