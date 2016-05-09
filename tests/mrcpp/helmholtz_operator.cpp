@@ -111,7 +111,7 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     double apply_prec = 1.0e-2;
     double build_prec = 1.0e-3;
 
-    // Computational domain [-8.0, 8.0]
+    // Computational domain [-32.0, 32.0]
     int scale = -5;
     int corner[3] = {-1, -1, -1};
     int nbox[3] = {2, 2, 2};

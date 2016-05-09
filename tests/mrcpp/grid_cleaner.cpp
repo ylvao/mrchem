@@ -3,8 +3,7 @@
 #include "factory_functions.h"
 #include "MWProjector.h"
 #include "GridCleaner.h"
-#include "WaveletAdaptor.h"
-#include "CopyAdaptor.h"
+#include "GridGenerator.h"
 
 namespace grid_cleaner {
 
@@ -29,8 +28,7 @@ template<int D> void testGridCleaner() {
     initialize(&mra);
 
     const double prec = 1.0e-4;
-    WaveletAdaptor<D> w_adap(prec);
-    MWProjector<D> Q(*mra, w_adap);
+    MWProjector<D> Q(*mra, prec);
     FunctionTree<D> *tree = Q(*func);
 
     const int refDepth = tree->getDepth();
@@ -59,8 +57,7 @@ template<int D> void testGridCleaner() {
     }
     WHEN("the grid is cleaned adaptively") {
         const double new_prec = 1.0e-5;
-        WaveletAdaptor<D> w_adaptor(new_prec);
-        GridCleaner<D> C(*mra, w_adaptor);
+        GridCleaner<D> C(*mra, new_prec);
         C(*tree);
         THEN("it represents an undefined function on a larger grid") {
             REQUIRE( tree->getDepth() >= refDepth );

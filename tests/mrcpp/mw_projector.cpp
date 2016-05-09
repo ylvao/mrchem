@@ -2,8 +2,7 @@
 
 #include "factory_functions.h"
 #include "MWProjector.h"
-#include "WaveletAdaptor.h"
-#include "CopyAdaptor.h"
+//#include "GridGenerator.h"
 
 namespace mw_projector {
 
@@ -65,9 +64,11 @@ template<int D> void testProjectFunction() {
             REQUIRE( f_tree->dot(*f_tree) == Approx(norm) );
         }
         AND_WHEN("the function is projected on an identical grid") {
-            CopyAdaptor<D> c_adap(*f_tree);
-            MWProjector<D> Q_copy(*mra, c_adap);
-            FunctionTree<D> *g_tree = Q_copy(*func);
+            GridGenerator<D> G(*mra);
+            FunctionTree<D> *g_tree = G(*f_tree);
+
+            MWProjector<D> Q_copy(*mra);
+            Q_copy(*g_tree, *func);
             THEN("it integrates to the same value") {
                 const double charge = f_tree->integrate();
                 REQUIRE( g_tree->integrate() == Approx(charge) );
