@@ -9,13 +9,13 @@
  *
  */
 
-#include <boost/timer.hpp>
 #include <Eigen/Core>
 
 #include "parallel.h"
 #include "constants.h"
 #include "MREnv.h"
 #include "TelePrompter.h"
+#include "Timer.h"
 #include "MathUtils.h"
 
 #include "BoundingBox.h"
@@ -26,12 +26,12 @@
 #include "MWProjector.h"
 #include "MWAdder.h"
 #include "MWMultiplier.h"
+#include "PoissonOperator.h"
 #include "GridGenerator.h"
 #include "GridCleaner.h"
-#include "CopyAdaptor.h"
-#include "WaveletAdaptor.h"
 
 #include "GaussFunc.h"
+#include "GaussExp.h"
 
 
 using namespace std;
@@ -39,6 +39,7 @@ using namespace Eigen;
 
 void testZeroTree();
 void testProjection();
+void testPoisson();
 void testAddition();
 void testMultiplication();
 void testGridGenerator();
@@ -46,24 +47,28 @@ void testTreeCleaner();
 
 template<int D> MultiResolutionAnalysis<D>* initializeMRA(int order);
 template<int D> GaussFunc<D>* initializeGauss();
+GaussExp<3>* initializeGaussExp(int N);
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
 
-    boost::timer rolex;
+    Timer rolex;
     rolex.restart();
 
-    SET_PRINT_PRECISION(15);
-    cout << scientific << setprecision(14);
+    int printlevel = 10;
+    int printprec = 15;
+    bool teletype = false;
+    MREnv::initializeMRCPP(printlevel, printprec, teletype);
 
-    MREnv::initializeMRCPP();
+    //testZeroTree();
+    //testProjection();
+    //testGridGenerator();
+    //testTreeCleaner();
+    //testAddition();
+    //testMultiplication();
+    testPoisson();
 
-    testZeroTree();
-    testProjection();
-    testGridGenerator();
-    testTreeCleaner();
-
-    MREnv::finalizeMRCPP(rolex.elapsed());
+    MREnv::finalizeMRCPP(rolex);
 
     return 0;
 }
@@ -87,11 +92,32 @@ MultiResolutionAnalysis<D>* initializeMRA(int order) {
 template<int D>
 GaussFunc<D>* initializeGauss() {
     // Constructing analytic function
-    double beta = 20.0;
+    double beta = 1.0e1;
     double alpha = pow(beta/pi, D/2.0);
     double pos[3] = {0.0, 0.0, 0.0};
     int pow[3] = {0, 0, 0};
     return new GaussFunc<D>(beta, alpha, pos, pow);
+}
+
+GaussExp<3>* initializeGaussExp(int N) {
+    // Constructing analytic function
+    GaussExp<3> *gExp = new GaussExp<3>();
+    double h = 32.0/(N+1);
+    double r0 = 16.0;
+    double beta = 0.1;
+    for (int i = 1; i <= N; i++) {
+        for (int j = 1; j <= N; j++) {
+            for (int k = 1; k <= N; k++) {
+                double alpha = pow(beta/pi, 3/2.0);
+                double pos[3] = {r0+i*h , r0+j*h, r0+k*h};
+                GaussFunc<3> gFunc(beta, alpha, pos);
+                gExp->append(gFunc);
+            }
+            beta *= 2.0;
+        }
+    }
+    //gExp->calcScreening(25.0);
+    return gExp;
 }
 
 void testZeroTree() {
@@ -145,23 +171,27 @@ void testZeroTree() {
 }
 
 void testProjection() {
+    int order = 9;
+    double prec = 1.0e-6;
+
     println(0, "\n\n======== Testing MWProjector =======\n");
-    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
-    GaussFunc<3> *f_func = initializeGauss<3>();
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(order);
+    GaussExp<3> *f_func = initializeGaussExp(3);
 
     // Setting up adaptor and projector
-    double prec = 1.0e-3;
-    WaveletAdaptor<3> w_adaptor(prec);
-    MWProjector<3> Q(*MRA, w_adaptor);
+    MWProjector<3> Q(*MRA, prec);
+    GridGenerator<3> G(*MRA);
 
     println(0, "\n\nProjecting function adaptively\n");
-    FunctionTree<3> *f_tree = Q(*f_func);
+    FunctionTree<3> *f_tree = G(*f_func);
+    //f_tree->setZero();
+    Q(*f_tree, *f_func);
 
     double integral = f_tree->integrate();
     double sq_norm = f_tree->getSquareNorm();
     println(0, endl);
-    println(0, "Integral     " << integral);
-    println(0, "Square norm  " << sq_norm);
+    println(0, "Integral        " << integral);
+    println(0, "Square norm     " << sq_norm);
 
     delete f_tree;
     delete f_func;
@@ -175,10 +205,9 @@ void testGridGenerator() {
     GaussFunc<3> *f_func = initializeGauss<3>();
 
     double prec = 1.0e-3;
-    WaveletAdaptor<3> w_adaptor(prec);
     GridGenerator<3> G(*MRA);
     MWProjector<3> Q(*MRA);
-    MWProjector<3> Q_adap(*MRA, w_adaptor);
+    MWProjector<3> Q_adap(*MRA, prec);
 
     FunctionTree<3> *f_tree = 0;
     FunctionTree<3> *g_tree = 0;
@@ -235,16 +264,16 @@ void testGridGenerator() {
 void testTreeCleaner() {
     println(0, "\n\n======== Testing TreeCleaner =======\n");
     MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
-    GaussFunc<3> *f_func = initializeGauss<3>();
+    GaussExp<3> *f_func = initializeGaussExp(5);
 
     double prec = 1.0e-3;
-    WaveletAdaptor<3> w_adaptor(prec);
 
     MWProjector<3> Q(*MRA);
-    GridCleaner<3> C(*MRA, w_adaptor);
+    MWProjector<3> Q_adap(*MRA, prec);
+    GridCleaner<3> C(*MRA, prec);
     GridGenerator<3> G(*MRA);
 
-    FunctionTree<3> *f_tree = G();
+    FunctionTree<3> *f_tree = G(*f_func);
 
     int n_nodes = 1;
     while (n_nodes > 0) {
@@ -252,13 +281,21 @@ void testTreeCleaner() {
         n_nodes = C(*f_tree);
     }
     Q(*f_tree, *f_func);
-
     double integral = f_tree->integrate();
     double sq_norm = f_tree->getSquareNorm();
     println(0, endl);
     println(0, "Integral     " << integral);
     println(0, "Square norm  " << sq_norm);
 
+    FunctionTree<3> *g_tree = G(*f_func);
+    Q_adap(*g_tree, *f_func);
+    double int_adap = g_tree->integrate();
+    double norm_adap = g_tree->getSquareNorm();
+    println(0, endl);
+    println(0, "Integral     " << int_adap);
+    println(0, "Square norm  " << norm_adap);
+
+    delete g_tree;
     delete f_tree;
     delete f_func;
     delete MRA;
@@ -267,26 +304,38 @@ void testTreeCleaner() {
 
 void testAddition() {
     println(0, "\n\nTesting MWAdder\n");
-    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(9);
 
-    double prec = 1.0e-3;
-    WaveletAdaptor<3> w_adaptor(prec);
+    double prec = 1.0e-6;
 
-    MWProjector<3> Q(*MRA, w_adaptor);
+    GridGenerator<3> G(*MRA);
+    MWProjector<3> Q(*MRA, prec);
     MWAdder<3> add(*MRA);
 
-    GaussFunc<3> *f_func = initializeGauss<3>();
-    GaussFunc<3> *g_func = initializeGauss<3>();
+    GaussExp<3> *f_func = initializeGaussExp(2);
+    GaussExp<3> *g_func = initializeGaussExp(3);
 
-    FunctionTree<3> *f_tree = Q(*f_func);
-    FunctionTree<3> *g_tree = Q(*g_func);
-    FunctionTree<3> *h_tree = add(1.0, *f_tree, -2.0, *g_tree);
+    FunctionTree<3> *f_tree = G(*f_func);
+    FunctionTree<3> *g_tree = G(*g_func);
+    
+    Q(*f_tree, *f_func);
+    Q(*g_tree, *g_func);
 
-    double integral = f_tree->integrate();
-    double sq_norm = f_tree->getSquareNorm();
+    FunctionTree<3> *h_tree = G();
+    G(*h_tree, *f_tree);
+    G(*h_tree, *g_tree);
+
+    FunctionTreeVector<3> sum_vec;
+    sum_vec.push_back(1.0, *f_tree);
+    sum_vec.push_back(-2.0, *g_tree);
+
+    add(*h_tree, sum_vec);
+
+    double integral = h_tree->integrate();
+    double sq_norm = h_tree->getSquareNorm();
     println(0, endl);
-    println(0, "Integral     " << integral);
-    println(0, "Square norm  " << sq_norm);
+    println(0, "Integral            " << setw(40) << integral);
+    println(0, "Square norm         " << setw(40) << sq_norm);
 
     delete f_tree;
     delete g_tree;
@@ -298,23 +347,30 @@ void testAddition() {
 
 void testMultiplication() {
     println(0, "\n\nTesting MWMultiplier\n");
-    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(5);
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(9);
 
-    double prec = 1.0e-3;
-    WaveletAdaptor<3> w_adaptor(prec);
+    double prec = 1.0e-6;
 
-    MWProjector<3> Q(*MRA, w_adaptor);
-    MWMultiplier<3> mult(*MRA, w_adaptor);
+    GridGenerator<3> G(*MRA);
+    MWProjector<3> Q(*MRA, prec);
+    MWMultiplier<3> mult(*MRA, prec);
 
-    GaussFunc<3> *f_func = initializeGauss<3>();
-    GaussFunc<3> *g_func = initializeGauss<3>();
+    GaussExp<3> *f_func = initializeGaussExp(2);
+    GaussExp<3> *g_func = initializeGaussExp(3);
 
-    FunctionTree<3> *f_tree = Q(*f_func);
-    FunctionTree<3> *g_tree = Q(*g_func);
-    FunctionTree<3> *h_tree = mult(2.0, *f_tree, *g_tree);
+    FunctionTree<3> *f_tree = G(*f_func);
+    FunctionTree<3> *g_tree = G(*g_func);
 
-    double integral = f_tree->integrate();
-    double sq_norm = f_tree->getSquareNorm();
+    Q(*f_tree, *f_func);
+    Q(*g_tree, *g_func);
+
+    FunctionTreeVector<3> prod_vec;
+    prod_vec.push_back(1.0, *f_tree);
+    prod_vec.push_back(2.0, *g_tree);
+    FunctionTree<3> *h_tree = mult(prod_vec);
+
+    double integral = h_tree->integrate();
+    double sq_norm = h_tree->getSquareNorm();
     println(0, endl);
     println(0, "Integral     " << integral);
     println(0, "Square norm  " << sq_norm);
@@ -325,5 +381,136 @@ void testMultiplication() {
     delete f_func;
     delete g_func;
     delete MRA;
+}
+
+void testPoisson() {
+    Timer analy_t, proj_t, build_t, apply_t;
+    println(0, "\n\nTesting Poisson operator\n");
+
+    // Computational domain [0,32]
+    int n = -6;
+    NodeIndex<3> idx(n);
+    BoundingBox<3> world(idx);
+
+    // Constructing scaling basis
+    int k = 7;
+    InterpolatingBasis basis(k);
+
+    // Initializing MRA
+    MultiResolutionAnalysis<3> MRA(world, basis);
+
+    double proj_prec = 1.0e-4;
+    double apply_prec = 1.0e-4;
+    double build_prec = 1.0e-4;
+
+    GridGenerator<3> G(MRA);
+    MWProjector<3> Q(MRA, proj_prec);
+
+    double alpha = 100.0;
+    double coef = pow(alpha/pi, 3.0/2.0);
+    double pos[3] = {pi,pi,pi};
+    int pow[3] = {0,0,0};
+    GaussFunc<3> f_func(alpha, coef, pos, pow);
+
+    printout(0, endl);
+    println(0, "================= Computing analytic energy ================");
+    printout(0, endl);
+
+    analy_t.restart();
+    double analyticEnergy = f_func.calcCoulombEnergy(f_func);
+    analy_t.stop();
+
+    println(0, "Time analytic:      " << analy_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+
+
+    printout(0, endl);
+    println(0, "=================== Projecting function ====================");
+    printout(0, endl);
+
+    proj_t.restart();
+    FunctionTree<3> *f_tree = Q(f_func);
+    proj_t.stop();
+
+    println(0, "Time projection:    " << proj_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+
+
+    printout(0, endl);
+    println(0, "================== Constructing operator ===================");
+    printout(0, endl);
+
+    build_t.restart();
+    PoissonOperator P(MRA, apply_prec, build_prec);
+    build_t.stop();
+
+    println(0, "Time construction:  " << build_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+
+
+    printout(0, endl);
+    println(0, "==================== Applying operator =====================");
+    printout(0, endl);
+
+    apply_t.restart();
+    FunctionTree<3> *g_tree = G();
+    P(*g_tree, *f_tree);
+    apply_t.stop();
+
+    println(0, "Time application:   " << apply_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+
+
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+    println(0, *f_tree);
+    println(0, *g_tree);
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    double fInt = f_tree->integrate();
+    double fNorm = sqrt(f_tree->getSquareNorm());
+    double gInt = g_tree->integrate();
+    double gNorm = sqrt(g_tree->getSquareNorm());
+    double numericalEnergy = g_tree->dot(*f_tree);
+    double error = (numericalEnergy-analyticEnergy)/numericalEnergy;
+
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+    println(0, "f_func integral:              " << setw(30) << fInt);
+    println(0, "f_func norm:                  " << setw(30) << fNorm << endl);
+    println(0, "g_func integral:              " << setw(30) << gInt);
+    println(0, "g_func norm:                  " << setw(30) << gNorm << endl);
+    println(0, "Analytic energy:              " << setw(30) << analyticEnergy);
+    println(0, "Numerical energy:             " << setw(30) << numericalEnergy);
+    println(0, "Relative error:               " << setw(30) << error);
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+    println(0, "Time analytic:      " << analy_t);
+    println(0, "Time projection:    " << proj_t);
+    println(0, "Time construction:  " << build_t);
+    println(0, "Time application:   " << apply_t);
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    delete f_tree;
+    delete g_tree;
 }
 
