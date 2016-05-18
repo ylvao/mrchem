@@ -568,7 +568,7 @@ void testSCF() {
         mult(*Vphi, tree_vec, 1);
         tree_vec.clear();
 
-        phi_np1 = G(*phi_n);
+        phi_np1 = G();
         H(*phi_np1, *Vphi);
         *phi_np1 *= -1.0/(2.0*pi);
         delete Vphi;
