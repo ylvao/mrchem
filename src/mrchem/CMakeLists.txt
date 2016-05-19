@@ -1,24 +1,39 @@
-include_directories (${CMAKE_INSTALL_PREFIX}/include)
-
-link_directories (${CMAKE_INSTALL_PREFIX}/lib)
-link_directories (${Boost_LIBRARY_DIRS})
+include(DefaultPathsMRCPP)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwanalytic)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwtrees)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_executable(mrchem.x mrchem.cpp)
 add_dependencies(mrchem.x external-modules)
 
 add_library(mrchem STATIC 
-        mrchem.cpp
-        MREnv.cpp
-        MREnv.h
-        )
+    mrchem.cpp
+    MREnv.cpp
+)
 
-target_link_libraries(mrchem mrcpp getkw)
+target_link_libraries(mrchem 
+    mrcpp 
+    mwanalytic
+    mwtrees
+    mwoperators
+    mwbuilders
+)
+
+target_link_libraries(mrchem.x 
+    mrchem 
+    mrcpp 
+    mwanalytic
+    mwtrees
+    mwoperators
+    mwbuilders
+    ${Boost_LIBRARIES}
+    ${BLAS_LIBRARIES}
+)
+
 add_dependencies(mrchem external-modules)
-
-target_link_libraries(mrchem.x mrchem mrcpp getkw
-	${Boost_LIBRARIES} ${BLAS_LIBRARIES}
-        )
-
 
 option (MRCHEM_DRIVER_DEBUG "Debug the driver (extmod)" OFF)
 

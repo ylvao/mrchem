@@ -6,10 +6,22 @@ get_property(test_sources GLOBAL PROPERTY TestSources)
 
 include_directories(${PROJECT_SOURCE_DIR}/external/catch)
 include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp)
-include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwarithmetics)
+include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwanalytic)
+include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwcore)
+include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwtrees)
+include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
+include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_executable(unit_tests.x unit_tests.cpp ${test_sources})
 
-target_link_libraries(unit_tests.x mrcpp)
-target_link_libraries(unit_tests.x ${BLAS_LIBRARIES})
-target_link_libraries(unit_tests.x ${Boost_LIBRARIES})
+target_link_libraries(unit_tests.x 
+    mrcpp 
+    mwanalytic
+    mwcore
+    mwtrees
+    mwoperators
+    mwbuilders
+    ${BLAS_LIBRARIES}
+    ${Boost_LIBRARIES}
+)
+
