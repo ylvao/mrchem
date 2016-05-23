@@ -14,9 +14,12 @@
 #include "parallel.h"
 #include "constants.h"
 #include "MREnv.h"
+#include "Timer.h"
 #include "TelePrompter.h"
 #include "MathUtils.h"
+#include "Plot.h"
 
+#include "AnalyticFunction.h"
 #include "BoundingBox.h"
 #include "NodeIndex.h"
 #include "MultiResolutionAnalysis.h"
@@ -40,6 +43,7 @@
 using namespace std;
 using namespace Eigen;
 
+void testAnalyticFunction();
 void testZeroTree();
 void testProjection();
 void testAddition();
@@ -63,6 +67,7 @@ int main(int argc, char **argv) {
     bool teletype = false;
     MREnv::initializeMRCPP(printlevel, printprec, teletype);
 
+    testAnalyticFunction();
 //    testZeroTree();
 //    testProjection();
 //    testGridGenerator();
@@ -70,7 +75,7 @@ int main(int argc, char **argv) {
 //    testAddition();
 //    testMultiplication();
 //    testPoisson();
-    testSCF();
+//    testSCF();
 
     MREnv::finalizeMRCPP(rolex);
 
@@ -105,6 +110,22 @@ GaussFunc<D>* initializeGauss(const double *pos) {
         double o[3] = {0.0, 0.0, 0.0};
         return new GaussFunc<D>(beta, alpha, o, pow);
     }
+}
+
+void testAnalyticFunction() {
+    auto f = [] (const double *r) -> double {
+        const double alpha = 10.0;
+        const double r_0[3] = {0.0, 0.0, 0.0};
+        double R = MathUtils::calcDistance(3, r, r_0);
+        return exp(-alpha*R);
+    };
+
+    AnalyticFunction<3> func(f);
+    int npts = 1000;
+    double a[3] = {-5.0, 0.0, 0.0};
+    double b[3] = { 5.0, 0.0, 0.0};
+    Plot<3> plt(npts, a, b);
+    plt.linePlot(func, "analytic");
 }
 
 void testZeroTree() {
