@@ -1,11 +1,10 @@
-#ifndef ATOM_H
-#define ATOM_H
-
-#include "Element.h"
+#ifndef NUCLEUS_H
+#define NUCLEUS_H
 
 #include <vector>
 
-#define Nuclei std::vector<Nucleus *>
+#include "PeriodicTable.h"
+#include "Element.h"
 
 class Nucleus {
 public:
@@ -59,6 +58,18 @@ private:
     double charge;
     double coord[3];
     const Element *element;
+};
+
+class Nuclei : public std::vector<Nucleus> {
+public:
+    void push_back(const Nucleus &nuc) {
+        std::vector<Nucleus>::push_back(nuc);
+    }
+    void push_back(const char *sym, const double *r) {
+        PeriodicTable pt;
+        Nucleus nuc(pt.getElement(sym), r);
+        std::vector<Nucleus>::push_back(nuc);
+    }
 };
 
 #endif // NUCLEUS_H

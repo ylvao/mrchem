@@ -21,13 +21,13 @@ using namespace Eigen;
 
 Molecule::Molecule(const Nuclei &nucs, int c)
         : charge(c),
+          nuclei(nucs),
           dipole(0),
           quadrupole(0),
           nmrShielding(0),
           spinSpinCoupling(0) {
-    NOT_IMPLEMENTED_ABORT;
     calcCenterOfMass();
-    allocProperties();
+//    allocProperties();
 }
 
 Molecule::Molecule(const string &coord_file, int c)
@@ -38,7 +38,7 @@ Molecule::Molecule(const string &coord_file, int c)
           spinSpinCoupling(0) {
     readCoordinateFile(coord_file);
     calcCenterOfMass();
-    allocProperties();
+//    allocProperties();
 }
 
 Molecule::Molecule(const vector<string> &coord_str, int c)
@@ -49,17 +49,17 @@ Molecule::Molecule(const vector<string> &coord_str, int c)
           spinSpinCoupling(0) {
     readCoordinateString(coord_str);
     calcCenterOfMass();
-    allocProperties();
+//    allocProperties();
 }
 
 Molecule::~Molecule() {
-    clearNuclei();
-    clearDipoleMoment();
-    clearQuadrupoleMoment();
-    clearPolarizability();
-    clearOpticalRotation();
-    clearMagnetizability();
-    freeProperties();
+    this->nuclei.clear();
+//    clearDipoleMoment();
+//    clearQuadrupoleMoment();
+//    clearPolarizability();
+//    clearOpticalRotation();
+//    clearMagnetizability();
+//    freeProperties();
 }
 
 void Molecule::allocProperties() {
@@ -90,16 +90,6 @@ void Molecule::freeProperties() {
     delete[] this->spinSpinCoupling;
     this->nmrShielding = 0;
     this->spinSpinCoupling = 0;
-}
-
-void Molecule::clearNuclei() {
-    for (int i = 0; i < getNNuclei(); i++) {
-        if (this->nuclei[i] != 0) {
-            delete this->nuclei[i];
-            this->nuclei[i] = 0;
-        }
-    }
-    this->nuclei.clear();
 }
 
 void Molecule::clearDipoleMoment() {
@@ -380,7 +370,6 @@ void Molecule::readCoordinateFile(const string &coord_file) {
         MSG_FATAL("Failed to open basis set file: " << coord_file);
     }
 
-    PeriodicTable pt;
     int nNuclei;
     string sym;
     double coord[3];
@@ -390,29 +379,23 @@ void Molecule::readCoordinateFile(const string &coord_file) {
         ifs >> coord[0];
         ifs >> coord[1];
         ifs >> coord[2];
-
-        const Element &element = pt.getElement(sym.c_str());
-        Nucleus *nuc  = new Nucleus(element, coord);
-        this->nuclei.push_back(nuc);
+        this->nuclei.push_back(sym.c_str(), coord);
     }
     ifs.close();
 }
 
 void Molecule::readCoordinateString(const vector<string> &coord_str) {
-    PeriodicTable pt;
+    int nNuclei = coord_str.size();
     string sym;
     double coord[3];
-    for (int i = 0; i < coord_str.size(); i++) {
+    for (int i = 0; i < nNuclei; i++) {
         stringstream ss;
         ss.str(coord_str[i]);
         ss >> sym;
         ss >> coord[0];
         ss >> coord[1];
         ss >> coord[2];
-
-        const Element &element = pt.getElement(sym.c_str());
-        Nucleus *nuc  = new Nucleus(element, coord);
-        this->nuclei.push_back(nuc);
+        this->nuclei.push_back(sym.c_str(), coord);
     }
 }
 

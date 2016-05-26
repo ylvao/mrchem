@@ -37,8 +37,8 @@ public:
     int getNElectrons() const;
 
     Nuclei &getNuclei() { return this->nuclei; }
-    Nucleus &getNucleus(int i) { return *this->nuclei[i]; }
-    const Nucleus &getNucleus(int i) const { return *this->nuclei[i]; }
+    Nucleus &getNucleus(int i) { return this->nuclei[i]; }
+    const Nucleus &getNucleus(int i) const { return this->nuclei[i]; }
 
     void printGeometry() const;
     void printProperties() const;
@@ -80,7 +80,6 @@ protected:
     void allocProperties();
     void freeProperties();
 
-    void clearNuclei();
     void clearDipoleMoment();
     void clearQuadrupoleMoment();
     void clearPolarizability();
