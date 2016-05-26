@@ -1,10 +1,13 @@
 include(DefaultPathsMRCPP)
-include_directories (${CMAKE_SOURCE_DIR}/src/mrchem)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwanalytic)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwtrees)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
+
+include_directories (chemistry)
+
+add_subdirectory (chemistry)
 
 add_executable(mrchem.x mrchem.cpp)
 add_dependencies(mrchem.x external-modules)
@@ -15,6 +18,7 @@ add_library(mrchem STATIC
 )
 
 target_link_libraries(mrchem 
+    chemistry 
     mrcpp 
     mwanalytic
     mwtrees
@@ -23,6 +27,7 @@ target_link_libraries(mrchem
 )
 
 target_link_libraries(mrchem.x 
+    chemistry 
     mrchem 
     mrcpp 
     mwanalytic
