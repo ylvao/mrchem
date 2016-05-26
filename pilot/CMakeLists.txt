@@ -1,5 +1,6 @@
 include(DefaultPathsMRCPP)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/chemistry)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwanalytic)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwcore)
@@ -12,6 +13,7 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
 
     target_link_libraries(mrchem-pilot.x 
         mrchem 
+        chemistry 
         mrcpp 
         mwanalytic 
         mwcore
