@@ -1,17 +1,32 @@
 #include "MREnv.h"
 #include "Timer.h"
+#include "mrchem.h"
 
 using namespace std;
 
-void MREnv::initializeMRCPP(int printlevel, int printprec, bool teletype) {
+void MREnv::initializeMRCPP(int argc, char **argv) {
     int nThreads = omp_get_max_threads();
     int nHosts = node_group.size();
 
     omp_set_dynamic(0);
     Eigen::setNbThreads(1);
 
-    TelePrompter::init(printlevel, teletype, "MRChem");
-    TelePrompter::setPrecision(printprec);
+    const char *infile = 0;
+    if (argc == 1) {
+        infile = "STDIN";
+    } else if (argc == 2) {
+        infile = argv[1];
+    } else {
+        MSG_ERROR("Ivalid number of arguments!");
+    }
+
+    Input = Getkw(infile, false, true);
+
+    int printlevel = Input.get<int>("printlevel");
+    bool teletype = Input.get<bool>("teletype");
+
+    TelePrompter::init(printlevel, teletype, "MRCHEM");
+    TelePrompter::setPrecision(15);
 
     println(0,endl << endl);
     println(0,"************************************************************");

@@ -9,7 +9,7 @@
 
 class MREnv {
 public:
-    static void initializeMRCPP(int printlevel, int printprec, bool teletype);
+    static void initializeMRCPP(int argc, char **argv);
     static void finalizeMRCPP(Timer t);
 };
 

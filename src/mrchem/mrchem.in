@@ -1,0 +1,183 @@
+#!@PYTHON_EXECUTABLE@
+# -*- coding: utf-8 -*-
+# vim:filetype=python:
+#
+# Written by Jonas Juselius <jonas.juselius@chem.uit.no>
+# University of Tromsø, 2008
+#
+
+ON=1
+OFF=0
+
+executable="@MRCHEM_EXECUTABLE@"
+debug=@MRCHEM_DRIVER_DEBUG@
+printlevel=0
+dryrun=False
+version="@PROJECT_VERSION@"
+
+import sys, re, optparse, os, string, subprocess, tempfile, math
+from copy import deepcopy
+
+sys.path.append("@CMAKE_INSTALL_PREFIX@/share/libgetkw")
+if not os.environ.has_key('MRCHEM_FILTER_DIR'):
+    os.environ['MRCHEM_FILTER_DIR'] = "@MW_FILTER_DIR@"
+import getkw
+#from @INITIAL_GUESS_PROGRAM@ import run_initial_guess
+#from @INITIAL_GUESS_PROGRAM@ import estimate_energy
+
+def main():
+    global topsect, debug, executable, printlevel, dryrun
+
+    if debug == ON:
+        debug = True
+    else:
+        debug = False
+
+    valid_keywords = setup_keywords()
+    printlevel = int(valid_keywords.getkw('printlevel')[0])
+    inpfil = parse_cmdline(valid_keywords)
+
+    if printlevel > 1:
+        print "Starting " + sys.argv[0]
+
+    if inpfil is None:
+        inpfil = "mrchem.inp"
+
+    input=getkw.GetkwParser()
+    inkw=input.parseFile(inpfil)
+    inkw.sanitize(valid_keywords)
+    topsect=inkw.get_topsect()
+    inkw.run_callbacks(valid_keywords)
+
+    #if not os.path.exists('initial_guess'):
+        #os.mkdir('initial_guess')
+    #if not os.path.exists('orbitals'):
+        #os.mkdir('orbitals')
+
+    if dryrun:
+        xfile='@' + inpfil
+        fd=open(xfile,'w')
+        print >> fd, inkw.top
+        fd.close()
+    else:
+        #mol = topsect.fetch_sect('Molecule')
+        #lsdalton = topsect.fetch_sect('LSDalton');
+        #run_lsdalton = lsdalton.get('run').get()
+        # Run LSDalton for initial guess
+        #if run_lsdalton:
+            #coords = mol.get('coords').get()
+            #mult = mol.get('multiplicity').get()
+            #charge = mol.get('charge').get()
+            #basis = lsdalton.get('basis').get()
+            #method = lsdalton.get('method').get()
+            #if run_initial_guess(coords, basis, method, charge, mult) is not None:
+                #print "Error in initial guess step"
+                #sys.exit(1)
+        # Write processed input file and run MRChem
+        with tempfile.TemporaryFile(mode='w+r') as fd:
+            fd.write(str(inkw.top))
+            fd.seek(0)
+            p = subprocess.Popen(executable, stdin=fd)
+            sts = os.waitpid(p.pid, 0)[1]
+            fd.close()
+
+def parse_cmdline(valid_keywords):
+    global debug, executable, printlevel, dryrun
+    usage="usage: %prog [options] [config] inpfile"
+    cmdln=optparse.OptionParser(usage=usage,
+            version="%prog {0}".format(version))
+    cmdln.add_option('-D','--dryrun', action='store_true', dest='dryrun',
+            default=False, help='Only process input')
+    cmdln.add_option('-d','--debug', action='store_true', dest='debug',
+            default=False, help='debug')
+    cmdln.add_option('-p','--print', action='store', dest='printlevel',
+            help='print level')
+    cmdln.add_option('-x','--executable', action='store', dest='executable',
+            help='set executable name')
+    (opts, args)=cmdln.parse_args()
+
+    if opts.executable:
+        executable = opts.executable
+
+    if opts.dryrun:
+        dryrun=opts.dryrun
+
+    if opts.printlevel:
+        printlevel=int(opts.printlevel)
+        valid_keywords.setkw('printlevel', printlevel)
+
+    if opts.debug == True:
+        debug=opts.debug
+        printlevel = 1
+
+    if (len(args) == 0):
+        inpfil=None
+    elif (len(args) == 1):
+        inpfil=args[0]
+    else:
+        cmdln.error('incorrect number of files')
+        sys.exit(0)
+    return inpfil
+
+def setup_keywords():
+    top=getkw.Section('toplevel', callback=verify_top)
+    top.set_status(True)
+    top.add_kw('order',				'INT', -1)
+    top.add_kw('rel_prec',			'DBL', -1.0)
+    top.add_kw('max_depth',			'INT', 20)
+    top.add_kw('wavelet',			'STR', 'Interpolating')
+    top.add_kw('printlevel',			'INT', 0)
+    top.add_kw('teletype',			'BOOL', False)
+
+    world=getkw.Section('World')
+    world.add_kw('scale',			'INT', 0)
+    world.add_kw('boxes',			'INT_ARRAY', [1, 1, 1])
+    world.add_kw('corner',			'INT_ARRAY', [0, 0, 0])
+    top.add_sect(world)
+
+    molecule=getkw.Section('Molecule', callback = verify_molecule)
+    molecule.add_kw('charge',			'INT', 0)
+    molecule.add_kw('multiplicity',		'INT', 1)
+    molecule.add_kw('angstrom',                 'BOOL', False)
+    molecule.add_kw('coords',			'DATA')
+    top.add_sect(molecule)
+
+    pilot=getkw.Section('Pilot')
+    pilot.add_kw('run_poisson',		        'BOOL', False)
+    pilot.add_kw('run_scf',			'BOOL', False)
+    top.add_sect(pilot)
+
+    return top
+
+def verify_top(top):
+    wavelet=top.get('wavelet')
+    wlet=wavelet.get()
+    if re.match('legen.*', wlet, re.I):
+        wavelet.set("L")
+    elif re.match('inter.*', wlet, re.I):
+        wavelet.set("I")
+    else:
+        print "Invalid wavelet type: ", wavelet
+        sys.exit(1)
+    if not top.get('order').is_set():
+        top['order'][0] = int(math.ceil(-1.5*math.log10(top['rel_prec'][0])));
+        print "\nPolynomial order is set by rel_prec ", top['order'][0]
+
+def verify_molecule(mol):
+    AA = 1.0
+    if mol.get('angstrom').get():
+        AA = 1.889725989
+    coords = mol.get('coords').get()
+    i = 0;
+    for line in coords[:]:
+        sp = line.split()
+        elm = sp[0].lower()
+        x_a, y_a, z_a = map(float, sp[1:])
+        x_b, y_b, z_b = AA*x_a, AA*y_a, AA*z_a
+        coords[i] = "%s       % 10.10f    % 10.10f    % 10.10f" % (elm.title(), x_b, y_b, z_b)
+        i = i+1
+    mol.get('angstrom').set(False)
+
+if __name__ == '__main__':
+    main()
+
