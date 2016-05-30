@@ -11,7 +11,10 @@
 
 #include <Eigen/Core>
 
+#include "mrchem.h"
 #include "MREnv.h"
+
+Getkw Input;
 
 int main(int argc, char **argv) {
     mpi::environment env(argc, argv);
