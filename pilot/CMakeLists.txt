@@ -34,3 +34,6 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
     execute_process(COMMAND chmod 755 ${CMAKE_BINARY_DIR}/pilot/mrchem OUTPUT_QUIET)
 endif()
 
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/mrchem.inp)
+    file(COPY mrchem.inp DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()

@@ -1,0 +1,96 @@
+# vim:syntax=sh:
+
+order = 7                         # Polynomial order
+rel_prec = 1.0e-4                 # Overall relative precision
+
+World {
+  scale = -4                      # Root scale defines world size 2^{-scale}
+  corner = [ 0, 0, 0 ]            # Translation of corner root box [x,y,z]
+  boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
+  gauge_origin = [0.0, 0.0, 0.0]  # Gauge origin (relative to molecular geometry given in input)
+}
+
+Molecule {
+  charge = 0                      # Total charge of molecule
+  multiplicity = 1                # Spin multiplicity
+  angstrom = true                 # Angstom or atomic (bohr) units
+$coords
+H       0.0     0.0     -0.3705
+H       0.0     0.0      0.3705
+$end
+}
+
+WaveFunction {
+  method = DFT                    # Wave function method (HF or DFT)
+  restricted = true               # Restricted/unrestricted
+}
+
+DFT {
+  spin = false                        # Use spin-separated DFT
+  exact_exchange = 0.0                # Amount of exact Hartree-Fock exchange
+$functionals
+LDA     1.0
+$end
+}
+
+Properties {
+  ground_state = true             # Compute ground state energy
+  dipole_moment = false           # Compute dipole moment
+  polarizability = false          # Compute polarizability
+  optrot_electric = false         # Compute optical rotation (electric response)
+  optrot_magnetic = false         # Compute optical rotation (magnetic response)
+  magnetizability = false         # Compute magnetizability
+  nmr_shielding = false           # Compute NMR shielding tensors
+  nmr_nuclei = [-1]               # Selected nuclei for NMR (-1 computes all nuclei)
+  frequencies = [0.0]             # Frequencies for electric response (0.0 gives static)
+}
+
+SCF {
+  property_thrs = 1.0             # Relative threshold in total energy (hartree)
+  orbital_thrs = 1.0e-3           # Relative threshold in orbitals
+  orbital_prec = [1.0e-3,-1.0]    # Variable prec for orbitals [init, final] (negative gives default)
+  lambda_thrs = 1.0e-4            # Threshold for reusing Helmholtz operators
+  rotation = 50                   # Iterations between each diagonalization/localization
+  max_iter = -1                   # Maximum number of iterations
+  history = 3                     # Maximum length of accelerator history
+  localize = false                # Localized or canonical orbitals (only for ground state)
+  initial_guess = none            # Type of initial guess: none, mw, gto
+  write_orbitals = false          # Write final orbitals
+}
+
+Response {
+  property_thrs = 1.0             # Relative threshold in property
+  orbital_thrs = 1.0e-3           # Relative threshold in perturbed orbitals
+  orbital_prec = [1.0e-3,-1.0]    # Variable prec for perturbed orbitals [init, final]
+  directions = [1,1,1]            # Run response in given directions [x,y,z]
+  max_iter = -1                   # Maximum number of iterations
+  history = 5                     # Maximum length of accelerator history
+  localize = false                # Localized or canonical orbitals (only for response)
+  initial_guess = none            # Type of initial guess: none, mw
+  write_orbitals = false          # Write final orbitals
+}
+
+LSDalton {
+  run = false                     # Run LSDalton initial guess
+  method = LDA                    # Initial guess method
+  basis = cc-pVDZ                 # Gaussian basis set
+}
+
+Files {
+  start_orbitals = orbital        # orbitals/*_xxxx.orb
+  final_orbitals = orbital        # orbitals/*_xxxx.orb
+  start_x_orbs   = x_orb          # orbitals/*_xxxx.orb
+  final_x_orbs   = x_orb          # orbitals/*_xxxx.orb
+  start_y_orbs   = y_orb          # orbitals/*_xxxx.orb
+  final_y_orbs   = y_orb          # orbitals/*_xxxx.orb
+  basis_set = initial_guess/mrchem.bas  # Basis set file
+  dens_mat  = initial_guess/mrchem.dens # Density matrix 
+  fock_mat  = initial_guess/mrchem.fock # Fock matrix
+  mo_mat_a  = initial_guess/mrchem.moa  # Alpha MO matrix
+  mo_mat_b  = initial_guess/mrchem.mob  # Beta MO batrix
+}
+
+Pilot {
+  run_poisson = false
+  run_scf = false
+}
