@@ -91,6 +91,10 @@ Files {
 }
 
 Pilot {
+  run_projection = false
+  run_addition = false
+  run_multiplication = false
   run_poisson = false
   run_scf = false
+  run_molecule = false
 }

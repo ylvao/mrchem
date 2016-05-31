@@ -72,12 +72,12 @@ int main(int argc, char **argv) {
 
     MREnv::initializeMRCPP(argc, argv);
 
-    bool run_projection = Input.get<bool>("pilot.run_projection");
-    bool run_addition = Input.get<bool>("pilot.run_addition");
-    bool run_multiplication = Input.get<bool>("pilot.run_multiplication");
-    bool run_poisson = Input.get<bool>("pilot.run_poisson");
-    bool run_scf = Input.get<bool>("pilot.run_scf");
-    bool run_molecule = Input.get<bool>("pilot.run_molecule");
+    bool run_projection = Input.get<bool>("Pilot.run_projection");
+    bool run_addition = Input.get<bool>("Pilot.run_addition");
+    bool run_multiplication = Input.get<bool>("Pilot.run_multiplication");
+    bool run_poisson = Input.get<bool>("Pilot.run_poisson");
+    bool run_scf = Input.get<bool>("Pilot.run_scf");
+    bool run_molecule = Input.get<bool>("Pilot.run_molecule");
 
     if (run_projection) testProjection();
     if (run_addition) testAddition();
