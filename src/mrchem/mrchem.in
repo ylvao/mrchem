@@ -18,12 +18,12 @@ version="@PROJECT_VERSION@"
 import sys, re, optparse, os, string, subprocess, tempfile, math
 from copy import deepcopy
 
-sys.path.append("@CMAKE_INSTALL_PREFIX@/share/libgetkw")
+sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
 if not os.environ.has_key('MRCHEM_FILTER_DIR'):
     os.environ['MRCHEM_FILTER_DIR'] = "@MW_FILTER_DIR@"
 import getkw
-#from @INITIAL_GUESS_PROGRAM@ import run_initial_guess
-#from @INITIAL_GUESS_PROGRAM@ import estimate_energy
+from @INITIAL_GUESS_PROGRAM@ import run_initial_guess
+from @INITIAL_GUESS_PROGRAM@ import estimate_energy
 
 def main():
     global topsect, debug, executable, printlevel, dryrun
@@ -49,10 +49,10 @@ def main():
     topsect=inkw.get_topsect()
     inkw.run_callbacks(valid_keywords)
 
-    #if not os.path.exists('initial_guess'):
-        #os.mkdir('initial_guess')
-    #if not os.path.exists('orbitals'):
-        #os.mkdir('orbitals')
+    if not os.path.exists('initial_guess'):
+        os.mkdir('initial_guess')
+    if not os.path.exists('orbitals'):
+        os.mkdir('orbitals')
 
     if dryrun:
         xfile='@' + inpfil
@@ -60,19 +60,19 @@ def main():
         print >> fd, inkw.top
         fd.close()
     else:
-        #mol = topsect.fetch_sect('Molecule')
-        #lsdalton = topsect.fetch_sect('LSDalton');
-        #run_lsdalton = lsdalton.get('run').get()
+        mol = topsect.fetch_sect('Molecule')
+        lsdalton = topsect.fetch_sect('LSDalton');
+        run_lsdalton = lsdalton.get('run').get()
         # Run LSDalton for initial guess
-        #if run_lsdalton:
-            #coords = mol.get('coords').get()
-            #mult = mol.get('multiplicity').get()
-            #charge = mol.get('charge').get()
-            #basis = lsdalton.get('basis').get()
-            #method = lsdalton.get('method').get()
-            #if run_initial_guess(coords, basis, method, charge, mult) is not None:
-                #print "Error in initial guess step"
-                #sys.exit(1)
+        if run_lsdalton:
+            coords = mol.get('coords').get()
+            mult = mol.get('multiplicity').get()
+            charge = mol.get('charge').get()
+            basis = lsdalton.get('basis').get()
+            method = lsdalton.get('method').get()
+            if run_initial_guess(coords, basis, method, charge, mult) is not None:
+                print "Error in initial guess step"
+                sys.exit(1)
         # Write processed input file and run MRChem
         with tempfile.TemporaryFile(mode='w+r') as fd:
             fd.write(str(inkw.top))
@@ -122,29 +122,111 @@ def parse_cmdline(valid_keywords):
 def setup_keywords():
     top=getkw.Section('toplevel', callback=verify_top)
     top.set_status(True)
-    top.add_kw('order',				'INT', -1)
-    top.add_kw('rel_prec',			'DBL', -1.0)
-    top.add_kw('max_depth',			'INT', 20)
-    top.add_kw('wavelet',			'STR', 'Interpolating')
-    top.add_kw('printlevel',			'INT', 0)
-    top.add_kw('teletype',			'BOOL', False)
+    top.add_kw('order',                 'INT', -1)
+    top.add_kw('rel_prec',              'DBL', -1.0)
+    top.add_kw('max_depth',             'INT', 20)
+    top.add_kw('wavelet',               'STR', 'Interpolating')
+    top.add_kw('energy_unit',           'STR', 'au')
+    top.add_kw('abs_prec',              'DBL', -1.0)
+    top.add_kw('est_norm',              'DBL', 1.0)
+    top.add_kw('printlevel',            'INT', 0)
+    top.add_kw('teletype',              'BOOL', False)
 
-    world=getkw.Section('World')
-    world.add_kw('scale',			'INT', 0)
-    world.add_kw('boxes',			'INT_ARRAY', [1, 1, 1])
-    world.add_kw('corner',			'INT_ARRAY', [0, 0, 0])
+    world=getkw.Section('World', callback = verify_world)
+    world.add_kw('scale',               'INT', 0)
+    world.add_kw('boxes',               'INT_ARRAY', [1, 1, 1])
+    world.add_kw('corner',              'INT_ARRAY', [0, 0, 0])
+    world.add_kw('center_of_mass',      'BOOL', False)
+    world.add_kw('gauge_origin',        'DBL_ARRAY', [0.0, 0.0, 0.0])
     top.add_sect(world)
 
     molecule=getkw.Section('Molecule', callback = verify_molecule)
-    molecule.add_kw('charge',			'INT', 0)
-    molecule.add_kw('multiplicity',		'INT', 1)
-    molecule.add_kw('angstrom',                 'BOOL', False)
-    molecule.add_kw('coords',			'DATA')
+    molecule.add_kw('charge',           'INT', 0)
+    molecule.add_kw('multiplicity',     'INT', 1)
+    molecule.add_kw('angstrom',         'BOOL', False)
+    molecule.add_kw('coords',           'DATA')
     top.add_sect(molecule)
 
+    wavefunction=getkw.Section('WaveFunction')
+    wavefunction.add_kw('restricted',   'BOOL', True)
+    wavefunction.add_kw('method',       'STR', 'HF')
+    top.add_sect(wavefunction)
+
+    dft=getkw.Section('DFT', callback = verify_dft)
+    dft.add_kw('spin',                  'BOOL', False)
+    dft.add_kw('orbital_free',          'BOOL', False)
+    dft.add_kw('exact_exchange',        'DBL', 0.0)
+    dft.add_kw('density_cutoff',        'DBL_ARRAY', [1.0e-15, 1.0e-15])
+    dft.add_kw('functionals',           'DATA')
+    dft.add_kw('func_coefs',            'DBL_ARRAY')
+    top.add_sect(dft)
+
+    properties=getkw.Section('Properties', callback = verify_properties)
+    properties.add_kw('ground_state',           'BOOL', False)
+    properties.add_kw('dipole_moment',          'BOOL', False)
+    properties.add_kw('quadrupole_moment',      'BOOL', False)
+    properties.add_kw('polarizability',         'BOOL', False)
+    properties.add_kw('optrot_electric',        'BOOL', False)
+    properties.add_kw('optrot_magnetic',        'BOOL', False)
+    properties.add_kw('magnetizability',        'BOOL', False)
+    properties.add_kw('nmr_shielding',          'BOOL', False)
+    properties.add_kw('nmr_nuclei',             'INT_ARRAY')
+    properties.add_kw('spin_spin_coupling',     'BOOL', False)
+    properties.add_kw('spin_spin_k',            'INT_ARRAY')
+    properties.add_kw('spin_spin_l',            'INT_ARRAY')
+    properties.add_kw('frequencies',            'DBL_ARRAY')
+    properties.add_kw('velocity_gauge',         'BOOL', False)
+    top.add_sect(properties)
+
+    scf=getkw.Section('SCF', callback=verify_scf)
+    scf.add_kw('history',               'INT', 3)
+    scf.add_kw('max_iter',              'INT', 100)
+    scf.add_kw('rotation',              'INT', 100)
+    scf.add_kw('localize',              'BOOL', False)
+    scf.add_kw('orbital_thrs',          'DBL', 1.0)
+    scf.add_kw('property_thrs',         'DBL', -1.0)
+    scf.add_kw('lambda_thrs',           'DBL', 1.0e-4)
+    scf.add_kw('orbital_prec',          'DBL_ARRAY', [1.0e-4,-1.0])
+    scf.add_kw('initial_guess',         'STR', 'gto')
+    scf.add_kw('write_orbitals',        'BOOL', False)
+    top.add_sect(scf)
+
+    response=getkw.Section('Response', callback=verify_response)
+    response.add_kw('history',          'INT', 5)
+    response.add_kw('max_iter',         'INT', 100)
+    response.add_kw('localize',         'BOOL', False)
+    response.add_kw('orbital_thrs',     'DBL', 1.0)
+    response.add_kw('property_thrs',    'DBL', 1.0)
+    response.add_kw('directions',       'INT_ARRAY', [1,1,1])
+    response.add_kw('orbital_prec',     'DBL_ARRAY', [1.0e-4,-1.0])
+    response.add_kw('initial_guess',    'STR', 'none')
+    response.add_kw('write_orbitals',   'BOOL', False)
+    top.add_sect(response)
+
+    initial=getkw.Section('LSDalton')
+    initial.add_kw('run',               'BOOL', False)
+    initial.add_kw('basis',             'STR', '3-21G')
+    initial.add_kw('method',            'STR', 'HF')
+    top.add_sect(initial)
+
+    files=getkw.Section('Files')
+    files.add_kw('start_orbitals',      'STR', 'orbital')
+    files.add_kw('final_orbitals',      'STR', 'orbital')
+    files.add_kw('start_x_orbs',        'STR', 'x_orb')
+    files.add_kw('final_x_orbs',        'STR', 'x_orb')
+    files.add_kw('start_y_orbs',        'STR', 'y_orb')
+    files.add_kw('final_y_orbs',    	   'STR', 'y_orb')
+    files.add_kw('basis_set',           'STR', 'initial_guess/mrchem.bas')
+    files.add_kw('dens_mat',    	       'STR', 'initial_guess/mrchem.dens')
+    files.add_kw('fock_mat',            'STR', 'initial_guess/mrchem.fock')
+    files.add_kw('energy_vec',          'STR', 'initial_guess/mrchem.en')
+    files.add_kw('mo_mat_a',            'STR', 'initial_guess/mrchem.moa')
+    files.add_kw('mo_mat_b',            'STR', 'initial_guess/mrchem.mob')
+    top.add_sect(files)
+
     pilot=getkw.Section('Pilot')
-    pilot.add_kw('run_poisson',		        'BOOL', False)
-    pilot.add_kw('run_scf',			'BOOL', False)
+    pilot.add_kw('run_poisson',         'BOOL', False)
+    pilot.add_kw('run_scf',             'BOOL', False)
     top.add_sect(pilot)
 
     return top
@@ -159,9 +241,32 @@ def verify_top(top):
     else:
         print "Invalid wavelet type: ", wavelet
         sys.exit(1)
+    if not top.get('rel_prec').is_set():
+        if not top.get('est_norm').is_set():
+            mol = topsect.fetch_sect('Molecule')
+            if mol.get('coords').is_set():
+                coords = mol.get('coords').get()
+                est_au = estimate_energy(coords)
+                if top['energy_unit'][0] == 'eV':
+                    top['est_norm'][0] = 27.2*est_au
+                elif top['energy_unit'][0] == 'kCal':
+                    top['est_norm'][0] = 627.5*est_au
+                elif top['energy_unit'][0] == 'kJ':
+                    top['est_norm'][0] = 2625.5*est_au
+                else:
+                    top['est_norm'][0] = est_au
+                print "\nPrecision is set by energy estimate Z^(5/2)"
+        top['rel_prec'][0] = 10*top['abs_prec'][0] / top['est_norm'][0]
+        print "   est_norm  ", top['est_norm'][0]
+        print "   abs_prec  ", top['abs_prec'][0]
+        print "   rel_prec  ", top['rel_prec'][0]
     if not top.get('order').is_set():
         top['order'][0] = int(math.ceil(-1.5*math.log10(top['rel_prec'][0])));
         print "\nPolynomial order is set by rel_prec ", top['order'][0]
+
+def verify_world(world):
+    if not world.get('gauge_origin').is_set():
+        world.get('center_of_mass')[0] = True
 
 def verify_molecule(mol):
     AA = 1.0
@@ -177,6 +282,56 @@ def verify_molecule(mol):
         coords[i] = "%s       % 10.10f    % 10.10f    % 10.10f" % (elm.title(), x_b, y_b, z_b)
         i = i+1
     mol.get('angstrom').set(False)
+
+def verify_response(rsp):
+    if not rsp.get('localize').is_set():
+        scf = topsect.fetch_sect('SCF')
+        rsp['localize'][0] = scf['localize'][0]
+    if rsp['orbital_prec'][1] < 0:
+        rsp['orbital_prec'][1] = topsect['rel_prec'][0]
+    if rsp['orbital_prec'][0] < 0:
+        rsp['orbital_prec'][0] = rsp['orbital_prec'][1]
+
+def verify_properties(prop):
+    if not prop.get('nmr_nuclei').is_set():
+        prop['nmr_nuclei'].get().append(-1);
+    if not prop.get('spin_spin_k').is_set():
+        prop['spin_spin_k'].get().append(-1);
+    if not prop.get('spin_spin_l').is_set():
+        prop['spin_spin_l'].get().append(-1);
+    if not prop.get('frequencies').is_set():
+        prop['frequencies'].get().append(0.0);
+
+def verify_dft(dft):
+    n = 0
+    for line in dft['functionals'][:]:
+        split_line = line.split()
+        if len(split_line) > 1:
+            func = split_line[0]
+            coef = split_line[1]
+        else:
+            func = split_line[0]
+            coef = 1.0
+        dft['func_coefs'].get().append(coef)
+        dft['functionals'][n] = func
+        n += 1
+
+def verify_scf(scf):
+    if scf['localize'][0]:
+        scf['rotation'][0] = abs(scf['rotation'][0])
+    else:
+        scf['rotation'][0] = -abs(scf['rotation'][0])
+    if scf['orbital_prec'][1] < 0:
+        scf['orbital_prec'][1] = topsect['rel_prec'][0]
+    if scf['orbital_prec'][0] < 0:
+        scf['orbital_prec'][0] = scf['orbital_prec'][1]
+    if scf['property_thrs'][0] < 0:
+        scf['property_thrs'][0] = topsect['rel_prec'][0]/10
+        print "   property_thrs  ", scf['property_thrs'][0]
+    if not scf['orbital_thrs'].is_set():
+        scf['orbital_thrs'][0] = math.sqrt(scf['property_thrs'][0])
+        print "   orbital_thrs  ", scf['orbital_thrs'][0]
+
 
 if __name__ == '__main__':
     main()

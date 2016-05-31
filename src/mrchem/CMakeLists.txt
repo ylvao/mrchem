@@ -1,8 +1,10 @@
 include_directories (${CMAKE_INSTALL_PREFIX}/include) 
 
 include_directories (chemistry)
+include_directories (initial_guess)
 
 add_subdirectory (chemistry)
+add_subdirectory (initial_guess)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 link_directories (${Boost_LIBRARY_DIRS})

@@ -10,6 +10,9 @@ include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigCompilerFlags)
 
+find_package(PythonInterp REQUIRED)
+set(PYTHON_SITE_INSTALL_DIR lib/python/site-packages)
+
 find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
 find_package(Boost REQUIRED serialization system timer)
@@ -35,6 +38,14 @@ if (NOT DEFINED ${MW_FILTER_DIR})
 endif()
 
 include(ConfigGitRevision)
+
+if (NOT INITIAL_GUESS_PROGRAM)
+    set (INITIAL_GUESS_PROGRAM "lsdalton")
+endif()
+
+if (NOT INITIAL_GUESS_PROGRAM_DIR)
+    set (INITIAL_GUESS_PROGRAM_DIR "/unknown")
+endif()
 
 add_subdirectory(external)
 add_subdirectory(src)
