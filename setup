@@ -55,7 +55,7 @@ group.add_argument('--enable-mpi',
         nargs='?',
         action='store',
         choices=('on','off'),
-        default='on',
+        default='off',
         const='on',
         help='enable MPI [default: %(default)s]')
 group.add_argument('--enable-openmp',
