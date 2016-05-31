@@ -11,6 +11,7 @@
 
 #include <Eigen/Core>
 
+#include "mrchem.h"
 #include "parallel.h"
 #include "constants.h"
 #include "MREnv.h"
@@ -35,6 +36,11 @@
 #include "CopyAdaptor.h"
 #include "WaveletAdaptor.h"
 
+#include "PeriodicTable.h"
+#include "Molecule.h"
+#include "Nucleus.h"
+#include "MolPlot.h"
+
 #include "GaussFunc.h"
 #include "HydrogenicFunction.h"
 #include "NuclearFunction.h"
@@ -44,14 +50,16 @@ using namespace std;
 using namespace Eigen;
 
 void testAnalyticFunction();
-void testZeroTree();
 void testProjection();
-void testAddition();
-void testMultiplication();
 void testGridGenerator();
 void testTreeCleaner();
+void testAddition();
+void testMultiplication();
 void testPoisson();
 void testSCF();
+void testMolecule();
+
+Getkw Input;
 
 template<int D> MultiResolutionAnalysis<D>* initializeMRA(int order);
 template<int D> GaussFunc<D>* initializeGauss(const double *pos = 0);
@@ -62,20 +70,21 @@ int main(int argc, char **argv) {
     Timer rolex;
     rolex.restart();
 
-    int printlevel = 0;
-    int printprec = 15;
-    bool teletype = false;
-    MREnv::initializeMRCPP(printlevel, printprec, teletype);
+    MREnv::initializeMRCPP(argc, argv);
 
-    testAnalyticFunction();
-//    testZeroTree();
-//    testProjection();
-//    testGridGenerator();
-//    testTreeCleaner();
-//    testAddition();
-//    testMultiplication();
-//    testPoisson();
-//    testSCF();
+    bool run_projection = Input.get<bool>("pilot.run_projection");
+    bool run_addition = Input.get<bool>("pilot.run_addition");
+    bool run_multiplication = Input.get<bool>("pilot.run_multiplication");
+    bool run_poisson = Input.get<bool>("pilot.run_poisson");
+    bool run_scf = Input.get<bool>("pilot.run_scf");
+    bool run_molecule = Input.get<bool>("pilot.run_molecule");
+
+    if (run_projection) testProjection();
+    if (run_addition) testAddition();
+    if (run_multiplication) testMultiplication();
+    if (run_poisson) testPoisson();
+    if (run_scf) testSCF();
+    if (run_molecule) testMolecule();
 
     MREnv::finalizeMRCPP(rolex);
 
@@ -126,56 +135,6 @@ void testAnalyticFunction() {
     double b[3] = { 5.0, 0.0, 0.0};
     Plot<3> plt(npts, a, b);
     plt.linePlot(func, "analytic");
-}
-
-void testZeroTree() {
-    println(0, "\n\n========= Testing default ==========\n");
-    println(0, "\n1D\n");
-    {
-        MultiResolutionAnalysis<1> *MRA = initializeMRA<1>(2);
-        GridGenerator<1> G(*MRA);
-        FunctionTree<1> *tree = G();
-        tree->setZero();
-
-        double integral = tree->integrate();
-        double sq_norm = tree->getSquareNorm();
-        println(0, "Integral     " << integral);
-        println(0, "Square norm  " << sq_norm);
-
-        delete tree;
-        delete MRA;
-    }
-    println(0, "\n2D\n");
-    {
-        MultiResolutionAnalysis<2> *MRA = initializeMRA<2>(3);
-        GridGenerator<2> G(*MRA);
-        FunctionTree<2> *tree = G();
-        tree->setZero();
-
-        double integral = tree->integrate();
-        double sq_norm = tree->getSquareNorm();
-        println(0, "Integral     " << integral);
-        println(0, "Square norm  " << sq_norm);
-
-        delete tree;
-        delete MRA;
-    }
-    println(0, "\n3D\n");
-    {
-        MultiResolutionAnalysis<3> *MRA = initializeMRA<3>(4);
-        GridGenerator<3> G(*MRA);
-        FunctionTree<3> *tree = G();
-        tree->setZero();
-
-        double integral = tree->integrate();
-        double sq_norm = tree->getSquareNorm();
-        println(0, "Integral     " << integral);
-        println(0, "Square norm  " << sq_norm);
-
-        delete tree;
-        delete MRA;
-    }
-    println(0, "\n\n====================================\n\n");
 }
 
 void testProjection() {
@@ -662,4 +621,12 @@ void testSCF() {
     delete phi_n;
     delete psi;
     delete V;
+}
+
+void testMolecule() {
+    int mol_charge = Input.get<int>("Molecule.charge");
+    vector<string> mol_coords = Input.getData("Molecule.coords");
+
+    Molecule mol(mol_coords, mol_charge);
+    mol.printGeometry();
 }
