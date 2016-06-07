@@ -95,6 +95,7 @@ Pilot {
   run_addition = false
   run_multiplication = false
   run_poisson = false
+  run_derivative = false
   run_scf = false
   run_molecule = false
 }

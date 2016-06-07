@@ -26,6 +26,7 @@
 #include "MultiResolutionAnalysis.h"
 #include "InterpolatingBasis.h"
 #include "FunctionTree.h"
+#include "DerivativeOperator.h"
 #include "PoissonOperator.h"
 #include "HelmholtzOperator.h"
 #include "MWProjector.h"
@@ -56,6 +57,7 @@ void testTreeCleaner();
 void testAddition();
 void testMultiplication();
 void testPoisson();
+void testDerivative();
 void testSCF();
 void testMolecule();
 
@@ -76,6 +78,7 @@ int main(int argc, char **argv) {
     bool run_addition = Input.get<bool>("Pilot.run_addition");
     bool run_multiplication = Input.get<bool>("Pilot.run_multiplication");
     bool run_poisson = Input.get<bool>("Pilot.run_poisson");
+    bool run_derivative = Input.get<bool>("Pilot.run_derivative");
     bool run_scf = Input.get<bool>("Pilot.run_scf");
     bool run_molecule = Input.get<bool>("Pilot.run_molecule");
 
@@ -83,6 +86,7 @@ int main(int argc, char **argv) {
     if (run_addition) testAddition();
     if (run_multiplication) testMultiplication();
     if (run_poisson) testPoisson();
+    if (run_derivative) testDerivative();
     if (run_scf) testSCF();
     if (run_molecule) testMolecule();
 
@@ -440,6 +444,168 @@ void testPoisson() {
 
     delete f_tree;
     delete g_tree;
+}
+
+void testDerivative() {
+    Timer proj_t1, proj_t2, build_t, apply_t, add_t;
+    println(0, "\n\nTesting derivative operator\n");
+
+    // Computational domain [0,32]
+    int n = -4;
+    NodeIndex<1> idx(n);
+    BoundingBox<1> world(idx);
+
+    // Constructing scaling basis
+    int k = 9;
+    InterpolatingBasis basis(k);
+
+    // Initializing MRA
+    MultiResolutionAnalysis<1> MRA(world, basis);
+
+    double proj_prec = 1.0e-7;
+    double apply_prec = 1.0e-7;
+    double build_prec = 1.0e-8;
+
+    MWAdder<1> add(MRA);
+    MWProjector<1> Q(MRA, proj_prec);
+    GridGenerator<1> G(MRA);
+
+//    double alpha = 100.0;
+//    double coef = pow(alpha/pi, 3.0/2.0);
+//    double pos[3] = {pi,pi,pi};
+//    int pow[3] = {0,0,0};
+//    GaussFunc<1> f_func(alpha, coef, pos, pow);
+//    GaussPoly<1> df_func = f_func.differentiate(0);
+
+    auto f_func = [] (const double *r) -> double {
+        const double alpha = 3.0;
+        const double r_0[3] = {pi, pi, pi};
+        double R = MathUtils::calcDistance(1, r, r_0);
+        return exp(-alpha*R);
+    };
+    auto df_func = [] (const double *r) -> double {
+        const double alpha = 3.0;
+        const double r_0[3] = {pi, pi, pi};
+        double R = MathUtils::calcDistance(1, r, r_0);
+        double sign = 1.0;
+        if (r[0] > r_0[0]) sign = -1.0;
+        return sign*alpha*exp(-alpha*R);
+    };
+
+
+    printout(0, endl);
+    println(0, "=================== Projecting function ====================");
+    printout(0, endl);
+    proj_t1.restart();
+    FunctionTree<1> *f_tree = Q(f_func);
+    proj_t1.stop();
+    println(0, "Time projection:    " << proj_t1 << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "================== Projecting derivative ===================");
+    printout(0, endl);
+    proj_t2.restart();
+    FunctionTree<1> *df_tree = Q(df_func);
+    proj_t2.stop();
+    println(0, "Time projection:    " << proj_t2 << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "================== Constructing operator ===================");
+    printout(0, endl);
+    build_t.restart();
+    DerivativeOperator<1> D_x(MRA, 0, apply_prec, build_prec);
+    build_t.stop();
+    println(0, "Time construction:  " << build_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "==================== Applying operator =====================");
+    printout(0, endl);
+    apply_t.restart();
+    FunctionTree<1> *dg_tree = G(*f_tree);
+    D_x(*dg_tree, *f_tree, -1);
+    apply_t.stop();
+    println(0, "Time application:   " << apply_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+    println(0, *f_tree);
+    println(0, *df_tree);
+    println(0, *dg_tree);
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "==================== Subtract functions ====================");
+    printout(0, endl);
+    add_t.restart();
+    FunctionTreeVector<1> tree_vec;
+    tree_vec.push_back(1.0, *df_tree);
+    tree_vec.push_back(-1.0, *dg_tree);
+    FunctionTree<1> *err_tree = add(tree_vec);
+    tree_vec.clear();
+    add_t.stop();
+    println(0, "Time subtraction:   " << add_t << endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    double fInt = f_tree->integrate();
+    double fNorm = sqrt(f_tree->getSquareNorm());
+    double dfInt = df_tree->integrate();
+    double dfNorm = sqrt(df_tree->getSquareNorm());
+    double dgInt = dg_tree->integrate();
+    double dgNorm = sqrt(dg_tree->getSquareNorm());
+    double abs_err = sqrt(err_tree->getSquareNorm());
+    double rel_err = abs_err/dfNorm;
+
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+    println(0, "f_func integral:              " << setw(30) << fInt);
+    println(0, "f_func norm:                  " << setw(30) << fNorm << endl);
+    println(0, "fg_func integral:             " << setw(30) << dfInt);
+    println(0, "fg_func norm:                 " << setw(30) << dfNorm << endl);
+    println(0, "dg_func integral:             " << setw(30) << dgInt);
+    println(0, "dg_func norm:                 " << setw(30) << dgNorm << endl);
+    println(0, "absolute error:               " << setw(30) << abs_err);
+    println(0, "relative error:               " << setw(30) << rel_err);
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+    println(0, "Time 1st projection: " << proj_t1);
+    println(0, "Time 2nd projection: " << proj_t2);
+    println(0, "Time construction:   " << build_t);
+    println(0, "Time application:    " << apply_t);
+    println(0, "Time substraction:   " << add_t);
+    printout(0, endl);
+    println(0, "============================================================");
+    printout(0, endl);
+
+//    double a = 0.0;
+//    double b = 16.0;
+//    Plot<1> plt(1000, &a, &b);
+//    plt.linePlot(*f_tree, "f_tree");
+//    plt.linePlot(*df_tree, "df_tree");
+//    plt.linePlot(*dg_tree, "dg_tree");
+//    plt.linePlot(*err_tree, "err_tree");
+
+    delete f_tree;
+    delete df_tree;
+    delete dg_tree;
+    delete err_tree;
 }
 
 void testSCF() {
