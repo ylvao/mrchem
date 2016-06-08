@@ -16,6 +16,7 @@ add_library(mrchem STATIC
     mrchem.in
     mrchem.cpp
     MREnv.cpp
+    SCFDriver.cpp
 )
 
 target_link_libraries(mrchem 
