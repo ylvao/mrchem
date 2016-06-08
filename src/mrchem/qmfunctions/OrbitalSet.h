@@ -12,17 +12,15 @@
 
 class OrbitalSet {
 public:
-    OrbitalSet(int n_orbs = 0);
+    OrbitalSet(int n_orbs);
+    OrbitalSet(int n_alpha, int n_beta);
+    OrbitalSet(int ne, int mult, bool rest);
     OrbitalSet(const OrbitalSet &orb_set);
-    virtual ~OrbitalSet() { this->clear(); }
-    void clear(bool free = true);
+    virtual ~OrbitalSet();
 
-//    void initialize(const Nuclei &nucs);
-//    void initialize(const OrbitalSet &orb_set);
-//    void initialize(int ne, int mult, bool rest);
-//    void initialize(int nd, int na, int nb);
+    void push_back(int n_orbs, int occ, int spin);
+    void clear();
 
-//    void append(int n_orbs, int occ, int spin);
 //    OrbitalSet& operator=(const OrbitalSet &orb_set);
 
 //    void writeOrbitals(const std::string &of);

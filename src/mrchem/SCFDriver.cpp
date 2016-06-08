@@ -192,9 +192,7 @@ void SCFDriver::setup() {
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
-    molecule->printGeometry();
-    orbitals = new OrbitalSet();
-//    orbitals->initialize(nEl, mol_multiplicity, wf_restricted);
+    orbitals = new OrbitalSet(nEl, mol_multiplicity, wf_restricted);
 
     // Defining gauge origin
     const double *COM = molecule->getCenterOfMass();
@@ -261,9 +259,9 @@ void SCFDriver::setup() {
     }
 
     // Setting up Fock matrix
-//    int nOrbs = orbitals->size();
-//    f_mat = new MatrixXd;
-//    *f_mat = MatrixXd::Zero(nOrbs, nOrbs);
+    int nOrbs = orbitals->size();
+    f_mat = new MatrixXd;
+    *f_mat = MatrixXd::Zero(nOrbs, nOrbs);
 
     // Setting up SCF
 //    helmholtz = new HelmholtzOperatorSet(scf_lambda_thrs);
@@ -301,9 +299,8 @@ void SCFDriver::setup() {
 }
 
 void SCFDriver::clear() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (molecule != 0) delete molecule;
-//    if (orbitals != 0) delete orbitals;
+    if (molecule != 0) delete molecule;
+    if (orbitals != 0) delete orbitals;
 
 //    if (helmholtz != 0) delete helmholtz;
 //    if (scf_kain != 0) delete scf_kain;
@@ -316,7 +313,7 @@ void SCFDriver::clear() {
 //    if (V != 0) delete V;
 //    if (K != 0) delete K;
 //    if (XC != 0) delete XC;
-//    if (f_mat != 0) delete f_mat;
+    if (f_mat != 0) delete f_mat;
 //    if (f_oper != 0) delete f_oper;
 //    if (xcfun_1 != 0) delete xcfun_1;
 }
@@ -436,11 +433,10 @@ void SCFDriver::clearPerturbedOperators() {
 }
 
 void SCFDriver::run() {
-    NOT_IMPLEMENTED_ABORT;
 //    bool converged = true;
-//    if (not sanityCheck()) {
-//        return;
-//    }
+    if (not sanityCheck()) {
+        return;
+    }
 //    setupInitialGroundState();
 //    if (run_ground_state) {
 //        converged = runGroundState();
@@ -477,7 +473,8 @@ void SCFDriver::run() {
 //            }
 //        }
 //    }
-//    molecule->printGeometry();
+    molecule->printGeometry();
+    println(0, *orbitals);
 //    molecule->printProperties();
 }
 

@@ -14,40 +14,111 @@
 using namespace std;
 using namespace Eigen;
 
-/** Orbital set constructor
+/** OrbitalVector constructor
  *
- * no is number of orbitals
+ * New orbitals are constructed with double
+ * occupancy and undefined spin
  *
- * Constructs a set of orbitals, and initializes all orbitals to NULL.
+ * All orbital functions are uninitialized.
  */
 OrbitalSet::OrbitalSet(int n_orbs) {
-    for (int i = 0; i < n_orbs; i++) {
-        this->orbitals.push_back(0);
-    }
+    push_back(n_orbs, 2, Paired);
 }
 
-/** Orbital set copy constructor
+/** OrbitalVector constructor
  *
- * Copy parameters and number of orbitals from
- * input set, and initializes all orbitals to NULL.
+ * New orbitals are constructed with single
+ * occupancy orbitals and alpha/beta spin
+ *
+ * All orbital functions are uninitialized.
+ */
+OrbitalSet::OrbitalSet(int n_alpha, int n_beta) {
+    push_back(n_alpha, 1, Alpha);
+    push_back(n_beta, 1, Beta);
+}
+
+/** OrbitalVector constructor
+ *
+ * ne is number of electrons.
+ * mult is spin mutiplicity.
+ * rest is spin restricted.
+ *
+ * All orbital functions are uninitialized.
+ */
+OrbitalSet::OrbitalSet(int ne, int mult, bool rest) {
+    int de = ne - (mult - 1);
+    if (de%2 != 0)  MSG_ERROR("Invalid multiplicity");
+
+    int na, nb, nd;
+    if (rest) {
+        na = mult - 1;
+        nb = 0;
+        nd = de/2;
+    } else {
+        na = de/2 + (mult - 1);
+        nb = de/2;
+        nd = 0;
+    }
+
+    push_back(nd, 2, Paired);
+    push_back(na, 1, Alpha);
+    push_back(nb, 1, Beta);
+}
+
+/** Copy constructor
+ *
+ * New orbitals are constructed with spin and occupancy
+ * parameters (not function data) taken from the input set.
+ *
+ * All orbital functions are uninitialized.
  */
 OrbitalSet::OrbitalSet(const OrbitalSet &orb_set) {
     for (int i = 0; i < orb_set.size(); i++) {
-        this->orbitals.push_back(0);
+        const Orbital &orb_i = orb_set.getOrbital(i);
+        Orbital *newOrb = new Orbital(orb_i);
+        this->orbitals.push_back(newOrb);
     }
 }
 
-/** Clears the set of orbitals
+/** OrbitalVector destructor
  *
- * Deletes any existing orbitals in the set and leaves a NULL
- * pointer in its stead. Length of orbital vector remains.
+ * Deletes all orbitals in the vector
  */
-void OrbitalSet::clear(bool free) {
+OrbitalSet::~OrbitalSet() {
     for (int i = 0; i < this->size(); i++) {
-        if (free and this->orbitals[i] != 0) {
+        if (this->orbitals[i] != 0) {
             delete this->orbitals[i];
         }
-        this->orbitals[i] = 0;
+    }
+    this->orbitals.clear();
+}
+
+/** Clears each orbital in the vector
+ *
+ * Deletes the actual functions in the orbitals, keeps
+ * the spin and occupancy.
+ */
+void OrbitalSet::clear() {
+    for (int i = 0; i < this->size(); i++) {
+        this->orbitals[i]->clear();
+    }
+}
+
+/** Append orbital to this set
+ *
+ * n_orbs is number of new orbitals.
+ * occ is occupancy of all new orbitals.
+ * spin is the spin of all new orbitals.
+ *
+ * New orbitals are constructed with given spin and occupancy
+ * parameters, as uninitialized functions.
+ *
+ * Any existing orbitals in the set are kept.
+ */
+void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
+    for (int i = 0; i < n_orbs; i++) {
+        Orbital *orb = new Orbital(occ, spin);
+        this->orbitals.push_back(orb);
     }
 }
 
@@ -77,96 +148,6 @@ void OrbitalSet::clear(bool free) {
 //            }
 //            n++;
 //        }
-//    }
-//}
-
-/** Initialize a set of orbitals
- *
- * nd is number of doubly occupied orbitals.
- * na is number of singly occupied orbitals with alpha spin.
- * nb is number of singly occupied orbitals with beta spin.
- *
- * Any existing orbitals in the set are deleted.
- * All orbitals are zero functions by default.
- */
-//void OrbitalSet::initialize(int nd, int na, int nb) {
-//    NOT_IMPLEMENTED_ABORT;
-//    this->clear();
-//    this->orbitals.clear();
-//    append(nd, 2, Orbital::Paired);
-//    append(na, 1, Orbital::Alpha);
-//    append(nb, 1, Orbital::Beta);
-//}
-
-/** Initialize a set of orbitals
- *
- * ne is number of electrons.
- * mult is spin mutiplicity.
- * rest is spin restricted.
- *
- * Any existing orbitals in the set are deleted.
- * All orbitals are zero functions by default.
- */
-//void OrbitalSet::initialize(int ne, int mult, bool rest) {
-//    NOT_IMPLEMENTED_ABORT;
-//    this->clear();
-//    this->orbitals.clear();
-//    int de = ne - (mult - 1);
-//    if (de%2 != 0) {
-//        MSG_ERROR("Invalid multiplicity");
-//    }
-
-//    int na, nb, nd;
-//    if (rest) {
-//    na = mult - 1;
-//    nb = 0;
-//    nd = de/2;
-//    } else {
-//    na = de/2 + (mult - 1);
-//    nb = de/2;
-//    nd = 0;
-//    }
-
-//    append(nd, 2, Orbital::Paired);
-//    append(na, 1, Orbital::Alpha);
-//    append(nb, 1, Orbital::Beta);
-//}
-
-/** Initialize a set of orbitals based on existing set
- *
- * New orbitals are constructed with spin and occupancy
- * parameters (not function data) taken from the old set.
- *
- * Any existing orbitals in the set are deleted.
- * All orbitals are zero functions by default.
- */
-//void OrbitalSet::initialize(const OrbitalSet &orb_set) {
-//    NOT_IMPLEMENTED_ABORT;
-//    this->clear();
-//    this->orbitals.clear();
-//    for (int i = 0; i < orb_set.size(); i++) {
-//        const Orbital &oldOrb = orb_set.getOrbital(i);
-//        Orbital *newOrb = new Orbital(oldOrb);
-//        this->orbitals.push_back(newOrb);
-//    }
-//}
-
-/** Append orbital to this set
- *
- * n_orbs is number of new orbitals.
- * occ is occupancy of all new orbitals.
- * spin is the spin of all new orbitals.
- *
- * New orbitals are constructed with given spin and occupancy
- * parameters, and initialized as zero functions.
- *
- * Any existing orbitals in the set are kept.
- */
-//void OrbitalSet::append(int n_orbs, int occ, int spin) {
-//    NOT_IMPLEMENTED_ABORT;
-//    for (int i = 0; i < n_orbs; i++) {
-//        Orbital *orb = new Orbital(occ, spin);
-//        this->orbitals.push_back(orb);
 //    }
 //}
 

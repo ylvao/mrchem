@@ -5,22 +5,23 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwtrees)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
-add_library(chemistry STATIC 
-    Molecule.cpp
-    PeriodicTable.cpp
+add_library(qmfunctions STATIC 
+    Orbital.cpp
+    OrbitalSet.cpp
 )
 
-target_link_libraries(chemistry
+target_link_libraries(qmfunctions
     mrchem
-    qmfunctions
+    chemistry
     mrcpp
+    mwanalytic
     mwcore
     mwtrees
     mwoperators
     mwbuilders
 )
 
-install(TARGETS chemistry
+install(TARGETS qmfunctions
         ARCHIVE DESTINATION lib
         CONFIGURATIONS Debug-devel Release-devel
         )

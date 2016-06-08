@@ -1,30 +1,19 @@
 #ifndef ORBITAL_H
 #define ORBITAL_H
 
+#include <cmath>
+
 #include "constants.h"
+#include "mrcpp_declarations.h"
 
 #include "TelePrompter.h"
 
-template<int D> class FunctionTree;
-
 class Orbital {
 public:
-    Orbital(int occ = 2, int s = Paired)
-            : spin(s),
-              occupancy(occ),
-              real(0),
-              imag(0) {
-        NOT_IMPLEMENTED_ABORT;
-    }
-    Orbital(const Orbital &orb)
-            : spin(orb.spin),
-              occupancy(orb.occupancy),
-              real(0),
-              imag(0) {
-        NOT_IMPLEMENTED_ABORT;
-    }
-    Orbital &operator =(const Orbital &orb) { NOT_IMPLEMENTED_ABORT; }
-    virtual ~Orbital() { NOT_IMPLEMENTED_ABORT; }
+    Orbital(int occ, int s);
+    Orbital(const Orbital &orb);
+    virtual ~Orbital() { clear(); }
+    void clear();
 
     int getSpin() const { return this->spin; }
     int getOccupancy() const { return this->occupancy; }
@@ -34,17 +23,18 @@ public:
     void setOccupancy(int occ) { this->occupancy = occ; }
     void setError(double err) { this->error = err; }
 
-    bool isConverged(double prec) const { NOT_IMPLEMENTED_ABORT; }
+    bool isConverged(double prec) const;
 
     FunctionTree<3> &re() { return *this->real; }
     FunctionTree<3> &im() { return *this->imag; }
 
-    void compare(const Orbital &orb) const { NOT_IMPLEMENTED_ABORT; }
-    int compareSpin(const Orbital &orb) const { NOT_IMPLEMENTED_ABORT; }
-    int compareOccupancy(const Orbital &orb) const { NOT_IMPLEMENTED_ABORT; }
+    void compare(const Orbital &orb) const;
+    int compareSpin(const Orbital &orb) const;
+    int compareOccupancy(const Orbital &orb) const;
 
     double dot(Orbital &orb) { NOT_IMPLEMENTED_ABORT; }
-    double getSquareNorm() const { NOT_IMPLEMENTED_ABORT; }
+    double getSquareNorm() const { return 1.0; }
+    double getExchangeFactor(const Orbital &orb) const;
 
     friend std::ostream& operator<<(std::ostream &o, Orbital &orb) {
         char sp = 'u';
@@ -58,11 +48,9 @@ public:
     }
 
 protected:
-    // Parameters
     int spin;
     int occupancy;
 
-    //Data
     double error;
     FunctionTree<3> *real;
     FunctionTree<3> *imag;
