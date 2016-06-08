@@ -19,7 +19,7 @@
 //#include "DIIS.h"
 
 #include "Molecule.h"
-#include "OrbitalSet.h"
+#include "OrbitalVector.h"
 //#include "Orbital.h"
 //#include "Density.h"
 //#include "Potential.h"
@@ -192,7 +192,7 @@ void SCFDriver::setup() {
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
-    orbitals = new OrbitalSet(nEl, mol_multiplicity, wf_restricted);
+    orbitals = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
 
     // Defining gauge origin
     const double *COM = molecule->getCenterOfMass();
@@ -362,10 +362,10 @@ void SCFDriver::setupPerturbedOrbitals(bool dynamic) {
     NOT_IMPLEMENTED_ABORT;
 //    if (orbitals == 0) MSG_ERROR("Orbitals not initialized");
 
-//    x_orbs = new OrbitalSet("xOrbs", *orbitals);
+//    x_orbs = new OrbitalVector("xOrbs", *orbitals);
 //    x_orbs->initialize(*orbitals);
 //    if (dynamic) {
-//        y_orbs = new OrbitalSet("yOrbs", *orbitals);
+//        y_orbs = new OrbitalVector("yOrbs", *orbitals);
 //        y_orbs->initialize(*orbitals);
 //    } else {
 //        y_orbs = x_orbs;
@@ -478,7 +478,7 @@ void SCFDriver::run() {
 //    molecule->printProperties();
 }
 
-bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalSet &orbs) {
+bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &orbs) {
     NOT_IMPLEMENTED_ABORT;
 //    if (orbitals == 0) MSG_ERROR("Orbitals not initialized");
 
@@ -745,7 +745,7 @@ void SCFDriver::setupInitialGroundState() {
     NOT_IMPLEMENTED_ABORT;
     // Reading initial guess
 //    if (scf_start == "none") {
-//        OrbitalSet initOrbs("initOrbs");
+//        OrbitalVector initOrbs("initOrbs");
 //        initOrbs.initialize(*nuclei);
 //        MatrixXd S = initOrbs.calcOverlapMatrix();
 //        println(0, endl << S << endl);
@@ -777,7 +777,7 @@ void SCFDriver::setupInitialResponse(QMOperator &h, int d,
 //    if (rsp_start == "none") {
 //    } else if (rsp_start == "gto") {
 //        int nOcc = orbitals->size();
-//        OrbitalSet *mol_orbs = new OrbitalSet("virtuals");
+//        OrbitalVector *mol_orbs = new OrbitalVector("virtuals");
 //        mol_orbs->readVirtuals(file_basis_set, file_mo_mat_a, nOcc);
 //        int nVirt = mol_orbs->size();
 
@@ -840,13 +840,13 @@ void SCFDriver::runMagneticallyInducedCurrents() {
     initResponse(frequencies);
 
     DerivativeOperator del(0.0, 0.0);
-    OrbitalSet &orbs = molecule.getOrbitals();
+    OrbitalVector &orbs = molecule.getOrbitals();
 
 // calculate perturbed orbitals
-    OrbitalSet *pOrbs[3];
-    pOrbs[0] = new OrbitalSet("xOrbs", orbs);
-    pOrbs[1] = new OrbitalSet("yOrbs", orbs);
-    pOrbs[2] = new OrbitalSet("zOrbs", orbs);
+    OrbitalVector *pOrbs[3];
+    pOrbs[0] = new OrbitalVector("xOrbs", orbs);
+    pOrbs[1] = new OrbitalVector("yOrbs", orbs);
+    pOrbs[2] = new OrbitalVector("zOrbs", orbs);
     calcMagneticResponseX(0, r_O, orbs, *pOrbs[0]);
     calcMagneticResponseX(1, r_O, orbs, *pOrbs[1]);
     calcMagneticResponseX(2, r_O, orbs, *pOrbs[2]);

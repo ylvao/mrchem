@@ -1,5 +1,5 @@
-#ifndef ORBITALSET_H
-#define ORBITALSET_H
+#ifndef ORBITALVECTOR_H
+#define ORBITALVECTOR_H
 
 #include <Eigen/Core>
 #include <string>
@@ -10,21 +10,21 @@
 
 //class OrbExp;
 
-class OrbitalSet {
+class OrbitalVector {
 public:
-    OrbitalSet(int n_orbs);
-    OrbitalSet(int n_alpha, int n_beta);
-    OrbitalSet(int ne, int mult, bool rest);
-    OrbitalSet(const OrbitalSet &orb_set);
-    virtual ~OrbitalSet();
+    OrbitalVector(int n_orbs);
+    OrbitalVector(int n_alpha, int n_beta);
+    OrbitalVector(int ne, int mult, bool rest);
+    OrbitalVector(const OrbitalVector &orb_set);
+    virtual ~OrbitalVector();
 
     void push_back(int n_orbs, int occ, int spin);
     void clear();
 
-//    OrbitalSet& operator=(const OrbitalSet &orb_set);
+//    OrbitalVector& operator=(const OrbitalVector &orb_set);
 
 //    void writeOrbitals(const std::string &of);
-//    void readOrbitals(const OrbitalSet &orbs);
+//    void readOrbitals(const OrbitalVector &orbs);
 //    void readOrbitals(const std::string &of);
 //    void readOrbitals(const std::string &bf,
 //                      const std::string &mo);
@@ -37,13 +37,13 @@ public:
 
 //    void normalize();
 //    void orthogonalize(double prec);
-//    void orthogonalize(double prec, OrbitalSet &orbitals);
+//    void orthogonalize(double prec, OrbitalVector &orbitals);
 //    Eigen::MatrixXd orthonormalize(double prec, Eigen::MatrixXd *F = 0);
 //    Eigen::MatrixXd localize(double prec, Eigen::MatrixXd *F = 0);
 //    Eigen::MatrixXd diagonalize(double prec, Eigen::MatrixXd *F);
 
 //    Eigen::MatrixXd calcOverlapMatrix();
-//    Eigen::MatrixXd calcOverlapMatrix(OrbitalSet &orbitals);
+//    Eigen::MatrixXd calcOverlapMatrix(OrbitalVector &orbitals);
 //    Eigen::MatrixXd calcLocalizationMatrix();
 //    Eigen::MatrixXd calcOrthonormalizationMatrix();
 //    Eigen::MatrixXd calcDiagonalizationMatrix(Eigen::MatrixXd F);
@@ -73,8 +73,8 @@ public:
     double calcTotalError() const;
 
 //    void rotate(double prec, const Eigen::MatrixXd &U);
-//    void add(double a, OrbitalSet &set_1, double b, OrbitalSet &set_b);
-//    void addInPlace(OrbitalSet &orb_set, double c = 1.0);
+//    void add(double a, OrbitalVector &set_1, double b, OrbitalVector &set_b);
+//    void addInPlace(OrbitalVector &orb_set, double c = 1.0);
 //    void crop(double prec = -1.0);
 
     const Orbital *getOrbitalPtr(int i) const { return this->orbitals[i]; }
@@ -83,17 +83,17 @@ public:
     const Orbital &getOrbital(int i) const;
     Orbital &getOrbital(int i);
 
-//    void replaceOrbitals(OrbitalSet &new_orbs);
+//    void replaceOrbitals(OrbitalVector &new_orbs);
 //    void replaceOrbital(int i, Orbital **orb);
 
 //    int printTreeSizes() const;
 
-    friend std::ostream& operator<<(std::ostream &o, OrbitalSet &orb_set) {
+    friend std::ostream& operator<<(std::ostream &o, OrbitalVector &orb_set) {
         int oldPrec = TelePrompter::setPrecision(15);
-        o << "*OrbitalSet:  ";
-        o << std::setw(4) << orb_set.size()          << " orbitals   ";
-        o << std::setw(4) << orb_set.getNOccupied()  << " occupied   ";
-        o << std::setw(4) << orb_set.getNElectrons() << " electrons" << std::endl;
+        o << "*OrbitalVector: ";
+        o << std::setw(4) << orb_set.size()          << " orbitals  ";
+        o << std::setw(4) << orb_set.getNOccupied()  << " occupied  ";
+        o << std::setw(4) << orb_set.getNElectrons() << " electrons " << std::endl;
         o << "------------------------------";
         o << "------------------------------\n";
         o << "   n    Norm                 Occ Spin  Error\n";
@@ -127,12 +127,12 @@ protected:
 //                           Eigen::MatrixXd &P,
 //                           Eigen::MatrixXd &A,
 //                           Eigen::MatrixXd &B) const;
-//    void separateSpinOrbitals(OrbitalSet &phi_p,
-//                              OrbitalSet &phi_a,
-//                              OrbitalSet &phi_b);
-//    void collectSpinOrbitals(OrbitalSet &phi_p,
-//                             OrbitalSet &phi_a,
-//                             OrbitalSet &phi_b);
+//    void separateSpinOrbitals(OrbitalVector &phi_p,
+//                              OrbitalVector &phi_a,
+//                              OrbitalVector &phi_b);
+//    void collectSpinOrbitals(OrbitalVector &phi_p,
+//                             OrbitalVector &phi_a,
+//                             OrbitalVector &phi_b);
 private:
     //Data
     std::vector<Orbital *> orbitals;
@@ -147,7 +147,7 @@ private:
  */
 //class RR : public NonlinearMaximizer {
 //public:
-//    RR(OrbitalSet &orbitals);//make the matrices <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
+//    RR(OrbitalVector &orbitals);//make the matrices <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
 //    const Eigen::MatrixXd &getTotalU() const { return this->total_U; }
 //protected:
 //    int N;//number of orbitals
@@ -162,4 +162,4 @@ private:
 //    void do_step(Eigen::VectorXd step);
 //};
 
-#endif // ORBITALSET_H
+#endif // ORBITALVECTOR_H

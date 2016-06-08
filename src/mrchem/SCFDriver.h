@@ -9,7 +9,7 @@ class Getkw;
 
 class Nuclei;
 class Molecule;
-class OrbitalSet;
+class OrbitalVector;
 class GroundStateSolver;
 class LinearResponseSolver;
 class HelmholtzOperatorSet;
@@ -127,7 +127,7 @@ protected:
     // Unperturbed quantities
     Molecule *molecule;
     Nuclei *nuclei;
-    OrbitalSet *orbitals;
+    OrbitalVector *orbitals;
     PoissonOperator *P;
     KineticOperator *T;
     NuclearPotential *V;
@@ -139,8 +139,8 @@ protected:
     Eigen::MatrixXd *f_mat;
 
     // Perturbed quantities
-    OrbitalSet *x_orbs;
-    OrbitalSet *y_orbs;
+    OrbitalVector *x_orbs;
+    OrbitalVector *y_orbs;
     CoulombHessian *dJ;
     ExchangeHessian *dK;
     XCHessian *dXC;
@@ -148,7 +148,7 @@ protected:
     FockOperator *df_oper;
 
     bool sanityCheck() const;
-    bool runInitialGuess(FockOperator &oper, Eigen::MatrixXd &F, OrbitalSet &orbs);
+    bool runInitialGuess(FockOperator &oper, Eigen::MatrixXd &F, OrbitalVector &orbs);
     bool runGroundState();
     void runElectricFieldResponse(double omega);
     void runMagneticFieldResponse(double omega);

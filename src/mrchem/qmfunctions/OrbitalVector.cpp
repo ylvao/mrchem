@@ -1,6 +1,6 @@
 #include <Eigen/Eigenvalues>
 
-#include "OrbitalSet.h"
+#include "OrbitalVector.h"
 #include "Orbital.h"
 //#include "OrbExp.h"
 //#include "GaussExp.h"
@@ -21,7 +21,7 @@ using namespace Eigen;
  *
  * All orbital functions are uninitialized.
  */
-OrbitalSet::OrbitalSet(int n_orbs) {
+OrbitalVector::OrbitalVector(int n_orbs) {
     push_back(n_orbs, 2, Paired);
 }
 
@@ -32,7 +32,7 @@ OrbitalSet::OrbitalSet(int n_orbs) {
  *
  * All orbital functions are uninitialized.
  */
-OrbitalSet::OrbitalSet(int n_alpha, int n_beta) {
+OrbitalVector::OrbitalVector(int n_alpha, int n_beta) {
     push_back(n_alpha, 1, Alpha);
     push_back(n_beta, 1, Beta);
 }
@@ -45,7 +45,7 @@ OrbitalSet::OrbitalSet(int n_alpha, int n_beta) {
  *
  * All orbital functions are uninitialized.
  */
-OrbitalSet::OrbitalSet(int ne, int mult, bool rest) {
+OrbitalVector::OrbitalVector(int ne, int mult, bool rest) {
     int de = ne - (mult - 1);
     if (de%2 != 0)  MSG_ERROR("Invalid multiplicity");
 
@@ -72,7 +72,7 @@ OrbitalSet::OrbitalSet(int ne, int mult, bool rest) {
  *
  * All orbital functions are uninitialized.
  */
-OrbitalSet::OrbitalSet(const OrbitalSet &orb_set) {
+OrbitalVector::OrbitalVector(const OrbitalVector &orb_set) {
     for (int i = 0; i < orb_set.size(); i++) {
         const Orbital &orb_i = orb_set.getOrbital(i);
         Orbital *newOrb = new Orbital(orb_i);
@@ -84,7 +84,7 @@ OrbitalSet::OrbitalSet(const OrbitalSet &orb_set) {
  *
  * Deletes all orbitals in the vector
  */
-OrbitalSet::~OrbitalSet() {
+OrbitalVector::~OrbitalVector() {
     for (int i = 0; i < this->size(); i++) {
         if (this->orbitals[i] != 0) {
             delete this->orbitals[i];
@@ -98,7 +98,7 @@ OrbitalSet::~OrbitalSet() {
  * Deletes the actual functions in the orbitals, keeps
  * the spin and occupancy.
  */
-void OrbitalSet::clear() {
+void OrbitalVector::clear() {
     for (int i = 0; i < this->size(); i++) {
         this->orbitals[i]->clear();
     }
@@ -115,14 +115,14 @@ void OrbitalSet::clear() {
  *
  * Any existing orbitals in the set are kept.
  */
-void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
+void OrbitalVector::push_back(int n_orbs, int occ, int spin) {
     for (int i = 0; i < n_orbs; i++) {
         Orbital *orb = new Orbital(occ, spin);
         this->orbitals.push_back(orb);
     }
 }
 
-//void OrbitalSet::initialize(const Nuclei &nucs) {
+//void OrbitalVector::initialize(const Nuclei &nucs) {
 //    NOT_IMPLEMENTED_ABORT;
 //    this->clear();
 //    this->orbitals.clear();
@@ -151,7 +151,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    }
 //}
 
-//OrbitalSet& OrbitalSet::operator=(const OrbitalSet &orb_set) {
+//OrbitalVector& OrbitalVector::operator=(const OrbitalVector &orb_set) {
 //    NOT_IMPLEMENTED_ABORT;
 //    if (this == &orb_set) {
 //        return *this;
@@ -169,7 +169,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    return *this;
 //}
 
-//void OrbitalSet::writeOrbitals(const string &of) {
+//void OrbitalVector::writeOrbitals(const string &of) {
 //    for (int i = 0; i < this->size(); i++) {
 //        stringstream name;
 //        name << "orbitals/" << of << "_";
@@ -182,7 +182,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    }
 //}
 
-//void OrbitalSet::readOrbitals(const string &of) {
+//void OrbitalVector::readOrbitals(const string &of) {
 //    for (int i = 0; i < this->size(); i++) {
 //        stringstream name;
 //        name << "orbitals/" << of << "_";
@@ -195,7 +195,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    }
 //}
 
-//void OrbitalSet::readOrbitals(const OrbitalSet &orbs) {
+//void OrbitalVector::readOrbitals(const OrbitalVector &orbs) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
@@ -216,7 +216,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
-//void OrbitalSet::readOrbitals(const string &bf, const string &mo) {
+//void OrbitalVector::readOrbitals(const string &bf, const string &mo) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
@@ -241,7 +241,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
-//void OrbitalSet::readVirtuals(const string &bf, const string &mo, int n_occ) {
+//void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
@@ -265,7 +265,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //}
 
 
-//void OrbitalSet::readOrbitals(const string &bf, const string &mo_a, const string &mo_b) {
+//void OrbitalVector::readOrbitals(const string &bf, const string &mo_a, const string &mo_b) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
@@ -306,7 +306,7 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
-//OrbExp* OrbitalSet::readOrbitalExpansion(const string &bf, const string &mo) {
+//OrbExp* OrbitalVector::readOrbitalExpansion(const string &bf, const string &mo) {
 //    MatrixXd MO = MathUtils::readMatrixFile(mo);
 //    MatrixXd MO_T = MO.transpose();
 
@@ -316,18 +316,18 @@ void OrbitalSet::push_back(int n_orbs, int occ, int spin) {
 //    return moExp;
 //}
 
-const Orbital& OrbitalSet::getOrbital(int i) const {
+const Orbital& OrbitalVector::getOrbital(int i) const {
     if (this->orbitals[i] == 0) MSG_ERROR("Incomplete set");
     return *this->orbitals[i];
 }
 
-Orbital& OrbitalSet::getOrbital(int i) {
+Orbital& OrbitalVector::getOrbital(int i) {
     if (this->orbitals[i] == 0) MSG_ERROR("Incomplete set");
     return *this->orbitals[i];
 }
 
 /** Returns the number of occupied orbitals */
-int OrbitalSet::getNOccupied() const {
+int OrbitalVector::getNOccupied() const {
     int nOccupied = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -342,7 +342,7 @@ int OrbitalSet::getNOccupied() const {
 }
 
 /** Returns the number of empty orbitals */
-int OrbitalSet::getNEmpty() const {
+int OrbitalVector::getNEmpty() const {
     int nEmpty = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -357,7 +357,7 @@ int OrbitalSet::getNEmpty() const {
 }
 
 /** Returns the number of singly occupied orbitals */
-int OrbitalSet::getNSingly() const {
+int OrbitalVector::getNSingly() const {
     int nSingly = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -372,7 +372,7 @@ int OrbitalSet::getNSingly() const {
 }
 
 /** Returns the number of paired orbitals */
-int OrbitalSet::getNPaired() const {
+int OrbitalVector::getNPaired() const {
     int nPaired = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -387,7 +387,7 @@ int OrbitalSet::getNPaired() const {
 }
 
 /** Returns the number of alpha orbitals */
-int OrbitalSet::getNAlpha() const {
+int OrbitalVector::getNAlpha() const {
     int nAlpha = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -402,7 +402,7 @@ int OrbitalSet::getNAlpha() const {
 }
 
 /** Returns the number of beta orbitals */
-int OrbitalSet::getNBeta() const {
+int OrbitalVector::getNBeta() const {
     int nBeta = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -417,7 +417,7 @@ int OrbitalSet::getNBeta() const {
 }
 
 /** Returns the number of doubly occupied orbitals */
-int OrbitalSet::getNDoubly() const {
+int OrbitalVector::getNDoubly() const {
     int nDoubly = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -435,7 +435,7 @@ int OrbitalSet::getNDoubly() const {
  *
  * Paired spin (default input) returns the total number of electrons.
  */
-int OrbitalSet::getNElectrons(int inpSpin) const {
+int OrbitalVector::getNElectrons(int inpSpin) const {
     int nElectrons = 0;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -460,11 +460,11 @@ int OrbitalSet::getNElectrons(int inpSpin) const {
     return nElectrons;
 }
 
-int OrbitalSet::getMultiplicity() const {
+int OrbitalVector::getMultiplicity() const {
     NOT_IMPLEMENTED_ABORT;
 }
 
-bool OrbitalSet::isConverged(double prec) const {
+bool OrbitalVector::isConverged(double prec) const {
     bool converged = true;
     for (int i = 0; i < this->size(); i++) {
         const Orbital *orb = getOrbitalPtr(i);
@@ -478,13 +478,13 @@ bool OrbitalSet::isConverged(double prec) const {
     return converged;
 }
 
-double OrbitalSet::calcTotalError() const {
+double OrbitalVector::calcTotalError() const {
     const VectorXd &error = getErrors();
     return sqrt(error.dot(error));
 }
 
 /** Returns a vector containing the orbital errors */
-VectorXd OrbitalSet::getErrors() const {
+VectorXd OrbitalVector::getErrors() const {
     int nOrbs = this->size();
     VectorXd errors = VectorXd::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
@@ -501,7 +501,7 @@ VectorXd OrbitalSet::getErrors() const {
  *
  * Length of input vector must match the number of orbitals in the set.
  */
-void OrbitalSet::setErrors(const VectorXd &errors) {
+void OrbitalVector::setErrors(const VectorXd &errors) {
     int nOrbs = this->size();
     if (nOrbs != errors.size()) {
         MSG_ERROR("Size mismatch");
@@ -517,7 +517,7 @@ void OrbitalSet::setErrors(const VectorXd &errors) {
 
 /** Returns a vector containing the orbital spins
  */
-VectorXi OrbitalSet::getSpins() const {
+VectorXi OrbitalVector::getSpins() const {
     int nOrbs = this->size();
     VectorXi spins = VectorXi::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
@@ -534,7 +534,7 @@ VectorXi OrbitalSet::getSpins() const {
  *
  * Length of input vector must match the number of orbitals in the set.
  */
-void OrbitalSet::setSpins(const VectorXi &spins) {
+void OrbitalVector::setSpins(const VectorXi &spins) {
     int nOrbs = this->size();
     if (nOrbs != spins.size()) {
         MSG_ERROR("Size mismatch");
@@ -550,7 +550,7 @@ void OrbitalSet::setSpins(const VectorXi &spins) {
 
 /** Returns a vector containing the orbital occupancies
  */
-VectorXi OrbitalSet::getOccupancies() const {
+VectorXi OrbitalVector::getOccupancies() const {
     int nOrbs = this->size();
     VectorXi occ = VectorXi::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
@@ -567,7 +567,7 @@ VectorXi OrbitalSet::getOccupancies() const {
  *
  * Length of input vector must match the number of orbitals in the set.
  */
-void OrbitalSet::setOccupancies(const VectorXi &occ) {
+void OrbitalVector::setOccupancies(const VectorXi &occ) {
     int nOrbs = this->size();
     if (nOrbs != occ.size()) {
         MSG_ERROR("Size mismatch");
@@ -583,7 +583,7 @@ void OrbitalSet::setOccupancies(const VectorXi &occ) {
 
 /** Returns a vector containing the orbital square norms
  */
-VectorXd OrbitalSet::getSquareNorms() const {
+VectorXd OrbitalVector::getSquareNorms() const {
     int nOrbs = this->size();
     VectorXd norms = VectorXd::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
@@ -598,7 +598,7 @@ VectorXd OrbitalSet::getSquareNorms() const {
 
 /** Returns a vector containing the orbital norms
  */
-VectorXd OrbitalSet::getNorms() const {
+VectorXd OrbitalVector::getNorms() const {
     int nOrbs = this->size();
     VectorXd norms = VectorXd::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
@@ -611,7 +611,7 @@ VectorXd OrbitalSet::getNorms() const {
     return norms;
 }
 
-//void OrbitalSet::replaceOrbitals(OrbitalSet &new_orbs) {
+//void OrbitalVector::replaceOrbitals(OrbitalVector &new_orbs) {
 //    int nOrbs = this->size();
 //    if (nOrbs != new_orbs.size()) {
 //        MSG_ERROR("Size mismatch");
@@ -623,7 +623,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    }
 //}
 
-//void OrbitalSet::replaceOrbital(int i, Orbital **orb) {
+//void OrbitalVector::replaceOrbital(int i, Orbital **orb) {
 //    if (i < 0 or i >= this->size()) {
 //        MSG_ERROR("Orbital index out of bounds");
 //    }
@@ -634,7 +634,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    *orb = 0;
 //}
 
-//void OrbitalSet::rotate(double prec, const MatrixXd &U) {
+//void OrbitalVector::rotate(double prec, const MatrixXd &U) {
 //    boost::timer timer, totTimer;
 //    totTimer.restart();
 
@@ -657,7 +657,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    }
 
 //    VectorXd errors = this->getErrors();
-//    OrbitalSet *newSet = new OrbitalSet("tmpSet", *this);
+//    OrbitalVector *newSet = new OrbitalVector("tmpSet", *this);
 
 //    double time;
 //    int nNodes;
@@ -718,7 +718,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    println(0, totTimer.elapsed());
 //}
 
-//void OrbitalSet::add(double a, OrbitalSet &set_a, double b, OrbitalSet &set_b) {
+//void OrbitalVector::add(double a, OrbitalVector &set_a, double b, OrbitalVector &set_b) {
 //    boost::timer timer;
 //    double time;
 //    int nNodes;
@@ -741,7 +741,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    }
 //}
 
-//void OrbitalSet::addInPlace(OrbitalSet &func_set, double c) {
+//void OrbitalVector::addInPlace(OrbitalVector &func_set, double c) {
 //    boost::timer timer;
 //    double time;
 //    int nNodes;
@@ -769,7 +769,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    setErrors(errors);
 //}
 
-//void OrbitalSet::crop(double prec) {
+//void OrbitalVector::crop(double prec) {
 //    boost::timer timer;
 //    timer.restart();
 //    println(0, "\n--------------------- Cropping orbitals --------------------");
@@ -789,7 +789,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    println(0, " -----------------\n");
 //}
 
-//MatrixXd OrbitalSet::getSpinMatrix() const {
+//MatrixXd OrbitalVector::getSpinMatrix() const {
 //    int N = this->size();
 //    MatrixXd S = MatrixXd::Zero(N,N);
 //    int i = 0;
@@ -817,7 +817,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    return S;
 //}
 
-//void OrbitalSet::spinCleanMatrix(MatrixXd &M) const {
+//void OrbitalVector::spinCleanMatrix(MatrixXd &M) const {
 //    int nOrbs = this->size();
 //    if (nOrbs != M.cols() or nOrbs != M.rows()) MSG_ERROR("Size mismatch");
 //    for (int i = 0; i < nOrbs; i++) {
@@ -836,7 +836,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    }
 //}
 
-//void OrbitalSet::separateSpinMatrix(MatrixXd &T, MatrixXd &P, MatrixXd &A, MatrixXd &B) const {
+//void OrbitalVector::separateSpinMatrix(MatrixXd &T, MatrixXd &P, MatrixXd &A, MatrixXd &B) const {
 //    MatrixXd S = getSpinMatrix();
 //    T = S*T;
 
@@ -848,7 +848,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    B = T.block(N_p+N_a,N_p+N_a,N_b,N_b);
 //}
 
-//void OrbitalSet::collectSpinMatrix(MatrixXd &T, MatrixXd &P, MatrixXd &A, MatrixXd &B) const {
+//void OrbitalVector::collectSpinMatrix(MatrixXd &T, MatrixXd &P, MatrixXd &A, MatrixXd &B) const {
 //    int rows = P.rows() + A.rows() + B.rows();
 //    int cols = P.cols() + A.cols() + B.cols();
 //    T = MatrixXd::Zero(rows, cols);
@@ -865,7 +865,7 @@ VectorXd OrbitalSet::getNorms() const {
  * The ownership of the orbitals is transferred to the
  * new sets and the original set is cleared.
  */
-//void OrbitalSet::separateSpinOrbitals(OrbitalSet &phi_p, OrbitalSet &phi_a, OrbitalSet &phi_b) {
+//void OrbitalVector::separateSpinOrbitals(OrbitalVector &phi_p, OrbitalVector &phi_a, OrbitalVector &phi_b) {
 //    if (phi_p.size() != this->getNPaired()) MSG_ERROR("Size mismatch paired");
 //    if (phi_a.size() != this->getNAlpha()) MSG_ERROR("Size mismatch alpha");
 //    if (phi_b.size() != this->getNBeta()) MSG_ERROR("Size mismatch beta");
@@ -894,7 +894,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    }
 //}
 
-//void OrbitalSet::collectSpinOrbitals(OrbitalSet &phi_p, OrbitalSet &phi_a, OrbitalSet &phi_b) {
+//void OrbitalVector::collectSpinOrbitals(OrbitalVector &phi_p, OrbitalVector &phi_a, OrbitalVector &phi_b) {
 //    int n_p = phi_p.size();
 //    int n_a = phi_a.size();
 //    int n_b = phi_b.size();
@@ -923,7 +923,7 @@ VectorXd OrbitalSet::getNorms() const {
 
 /** Normalize all orbitals in the set
  */
-//void OrbitalSet::normalize() {
+//void OrbitalVector::normalize() {
 //    boost::timer rolex;
 //    rolex.restart();
 //    printout(0, "Normalizing                                      ");
@@ -938,7 +938,7 @@ VectorXd OrbitalSet::getNorms() const {
  *
  * Nothing happens to the Fock matrix in this process.
  */
-//void OrbitalSet::orthogonalize(double prec) {
+//void OrbitalVector::orthogonalize(double prec) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    for (int i = 0; i < this->size(); i++) {
@@ -957,7 +957,7 @@ VectorXd OrbitalSet::getNorms() const {
  *
  * Orbitals are NOT orthogonalized within this set
  */
-//void OrbitalSet::orthogonalize(double prec, OrbitalSet &orbs) {
+//void OrbitalVector::orthogonalize(double prec, OrbitalVector &orbs) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    for (int i = 0; i < this->size(); i++) {
@@ -972,16 +972,16 @@ VectorXd OrbitalSet::getNorms() const {
 //    printout(0, rolex.elapsed() << endl);
 //}
 
-//MatrixXd OrbitalSet::orthonormalize(double prec, MatrixXd *F) {
+//MatrixXd OrbitalVector::orthonormalize(double prec, MatrixXd *F) {
 //    MatrixXd U_p, U_a, U_b;
 //    MatrixXd P, A, B;
 //    if (F != 0) {
 //        separateSpinMatrix(*F, P, A, B);
 //    }
 
-//    OrbitalSet phi_p("phi_p", getNDoubly());
-//    OrbitalSet phi_a("phi_a", getNAlpha());
-//    OrbitalSet phi_b("phi_b", getNBeta());
+//    OrbitalVector phi_p("phi_p", getNDoubly());
+//    OrbitalVector phi_a("phi_a", getNAlpha());
+//    OrbitalVector phi_b("phi_b", getNBeta());
 //    separateSpinOrbitals(phi_p, phi_a, phi_b);
 
 //    if (phi_p.size() > 0) {
@@ -1014,16 +1014,16 @@ VectorXd OrbitalSet::getNorms() const {
 //    return U;
 //}
 
-//MatrixXd OrbitalSet::localize(double prec, MatrixXd *F) {
+//MatrixXd OrbitalVector::localize(double prec, MatrixXd *F) {
 //    MatrixXd U_p, U_a, U_b;
 //    MatrixXd P, A, B;
 //    if (F != 0) {
 //        separateSpinMatrix(*F, P, A, B);
 //    }
 
-//    OrbitalSet phi_p("phi_p", getNDoubly());
-//    OrbitalSet phi_a("phi_a", getNAlpha());
-//    OrbitalSet phi_b("phi_b", getNBeta());
+//    OrbitalVector phi_p("phi_p", getNDoubly());
+//    OrbitalVector phi_a("phi_a", getNAlpha());
+//    OrbitalVector phi_b("phi_b", getNBeta());
 //    separateSpinOrbitals(phi_p, phi_a, phi_b);
 
 //    if (phi_p.size() > 0) {
@@ -1056,7 +1056,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    return U;
 //}
 
-//MatrixXd OrbitalSet::diagonalize(double prec, MatrixXd *F) {
+//MatrixXd OrbitalVector::diagonalize(double prec, MatrixXd *F) {
 //    if (F == 0) MSG_ERROR("No Fock matrix to diagonalize");
 //    boost::timer rolex;
 //    rolex.restart();
@@ -1066,9 +1066,9 @@ VectorXd OrbitalSet::getNorms() const {
 //    MatrixXd P, A, B;
 //    separateSpinMatrix(*F, P, A, B);
 
-//    OrbitalSet phi_p("phi_p", getNPaired());
-//    OrbitalSet phi_a("phi_a", getNAlpha());
-//    OrbitalSet phi_b("phi_b", getNBeta());
+//    OrbitalVector phi_p("phi_p", getNPaired());
+//    OrbitalVector phi_a("phi_a", getNAlpha());
+//    OrbitalVector phi_b("phi_b", getNBeta());
 //    separateSpinOrbitals(phi_p, phi_a, phi_b);
 
 //    if (phi_p.size() > 0) {
@@ -1109,7 +1109,7 @@ VectorXd OrbitalSet::getNorms() const {
 //}
 
 /** Calculate overlap matrix within orbital set */
-//MatrixXd OrbitalSet::calcOverlapMatrix() {
+//MatrixXd OrbitalVector::calcOverlapMatrix() {
 //    int nOrbs = this->size();
 //    MatrixXd S = MatrixXd::Zero(nOrbs, nOrbs);
 //    for (int i = 0; i < nOrbs; i++) {
@@ -1126,16 +1126,16 @@ VectorXd OrbitalSet::getNorms() const {
 //}
 
 /** Calculate overlap matrix between two orbital sets */
-//MatrixXd OrbitalSet::calcOverlapMatrix(OrbitalSet &inpSet) {
+//MatrixXd OrbitalVector::calcOverlapMatrix(OrbitalVector &inpVector) {
 //    int nOrbs = this->size();
-//    if (inpSet.size() != nOrbs) {
+//    if (inpVector.size() != nOrbs) {
 //        MSG_ERROR("Size mismatch between orbital sets");
 //    }
 //    MatrixXd S = MatrixXd::Zero(nOrbs, nOrbs);
 //    for (int i = 0; i < nOrbs; i++) {
 //        Orbital &iOrb = this->getOrbital(i);
 //        for (int j = 0; j < nOrbs; j++) {
-//            Orbital &jOrb = inpSet.getOrbital(j);
+//            Orbital &jOrb = inpVector.getOrbital(j);
 //            double innerProd = iOrb.innerProduct(jOrb);
 //            S(i,j) = innerProd;
 //        }
@@ -1147,7 +1147,7 @@ VectorXd OrbitalSet::getNorms() const {
  *
  * This operation includes the orthonormalization using the overlap matrix.
  */
-//MatrixXd OrbitalSet::calcDiagonalizationMatrix(MatrixXd F) {
+//MatrixXd OrbitalVector::calcDiagonalizationMatrix(MatrixXd F) {
 //    boost::timer rolex;
 //    rolex.restart();
 //    printout(1, "Calculating diagonalization matrix               ");
@@ -1171,7 +1171,7 @@ VectorXd OrbitalSet::getNorms() const {
  * The resulting transformation includes the orthonormalization of the orbitals.
  * For details see the tex documentation in doc directory
  */
-//MatrixXd OrbitalSet::calcLocalizationMatrix() {
+//MatrixXd OrbitalVector::calcLocalizationMatrix() {
 //    double optTime = 0.0;
 //    double rotTime = 0.0;
 //    double totTime = 0.0;
@@ -1205,7 +1205,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    return U;
 //}
 
-//MatrixXd OrbitalSet::calcOrthonormalizationMatrix() {
+//MatrixXd OrbitalVector::calcOrthonormalizationMatrix() {
 //    boost::timer rolex;
 //    rolex.restart();
 //    printout(1, "Calculating orthonormalization matrix            ");
@@ -1218,7 +1218,7 @@ VectorXd OrbitalSet::getNorms() const {
 //    return U;
 //}
 
-//int OrbitalSet::printTreeSizes() const {
+//int OrbitalVector::printTreeSizes() const {
 //    int nNodes = 0;
 //    int nTrees = 0;
 //    for (int i = 0; i < size(); i++) {
@@ -1227,13 +1227,13 @@ VectorXd OrbitalSet::getNorms() const {
 //            nTrees++;
 //        }
 //    }
-//    println(0, " OrbitalSet        " << setw(15) << nTrees << setw(25) << nNodes);
+//    println(0, " OrbitalVector        " << setw(15) << nTrees << setw(25) << nNodes);
 //    return nNodes;
 //}
 
 /** Compute the position matrix <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
  */
-//RR::RR(OrbitalSet &orbitals) {
+//RR::RR(OrbitalVector &orbitals) {
 //    N = orbitals.size();
 //    if (N == 0) {
 //        MSG_ERROR("Cannot localize empty set");

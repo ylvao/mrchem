@@ -7,7 +7,7 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_library(qmfunctions STATIC 
     Orbital.cpp
-    OrbitalSet.cpp
+    OrbitalVector.cpp
 )
 
 target_link_libraries(qmfunctions
