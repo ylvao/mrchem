@@ -2,9 +2,11 @@ include_directories (${CMAKE_INSTALL_PREFIX}/include)
 
 include_directories (chemistry)
 include_directories (initial_guess)
+include_directories (qmfunctions)
 
 add_subdirectory (chemistry)
 add_subdirectory (initial_guess)
+add_subdirectory (qmfunctions)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 link_directories (${Boost_LIBRARY_DIRS})
@@ -21,6 +23,7 @@ add_library(mrchem STATIC
 
 target_link_libraries(mrchem 
     chemistry 
+    qmfunctions
     mrcpp 
     mwanalytic
     mwtrees
@@ -34,6 +37,7 @@ add_dependencies(mrchem external-modules)
 target_link_libraries(mrchem.x 
     mrchem 
     chemistry
+    qmfunctions
     mrcpp 
     mwanalytic
     mwtrees

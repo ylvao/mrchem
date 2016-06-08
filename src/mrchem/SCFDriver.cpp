@@ -18,8 +18,8 @@
 //#include "KAIN.h"
 //#include "DIIS.h"
 
-//#include "Molecule.h"
-//#include "OrbitalSet.h"
+#include "Molecule.h"
+#include "OrbitalSet.h"
 //#include "Orbital.h"
 //#include "Density.h"
 //#include "Potential.h"
@@ -188,72 +188,77 @@ bool SCFDriver::sanityCheck() const {
 }
 
 void SCFDriver::setup() {
-    NOT_IMPLEMENTED_ABORT;
     // Setting up molecule
-//    molecule = new Molecule(mol_coords, mol_charge);
-//    int nEl = molecule->getNElectrons();
-//    nuclei = &molecule->getNuclei();
-//    orbitals = new OrbitalSet("orbs");
+    molecule = new Molecule(mol_coords, mol_charge);
+    int nEl = molecule->getNElectrons();
+    nuclei = &molecule->getNuclei();
+    molecule->printGeometry();
+    orbitals = new OrbitalSet();
 //    orbitals->initialize(nEl, mol_multiplicity, wf_restricted);
 
     // Defining gauge origin
-//    const double *origin = BoundingBox<3>::getWorldBox().getOrigin();
-//    const double *COM = molecule->getCenterOfMass();
-//    if (center_of_mass) {
-//        r_O[0] = COM[0];
-//        r_O[1] = COM[1];
-//        r_O[2] = COM[2];
-//    } else {
-//        r_O[0] = gauge[0] - origin[0];
-//        r_O[1] = gauge[1] - origin[1];
-//        r_O[2] = gauge[2] - origin[2];
-//    }
+    const double *COM = molecule->getCenterOfMass();
+    if (center_of_mass) {
+        r_O[0] = COM[0];
+        r_O[1] = COM[1];
+        r_O[2] = COM[2];
+    } else {
+        r_O[0] = gauge[0];
+        r_O[1] = gauge[1];
+        r_O[2] = gauge[2];
+    }
 
     // Setup properties
-//    if (nmr_nuclei[0] < 0) {
-//        nmr_nuclei.clear();
-//        for (int i = 0; i < molecule->getNNuclei(); i++) {
-//            nmr_nuclei.push_back(i);
-//        }
-//    }
-//    if (spin_spin_k[0] < 0) {
-//        spin_spin_k.clear();
-//        for (int k = 0; k < molecule->getNNuclei(); k++) {
-//            spin_spin_k.push_back(k);
-//        }
-//    }
-//    if (spin_spin_l[0] < 0) {
-//        spin_spin_l.clear();
-//        for (int l = 0; l < molecule->getNNuclei(); l++) {
-//            spin_spin_l.push_back(l);
-//        }
-//    }
-//    if (run_dipole_moment) molecule->initDipoleMoment(r_O);
-//    if (run_quadrupole_moment) molecule->initQuadrupoleMoment(r_O);
-//    for (int i = 0; i < frequencies.size(); i++) {
-//        if (run_polarizability) {
-//            molecule->initPolarizability(frequencies[i], r_O, velocity_gauge);
-//        }
-//        if (run_optrot_electric or run_optrot_magnetic) {
-//            molecule->initOpticalRotation(frequencies[i], r_O, velocity_gauge);
-//        }
-//    }
-//    if (run_magnetizability) molecule->initMagnetizability(0.0, r_O);
-//    if (run_nmr_shielding) {
-//        for (int k = 0; k < nmr_nuclei.size(); k++) {
-//            int K = nmr_nuclei[k];
-//            molecule->initNMRShielding(K, r_O);
-//        }
-//    }
-//    if (run_spin_spin) {
-//        for (int k = 0; k < spin_spin_k.size(); k++) {
-//            int K = spin_spin_k[k];
-//            for (int l = 0; l < spin_spin_l.size(); l++) {
-//                int L = spin_spin_l[l];
-//                molecule->initSpinSpinCoupling(K, L);
-//            }
-//        }
-//    }
+    if (nmr_nuclei[0] < 0) {
+        nmr_nuclei.clear();
+        for (int i = 0; i < molecule->getNNuclei(); i++) {
+            nmr_nuclei.push_back(i);
+        }
+    }
+    if (spin_spin_k[0] < 0) {
+        spin_spin_k.clear();
+        for (int k = 0; k < molecule->getNNuclei(); k++) {
+            spin_spin_k.push_back(k);
+        }
+    }
+    if (spin_spin_l[0] < 0) {
+        spin_spin_l.clear();
+        for (int l = 0; l < molecule->getNNuclei(); l++) {
+            spin_spin_l.push_back(l);
+        }
+    }
+    if (run_dipole_moment) {
+        molecule->initDipoleMoment(r_O);
+    }
+    if (run_quadrupole_moment) {
+        molecule->initQuadrupoleMoment(r_O);
+    }
+    for (int i = 0; i < frequencies.size(); i++) {
+        if (run_polarizability) {
+            molecule->initPolarizability(frequencies[i], r_O, velocity_gauge);
+        }
+        if (run_optrot_electric or run_optrot_magnetic) {
+            molecule->initOpticalRotation(frequencies[i], r_O, velocity_gauge);
+        }
+    }
+    if (run_magnetizability) {
+        molecule->initMagnetizability(0.0, r_O);
+    }
+    if (run_nmr_shielding) {
+        for (int k = 0; k < nmr_nuclei.size(); k++) {
+            int K = nmr_nuclei[k];
+            molecule->initNMRShielding(K, r_O);
+        }
+    }
+    if (run_spin_spin) {
+        for (int k = 0; k < spin_spin_k.size(); k++) {
+            int K = spin_spin_k[k];
+            for (int l = 0; l < spin_spin_l.size(); l++) {
+                int L = spin_spin_l[l];
+                molecule->initSpinSpinCoupling(K, L);
+            }
+        }
+    }
 
     // Setting up Fock matrix
 //    int nOrbs = orbitals->size();
