@@ -400,13 +400,9 @@ void Molecule::readCoordinateString(const vector<string> &coord_str) {
 }
 
 void Molecule::printGeometry() const {
-    println(0, "                                                            ");
-    println(0, "========================= Molecule =========================");
-    println(0, "                                                            ");
-    println(0, " Nr  Element              x             y             z     ");
-    println(0, "------------------------------------------------------------");
-    println(0, "                                                            ");
-
+    TelePrompter::printHeader("Molecule");
+    println(0, " Nr  Element             x             y             z      ");
+    TelePrompter::printSeparator('-');
     int oldPrec = TelePrompter::setPrecision(5);
 
     int nNuclei = getNNuclei();
@@ -418,22 +414,17 @@ void Molecule::printGeometry() const {
         symbol << "  ";
         printout(0, setw(3) << i+1 << "     ");
         printout(0, symbol.str()[0] << symbol.str()[1]);
-        printout(0, setw(22) << coord[0]);
+        printout(0, setw(21) << coord[0]);
         printout(0, setw(14) << coord[1]);
         printout(0, setw(14) << coord[2] << endl);
     }
-    println(0, "                                                            ");
-    println(0, "------------------------------------------------------------");
-    println(0, "                                                            ");
-    printout(0, " Center Of Mass:  ");
+    TelePrompter::printSeparator('-');
+    printout(0, " Center of mass: ");
     printout(0, setw(14) << this->COM[0]);
     printout(0, setw(14) << this->COM[1]);
     printout(0, setw(14) << this->COM[2] << endl);
     TelePrompter::setPrecision(oldPrec);
-    println(0, "                                                            ");
-    println(0, "============================================================");
-    println(0, "                                                            ");
-    println(0, "                                                            ");
+    TelePrompter::printSeparator('=', 2);
 }
 
 void Molecule::printProperties() const {
