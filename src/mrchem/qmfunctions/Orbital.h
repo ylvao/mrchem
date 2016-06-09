@@ -1,8 +1,6 @@
 #ifndef ORBITAL_H
 #define ORBITAL_H
 
-#include <cmath>
-
 #include "constants.h"
 #include "mrcpp_declarations.h"
 
@@ -33,16 +31,23 @@ public:
     int compareOccupancy(const Orbital &orb) const;
 
     double dot(Orbital &orb) { NOT_IMPLEMENTED_ABORT; }
-    double getSquareNorm() const { return 1.0; }
+    double getSquareNorm() const;
     double getExchangeFactor(const Orbital &orb) const;
+
+    char printSpin() const {
+        char sp = 'u';
+        if (this->spin == Alpha) sp = 'a';
+        if (this->spin == Beta) sp = 'b';
+        return sp;
+    }
 
     friend std::ostream& operator<<(std::ostream &o, Orbital &orb) {
         char sp = 'u';
         if (orb.getSpin() == Alpha) sp = 'a';
         if (orb.getSpin() == Beta) sp = 'b';
-        o << std::setw(25) << sqrt(orb.getSquareNorm());
+        o << std::setw(25) << orb.getSquareNorm();
         o << std::setw(3) << orb.getOccupancy();
-        o << std::setw(4) << sp;
+        o << std::setw(4) << orb.printSpin();
         o << std::setw(24) << orb.getError() << std::endl;
         return o;
     }

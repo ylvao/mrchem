@@ -8,8 +8,6 @@
 //#include "NonlinearMaximizer.h"
 #include "Orbital.h"
 
-//class OrbExp;
-
 class OrbitalVector {
 public:
     OrbitalVector(int n_orbs);
@@ -24,16 +22,7 @@ public:
 //    OrbitalVector& operator=(const OrbitalVector &orb_set);
 
 //    void writeOrbitals(const std::string &of);
-//    void readOrbitals(const OrbitalVector &orbs);
 //    void readOrbitals(const std::string &of);
-//    void readOrbitals(const std::string &bf,
-//                      const std::string &mo);
-//    void readOrbitals(const std::string &bf,
-//                      const std::string &mo_a,
-//                      const std::string &mo_b);
-//    void readVirtuals(const std::string &bf,
-//                      const std::string &mo,
-//                      int n_occ);
 
 //    void normalize();
 //    void orthogonalize(double prec);
@@ -96,11 +85,11 @@ public:
         o << std::setw(4) << orb_set.getNElectrons() << " electrons " << std::endl;
         o << "------------------------------";
         o << "------------------------------\n";
-        o << "   n    Norm                 Occ Spin  Error\n";
+        o << "   n    sqNorm               Occ Spin  Error\n";
         o << "------------------------------";
         o << "------------------------------\n";
-        for (int i = orb_set.size(); i > 0; i--) {
-            Orbital *orb = orb_set.getOrbitalPtr(i-1);
+        for (int i = 0; i < orb_set.size(); i++) {
+            Orbital *orb = orb_set.getOrbitalPtr(i);
             o << std::setw(4) << i;
             if (orb != 0) {
                 o << *orb;
@@ -114,8 +103,6 @@ public:
         return o;
     }
 protected:
-//    OrbExp* readOrbitalExpansion(const std::string &bf, const std::string &mo);
-
 //    Eigen::MatrixXd getSpinMatrix() const;
 //    void spinCleanMatrix(Eigen::MatrixXd &M) const;
 

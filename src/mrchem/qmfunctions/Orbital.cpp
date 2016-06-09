@@ -28,6 +28,13 @@ void Orbital::clear() {
     this->imag = 0;
 }
 
+double Orbital::getSquareNorm() const {
+    double sqNorm = 0.0;
+    if (this->real != 0) sqNorm += this->real->getSquareNorm();
+    if (this->imag != 0) sqNorm += this->imag->getSquareNorm();
+    return sqNorm;
+}
+
 void Orbital::compare(const Orbital &orb) const {
     if (this->compareOccupancy(orb) < 0) {
         MSG_WARN("Different occupancy");

@@ -13,6 +13,7 @@ add_library(qmfunctions STATIC
 target_link_libraries(qmfunctions
     mrchem
     chemistry
+    initial_guess
     mrcpp
     mwanalytic
     mwcore

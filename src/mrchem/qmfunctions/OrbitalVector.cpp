@@ -2,10 +2,6 @@
 
 #include "OrbitalVector.h"
 #include "Orbital.h"
-//#include "OrbExp.h"
-//#include "GaussExp.h"
-//#include "Intgrl.h"
-//#include "MathUtils.h"
 //#include "PositionFunction.h"
 //#include "HydrogenicFunction.h"
 //#include "NonlinearMaximizer.h"
@@ -193,127 +189,6 @@ void OrbitalVector::push_back(int n_orbs, int occ, int spin) {
 //        Orbital &orb = getOrbital(i);
 //        orb.loadTree(name.str());
 //    }
-//}
-
-//void OrbitalVector::readOrbitals(const OrbitalVector &orbs) {
-//    boost::timer rolex;
-//    rolex.restart();
-//    int oldPrec = TelePrompter::setPrecision(15);
-//    printout(0, "\n\n================ Setting up starting guess ");
-//    printout(0, "=================\n\n");
-
-//    for (int i = 0; i < this->size(); i++) {
-//    Orbital *thisOrb = this->getOrbitalPtr(i);
-//        if (thisOrb == 0) MSG_ERROR("Orbital not initialized");
-//    const Orbital &thatOrb = orbs.getOrbital(i);
-//    *thisOrb = thatOrb;
-//        printout(0, "Orbital " << setw(3) << i);
-//        println(0, " squareNorm: " << setw(36) << thisOrb->getSquareNorm());
-//    }
-//    TelePrompter::setPrecision(5);
-//    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
-//    TelePrompter::setPrecision(oldPrec);
-//}
-
-//void OrbitalVector::readOrbitals(const string &bf, const string &mo) {
-//    boost::timer rolex;
-//    rolex.restart();
-//    int oldPrec = TelePrompter::setPrecision(15);
-//    printout(0, "\n\n============== Setting up occupied orbitals ");
-//    printout(0, "================\n\n");
-
-//    OrbExp *moExp = readOrbitalExpansion(bf, mo);
-//    for (int i = 0; i < this->size(); i++) {
-//    Orbital *mwOrb = this->getOrbitalPtr(i);
-//        if (mwOrb == 0) MSG_ERROR("Uninitialized orbtial");
-//    GaussExp<3> &gtOrb = moExp->getOrbital(i);
-//        //mwOrb.setRelPrec(1.0e-3);
-//    mwOrb->projectFunction(gtOrb);
-//        printout(0, "Orbital " << setw(3) << i);
-//        println(0, " squareNorm: " << setw(36) << mwOrb->getSquareNorm());
-//    //mwOrb.normalize();
-//    }
-//    delete moExp;
-//    TelePrompter::setPrecision(5);
-//    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
-//    TelePrompter::setPrecision(oldPrec);
-//}
-
-//void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
-//    boost::timer rolex;
-//    rolex.restart();
-//    int oldPrec = TelePrompter::setPrecision(15);
-//    printout(0, "\n\n=============== Setting up virtual orbitals ");
-//    printout(0, "================\n\n");
-
-//    OrbExp *moExp = readOrbitalExpansion(bf, mo);
-//    for (int a = n_occ; a < moExp->size(); a++) {
-//    GaussExp<3> &gtOrb = moExp->getOrbital(a);
-//        Orbital *orb_a = new Orbital(2, Orbital::Paired);
-//    orb_a->projectFunction(gtOrb);
-//        printout(0, "Orbital " << setw(3) << a);
-//        println(0, " squareNorm: " << setw(36) << orb_a->getSquareNorm());
-//        this->orbitals.push_back(orb_a);
-//    }
-//    delete moExp;
-//    TelePrompter::setPrecision(5);
-//    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
-//    TelePrompter::setPrecision(oldPrec);
-//}
-
-
-//void OrbitalVector::readOrbitals(const string &bf, const string &mo_a, const string &mo_b) {
-//    boost::timer rolex;
-//    rolex.restart();
-//    int oldPrec = TelePrompter::setPrecision(15);
-//    printout(0, "\n\n================ Setting up starting guess ");
-//    printout(0, "=================\n\n");
-
-//    int n_a = 0;
-//    int n_b = 0;
-//    OrbExp *moExp_a = readOrbitalExpansion(bf, mo_a);
-//    OrbExp *moExp_b = readOrbitalExpansion(bf, mo_b);
-//    for (int i = 0; i < this->size(); i++) {
-//    Orbital *mwOrb = this->getOrbitalPtr(i);
-//        if (mwOrb == 0) MSG_ERROR("Orbital not initialized");
-//    GaussExp<3> *gtOrb = 0;
-//        if (mwOrb->getSpin() == Orbital::Alpha) {
-//            gtOrb = &moExp_a->getOrbital(n_a);
-//            n_a++;
-//        }
-//        if (mwOrb->getSpin() == Orbital::Beta) {
-//            gtOrb = &moExp_b->getOrbital(n_b);
-//            n_b++;
-//        }
-//        if (mwOrb->getSpin() == Orbital::Paired) {
-//            NOT_IMPLEMENTED_ABORT;
-//        }
-//        //mwOrb.setRelPrec(1.0e-3);
-//    mwOrb->projectFunction(*gtOrb);
-//        printout(0, "Orbital " << setw(3) << i);
-//        println(0, " squareNorm: " << setw(36) << mwOrb->getSquareNorm());
-//    //mwOrb.normalize();
-//    }
-//    delete moExp_a;
-//    delete moExp_b;
-
-//    TelePrompter::setPrecision(5);
-//    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
-//    TelePrompter::setPrecision(oldPrec);
-//}
-
-//OrbExp* OrbitalVector::readOrbitalExpansion(const string &bf, const string &mo) {
-//    MatrixXd MO = MathUtils::readMatrixFile(mo);
-//    MatrixXd MO_T = MO.transpose();
-
-//    Intgrl intgrl(bf);
-//    OrbExp *moExp = new OrbExp(intgrl);
-//    moExp->rotate(MO_T);
-//    return moExp;
 //}
 
 const Orbital& OrbitalVector::getOrbital(int i) const {
