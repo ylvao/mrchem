@@ -1,5 +1,11 @@
 include_directories (${CMAKE_INSTALL_PREFIX}/include) 
 
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwanalytic)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwcore)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwtrees)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 include_directories (chemistry)
 include_directories (initial_guess)
 include_directories (qmfunctions)
@@ -23,6 +29,7 @@ add_library(mrchem STATIC
 
 target_link_libraries(mrchem 
     chemistry 
+    initial_guess
     qmfunctions
     mrcpp 
     mwanalytic
@@ -37,6 +44,7 @@ add_dependencies(mrchem external-modules)
 target_link_libraries(mrchem.x 
     mrchem 
     chemistry
+    initial_guess
     qmfunctions
     mrcpp 
     mwanalytic

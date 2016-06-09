@@ -7,6 +7,8 @@
 
 class Getkw;
 
+template<int D> class MultiResolutionAnalysis;
+
 class Nuclei;
 class Molecule;
 class OrbitalVector;
@@ -38,10 +40,16 @@ public:
     void clear();
 
 protected:
-    double est_norm;
+    // Top level input
+    int order;
     double rel_prec;
-    double r_O[3];
+    double max_depth;
+
+    // World input
+    int scale;
     bool center_of_mass;
+    std::vector<int> boxes;
+    std::vector<int> corner;
     std::vector<double> gauge;
 
     // Run parameters
@@ -117,6 +125,10 @@ protected:
     std::string file_energy_vec;
     std::string file_mo_mat_a;
     std::string file_mo_mat_b;
+
+    // Computational domain
+    double r_O[3];
+    MultiResolutionAnalysis<3> *MRA;
 
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;

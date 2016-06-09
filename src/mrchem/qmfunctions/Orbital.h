@@ -52,6 +52,8 @@ public:
         return o;
     }
 
+    friend class InitialGuessProjector;
+
 protected:
     int spin;
     int occupancy;

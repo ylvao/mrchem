@@ -7,6 +7,9 @@
 
 #include "TelePrompter.h"
 
+#include "InterpolatingBasis.h"
+#include "MultiResolutionAnalysis.h"
+
 //#include "CoreHamiltonian.h"
 //#include "Hartree.h"
 //#include "HartreeFock.h"
@@ -23,6 +26,8 @@
 //#include "Orbital.h"
 //#include "Density.h"
 //#include "Potential.h"
+
+#include "InitialGuessProjector.h"
 
 //#include "SCFEnergy.h"
 //#include "DipoleMoment.h"
@@ -54,10 +59,14 @@ using namespace std;
 using namespace Eigen;
 
 SCFDriver::SCFDriver(Getkw &input) {
-    est_norm = input.get<double>("est_norm");
+    order = input.get<int>("order");
     rel_prec = input.get<double>("rel_prec");
+    max_depth = input.get<int>("max_depth");
 
+    scale = input.get<int>("World.scale");
     center_of_mass = input.get<bool>("World.center_of_mass");
+    boxes = input.getIntVec("World.boxes");
+    corner = input.getIntVec("World.corner");
     gauge = input.getDblVec("World.gauge_origin");
 
     run_ground_state = input.get<bool>("Properties.ground_state");
@@ -188,6 +197,12 @@ bool SCFDriver::sanityCheck() const {
 }
 
 void SCFDriver::setup() {
+    // Setting up MRA
+    NodeIndex<3> idx(scale, corner.data());
+    BoundingBox<3> world(idx, boxes.data());
+    InterpolatingBasis basis(order);
+    MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
+
     // Setting up molecule
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
@@ -299,6 +314,8 @@ void SCFDriver::setup() {
 }
 
 void SCFDriver::clear() {
+    if (MRA != 0) delete MRA;
+
     if (molecule != 0) delete molecule;
     if (orbitals != 0) delete orbitals;
 
@@ -433,11 +450,11 @@ void SCFDriver::clearPerturbedOperators() {
 }
 
 void SCFDriver::run() {
-//    bool converged = true;
+    bool converged = true;
     if (not sanityCheck()) {
         return;
     }
-//    setupInitialGroundState();
+    setupInitialGroundState();
 //    if (run_ground_state) {
 //        converged = runGroundState();
 //    } else {
@@ -474,7 +491,6 @@ void SCFDriver::run() {
 //        }
 //    }
     molecule->printGeometry();
-    println(0, *orbitals);
 //    molecule->printProperties();
 }
 
@@ -742,9 +758,9 @@ void SCFDriver::calcMagneticMomentProperties(const string &type, int d, int L) {
 }
 
 void SCFDriver::setupInitialGroundState() {
-    NOT_IMPLEMENTED_ABORT;
     // Reading initial guess
-//    if (scf_start == "none") {
+    if (scf_start == "none") {
+        NOT_IMPLEMENTED_ABORT;
 //        OrbitalVector initOrbs("initOrbs");
 //        initOrbs.initialize(*nuclei);
 //        MatrixXd S = initOrbs.calcOverlapMatrix();
@@ -756,18 +772,19 @@ void SCFDriver::setupInitialGroundState() {
 //        println(0, endl << F << endl);
 //        orbitals->readOrbitals(initOrbs);
 //        runInitialGuess(*f_oper, F, *orbitals);
-//    } else if (scf_start == "gto") {
-//        if (wf_restricted) {
-//            orbitals->readOrbitals(file_basis_set, file_mo_mat_a);
-//        } else {
-//            orbitals->readOrbitals(file_basis_set, file_mo_mat_a, file_mo_mat_b);
-//        }
-//    } else if (scf_start == "mw") {
+    } else if (scf_start == "gto") {
+        InitialGuessProjector IGP(*MRA, rel_prec);
+        if (wf_restricted) {
+            IGP(*orbitals, file_basis_set, file_mo_mat_a);
+        } else {
+            IGP(*orbitals, file_basis_set, file_mo_mat_a, file_mo_mat_b);
+        }
+    } else if (scf_start == "mw") {
+        NOT_IMPLEMENTED_ABORT;
 //        orbitals->readOrbitals(file_start_orbitals);
-//    } else {
-//        NOT_IMPLEMENTED_ABORT;
-//    }
-//    molecule->printGeometry();
+    } else {
+        NOT_IMPLEMENTED_ABORT;
+    }
 }
 
 void SCFDriver::setupInitialResponse(QMOperator &h, int d,
