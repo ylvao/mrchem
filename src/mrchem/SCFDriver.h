@@ -8,6 +8,13 @@
 class Getkw;
 
 template<int D> class MultiResolutionAnalysis;
+template<int D> class MWAdder;
+template<int D> class MWMultiplier;
+template<int D> class MWProjector;
+template<int D> class GridGenerator;
+template<int D> class DerivativeOperator;
+template<int D> class FunctionTree;
+class PoissonOperator;
 
 class Nuclei;
 class Molecule;
@@ -19,11 +26,10 @@ class Accelerator;
 
 class QMOperator;
 class FockOperator;
-class PoissonOperator;
 class CoulombPotential;
 class CoulombHessian;
 class KineticOperator;
-class NuclearPotential;
+class Potential;
 class ExchangePotential;
 class ExchangeHessian;
 class XCPotential;
@@ -130,6 +136,14 @@ protected:
     double r_O[3];
     MultiResolutionAnalysis<3> *MRA;
 
+    // MW operators
+    MWAdder<3> *add;
+    MWMultiplier<3> *mult;
+    MWProjector<3> *Q;
+    GridGenerator<3> *G;
+    DerivativeOperator<3> *D;
+    PoissonOperator *P;
+
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;
     Accelerator *scf_kain;
@@ -139,10 +153,10 @@ protected:
     // Unperturbed quantities
     Molecule *molecule;
     Nuclei *nuclei;
-    OrbitalVector *orbitals;
-    PoissonOperator *P;
+    OrbitalVector *phi;
     KineticOperator *T;
-    NuclearPotential *V;
+    FunctionTree<3> *nuc_tree;
+    Potential *V;
     CoulombPotential *J;
     ExchangePotential *K;
     XCPotential *XC;
@@ -151,8 +165,8 @@ protected:
     Eigen::MatrixXd *f_mat;
 
     // Perturbed quantities
-    OrbitalVector *x_orbs;
-    OrbitalVector *y_orbs;
+    OrbitalVector *x_phi;
+    OrbitalVector *y_phi;
     CoulombHessian *dJ;
     ExchangeHessian *dK;
     XCHessian *dXC;

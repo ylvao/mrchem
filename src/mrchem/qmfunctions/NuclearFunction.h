@@ -4,17 +4,46 @@
 #include <vector>
 
 #include "RepresentableFunction.h"
+#include "Nucleus.h"
 #include "MathUtils.h"
 
 class NuclearFunction : public RepresentableFunction<3> {
 public:
-    NuclearFunction() : RepresentableFunction<3>() {
-        this->constant = -1.0/(3.0*sqrt(pi));
+    NuclearFunction()
+            : RepresentableFunction<3>(),
+              const_fac(-1.0/(3.0*root_pi)) {
     }
+    NuclearFunction(const Nuclei &nucs, double prec)
+            : RepresentableFunction<3>(),
+              const_fac(-1.0/(3.0*root_pi)) {
+        int oldprec = TelePrompter::setPrecision(5);
+        println(0, " Nr  Element         Charge        Precision     Smoothing ");
+        TelePrompter::printSeparator(0, '-');
 
+        double c = 0.00435*prec;
+        for (int i = 0; i < nucs.size(); i++) {
+            const Nucleus &nuc = nucs[i];
+            double Z = nuc.getCharge();
+            double z_5 = pow(Z, 5.0);
+            double smooth = pow(c/z_5, 1.0/3.0);
+            addNucleus(nuc, smooth);
+
+            std::stringstream symbol;
+            symbol << nuc.getElement().getSymbol();
+            symbol << "  ";
+            printout(0, std::setw(3) << i+1 << "     ");
+            printout(0, symbol.str()[0] << symbol.str()[1]);
+            printout(0, std::setw(22) << Z);
+            printout(0, std::setw(14) << prec);
+            printout(0, std::setw(14) << smooth << std::endl);
+        }
+        TelePrompter::setPrecision(oldprec);
+    }
     virtual ~NuclearFunction() { }
 
-    void addNucleus(const double pos[3], double Z, double smooth) {
+    void addNucleus(const Nucleus &nuc, double smooth) {
+        double Z = nuc.getCharge();
+        const double *pos = nuc.getCoord();
         this->x_coords.push_back(pos[0]);
         this->y_coords.push_back(pos[1]);
         this->z_coords.push_back(pos[2]);
@@ -33,7 +62,7 @@ public:
             r1 *= 1.0/this->smoothParam[i];
             double r2 = pow(r1, 2.0);
             double partResult = -erf(r1)/r1;
-            partResult += this->constant*(exp(-r2) + 16.0*exp(-4.0*r2));
+            partResult += this->const_fac*(exp(-r2) + 16.0*exp(-4.0*r2));
             result += this->charges[i]*partResult/this->smoothParam[i];
         }
         return result;
@@ -75,7 +104,7 @@ public:
     }
 
 protected:
-    double constant;
+    const double const_fac;
     std::vector<double> smoothParam;
     std::vector<double> charges;
     std::vector<double> x_coords;

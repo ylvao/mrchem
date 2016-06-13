@@ -9,10 +9,12 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 include_directories (chemistry)
 include_directories (initial_guess)
 include_directories (qmfunctions)
+include_directories (qmoperators)
 
 add_subdirectory (chemistry)
 add_subdirectory (initial_guess)
 add_subdirectory (qmfunctions)
+add_subdirectory (qmoperators)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 link_directories (${Boost_LIBRARY_DIRS})
@@ -31,6 +33,7 @@ target_link_libraries(mrchem
     chemistry 
     initial_guess
     qmfunctions
+    qmoperators
     mrcpp 
     mwanalytic
     mwtrees
@@ -46,6 +49,7 @@ target_link_libraries(mrchem.x
     chemistry
     initial_guess
     qmfunctions
+    qmoperators
     mrcpp 
     mwanalytic
     mwtrees

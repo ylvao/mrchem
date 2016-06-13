@@ -28,6 +28,13 @@ void Orbital::clear() {
     this->imag = 0;
 }
 
+int Orbital::getNNodes() const {
+    int nNodes = 0;
+    if (this->real != 0) nNodes += this->real->getNNodes();
+    if (this->imag != 0) nNodes += this->imag->getNNodes();
+    return nNodes;
+}
+
 double Orbital::getSquareNorm() const {
     double sqNorm = 0.0;
     if (this->real != 0) sqNorm += this->real->getSquareNorm();
@@ -77,36 +84,22 @@ bool Orbital::isConverged(double prec) const {
     }
 }
 
-//double Orbital::innerProduct(FunctionTree<3> &fTree) {
-//    if (Orbital *orb = dynamic_cast<Orbital *>(&fTree)) {
-//        if ((this->getSpin() == Alpha) and (orb->getSpin() == Beta)) {
-//            return 0.0;
-//        }
-//        if ((this->getSpin() == Beta) and (orb->getSpin() == Alpha)) {
-//            return 0.0;
-//        }
-//    }
-//    return FunctionTree<3>::innerProduct(fTree);
-//}
-
-//void Orbital::initialize(Molecule &mol, const int *pow, double exp) {
-//    GaussExp<3> gExp;
-//    int nNuclei = mol.getNNuclei();
-//    for (int i = 0; i < nNuclei; i++) {
-//        Nucleus &nuc = mol.getNucleus(i);
-//        GaussFunc<3> gFunc;
-//        gFunc.setPos(nuc.getCoord());
-//        gFunc.setPower(pow);
-//        gFunc.setExp(exp);
-//        gExp.append(gFunc);
-//    }
-//    this->projectFunction(gExp);
-//    this->normalize();
-//}
-
-//void Orbital::initialize(Nucleus &nuc, const int *pow, double exp) {
-//    NOT_IMPLEMENTED_ABORT;
-//}
+complex<double> Orbital::dot(Orbital &ket) {
+    Orbital &bra = *this;
+    if ((bra.getSpin() == Alpha) and (ket.getSpin() == Beta)) {
+        return 0.0;
+    }
+    if ((bra.getSpin() == Beta) and (ket.getSpin() == Alpha)) {
+        return 0.0;
+    }
+    double re = 0.0;
+    double im = 0.0;
+    if (bra.real != 0 and ket.real != 0) re += bra.real->dot(*ket.real);
+    if (bra.imag != 0 and ket.imag != 0) re += bra.imag->dot(*ket.imag);
+    if (bra.real != 0 and ket.imag != 0) im += bra.real->dot(*ket.imag);
+    if (bra.imag != 0 and ket.real != 0) im -= bra.imag->dot(*ket.real);
+    return complex<double>(re, im);
+}
 
 /** Write the tree structure to disk, for later use.
   * Argument file name will get a ".orb" file extension, and in MPI an

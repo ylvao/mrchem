@@ -1,6 +1,8 @@
 #ifndef ORBITAL_H
 #define ORBITAL_H
 
+#include <complex>
+
 #include "constants.h"
 #include "mrcpp_declarations.h"
 
@@ -13,6 +15,7 @@ public:
     virtual ~Orbital() { clear(); }
     void clear();
 
+    int getNNodes() const;
     int getSpin() const { return this->spin; }
     int getOccupancy() const { return this->occupancy; }
     double getError() const { return this->error; }
@@ -30,7 +33,7 @@ public:
     int compareSpin(const Orbital &orb) const;
     int compareOccupancy(const Orbital &orb) const;
 
-    double dot(Orbital &orb) { NOT_IMPLEMENTED_ABORT; }
+    std::complex<double> dot(Orbital &ket);
     double getSquareNorm() const;
     double getExchangeFactor(const Orbital &orb) const;
 
@@ -53,6 +56,8 @@ public:
     }
 
     friend class InitialGuessProjector;
+    friend class MomentumOperator;
+    friend class Potential;
 
 protected:
     int spin;

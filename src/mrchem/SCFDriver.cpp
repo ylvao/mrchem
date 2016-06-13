@@ -10,7 +10,14 @@
 #include "InterpolatingBasis.h"
 #include "MultiResolutionAnalysis.h"
 
-//#include "CoreHamiltonian.h"
+#include "MWAdder.h"
+#include "MWMultiplier.h"
+#include "MWProjector.h"
+#include "GridGenerator.h"
+#include "DerivativeOperator.h"
+#include "PoissonOperator.h"
+
+#include "CoreHamiltonian.h"
 //#include "Hartree.h"
 //#include "HartreeFock.h"
 //#include "DFT.h"
@@ -25,7 +32,7 @@
 #include "OrbitalVector.h"
 //#include "Orbital.h"
 //#include "Density.h"
-//#include "Potential.h"
+#include "Potential.h"
 
 #include "InitialGuessProjector.h"
 
@@ -38,9 +45,8 @@
 //#include "NMRShielding.h"
 //#include "SpinSpinCoupling.h"
 
-//#include "PoissonOperator.h"
-//#include "KineticOperator.h"
-//#include "NuclearPotential.h"
+#include "KineticOperator.h"
+#include "NuclearFunction.h"
 //#include "CoulombPotential.h"
 //#include "CoulombHessian.h"
 //#include "ExchangePotential.h"
@@ -153,9 +159,9 @@ SCFDriver::SCFDriver(Getkw &input) {
     rsp_kain_y = 0;
 
     molecule = 0;
-    orbitals = 0;
-    x_orbs = 0;
-    y_orbs = 0;
+    phi = 0;
+    x_phi = 0;
+    y_phi = 0;
 
     P = 0;
     T = 0;
@@ -203,11 +209,19 @@ void SCFDriver::setup() {
     InterpolatingBasis basis(order);
     MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
 
+    // Setting up MW operators
+    add = new MWAdder<3>(*MRA);
+    mult = new MWMultiplier<3>(*MRA);
+    Q = new MWProjector<3>(*MRA, rel_prec);
+    G = new GridGenerator<3>(*MRA);
+    D = new DerivativeOperator<3>(*MRA, rel_prec, rel_prec/10.0);
+    P = new PoissonOperator(*MRA, rel_prec, rel_prec/10.0);
+
     // Setting up molecule
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
-    orbitals = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
+    phi = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
 
     // Defining gauge origin
     const double *COM = molecule->getCenterOfMass();
@@ -274,7 +288,7 @@ void SCFDriver::setup() {
     }
 
     // Setting up Fock matrix
-    int nOrbs = orbitals->size();
+    int nOrbs = phi->size();
     f_mat = new MatrixXd;
     *f_mat = MatrixXd::Zero(nOrbs, nOrbs);
 
@@ -284,18 +298,25 @@ void SCFDriver::setup() {
 //    if (rsp_history > 0) rsp_kain_x = new KAIN(rsp_history);
 //    if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
 
-    // Setting up Fock operator
-//    P = new PoissonOperator;
-//    T = new KineticOperator;
-//    V = new NuclearPotential(*nuclei);
-//    J = new CoulombPotential(*P, *orbitals);
+    Timer nuc_timer;
+    nuc_timer.restart();
+    TelePrompter::printHeader(0, "Setting up nuclear potential");
+    NuclearFunction nuc_func(*nuclei, rel_prec);
+    nuc_tree = (*Q)(nuc_func);
+    TelePrompter::printFooter(0, nuc_timer, 2);
 
-//    if (wf_method == "Core") {
-//        f_oper = new CoreHamiltonian(*T, *V);
+    // Setting up Fock operator
+    T = new KineticOperator(*D);
+    V = new Potential(*add, *mult, nuc_tree, 0);
+//    rho = new DensityOperator(*phi);
+//    J = new CoulombPotential(*P, *phi);
+
+    if (wf_method == "Core") {
+        f_oper = new CoreHamiltonian(*T, *V);
 //    } else if (wf_method == "Hartree") {
 //        f_oper = new Hartree(*T, *V, *J);
 //    } else if (wf_method == "HF") {
-//        K = new ExchangePotential(*P, *orbitals);
+//        K = new ExchangePotential(*P, *phi);
 //        f_oper = new HartreeFock(*T, *V, *J, *K);
 //    } else if (wf_method == "DFT") {
 //        xcfun_1 = new XCFunctional(dft_spin, 1);
@@ -303,35 +324,41 @@ void SCFDriver::setup() {
 //        for (int i = 0; i < dft_func_names.size(); i++) {
 //            xcfun_1->setFunctional(dft_func_names[i], dft_func_coefs[i]);
 //        }
-//        XC = new XCPotential(*xcfun_1, *orbitals);
+//        XC = new XCPotential(*xcfun_1, *phi);
 //        if (dft_x_fac > MachineZero) {
-//            K = new ExchangePotential(*P, *orbitals, dft_x_fac);
+//            K = new ExchangePotential(*P, *phi, dft_x_fac);
 //        }
 //        f_oper = new DFT(*T, *V, *J, *XC, K);
-//    } else {
-//        MSG_ERROR("Invalid method");
-//    }
+    } else {
+        MSG_ERROR("Invalid method");
+    }
 }
 
 void SCFDriver::clear() {
     if (MRA != 0) delete MRA;
 
     if (molecule != 0) delete molecule;
-    if (orbitals != 0) delete orbitals;
+    if (phi != 0) delete phi;
+    if (nuc_tree != 0) delete nuc_tree;
 
 //    if (helmholtz != 0) delete helmholtz;
 //    if (scf_kain != 0) delete scf_kain;
 //    if (rsp_kain_x != 0) delete rsp_kain_x;
 //    if (rsp_kain_y != 0) delete rsp_kain_y;
 
-//    if (P != 0) delete P;
+    if (add != 0) delete add;
+    if (mult != 0) delete mult;
+    if (Q != 0) delete Q;
+    if (G != 0) delete G;
+    if (D != 0) delete D;
+    if (P != 0) delete P;
 //    if (T != 0) delete T;
 //    if (J != 0) delete J;
 //    if (V != 0) delete V;
 //    if (K != 0) delete K;
 //    if (XC != 0) delete XC;
     if (f_mat != 0) delete f_mat;
-//    if (f_oper != 0) delete f_oper;
+    if (f_oper != 0) delete f_oper;
 //    if (xcfun_1 != 0) delete xcfun_1;
 }
 
@@ -377,34 +404,34 @@ LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
 
 void SCFDriver::setupPerturbedOrbitals(bool dynamic) {
     NOT_IMPLEMENTED_ABORT;
-//    if (orbitals == 0) MSG_ERROR("Orbitals not initialized");
+//    if (phi == 0) MSG_ERROR("Orbitals not initialized");
 
-//    x_orbs = new OrbitalVector("xOrbs", *orbitals);
-//    x_orbs->initialize(*orbitals);
+//    x_phi = new OrbitalVector("xOrbs", *phi);
+//    x_phi->initialize(*phi);
 //    if (dynamic) {
-//        y_orbs = new OrbitalVector("yOrbs", *orbitals);
-//        y_orbs->initialize(*orbitals);
+//        y_phi = new OrbitalVector("yOrbs", *phi);
+//        y_phi->initialize(*phi);
 //    } else {
-//        y_orbs = x_orbs;
+//        y_phi = x_phi;
 //    }
 }
 
 void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
     NOT_IMPLEMENTED_ABORT;
-//    if (x_orbs != 0) delete x_orbs;
+//    if (x_phi != 0) delete x_phi;
 //    if (dynamic) {
-//        if (y_orbs != 0) delete y_orbs;
+//        if (y_phi != 0) delete y_phi;
 //    }
-//    x_orbs = 0;
-//    y_orbs = 0;
+//    x_phi = 0;
+//    y_phi = 0;
 }
 
 void SCFDriver::setupPerturbedOperators(QMOperator &dH, bool dynamic) {
     NOT_IMPLEMENTED_ABORT;
 //    if (P == 0) MSG_ERROR("Poission operator not initialized");
-//    if (orbitals == 0) MSG_ERROR("Orbitals not initialized");
-//    if (x_orbs == 0) MSG_ERROR("X orbitals not initialized");
-//    if (y_orbs == 0) MSG_ERROR("Y orbitals not initialized");
+//    if (phi == 0) MSG_ERROR("Orbitals not initialized");
+//    if (x_phi == 0) MSG_ERROR("X orbitals not initialized");
+//    if (y_phi == 0) MSG_ERROR("Y orbitals not initialized");
 
 //    double xFac = 0.0;
 //    if (wf_method == "HF") {
@@ -413,12 +440,12 @@ void SCFDriver::setupPerturbedOperators(QMOperator &dH, bool dynamic) {
 //        xFac = dft_x_fac;
 //    }
 //    if (xFac > MachineZero) {
-//        dK = new ExchangeHessian(*P, *orbitals, x_orbs, y_orbs, xFac);
+//        dK = new ExchangeHessian(*P, *phi, x_phi, y_phi, xFac);
 //    }
 
 //    bool imaginary = dH.isImaginary();
 //    if (not imaginary or dynamic) {
-//        dJ = new CoulombHessian(*P, *orbitals, x_orbs, y_orbs);
+//        dJ = new CoulombHessian(*P, *phi, x_phi, y_phi);
 //        if (wf_method == "DFT") {
 //            xcfun_2 = new XCFunctional(dft_spin, 2);
 //            xcfun_2->setDensityCutoff(dft_cutoff[1]);
@@ -426,7 +453,7 @@ void SCFDriver::setupPerturbedOperators(QMOperator &dH, bool dynamic) {
 //                xcfun_2->setFunctional(dft_func_names[i], dft_func_coefs[i]);
 //            }
 //            if (xcfun_2 == 0) MSG_ERROR("xcfun not initialized");
-//            dXC = new XCHessian(*xcfun_2, *orbitals, x_orbs, y_orbs);
+//            dXC = new XCHessian(*xcfun_2, *phi, x_phi, y_phi);
 //        }
 //    }
 
@@ -455,20 +482,20 @@ void SCFDriver::run() {
         return;
     }
     setupInitialGroundState();
-//    if (run_ground_state) {
-//        converged = runGroundState();
-//    } else {
-//        f_oper->setup();
-//        *f_mat = (*f_oper)(*orbitals, *orbitals);
-//        f_oper->clear();
-//    }
+    if (run_ground_state) {
+        converged = runGroundState();
+    } else {
+        f_oper->setup();
+        *f_mat = (*f_oper)(*phi, *phi);
+        f_oper->clear();
+    }
 //    calcGroundStateProperties();
 //    if (converged) {
 //        if (run_el_field_rsp or run_mag_field_rsp) {
 //            if (rsp_localize) {
-//                orbitals->localize(-1.0, f_mat);
+//                phi->localize(-1.0, f_mat);
 //            } else {
-//                orbitals->diagonalize(-1.0, f_mat);
+//                phi->diagonalize(-1.0, f_mat);
 //            }
 //        }
 //        if (run_el_field_rsp) {
@@ -490,13 +517,16 @@ void SCFDriver::run() {
 //            }
 //        }
 //    }
+    TelePrompter::printHeader(0, "Fock matrix");
+    println(0, *f_mat);
+    TelePrompter::printSeparator(0, '=', 2);
     molecule->printGeometry();
 //    molecule->printProperties();
 }
 
 bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &orbs) {
     NOT_IMPLEMENTED_ABORT;
-//    if (orbitals == 0) MSG_ERROR("Orbitals not initialized");
+//    if (phi == 0) MSG_ERROR("Orbitals not initialized");
 
 //    GroundStateSolver *gss = setupInitialGuessSolver();
 //    gss->setup(oper, F, orbs);
@@ -509,12 +539,12 @@ bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &
 
 bool SCFDriver::runGroundState() {
     NOT_IMPLEMENTED_ABORT;
-//    if (orbitals == 0) MSG_ERROR("Orbitals not initialized");
+//    if (phi == 0) MSG_ERROR("Orbitals not initialized");
 //    if (f_oper == 0) MSG_ERROR("Fock operator not initialized");
 //    if (f_mat == 0) MSG_ERROR("Fock matrix not initialized");
 
 //    GroundStateSolver *gss = setupGroundStateSolver();
-//    gss->setup(*f_oper, *f_mat, *orbitals);
+//    gss->setup(*f_oper, *f_mat, *phi);
 //    bool converged = gss->optimize();
 //    gss->clear();
 
@@ -548,9 +578,9 @@ void SCFDriver::runElectricFieldResponse(double omega) {
 //        setupPerturbedOperators(*h, dynamic);
 
 //        if (dynamic) {
-//            lrs->setup(omega, *df_oper, *x_orbs, *y_orbs);
+//            lrs->setup(omega, *df_oper, *x_phi, *y_phi);
 //        } else {
-//            lrs->setup(*df_oper, *x_orbs);
+//            lrs->setup(*df_oper, *x_phi);
 //        }
 //        converged = lrs->optimize();
 //        lrs->clear();
@@ -560,11 +590,11 @@ void SCFDriver::runElectricFieldResponse(double omega) {
 //        if (rsp_write_orbitals) {
 //            stringstream x_file;
 //            x_file << file_final_x_orbs << "_" << d;
-//            x_orbs->writeOrbitals(x_file.str());
+//            x_phi->writeOrbitals(x_file.str());
 //            if (dynamic) {
 //                stringstream y_file;
 //                y_file << file_final_y_orbs << "_" << d;
-//                y_orbs->writeOrbitals(y_file.str());
+//                y_phi->writeOrbitals(y_file.str());
 //            }
 //        }
 
@@ -596,9 +626,9 @@ void SCFDriver::runMagneticFieldResponse(double omega) {
 //        setupPerturbedOperators(h, dynamic);
 
 //        if (dynamic) {
-//            lrs->setup(omega, *df_oper, *x_orbs, *y_orbs);
+//            lrs->setup(omega, *df_oper, *x_phi, *y_phi);
 //        } else {
-//            lrs->setup(*df_oper, *x_orbs);
+//            lrs->setup(*df_oper, *x_phi);
 //        }
 //        converged = lrs->optimize();
 //        lrs->clear();
@@ -608,11 +638,11 @@ void SCFDriver::runMagneticFieldResponse(double omega) {
 //        if (rsp_write_orbitals) {
 //            stringstream x_file;
 //            x_file << file_final_x_orbs << "_" << d;
-//            x_orbs->writeOrbitals(x_file.str());
+//            x_phi->writeOrbitals(x_file.str());
 //            if (dynamic) {
 //                stringstream y_file;
 //                y_file << file_final_y_orbs << "_" << d;
-//                y_orbs->writeOrbitals(y_file.str());
+//                y_phi->writeOrbitals(y_file.str());
 //            }
 //        }
 
@@ -655,11 +685,11 @@ void SCFDriver::runMagneticMomentResponse(const string &type, int L) {
 //        if (rsp_write_orbitals) {
 //            stringstream x_file;
 //            x_file << file_final_x_orbs << "_" << d;
-//            x_orbs->writeOrbitals(x_file.str());
+//            x_phi->writeOrbitals(x_file.str());
 //            if (dynamic) {
 //                stringstream y_file;
 //                y_file << file_final_y_orbs << "_" << d;
-//                y_orbs->writeOrbitals(y_file.str());
+//                y_phi->writeOrbitals(y_file.str());
 //            }
 //        }
 
@@ -679,28 +709,28 @@ void SCFDriver::calcGroundStateProperties() {
 //    f_oper->setup();
 //    SCFEnergy &energy = molecule->getSCFEnergy();
 //    energy.compute(*nuclei);
-//    energy.compute(*f_oper, *f_mat, *orbitals);
+//    energy.compute(*f_oper, *f_mat, *phi);
 //    f_oper->clear();
 
 //    if (run_dipole_moment) {
 //        DipoleMoment &dipole = molecule->getDipoleMoment();
 //        dipole.compute(*nuclei);
-//        dipole.compute(*orbitals);
+//        dipole.compute(*phi);
 //    }
 //    if (run_quadrupole_moment) {
 //        QuadrupoleMoment &quadrupole = molecule->getQuadrupoleMoment();
 //        quadrupole.compute(*nuclei);
-//        quadrupole.compute(*orbitals);
+//        quadrupole.compute(*phi);
 //    }
 //    if (run_magnetizability) {
 //        Magnetizability &magnetizability = molecule->getMagnetizability();
-//        magnetizability.computeDiamagnetic(*orbitals);
+//        magnetizability.computeDiamagnetic(*phi);
 //    }
 //    if (run_nmr_shielding) {
 //        for (int k = 0; k < nmr_nuclei.size(); k++) {
 //            int K = nmr_nuclei[k];
 //            NMRShielding &shielding = molecule->getNMRShielding(K);
-//            shielding.computeDiamagnetic(*orbitals);
+//            shielding.computeDiamagnetic(*phi);
 //        }
 //    }
 //    if (run_spin_spin) {
@@ -709,7 +739,7 @@ void SCFDriver::calcGroundStateProperties() {
 //            for (int l = 0; l < spin_spin_l.size(); l++) {
 //                int L = spin_spin_l[l];
 //                SpinSpinCoupling &ssc = molecule->getSpinSpinCoupling(K, L);
-//                ssc.computeDiamagnetic(*orbitals);
+//                ssc.computeDiamagnetic(*phi);
 //            }
 //        }
 //    }
@@ -719,11 +749,11 @@ void SCFDriver::calcElectricFieldProperties(int d, double omega) {
     NOT_IMPLEMENTED_ABORT;
 //    if (run_polarizability) {
 //        Polarizability &polarizability = molecule->getPolarizability(omega);
-//        polarizability.compute(d, *orbitals, *x_orbs, *y_orbs);
+//        polarizability.compute(d, *phi, *x_phi, *y_phi);
 //    }
 //    if (run_optrot_electric) {
 //        OpticalRotation &opt_rot = molecule->getOpticalRotation(omega);
-//        opt_rot.compute("E", d, *orbitals, *x_orbs, *y_orbs);
+//        opt_rot.compute("E", d, *phi, *x_phi, *y_phi);
 //    }
 }
 
@@ -731,18 +761,18 @@ void SCFDriver::calcMagneticFieldProperties(int d, double omega) {
     NOT_IMPLEMENTED_ABORT;
 //    if (run_magnetizability) {
 //        Magnetizability &magnetizability = molecule->getMagnetizability();
-//        magnetizability.computeParamagnetic("B", d, *orbitals, *x_orbs, *y_orbs);
+//        magnetizability.computeParamagnetic("B", d, *phi, *x_phi, *y_phi);
 //    }
 //    if (run_nmr_shielding) {
 //        for (int k = 0; k < nmr_nuclei.size(); k++) {
 //            int K = nmr_nuclei[k];
 //            NMRShielding &shielding = molecule->getNMRShielding(K);
-//            shielding.computeParamagnetic("B", d, *orbitals, *x_orbs, *y_orbs);
+//            shielding.computeParamagnetic("B", d, *phi, *x_phi, *y_phi);
 //        }
 //    }
 //    if (run_optrot_magnetic) {
 //        OpticalRotation &opt_rot = molecule->getOpticalRotation(omega);
-//        opt_rot.compute("B", d, *orbitals, *x_orbs, *y_orbs);
+//        opt_rot.compute("B", d, *phi, *x_phi, *y_phi);
 //    }
 }
 
@@ -752,7 +782,7 @@ void SCFDriver::calcMagneticMomentProperties(const string &type, int d, int L) {
 //        for (int k = 0; k < nmr_nuclei.size(); k++) {
 //            int K = nmr_nuclei[k];
 //            SpinSpinCoupling &ssc = molecule->getSpinSpinCoupling(K, L);
-//            ssc.computeParamagnetic(type, d, *orbitals, *x_orbs, *y_orbs);
+//            ssc.computeParamagnetic(type, d, *phi, *x_phi, *y_phi);
 //        }
 //    }
 }
@@ -770,18 +800,18 @@ void SCFDriver::setupInitialGroundState() {
 //        println(0, endl << F << endl);
 //        initOrbs.diagonalize(-1.0, &F);
 //        println(0, endl << F << endl);
-//        orbitals->readOrbitals(initOrbs);
-//        runInitialGuess(*f_oper, F, *orbitals);
+//        phi->readOrbitals(initOrbs);
+//        runInitialGuess(*f_oper, F, *phi);
     } else if (scf_start == "gto") {
         InitialGuessProjector IGP(*MRA, rel_prec);
         if (wf_restricted) {
-            IGP(*orbitals, file_basis_set, file_mo_mat_a);
+            IGP(*phi, file_basis_set, file_mo_mat_a);
         } else {
-            IGP(*orbitals, file_basis_set, file_mo_mat_a, file_mo_mat_b);
+            IGP(*phi, file_basis_set, file_mo_mat_a, file_mo_mat_b);
         }
     } else if (scf_start == "mw") {
         NOT_IMPLEMENTED_ABORT;
-//        orbitals->readOrbitals(file_start_orbitals);
+//        phi->readOrbitals(file_start_orbitals);
     } else {
         NOT_IMPLEMENTED_ABORT;
     }
@@ -793,19 +823,19 @@ void SCFDriver::setupInitialResponse(QMOperator &h, int d,
     // Reading initial guess
 //    if (rsp_start == "none") {
 //    } else if (rsp_start == "gto") {
-//        int nOcc = orbitals->size();
+//        int nOcc = phi->size();
 //        OrbitalVector *mol_orbs = new OrbitalVector("virtuals");
 //        mol_orbs->readVirtuals(file_basis_set, file_mo_mat_a, nOcc);
 //        int nVirt = mol_orbs->size();
 
-//        if (rsp_localize) orbitals->diagonalize(-1.0, f_mat);
+//        if (rsp_localize) phi->diagonalize(-1.0, f_mat);
 //        VectorXd epsilon = MathUtils::readVectorFile(file_energy_vec);
 
 //        for (int i = 0; i < nOcc; i++) {
 //            vector<double> x_ai;
 //            vector<double> y_ai;
 //            vector<FunctionTree<3> *> t_a;
-//            Orbital &phi_i = orbitals->getOrbital(i);
+//            Orbital &phi_i = phi->getOrbital(i);
 //            for (int a = 0; a < nVirt; a++) {
 //                Orbital &phi_a = mol_orbs->getOrbital(a);
 //                double h_ai = -h(phi_a, phi_i);
@@ -816,29 +846,29 @@ void SCFDriver::setupInitialResponse(QMOperator &h, int d,
 //                }
 //            }
 //            if (t_a.size() > 0) {
-//                Orbital &x_i = x_orbs->getOrbital(i);
+//                Orbital &x_i = x_phi->getOrbital(i);
 //                x_i.add(x_ai, t_a, 0);
 //                printout(0, "xOrb    " << setw(3) << i);
 //                println(0, " squareNorm: " << setw(36) << x_i.getSquareNorm());
 //                if (dynamic) {
-//                    Orbital &y_i = y_orbs->getOrbital(i);
+//                    Orbital &y_i = y_phi->getOrbital(i);
 //                    y_i.add(y_ai, t_a, 0);
 //                }
 //            }
 //        }
 //        if (rsp_localize) {
-//            MatrixXd U = orbitals->localize(-1.0, f_mat);
-//            x_orbs->rotate(-1.0, U);
-//            if (dynamic) y_orbs->rotate(-1.0, U);
+//            MatrixXd U = phi->localize(-1.0, f_mat);
+//            x_phi->rotate(-1.0, U);
+//            if (dynamic) y_phi->rotate(-1.0, U);
 //        }
 //        delete mol_orbs;
 //    } else if (rsp_start == "mw") {
 //        stringstream x_file, y_file;
 //        x_file << file_final_x_orbs << "_" << d;
-//        x_orbs->readOrbitals(x_file.str());
+//        x_phi->readOrbitals(x_file.str());
 //        if (dynamic) {
 //            y_file << file_final_y_orbs << "_" << d;
-//            y_orbs->readOrbitals(y_file.str());
+//            y_phi->readOrbitals(y_file.str());
 //        }
 //    } else {
 //        NOT_IMPLEMENTED_ABORT;
