@@ -37,9 +37,9 @@ void InitialGuessProjector::operator()(OrbitalVector &orbs,
                                        const string &mo) {
     Timer rolex;
     rolex.restart();
-    TelePrompter::printHeader("Setting up occupied orbitals");
+    TelePrompter::printHeader(0, "Setting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
-    TelePrompter::printSeparator('-');
+    TelePrompter::printSeparator(0, '-');
 
     OrbitalExp *moExp = readOrbitalExpansion(bf, mo);
     for (int i = 0; i < orbs.size(); i++) {
@@ -55,7 +55,7 @@ void InitialGuessProjector::operator()(OrbitalVector &orbs,
     }
     delete moExp;
 
-    TelePrompter::printFooter(rolex, 2);
+    TelePrompter::printFooter(0, rolex, 2);
 }
 
 void InitialGuessProjector::operator()(OrbitalVector &orbs,

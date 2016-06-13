@@ -400,9 +400,9 @@ void Molecule::readCoordinateString(const vector<string> &coord_str) {
 }
 
 void Molecule::printGeometry() const {
-    TelePrompter::printHeader("Molecule");
+    TelePrompter::printHeader(0, "Molecule");
     println(0, " Nr  Element             x             y             z      ");
-    TelePrompter::printSeparator('-');
+    TelePrompter::printSeparator(0, '-');
     int oldPrec = TelePrompter::setPrecision(5);
 
     int nNuclei = getNNuclei();
@@ -418,13 +418,13 @@ void Molecule::printGeometry() const {
         printout(0, setw(14) << coord[1]);
         printout(0, setw(14) << coord[2] << endl);
     }
-    TelePrompter::printSeparator('-');
+    TelePrompter::printSeparator(0, '-');
     printout(0, " Center of mass: ");
     printout(0, setw(14) << this->COM[0]);
     printout(0, setw(14) << this->COM[1]);
     printout(0, setw(14) << this->COM[2] << endl);
     TelePrompter::setPrecision(oldPrec);
-    TelePrompter::printSeparator('=', 2);
+    TelePrompter::printSeparator(0, '=', 2);
 }
 
 void Molecule::printProperties() const {
