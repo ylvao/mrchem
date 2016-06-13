@@ -352,9 +352,9 @@ void SCFDriver::clear() {
     if (G != 0) delete G;
     if (D != 0) delete D;
     if (P != 0) delete P;
-//    if (T != 0) delete T;
+    if (T != 0) delete T;
 //    if (J != 0) delete J;
-//    if (V != 0) delete V;
+    if (V != 0) delete V;
 //    if (K != 0) delete K;
 //    if (XC != 0) delete XC;
     if (f_mat != 0) delete f_mat;
