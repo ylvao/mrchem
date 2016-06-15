@@ -2,26 +2,22 @@
 #define POTENTIAL_H
 
 #include "QMOperator.h"
+#include "MWAdder.h"
+#include "MWMultiplier.h"
 
-template<int D> class MWAdder;
-template<int D> class MWMultiplier;
 template<int D> class FunctionTree;
+template<int D> class MultiResolutionAnalysis;
 
 class Potential : public QMOperator {
 public:
-    Potential(MWAdder<3> &a,
-              MWMultiplier<3> &m,
-              FunctionTree<3> *re = 0,
-              FunctionTree<3> *im = 0)
-        : add(&a),
-          mult(&m),
-          real(re),
-          imag(im) {
-    }
-    virtual ~Potential() { }
+    Potential(const MultiResolutionAnalysis<3> &mra);
+    virtual ~Potential();
 
     int getNNodes() const;
     virtual int printTreeSizes() const;
+
+    virtual void setup(double prec);
+    virtual void clear();
 
     virtual Orbital* operator() (Orbital &orb);
     virtual Orbital* adjoint(Orbital &orb);
@@ -33,8 +29,8 @@ public:
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
 protected:
-    MWAdder<3> *add;
-    MWMultiplier<3> *mult;
+    MWAdder<3> add;
+    MWMultiplier<3> mult;
     FunctionTree<3> *real;
     FunctionTree<3> *imag;
 };

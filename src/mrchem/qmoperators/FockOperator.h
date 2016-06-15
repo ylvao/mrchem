@@ -7,7 +7,7 @@
 
 class Molecule;
 class Orbital;
-class Potential;
+class NuclearPotential;
 class KineticOperator;
 class CoulombOperator;
 class ExchangeOperator;
@@ -16,7 +16,7 @@ class XCOperator;
 class FockOperator : public QMOperator {
 public:
     FockOperator(KineticOperator *t = 0,
-                 Potential *v = 0,
+                 NuclearPotential *v = 0,
                  CoulombOperator *j = 0,
                  ExchangeOperator *k = 0,
                  XCOperator *xc = 0);
@@ -28,7 +28,7 @@ public:
     const QMOperator& getPerturbationOperator(int i) const { return *this->H_1[i]; }
 
     KineticOperator *getKineticOperator() { return this->T; }
-    Potential *getNuclearPotential() { return this->V; }
+    NuclearPotential *getNuclearPotential() { return this->V; }
     CoulombOperator *getCoulombOperator() { return this->J; }
     ExchangeOperator *getExchangeOperator() { return this->K; }
     XCOperator *getXCOperator() { return this->XC; }
@@ -37,10 +37,10 @@ public:
 
     virtual void rotate(double prec, Eigen::MatrixXd &U);
 
-    virtual void setupUnperturbed(double prec = -1.0);
+    virtual void setupUnperturbed(double prec);
     virtual void clearUnperturbed();
 
-    virtual void setup(double prec = -1.0);
+    virtual void setup(double prec);
     virtual void clear();
 
     virtual Orbital* operator() (Orbital &orb_p);
@@ -78,7 +78,7 @@ public:
 
 protected:
     KineticOperator *T;
-    Potential *V;
+    NuclearPotential *V;
     CoulombOperator *J;
     ExchangeOperator *K;
     XCOperator *XC;

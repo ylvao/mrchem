@@ -1,6 +1,6 @@
 #include "FockOperator.h"
 #include "KineticOperator.h"
-#include "Potential.h"
+#include "NuclearPotential.h"
 //#include "CoulombOperator.h"
 //#include "ExchangeOperator.h"
 //#include "XCOperator.h"
@@ -12,7 +12,7 @@ using namespace std;
 using namespace Eigen;
 
 FockOperator::FockOperator(KineticOperator *t,
-                           Potential *v,
+                           NuclearPotential *v,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)

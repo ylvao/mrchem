@@ -2,15 +2,19 @@
 #define KINETICOPERATOR_H
 
 #include "QMOperator.h"
+#include "MomentumOperator.h"
 
-template<int D> class DerivativeOperator;
+template<int D> class MultiResolutionAnalysis;
 class MomentumOperator;
-class Orbital;
 
 class KineticOperator : public QMOperator {
 public:
-    KineticOperator(DerivativeOperator<3> &d);
+    KineticOperator(double build_prec,
+                    const MultiResolutionAnalysis<3> &mra);
     virtual ~KineticOperator();
+
+    virtual void setup(double prec);
+    virtual void clear();
 
     virtual int printTreeSizes() const;
 
@@ -24,9 +28,9 @@ public:
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
 protected:
-    MomentumOperator *p_x;
-    MomentumOperator *p_y;
-    MomentumOperator *p_z;
+    MomentumOperator p_x;
+    MomentumOperator p_y;
+    MomentumOperator p_z;
 };
 
 #endif // KINETICOPERATOR_H

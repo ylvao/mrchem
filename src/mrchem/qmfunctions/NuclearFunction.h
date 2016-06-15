@@ -17,6 +17,7 @@ public:
             : RepresentableFunction<3>(),
               const_fac(-1.0/(3.0*root_pi)) {
         int oldprec = TelePrompter::setPrecision(5);
+        TelePrompter::printHeader(0, "Setting up nuclear potential");
         println(0, " Nr  Element         Charge        Precision     Smoothing ");
         TelePrompter::printSeparator(0, '-');
 
@@ -37,6 +38,7 @@ public:
             printout(0, std::setw(14) << prec);
             printout(0, std::setw(14) << smooth << std::endl);
         }
+        TelePrompter::printSeparator(0, '=', 2);
         TelePrompter::setPrecision(oldprec);
     }
     virtual ~NuclearFunction() { }

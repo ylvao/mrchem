@@ -4,22 +4,17 @@
 #include <Eigen/Core>
 #include <string>
 
-#include "TelePrompter.h"
-
 class OrbitalVector;
 class Orbital;
 
-/** \brief Quantum mechanical operators
+/** \brief Quantum mechanical Hermitian operators
 
     Base class to handle operators and their application in the QM sense
 
   */
 class QMOperator {
 public:
-    QMOperator(bool im = false)
-            : imaginary(im),
-              precision(-1.0) {
-    }
+    QMOperator() : apply_prec(-1.0) { }
     virtual ~QMOperator() { }
 
     virtual void rotate(double prec, Eigen::MatrixXd &U) { }
@@ -27,10 +22,8 @@ public:
     virtual void setupUnperturbed(double prec = -1.0) { }
     virtual void clearUnperturbed() { }
 
-    virtual void setup(double prec = -1.0) { this->precision = prec; }
-    virtual void clear() { this->precision = -1.0; }
-
-    bool isImaginary() const { return this->imaginary; }
+    virtual void setup(double prec) { this->apply_prec = prec; }
+    virtual void clear() { this->apply_prec = -1.0; }
 
     virtual int printTreeSizes() const;
 
@@ -47,8 +40,7 @@ public:
     double calcProperty(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y);
 
 protected:
-    bool imaginary;
-    double precision;
+    double apply_prec;
 };
 
 #endif // QMOPERATOR_H

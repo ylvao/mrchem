@@ -1,31 +1,37 @@
 #include "MomentumOperator.h"
-#include "DerivativeOperator.h"
 #include "Orbital.h"
 #include "Timer.h"
 
 using namespace std;
 
-MomentumOperator::MomentumOperator(int dir, DerivativeOperator<3> &d_oper)
-        : QMOperator(true),
-          apply_dir(dir),
-          D(&d_oper) {
+MomentumOperator::MomentumOperator(double build_prec,
+                                   const MultiResolutionAnalysis<3> &mra,
+                                   int dir)
+        : D(mra, build_prec, build_prec) {
+    D.setApplyDir(dir);
 }
 
-/* Derivative operator does not belong to this class and is not deleted */
 MomentumOperator::~MomentumOperator() {
-    this->D = 0;
+}
+
+void MomentumOperator::setup(double prec) {
+    this->apply_prec = prec;
+    this->D.setPrecision(prec);
+}
+
+void MomentumOperator::clear() {
+    this->apply_prec = -1.0;
 }
 
 Orbital* MomentumOperator::operator() (Orbital &orb_p) {
     Timer timer;
     timer.restart();
     Orbital *dOrb_p = new Orbital(orb_p);
-    this->D->setApplyDir(this->apply_dir);
     if (orb_p.real != 0) {
-        dOrb_p->imag = (*this->D)(*orb_p.real);
+        dOrb_p->imag = this->D(*orb_p.real);
     }
     if (orb_p.imag != 0) {
-        dOrb_p->real = (*this->D)(*orb_p.imag);
+        dOrb_p->real = this->D(*orb_p.imag);
         *dOrb_p->real *= -1.0;
     }
     timer.stop();

@@ -10,13 +10,6 @@
 #include "InterpolatingBasis.h"
 #include "MultiResolutionAnalysis.h"
 
-#include "MWAdder.h"
-#include "MWMultiplier.h"
-#include "MWProjector.h"
-#include "GridGenerator.h"
-#include "DerivativeOperator.h"
-#include "PoissonOperator.h"
-
 #include "CoreHamiltonian.h"
 //#include "Hartree.h"
 //#include "HartreeFock.h"
@@ -31,8 +24,7 @@
 #include "Molecule.h"
 #include "OrbitalVector.h"
 //#include "Orbital.h"
-//#include "Density.h"
-#include "Potential.h"
+//#include "DensityOperator.h"
 
 #include "InitialGuessProjector.h"
 
@@ -46,8 +38,8 @@
 //#include "SpinSpinCoupling.h"
 
 #include "KineticOperator.h"
-#include "NuclearFunction.h"
-//#include "CoulombPotential.h"
+#include "NuclearPotential.h"
+//#include "CoulombOperator.h"
 //#include "CoulombHessian.h"
 //#include "ExchangePotential.h"
 //#include "ExchangeHessian.h"
@@ -163,7 +155,6 @@ SCFDriver::SCFDriver(Getkw &input) {
     x_phi = 0;
     y_phi = 0;
 
-    P = 0;
     T = 0;
     V = 0;
     J = 0;
@@ -208,14 +199,6 @@ void SCFDriver::setup() {
     BoundingBox<3> world(idx, boxes.data());
     InterpolatingBasis basis(order);
     MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
-
-    // Setting up MW operators
-    add = new MWAdder<3>(*MRA);
-    mult = new MWMultiplier<3>(*MRA);
-    Q = new MWProjector<3>(*MRA, rel_prec);
-    G = new GridGenerator<3>(*MRA);
-    D = new DerivativeOperator<3>(*MRA, rel_prec, rel_prec/10.0);
-    P = new PoissonOperator(*MRA, rel_prec, rel_prec/10.0);
 
     // Setting up molecule
     molecule = new Molecule(mol_coords, mol_charge);
@@ -298,35 +281,27 @@ void SCFDriver::setup() {
 //    if (rsp_history > 0) rsp_kain_x = new KAIN(rsp_history);
 //    if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
 
-    Timer nuc_timer;
-    nuc_timer.restart();
-    TelePrompter::printHeader(0, "Setting up nuclear potential");
-    NuclearFunction nuc_func(*nuclei, rel_prec);
-    nuc_tree = (*Q)(nuc_func);
-    TelePrompter::printFooter(0, nuc_timer, 2);
-
     // Setting up Fock operator
-    T = new KineticOperator(*D);
-    V = new Potential(*add, *mult, nuc_tree, 0);
-//    rho = new DensityOperator(*phi);
-//    J = new CoulombPotential(*P, *phi);
+    T = new KineticOperator(rel_prec, *MRA);
+    V = new NuclearPotential(rel_prec, *MRA, *nuclei);
+//    rho = new DensityOperator(rel_prec, *MRA, *phi);
+//    J = new CoulombOperator(rel_prec, *MRA, *rho);
 
     if (wf_method == "Core") {
         f_oper = new CoreHamiltonian(*T, *V);
 //    } else if (wf_method == "Hartree") {
 //        f_oper = new Hartree(*T, *V, *J);
 //    } else if (wf_method == "HF") {
-//        K = new ExchangePotential(*P, *phi);
+//        K = new ExchangePotential(rel_prec, *MRA, *rho);
 //        f_oper = new HartreeFock(*T, *V, *J, *K);
 //    } else if (wf_method == "DFT") {
 //        xcfun_1 = new XCFunctional(dft_spin, 1);
-//        xcfun_1->setDensityCutoff(dft_cutoff[0]);
 //        for (int i = 0; i < dft_func_names.size(); i++) {
 //            xcfun_1->setFunctional(dft_func_names[i], dft_func_coefs[i]);
 //        }
-//        XC = new XCPotential(*xcfun_1, *phi);
+//        XC = new XCPotential(rel_prec, *MRA, *rho, *xcfun_1);
 //        if (dft_x_fac > MachineZero) {
-//            K = new ExchangePotential(*P, *phi, dft_x_fac);
+//            K = new ExchangePotential(rel_prec, *MRA, *rho, dft_x_fac);
 //        }
 //        f_oper = new DFT(*T, *V, *J, *XC, K);
     } else {
@@ -339,22 +314,15 @@ void SCFDriver::clear() {
 
     if (molecule != 0) delete molecule;
     if (phi != 0) delete phi;
-    if (nuc_tree != 0) delete nuc_tree;
 
 //    if (helmholtz != 0) delete helmholtz;
 //    if (scf_kain != 0) delete scf_kain;
 //    if (rsp_kain_x != 0) delete rsp_kain_x;
 //    if (rsp_kain_y != 0) delete rsp_kain_y;
 
-    if (add != 0) delete add;
-    if (mult != 0) delete mult;
-    if (Q != 0) delete Q;
-    if (G != 0) delete G;
-    if (D != 0) delete D;
-    if (P != 0) delete P;
     if (T != 0) delete T;
-//    if (J != 0) delete J;
     if (V != 0) delete V;
+//    if (J != 0) delete J;
 //    if (K != 0) delete K;
 //    if (XC != 0) delete XC;
     if (f_mat != 0) delete f_mat;
@@ -485,7 +453,7 @@ void SCFDriver::run() {
     if (run_ground_state) {
         converged = runGroundState();
     } else {
-        f_oper->setup();
+        f_oper->setup(rel_prec);
         *f_mat = (*f_oper)(*phi, *phi);
         f_oper->clear();
     }

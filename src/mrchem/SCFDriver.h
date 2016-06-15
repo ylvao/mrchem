@@ -7,15 +7,6 @@
 
 class Getkw;
 
-template<int D> class MultiResolutionAnalysis;
-template<int D> class MWAdder;
-template<int D> class MWMultiplier;
-template<int D> class MWProjector;
-template<int D> class GridGenerator;
-template<int D> class DerivativeOperator;
-template<int D> class FunctionTree;
-class PoissonOperator;
-
 class Nuclei;
 class Molecule;
 class OrbitalVector;
@@ -26,15 +17,18 @@ class Accelerator;
 
 class QMOperator;
 class FockOperator;
-class CoulombPotential;
+class DensityOperator;
+class CoulombOperator;
 class CoulombHessian;
 class KineticOperator;
-class Potential;
+class NuclearPotential;
 class ExchangePotential;
 class ExchangeHessian;
 class XCPotential;
 class XCHessian;
 class XCFunctional;
+
+template<int D> class MultiResolutionAnalysis;
 
 class SCFDriver {
 public:
@@ -136,14 +130,6 @@ protected:
     double r_O[3];
     MultiResolutionAnalysis<3> *MRA;
 
-    // MW operators
-    MWAdder<3> *add;
-    MWMultiplier<3> *mult;
-    MWProjector<3> *Q;
-    GridGenerator<3> *G;
-    DerivativeOperator<3> *D;
-    PoissonOperator *P;
-
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;
     Accelerator *scf_kain;
@@ -154,10 +140,10 @@ protected:
     Molecule *molecule;
     Nuclei *nuclei;
     OrbitalVector *phi;
+    DensityOperator *rho;
     KineticOperator *T;
-    FunctionTree<3> *nuc_tree;
-    Potential *V;
-    CoulombPotential *J;
+    NuclearPotential *V;
+    CoulombOperator *J;
     ExchangePotential *K;
     XCPotential *XC;
     XCFunctional *xcfun_1;

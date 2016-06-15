@@ -11,7 +11,34 @@
 using namespace std;
 using namespace Eigen;
 
+Potential::Potential(const MultiResolutionAnalysis<3> &mra)
+    : add(mra),
+      mult(mra),
+      real(0),
+      imag(0) {
+}
+Potential::~Potential() {
+    if (this->real != 0) MSG_ERROR("Operator not properly deallocated");
+    if (this->imag != 0) MSG_ERROR("Operator not properly deallocated");
+}
+
+void Potential::setup(double prec) {
+    this->apply_prec = prec;
+    this->add.setPrecision(prec);
+    this->mult.setPrecision(prec);
+}
+
+void Potential::clear() {
+    this->apply_prec = -1.0;
+    if (this->real != 0) delete this->real;
+    if (this->imag != 0) delete this->imag;
+    this->real = 0;
+    this->imag = 0;
+}
+
+
 Orbital* Potential::operator() (Orbital &orb_p) {
+    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     Timer timer;
     timer.restart();
 
@@ -29,14 +56,14 @@ Orbital* Potential::operator() (Orbital &orb_p) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(*this->real);
             tree_vec.push_back(*orb_p.real);
-            real_1 = (*this->mult)(tree_vec);
+            real_1 = this->mult(tree_vec);
             real_vec.push_back(*real_1);
         }
         if (this->imag != 0) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(*this->imag);
             tree_vec.push_back(*orb_p.real);
-            imag_1 = (*this->mult)(tree_vec);
+            imag_1 = this->mult(tree_vec);
             imag_vec.push_back(*imag_1);
         }
     }
@@ -45,22 +72,22 @@ Orbital* Potential::operator() (Orbital &orb_p) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(*this->real);
             tree_vec.push_back(*orb_p.imag);
-            imag_2 = (*this->mult)(tree_vec);
+            imag_2 = this->mult(tree_vec);
             imag_vec.push_back(*imag_2);
         }
         if (this->imag != 0) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(*this->imag);
             tree_vec.push_back(*orb_p.imag);
-            real_2 = (*this->mult)(tree_vec);
+            real_2 = this->mult(tree_vec);
             real_vec.push_back(*real_2);
         }
     }
     if (real_vec.size() > 0) {
-        Vorb->real = (*this->add)(real_vec);
+        Vorb->real = this->add(real_vec);
     }
     if (imag_vec.size() > 0) {
-        Vorb->imag = (*this->add)(imag_vec);
+        Vorb->imag = this->add(imag_vec);
     }
 
     if (real_1 != 0) delete real_1;

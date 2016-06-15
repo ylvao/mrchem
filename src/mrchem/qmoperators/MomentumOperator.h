@@ -2,13 +2,20 @@
 #define MOMENTUMOPERATOR_H
 
 #include "QMOperator.h"
+#include "DerivativeOperator.h"
 
 template<int D> class DerivativeOperator;
+template<int D> class MultiResolutionAnalysis;
 
 class MomentumOperator : public QMOperator {
 public:
-    MomentumOperator(int dir, DerivativeOperator<3> &d_oper);
+    MomentumOperator(double build_prec,
+                     const MultiResolutionAnalysis<3> &mra,
+                     int dir);
     virtual ~MomentumOperator();
+
+    virtual void setup(double prec);
+    virtual void clear();
 
     virtual int printTreeSizes() const;
 
@@ -19,8 +26,7 @@ public:
     using QMOperator::adjoint;
 
 protected:
-    const int apply_dir;
-    DerivativeOperator<3> *D;
+    DerivativeOperator<3> D;
 };
 
 #endif // MOMENTUMOPERATOR_H

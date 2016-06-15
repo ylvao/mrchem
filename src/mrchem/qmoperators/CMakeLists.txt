@@ -9,6 +9,7 @@ add_library(qmoperators STATIC
     KineticOperator.cpp
     MomentumOperator.cpp
     Potential.cpp
+    NuclearPotential.cpp
     FockOperator.cpp
     QMOperator.cpp
 )
