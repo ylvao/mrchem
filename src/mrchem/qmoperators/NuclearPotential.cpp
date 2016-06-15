@@ -20,11 +20,13 @@ void NuclearPotential::setup(double prec) {
         this->clean.setPrecision(-1.0);
         this->project.setPrecision(prec);
         this->real = this->project(this->nuc_func);
+        this->imag = 0;
     } else {
         this->clean.setPrecision(prec);
         this->project.setPrecision(-1.0);
         int nNodes = this->clean(*this->real);
         this->project(*this->real, this->nuc_func);
+        this->imag = 0;
     }
     timer.stop();
     int n = getNNodes();
