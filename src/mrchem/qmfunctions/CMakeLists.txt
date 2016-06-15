@@ -6,6 +6,7 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_library(qmfunctions STATIC 
+    NuclearFunction.cpp
     Orbital.cpp
     OrbitalVector.cpp
 )
