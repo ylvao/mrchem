@@ -22,9 +22,9 @@
 //#include "DIIS.h"
 
 #include "Molecule.h"
-#include "OrbitalVector.h"
 //#include "Orbital.h"
-//#include "DensityOperator.h"
+#include "OrbitalVector.h"
+//#include "Density.h"
 
 #include "InitialGuessProjector.h"
 
@@ -43,7 +43,7 @@
 //#include "CoulombHessian.h"
 //#include "ExchangePotential.h"
 //#include "ExchangeHessian.h"
-//#include "XCFunctional.h"
+#include "XCFunctional.h"
 //#include "XCPotential.h"
 //#include "XCHessian.h"
 //#include "DipoleOperator.h"
@@ -205,6 +205,7 @@ void SCFDriver::setup() {
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
     phi = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
+//    rho = new Density(*MRA, *phi, dft_spin);
 
     // Defining gauge origin
     const double *COM = molecule->getCenterOfMass();
@@ -284,7 +285,6 @@ void SCFDriver::setup() {
     // Setting up Fock operator
     T = new KineticOperator(rel_prec, *MRA);
     V = new NuclearPotential(rel_prec, *MRA, *nuclei);
-//    rho = new DensityOperator(rel_prec, *MRA, *phi);
 //    J = new CoulombOperator(rel_prec, *MRA, *rho);
 
     if (wf_method == "Core") {
@@ -294,12 +294,12 @@ void SCFDriver::setup() {
 //    } else if (wf_method == "HF") {
 //        K = new ExchangePotential(rel_prec, *MRA, *rho);
 //        f_oper = new HartreeFock(*T, *V, *J, *K);
-//    } else if (wf_method == "DFT") {
-//        xcfun_1 = new XCFunctional(dft_spin, 1);
-//        for (int i = 0; i < dft_func_names.size(); i++) {
-//            xcfun_1->setFunctional(dft_func_names[i], dft_func_coefs[i]);
-//        }
-//        XC = new XCPotential(rel_prec, *MRA, *rho, *xcfun_1);
+    } else if (wf_method == "DFT") {
+        xcfun_1 = new XCFunctional(dft_spin, 1);
+        for (int i = 0; i < dft_func_names.size(); i++) {
+            xcfun_1->setFunctional(dft_func_names[i], dft_func_coefs[i]);
+        }
+//        XC = new XCPotential(rel_prec, *MRA, *xcfun_1, *phi);
 //        if (dft_x_fac > MachineZero) {
 //            K = new ExchangePotential(rel_prec, *MRA, *rho, dft_x_fac);
 //        }
@@ -314,6 +314,7 @@ void SCFDriver::clear() {
 
     if (molecule != 0) delete molecule;
     if (phi != 0) delete phi;
+//    if (rho != 0) delete rho;
 
 //    if (helmholtz != 0) delete helmholtz;
 //    if (scf_kain != 0) delete scf_kain;
@@ -327,7 +328,7 @@ void SCFDriver::clear() {
 //    if (XC != 0) delete XC;
     if (f_mat != 0) delete f_mat;
     if (f_oper != 0) delete f_oper;
-//    if (xcfun_1 != 0) delete xcfun_1;
+    if (xcfun_1 != 0) delete xcfun_1;
 }
 
 GroundStateSolver* SCFDriver::setupInitialGuessSolver() {

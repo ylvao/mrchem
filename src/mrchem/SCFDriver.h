@@ -9,6 +9,7 @@ class Getkw;
 
 class Nuclei;
 class Molecule;
+class Density;
 class OrbitalVector;
 class GroundStateSolver;
 class LinearResponseSolver;
@@ -17,7 +18,6 @@ class Accelerator;
 
 class QMOperator;
 class FockOperator;
-class DensityOperator;
 class CoulombOperator;
 class CoulombHessian;
 class KineticOperator;
@@ -139,8 +139,8 @@ protected:
     // Unperturbed quantities
     Molecule *molecule;
     Nuclei *nuclei;
+    Density *rho;
     OrbitalVector *phi;
-    DensityOperator *rho;
     KineticOperator *T;
     NuclearPotential *V;
     CoulombOperator *J;
