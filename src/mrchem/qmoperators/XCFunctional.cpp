@@ -10,7 +10,7 @@ using namespace Eigen;
 XCFunctional::XCFunctional(bool s, int k)
         : spin(s),
           order(k),
-          type(XC_Undefined),
+          type(XC_undefined),
           inputLength(-1),
           outputLength(-1),
           cutoff(-1.0) {
@@ -22,7 +22,7 @@ XCFunctional::~XCFunctional() {
 }
 
 bool XCFunctional::isLDA() const {
-    if (this->type == XC_LDA) {
+    if (this->type == XC_lda) {
         return true;
     } else {
         return false;
@@ -30,7 +30,7 @@ bool XCFunctional::isLDA() const {
 }
 
 bool XCFunctional::isGGA() const {
-    if (this->type == XC_GGA) {
+    if (this->type == XC_gga) {
         return true;
     } else {
         return false;
@@ -38,56 +38,56 @@ bool XCFunctional::isGGA() const {
 }
 
 void XCFunctional::setFunctional(const string &name, double coef) {
-    if (xc_set(this->func, name.c_str(), coef)) {
-        MSG_ERROR("Invalid functional");
-    }
+    //if (xc_set(this->func, name.c_str(), coef)) {
+        //MSG_ERROR("Invalid functional");
+    //}
 
     if (this->isGGA()) {
         return;
     }
 
     if (name == "SLATERx") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "VWNc") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "VWN5c") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "LDA") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "PW92c") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "PZ81c") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "TFk") {
-        this->type = XC_LDA;
+        this->type = XC_lda;
     } else if (name == "VWk") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "BECKEx") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "LYPc") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "BLYP") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "B3LYP") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PW91x") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PW91c") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PW91k") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "BP86") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PBE0") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PBEc") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "REVPBEc") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PBEx") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else if (name == "PBE") {
-        this->type = XC_GGA;
+        this->type = XC_gga;
     } else {
         MSG_ERROR("Invalid functional");
     }
@@ -97,10 +97,10 @@ void XCFunctional::setFunctional(const string &name, double coef) {
 void XCFunctional::setup() {
     if (not this->isSpinSeparated()) {
         if (this->isLDA()) {
-            xc_eval_setup(this->func,
-                          XC_N,
-                          XC_PARTIAL_DERIVATIVES,
-                          this->order);
+            //xc_eval_setup(this->func,
+                          //XC_N,
+                          //XC_PARTIAL_DERIVATIVES,
+                          //this->order);
             this->inputLength = 1;
             if (this->order == 0) {
                 this->outputLength = 1;
@@ -112,10 +112,10 @@ void XCFunctional::setup() {
                 MSG_ERROR("Order > 2 not supported");
             }
         } else if (this->isGGA()) {
-            xc_eval_setup(this->func,
-                          XC_N_GNN,
-                          XC_PARTIAL_DERIVATIVES,
-                          this->order);
+            //xc_eval_setup(this->func,
+                          //XC_N_GNN,
+                          //XC_PARTIAL_DERIVATIVES,
+                          //this->order);
             this->inputLength = 2;
             if (this->order == 0) {
                 this->outputLength = 1;
@@ -131,10 +131,10 @@ void XCFunctional::setup() {
         }
     } else {
         if (this->isLDA()) {
-            xc_eval_setup(this->func,
-                          XC_A_B,
-                          XC_PARTIAL_DERIVATIVES,
-                          this->order);
+            //xc_eval_setup(this->func,
+                          //XC_A_B,
+                          //XC_PARTIAL_DERIVATIVES,
+                          //this->order);
             this->inputLength = 2;
             if (this->order == 0) {
                 this->outputLength = 1;
@@ -146,10 +146,10 @@ void XCFunctional::setup() {
                 MSG_ERROR("Order > 2 not supported");
             }
         } else if (this->isGGA()) {
-            xc_eval_setup(this->func,
-                          XC_A_B_GAA_GAB_GBB,
-                          XC_PARTIAL_DERIVATIVES,
-                          this->order);
+            //xc_eval_setup(this->func,
+                          //XC_A_B_GAA_GAB_GBB,
+                          //XC_PARTIAL_DERIVATIVES,
+                          //this->order);
             this->inputLength = 5;
             if (this->order == 0) {
                 this->outputLength = 1;
@@ -210,7 +210,7 @@ void XCFunctional::evaluate(MatrixXd &inp, MatrixXd &out) const {
 
     for (int i = 0; i < nPts; i++) {
         if (inp(i,0) >= this->cutoff) {
-            xc_eval(this->func, inp.row(i).data(), out.row(i).data());
+            //xc_eval(this->func, inp.row(i).data(), out.row(i).data());
         } else {
             out.row(i).setZero();
         }
