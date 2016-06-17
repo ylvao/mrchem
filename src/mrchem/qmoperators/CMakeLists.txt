@@ -6,12 +6,13 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_library(qmoperators STATIC 
+    FockOperator.cpp
     KineticOperator.cpp
     MomentumOperator.cpp
-    Potential.cpp
     NuclearPotential.cpp
-    FockOperator.cpp
+    Potential.cpp
     QMOperator.cpp
+    XCFunctional.cpp
 )
 
 target_link_libraries(qmoperators
@@ -25,6 +26,7 @@ target_link_libraries(qmoperators
     mwtrees
     mwoperators
     mwbuilders
+    xcfun
 )
 
 install(TARGETS qmoperators

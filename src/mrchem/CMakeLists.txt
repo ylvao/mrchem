@@ -40,6 +40,7 @@ target_link_libraries(mrchem
     mwoperators
     mwbuilders
     getkw
+    xcfun
 )
 
 add_dependencies(mrchem external-modules)
@@ -56,6 +57,7 @@ target_link_libraries(mrchem.x
     mwoperators
     mwbuilders
     getkw
+    xcfun
     ${Boost_LIBRARIES}
     ${BLAS_LIBRARIES}
 )
