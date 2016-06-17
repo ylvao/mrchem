@@ -7,6 +7,9 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/chemistry)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/initial_guess)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/qmfunctions)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/qmoperators)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 
@@ -20,6 +23,9 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
     target_link_libraries(mrchem-pilot.x 
         mrchem 
         chemistry 
+        initial_guess
+        qmfunctions
+        qmoperators
         mrcpp 
         mwanalytic 
         mwcore
@@ -27,6 +33,7 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
         mwoperators 
         mwbuilders
         getkw
+        xcfun
         ${Boost_LIBRARIES}
         ${BLAS_LIBRARIES}
     )
