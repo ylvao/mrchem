@@ -1,39 +1,31 @@
 #ifndef XCFUNCTIONAL_H
 #define XCFUNCTIONAL_H
 
-#include <vector>
 #include <Eigen/Core>
 
 #include "xcfun.h"
 
 class XCFunctional {
 public:
-    XCFunctional(bool s, int k = 2);
+    XCFunctional(bool s);
     virtual ~XCFunctional();
 
-    void evaluate(Eigen::MatrixXd &inp, Eigen::MatrixXd &out) const;
-
     void setFunctional(const std::string &name, double coef = 1.0);
-    void setDensityCutoff(double cut) { this->cutoff = cut; }
 
-    int getInputLength() const { return this->inputLength; }
-    int getOutputLength() const { return this->outputLength; }
+    int getInputLength() const { return xc_input_length(this->functional); }
+    int getOutputLength(int k) const { return xc_output_length(this->functional, k); }
 
-    bool isLDA() const;
-    bool isGGA() const;
+    bool isLDA() const { return (xc_get_type(this->functional) == XC_LDA); }
+    bool isGGA() const { return (xc_get_type(this->functional) == XC_GGA); }
     bool isSpinSeparated() const { return this->spin; }
+
+    void evaluate(int k, Eigen::MatrixXd &inp, Eigen::MatrixXd &out) const;
 
 private:
     bool spin;
-    int order;
-    int type;
-    int inputLength;
-    int outputLength;
-    double cutoff;
+    xc_functional functional;
 
-    xc_functional func;
-
-    void setup();
+    int getParamFromName(const std::string &name);
 };
 
 #endif // XCFUNCTIONAL_H

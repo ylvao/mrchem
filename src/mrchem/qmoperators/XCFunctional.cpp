@@ -2,168 +2,147 @@
 #include "TelePrompter.h"
 #include "Timer.h"
 
-#include "constants.h"
-
 using namespace std;
 using namespace Eigen;
 
-XCFunctional::XCFunctional(bool s, int k)
-        : spin(s),
-          order(k),
-          type(XC_undefined),
-          inputLength(-1),
-          outputLength(-1),
-          cutoff(-1.0) {
-    this->func = xc_new_functional();
+XCFunctional::XCFunctional(bool s) : spin(s) {
+    this->functional = xc_new_functional();
+    if (this->spin) {
+        xc_set_mode(this->functional, XC_VARS_AB);
+    } else {
+        xc_set_mode(this->functional, XC_VARS_N);
+    }
 }
 
 XCFunctional::~XCFunctional() {
-    xc_free_functional(func);
-}
-
-bool XCFunctional::isLDA() const {
-    if (this->type == XC_lda) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool XCFunctional::isGGA() const {
-    if (this->type == XC_gga) {
-        return true;
-    } else {
-        return false;
-    }
+    xc_free_functional(this->functional);
 }
 
 void XCFunctional::setFunctional(const string &name, double coef) {
-    //if (xc_set(this->func, name.c_str(), coef)) {
-        //MSG_ERROR("Invalid functional");
-    //}
+    int param = getParamFromName(name);
+    xc_set_param(this->functional, param, coef);
+}
 
-    if (this->isGGA()) {
-        return;
-    }
-
-    if (name == "SLATERx") {
-        this->type = XC_lda;
-    } else if (name == "VWNc") {
-        this->type = XC_lda;
-    } else if (name == "VWN5c") {
-        this->type = XC_lda;
-    } else if (name == "LDA") {
-        this->type = XC_lda;
-    } else if (name == "PW92c") {
-        this->type = XC_lda;
-    } else if (name == "PZ81c") {
-        this->type = XC_lda;
-    } else if (name == "TFk") {
-        this->type = XC_lda;
-    } else if (name == "VWk") {
-        this->type = XC_gga;
-    } else if (name == "BECKEx") {
-        this->type = XC_gga;
-    } else if (name == "LYPc") {
-        this->type = XC_gga;
-    } else if (name == "BLYP") {
-        this->type = XC_gga;
-    } else if (name == "B3LYP") {
-        this->type = XC_gga;
-    } else if (name == "PW91x") {
-        this->type = XC_gga;
-    } else if (name == "PW91c") {
-        this->type = XC_gga;
-    } else if (name == "PW91k") {
-        this->type = XC_gga;
-    } else if (name == "BP86") {
-        this->type = XC_gga;
-    } else if (name == "PBE0") {
-        this->type = XC_gga;
-    } else if (name == "PBEc") {
-        this->type = XC_gga;
-    } else if (name == "REVPBEc") {
-        this->type = XC_gga;
-    } else if (name == "PBEx") {
-        this->type = XC_gga;
-    } else if (name == "PBE") {
-        this->type = XC_gga;
+int XCFunctional::getParamFromName(const string &name) {
+    int param = -1;
+    if (name == "SLATERX") {
+        MSG_WARN("Functional not tested");
+        param = XC_SLATERX;
+    } else if (name == "VWN5C") {
+        MSG_WARN("Functional not tested");
+        param = XC_VWN5C;
+    } else if (name == "BECKEX") {
+        MSG_WARN("Functional not tested");
+        param = XC_BECKEX;
+    } else if (name == "BECKECORRX") {
+        MSG_WARN("Functional not tested");
+        param = XC_BECKECORRX;
+    } else if (name == "BECKESRX") {
+        MSG_WARN("Functional not tested");
+        param = XC_BECKESRX;
+    } else if (name == "OPTX") {
+        MSG_WARN("Functional not tested");
+        param = XC_OPTX;
+    } else if (name == "LYPC") {
+        MSG_WARN("Functional not tested");
+        param = XC_LYPC;
+    } else if (name == "PBEX") {
+        MSG_WARN("Functional not tested");
+        param = XC_PBEX;
+    } else if (name == "REVPBEX") {
+        MSG_WARN("Functional not tested");
+        param = XC_REVPBEX;
+    } else if (name == "RPBEX") {
+        MSG_WARN("Functional not tested");
+        param = XC_RPBEX;
+    } else if (name == "PBEC") {
+        MSG_WARN("Functional not tested");
+        param = XC_PBEC;
+    } else if (name == "SPBEC") {
+        MSG_WARN("Functional not tested");
+        param = XC_SPBEC;
+    } else if (name == "VWN_PBEC") {
+        MSG_WARN("Functional not tested");
+        param = XC_VWN_PBEC;
+    } else if (name == "LDAERFX") {
+        MSG_WARN("Functional not tested");
+        param = XC_LDAERFX;
+    } else if (name == "LDAERFC") {
+        MSG_WARN("Functional not tested");
+        param = XC_LDAERFC;
+    } else if (name == "LDAERFC_JT") {
+        MSG_WARN("Functional not tested");
+        param = XC_LDAERFC_JT;
+    } else if (name == "KTX") {
+        MSG_WARN("Functional not tested");
+        param = XC_KTX;
+    } else if (name == "TFK") {
+        MSG_WARN("Functional not tested");
+        param = XC_TFK;
+    } else if (name == "PW91X") {
+        MSG_WARN("Functional not tested");
+        param = XC_PW91X;
+    } else if (name == "PW91K") {
+        MSG_WARN("Functional not tested");
+        param = XC_PW91K;
+    } else if (name == "PW92C") {
+        MSG_WARN("Functional not tested");
+        param = XC_PW92C;
+    } else if (name == "MO5X") {
+        MSG_WARN("Functional not tested");
+        param = XC_M05X;
+    } else if (name == "MO5X2X") {
+        MSG_WARN("Functional not tested");
+        param = XC_M05X2X;
+    } else if (name == "MO6X") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06X;
+    } else if (name == "MO6X2X") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06X2X;
+    } else if (name == "MO6LX") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06LX;
+    } else if (name == "MO6HFX") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06HFX;
+    } else if (name == "BRX") {
+        MSG_WARN("Functional not tested");
+        param = XC_BRX;
+    } else if (name == "MO5X2C") {
+        MSG_WARN("Functional not tested");
+        param = XC_M05X2C;
+    } else if (name == "MO5C") {
+        MSG_WARN("Functional not tested");
+        param = XC_M05C;
+    } else if (name == "MO6C") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06C;
+    } else if (name == "MO6HFC") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06HFC;
+    } else if (name == "MO6LC") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06LC;
+    } else if (name == "MO6X2C") {
+        MSG_WARN("Functional not tested");
+        param = XC_M06X2C;
+    } else if (name == "TPSSC") {
+        MSG_WARN("Functional not tested");
+        param = XC_TPSSC;
+    } else if (name == "TPSSX") {
+        MSG_WARN("Functional not tested");
+        param = XC_TPSSX;
+    } else if (name == "REVTPSSC") {
+        MSG_WARN("Functional not tested");
+        param = XC_REVTPSSC;
+    } else if (name == "REVTPSSX") {
+        MSG_WARN("Functional not tested");
+        param = XC_REVTPSSX;
     } else {
         MSG_ERROR("Invalid functional");
     }
-    setup();
-}
-
-void XCFunctional::setup() {
-    if (not this->isSpinSeparated()) {
-        if (this->isLDA()) {
-            //xc_eval_setup(this->func,
-                          //XC_N,
-                          //XC_PARTIAL_DERIVATIVES,
-                          //this->order);
-            this->inputLength = 1;
-            if (this->order == 0) {
-                this->outputLength = 1;
-            } else if (this->order == 1) {
-                this->outputLength = 2;
-            } else if (this->order == 2) {
-                this->outputLength = 3;
-            } else {
-                MSG_ERROR("Order > 2 not supported");
-            }
-        } else if (this->isGGA()) {
-            //xc_eval_setup(this->func,
-                          //XC_N_GNN,
-                          //XC_PARTIAL_DERIVATIVES,
-                          //this->order);
-            this->inputLength = 2;
-            if (this->order == 0) {
-                this->outputLength = 1;
-            } else if (this->order == 1) {
-                this->outputLength = 3;
-            } else if (this->order == 2) {
-                this->outputLength = 6;
-            } else {
-                MSG_ERROR("Order > 2 not supported");
-            }
-        } else {
-            MSG_ERROR("Invalid functional type");
-        }
-    } else {
-        if (this->isLDA()) {
-            //xc_eval_setup(this->func,
-                          //XC_A_B,
-                          //XC_PARTIAL_DERIVATIVES,
-                          //this->order);
-            this->inputLength = 2;
-            if (this->order == 0) {
-                this->outputLength = 1;
-            } else if (this->order == 1) {
-                this->outputLength = 3;
-            } else if (this->order == 2) {
-                this->outputLength = 6;
-            } else {
-                MSG_ERROR("Order > 2 not supported");
-            }
-        } else if (this->isGGA()) {
-            //xc_eval_setup(this->func,
-                          //XC_A_B_GAA_GAB_GBB,
-                          //XC_PARTIAL_DERIVATIVES,
-                          //this->order);
-            this->inputLength = 5;
-            if (this->order == 0) {
-                this->outputLength = 1;
-            } else if (this->order == 1) {
-                this->outputLength = 6;
-            } else if (this->order == 2) {
-                this->outputLength = 21;
-            } else {
-                MSG_ERROR("Order > 2 not supported");
-            }
-        } else {
-            MSG_ERROR("Invalid functional type");
-        }
-    }
+    return param;
 }
 
 /** Computes the alpha and beta exchange-correlation potentials
@@ -198,23 +177,24 @@ void XCFunctional::setup() {
  *  \right) \f$
  */
 
-void XCFunctional::evaluate(MatrixXd &inp, MatrixXd &out) const {
-    if (inp.cols() != this->inputLength) MSG_ERROR("Invalid input");
+void XCFunctional::evaluate(int k, MatrixXd &inp, MatrixXd &out) const {
+    NOT_IMPLEMENTED_ABORT;
+//    if (inp.cols() != this->inputLength) MSG_ERROR("Invalid input");
 
-    Timer timer;
-    timer.restart();
-    TelePrompter::printHeader(0, "Evaluating XC functional");
+//    Timer timer;
+//    timer.restart();
+//    TelePrompter::printHeader(0, "Evaluating XC functional");
 
-    int nPts = inp.rows();
-    out = MatrixXd::Zero(nPts, this->outputLength);
+//    int nPts = inp.rows();
+//    out = MatrixXd::Zero(nPts, this->outputLength);
 
-    for (int i = 0; i < nPts; i++) {
-        if (inp(i,0) >= this->cutoff) {
-            //xc_eval(this->func, inp.row(i).data(), out.row(i).data());
-        } else {
-            out.row(i).setZero();
-        }
-    }
-    timer.stop();
-    TelePrompter::printFooter(0, timer, 2);
+//    for (int i = 0; i < nPts; i++) {
+//        if (inp(i,0) >= this->cutoff) {
+//            //xc_eval(this->func, inp.row(i).data(), out.row(i).data());
+//        } else {
+//            out.row(i).setZero();
+//        }
+//    }
+//    timer.stop();
+//    TelePrompter::printFooter(0, timer, 2);
 }
