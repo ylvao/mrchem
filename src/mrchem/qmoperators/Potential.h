@@ -19,6 +19,9 @@ public:
     virtual void setup(double prec);
     virtual void clear();
 
+    bool hasReal() const { if (this->real == 0) return false; return true; }
+    bool hasImag() const { if (this->imag == 0) return false; return true; }
+
     virtual Orbital* operator() (Orbital &orb);
     virtual Orbital* adjoint(Orbital &orb);
 
@@ -27,6 +30,9 @@ public:
 
     virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
+
+    friend class XCPotential;
+    friend class CoulombPotential;
 
 protected:
     MWAdder<3> add;

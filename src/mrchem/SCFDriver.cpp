@@ -11,9 +11,9 @@
 #include "MultiResolutionAnalysis.h"
 
 #include "CoreHamiltonian.h"
-//#include "Hartree.h"
+#include "Hartree.h"
 //#include "HartreeFock.h"
-//#include "DFT.h"
+#include "DFT.h"
 
 //#include "GroundStateSolver.h"
 //#include "LinearResponseSolver.h"
@@ -39,12 +39,12 @@
 
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
-//#include "CoulombOperator.h"
+#include "CoulombPotential.h"
 //#include "CoulombHessian.h"
 //#include "ExchangePotential.h"
 //#include "ExchangeHessian.h"
 #include "XCFunctional.h"
-//#include "XCPotential.h"
+#include "XCPotential.h"
 //#include "XCHessian.h"
 //#include "DipoleOperator.h"
 //#include "QuadrupoleOperator.h"
@@ -165,12 +165,11 @@ SCFDriver::SCFDriver(Getkw &input) {
     dK = 0;
     dXC = 0;
 
+    xcfun = 0;
+
     f_mat = 0;
     f_oper = 0;
     df_oper = 0;
-
-    xcfun_1 = 0;
-    xcfun_2 = 0;
 }
 
 bool SCFDriver::sanityCheck() const {
@@ -285,25 +284,26 @@ void SCFDriver::setup() {
     // Setting up Fock operator
     T = new KineticOperator(rel_prec, *MRA);
     V = new NuclearPotential(rel_prec, *MRA, *nuclei);
-//    J = new CoulombOperator(rel_prec, *MRA, *rho);
+    J = new CoulombPotential(rel_prec, *MRA, *phi);
+
 
     if (wf_method == "Core") {
         f_oper = new CoreHamiltonian(*T, *V);
-//    } else if (wf_method == "Hartree") {
-//        f_oper = new Hartree(*T, *V, *J);
+    } else if (wf_method == "Hartree") {
+        f_oper = new Hartree(*T, *V, *J);
 //    } else if (wf_method == "HF") {
 //        K = new ExchangePotential(rel_prec, *MRA, *rho);
 //        f_oper = new HartreeFock(*T, *V, *J, *K);
     } else if (wf_method == "DFT") {
-        xcfun_1 = new XCFunctional(dft_spin, 1);
+        xcfun = new XCFunctional(dft_spin);
         for (int i = 0; i < dft_func_names.size(); i++) {
-            xcfun_1->setFunctional(dft_func_names[i], dft_func_coefs[i]);
+            xcfun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
         }
-//        XC = new XCPotential(rel_prec, *MRA, *xcfun_1, *phi);
+        XC = new XCPotential(rel_prec, *MRA, *xcfun, *phi);
 //        if (dft_x_fac > MachineZero) {
 //            K = new ExchangePotential(rel_prec, *MRA, *rho, dft_x_fac);
 //        }
-//        f_oper = new DFT(*T, *V, *J, *XC, K);
+        f_oper = new DFT(*T, *V, *J, *XC, 0);
     } else {
         MSG_ERROR("Invalid method");
     }
@@ -323,12 +323,12 @@ void SCFDriver::clear() {
 
     if (T != 0) delete T;
     if (V != 0) delete V;
-//    if (J != 0) delete J;
+    if (J != 0) delete J;
 //    if (K != 0) delete K;
-//    if (XC != 0) delete XC;
+    if (XC != 0) delete XC;
     if (f_mat != 0) delete f_mat;
     if (f_oper != 0) delete f_oper;
-    if (xcfun_1 != 0) delete xcfun_1;
+    if (xcfun != 0) delete xcfun;
 }
 
 GroundStateSolver* SCFDriver::setupInitialGuessSolver() {

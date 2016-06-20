@@ -18,7 +18,7 @@ class Accelerator;
 
 class QMOperator;
 class FockOperator;
-class CoulombOperator;
+class CoulombPotential;
 class CoulombHessian;
 class KineticOperator;
 class NuclearPotential;
@@ -143,10 +143,9 @@ protected:
     OrbitalVector *phi;
     KineticOperator *T;
     NuclearPotential *V;
-    CoulombOperator *J;
+    CoulombPotential *J;
     ExchangePotential *K;
     XCPotential *XC;
-    XCFunctional *xcfun_1;
     FockOperator *f_oper;
     Eigen::MatrixXd *f_mat;
 
@@ -156,8 +155,10 @@ protected:
     CoulombHessian *dJ;
     ExchangeHessian *dK;
     XCHessian *dXC;
-    XCFunctional *xcfun_2;
     FockOperator *df_oper;
+
+    // XCFun
+    XCFunctional *xcfun;
 
     bool sanityCheck() const;
     bool runInitialGuess(FockOperator &oper, Eigen::MatrixXd &F, OrbitalVector &orbs);
