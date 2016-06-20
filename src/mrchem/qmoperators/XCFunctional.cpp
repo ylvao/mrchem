@@ -179,10 +179,20 @@ int XCFunctional::getParamFromName(const string &name) {
 void XCFunctional::evaluate(int k, MatrixXd &inp, MatrixXd &out) const {
     if (inp.cols() != getInputLength()) MSG_ERROR("Invalid input");
 
+    int nInp = getInputLength();
+    int nOut = getOutputLength(k);
     int nPts = inp.rows();
-    out = MatrixXd::Zero(nPts, getOutputLength(k));
+    out = MatrixXd::Zero(nPts, nOut);
+
+    double *iDat = new double[nInp];
+    double *oDat = new double[nOut];
 
     for (int i = 0; i < nPts; i++) {
-        xc_eval(this->functional, k, inp.row(i).data(), out.row(i).data());
+        for (int j = 0; j < nInp; j++) iDat[j] = inp(i,j);
+        xc_eval(this->functional, k, iDat, oDat);
+        for (int j = 0; j < nOut; j++) out(i,j) = oDat[j];
     }
+    delete[] iDat;
+    delete[] oDat;
 }
+
