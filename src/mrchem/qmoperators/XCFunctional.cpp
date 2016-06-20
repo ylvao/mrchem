@@ -1,6 +1,5 @@
 #include "XCFunctional.h"
 #include "TelePrompter.h"
-#include "Timer.h"
 
 using namespace std;
 using namespace Eigen;
@@ -178,23 +177,12 @@ int XCFunctional::getParamFromName(const string &name) {
  */
 
 void XCFunctional::evaluate(int k, MatrixXd &inp, MatrixXd &out) const {
-    NOT_IMPLEMENTED_ABORT;
-//    if (inp.cols() != this->inputLength) MSG_ERROR("Invalid input");
+    if (inp.cols() != getInputLength()) MSG_ERROR("Invalid input");
 
-//    Timer timer;
-//    timer.restart();
-//    TelePrompter::printHeader(0, "Evaluating XC functional");
+    int nPts = inp.rows();
+    out = MatrixXd::Zero(nPts, getOutputLength(k));
 
-//    int nPts = inp.rows();
-//    out = MatrixXd::Zero(nPts, this->outputLength);
-
-//    for (int i = 0; i < nPts; i++) {
-//        if (inp(i,0) >= this->cutoff) {
-//            //xc_eval(this->func, inp.row(i).data(), out.row(i).data());
-//        } else {
-//            out.row(i).setZero();
-//        }
-//    }
-//    timer.stop();
-//    TelePrompter::printFooter(0, timer, 2);
+    for (int i = 0; i < nPts; i++) {
+        xc_eval(this->functional, k, inp.row(i).data(), out.row(i).data());
+    }
 }
