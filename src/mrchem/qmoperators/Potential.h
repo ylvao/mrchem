@@ -22,6 +22,9 @@ public:
     bool hasReal() const { if (this->real == 0) return false; return true; }
     bool hasImag() const { if (this->imag == 0) return false; return true; }
 
+    FunctionTree<3> &re() { return *this->real; }
+    FunctionTree<3> &im() { return *this->imag; }
+
     virtual Orbital* operator() (Orbital &orb);
     virtual Orbital* adjoint(Orbital &orb);
 
