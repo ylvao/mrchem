@@ -3,12 +3,15 @@
 
 #include "constants.h"
 
+#include "TelePrompter.h"
+
 template<int D> class FunctionTree;
 
 class Density {
 public:
     Density(bool s);
     Density(const Density &rho);
+    Density &operator=(const Density &rho) { NOT_IMPLEMENTED_ABORT; }
     virtual ~Density();
 
     int getNNodes() const;

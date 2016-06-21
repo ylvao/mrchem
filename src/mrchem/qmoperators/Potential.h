@@ -11,6 +11,7 @@ template<int D> class MultiResolutionAnalysis;
 class Potential : public QMOperator {
 public:
     Potential(const MultiResolutionAnalysis<3> &mra);
+    Potential &operator=(const Potential &pot) { NOT_IMPLEMENTED_ABORT; }
     virtual ~Potential();
 
     int getNNodes() const;

@@ -4,9 +4,10 @@
 #include <complex>
 
 #include "constants.h"
-#include "mrcpp_declarations.h"
 
 #include "TelePrompter.h"
+
+template<int D> class FunctionTree;
 
 class Orbital {
 public:

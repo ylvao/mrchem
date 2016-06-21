@@ -12,6 +12,7 @@ class NuclearFunction : public RepresentableFunction<3> {
 public:
     NuclearFunction();
     NuclearFunction(const Nuclei &nucs, double prec);
+    NuclearFunction &operator=(const NuclearFunction &func) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NuclearFunction() { }
 
     void push_back(const Nucleus &nuc, double smooth);

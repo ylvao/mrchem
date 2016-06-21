@@ -11,6 +11,7 @@ public:
     NuclearPotential(double build_prec,
                      const MultiResolutionAnalysis<3> &mra,
                      Nuclei &nucs);
+    NuclearPotential &operator=(const NuclearPotential &pot) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NuclearPotential();
 
     virtual void setup(double prec);
