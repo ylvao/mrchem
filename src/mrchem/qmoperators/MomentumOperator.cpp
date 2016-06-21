@@ -7,8 +7,8 @@ using namespace std;
 MomentumOperator::MomentumOperator(double build_prec,
                                    const MultiResolutionAnalysis<3> &mra,
                                    int dir)
-        : D(mra, build_prec, build_prec) {
-    D.setApplyDir(dir);
+        : derivative(mra, build_prec, build_prec) {
+    derivative.setApplyDir(dir);
 }
 
 MomentumOperator::~MomentumOperator() {
@@ -16,7 +16,7 @@ MomentumOperator::~MomentumOperator() {
 
 void MomentumOperator::setup(double prec) {
     this->apply_prec = prec;
-    this->D.setPrecision(prec);
+    this->derivative.setPrecision(prec);
 }
 
 void MomentumOperator::clear() {
@@ -28,16 +28,16 @@ Orbital* MomentumOperator::operator() (Orbital &orb_p) {
     timer.restart();
     Orbital *dOrb_p = new Orbital(orb_p);
     if (orb_p.real != 0) {
-        dOrb_p->imag = this->D(*orb_p.real);
+        dOrb_p->imag = this->derivative(*orb_p.real);
     }
     if (orb_p.imag != 0) {
-        dOrb_p->real = this->D(*orb_p.imag);
+        dOrb_p->real = this->derivative(*orb_p.imag);
         *dOrb_p->real *= -1.0;
     }
     timer.stop();
     int n = dOrb_p->getNNodes();
     double t = timer.getWallTime();
-    TelePrompter::printTree(1, "Applied momentum", n, t);
+    TelePrompter::printTree(2, "Applied momentum", n, t);
     return dOrb_p;
 }
 

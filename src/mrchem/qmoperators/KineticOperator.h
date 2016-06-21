@@ -28,9 +28,9 @@ public:
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
 protected:
-    MomentumOperator p_x;
-    MomentumOperator p_y;
-    MomentumOperator p_z;
+    MomentumOperator momentum_x;
+    MomentumOperator momentum_y;
+    MomentumOperator momentum_z;
 };
 
 #endif // KINETICOPERATOR_H

@@ -26,7 +26,7 @@ public:
     using QMOperator::adjoint;
 
 protected:
-    DerivativeOperator<3> D;
+    DerivativeOperator<3> derivative;
 };
 
 #endif // MOMENTUMOPERATOR_H
