@@ -12,6 +12,7 @@ class Orbital {
 public:
     Orbital(int occ, int s);
     Orbital(const Orbital &orb);
+    Orbital &operator=(const Orbital &orb) { NOT_IMPLEMENTED_ABORT; }
     virtual ~Orbital() { clear(); }
     void clear();
 
@@ -61,6 +62,8 @@ public:
     friend class InitialGuessProjector;
     friend class MomentumOperator;
     friend class Potential;
+    friend class OrbitalAdder;
+    friend class OrbitalMultiplier;
 
 protected:
     int spin;
