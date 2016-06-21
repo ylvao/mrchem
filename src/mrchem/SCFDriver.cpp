@@ -22,11 +22,9 @@
 //#include "DIIS.h"
 
 #include "Molecule.h"
-//#include "Orbital.h"
 #include "OrbitalVector.h"
-//#include "Density.h"
 
-#include "InitialGuessProjector.h"
+#include "OrbitalProjector.h"
 
 //#include "SCFEnergy.h"
 //#include "DipoleMoment.h"
@@ -46,6 +44,7 @@
 #include "XCFunctional.h"
 #include "XCPotential.h"
 //#include "XCHessian.h"
+
 //#include "DipoleOperator.h"
 //#include "QuadrupoleOperator.h"
 //#include "AngularMomentumOperator.h"
@@ -204,7 +203,6 @@ void SCFDriver::setup() {
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
     phi = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
-//    rho = new Density(*MRA, *phi, dft_spin);
 
     // Defining gauge origin
     const double *COM = molecule->getCenterOfMass();
@@ -314,7 +312,6 @@ void SCFDriver::clear() {
 
     if (molecule != 0) delete molecule;
     if (phi != 0) delete phi;
-//    if (rho != 0) delete rho;
 
 //    if (helmholtz != 0) delete helmholtz;
 //    if (scf_kain != 0) delete scf_kain;
@@ -772,7 +769,7 @@ void SCFDriver::setupInitialGroundState() {
 //        phi->readOrbitals(initOrbs);
 //        runInitialGuess(*f_oper, F, *phi);
     } else if (scf_start == "gto") {
-        InitialGuessProjector IGP(*MRA, rel_prec);
+        OrbitalProjector IGP(*MRA, rel_prec);
         if (wf_restricted) {
             IGP(*phi, file_basis_set, file_mo_mat_a);
         } else {

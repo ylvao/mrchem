@@ -1,5 +1,5 @@
-#ifndef INITIALGUESSPROJECTOR_H
-#define INITIALGUESSPROJECTOR_H
+#ifndef ORBITALPROJECTOR_H
+#define ORBITALPROJECTOR_H
 
 #include <string>
 
@@ -8,12 +8,12 @@
 class OrbitalVector;
 class OrbitalExp;
 
-class InitialGuessProjector {
+class OrbitalProjector {
 public:
-    InitialGuessProjector(MultiResolutionAnalysis<3> &mra, double prec)
-        : G(mra),
-          Q(mra, prec) { }
-    virtual ~InitialGuessProjector() { }
+    OrbitalProjector(const MultiResolutionAnalysis<3> &mra, double prec)
+        : grid(mra),
+          project(mra, prec) { }
+    virtual ~OrbitalProjector() { }
 
 //    void readOrbitals(const OrbitalVector &orbs);
 //    void readVirtuals(const std::string &bf,
@@ -27,11 +27,11 @@ public:
                     const std::string &mo_a,
                     const std::string &mo_b);
 protected:
-    GridGenerator<3> G;
-    MWProjector<3> Q;
+    GridGenerator<3> grid;
+    MWProjector<3> project;
 
     OrbitalExp* readOrbitalExpansion(const std::string &bf,
                                      const std::string &mo);
 };
 
-#endif // INITIALGUESSPROJECTOR_H
+#endif // ORBITALPROJECTOR_H

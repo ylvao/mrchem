@@ -8,7 +8,6 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 add_library(initial_guess STATIC 
     AOBasis.cpp
     AOContraction.cpp
-    InitialGuessProjector.cpp
     Intgrl.cpp
     OrbitalExp.cpp
 )

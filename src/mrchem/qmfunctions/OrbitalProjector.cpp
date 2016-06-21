@@ -1,4 +1,4 @@
-#include "InitialGuessProjector.h"
+#include "OrbitalProjector.h"
 #include "GaussExp.h"
 #include "Intgrl.h"
 #include "OrbitalExp.h"
@@ -32,9 +32,9 @@ using namespace Eigen;
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
-void InitialGuessProjector::operator()(OrbitalVector &orbs,
-                                       const string &bf,
-                                       const string &mo) {
+void OrbitalProjector::operator()(OrbitalVector &orbs,
+                                  const string &bf,
+                                  const string &mo) {
     Timer rolex;
     rolex.restart();
     TelePrompter::printHeader(0, "Setting up occupied orbitals");
@@ -46,8 +46,8 @@ void InitialGuessProjector::operator()(OrbitalVector &orbs,
         Orbital &mwOrb = orbs.getOrbital(i);
         GaussExp<3> &gtOrb = moExp->getOrbital(i);
         mwOrb.clear();
-        mwOrb.real = G();
-        Q(*mwOrb.real, gtOrb);
+        mwOrb.real = this->grid();
+        this->project(*mwOrb.real, gtOrb);
         printout(0, setw(5) << i);
         printout(0, setw(5) << mwOrb.printSpin());
         printout(0, setw(5) << mwOrb.getOccupancy());
@@ -58,7 +58,7 @@ void InitialGuessProjector::operator()(OrbitalVector &orbs,
     TelePrompter::printFooter(0, rolex, 2);
 }
 
-void InitialGuessProjector::operator()(OrbitalVector &orbs,
+void OrbitalProjector::operator()(OrbitalVector &orbs,
                                        const string &bf,
                                        const string &mo_a,
                                        const string &mo_b) {
@@ -127,7 +127,7 @@ void InitialGuessProjector::operator()(OrbitalVector &orbs,
 //}
 
 
-OrbitalExp* InitialGuessProjector::readOrbitalExpansion(const string &bf, const string &mo) {
+OrbitalExp* OrbitalProjector::readOrbitalExpansion(const string &bf, const string &mo) {
     MatrixXd MO = MathUtils::readMatrixFile(mo);
     MatrixXd MO_T = MO.transpose();
 
