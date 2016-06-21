@@ -17,6 +17,7 @@ Potential::Potential(const MultiResolutionAnalysis<3> &mra)
       real(0),
       imag(0) {
 }
+
 Potential::~Potential() {
     if (this->real != 0) MSG_ERROR("Operator not properly deallocated");
     if (this->imag != 0) MSG_ERROR("Operator not properly deallocated");
@@ -57,14 +58,14 @@ Orbital* Potential::operator() (Orbital &orb_p) {
             tree_vec.push_back(this->real);
             tree_vec.push_back(orb_p.real);
             real_1 = this->mult(tree_vec);
-            real_vec.push_back(real_1);
+            real_vec.push_back(1.0, real_1);
         }
         if (this->imag != 0) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(this->imag);
             tree_vec.push_back(orb_p.real);
             imag_1 = this->mult(tree_vec);
-            imag_vec.push_back(imag_1);
+            imag_vec.push_back(1.0, imag_1);
         }
     }
     if (orb_p.imag != 0) {
@@ -73,14 +74,14 @@ Orbital* Potential::operator() (Orbital &orb_p) {
             tree_vec.push_back(this->real);
             tree_vec.push_back(orb_p.imag);
             imag_2 = this->mult(tree_vec);
-            imag_vec.push_back(imag_2);
+            imag_vec.push_back(1.0, imag_2);
         }
         if (this->imag != 0) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(this->imag);
             tree_vec.push_back(orb_p.imag);
             real_2 = this->mult(tree_vec);
-            real_vec.push_back(real_2);
+            real_vec.push_back(-1.0, real_2);
         }
     }
     if (real_vec.size() > 0) {
