@@ -62,6 +62,7 @@ public:
     friend class InitialGuessProjector;
     friend class MomentumOperator;
     friend class Potential;
+    friend class ExchangePotential;
     friend class OrbitalAdder;
     friend class OrbitalMultiplier;
 

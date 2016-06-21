@@ -498,16 +498,16 @@ VectorXd OrbitalVector::getNorms() const {
 //    }
 //}
 
-//void OrbitalVector::replaceOrbital(int i, Orbital **orb) {
-//    if (i < 0 or i >= this->size()) {
-//        MSG_ERROR("Orbital index out of bounds");
-//    }
-//    if (this->orbitals[i] != 0) {
-//        delete this->orbitals[i];
-//    }
-//    this->orbitals[i] = *orb;
-//    *orb = 0;
-//}
+void OrbitalVector::replaceOrbital(int i, Orbital **orb) {
+    if (i < 0 or i >= this->size()) {
+        MSG_ERROR("Orbital index out of bounds");
+    }
+    if (this->orbitals[i] != 0) {
+        delete this->orbitals[i];
+    }
+    this->orbitals[i] = *orb;
+    *orb = 0;
+}
 
 //void OrbitalVector::rotate(double prec, const MatrixXd &U) {
 //    boost::timer timer, totTimer;

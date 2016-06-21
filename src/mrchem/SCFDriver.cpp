@@ -12,7 +12,7 @@
 
 #include "CoreHamiltonian.h"
 #include "Hartree.h"
-//#include "HartreeFock.h"
+#include "HartreeFock.h"
 #include "DFT.h"
 
 //#include "GroundStateSolver.h"
@@ -41,7 +41,7 @@
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
 //#include "CoulombHessian.h"
-//#include "ExchangePotential.h"
+#include "ExchangePotential.h"
 //#include "ExchangeHessian.h"
 #include "XCFunctional.h"
 #include "XCPotential.h"
@@ -291,18 +291,18 @@ void SCFDriver::setup() {
         f_oper = new CoreHamiltonian(*T, *V);
     } else if (wf_method == "Hartree") {
         f_oper = new Hartree(*T, *V, *J);
-//    } else if (wf_method == "HF") {
-//        K = new ExchangePotential(rel_prec, *MRA, *rho);
-//        f_oper = new HartreeFock(*T, *V, *J, *K);
+    } else if (wf_method == "HF") {
+        K = new ExchangePotential(rel_prec, *MRA, *phi);
+        f_oper = new HartreeFock(*T, *V, *J, *K);
     } else if (wf_method == "DFT") {
         xcfun = new XCFunctional(dft_spin);
         for (int i = 0; i < dft_func_names.size(); i++) {
             xcfun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
         }
         XC = new XCPotential(rel_prec, *MRA, *xcfun, *phi);
-//        if (dft_x_fac > MachineZero) {
-//            K = new ExchangePotential(rel_prec, *MRA, *rho, dft_x_fac);
-//        }
+        if (dft_x_fac > MachineZero) {
+            K = new ExchangePotential(rel_prec, *MRA, *phi, dft_x_fac);
+        }
         f_oper = new DFT(*T, *V, *J, *XC, 0);
     } else {
         MSG_ERROR("Invalid method");
@@ -324,7 +324,7 @@ void SCFDriver::clear() {
     if (T != 0) delete T;
     if (V != 0) delete V;
     if (J != 0) delete J;
-//    if (K != 0) delete K;
+    if (K != 0) delete K;
     if (XC != 0) delete XC;
     if (f_mat != 0) delete f_mat;
     if (f_oper != 0) delete f_oper;

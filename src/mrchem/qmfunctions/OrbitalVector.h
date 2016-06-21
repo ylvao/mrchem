@@ -73,7 +73,7 @@ public:
     Orbital &getOrbital(int i);
 
 //    void replaceOrbitals(OrbitalVector &new_orbs);
-//    void replaceOrbital(int i, Orbital **orb);
+    void replaceOrbital(int i, Orbital **orb);
 
 //    int printTreeSizes() const;
 
