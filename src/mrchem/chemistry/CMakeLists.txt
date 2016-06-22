@@ -13,6 +13,8 @@ add_library(chemistry STATIC
 target_link_libraries(chemistry
     mrchem
     qmfunctions
+    properties
+    scf_solver
     mrcpp
     mwcore
     mwtrees

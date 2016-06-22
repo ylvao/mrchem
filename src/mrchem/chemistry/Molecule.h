@@ -14,7 +14,7 @@
 #include <string>
 #include <Eigen/Core>
 
-//#include "SCFEnergy.h"
+#include "SCFEnergy.h"
 #include "Nucleus.h"
 
 class DipoleMoment;
@@ -43,7 +43,7 @@ public:
     void printGeometry() const;
     void printProperties() const;
 
-//    SCFEnergy &getSCFEnergy() { return this->energy; }
+    SCFEnergy &getSCFEnergy() { return this->energy; }
     const double *getCenterOfMass() const { return this->COM; }
 
     void initDipoleMoment(const double *o = 0);
@@ -68,7 +68,7 @@ protected:
 
     // Properties
     double COM[3];
-//    SCFEnergy energy;
+    SCFEnergy energy;
     DipoleMoment *dipole;
     QuadrupoleMoment *quadrupole;
     NMRShielding **nmrShielding;

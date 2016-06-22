@@ -26,7 +26,7 @@
 
 #include "OrbitalProjector.h"
 
-//#include "SCFEnergy.h"
+#include "SCFEnergy.h"
 //#include "DipoleMoment.h"
 //#include "QuadrupoleMoment.h"
 //#include "Polarizability.h"
@@ -284,7 +284,6 @@ void SCFDriver::setup() {
     V = new NuclearPotential(rel_prec, *MRA, *nuclei);
     J = new CoulombPotential(rel_prec, *MRA, *phi);
 
-
     if (wf_method == "Core") {
         f_oper = new CoreHamiltonian(*T, *V);
     } else if (wf_method == "Hartree") {
@@ -341,8 +340,7 @@ GroundStateSolver* SCFDriver::setupInitialGuessSolver() {
 }
 
 GroundStateSolver* SCFDriver::setupGroundStateSolver() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
+    if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
 //    GroundStateSolver *gss = new GroundStateSolver(*helmholtz, scf_kain);
 //    gss->setMaxIterations(scf_max_iter);
@@ -350,6 +348,7 @@ GroundStateSolver* SCFDriver::setupGroundStateSolver() {
 //    gss->setThreshold(scf_orbital_thrs, scf_property_thrs);
 //    gss->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
 //    return gss;
+    return 0;
 }
 
 LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
@@ -455,7 +454,7 @@ void SCFDriver::run() {
         *f_mat = (*f_oper)(*phi, *phi);
         f_oper->clear();
     }
-//    calcGroundStateProperties();
+    calcGroundStateProperties();
 //    if (converged) {
 //        if (run_el_field_rsp or run_mag_field_rsp) {
 //            if (rsp_localize) {
@@ -487,7 +486,7 @@ void SCFDriver::run() {
     println(0, *f_mat);
     TelePrompter::printSeparator(0, '=', 2);
     molecule->printGeometry();
-//    molecule->printProperties();
+    molecule->printProperties();
 }
 
 bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &orbs) {
@@ -508,18 +507,18 @@ bool SCFDriver::runGroundState() {
     if (f_oper == 0) MSG_ERROR("Fock operator not initialized");
     if (f_mat == 0) MSG_ERROR("Fock matrix not initialized");
 
-    NOT_IMPLEMENTED_ABORT;
-//    GroundStateSolver *gss = setupGroundStateSolver();
+    GroundStateSolver *gss = setupGroundStateSolver();
 //    gss->setup(*f_oper, *f_mat, *phi);
 //    bool converged = gss->optimize();
+    bool converged = true;
 //    gss->clear();
 
 //    if (scf_write_orbitals) {
-//        orbitals->writeOrbitals(file_final_orbitals);
+//        phi->writeOrbitals(file_final_orbitals);
 //    }
 
 //    delete gss;
-//    return converged;
+    return converged;
 }
 
 void SCFDriver::runElectricFieldResponse(double omega) {
@@ -671,12 +670,11 @@ void SCFDriver::runMagneticMomentResponse(const string &type, int L) {
 }
 
 void SCFDriver::calcGroundStateProperties() {
-    NOT_IMPLEMENTED_ABORT;
-//    f_oper->setup();
-//    SCFEnergy &energy = molecule->getSCFEnergy();
-//    energy.compute(*nuclei);
-//    energy.compute(*f_oper, *f_mat, *phi);
-//    f_oper->clear();
+    f_oper->setup(rel_prec);
+    SCFEnergy &energy = molecule->getSCFEnergy();
+    energy.compute(*nuclei);
+    energy.compute(*f_oper, *f_mat, *phi);
+    f_oper->clear();
 
 //    if (run_dipole_moment) {
 //        DipoleMoment &dipole = molecule->getDipoleMoment();

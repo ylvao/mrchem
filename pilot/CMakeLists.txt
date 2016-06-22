@@ -10,6 +10,8 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/chemistry)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/initial_guess)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/qmfunctions)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/qmoperators)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/scf_solver)
+include_directories (${CMAKE_SOURCE_DIR}/src/mrchem/properties)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 
@@ -26,6 +28,8 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
         initial_guess
         qmfunctions
         qmoperators
+        scf_solver
+        properties
         mrcpp 
         mwanalytic 
         mwcore

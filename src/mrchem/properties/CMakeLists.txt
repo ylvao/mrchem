@@ -5,17 +5,16 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwtrees)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
-add_library(scf_solver STATIC 
-    HelmholtzOperatorSet.cpp
+add_library(properties STATIC 
+    SCFEnergy.cpp
 )
 
-target_link_libraries(scf_solver
+target_link_libraries(properties
     mrchem
     chemistry
     initial_guess
     qmfunctions
     qmoperators
-    properties
     mrcpp
     mwanalytic
     mwcore
@@ -25,7 +24,7 @@ target_link_libraries(scf_solver
     xcfun
 )
 
-install(TARGETS scf_solver
+install(TARGETS properties
         ARCHIVE DESTINATION lib
         CONFIGURATIONS Debug-devel Release-devel
         )

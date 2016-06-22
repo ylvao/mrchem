@@ -428,11 +428,10 @@ void Molecule::printGeometry() const {
 }
 
 void Molecule::printProperties() const {
-    NOT_IMPLEMENTED_ABORT;
 //    if (this->nmrShielding == 0) MSG_ERROR("Properties not allocated");
 //    if (this->spinSpinCoupling == 0) MSG_ERROR("Properties not allocated");
 
-//    println(0, this->energy);
+    println(0, this->energy);
 //    if (this->dipole != 0) {
 //        println(0, *this->dipole);
 //    }
