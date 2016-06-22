@@ -66,6 +66,7 @@ public:
     friend class OrbitalAdder;
     friend class OrbitalMultiplier;
     friend class OrbitalProjector;
+    friend class HelmholtzOperatorSet;
 
 protected:
     int spin;

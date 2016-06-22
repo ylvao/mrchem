@@ -4,6 +4,7 @@
 #include <vector>
 #include <Eigen/Core>
 
+#include "OrbitalAdder.h"
 #include "TelePrompter.h"
 
 class HelmholtzOperatorSet;
@@ -14,7 +15,7 @@ class Orbital;
 
 class SCF {
 public:
-    SCF(HelmholtzOperatorSet &h);
+    SCF(const MultiResolutionAnalysis<3> &mra, HelmholtzOperatorSet &h);
     virtual ~SCF();
 
     double getOrbitalPrecision() const { return this->orbPrec[0]; }
@@ -42,6 +43,8 @@ protected:
     std::vector<double> property;
 
     HelmholtzOperatorSet *helmholtz;// Pointer to external object, do not delete!
+    OrbitalAdder add;
+//    OrbitalRotator rotate;
 
     bool needLocalization() const;
     bool needDiagonalization() const;
@@ -52,8 +55,7 @@ protected:
     void printUpdate(const std::string &name, double P, double dP) const;
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
 
-    void printOrbitals(const Eigen::MatrixXd &f_mat, const OrbitalVector &phi) const;
-    void printOrbitals(const OrbitalVector &phi) const;
+    void printOrbitals(const Eigen::MatrixXd &F, const OrbitalVector &phi) const;
     void printConvergence(bool converged) const;
     void printCycle() const;
     void printTimer(double t) const;
@@ -63,17 +65,17 @@ protected:
     bool accelerate(Accelerator *acc,
                     OrbitalVector *phi,
                     OrbitalVector *d_phi,
-                    Eigen::MatrixXd *f_mat = 0,
-                    Eigen::MatrixXd *df_mat = 0);
+                    Eigen::MatrixXd *F = 0,
+                    Eigen::MatrixXd *dF = 0);
 
     void applyHelmholtzOperators(OrbitalVector &phi_np1,
-                                 Eigen::MatrixXd &f_mat_n,
                                  OrbitalVector &phi_n,
+                                 Eigen::MatrixXd &F_n,
                                  bool adjoint = false);
 
     virtual Orbital* getHelmholtzArgument(int i,
                                           OrbitalVector &phi,
-                                          Eigen::MatrixXd &f_mat,
+                                          Eigen::MatrixXd &F,
                                           bool adjoint) = 0;
 
     Orbital* calcMatrixPart(int i,

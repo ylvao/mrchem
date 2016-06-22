@@ -3,18 +3,19 @@
 #include "FockOperator.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
-#include "eigen_disable_warnings.h"
+#include "Timer.h"
 
 using namespace std;
 using namespace Eigen;
 
-SCF::SCF(HelmholtzOperatorSet &h)
+SCF::SCF(const MultiResolutionAnalysis<3> &mra, HelmholtzOperatorSet &h)
     : nIter(0),
       maxIter(-1),
       iterPerRotation(0),
       orbThrs(-1.0),
       propThrs(-1.0),
-      helmholtz(&h) {
+      helmholtz(&h),
+      add(mra) {
     this->orbPrec[0] = -1.0;
     this->orbPrec[1] = -1.0;
     this->orbPrec[2] = -1.0;
@@ -40,12 +41,12 @@ void SCF::adjustPrecision(double error) {
     this->orbPrec[0] = min(10.0*error*error, this->orbPrec[0]);
     this->orbPrec[0] = max(this->orbPrec[0], this->orbPrec[2]);
 
-    printout(0, endl);
+    TelePrompter::printSeparator(0, '=');
     TelePrompter::printDouble(0, "Current precision", this->orbPrec[0]);
-    printout(0, endl);
+    TelePrompter::printSeparator(0, '-');
     TelePrompter::printDouble(0, "Orbital threshold", this->orbThrs);
     TelePrompter::printDouble(0, "Property threshold", this->propThrs);
-    printout(0, endl);
+    TelePrompter::printSeparator(0, '=', 2);
 }
 
 void SCF::resetPrecision() {
@@ -107,66 +108,26 @@ double SCF::getUpdate(const vector<double> &vec, int i, bool absPrec) const {
     return E_diff;
 }
 
-void SCF::printOrbitals(const MatrixXd &f_mat, const OrbitalVector &phi) const {
-    NOT_IMPLEMENTED_ABORT;
-//    println(0, endl);
-//    println(0, "------------------------------------------------------------");
-//    println(0, "Orb    F(i,i)         Error         nNodes  Spin  Occ  Done ");
-//    println(0, "------------------------------------------------------------");
+void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
+    TelePrompter::printHeader(0, "Orbitals");
+    println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
+    TelePrompter::printSeparator(0, '-');
 
-//    int nOrbs = phi.size();
-//    for (int i = 0; i < nOrbs; i++) {
-//        const Orbital &phi_i = phi.getOrbital(i);
-
-//        char sp = 'u';
-//        if (phi_i.getSpin() == Orbital::Alpha) sp = 'a';
-//        if (phi_i.getSpin() == Orbital::Beta) sp = 'b';
-
-//        printout(0, setw(3) << i);
-//        printout(0, " " << setw(13) << f_mat(i,i));
-//        printout(0, " " << setw(13) << phi_i.getError());
-//        printout(0, " " << setw(10) << phi_i.getNNodes());
-//        printout(0, setw(5) << sp);
-//        printout(0, setw(5) << phi_i.getOccupancy());
-//        printout(0, setw(5) << phi_i.isConverged(getOrbitalThreshold()) << endl);
-//    }
-//    printout(0, "------------------------------");
-//    println(0,  "------------------------------");
-//    printout(0, "Total error:                     ");
-//    printout(0, setw(16) << phi.calcTotalError() << "     ");
-//    printout(0, setw(3) << phi.isConverged(getOrbitalThreshold()) << endl);
-//    printout(0, "------------------------------");
-//    println(0,  "------------------------------");
-//    printout(0, "\n");
-}
-
-void SCF::printOrbitals(const OrbitalVector &phi) const {
-    NOT_IMPLEMENTED_ABORT;
-//    TelePrompter::printHeader(0, "Orbital Vector");
-//    println(0, "Orb    Norm           Error         nNodes  Spin  Occ  Done ");
-//    TelePrompter::printSeparator(0, '-');
-
-//    int nOrbs = phi.size();
-//    for (int i = 0; i < nOrbs; i++) {
-//        const Orbital &phi_i = phi.getOrbital(i);
-
-//        char sp = 'u';
-//        if (phi_i.getSpin() == Orbital::Alpha) sp = 'a';
-//        if (phi_i.getSpin() == Orbital::Beta) sp = 'b';
-
-//        printout(0, setw(3) << i);
-//        printout(0, " " << setw(13) << sqrt(phi_i.getSquareNorm()));
-//        printout(0, " " << setw(13) << phi_i.getError());
-//        printout(0, " " << setw(10) << phi_i.getNNodes());
-//        printout(0, setw(5) << sp);
-//        printout(0, setw(5) << phi_i.getOccupancy());
-//        printout(0, setw(5) << phi_i.isConverged(getOrbitalThreshold()) << endl);
-//    }
-//    TelePrompter::printSeparator(0, "-");
-//    printout(0, "Total error:                     ");
-//    printout(0, setw(16) << phi.calcTotalError() << "     ");
-//    printout(0, setw(3) << phi.isConverged(getOrbitalThreshold()) << endl);
-//    TelePrompter::printSeparator(0, "-", 2);
+    for (int i = 0; i < phi.size(); i++) {
+        const Orbital &phi_i = phi.getOrbital(i);
+        printout(0, setw(3) << i);
+        printout(0, " " << setw(13) << F(i,i));
+        printout(0, " " << setw(13) << phi_i.getError());
+        printout(0, " " << setw(10) << phi_i.getNNodes());
+        printout(0, setw(5) << phi_i.printSpin());
+        printout(0, setw(5) << phi_i.getOccupancy());
+        printout(0, setw(5) << phi_i.isConverged(getOrbitalThreshold()) << endl);
+    }
+    TelePrompter::printSeparator(0, '-');
+    printout(0, "Total error:                     ");
+    printout(0, setw(16) << phi.calcTotalError() << "     ");
+    printout(0, setw(3) << phi.isConverged(getOrbitalThreshold()) << endl);
+    TelePrompter::printSeparator(0, '=', 2);
 }
 
 void SCF::printConvergence(bool converged) const {
@@ -239,7 +200,7 @@ void SCF::printMatrix(int level, const MatrixXd &M, const char &name, int pr) co
 }
 
 bool SCF::accelerate(Accelerator *acc, OrbitalVector *phi, OrbitalVector *d_phi,
-                     MatrixXd *f_mat, MatrixXd *df_mat) {
+                     MatrixXd *F, MatrixXd *dF) {
     NOT_IMPLEMENTED_ABORT;
 //    if (acc != 0) {
 //        if (phi == 0) MSG_ERROR("Uninitialized orbitals");
@@ -260,89 +221,71 @@ bool SCF::accelerate(Accelerator *acc, OrbitalVector *phi, OrbitalVector *d_phi,
  * the norms of the new orbitals (deviation from one).
  */
 void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
-                                  Eigen::MatrixXd &f_mat_n,
                                   OrbitalVector &phi_n,
+                                  MatrixXd &F_n,
                                   bool adjoint) {
-    NOT_IMPLEMENTED_ABORT;
-//    Timer timer;
-//    timer.restart();
+    Timer timer;
+    timer.restart();
 
-//    TelePrompter::printHeader(0, "Calculating Orbital Updates");
-//    println(0, "Orb    OrbNorm       NormDiff       nNodes         Timing   ");
+    TelePrompter::printHeader(0, "Applying Helmholtz Operators");
+    println(0, " Orb    OrbNorm       NormDiff       nNodes         Timing   ");
 
-//    phi_np1.clear();
-//    for (int i = 0; i < phi_n.size(); i++) {
-//        Timer timer;
-//        timer.restart();
-//        Orbital &nPhi_i = phi_n.getOrbital(i);
-//        double norm_n = nPhi_i.getSquareNorm();
-//        if (norm_n < 0.0) {
-//            norm_n = 0.0;
-//        } else {
-//            norm_n = sqrt(norm_n);
-//        }
+    HelmholtzOperatorSet &H = *this->helmholtz;
+    H.setPrecision(getOrbitalPrecision());
 
-//        HelmholtzOperator &H = this->helmholtz->getOperator(i);
-//        Orbital *greenArgument = getHelmholtzArgument(i, phi_n, f_mat_n, adjoint);
+    phi_np1.clear();
+    for (int i = 0; i < phi_n.size(); i++) {
+        Timer timer;
+        timer.restart();
+        Orbital &nPhi_i = phi_n.getOrbital(i);
+        Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
-//        Orbital *np1Phi_i = new Orbital(nPhi_i);
-//        np1Phi_i->setRelPrec(getOrbitalPrecision());
-//        np1Phi_i->setAbsPrec(true);
-//        greenOper.apply(*np1Phi_i, *greenArgument);
-//        delete greenArgument;
+        Orbital *arg_i = getHelmholtzArgument(i, phi_n, F_n, adjoint);
+        H(i, np1Phi_i, *arg_i);
+        delete arg_i;
 
-//        int nNodes = np1Phi_i->getNNodes();
-//        double norm_np1 = sqrt(np1Phi_i->getSquareNorm());
-//        double dNorm_n = fabs(norm_np1-norm_n);
+        int nNodes = np1Phi_i.getNNodes();
+        double norm_n = sqrt(nPhi_i.getSquareNorm());
+        double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
+        double dNorm_n = fabs(norm_np1-norm_n);
 
-//        printout(0, setw(3) << i);
-//        printout(0, " " << setw(13) << norm_np1);
-//        printout(0, " " << setw(13) << dNorm_n);
-//        printout(0, " " << setw(10) << nNodes);
-//        printout(0, setw(18) << timer.elapsed() << endl);
-
-//        phi_np1.replaceOrbital(i, &np1Phi_i);
-//    }
-//    TelePrompter::printFooter(0, timer, 2);
+        printout(0, setw(3) << i);
+        printout(0, " " << setw(13) << norm_np1);
+        printout(0, " " << setw(13) << dNorm_n);
+        printout(0, " " << setw(9) << nNodes);
+        printout(0, setw(18) << timer.getWallTime() << endl);
+    }
+    TelePrompter::printFooter(0, timer, 2);
 }
 
 Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
-    NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
-//    vector<double> expCoefs;
-//    vector<FunctionTree<3> *> expOrbs;
+    vector<double> coefs;
+    vector<Orbital *> orbs;
 
-//    int nOrbs = phi.size();
-//    for (int j = 0; j < nOrbs; j++) {
-//        double coef = M(i,j);
-//        // Linear scaling screening inserted here
-//        if (fabs(coef) > MachineZero) {
-//            Orbital &orb_j = phi.getOrbital(j);
-//            double norm_j = orb_j.getSquareNorm();
-//            if (norm_j > 0.0) {
-//                norm_j = sqrt(norm_j);
-//            } else {
-//                norm_j = 0.0;
-//            }
-//            if (norm_j > 0.01*getOrbitalPrecision()) {
-//                expCoefs.push_back(coef);
-//                expOrbs.push_back(&orb_j);
-//            }
-//        }
-//    }
+    int nOrbs = phi.size();
+    for (int j = 0; j < nOrbs; j++) {
+        double coef = M(i,j);
+        // Linear scaling screening inserted here
+        if (fabs(coef) > MachineZero) {
+            Orbital &phi_j = phi.getOrbital(j);
+            double norm_j = sqrt(phi_j.getSquareNorm());
+            if (norm_j > 0.01*getOrbitalPrecision()) {
+                coefs.push_back(coef);
+                orbs.push_back(&phi_j);
+            }
+        }
+    }
 
-//    Orbital *orb = 0;
-//    if (expOrbs.size() > 0) {
-//        timer.restart();
-//        Orbital &orb_i = phi.getOrbital(i);
-//        orb = new Orbital(orb_i);
-//        orb->setRelPrec(getOrbitalPrecision());
-//        orb->setAbsPrec(true);
-//        orb->add(expCoefs, expOrbs, -1);
-//        double time = timer.elapsed();
-//        int nNodes = orb->getNNodes();
-//        TelePrompter::printTree(2, "Added matrix part", nNodes, time);
-//    }
-//    return orb;
+    Orbital &phi_i = phi.getOrbital(i);
+    Orbital *result = new Orbital(phi_i);
+    if (orbs.size() > 0) {
+        Timer timer;
+        timer.restart();
+        this->add(*result, coefs, orbs);
+        double time = timer.getWallTime();
+        int nNodes = result->getNNodes();
+        TelePrompter::printTree(2, "Added matrix part", nNodes, time);
+    }
+    return result;
 }
 

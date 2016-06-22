@@ -17,8 +17,10 @@
 using namespace std;
 using namespace Eigen;
 
-GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h, Accelerator *a)
-        : SCF(h),
+GroundStateSolver::GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
+                                     HelmholtzOperatorSet &h,
+                                     Accelerator *a)
+        : SCF(mra, h),
           fOper_n(0),
           fOper_np1(0),
           orbitals_n(0),
@@ -124,63 +126,68 @@ bool GroundStateSolver::optimize() {
 }
 
 bool GroundStateSolver::optimizeOrbitals() {
-    NOT_IMPLEMENTED_ABORT;
-//    boost::timer scfTimer;
-//    double err_o = this->phi_n->getErrors().maxCoeff();
-//    double err_t = 1.0;
+    MatrixXd &F = *this->fMat_n;
+    FockOperator &fock = *this->fOper_n;
+    OrbitalVector &phi_n = *this->orbitals_n;
+    OrbitalVector &phi_np1 = *this->orbitals_np1;
+    OrbitalVector &dPhi_n = *this->dOrbitals_n;
 
-//    adjustPrecision(err_o);
-//    this->fOper_n->setup(getOrbitalPrecision());
-//    *this->fMat_n = (*this->fOper_n)(*this->phi_n, *this->phi_n);
+    double err_t = 1.0;
+    double err_o = phi_n.getErrors().maxCoeff();
+    adjustPrecision(err_o);
 
-//    bool converged = false;
-//    while(this->nIter++ < this->maxIter or this->maxIter < 0) {
-//        scfTimer.restart();
-//        printCycle();
-//        adjustPrecision(err_o);
+    fock.setup(getOrbitalPrecision());
+    F = fock(phi_n, phi_n);
+
+    bool converged = false;
+    while(this->nIter++ < this->maxIter or this->maxIter < 0) {
+        Timer timer;
+        timer.restart();
+        printCycle();
+        adjustPrecision(err_o);
 
 //        printMatrix(1, *this->fMat_n, 'F');
-//        rotate(*this->phi_n, *this->fMat_n, this->fOper_n);
+//        rotate(*this->orbitals_n, *this->fMat_n, this->fOper_n);
 //        printMatrix(1, *this->fMat_n, 'F');
 
-//        double prop = calcProperty();
-//        this->property.push_back(prop);
+        double prop = calcProperty();
+        this->property.push_back(prop);
 
-//        this->helmholtz->initialize(this->fMat_n->diagonal());
-//        applyHelmholtzOperators(*this->phi_np1, *this->fMat_n, *this->phi_n);
-//        this->phi_np1->orthonormalize(getOrbitalPrecision());
-//        calcOrbitalUpdates();
-//        this->phi_np1->clear();
+        this->helmholtz->initialize(F.diagonal());
+        applyHelmholtzOperators(phi_np1, phi_n, F);
+//        this->rotate.orthonormalize(phi_n);
+        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
+        phi_np1.clear();
 
 //        accelerate(this->acc, this->phi_n, this->dPhi_n);
 //        printTreeSizes();
 
-//        err_o = calcOrbitalError();
-//        err_t = calcTotalError();
-//        this->orbError.push_back(err_t);
+        err_o = calcOrbitalError();
+        err_t = calcTotalError();
+        this->orbError.push_back(err_t);
 
-//        this->phi_n->addInPlace(*this->dPhi_n);
-//        this->phi_n->orthonormalize(getOrbitalPrecision());
-//        this->phi_n->setErrors(this->dPhi_n->getNorms());
+        this->add.inPlace(phi_n, 1.0, dPhi_n);
+        phi_n.normalize();
+        phi_n.setErrors(dPhi_n.getNorms());
 
-//        this->fOper_n->clear();
-//        this->dPhi_n->clear();
+        fock.clear();
+        dPhi_n.clear();
 
-//        this->fOper_n->setup(getOrbitalPrecision());
-//        *this->fMat_n = (*this->fOper_n)(*this->phi_n, *this->phi_n);
+        fock.setup(getOrbitalPrecision());
+        F = fock(phi_n, phi_n);
 
-//        printOrbitals(*this->fMat_n, *this->phi_n);
-//        printProperty();
-//        printTimer(scfTimer.elapsed());
+        printOrbitals(F, phi_n);
+        printProperty();
+        printTimer(timer.getWallTime());
 
-//        if (err_o < getOrbitalThreshold()) {
-//            converged = true;
-//            break;
-//        }
-//    }
+        if (err_o < getOrbitalThreshold()) {
+            converged = true;
+            break;
+        }
+    }
 //    if (this->acc != 0) this->acc->clear();
-//    if (this->fOper_n != 0) this->fOper_n->clear();
-//    return converged;
+    fock.clear();
+    return converged;
 }
 
 bool GroundStateSolver::optimizeEnergy() {
@@ -249,54 +256,53 @@ bool GroundStateSolver::optimizeEnergy() {
 }
 
 double GroundStateSolver::calcProperty() {
-    NOT_IMPLEMENTED_ABORT;
-//    SCFEnergy scfEnergy;
-//    scfEnergy.compute(*this->fOper_n, *this->fMat_n, *this->phi_n);
-//    this->energy.push_back(scfEnergy);
-//    return scfEnergy.getElectronicEnergy();
+    MatrixXd &F = *this->fMat_n;
+    FockOperator &fock = *this->fOper_n;
+    OrbitalVector &phi = *this->orbitals_n;
+
+    SCFEnergy scfEnergy;
+    scfEnergy.compute(fock, F, phi);
+    this->energy.push_back(scfEnergy);
+    return scfEnergy.getElectronicEnergy();
 }
 
 double GroundStateSolver::calcTotalError() const {
-    NOT_IMPLEMENTED_ABORT;
-//    VectorXd errors = this->dPhi_n->getNorms();
-//    return sqrt(errors.dot(errors));
+    VectorXd errors = this->dOrbitals_n->getNorms();
+    return sqrt(errors.dot(errors));
 }
 
 double GroundStateSolver::calcOrbitalError() const {
-    NOT_IMPLEMENTED_ABORT;
-//    return this->dPhi_n->getNorms().maxCoeff();
+    return this->dOrbitals_n->getNorms().maxCoeff();
 }
 
 double GroundStateSolver::calcPropertyError() const {
-    NOT_IMPLEMENTED_ABORT;
-//    int iter = this->property.size();
-//    return fabs(getUpdate(this->property, iter, false));
+    int iter = this->property.size();
+    return fabs(getUpdate(this->property, iter, false));
 }
 
-void GroundStateSolver::rotate(OrbitalVector &phi,
-                               MatrixXd &f_mat,
-                               FockOperator *f_oper) {
-    NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
+//void GroundStateSolver::rotate(OrbitalVector &phi,
+//                               MatrixXd &f_mat,
+//                               FockOperator *f_oper) {
+//        NOT_IMPLEMENTED_ABORT;
+//    Timer timer;
 //    timer.restart();
-//    println(1,"                                                            ");
-//    println(1,"--------------------- Rotating Orbitals --------------------");
+//    TelePrompter::printHeader(1,"Rotating Orbitals");
+
 //    MatrixXd U;
 //    if (needLocalization()) {
-//        U = orbs.localize(getOrbitalPrecision(), &f_mat);
+//        U = phi.localize(getOrbitalPrecision(), &f_mat);
 //    } else if (needDiagonalization()) {
-//        U = orbs.diagonalize(getOrbitalPrecision(), &f_mat);
+//        U = phi.diagonalize(getOrbitalPrecision(), &f_mat);
 //        if (this->acc != 0) this->acc->clear();
 //    } else {
-//        U = orbs.orthonormalize(getOrbitalPrecision(), &f_mat);
+//        U = phi.orthonormalize(getOrbitalPrecision(), &f_mat);
 //    }
 
 //    if (f_oper != 0) {
 //        f_oper->rotate(getOrbitalPrecision(), U);
 //    }
-//    printout(1, "---------------- Elapsed time: " << timer.elapsed());
-//    println(1, " -----------------\n");
-}
+//    TelePrompter::printFooter(1, timer, 2);
+//}
 
 void GroundStateSolver::calcOrbitalUpdates() {
     NOT_IMPLEMENTED_ABORT;
@@ -403,73 +409,65 @@ void GroundStateSolver::calcFockMatrixUpdate() {
  */
 Orbital* GroundStateSolver::getHelmholtzArgument(int i,
                                                  OrbitalVector &phi,
-                                                 MatrixXd &f_mat,
+                                                 MatrixXd &F,
                                                  bool adjoint) {
-    NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
-//    double coef = -1.0/(2.0*pi);
-//    vector<double> coefs;
-//    vector<FunctionTree<3> *> trees;
+    FockOperator &fock = *this->fOper_n;
 
-//    Orbital &orb_i = orbs.getOrbital(i);
+    double coef = -1.0/(2.0*pi);
+    Orbital &phi_i = phi.getOrbital(i);
 
-//    this->fOper_n->setMaxApplyDepth(orb_i.getDepth() + 0);
-//    Orbital *part_1 = this->fOper_n->applyPotential(orb_i);
-//    this->fOper_n->setMaxApplyDepth(-1);
-//    if (part_1 != 0) {
-//        coefs.push_back(coef);
-//        trees.push_back(part_1);
-//    }
+    MatrixXd L = this->helmholtz->getLambda().asDiagonal();
+    MatrixXd LmF = L - F;
 
-//    MatrixXd L = this->helmholtz->getLambda().asDiagonal();
-//    MatrixXd LmF = L - f_mat;
-//    Orbital *part_2 = calcMatrixPart(i, LmF, orbs);
-//    if (part_2 != 0) {
-//        coefs.push_back(coef);
-//        trees.push_back(part_2);
-//    }
+    Orbital *part_1 = fock.applyPotential(phi_i);
+    Orbital *part_2 = calcMatrixPart(i, LmF, phi);
 
-//    timer.restart();
-//    Orbital *argument = new Orbital(orb_i);
-//    argument->add(coefs, trees, 0);
-//    argument->crop(getOrbitalPrecision());
-//    double time = timer.elapsed();
-//    int nNodes = argument->getNNodes();
-//    TelePrompter::printTree(2, "Added arguments", nNodes, time);
+    if (part_1 == 0) part_1 = new Orbital(phi_i);
+    if (part_2 == 0) part_2 = new Orbital(phi_i);
 
-//    if (part_1 != 0) delete part_1;
-//    if (part_2 != 0) delete part_2;
+    Timer timer;
+    timer.restart();
+    Orbital *arg = new Orbital(phi_i);
+    this->add(*arg, coef, *part_1, coef, *part_2);
 
-//    return argument;
+    double time = timer.getWallTime();
+    int nNodes = arg->getNNodes();
+    TelePrompter::printTree(2, "Added arguments", nNodes, time);
+
+    if (part_1 != 0) delete part_1;
+    if (part_2 != 0) delete part_2;
+
+    return arg;
 }
 
 void GroundStateSolver::printProperty() const {
-    NOT_IMPLEMENTED_ABORT;
-//    SCFEnergy scf_0, scf_1;
-//    int iter = this->energy.size();
-//    if (iter > 1) scf_0 = this->energy[iter - 2];
-//    if (iter > 0) scf_1 = this->energy[iter - 1];
+    SCFEnergy scf_0, scf_1;
+    int iter = this->energy.size();
+    if (iter > 1) scf_0 = this->energy[iter - 2];
+    if (iter > 0) scf_1 = this->energy[iter - 1];
 
-//    double T_0 = scf_0.getKineticEnergy();
-//    double T_1 = scf_1.getKineticEnergy();
-//    double V_0 = scf_0.getElectronNuclearEnergy();
-//    double V_1 = scf_1.getElectronNuclearEnergy();
-//    double J_0 = scf_0.getElectronElectronEnergy();
-//    double J_1 = scf_1.getElectronElectronEnergy();
-//    double K_0 = scf_0.getExchangeEnergy();
-//    double K_1 = scf_1.getExchangeEnergy();
-//    double XC_0 = scf_0.getExchangeCorrelationEnergy();
-//    double XC_1 = scf_1.getExchangeCorrelationEnergy();
-//    double E_0 = scf_0.getElectronicEnergy();
-//    double E_1 = scf_1.getElectronicEnergy();
+    double T_0 = scf_0.getKineticEnergy();
+    double T_1 = scf_1.getKineticEnergy();
+    double V_0 = scf_0.getElectronNuclearEnergy();
+    double V_1 = scf_1.getElectronNuclearEnergy();
+    double J_0 = scf_0.getElectronElectronEnergy();
+    double J_1 = scf_1.getElectronElectronEnergy();
+    double K_0 = scf_0.getExchangeEnergy();
+    double K_1 = scf_1.getExchangeEnergy();
+    double XC_0 = scf_0.getExchangeCorrelationEnergy();
+    double XC_1 = scf_1.getExchangeCorrelationEnergy();
+    double E_0 = scf_0.getElectronicEnergy();
+    double E_1 = scf_1.getElectronicEnergy();
 
-//    println(0, "              Energy                     Update        Done ");
-//    printUpdate(" Kinetic  ",  T_1,  T_1 -  T_0);
-//    printUpdate(" N-E      ",  V_1,  V_1 -  V_0);
-//    printUpdate(" Coulomb  ",  J_1,  J_1 -  J_0);
-//    printUpdate(" Exchange ",  K_1,  K_1 -  K_0);
-//    printUpdate(" X-C      ", XC_1, XC_1 - XC_0);
-//    printUpdate(" Total    ",  E_1,  E_1 -  E_0);
+    TelePrompter::printHeader(0, "                    Energy                 Update      Done ");
+    printUpdate(" Kinetic  ",  T_1,  T_1 -  T_0);
+    printUpdate(" N-E      ",  V_1,  V_1 -  V_0);
+    printUpdate(" Coulomb  ",  J_1,  J_1 -  J_0);
+    printUpdate(" Exchange ",  K_1,  K_1 -  K_0);
+    printUpdate(" X-C      ", XC_1, XC_1 - XC_0);
+    TelePrompter::printSeparator(0, '-');
+    printUpdate(" Total    ",  E_1,  E_1 -  E_0);
+    TelePrompter::printSeparator(0, '=');
 }
 
 /** Prints the number of trees and nodes kept in the solver at the given moment */

@@ -10,7 +10,9 @@ class Accelerator;
 
 class GroundStateSolver : public SCF {
 public:
-    GroundStateSolver(HelmholtzOperatorSet &h, Accelerator *a = 0);
+    GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
+                      HelmholtzOperatorSet &h,
+                      Accelerator *a = 0);
     virtual ~GroundStateSolver();
 
     void setup(FockOperator &f_oper, Eigen::MatrixXd &f_mat, OrbitalVector &phi);
@@ -39,10 +41,6 @@ protected:
 
     void setupUpdates();
     void clearUpdates();
-
-    void rotate(OrbitalVector &phi,
-                Eigen::MatrixXd &f_mat,
-                FockOperator *f_oper = 0);
 
     void calcOrbitalUpdates();
     void calcFockMatrixUpdate();
