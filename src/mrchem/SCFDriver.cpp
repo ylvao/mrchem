@@ -285,12 +285,12 @@ void SCFDriver::setup() {
     J = new CoulombPotential(rel_prec, *MRA, *phi);
 
     if (wf_method == "Core") {
-        f_oper = new CoreHamiltonian(*T, *V);
+        f_oper = new CoreHamiltonian(*MRA, *T, *V);
     } else if (wf_method == "Hartree") {
-        f_oper = new Hartree(*T, *V, *J);
+        f_oper = new Hartree(*MRA, *T, *V, *J);
     } else if (wf_method == "HF") {
         K = new ExchangePotential(rel_prec, *MRA, *phi);
-        f_oper = new HartreeFock(*T, *V, *J, *K);
+        f_oper = new HartreeFock(*MRA, *T, *V, *J, *K);
     } else if (wf_method == "DFT") {
         xcfun = new XCFunctional(dft_spin);
         for (int i = 0; i < dft_func_names.size(); i++) {
@@ -300,7 +300,7 @@ void SCFDriver::setup() {
         if (dft_x_fac > MachineZero) {
             K = new ExchangePotential(rel_prec, *MRA, *phi, dft_x_fac);
         }
-        f_oper = new DFT(*T, *V, *J, *XC, 0);
+        f_oper = new DFT(*MRA, *T, *V, *J, *XC, 0);
     } else {
         MSG_ERROR("Invalid method");
     }
@@ -342,7 +342,7 @@ GroundStateSolver* SCFDriver::setupInitialGuessSolver() {
 GroundStateSolver* SCFDriver::setupGroundStateSolver() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-    GroundStateSolver *gss = new GroundStateSolver(*helmholtz, scf_kain);
+    GroundStateSolver *gss = new GroundStateSolver(*MRA, *helmholtz, scf_kain);
     gss->setMaxIterations(scf_max_iter);
     gss->setRotation(scf_rotation);
     gss->setThreshold(scf_orbital_thrs, scf_property_thrs);

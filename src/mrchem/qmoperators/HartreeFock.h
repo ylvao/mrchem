@@ -5,9 +5,12 @@
 
 class HartreeFock : public FockOperator {
 public:
-    HartreeFock(KineticOperator &t, NuclearPotential &v, 
-                CoulombOperator &j, ExchangeOperator &k) 
-            : FockOperator(&t, &v, &j, &k) { }
+    HartreeFock(const MultiResolutionAnalysis<3> &mra,
+                KineticOperator &t,
+                NuclearPotential &v,
+                CoulombOperator &j,
+                ExchangeOperator &k)
+            : FockOperator(mra, &t, &v, &j, &k) { }
     virtual ~HartreeFock() { }
 };
 

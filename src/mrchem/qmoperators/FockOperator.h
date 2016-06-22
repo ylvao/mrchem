@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "QMOperator.h"
+#include "OrbitalAdder.h"
 
 class Molecule;
 class Orbital;
@@ -15,7 +16,8 @@ class XCOperator;
 
 class FockOperator : public QMOperator {
 public:
-    FockOperator(KineticOperator *t = 0,
+    FockOperator(const MultiResolutionAnalysis<3> &mra,
+                 KineticOperator *t = 0,
                  NuclearPotential *v = 0,
                  CoulombOperator *j = 0,
                  ExchangeOperator *k = 0,
@@ -77,6 +79,7 @@ public:
     Eigen::MatrixXd applyAdjointPerturbations(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
 protected:
+    OrbitalAdder add;
     KineticOperator *T;
     NuclearPotential *V;
     CoulombOperator *J;

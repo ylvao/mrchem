@@ -5,8 +5,10 @@
 
 class CoreHamiltonian : public FockOperator {
 public:
-    CoreHamiltonian(KineticOperator &t, NuclearPotential &v)
-        : FockOperator(&t, &v) { }
+    CoreHamiltonian(const MultiResolutionAnalysis<3> &mra,
+                    KineticOperator &t,
+                    NuclearPotential &v)
+        : FockOperator(mra, &t, &v) { }
     virtual ~CoreHamiltonian() { }
 };
 

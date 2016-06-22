@@ -10,6 +10,7 @@ add_library(qmfunctions STATIC
     DensityProjector.cpp
     NuclearFunction.cpp
     Orbital.cpp
+    OrbitalAdder.cpp
     OrbitalProjector.cpp
     OrbitalVector.cpp
 )

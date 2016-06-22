@@ -11,12 +11,14 @@
 using namespace std;
 using namespace Eigen;
 
-FockOperator::FockOperator(KineticOperator *t,
+FockOperator::FockOperator(const MultiResolutionAnalysis<3> &mra,
+                           KineticOperator *t,
                            NuclearPotential *v,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
         : QMOperator(),
+          add(mra),
           T(t),
           V(v),
           J(j),
@@ -236,26 +238,38 @@ MatrixXd FockOperator::applyAdjointKinetic(OrbitalVector &i_orbs, OrbitalVector 
 }
 
 Orbital* FockOperator::applyPotential(Orbital &orb_p) {
-    NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
-//    vector<FunctionTree<3> *> orbs;
+    vector<double> coefs;
+    vector<Orbital *> orbs;
+    if (this->V != 0) {
+        coefs.push_back(1.0);
+        orbs.push_back((*this->V)(orb_p));
+    }
+    if (this->J != 0) {
+        coefs.push_back(1.0);
+        orbs.push_back((*this->J)(orb_p));
+    }
+    if (this->K != 0) {
+        coefs.push_back(1.0);
+        orbs.push_back((*this->K)(orb_p));
+    }
+    if (this->XC != 0) {
+        coefs.push_back(1.0);
+        orbs.push_back((*this->XC)(orb_p));
+    }
 
-//    if (this->V != 0) orbs.push_back((*this->V)(orb_p));
-//    if (this->J != 0) orbs.push_back((*this->J)(orb_p));
-//    if (this->K != 0) orbs.push_back((*this->K)(orb_p));
-//    if (this->XC != 0) orbs.push_back((*this->XC)(orb_p));
+    Timer timer;
+    timer.restart();
+    Orbital *result = new Orbital(orb_p);
+    this->add(*result, coefs, orbs);
+    double time = timer.getWallTime();
+    int nNodes = result->getNNodes();
+    TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
 
-//    timer.restart();
-//    Orbital *result = new Orbital(orb_p);
-//    result->add(orbs, 0);
-//    double time = timer.elapsed();
-//    int nNodes = result->getNNodes();
-//    TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
-//    for (int n = 0; n < orbs.size(); n++) {
-//        delete orbs[n];
-//        orbs[n] = 0;
-//    }
-//    return result;
+    for (int n = 0; n < orbs.size(); n++) {
+        delete orbs[n];
+        orbs[n] = 0;
+    }
+    return result;
 }
 
 double FockOperator::applyPotential(Orbital &orb_i, Orbital &orb_j) {
