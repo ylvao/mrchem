@@ -24,15 +24,15 @@ public:
 //    void writeOrbitals(const std::string &of);
 //    void readOrbitals(const std::string &of);
 
-//    void normalize();
+    void normalize();
 //    void orthogonalize(double prec);
 //    void orthogonalize(double prec, OrbitalVector &orbitals);
 //    Eigen::MatrixXd orthonormalize(double prec, Eigen::MatrixXd *F = 0);
 //    Eigen::MatrixXd localize(double prec, Eigen::MatrixXd *F = 0);
 //    Eigen::MatrixXd diagonalize(double prec, Eigen::MatrixXd *F);
 
-//    Eigen::MatrixXd calcOverlapMatrix();
-//    Eigen::MatrixXd calcOverlapMatrix(OrbitalVector &orbitals);
+    Eigen::MatrixXcd calcOverlapMatrix();
+    Eigen::MatrixXcd calcOverlapMatrix(OrbitalVector &ket);
 //    Eigen::MatrixXd calcLocalizationMatrix();
 //    Eigen::MatrixXd calcOrthonormalizationMatrix();
 //    Eigen::MatrixXd calcDiagonalizationMatrix(Eigen::MatrixXd F);

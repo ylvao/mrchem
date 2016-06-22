@@ -6,6 +6,7 @@
 //#include "HydrogenicFunction.h"
 //#include "NonlinearMaximizer.h"
 //#include "eigen_disable_warnings.h"
+#include "Timer.h"
 
 using namespace std;
 using namespace Eigen;
@@ -798,16 +799,12 @@ void OrbitalVector::replaceOrbital(int i, Orbital **orb) {
 
 /** Normalize all orbitals in the set
  */
-//void OrbitalVector::normalize() {
-//    boost::timer rolex;
-//    rolex.restart();
-//    printout(0, "Normalizing                                      ");
-//    for (int i = 0; i < this->size(); i++) {
-//        Orbital &orb = getOrbital(i);
-//        orb.normalize();
-//    }
-//    println(0, rolex.elapsed());
-//}
+void OrbitalVector::normalize() {
+    for (int i = 0; i < this->size(); i++) {
+        Orbital &orb = getOrbital(i);
+        orb.normalize();
+    }
+}
 
 /** Gram-Schmidt orthogonalize the orbitals in the set
  *
@@ -984,39 +981,25 @@ void OrbitalVector::replaceOrbital(int i, Orbital **orb) {
 //}
 
 /** Calculate overlap matrix within orbital set */
-//MatrixXd OrbitalVector::calcOverlapMatrix() {
-//    int nOrbs = this->size();
-//    MatrixXd S = MatrixXd::Zero(nOrbs, nOrbs);
-//    for (int i = 0; i < nOrbs; i++) {
-//        Orbital &iOrb = getOrbital(i);
-//        S(i,i) = iOrb.getSquareNorm();
-//        for (int j = 0; j < i; j++) {
-//            Orbital &jOrb = getOrbital(j);
-//            double innerProd = iOrb.innerProduct(jOrb);
-//            S(i,j) = innerProd;
-//            S(j,i) = innerProd;
-//        }
-//    }
-//    return S;
-//}
+MatrixXcd OrbitalVector::calcOverlapMatrix() {
+    OrbitalVector &bra = *this;
+    OrbitalVector &ket = *this;
+    return bra.calcOverlapMatrix(ket);
+}
 
 /** Calculate overlap matrix between two orbital sets */
-//MatrixXd OrbitalVector::calcOverlapMatrix(OrbitalVector &inpVector) {
-//    int nOrbs = this->size();
-//    if (inpVector.size() != nOrbs) {
-//        MSG_ERROR("Size mismatch between orbital sets");
-//    }
-//    MatrixXd S = MatrixXd::Zero(nOrbs, nOrbs);
-//    for (int i = 0; i < nOrbs; i++) {
-//        Orbital &iOrb = this->getOrbital(i);
-//        for (int j = 0; j < nOrbs; j++) {
-//            Orbital &jOrb = inpVector.getOrbital(j);
-//            double innerProd = iOrb.innerProduct(jOrb);
-//            S(i,j) = innerProd;
-//        }
-//    }
-//    return S;
-//}
+MatrixXcd OrbitalVector::calcOverlapMatrix(OrbitalVector &ket) {
+    OrbitalVector &bra = *this;
+    MatrixXcd S = MatrixXcd::Zero(bra.size(), ket.size());
+    for (int i = 0; i < bra.size(); i++) {
+        Orbital &bra_i = bra.getOrbital(i);
+        for (int j = 0; j < ket.size(); j++) {
+            Orbital &ket_j = ket.getOrbital(j);
+            S(i,j) = bra_i.dot(ket_j);
+        }
+    }
+    return S;
+}
 
 /** Perform the orbital rotation that diagonalizes the Fock matrix
  *
