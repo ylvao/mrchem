@@ -5,6 +5,9 @@
 #include <vector>
 
 #include "HelmholtzOperator.h"
+#include "GridGenerator.h"
+
+class Orbital;
 
 class HelmholtzOperatorSet {
 public:
@@ -18,6 +21,7 @@ public:
 
     int printTreeSizes() const;
 
+    void setPrecision(double prec) { this->apply_prec = prec; }
     void setThreshold(double thrs) { this->threshold = thrs; }
     double getThreshold() const { return this->threshold; }
 
@@ -25,10 +29,14 @@ public:
     Eigen::VectorXd getLambda() const;
     HelmholtzOperator &getOperator(int i);
 
+    void operator()(int i, Orbital &out, Orbital &inp);
+
 private:
     double threshold; //For re-using operators. Negative means always recreate
     double build_prec;
+    double apply_prec;
     const MultiResolutionAnalysis<3> MRA;
+    GridGenerator<3> grid;
 
     std::vector<int> operIdx;
     std::vector<double> lambda;

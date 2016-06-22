@@ -11,7 +11,9 @@ HelmholtzOperatorSet::HelmholtzOperatorSet(double build,
                                            double thrs)
         : threshold(thrs),
           build_prec(build),
-          MRA(mra) {
+          apply_prec(build),
+          MRA(mra),
+          grid(mra) {
 }
 
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
@@ -132,3 +134,19 @@ int HelmholtzOperatorSet::printTreeSizes() const {
     return totNodes;
 }
 
+void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
+    if (out.hasReal()) MSG_ERROR("Orbital not empty");
+    if (out.hasImag()) MSG_ERROR("Orbital not empty");
+
+    HelmholtzOperator &H_i = getOperator(i);
+    H_i.setPrecision(this->apply_prec);
+
+    if (inp.hasReal()) {
+        out.real = this->grid();
+        H_i(*out.real, *inp.real);
+    }
+    if (inp.hasImag()) {
+        out.imag = this->grid();
+        H_i(*out.imag, *inp.imag);
+    }
+}
