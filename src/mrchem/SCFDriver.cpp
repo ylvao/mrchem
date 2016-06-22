@@ -15,7 +15,7 @@
 #include "HartreeFock.h"
 #include "DFT.h"
 
-//#include "GroundStateSolver.h"
+#include "GroundStateSolver.h"
 //#include "LinearResponseSolver.h"
 #include "HelmholtzOperatorSet.h"
 //#include "KAIN.h"
@@ -342,13 +342,12 @@ GroundStateSolver* SCFDriver::setupInitialGuessSolver() {
 GroundStateSolver* SCFDriver::setupGroundStateSolver() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-//    GroundStateSolver *gss = new GroundStateSolver(*helmholtz, scf_kain);
-//    gss->setMaxIterations(scf_max_iter);
-//    gss->setRotation(scf_rotation);
-//    gss->setThreshold(scf_orbital_thrs, scf_property_thrs);
-//    gss->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
-//    return gss;
-    return 0;
+    GroundStateSolver *gss = new GroundStateSolver(*helmholtz, scf_kain);
+    gss->setMaxIterations(scf_max_iter);
+    gss->setRotation(scf_rotation);
+    gss->setThreshold(scf_orbital_thrs, scf_property_thrs);
+    gss->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
+    return gss;
 }
 
 LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
@@ -508,16 +507,15 @@ bool SCFDriver::runGroundState() {
     if (f_mat == 0) MSG_ERROR("Fock matrix not initialized");
 
     GroundStateSolver *gss = setupGroundStateSolver();
-//    gss->setup(*f_oper, *f_mat, *phi);
-//    bool converged = gss->optimize();
-    bool converged = true;
-//    gss->clear();
+    gss->setup(*f_oper, *f_mat, *phi);
+    bool converged = gss->optimize();
+    gss->clear();
 
 //    if (scf_write_orbitals) {
 //        phi->writeOrbitals(file_final_orbitals);
 //    }
 
-//    delete gss;
+    delete gss;
     return converged;
 }
 

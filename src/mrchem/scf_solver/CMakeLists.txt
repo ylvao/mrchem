@@ -6,7 +6,9 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_library(scf_solver STATIC 
+    GroundStateSolver.cpp
     HelmholtzOperatorSet.cpp
+    SCF.cpp
 )
 
 target_link_libraries(scf_solver
