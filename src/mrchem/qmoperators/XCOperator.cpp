@@ -114,7 +114,7 @@ void XCOperator::setupXCInput() {
     }
     double t = timer.getWallTime();
     int n = sumNodes<FunctionTree<3> >(this->xcInput, nInp);
-    TelePrompter::printTree(1, "Preprocessing density", n, t);
+    TelePrompter::printTree(0, "XC preprocess xcfun", n, t);
     printout(2, endl);
 }
 
@@ -185,7 +185,7 @@ void XCOperator::evaluateXCFunctional() {
 
     double t = timer.getWallTime();
     int nNodes = sumNodes<FunctionTree<3> >(this->xcOutput, nOut);
-    TelePrompter::printTree(1, "Evaluating XC functional", nNodes, t);
+    TelePrompter::printTree(0, "XC evaluate xcfun", nNodes, t);
     printout(2, endl);
 }
 
@@ -198,7 +198,7 @@ void XCOperator::calcEnergy() {
     this->energy = this->xcOutput[0]->integrate();
     double time = timer.getWallTime();
     int nNodes = this->xcOutput[0]->getNNodes();
-    TelePrompter::printTree(1, "XC energy", nNodes, time);
+    TelePrompter::printTree(0, "XC energy", nNodes, time);
 }
 
 //Potential** XCOperator::calcGradDotPotDensVec(Potential *pot, Density **dens) {

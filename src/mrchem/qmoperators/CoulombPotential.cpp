@@ -38,7 +38,7 @@ void CoulombPotential::setup(double prec) {
     timer.stop();
     int n = this->potential->getNNodes();
     double t = timer.getWallTime();
-    TelePrompter::printTree(1, "Coulomb potential", n, t);
+    TelePrompter::printTree(0, "Coulomb potential", n, t);
     this->potential->setup(this->apply_prec);
 }
 

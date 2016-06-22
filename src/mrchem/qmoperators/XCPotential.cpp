@@ -59,7 +59,7 @@ void XCPotential::calcPotential() {
     }
     double t = timer.getWallTime();
     int n = -1;
-    TelePrompter::printTree(1, "XC potential", n, t);
+    TelePrompter::printTree(0, "XC potential", n, t);
 }
 
 void XCPotential::calcPotentialLDA(int spin) {

@@ -31,7 +31,7 @@ void NuclearPotential::setup(double prec) {
     timer.stop();
     int n = getNNodes();
     double t = timer.getWallTime();
-    TelePrompter::printTree(1, "Nuclear potential", n, t);
+    TelePrompter::printTree(0, "Nuclear potential", n, t);
     Potential::setup(prec);
 }
 
