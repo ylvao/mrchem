@@ -17,7 +17,7 @@
 
 //#include "GroundStateSolver.h"
 //#include "LinearResponseSolver.h"
-//#include "HelmholtzOperatorSet.h"
+#include "HelmholtzOperatorSet.h"
 //#include "KAIN.h"
 //#include "DIIS.h"
 
@@ -274,7 +274,7 @@ void SCFDriver::setup() {
     *f_mat = MatrixXd::Zero(nOrbs, nOrbs);
 
     // Setting up SCF
-//    helmholtz = new HelmholtzOperatorSet(scf_lambda_thrs);
+    helmholtz = new HelmholtzOperatorSet(rel_prec, *MRA, scf_lambda_thrs);
 //    if (scf_history > 0) scf_kain = new KAIN(scf_history);
 //    if (rsp_history > 0) rsp_kain_x = new KAIN(rsp_history);
 //    if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
@@ -313,7 +313,7 @@ void SCFDriver::clear() {
     if (molecule != 0) delete molecule;
     if (phi != 0) delete phi;
 
-//    if (helmholtz != 0) delete helmholtz;
+    if (helmholtz != 0) delete helmholtz;
 //    if (scf_kain != 0) delete scf_kain;
 //    if (rsp_kain_x != 0) delete rsp_kain_x;
 //    if (rsp_kain_y != 0) delete rsp_kain_y;
@@ -504,11 +504,11 @@ bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &
 }
 
 bool SCFDriver::runGroundState() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (phi == 0) MSG_ERROR("Orbitals not initialized");
-//    if (f_oper == 0) MSG_ERROR("Fock operator not initialized");
-//    if (f_mat == 0) MSG_ERROR("Fock matrix not initialized");
+    if (phi == 0) MSG_ERROR("Orbitals not initialized");
+    if (f_oper == 0) MSG_ERROR("Fock operator not initialized");
+    if (f_mat == 0) MSG_ERROR("Fock matrix not initialized");
 
+    NOT_IMPLEMENTED_ABORT;
 //    GroundStateSolver *gss = setupGroundStateSolver();
 //    gss->setup(*f_oper, *f_mat, *phi);
 //    bool converged = gss->optimize();
@@ -769,11 +769,11 @@ void SCFDriver::setupInitialGroundState() {
 //        phi->readOrbitals(initOrbs);
 //        runInitialGuess(*f_oper, F, *phi);
     } else if (scf_start == "gto") {
-        OrbitalProjector IGP(*MRA, rel_prec);
+        OrbitalProjector OP(*MRA, rel_prec);
         if (wf_restricted) {
-            IGP(*phi, file_basis_set, file_mo_mat_a);
+            OP(*phi, file_basis_set, file_mo_mat_a);
         } else {
-            IGP(*phi, file_basis_set, file_mo_mat_a, file_mo_mat_b);
+            OP(*phi, file_basis_set, file_mo_mat_a, file_mo_mat_b);
         }
     } else if (scf_start == "mw") {
         NOT_IMPLEMENTED_ABORT;
