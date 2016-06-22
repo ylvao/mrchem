@@ -94,11 +94,21 @@ complex<double> Orbital::dot(Orbital &ket) {
     }
     double re = 0.0;
     double im = 0.0;
-    if (bra.real != 0 and ket.real != 0) re += bra.real->dot(*ket.real);
-    if (bra.imag != 0 and ket.imag != 0) re += bra.imag->dot(*ket.imag);
-    if (bra.real != 0 and ket.imag != 0) im += bra.real->dot(*ket.imag);
-    if (bra.imag != 0 and ket.real != 0) im -= bra.imag->dot(*ket.real);
+    if (bra.hasReal() and ket.hasReal()) re += bra.re().dot(ket.re());
+    if (bra.hasImag() and ket.hasImag()) re += bra.im().dot(ket.im());
+    if (bra.hasReal() and ket.hasImag()) im += bra.re().dot(ket.im());
+    if (bra.hasImag() and ket.hasReal()) im -= bra.im().dot(ket.re());
     return complex<double>(re, im);
+}
+
+void Orbital::normalize() {
+    double norm = sqrt(getSquareNorm());
+    if (hasReal()) this->re() *= 1.0/norm;
+    if (hasImag()) this->im() *= 1.0/norm;
+}
+
+void Orbital::orthogonalize(Orbital &phi) {
+    NOT_IMPLEMENTED_ABORT;
 }
 
 /** Write the tree structure to disk, for later use.

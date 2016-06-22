@@ -42,6 +42,9 @@ public:
     double getSquareNorm() const;
     double getExchangeFactor(const Orbital &orb) const;
 
+    void normalize();
+    void orthogonalize(Orbital &orb);
+
     char printSpin() const {
         char sp = 'u';
         if (this->spin == Alpha) sp = 'a';
@@ -50,9 +53,6 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream &o, Orbital &orb) {
-        char sp = 'u';
-        if (orb.getSpin() == Alpha) sp = 'a';
-        if (orb.getSpin() == Beta) sp = 'b';
         o << std::setw(25) << orb.getSquareNorm();
         o << std::setw(3) << orb.getOccupancy();
         o << std::setw(4) << orb.printSpin();
