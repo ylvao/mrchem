@@ -37,7 +37,7 @@ public:
 
     int printTreeSizes() const;
 
-    virtual void rotate(double prec, Eigen::MatrixXd &U);
+    virtual void rotate(Eigen::MatrixXd &U);
 
     virtual void setupUnperturbed(double prec);
     virtual void clearUnperturbed();

@@ -9,7 +9,7 @@
 #include "XCPotential.h"
 #include "XCFunctional.h"
 #include "SCFEnergy.h"
-//#include "Accelerator.h"
+//#include "KAIN.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
 #include "eigen_disable_warnings.h"
@@ -19,7 +19,7 @@ using namespace Eigen;
 
 GroundStateSolver::GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
                                      HelmholtzOperatorSet &h,
-                                     Accelerator *a)
+                                     KAIN *k)
         : SCF(mra, h),
           fOper_n(0),
           fOper_np1(0),
@@ -29,7 +29,7 @@ GroundStateSolver::GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
           fMat_n(0),
           fMat_np1(0),
           dfMat_n(0),
-          accelerator(a) {
+          kain(k) {
 }
 
 GroundStateSolver::~GroundStateSolver() {
@@ -37,7 +37,7 @@ GroundStateSolver::~GroundStateSolver() {
     if (this->dOrbitals_n != 0) MSG_ERROR("Solver not properly cleared");
     if (this->fMat_np1 != 0) MSG_ERROR("Solver not properly cleared");
     if (this->dfMat_n != 0) MSG_ERROR("Solver not properly cleared");
-    this->accelerator = 0;
+    this->kain = 0;
 }
 
 void GroundStateSolver::setup(FockOperator &f_oper,
@@ -72,7 +72,7 @@ void GroundStateSolver::clear() {
     this->orbitals_np1 = 0;
     this->dOrbitals_n = 0;
 
-//    if (this->acc != 0) this->acc->clear();
+//    if (this->kain != 0) this->kain->clear();
     resetPrecision();
 }
 
@@ -132,8 +132,8 @@ bool GroundStateSolver::optimizeOrbitals() {
     OrbitalVector &phi_np1 = *this->orbitals_np1;
     OrbitalVector &dPhi_n = *this->dOrbitals_n;
 
-    double err_t = 1.0;
     double err_o = phi_n.getErrors().maxCoeff();
+    double err_t = 1.0;
     adjustPrecision(err_o);
 
     fock.setup(getOrbitalPrecision());
@@ -143,49 +143,84 @@ bool GroundStateSolver::optimizeOrbitals() {
     while(this->nIter++ < this->maxIter or this->maxIter < 0) {
         Timer timer;
         timer.restart();
-        printCycle();
-        adjustPrecision(err_o);
 
-//        printMatrix(1, *this->fMat_n, 'F');
-//        rotate(*this->orbitals_n, *this->fMat_n, this->fOper_n);
-//        printMatrix(1, *this->fMat_n, 'F');
+        {   // Initialize SCF cycle
+            printCycle();
+            adjustPrecision(err_o);
+        }
 
-        double prop = calcProperty();
-        this->property.push_back(prop);
+        {   // Localize/diagonalize/orthogonalize
+            MatrixXd U = calcRotationMatrix(phi_n, F);
+            fock.rotate(U);
+            F = U.transpose()*F*U;
+            this->add.rotate(phi_n, U);
+        }
 
-        this->helmholtz->initialize(F.diagonal());
-        applyHelmholtzOperators(phi_np1, phi_n, F);
-//        this->rotate.orthonormalize(phi_n);
-        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
-        phi_np1.clear();
+        {   // Compute electronic energy
+            double prop = calcProperty();
+            this->property.push_back(prop);
+        }
 
-//        accelerate(this->acc, this->phi_n, this->dPhi_n);
+        {   // Iterate Helmholtz operators
+            this->helmholtz->initialize(F.diagonal());
+            applyHelmholtzOperators(phi_np1, phi_n, F);
+            fock.clear();
+        }
+
+        {   // Orthonormalize
+            MatrixXd U = calcOrthonormalizationMatrix(phi_np1);
+            this->add.rotate(phi_np1, U);
+        }
+
+        {   // Compute orbital updates
+            this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
+            phi_np1.clear();
+        }
+
+        { // Employ KAIN accelerator
+//            if (this->kain != 0) this->kain->pushBack(phi_n, dPhi_n);
+//            if (this->kain != 0) this->kain->calcUpdates(phi_n, dPhi_n);
+        }
+
 //        printTreeSizes();
 
-        err_o = calcOrbitalError();
-        err_t = calcTotalError();
-        this->orbError.push_back(err_t);
+        {   // Compute errors
+            VectorXd errors = dPhi_n.getNorms();
+            phi_n.setErrors(errors);
+            err_o = errors.maxCoeff();
+            err_t = sqrt(errors.dot(errors));
+            this->orbError.push_back(err_t);
+        }
 
-        this->add.inPlace(phi_n, 1.0, dPhi_n);
-        phi_n.normalize();
-        phi_n.setErrors(dPhi_n.getNorms());
+        {   // Update orbitals
+            this->add.inPlace(phi_n, 1.0, dPhi_n);
+            dPhi_n.clear();
+        }
 
-        fock.clear();
-        dPhi_n.clear();
+        {   // Orthonormalize
+//            MatrixXd U = calcOrthonormalizationMatrix(phi_n);
+//            this->add.rotate(phi_n, U);
+//            phi_n.orthonormalize();
+            phi_n.normalize();
+        }
 
-        fock.setup(getOrbitalPrecision());
-        F = fock(phi_n, phi_n);
+        {   // Compute Fock matrix
+            fock.setup(getOrbitalPrecision());
+            F = fock(phi_n, phi_n);
+        }
 
-        printOrbitals(F, phi_n);
-        printProperty();
-        printTimer(timer.getWallTime());
+        {   // Finalize SCF cycle
+            printOrbitals(F, phi_n);
+            printProperty();
+            printTimer(timer.getWallTime());
+        }
 
         if (err_o < getOrbitalThreshold()) {
             converged = true;
             break;
         }
     }
-//    if (this->acc != 0) this->acc->clear();
+//    if (this->kain != 0) this->kain->clear();
     fock.clear();
     return converged;
 }

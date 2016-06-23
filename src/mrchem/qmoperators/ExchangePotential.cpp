@@ -24,7 +24,7 @@ void ExchangePotential::clear() {
     this->exchange_0.clear();
 }
 
-void ExchangePotential::rotate(double prec, MatrixXd &U) {
+void ExchangePotential::rotate(MatrixXd &U) {
     NOT_IMPLEMENTED_ABORT;
 //    if (prec < 0.0) {
 //        prec = this->precision;

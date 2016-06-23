@@ -13,7 +13,7 @@ class OrbitalVector;
 class GroundStateSolver;
 class LinearResponseSolver;
 class HelmholtzOperatorSet;
-class Accelerator;
+class KAIN;
 
 class QMOperator;
 class FockOperator;
@@ -131,9 +131,9 @@ protected:
 
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;
-    Accelerator *scf_kain;
-    Accelerator *rsp_kain_x;
-    Accelerator *rsp_kain_y;
+    KAIN *scf_kain;
+    KAIN *rsp_kain_x;
+    KAIN *rsp_kain_y;
 
     // Unperturbed quantities
     Molecule *molecule;

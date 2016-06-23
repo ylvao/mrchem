@@ -17,7 +17,7 @@ public:
     QMOperator() : apply_prec(-1.0) { }
     virtual ~QMOperator() { }
 
-    virtual void rotate(double prec, Eigen::MatrixXd &U) { }
+    virtual void rotate(Eigen::MatrixXd &U) { }
 
     virtual void setupUnperturbed(double prec = -1.0) { }
     virtual void clearUnperturbed() { }

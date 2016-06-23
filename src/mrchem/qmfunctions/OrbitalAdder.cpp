@@ -58,6 +58,19 @@ void OrbitalAdder::operator()(OrbitalVector &out,
     }
 }
 
+void OrbitalAdder::operator()(Orbital &out, VectorXd &c, OrbitalVector &inp) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+/** In place rotation of orbital vector */
+void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
 void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {
     if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
 
@@ -76,13 +89,4 @@ void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
     out.imag = tmp->imag;
     tmp->real = 0;
     tmp->imag = 0;
-}
-
-
-void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-void OrbitalAdder::operator()(Orbital &out, VectorXd &c, OrbitalVector &inp) {
-    NOT_IMPLEMENTED_ABORT;
 }

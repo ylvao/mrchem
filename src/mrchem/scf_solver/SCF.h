@@ -42,9 +42,8 @@ protected:
     std::vector<double> orbError;
     std::vector<double> property;
 
-    HelmholtzOperatorSet *helmholtz;// Pointer to external object, do not delete!
     OrbitalAdder add;
-//    OrbitalRotator rotate;
+    HelmholtzOperatorSet *helmholtz;// Pointer to external object, do not delete!
 
     bool needLocalization() const;
     bool needDiagonalization() const;
@@ -62,12 +61,6 @@ protected:
     void printMatrix(int level, const Eigen::MatrixXd &M,
                      const char &name, int pr = 5) const;
 
-    bool accelerate(Accelerator *acc,
-                    OrbitalVector *phi,
-                    OrbitalVector *d_phi,
-                    Eigen::MatrixXd *F = 0,
-                    Eigen::MatrixXd *dF = 0);
-
     void applyHelmholtzOperators(OrbitalVector &phi_np1,
                                  OrbitalVector &phi_n,
                                  Eigen::MatrixXd &F_n,
@@ -81,6 +74,11 @@ protected:
     Orbital* calcMatrixPart(int i,
                             Eigen::MatrixXd &M,
                             OrbitalVector &phi);
+
+    Eigen::MatrixXd calcRotationMatrix(OrbitalVector &phi, Eigen::MatrixXd &F);
+    Eigen::MatrixXd calcLocalizationMatrix(OrbitalVector &phi);
+    Eigen::MatrixXd calcDiagonalizationMatrix(OrbitalVector &phi, Eigen::MatrixXd &F);
+    Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
 };
 
 #endif // SCF_H

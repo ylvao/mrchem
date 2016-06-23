@@ -12,7 +12,7 @@ public:
                       double x_fac = 1.0);
     virtual ~ExchangePotential();
 
-    virtual void rotate(double prec, Eigen::MatrixXd &U);
+    virtual void rotate(Eigen::MatrixXd &U);
 
     virtual void setup(double prec);
     virtual void clear();

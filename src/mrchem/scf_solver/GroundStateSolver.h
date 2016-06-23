@@ -6,13 +6,13 @@
 #include "SCF.h"
 #include "SCFEnergy.h"
 
-class Accelerator;
+class KAIN;
 
 class GroundStateSolver : public SCF {
 public:
     GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
                       HelmholtzOperatorSet &h,
-                      Accelerator *a = 0);
+                      KAIN *k = 0);
     virtual ~GroundStateSolver();
 
     void setup(FockOperator &f_oper, Eigen::MatrixXd &f_mat, OrbitalVector &phi);
@@ -34,7 +34,7 @@ protected:
     Eigen::MatrixXd *fMat_np1;
     Eigen::MatrixXd *dfMat_n;
 
-    Accelerator *accelerator;	    // Pointer to external object, do not delete!
+    KAIN *kain; // Pointer to external object, do not delete!
 
     bool optimizeOrbitals();
     bool optimizeEnergy();

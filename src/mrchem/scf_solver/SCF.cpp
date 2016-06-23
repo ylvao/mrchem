@@ -199,19 +199,6 @@ void SCF::printMatrix(int level, const MatrixXd &M, const char &name, int pr) co
     TelePrompter::setPrecision(oldPrec);
 }
 
-bool SCF::accelerate(Accelerator *acc, OrbitalVector *phi, OrbitalVector *d_phi,
-                     MatrixXd *F, MatrixXd *dF) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (acc != 0) {
-//        if (phi == 0) MSG_ERROR("Uninitialized orbitals");
-//        if (d_phi == 0) MSG_ERROR("Uninitialized orbitals");
-//        acc->pushBack(*phi, *d_phi, f_mat, df_mat);
-//        acc->calcUpdates(*phi, *d_phi, f_mat, df_mat);
-//        return true;
-//    }
-//    return false;
-}
-
 /** Computes a new set of orbitals by application of the Helmholtz operator
  *
  * Requires orbitals in the orbitals pointer as well as corresponding operators
@@ -289,3 +276,18 @@ Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
     return result;
 }
 
+MatrixXd SCF::calcRotationMatrix(OrbitalVector &phi, MatrixXd &F) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+MatrixXd SCF::calcLocalizationMatrix(OrbitalVector &phi) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+MatrixXd SCF::calcDiagonalizationMatrix(OrbitalVector &phi, MatrixXd &F) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+MatrixXd SCF::calcOrthonormalizationMatrix(OrbitalVector &phi) {
+    NOT_IMPLEMENTED_ABORT;
+}

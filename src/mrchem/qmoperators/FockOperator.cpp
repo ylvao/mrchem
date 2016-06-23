@@ -88,14 +88,14 @@ void FockOperator::clear() {
     }
 }
 
-void FockOperator::rotate(double prec, MatrixXd &U) {
-    if (this->T != 0) this->T->rotate(prec, U);
-    if (this->V != 0) this->V->rotate(prec, U);
-    if (this->J != 0) this->J->rotate(prec, U);
-    if (this->K != 0) this->K->rotate(prec, U);
-    if (this->XC != 0) this->XC->rotate(prec, U);
+void FockOperator::rotate(MatrixXd &U) {
+    if (this->T != 0) this->T->rotate(U);
+    if (this->V != 0) this->V->rotate(U);
+    if (this->J != 0) this->J->rotate(U);
+    if (this->K != 0) this->K->rotate(U);
+    if (this->XC != 0) this->XC->rotate(U);
     for (int i = 0; i < getNPerturbations(); i++) {
-        getPerturbationOperator(i).rotate(prec, U);
+        getPerturbationOperator(i).rotate(U);
     }
 }
 

@@ -30,9 +30,8 @@ public:
                     Eigen::VectorXd &c,
                     OrbitalVector &inp);
 
-    void rotate(OrbitalVector &out,
-                Eigen::MatrixXd &U,
-                OrbitalVector &inp);
+    void rotate(OrbitalVector &out, Eigen::MatrixXd &U, OrbitalVector &inp);
+    void rotate(OrbitalVector &out, Eigen::MatrixXd &U);
 
     void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
     void inPlace(Orbital &out, double c, Orbital &inp);

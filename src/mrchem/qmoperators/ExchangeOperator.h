@@ -27,8 +27,6 @@ public:
     void setExchangeFactor(double x_fac) { this->x_factor = x_fac; }
     double getExchangeFactor() const { return this->x_factor; }
 
-    virtual void rotate(double prec, Eigen::MatrixXd &U) { }
-
     void setScreen(bool s) { this->screen = s; }
     bool getScreen() const { return this->screen; }
 
