@@ -59,7 +59,18 @@ void OrbitalAdder::operator()(OrbitalVector &out,
 }
 
 void OrbitalAdder::operator()(Orbital &out, VectorXd &c, OrbitalVector &inp) {
-    NOT_IMPLEMENTED_ABORT;
+    if (c.size() != inp.size()) MSG_ERROR("Invalid arguments");
+    if (out.hasReal() or out.hasImag()) MSG_ERROR("Output not empty");
+
+    FunctionTreeVector<3> real_vec;
+    FunctionTreeVector<3> imag_vec;
+    for (int i = 0; i < inp.size(); i++) {
+        Orbital &phi_i = inp.getOrbital(i);
+        if (phi_i.hasReal()) real_vec.push_back(c(i), phi_i.real);
+        if (phi_i.hasImag()) imag_vec.push_back(c(i), phi_i.imag);
+    }
+    if (real_vec.size() != 0) out.real = (*this)(real_vec);
+    if (imag_vec.size() != 0) out.imag = (*this)(imag_vec);
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
@@ -68,7 +79,26 @@ void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
 
 /** In place rotation of orbital vector */
 void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U) {
-    NOT_IMPLEMENTED_ABORT;
+    OrbitalVector tmp(out);
+    for (int i = 0; i < out.size(); i++) {
+        VectorXd c = U.row(i);
+        Orbital &tmp_phi = tmp.getOrbital(i);
+        (*this)(tmp_phi, c, out);
+    }
+    out.clear();
+    for (int i = 0; i < out.size(); i++) {
+        Orbital &tmp_phi = tmp.getOrbital(i);
+        Orbital &out_phi = out.getOrbital(i);
+        if (tmp_phi.hasReal()) {
+            out_phi.real = tmp_phi.real;
+            tmp_phi.real = 0;
+        }
+        if (tmp_phi.hasImag()) {
+            out_phi.imag = tmp_phi.imag;
+            tmp_phi.imag = 0;
+        }
+    }
+    tmp.clear();
 }
 
 void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {

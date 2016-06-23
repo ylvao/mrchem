@@ -275,19 +275,3 @@ Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
     }
     return result;
 }
-
-MatrixXd SCF::calcRotationMatrix(OrbitalVector &phi, MatrixXd &F) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-MatrixXd SCF::calcLocalizationMatrix(OrbitalVector &phi) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-MatrixXd SCF::calcDiagonalizationMatrix(OrbitalVector &phi, MatrixXd &F) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-MatrixXd SCF::calcOrthonormalizationMatrix(OrbitalVector &phi) {
-    NOT_IMPLEMENTED_ABORT;
-}

@@ -57,6 +57,10 @@ protected:
     double calcTotalError() const;
     double calcOrbitalError() const;
     double calcPropertyError() const;
+
+    Eigen::MatrixXd calcLocalizationMatrix(OrbitalVector &phi);
+    Eigen::MatrixXd calcDiagonalizationMatrix(OrbitalVector &phi, Eigen::MatrixXd &F);
+    Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
 };
 
 #endif // GROUNDSTATESOLVER_H

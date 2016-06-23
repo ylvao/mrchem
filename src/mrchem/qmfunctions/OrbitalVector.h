@@ -25,17 +25,11 @@ public:
 //    void readOrbitals(const std::string &of);
 
     void normalize();
-//    void orthogonalize(double prec);
-//    void orthogonalize(double prec, OrbitalVector &orbitals);
-//    Eigen::MatrixXd orthonormalize(double prec, Eigen::MatrixXd *F = 0);
-//    Eigen::MatrixXd localize(double prec, Eigen::MatrixXd *F = 0);
-//    Eigen::MatrixXd diagonalize(double prec, Eigen::MatrixXd *F);
+    void orthogonalize();
+    void orthogonalize(OrbitalVector &phi);
 
     Eigen::MatrixXcd calcOverlapMatrix();
     Eigen::MatrixXcd calcOverlapMatrix(OrbitalVector &ket);
-//    Eigen::MatrixXd calcLocalizationMatrix();
-//    Eigen::MatrixXd calcOrthonormalizationMatrix();
-//    Eigen::MatrixXd calcDiagonalizationMatrix(Eigen::MatrixXd F);
 
     int size() const { return this->orbitals.size(); }
     int getNOccupied() const;
@@ -60,11 +54,6 @@ public:
 
     bool isConverged(double prec) const;
     double calcTotalError() const;
-
-//    void rotate(double prec, const Eigen::MatrixXd &U);
-//    void add(double a, OrbitalVector &set_1, double b, OrbitalVector &set_b);
-//    void addInPlace(OrbitalVector &orb_set, double c = 1.0);
-//    void crop(double prec = -1.0);
 
     const Orbital *getOrbitalPtr(int i) const { return this->orbitals[i]; }
     Orbital *getOrbitalPtr(int i) { return this->orbitals[i]; }

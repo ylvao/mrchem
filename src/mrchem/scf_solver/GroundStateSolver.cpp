@@ -1,3 +1,5 @@
+#include <Eigen/Eigenvalues>
+
 #include "GroundStateSolver.h"
 #include "HelmholtzOperatorSet.h"
 #include "FockOperator.h"
@@ -150,7 +152,15 @@ bool GroundStateSolver::optimizeOrbitals() {
         }
 
         {   // Localize/diagonalize/orthogonalize
-            MatrixXd U = calcRotationMatrix(phi_n, F);
+            MatrixXd U;
+            if (needLocalization()) {
+                U = calcLocalizationMatrix(phi_n);
+            } else if (needDiagonalization()) {
+                U = calcDiagonalizationMatrix(phi_n, F);
+//                if (this->kain != 0) this->kain->clear();
+            } else {
+                U = calcOrthonormalizationMatrix(phi_n);
+            }
             fock.rotate(U);
             F = U.transpose()*F*U;
             this->add.rotate(phi_n, U);
@@ -198,10 +208,10 @@ bool GroundStateSolver::optimizeOrbitals() {
         }
 
         {   // Orthonormalize
-//            MatrixXd U = calcOrthonormalizationMatrix(phi_n);
-//            this->add.rotate(phi_n, U);
-//            phi_n.orthonormalize();
-            phi_n.normalize();
+            MatrixXd U = calcOrthonormalizationMatrix(phi_n);
+            this->add.rotate(phi_n, U);
+//            phi_n.orthogonalize();
+//            phi_n.normalize();
         }
 
         {   // Compute Fock matrix
@@ -531,4 +541,99 @@ int GroundStateSolver::printTreeSizes() const {
 //    println(0,"                                                            ");
 
 //    return n3D;
+}
+
+/** Minimize the spatial extension of orbitals, by a transformation of orbitals
+ *
+ * Minimizes \f$  \sum_{i=1,N}\langle i| {\bf R^2}  | i \rangle - \langle i| {\bf R}| i \rangle^2 \f$
+ *	which is equivalent to maximizing \f$  \sum_{i=1,N}\langle i| {\bf R}| i \rangle^2\f$
+ *
+ * The resulting transformation includes the orthonormalization of the orbitals.
+ * For details see the tex documentation in doc directory
+ */
+MatrixXd GroundStateSolver::calcLocalizationMatrix(OrbitalVector &phi) {
+    NOT_IMPLEMENTED_ABORT;
+//    double optTime = 0.0;
+//    double rotTime = 0.0;
+//    double totTime = 0.0;
+
+//    mpi::timer totTimer, timer;
+//    totTimer.restart();
+
+//    int oldPrec = TelePrompter::setPrecision(5);
+//    println(0, endl);
+
+//    timer.restart();
+//    RR rr(*this);
+//    int nIter = rr.maximize();//compute total U, rotation matrix
+//    optTime += timer.elapsed();
+//    println(0, "Localized after iteration               " << setw(20) << nIter);
+
+//    MatrixXd U;
+//    if (nIter > 0) {
+//        U = rr.getTotalU().transpose();
+//    } else {
+//        timer.restart();
+//        U = calcOrthonormalizationMatrix();
+//        optTime += timer.elapsed();
+//    }
+
+//    println(0, "Calculating rotation matrix                      " << optTime);
+//    println(0, "Total time localization                          " << totTimer.elapsed());
+//    printout(0, endl);
+
+//    TelePrompter::setPrecision(oldPrec);
+//    return U;
+}
+
+/** Perform the orbital rotation that diagonalizes the Fock matrix
+ *
+ * This operation includes the orthonormalization using the overlap matrix.
+ */
+MatrixXd GroundStateSolver::calcDiagonalizationMatrix(OrbitalVector &phi, MatrixXd &F_tilde) {
+    NOT_IMPLEMENTED_ABORT;
+//    Timer timer;
+//    timer.restart();
+//    printout(1, "Calculating diagonalization matrix               ");
+
+//    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+
+//    SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
+//    es.compute(S_tilde);
+
+//    MatrixXd A = es.eigenvalues().asDiagonal();
+//    for (int i = 0; i < A.cols(); i++) {
+//        A(i,i) = pow(A(i,i), -1.0/2.0);
+//    }
+//    MatrixXd B = es.eigenvectors();
+//    MatrixXd S_m12 = B*A*B.transpose();
+
+//    MatrixXd F = S_m12*F_tilde*S_m12.transpose();
+
+//    es.compute(F);
+//    MatrixXd M = es.eigenvalues();
+//    MatrixXd U = M.transpose()*S_m12;
+
+//    println(1, timer.getWallTime());
+//    return U;
+}
+
+MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
+    Timer timer;
+    timer.restart();
+    printout(1, "Calculating orthonormalization matrix            ");
+
+    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+    SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
+    es.compute(S_tilde);
+
+    MatrixXd A = es.eigenvalues().asDiagonal();
+    for (int i = 0; i < A.cols(); i++) {
+        A(i,i) = pow(A(i,i), -1.0/2.0);
+    }
+    MatrixXd B = es.eigenvectors();
+    MatrixXd U = B*A*B.transpose();
+
+    println(1, timer.getWallTime());
+    return U;
 }

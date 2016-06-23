@@ -810,7 +810,8 @@ void OrbitalVector::normalize() {
  *
  * Nothing happens to the Fock matrix in this process.
  */
-//void OrbitalVector::orthogonalize(double prec) {
+void OrbitalVector::orthogonalize() {
+    NOT_IMPLEMENTED_ABORT;
 //    boost::timer rolex;
 //    rolex.restart();
 //    for (int i = 0; i < this->size(); i++) {
@@ -823,13 +824,14 @@ void OrbitalVector::normalize() {
 //    }
 //    printout(0, "Orthogonalizing                                  ");
 //    printout(0, rolex.elapsed() << endl);
-//}
+}
 
 /** Orthogonalize all orbitals in this set against all orbitals in the input set
  *
  * Orbitals are NOT orthogonalized within this set
  */
-//void OrbitalVector::orthogonalize(double prec, OrbitalVector &orbs) {
+void OrbitalVector::orthogonalize(OrbitalVector &orbs) {
+    NOT_IMPLEMENTED_ABORT;
 //    boost::timer rolex;
 //    rolex.restart();
 //    for (int i = 0; i < this->size(); i++) {
@@ -842,7 +844,7 @@ void OrbitalVector::normalize() {
 //    }
 //    printout(0, "Orthogonalizing                                  ");
 //    printout(0, rolex.elapsed() << endl);
-//}
+}
 
 //MatrixXd OrbitalVector::orthonormalize(double prec, MatrixXd *F) {
 //    MatrixXd U_p, U_a, U_b;
@@ -1000,81 +1002,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix(OrbitalVector &ket) {
     }
     return S;
 }
-
-/** Perform the orbital rotation that diagonalizes the Fock matrix
- *
- * This operation includes the orthonormalization using the overlap matrix.
- */
-//MatrixXd OrbitalVector::calcDiagonalizationMatrix(MatrixXd F) {
-//    boost::timer rolex;
-//    rolex.restart();
-//    printout(1, "Calculating diagonalization matrix               ");
-
-//    MatrixXd S_tilde = calcOverlapMatrix();
-//    MatrixXd S_m12 = MathUtils::hermitianMatrixPow(S_tilde, -1.0/2.0);
-//    F = S_m12*F*S_m12.transpose();
-
-//    MatrixXd M = MathUtils::diagonalizeHermitianMatrix(F);
-//    MatrixXd U = M.transpose()*S_m12;
-
-//    println(1, rolex.elapsed());
-//    return U;
-//}
-
-/** Minimize the spatial extension of orbitals, by a transformation of orbitals
- *
- * Minimizes \f$  \sum_{i=1,N}\langle i| {\bf R^2}  | i \rangle - \langle i| {\bf R}| i \rangle^2 \f$
- *	which is equivalent to maximizing \f$  \sum_{i=1,N}\langle i| {\bf R}| i \rangle^2\f$
- *
- * The resulting transformation includes the orthonormalization of the orbitals.
- * For details see the tex documentation in doc directory
- */
-//MatrixXd OrbitalVector::calcLocalizationMatrix() {
-//    double optTime = 0.0;
-//    double rotTime = 0.0;
-//    double totTime = 0.0;
-
-//    mpi::timer totTimer, timer;
-//    totTimer.restart();
-
-//    int oldPrec = TelePrompter::setPrecision(5);
-//    println(0, endl);
-
-//    timer.restart();
-//    RR rr(*this);
-//    int nIter = rr.maximize();//compute total U, rotation matrix
-//    optTime += timer.elapsed();
-//    println(0, "Localized after iteration               " << setw(20) << nIter);
-
-//    MatrixXd U;
-//    if (nIter > 0) {
-//        U = rr.getTotalU().transpose();
-//    } else {
-//        timer.restart();
-//        U = calcOrthonormalizationMatrix();
-//        optTime += timer.elapsed();
-//    }
-
-//    println(0, "Calculating rotation matrix                      " << optTime);
-//    println(0, "Total time localization                          " << totTimer.elapsed());
-//    printout(0, endl);
-
-//    TelePrompter::setPrecision(oldPrec);
-//    return U;
-//}
-
-//MatrixXd OrbitalVector::calcOrthonormalizationMatrix() {
-//    boost::timer rolex;
-//    rolex.restart();
-//    printout(1, "Calculating orthonormalization matrix            ");
-
-//    MatrixXd S_tilde = calcOverlapMatrix();
-//    MatrixXd U = MathUtils::hermitianMatrixPow(S_tilde, -1.0/2.0);
-//    spinCleanMatrix(U);
-
-//    println(1, rolex.elapsed());
-//    return U;
-//}
 
 //int OrbitalVector::printTreeSizes() const {
 //    int nNodes = 0;
