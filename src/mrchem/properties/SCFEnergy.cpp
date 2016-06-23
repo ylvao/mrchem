@@ -58,9 +58,7 @@ void SCFEnergy::compute(const Nuclei &nuclei) {
         }
     }
     int oldPrec = TelePrompter::setPrecision(15);
-    println(0, "                                                            ");
     println(0, " Nuclear energy              " << setw(30) << this->E_nuc    );
-    println(0, "                                                            ");
     TelePrompter::setPrecision(oldPrec);
     TelePrompter::printFooter(0, timer, 2);
 }
@@ -109,9 +107,9 @@ void SCFEnergy::compute(FockOperator &f_oper, MatrixXd &f_mat, OrbitalVector &ph
     this->E_el = E_orbxc2 - E_eex + this->E_xc;
 
     int oldPrec = TelePrompter::setPrecision(15);
-    println(0, "                                                            ");
+    println(2, "                                                            ");
     println(0, " Electronic energy           " << setw(30) << this->E_el     );
-    println(0, "                                                            ");
+    println(2, "                                                            ");
     TelePrompter::setPrecision(oldPrec);
     TelePrompter::printFooter(0, timer, 2);
 }

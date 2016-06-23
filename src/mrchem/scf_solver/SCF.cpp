@@ -124,45 +124,38 @@ void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
         printout(0, setw(5) << phi_i.isConverged(getOrbitalThreshold()) << endl);
     }
     TelePrompter::printSeparator(0, '-');
-    printout(0, "Total error:                     ");
-    printout(0, setw(16) << phi.calcTotalError() << "     ");
+    printout(0, " Total error:                    ");
+    printout(0, setw(19) << phi.calcTotalError() << "  ");
     printout(0, setw(3) << phi.isConverged(getOrbitalThreshold()) << endl);
     TelePrompter::printSeparator(0, '=', 2);
 }
 
 void SCF::printConvergence(bool converged) const {
-    NOT_IMPLEMENTED_ABORT;
-//    int iter = this->orbError.size();
-//    int oldPrec = TelePrompter::getPrecision();
-//    println(0,"                                                            ");
-//    println(0,"                                                            ");
-//    println(0,"==================== Convergence rate ======================");
-//    println(0,"                                                            ");
-//    if (converged) {
-//        println(0, " SCF converged in " << iter << " iterations!");
-//    } else {
-//        println(0, " SCF did NOT converge in " << iter << " iterations!");
-//    }
-//    println(0,"                                                            ");
-//    println(0,"------------------------------------------------------------");
-//    println(0,"Iter   Orb Error       Property                     Update  ");
-//    println(0,"------------------------------------------------------------");
-//    for (int i = 0; i < iter; i++) {
-//        double prop_i = this->property[i];
-//        double propDiff = getUpdate(this->property, i+1, true);
-//        printout(0, setw(3) << i+1);
-//        TelePrompter::setPrecision(5);
-//        printout(0, setw(15) << this->orbError[i]);
-//        TelePrompter::setPrecision(15);
-//        printout(0, setw(26) << prop_i);
-//        TelePrompter::setPrecision(5);
-//        printout(0, setw(16) << propDiff);
-//        printout(0, endl);
-//    }
-//    TelePrompter::setPrecision(oldPrec);
-//    println(0,"============================================================");
-//    println(0,"                                                            ");
-//    println(0,"                                                            ");
+    int iter = this->orbError.size();
+    int oldPrec = TelePrompter::getPrecision();
+    TelePrompter::printHeader(0, "Convergence rate");
+    println(0,"Iter   Orb Error       Property                     Update  ");
+    TelePrompter::printSeparator(0, '-');
+    for (int i = 0; i < iter; i++) {
+        double prop_i = this->property[i];
+        double propDiff = getUpdate(this->property, i+1, true);
+        printout(0, setw(3) << i+1);
+        TelePrompter::setPrecision(5);
+        printout(0, setw(15) << this->orbError[i]);
+        TelePrompter::setPrecision(15);
+        printout(0, setw(26) << prop_i);
+        TelePrompter::setPrecision(5);
+        printout(0, setw(16) << propDiff);
+        printout(0, endl);
+    }
+    TelePrompter::setPrecision(oldPrec);
+    TelePrompter::printSeparator(0, '-');
+    if (converged) {
+        println(0, " SCF converged in " << iter << " iterations!");
+    } else {
+        println(0, " SCF did NOT converge in " << iter << " iterations!");
+    }
+    TelePrompter::printSeparator(0, '=', 2);
 }
 
 void SCF::printCycle() const {
@@ -170,7 +163,7 @@ void SCF::printCycle() const {
     printout(0, "#######################");
     printout(0, " SCF cycle " << setw(2) << this->nIter << " ");
     printout(0, "#######################");
-    printout(0, endl << endl);
+    printout(0, endl << endl << endl);
 }
 
 void SCF::printTimer(double t) const {
@@ -179,7 +172,7 @@ void SCF::printTimer(double t) const {
     printout(0, "################");
     printout(0, " Elapsed time:  " << t << " ");
     printout(0, "################");
-    printout(0, endl << endl);
+    printout(0, endl << endl << endl);
     TelePrompter::setPrecision(oldPrec);
 }
 
@@ -216,6 +209,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 
     TelePrompter::printHeader(0, "Applying Helmholtz Operators");
     println(0, " Orb    OrbNorm       NormDiff       nNodes         Timing   ");
+    TelePrompter::printSeparator(0, '-');
 
     HelmholtzOperatorSet &H = *this->helmholtz;
     H.setPrecision(getOrbitalPrecision());
