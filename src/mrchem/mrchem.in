@@ -330,7 +330,7 @@ def verify_scf(scf):
         scf['orbital_prec'][1] = topsect['rel_prec'][0]
     if scf['orbital_prec'][0] < 0:
         scf['orbital_prec'][0] = scf['orbital_prec'][1]
-    if scf['property_thrs'][0] < 0:
+    if not scf['property_thrs'].is_set():
         scf['property_thrs'][0] = topsect['rel_prec'][0]/10
         print "   property_thrs  ", scf['property_thrs'][0]
     if not scf['orbital_thrs'].is_set():
