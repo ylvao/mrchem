@@ -112,11 +112,11 @@ void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {
 }
 
 void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
-    Orbital *tmp = new Orbital(out);
-    (*this)(*tmp, 1.0, out, c, inp);
+    Orbital tmp(out);
+    (*this)(tmp, 1.0, out, c, inp);
     out.clear();
-    out.real = tmp->real;
-    out.imag = tmp->imag;
-    tmp->real = 0;
-    tmp->imag = 0;
+    out.real = tmp.real;
+    out.imag = tmp.imag;
+    tmp.real = 0;
+    tmp.imag = 0;
 }
