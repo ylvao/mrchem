@@ -20,23 +20,23 @@ OrbitalOptimizer::~OrbitalOptimizer() {
 void OrbitalOptimizer::setup(FockOperator &fock,
                               OrbitalVector &phi,
                               MatrixXd &F) {
-    this->orbitals_n = &phi;
     this->fMat_n = &F;
     this->fOper_n = &fock;
 
-    this->orbitals_np1 = new OrbitalVector(*this->orbitals_n);
-    this->dOrbitals_n = new OrbitalVector(*this->orbitals_n);
+    this->orbitals_n = &phi;
+    this->orbitals_np1 = new OrbitalVector(phi);
+    this->dOrbitals_n = new OrbitalVector(phi);
 }
 
 void OrbitalOptimizer::clear() {
     this->nIter = 0;
-    this->orbitals_n = 0;
     this->fMat_n = 0;
     this->fOper_n = 0;
 
     delete this->orbitals_np1;
     delete this->dOrbitals_n;
 
+    this->orbitals_n = 0;
     this->orbitals_np1 = 0;
     this->dOrbitals_n = 0;
 
@@ -53,7 +53,6 @@ bool OrbitalOptimizer::optimize() {
 
     double err_o = phi_n.getErrors().maxCoeff();
     double err_t = 1.0;
-    adjustPrecision(err_o);
 
     fock.setup(getOrbitalPrecision());
     F = fock(phi_n, phi_n);

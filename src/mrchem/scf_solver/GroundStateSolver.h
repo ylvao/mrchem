@@ -36,6 +36,7 @@ protected:
     void localize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     void diagonalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     void orthonormalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
+    Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
 };
 
 #endif // GROUNDSTATESOLVER_H

@@ -23,13 +23,16 @@ GroundStateSolver::GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
                                      HelmholtzOperatorSet &h)
         : SCF(mra, h),
           fOper_n(0),
+          fMat_n(0),
           orbitals_n(0),
           orbitals_np1(0),
-          dOrbitals_n(0),
-          fMat_n(0) {
+          dOrbitals_n(0) {
 }
 
 GroundStateSolver::~GroundStateSolver() {
+    if (this->fOper_n != 0) MSG_ERROR("Solver not properly cleared");
+    if (this->fMat_n != 0) MSG_ERROR("Solver not properly cleared");
+    if (this->orbitals_n != 0) MSG_ERROR("Solver not properly cleared");
     if (this->orbitals_np1 != 0) MSG_ERROR("Solver not properly cleared");
     if (this->dOrbitals_n != 0) MSG_ERROR("Solver not properly cleared");
 }
@@ -170,23 +173,14 @@ void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector 
  * This operation includes the orthonormalization using the overlap matrix.
  */
 void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
+    MatrixXd S_m12 = calcOrthonormalizationMatrix(phi);
+    F = S_m12.transpose()*F*S_m12;
+
     Timer timer;
     timer.restart();
     printout(1, "Calculating diagonalization matrix               ");
 
     SelfAdjointEigenSolver<MatrixXd> es(F.cols());
-
-    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
-    es.compute(S_tilde);
-
-    MatrixXd A = es.eigenvalues().asDiagonal();
-    MatrixXd B = es.eigenvectors();
-    for (int i = 0; i < A.cols(); i++) {
-        A(i,i) = pow(A(i,i), -1.0/2.0);
-    }
-    MatrixXd S_m12 = B*A*B.transpose();
-    F = S_m12.transpose()*F*S_m12;
-
     es.compute(F);
     MatrixXd M = es.eigenvectors();
     MatrixXd U = M.transpose()*S_m12;
@@ -199,6 +193,13 @@ void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVect
 }
 
 void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
+    MatrixXd U = calcOrthonormalizationMatrix(phi);
+    F = U.transpose()*F*U;
+    fock.rotate(U);
+    this->add.rotate(phi, U);
+}
+
+MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     Timer timer;
     timer.restart();
     printout(1, "Calculating orthonormalization matrix            ");
@@ -215,8 +216,5 @@ void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalV
     MatrixXd U = B*A*B.transpose();
 
     println(1, timer.getWallTime());
-
-    F = U.transpose()*F*U;
-    fock.rotate(U);
-    this->add.rotate(phi, U);
+    return U;
 }
