@@ -10,6 +10,8 @@ class Getkw;
 class Nuclei;
 class Molecule;
 class OrbitalVector;
+class OrbitalOptimizer;
+class EnergyOptimizer;
 class GroundStateSolver;
 class LinearResponseSolver;
 class HelmholtzOperatorSet;
@@ -171,7 +173,7 @@ protected:
     void calcMagneticMomentProperties(const std::string &type, int d, int L);
 
     GroundStateSolver *setupInitialGuessSolver();
-    GroundStateSolver *setupGroundStateSolver();
+    OrbitalOptimizer *setupOrbitalOptimizer();
     LinearResponseSolver *setupLinearResponseSolver(bool dynamic);
 
     void setupInitialGroundState();

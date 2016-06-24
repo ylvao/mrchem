@@ -15,7 +15,8 @@ SCF::SCF(const MultiResolutionAnalysis<3> &mra, HelmholtzOperatorSet &h)
       orbThrs(-1.0),
       propThrs(-1.0),
       helmholtz(&h),
-      add(mra) {
+      add(mra),
+      MRA(mra) {
     this->orbPrec[0] = -1.0;
     this->orbPrec[1] = -1.0;
     this->orbPrec[2] = -1.0;
@@ -112,6 +113,7 @@ void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
     TelePrompter::printHeader(0, "Orbitals");
     println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
     TelePrompter::printSeparator(0, '-');
+    int oldprec = TelePrompter::setPrecision(5);
 
     for (int i = 0; i < phi.size(); i++) {
         const Orbital &phi_i = phi.getOrbital(i);
@@ -128,6 +130,7 @@ void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
     printout(0, setw(19) << phi.calcTotalError() << "  ");
     printout(0, setw(3) << phi.isConverged(getOrbitalThreshold()) << endl);
     TelePrompter::printSeparator(0, '=', 2);
+    TelePrompter::setPrecision(oldprec);
 }
 
 void SCF::printConvergence(bool converged) const {
@@ -151,9 +154,9 @@ void SCF::printConvergence(bool converged) const {
     TelePrompter::setPrecision(oldPrec);
     TelePrompter::printSeparator(0, '-');
     if (converged) {
-        println(0, " SCF converged in " << iter << " iterations!");
+        println(0,"                      SCF converged!!!                      ");
     } else {
-        println(0, " SCF did NOT converge in " << iter << " iterations!");
+        println(0,"                   SCF did NOT converge!!!                  ");
     }
     TelePrompter::printSeparator(0, '=', 2);
 }
@@ -210,6 +213,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
     TelePrompter::printHeader(0, "Applying Helmholtz Operators");
     println(0, " Orb    OrbNorm       NormDiff       nNodes         Timing   ");
     TelePrompter::printSeparator(0, '-');
+    int oldprec = TelePrompter::setPrecision(5);
 
     HelmholtzOperatorSet &H = *this->helmholtz;
     H.setPrecision(getOrbitalPrecision());
@@ -237,6 +241,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         printout(0, setw(18) << timer.getWallTime() << endl);
     }
     TelePrompter::printFooter(0, timer, 2);
+    TelePrompter::setPrecision(oldprec);
 }
 
 Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {

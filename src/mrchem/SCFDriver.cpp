@@ -15,7 +15,7 @@
 #include "HartreeFock.h"
 #include "DFT.h"
 
-#include "GroundStateSolver.h"
+#include "OrbitalOptimizer.h"
 //#include "LinearResponseSolver.h"
 #include "HelmholtzOperatorSet.h"
 //#include "KAIN.h"
@@ -339,15 +339,15 @@ GroundStateSolver* SCFDriver::setupInitialGuessSolver() {
 //    return gss;
 }
 
-GroundStateSolver* SCFDriver::setupGroundStateSolver() {
+OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-    GroundStateSolver *gss = new GroundStateSolver(*MRA, *helmholtz, scf_kain);
-    gss->setMaxIterations(scf_max_iter);
-    gss->setRotation(scf_rotation);
-    gss->setThreshold(scf_orbital_thrs, scf_property_thrs);
-    gss->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
-    return gss;
+    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*MRA, *helmholtz, scf_kain);
+    optimizer->setMaxIterations(scf_max_iter);
+    optimizer->setRotation(scf_rotation);
+    optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
+    optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
+    return optimizer;
 }
 
 LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
@@ -505,17 +505,31 @@ bool SCFDriver::runGroundState() {
     if (phi == 0) MSG_ERROR("Orbitals not initialized");
     if (f_oper == 0) MSG_ERROR("Fock operator not initialized");
     if (f_mat == 0) MSG_ERROR("Fock matrix not initialized");
+    bool converged = false;
+    { // Optimize orbitals
+        OrbitalOptimizer *solver = setupOrbitalOptimizer();
+        solver->setup(*f_oper, *f_mat, *phi);
+        converged = solver->optimize();
+        solver->clear();
+        delete solver;
+    }
 
-    GroundStateSolver *gss = setupGroundStateSolver();
-    gss->setup(*f_oper, *f_mat, *phi);
-    bool converged = gss->optimize();
-    gss->clear();
+    { // Optimize energy
+        if (scf_property_thrs > 0.0) {
+            NOT_IMPLEMENTED_ABORT;
+            //        EnergyOptimizer *solver = setupEnergyOptimizer();
+            //        setRotation(0); // For this part we don't diagonalize/localize
+            //        solver->setup(*f_oper, *f_mat, *phi);
+            //        converged = optimizeEnergy();
+            //        clearUpdates();
+            //        setRotation(oldRot);
+        }
+    }
 
 //    if (scf_write_orbitals) {
 //        phi->writeOrbitals(file_final_orbitals);
 //    }
 
-    delete gss;
     return converged;
 }
 
