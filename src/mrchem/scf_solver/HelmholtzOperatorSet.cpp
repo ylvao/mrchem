@@ -2,6 +2,7 @@
 #include "OrbitalVector.h"
 #include "OperatorTree.h"
 #include "Timer.h"
+#include "eigen_disable_warnings.h"
 
 using namespace std;
 using namespace Eigen;
