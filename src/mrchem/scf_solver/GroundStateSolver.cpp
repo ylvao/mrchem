@@ -591,31 +591,20 @@ MatrixXd GroundStateSolver::calcLocalizationMatrix(OrbitalVector &phi) {
  * This operation includes the orthonormalization using the overlap matrix.
  */
 MatrixXd GroundStateSolver::calcDiagonalizationMatrix(OrbitalVector &phi, MatrixXd &F_tilde) {
-    NOT_IMPLEMENTED_ABORT;
-//    Timer timer;
-//    timer.restart();
-//    printout(1, "Calculating diagonalization matrix               ");
+    Timer timer;
+    timer.restart();
+    printout(1, "Calculating diagonalization matrix               ");
 
-//    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+    MatrixXd S_m12 = calcOrthonormalizationMatrix(phi);
+    MatrixXd F = S_m12*F_tilde*S_m12.transpose();
 
-//    SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
-//    es.compute(S_tilde);
+    SelfAdjointEigenSolver<MatrixXd> es(F.cols());
+    es.compute(F);
+    MatrixXd M = es.eigenvalues();
+    MatrixXd U = M.transpose()*S_m12;
 
-//    MatrixXd A = es.eigenvalues().asDiagonal();
-//    for (int i = 0; i < A.cols(); i++) {
-//        A(i,i) = pow(A(i,i), -1.0/2.0);
-//    }
-//    MatrixXd B = es.eigenvectors();
-//    MatrixXd S_m12 = B*A*B.transpose();
-
-//    MatrixXd F = S_m12*F_tilde*S_m12.transpose();
-
-//    es.compute(F);
-//    MatrixXd M = es.eigenvalues();
-//    MatrixXd U = M.transpose()*S_m12;
-
-//    println(1, timer.getWallTime());
-//    return U;
+    println(1, timer.getWallTime());
+    return U;
 }
 
 MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
