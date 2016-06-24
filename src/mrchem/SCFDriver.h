@@ -146,8 +146,15 @@ protected:
     CoulombPotential *J;
     ExchangePotential *K;
     XCPotential *XC;
-    FockOperator *f_oper;
-    Eigen::MatrixXd *f_mat;
+    FockOperator *fock;
+    Eigen::MatrixXd F;
+
+    OrbitalVector *phi_np1;
+    CoulombPotential *J_np1;
+    ExchangePotential *K_np1;
+    XCPotential *XC_np1;
+    FockOperator *fock_np1;
+    Eigen::MatrixXd F_np1;
 
     // Perturbed quantities
     OrbitalVector *x_phi;
@@ -155,7 +162,7 @@ protected:
     CoulombHessian *dJ;
     ExchangeHessian *dK;
     XCHessian *dXC;
-    FockOperator *df_oper;
+    FockOperator *d_fock;
 
     // XCFun
     XCFunctional *xcfun;
@@ -174,7 +181,11 @@ protected:
 
     GroundStateSolver *setupInitialGuessSolver();
     OrbitalOptimizer *setupOrbitalOptimizer();
+    EnergyOptimizer *setupEnergyOptimizer();
     LinearResponseSolver *setupLinearResponseSolver(bool dynamic);
+
+    void setup_np1();
+    void clear_np1();
 
     void setupInitialGroundState();
     void setupInitialResponse(QMOperator &h, int d, bool dynamic, double omega);

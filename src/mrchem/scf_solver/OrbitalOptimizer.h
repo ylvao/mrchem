@@ -10,7 +10,7 @@ public:
                      KAIN *k = 0);
     virtual ~OrbitalOptimizer();
 
-    void setup(FockOperator &f_oper, Eigen::MatrixXd &f_mat, OrbitalVector &phi);
+    void setup(FockOperator &fock, OrbitalVector &phi, Eigen::MatrixXd &F);
     void clear();
 
     virtual bool optimize();

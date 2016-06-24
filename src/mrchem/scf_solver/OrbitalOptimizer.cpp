@@ -17,12 +17,12 @@ OrbitalOptimizer::~OrbitalOptimizer() {
     this->kain = 0;
 }
 
-void OrbitalOptimizer::setup(FockOperator &f_oper,
-                              MatrixXd &f_mat,
-                              OrbitalVector &phi) {
+void OrbitalOptimizer::setup(FockOperator &fock,
+                              OrbitalVector &phi,
+                              MatrixXd &F) {
     this->orbitals_n = &phi;
-    this->fMat_n = &f_mat;
-    this->fOper_n = &f_oper;
+    this->fMat_n = &F;
+    this->fOper_n = &fock;
 
     this->orbitals_np1 = new OrbitalVector(*this->orbitals_n);
     this->dOrbitals_n = new OrbitalVector(*this->orbitals_n);
