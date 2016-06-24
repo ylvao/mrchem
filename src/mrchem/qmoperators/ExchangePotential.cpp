@@ -25,14 +25,7 @@ void ExchangePotential::clear() {
 }
 
 void ExchangePotential::rotate(MatrixXd &U) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (prec < 0.0) {
-//        prec = this->precision;
-//    }
-//    if (this->ex_0 != 0) {
-//        printout(1, endl);
-//        this->ex_0->rotate(prec, U);
-//    }
+    this->add.rotate(exchange_0, U);
 }
 
 Orbital* ExchangePotential::operator() (Orbital &phi_p) {
