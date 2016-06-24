@@ -58,7 +58,10 @@ void XCPotential::calcPotential() {
         MSG_FATAL("Invalid functional type");
     }
     double t = timer.getWallTime();
-    int n = -1;
+    int n = 0;
+    n += this->potential[0]->getNNodes();
+    n += this->potential[1]->getNNodes();
+    n += this->potential[2]->getNNodes();
     TelePrompter::printTree(0, "XC potential", n, t);
 }
 

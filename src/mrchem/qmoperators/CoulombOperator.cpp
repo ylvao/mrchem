@@ -32,8 +32,10 @@ void CoulombOperator::clear() {
 }
 
 int CoulombOperator::printTreeSizes() const {
-    this->density.printTreeSizes();
-    this->potential.printTreeSizes();
+    int nNodes = 0;
+    nNodes += this->density.printTreeSizes();
+    nNodes += this->potential.printTreeSizes();
+    return nNodes;
 }
 
 Orbital* CoulombOperator::operator() (Orbital &orb) {

@@ -420,7 +420,6 @@ MatrixXd FockOperator::applyAdjointPerturbations(OrbitalVector &i_orbs, OrbitalV
 /** Prints the number of trees and nodes kept in the Fock operator */
 int FockOperator::printTreeSizes() const {
     int nNodes = 0;
-    if (this->T != 0) nNodes += this->T->printTreeSizes();
     if (this->V != 0) nNodes += this->V->printTreeSizes();
     if (this->J != 0) nNodes += this->J->printTreeSizes();
     if (this->K != 0) nNodes += this->K->printTreeSizes();
