@@ -46,7 +46,7 @@ void EnergyOptimizer::clear() {
 }
 
 bool EnergyOptimizer::optimize() {
-    MatrixXd &F = *this->fMat_n;
+    MatrixXd &F_n = *this->fMat_n;
     FockOperator &fock = *this->fOper_n;
     OrbitalVector &phi_n = *this->orbitals_n;
     OrbitalVector &phi_np1 = *this->orbitals_np1;
@@ -71,8 +71,8 @@ bool EnergyOptimizer::optimize() {
         this->property.push_back(E);
 
         // Iterate Helmholtz operators
-        this->helmholtz->initialize(F.diagonal());
-        applyHelmholtzOperators(phi_np1, phi_n, F);
+        this->helmholtz->initialize(F_n.diagonal());
+        applyHelmholtzOperators(phi_np1, phi_n, F_n);
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
 
         // Compute errors
@@ -84,19 +84,19 @@ bool EnergyOptimizer::optimize() {
         this->orbError.push_back(err_t);
 
         // Compute Fock matrix
-        MatrixXd F_tilde = F + calcFockMatrixUpdate();
+        MatrixXd F_np1 = F_n + calcFockMatrixUpdate();
         phi_n.clear();
         dPhi_n.clear();
         fock.clear();
 
         // Rotate orbitals
         MatrixXd U = calcOrthonormalizationMatrix(phi_np1);
-        F = U.transpose()*F_tilde*U;
+        F_n = U.transpose()*F_np1*U;
         this->add.rotate(phi_n, U, phi_np1);
         phi_np1.clear();
 
         // Finalize SCF cycle
-        printOrbitals(F, phi_n);
+        printOrbitals(F_n, phi_n);
         printProperty();
         printTimer(timer.getWallTime());
 
@@ -111,10 +111,6 @@ bool EnergyOptimizer::optimize() {
 
 MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     if (this->fOper_np1 == 0) MSG_FATAL("Operator not initialized");
-
-    MatrixXd F_n;
-    MatrixXd F_np1;
-    MatrixXd dV_n;
 
     OrbitalVector &phi_n = *this->orbitals_n;
     OrbitalVector &phi_np1 = *this->orbitals_np1;
@@ -133,6 +129,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     ExchangeOperator *k_n = this->fOper_n->getExchangeOperator();
     XCOperator *xc_n = this->fOper_n->getXCOperator();
 
+    MatrixXd dV_n;
     {   // Nuclear potential matrix is computed explicitly
         Timer timer;
         timer.restart();
@@ -141,6 +138,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
         TelePrompter::printDouble(0, "Nuclear potential matrix", t);
     }
 
+    MatrixXd F_n;
     {   // Computing potential matrix excluding nuclear part
         Timer timer;
         timer.restart();
@@ -166,6 +164,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     if (xc_np1 != 0) xc_np1->setup(getOrbitalPrecision());
     println(0,"                                                            ");
 
+    MatrixXd F_np1;
     {   // Computing potential matrix excluding nuclear part
         Timer timer;
         timer.restart();
@@ -183,6 +182,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
         TelePrompter::printDouble(0, "Fock matrix n+1", t);
     }
 
+    // Re-computing non-orthogonal phi_np1
     phi_np1.clear();
     this->add(phi_np1, 1.0, phi_n, 1.0, dPhi_n);
 
@@ -194,7 +194,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     // Adding up the pieces
     MatrixXd dF_n = dV_n + dF_1 + dF_2 + dF_3;
 
-    //Symmetrizing
+    // Symmetrizing
     MatrixXd sym = dF_n + dF_n.transpose();
     dF_n = 0.5 * sym;
 
