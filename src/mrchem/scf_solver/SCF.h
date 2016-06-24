@@ -65,13 +65,13 @@ protected:
                      const char &name, int pr = 5) const;
 
     void applyHelmholtzOperators(OrbitalVector &phi_np1,
-                                 OrbitalVector &phi_n,
                                  Eigen::MatrixXd &F_n,
+                                 OrbitalVector &phi_n,
                                  bool adjoint = false);
 
     virtual Orbital* getHelmholtzArgument(int i,
-                                          OrbitalVector &phi,
                                           Eigen::MatrixXd &F,
+                                          OrbitalVector &phi,
                                           bool adjoint) = 0;
 
     Orbital* calcMatrixPart(int i,

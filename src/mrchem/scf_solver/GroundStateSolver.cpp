@@ -47,8 +47,8 @@ GroundStateSolver::~GroundStateSolver() {
  * greenArg = \hat{V}orb_i + \sum_j (\Lambda_{ij}-F_{ij})orb_j
  */
 Orbital* GroundStateSolver::getHelmholtzArgument(int i,
-                                                 OrbitalVector &phi,
                                                  MatrixXd &F,
+                                                 OrbitalVector &phi,
                                                  bool adjoint) {
     FockOperator &fock = *this->fOper_n;
 

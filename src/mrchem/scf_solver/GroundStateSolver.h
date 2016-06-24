@@ -25,8 +25,8 @@ protected:
     OrbitalVector *dOrbitals_n;
 
     virtual Orbital* getHelmholtzArgument(int i,
+                                          Eigen::MatrixXd &F,
                                           OrbitalVector &phi,
-                                          Eigen::MatrixXd &f_mat,
                                           bool adjoint);
 
     void printProperty() const;

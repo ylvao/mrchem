@@ -204,8 +204,8 @@ void SCF::printMatrix(int level, const MatrixXd &M, const char &name, int pr) co
  * the norms of the new orbitals (deviation from one).
  */
 void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
-                                  OrbitalVector &phi_n,
                                   MatrixXd &F_n,
+                                  OrbitalVector &phi_n,
                                   bool adjoint) {
     Timer timer;
     timer.restart();
@@ -225,7 +225,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         Orbital &nPhi_i = phi_n.getOrbital(i);
         Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
-        Orbital *arg_i = getHelmholtzArgument(i, phi_n, F_n, adjoint);
+        Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
         H(i, np1Phi_i, *arg_i);
         delete arg_i;
 

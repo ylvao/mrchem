@@ -74,7 +74,7 @@ bool EnergyOptimizer::optimize() {
 
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F_n.diagonal());
-        applyHelmholtzOperators(phi_np1, phi_n, F_n);
+        applyHelmholtzOperators(phi_np1, F_n, phi_n);
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
 
         // Compute errors
