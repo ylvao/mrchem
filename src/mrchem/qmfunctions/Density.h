@@ -18,6 +18,7 @@ public:
     void clear();
 
     FunctionTree<3> &getDensity(int s = Paired);
+    int printTreeSizes() const;
 
     friend class DensityProjector;
 

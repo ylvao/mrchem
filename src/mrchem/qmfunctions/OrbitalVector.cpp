@@ -1003,18 +1003,18 @@ MatrixXcd OrbitalVector::calcOverlapMatrix(OrbitalVector &ket) {
     return S;
 }
 
-//int OrbitalVector::printTreeSizes() const {
-//    int nNodes = 0;
-//    int nTrees = 0;
-//    for (int i = 0; i < size(); i++) {
-//        if (this->orbitals[i] != 0) {
-//            nNodes += this->orbitals[i]->getNNodes();
-//            nTrees++;
-//        }
-//    }
-//    println(0, " OrbitalVector        " << setw(15) << nTrees << setw(25) << nNodes);
-//    return nNodes;
-//}
+int OrbitalVector::printTreeSizes() const {
+    int nNodes = 0;
+    int nTrees = 0;
+    for (int i = 0; i < size(); i++) {
+        if (this->orbitals[i] != 0) {
+            nNodes += this->orbitals[i]->getNNodes();
+            nTrees++;
+        }
+    }
+    println(0, " OrbitalVector     " << setw(15) << nTrees << setw(25) << nNodes);
+    return nNodes;
+}
 
 /** Compute the position matrix <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
  */

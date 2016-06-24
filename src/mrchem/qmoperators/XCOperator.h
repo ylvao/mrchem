@@ -17,9 +17,9 @@ class XCOperator : public QMOperator {
 public:
     XCOperator(int k,
                double build_prec,
-              const MultiResolutionAnalysis<3> &mra,
-              XCFunctional &func,
-              OrbitalVector &phi);
+               const MultiResolutionAnalysis<3> &mra,
+               XCFunctional &func,
+               OrbitalVector &phi);
     virtual ~XCOperator();
 
     double getEnergy() const { return this->energy; }

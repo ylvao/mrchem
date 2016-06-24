@@ -1,8 +1,9 @@
 #ifndef COULOMBOPERATOR_H
 #define COULOMBOPERATOR_H
 
-#include "Potential.h"
+#include "QMOperator.h"
 #include "Density.h"
+#include "Potential.h"
 #include "GridCleaner.h"
 #include "PoissonOperator.h"
 #include "DensityProjector.h"
@@ -34,7 +35,7 @@ protected:
     DensityProjector project;
 
     Density density;
-    Potential *potential;
+    Potential potential;
     OrbitalVector *orbitals;
 };
 

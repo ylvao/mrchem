@@ -64,7 +64,7 @@ public:
 //    void replaceOrbitals(OrbitalVector &new_orbs);
     void replaceOrbital(int i, Orbital **orb);
 
-//    int printTreeSizes() const;
+    int printTreeSizes() const;
 
     friend std::ostream& operator<<(std::ostream &o, OrbitalVector &orb_set) {
         int oldPrec = TelePrompter::setPrecision(15);

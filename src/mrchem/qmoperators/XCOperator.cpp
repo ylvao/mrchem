@@ -277,55 +277,44 @@ Orbital* XCOperator::adjoint(Orbital &orb) {
 }
 
 int XCOperator::printTreeSizes() const {
-    NOT_IMPLEMENTED_ABORT;
-//    int nNodes = 0;
-//    int nTrees = 0;
-//    if (this->rho_0 != 0) {
-//        int nFuncs = 8;
-//        for (int i = 0; i < nFuncs; i++) {
-//            if (this->rho_0[i] != 0) {
-//                nNodes += this->rho_0[i]->getNNodes();
-//                nTrees++;
-//            }
-//        }
-//    }
-//    if (this->potential != 0) {
-//        if (not this->xcFun->isSpinSeparated()) {
-//            if (this->potential[0] != 0) {
-//                nNodes += this->potential[0]->getNNodes();
-//                nTrees++;
-//            }
-//        } else {
-//            if (this->potential[1] != 0) {
-//                nNodes += this->potential[1]->getNNodes();
-//                nTrees++;
-//            }
-//            if (this->potential[2] != 0) {
-//                nNodes += this->potential[2]->getNNodes();
-//                nTrees++;
-//            }
-//        }
-//    }
-//    if (this->xcInput != 0) {
-//        int nFuncs = this->xcFun->getInputLength();
-//        for (int i = 0; i < nFuncs; i++) {
-//            if (this->xcInput[i] != 0) {
-//                nNodes += this->xcInput[i]->getNNodes();
-//                nTrees++;
-//            }
-//        }
-//    }
-//    if (this->xcOutput != 0) {
-//        int nFuncs = this->xcFun->getOutputLength();
-//        for (int i = 0; i < nFuncs; i++) {
-//            if (this->xcOutput[i] != 0) {
-//                nNodes += this->xcOutput[i]->getNNodes();
-//                nTrees++;
-//            }
-//        }
-//    }
-//    println(0, " XCOperator        " << setw(15) << nTrees << setw(25) << nNodes);
-//    return nNodes;
+    int nNodes = 0;
+    nNodes += this->density_0.printTreeSizes();
+//    this->gradient_0[0]->printTreeSizes();
+//    this->gradient_0[1]->printTreeSizes();
+//    this->gradient_0[2]->printTreeSizes();
+
+    if (this->potential != 0) {
+        nNodes += this->potential[0]->printTreeSizes();
+        nNodes += this->potential[1]->printTreeSizes();
+        nNodes += this->potential[2]->printTreeSizes();
+    }
+    int nInput = 0;
+    int inTrees = 0;
+    if (this->xcInput != 0) {
+        int nFuncs = this->functional->getInputLength();
+        for (int i = 0; i < nFuncs; i++) {
+            if (this->xcInput[i] != 0) {
+                nInput += this->xcInput[i]->getNNodes();
+                inTrees++;
+            }
+        }
+    }
+    int nOutput = 0;
+    int outTrees = 0;
+    if (this->xcOutput != 0) {
+        int nFuncs = this->functional->getOutputLength(this->order);
+        for (int i = 0; i < nFuncs; i++) {
+            if (this->xcOutput[i] != 0) {
+                nOutput += this->xcOutput[i]->getNNodes();
+                outTrees++;
+            }
+        }
+    }
+    println(0, " XC input          " << setw(15) << inTrees << setw(25) << nInput);
+    println(0, " XC output         " << setw(15) << outTrees << setw(25) << nOutput);
+
+    nNodes += (nInput + nOutput);
+    return nNodes;
 }
 
 void XCOperator::compressTreeData(int nFuncs, FunctionTree<3> **trees, MatrixXd &data) {

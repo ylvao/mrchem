@@ -10,15 +10,11 @@ CoulombOperator::CoulombOperator(double build_prec,
           poisson(mra, build_prec, build_prec),
           project(mra),
           density(Paired),
-          potential(0),
+          potential(mra),
           orbitals(&phi) {
-    this->potential = new Potential(mra);
 }
 
 CoulombOperator::~CoulombOperator() {
-    if (this->potential == 0) MSG_ERROR("Invalid potential");
-    delete this->potential;
-    this->potential = 0;
 }
 
 void CoulombOperator::setup(double prec) {
@@ -36,13 +32,13 @@ void CoulombOperator::clear() {
 }
 
 int CoulombOperator::printTreeSizes() const {
-    NOT_IMPLEMENTED_ABORT;
+    this->density.printTreeSizes();
+    this->potential.printTreeSizes();
 }
 
 Orbital* CoulombOperator::operator() (Orbital &orb) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (this->potential == 0) MSG_ERROR("XC potential not available");
-    return (*this->potential)(orb);
+    return this->potential(orb);
 }
 
 Orbital* CoulombOperator::adjoint(Orbital &orb) {

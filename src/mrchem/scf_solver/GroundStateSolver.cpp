@@ -192,7 +192,7 @@ bool GroundStateSolver::optimizeOrbitals() {
 //            if (this->kain != 0) this->kain->calcUpdates(phi_n, dPhi_n);
         }
 
-//        printTreeSizes();
+        printTreeSizes();
 
         {   // Compute errors
             VectorXd errors = dPhi_n.getNorms();
@@ -517,30 +517,24 @@ void GroundStateSolver::printProperty() const {
 
 /** Prints the number of trees and nodes kept in the solver at the given moment */
 int GroundStateSolver::printTreeSizes() const {
-    NOT_IMPLEMENTED_ABORT;
-//    println(0,"                                                            ");
-//    println(0,"                                                            ");
-//    println(0,"------------------- Printing Tree sizes --------------------");
-//    println(0,"                                                            ");
+    TelePrompter::printHeader(0, "Printing Tree Sizes");
 
 //    int n2D = 0;
-//    int n3D = 0;
+    int n3D = 0;
 //    if (this->helmholtz != 0) n2D += this->helmholtz->printTreeSizes();
-//    if (this->fOper_n != 0) n3D += this->fOper_n->printTreeSizes();
-//    if (this->fOper_np1 != 0) n3D += this->fOper_np1->printTreeSizes();
-//    if (this->phi_n != 0) n3D += this->phi_n->printTreeSizes();
-//    if (this->phi_np1 != 0) n3D += this->phi_np1->printTreeSizes();
-//    if (this->dPhi_n != 0) n3D += this->dPhi_n->printTreeSizes();
-//    if (this->acc != 0) n3D += this->acc->printTreeSizes();
+    if (this->fOper_n != 0) n3D += this->fOper_n->printTreeSizes();
+    if (this->fOper_np1 != 0) n3D += this->fOper_np1->printTreeSizes();
+    if (this->orbitals_n != 0) n3D += this->orbitals_n->printTreeSizes();
+    if (this->orbitals_np1 != 0) n3D += this->orbitals_np1->printTreeSizes();
+    if (this->dOrbitals_n != 0) n3D += this->dOrbitals_n->printTreeSizes();
+//    if (this->kain != 0) n3D += this->kain->printTreeSizes();
 
-//    println(0,"                                                            ");
+    TelePrompter::printSeparator(0, '-');
 //    println(0," Total number of 2D nodes                " << setw(18) << n2D);
-//    println(0," Total number of 3D nodes                " << setw(18) << n3D);
-//    println(0,"                                                            ");
-//    println(0,"------------------------------------------------------------");
-//    println(0,"                                                            ");
+    println(0," Total number of nodes                   " << setw(18) << n3D);
+    TelePrompter::printSeparator(0, '=', 2);
 
-//    return n3D;
+    return n3D;
 }
 
 /** Minimize the spatial extension of orbitals, by a transformation of orbitals

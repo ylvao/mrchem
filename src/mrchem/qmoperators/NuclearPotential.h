@@ -17,8 +17,6 @@ public:
     virtual void setup(double prec);
     virtual void clear();
 
-    virtual int printTreeSizes() const;
-
     using Potential::operator();
     using Potential::adjoint;
 

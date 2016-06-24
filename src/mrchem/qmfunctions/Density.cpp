@@ -2,6 +2,8 @@
 #include "FunctionTree.h"
 #include "TelePrompter.h"
 
+using namespace std;
+
 Density::Density(bool s)
     : spin(s),
       total(0),
@@ -46,6 +48,15 @@ FunctionTree<3>& Density::getDensity(int s) {
     if (s == Beta) rho = this->beta;
     if (rho == 0) MSG_FATAL("Uninitialized density");
     return *rho;
+}
+
+int Density::printTreeSizes() const {
+    int nNodes = 0;
+    if (this->total != 0) nNodes += this->total->getNNodes();
+    if (this->alpha != 0) nNodes += this->alpha->getNNodes();
+    if (this->beta != 0) nNodes += this->beta->getNNodes();
+    println(0, " Density           " << setw(15) << 1 << setw(25) << nNodes);
+    return nNodes;
 }
 
 //void Density::setup(double prec) {

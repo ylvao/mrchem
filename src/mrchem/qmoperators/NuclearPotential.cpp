@@ -40,7 +40,3 @@ void NuclearPotential::clear() {
     this->project.setPrecision(-1.0);
     Potential::clear();
 }
-
-int NuclearPotential::printTreeSizes() const {
-    NOT_IMPLEMENTED_ABORT;
-}
