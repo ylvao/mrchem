@@ -9,18 +9,17 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
                               double a, Orbital &phi_a,
                               double b, Orbital &phi_b) {
     if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
-    {
-        FunctionTreeVector<3> vec;
-        if (phi_a.hasReal()) vec.push_back(a, phi_a.real);
-        if (phi_b.hasReal()) vec.push_back(b, phi_b.real);
-        phi_ab.real = (*this)(vec);
-    }
-    {
-        FunctionTreeVector<3> vec;
-        if (phi_a.hasImag()) vec.push_back(a, phi_a.imag);
-        if (phi_b.hasImag()) vec.push_back(b, phi_b.imag);
-        phi_ab.imag = (*this)(vec);
-    }
+    FunctionTreeVector<3> real_vec;
+    FunctionTreeVector<3> imag_vec;
+
+    if (phi_a.hasReal()) real_vec.push_back(a, phi_a.real);
+    if (phi_b.hasReal()) real_vec.push_back(b, phi_b.real);
+
+    if (phi_a.hasImag()) imag_vec.push_back(a, phi_a.imag);
+    if (phi_b.hasImag()) imag_vec.push_back(b, phi_b.imag);
+
+    if (real_vec.size() > 0) phi_ab.real = (*this)(real_vec);
+    if (imag_vec.size() > 0) phi_ab.imag = (*this)(imag_vec);
 }
 
 void OrbitalAdder::operator()(Orbital &out,
@@ -28,20 +27,14 @@ void OrbitalAdder::operator()(Orbital &out,
                               std::vector<Orbital *> &orbs) {
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Orbital not empty");
     if (coefs.size() != orbs.size()) MSG_ERROR("Invalid arguments");
-    {
-        FunctionTreeVector<3> vec;
-        for (int i = 0; i < orbs.size(); i++) {
-            if (orbs[i]->hasReal()) vec.push_back(coefs[i], orbs[i]->real);
-        }
-        out.real = (*this)(vec);
+    FunctionTreeVector<3> real_vec;
+    FunctionTreeVector<3> imag_vec;
+    for (int i = 0; i < orbs.size(); i++) {
+        if (orbs[i]->hasReal()) real_vec.push_back(coefs[i], orbs[i]->real);
+        if (orbs[i]->hasImag()) imag_vec.push_back(coefs[i], orbs[i]->imag);
     }
-    {
-        FunctionTreeVector<3> vec;
-        for (int i = 0; i < orbs.size(); i++) {
-            if (orbs[i]->hasImag()) vec.push_back(coefs[i], orbs[i]->imag);
-        }
-        out.imag = (*this)(vec);
-    }
+    if (real_vec.size() > 0) out.real = (*this)(vec);
+    if (imag_vec.size() > 0) out.imag = (*this)(vec);
 }
 
 void OrbitalAdder::operator()(OrbitalVector &out,
@@ -74,17 +67,19 @@ void OrbitalAdder::operator()(Orbital &out, VectorXd &c, OrbitalVector &inp) {
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
-    NOT_IMPLEMENTED_ABORT;
+    if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
+    if (out.size() != U.rows()) MSG_ERROR("Invalid arguments");
+    for (int i = 0; i < out.size(); i++) {
+        VectorXd c = U.row(i);
+        Orbital &out_i = out.getOrbital(i);
+        (*this)(out_i, c, inp);
+    }
 }
 
 /** In place rotation of orbital vector */
 void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U) {
     OrbitalVector tmp(out);
-    for (int i = 0; i < out.size(); i++) {
-        VectorXd c = U.row(i);
-        Orbital &tmp_phi = tmp.getOrbital(i);
-        (*this)(tmp_phi, c, out);
-    }
+    rotate(tmp, U, out);
     out.clear();
     for (int i = 0; i < out.size(); i++) {
         Orbital &tmp_phi = tmp.getOrbital(i);
