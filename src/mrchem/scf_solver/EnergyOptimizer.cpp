@@ -100,7 +100,7 @@ bool EnergyOptimizer::optimize() {
         printProperty();
         printTimer(timer.getWallTime());
 
-        if (err_p < getPropertyThreshold() and this->nIter > 1) {
+        if (err_p < getPropertyThreshold()) {
             converged = true;
             break;
         }
