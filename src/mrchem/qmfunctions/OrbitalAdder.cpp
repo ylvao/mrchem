@@ -33,8 +33,8 @@ void OrbitalAdder::operator()(Orbital &out,
         if (orbs[i]->hasReal()) real_vec.push_back(coefs[i], orbs[i]->real);
         if (orbs[i]->hasImag()) imag_vec.push_back(coefs[i], orbs[i]->imag);
     }
-    if (real_vec.size() > 0) out.real = (*this)(vec);
-    if (imag_vec.size() > 0) out.imag = (*this)(vec);
+    if (real_vec.size() > 0) out.real = (*this)(real_vec);
+    if (imag_vec.size() > 0) out.imag = (*this)(imag_vec);
 }
 
 void OrbitalAdder::operator()(OrbitalVector &out,
