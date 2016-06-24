@@ -151,19 +151,15 @@ bool GroundStateSolver::optimizeOrbitals() {
             adjustPrecision(err_o);
         }
 
-        {   // Localize/diagonalize/orthogonalize
-            MatrixXd U;
+        {   // Rotate orbitals
             if (needLocalization()) {
-                U = calcLocalizationMatrix(phi_n);
+                localize(fock, F, phi_n);
             } else if (needDiagonalization()) {
-                U = calcDiagonalizationMatrix(phi_n, F);
+                diagonalize(fock, F, phi_n);
 //                if (this->kain != 0) this->kain->clear();
             } else {
-                U = calcOrthonormalizationMatrix(phi_n);
+                orthonormalize(fock, F, phi_n);
             }
-            fock.rotate(U);
-            F = U.transpose()*F*U;
-            this->add.rotate(phi_n, U);
         }
 
         {   // Compute electronic energy
@@ -178,8 +174,7 @@ bool GroundStateSolver::optimizeOrbitals() {
         }
 
         {   // Orthonormalize
-            MatrixXd U = calcOrthonormalizationMatrix(phi_np1);
-            this->add.rotate(phi_np1, U);
+            orthonormalize(fock, F, phi_np1);
         }
 
         {   // Compute orbital updates
@@ -208,10 +203,7 @@ bool GroundStateSolver::optimizeOrbitals() {
         }
 
         {   // Orthonormalize
-            MatrixXd U = calcOrthonormalizationMatrix(phi_n);
-            this->add.rotate(phi_n, U);
-//            phi_n.orthogonalize();
-//            phi_n.normalize();
+            orthonormalize(fock, F, phi_n);
         }
 
         {   // Compute Fock matrix
@@ -545,7 +537,7 @@ int GroundStateSolver::printTreeSizes() const {
  * The resulting transformation includes the orthonormalization of the orbitals.
  * For details see the tex documentation in doc directory
  */
-MatrixXd GroundStateSolver::calcLocalizationMatrix(OrbitalVector &phi) {
+void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     NOT_IMPLEMENTED_ABORT;
 //    double optTime = 0.0;
 //    double rotTime = 0.0;
@@ -584,24 +576,36 @@ MatrixXd GroundStateSolver::calcLocalizationMatrix(OrbitalVector &phi) {
  *
  * This operation includes the orthonormalization using the overlap matrix.
  */
-MatrixXd GroundStateSolver::calcDiagonalizationMatrix(OrbitalVector &phi, MatrixXd &F_tilde) {
+void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     Timer timer;
     timer.restart();
     printout(1, "Calculating diagonalization matrix               ");
 
-    MatrixXd S_m12 = calcOrthonormalizationMatrix(phi);
-    MatrixXd F = S_m12*F_tilde*S_m12.transpose();
-
     SelfAdjointEigenSolver<MatrixXd> es(F.cols());
+
+    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+    es.compute(S_tilde);
+
+    MatrixXd A = es.eigenvalues().asDiagonal();
+    MatrixXd B = es.eigenvectors();
+    for (int i = 0; i < A.cols(); i++) {
+        A(i,i) = pow(A(i,i), -1.0/2.0);
+    }
+    MatrixXd S_m12 = B*A*B.transpose();
+    F = S_m12.transpose()*F*S_m12;
+
     es.compute(F);
-    MatrixXd M = es.eigenvalues();
+    MatrixXd M = es.eigenvectors();
     MatrixXd U = M.transpose()*S_m12;
 
     println(1, timer.getWallTime());
-    return U;
+
+    F = es.eigenvalues().asDiagonal();
+    fock.rotate(U);
+    this->add.rotate(phi, U);
 }
 
-MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
+void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     Timer timer;
     timer.restart();
     printout(1, "Calculating orthonormalization matrix            ");
@@ -618,5 +622,8 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     MatrixXd U = B*A*B.transpose();
 
     println(1, timer.getWallTime());
-    return U;
+
+    F = U.transpose()*F*U;
+    fock.rotate(U);
+    this->add.rotate(phi, U);
 }

@@ -58,9 +58,9 @@ protected:
     double calcOrbitalError() const;
     double calcPropertyError() const;
 
-    Eigen::MatrixXd calcLocalizationMatrix(OrbitalVector &phi);
-    Eigen::MatrixXd calcDiagonalizationMatrix(OrbitalVector &phi, Eigen::MatrixXd &F);
-    Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
+    void localize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
+    void diagonalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
+    void orthonormalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
 };
 
 #endif // GROUNDSTATESOLVER_H
