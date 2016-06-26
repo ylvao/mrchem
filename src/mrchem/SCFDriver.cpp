@@ -19,7 +19,7 @@
 #include "EnergyOptimizer.h"
 //#include "LinearResponseSolver.h"
 #include "HelmholtzOperatorSet.h"
-//#include "KAIN.h"
+#include "KAIN.h"
 //#include "DIIS.h"
 
 #include "Molecule.h"
@@ -275,7 +275,7 @@ void SCFDriver::setup() {
 
     // Setting up SCF
     helmholtz = new HelmholtzOperatorSet(rel_prec, *MRA, scf_lambda_thrs);
-//    if (scf_history > 0) scf_kain = new KAIN(scf_history);
+    if (scf_history > 0) scf_kain = new KAIN(*MRA, scf_history);
 //    if (rsp_history > 0) rsp_kain_x = new KAIN(rsp_history);
 //    if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
 
@@ -315,7 +315,7 @@ void SCFDriver::clear() {
     if (phi != 0) delete phi;
 
     if (helmholtz != 0) delete helmholtz;
-//    if (scf_kain != 0) delete scf_kain;
+    if (scf_kain != 0) delete scf_kain;
 //    if (rsp_kain_x != 0) delete rsp_kain_x;
 //    if (rsp_kain_y != 0) delete rsp_kain_y;
 

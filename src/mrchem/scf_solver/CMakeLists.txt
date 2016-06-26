@@ -6,10 +6,12 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_library(scf_solver STATIC 
+    Accelerator.cpp
     GroundStateSolver.cpp
     EnergyOptimizer.cpp
     OrbitalOptimizer.cpp
     HelmholtzOperatorSet.cpp
+    KAIN.cpp
     SCF.cpp
 )
 

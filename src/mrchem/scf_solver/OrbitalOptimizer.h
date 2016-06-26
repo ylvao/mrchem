@@ -3,11 +3,13 @@
 
 #include "GroundStateSolver.h"
 
+class Accelerator;
+
 class OrbitalOptimizer : public GroundStateSolver {
 public:
     OrbitalOptimizer(const MultiResolutionAnalysis<3> &mra,
                      HelmholtzOperatorSet &h,
-                     KAIN *k = 0);
+                     Accelerator *k = 0);
     virtual ~OrbitalOptimizer();
 
     void setup(FockOperator &fock, OrbitalVector &phi, Eigen::MatrixXd &F);
@@ -16,7 +18,7 @@ public:
     virtual bool optimize();
 
 protected:
-    KAIN *kain; // Pointer to external object, do not delete!
+    Accelerator *kain; // Pointer to external object, do not delete!
 
     void printTreeSizes() const;
 };

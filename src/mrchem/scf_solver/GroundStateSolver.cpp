@@ -11,7 +11,6 @@
 #include "XCPotential.h"
 #include "XCFunctional.h"
 #include "SCFEnergy.h"
-//#include "KAIN.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
 #include "eigen_disable_warnings.h"

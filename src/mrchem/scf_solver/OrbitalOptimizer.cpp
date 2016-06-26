@@ -2,13 +2,14 @@
 #include "OrbitalVector.h"
 #include "FockOperator.h"
 #include "HelmholtzOperatorSet.h"
+#include "Accelerator.h"
 
 using namespace std;
 using namespace Eigen;
 
 OrbitalOptimizer::OrbitalOptimizer(const MultiResolutionAnalysis<3> &mra,
                                    HelmholtzOperatorSet &h,
-                                   KAIN *k)
+                                   Accelerator *k)
         : GroundStateSolver(mra, h),
           kain(k) {
 }
@@ -40,7 +41,7 @@ void OrbitalOptimizer::clear() {
     this->orbitals_np1 = 0;
     this->dOrbitals_n = 0;
 
-//    if (this->kain != 0) this->kain->clear();
+    if (this->kain != 0) this->kain->clear();
     resetPrecision();
 }
 
@@ -71,7 +72,7 @@ bool OrbitalOptimizer::optimize() {
             localize(fock, F, phi_n);
         } else if (needDiagonalization()) {
             diagonalize(fock, F, phi_n);
-//            if (this->kain != 0) this->kain->clear();
+            if (this->kain != 0) this->kain->clear();
         } else {
             orthonormalize(fock, F, phi_n);
         }
@@ -92,8 +93,8 @@ bool OrbitalOptimizer::optimize() {
         phi_np1.clear();
 
         // Employ KAIN accelerator
-//        if (this->kain != 0) this->kain->pushBack(phi_n, dPhi_n);
-//        if (this->kain != 0) this->kain->calcUpdates(phi_n, dPhi_n);
+        if (this->kain != 0) this->kain->pushBack(phi_n, dPhi_n);
+        if (this->kain != 0) this->kain->calcUpdates(phi_n, dPhi_n);
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
@@ -122,7 +123,7 @@ bool OrbitalOptimizer::optimize() {
             break;
         }
     }
-//    if (this->kain != 0) this->kain->clear();
+    if (this->kain != 0) this->kain->clear();
     fock.clear();
     printConvergence(converged);
     return converged;
@@ -137,7 +138,7 @@ void OrbitalOptimizer::printTreeSizes() const {
     if (this->orbitals_n != 0) nNodes += this->orbitals_n->printTreeSizes();
     if (this->orbitals_np1 != 0) nNodes += this->orbitals_np1->printTreeSizes();
     if (this->dOrbitals_n != 0) nNodes += this->dOrbitals_n->printTreeSizes();
-//    if (this->kain != 0) nNodes += this->kain->printTreeSizes();
+    if (this->kain != 0) nNodes += this->kain->printTreeSizes();
 
     TelePrompter::printSeparator(0, '-');
     println(0," Total number of nodes                   " << setw(18) << nNodes);

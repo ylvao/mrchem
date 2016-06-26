@@ -6,8 +6,6 @@
 #include "SCF.h"
 #include "SCFEnergy.h"
 
-class KAIN;
-
 class GroundStateSolver : public SCF {
 public:
     GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
