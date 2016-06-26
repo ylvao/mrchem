@@ -51,7 +51,7 @@ void OrbitalAdder::operator()(OrbitalVector &out,
     }
 }
 
-void OrbitalAdder::operator()(Orbital &out, VectorXd &c, OrbitalVector &inp) {
+void OrbitalAdder::operator()(Orbital &out, const VectorXd &c, OrbitalVector &inp) {
     if (c.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Output not empty");
 
@@ -66,7 +66,7 @@ void OrbitalAdder::operator()(Orbital &out, VectorXd &c, OrbitalVector &inp) {
     if (imag_vec.size() != 0) out.imag = (*this)(imag_vec);
 }
 
-void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
+void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
     if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.size() != U.rows()) MSG_ERROR("Invalid arguments");
     for (int i = 0; i < out.size(); i++) {
@@ -77,7 +77,7 @@ void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U, OrbitalVector &inp) {
 }
 
 /** In place rotation of orbital vector */
-void OrbitalAdder::rotate(OrbitalVector &out, MatrixXd &U) {
+void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     OrbitalVector tmp(out);
     rotate(tmp, U, out);
     out.clear();

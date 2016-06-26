@@ -27,11 +27,11 @@ public:
                     double b, OrbitalVector &inp_b);
 
     void operator()(Orbital &out,
-                    Eigen::VectorXd &c,
+                    const Eigen::VectorXd &c,
                     OrbitalVector &inp);
 
-    void rotate(OrbitalVector &out, Eigen::MatrixXd &U, OrbitalVector &inp);
-    void rotate(OrbitalVector &out, Eigen::MatrixXd &U);
+    void rotate(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
+    void rotate(OrbitalVector &out, const Eigen::MatrixXd &U);
 
     void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
     void inPlace(Orbital &out, double c, Orbital &inp);
