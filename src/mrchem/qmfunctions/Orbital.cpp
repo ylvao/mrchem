@@ -21,9 +21,9 @@ Orbital::Orbital(const Orbital &orb)
           imag(0) {
 }
 
-void Orbital::clear() {
-    if (this->real != 0) delete this->real;
-    if (this->imag != 0) delete this->imag;
+void Orbital::clear(bool free) {
+    if (this->real != 0 and free) delete this->real;
+    if (this->imag != 0 and free) delete this->imag;
     this->real = 0;
     this->imag = 0;
 }

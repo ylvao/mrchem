@@ -17,7 +17,7 @@ public:
     virtual ~OrbitalVector();
 
     void push_back(int n_orbs, int occ, int spin);
-    void clear();
+    void clear(bool free = true);
 
 //    OrbitalVector& operator=(const OrbitalVector &orb_set);
 

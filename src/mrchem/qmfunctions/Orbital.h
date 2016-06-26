@@ -15,7 +15,7 @@ public:
     Orbital(const Orbital &orb);
     Orbital &operator=(const Orbital &orb) { NOT_IMPLEMENTED_ABORT; }
     virtual ~Orbital() { clear(); }
-    void clear();
+    void clear(bool free = true);
 
     int getNNodes() const;
     int getSpin() const { return this->spin; }

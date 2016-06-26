@@ -95,9 +95,9 @@ OrbitalVector::~OrbitalVector() {
  * Deletes the actual functions in the orbitals, keeps
  * the spin and occupancy.
  */
-void OrbitalVector::clear() {
+void OrbitalVector::clear(bool free) {
     for (int i = 0; i < this->size(); i++) {
-        this->orbitals[i]->clear();
+        this->orbitals[i]->clear(free);
     }
 }
 
