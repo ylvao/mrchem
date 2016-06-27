@@ -117,8 +117,9 @@ void KAIN::expandSolution(OrbitalVector &phi,
     phi.clear();
     dPhi.clear();
 
-    // Orbitals are unchanged, new updates are computed
-    copyOrbitals(phi);
+    // Orbitals are unchanged
+    MatrixXd I = MatrixXd::Identity(phi.size(), phi.size());
+    this->add.rotate(phi, I, *this->orbitals[nHistory]);
 
     int m = 0;
     for (int n = 0; n < nOrbitals; n++) {
