@@ -93,8 +93,7 @@ bool OrbitalOptimizer::optimize() {
         phi_np1.clear();
 
         // Employ KAIN accelerator
-        if (this->kain != 0) this->kain->pushBack(phi_n, dPhi_n);
-        if (this->kain != 0) this->kain->calcUpdates(phi_n, dPhi_n);
+        if (this->kain != 0) this->kain->accelerate(phi_n, dPhi_n);
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();

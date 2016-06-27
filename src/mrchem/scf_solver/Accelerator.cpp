@@ -113,10 +113,13 @@ void Accelerator::rotate(const MatrixXd &U, bool rotAll) {
  * input, the matrices are included in the subspace. If the length
  * of the history exceed maxHistory the oldest orbitals are discarded.
  */
-void Accelerator::pushBack(OrbitalVector &phi,
-                           OrbitalVector &dPhi,
-                           MatrixXd *F,
-                           MatrixXd *dF) {
+void Accelerator::push_back(OrbitalVector &phi,
+                            OrbitalVector &dPhi,
+                            MatrixXd *F,
+                            MatrixXd *dF) {
+    Timer timer;
+    timer.restart();
+
     int nHistory = this->orbitals.size();
     bool historyIsFull = false;
     if (nHistory >= this->maxHistory) {
@@ -134,20 +137,8 @@ void Accelerator::pushBack(OrbitalVector &phi,
     OrbitalVector *new_phi = new OrbitalVector(phi);
     OrbitalVector *new_dPhi = new OrbitalVector(dPhi);
 
-    for (int i = 0; i < phi.size(); i++) {
-        Orbital &phi_i = phi.getOrbital(i);
-        Orbital &new_i = new_phi->getOrbital(i);
-        NOT_IMPLEMENTED_ABORT;
-//        new_i.real = phi_i.real;
-//        new_i.imag = phi_i.imag;
-    }
-    for (int i = 0; i < dPhi.size(); i++) {
-        Orbital &phi_i = dPhi.getOrbital(i);
-        Orbital &new_i = new_dPhi->getOrbital(i);
-        NOT_IMPLEMENTED_ABORT;
-//        new_i.real = phi_i.real;
-//        new_i.imag = phi_i.imag;
-    }
+    *new_phi = phi;
+    *new_dPhi = dPhi;
 
     this->orbitals.push_back(new_phi);
     this->dOrbitals.push_back(new_dPhi);
@@ -172,9 +163,11 @@ void Accelerator::pushBack(OrbitalVector &phi,
         phi.clear(false);
         dPhi.clear(false);
     } else {
-        println(0, "Clearing accelerator");
+        println(0, " Clearing accelerator");
         this->clear();
     }
+    double t = timer.getWallTime();
+    TelePrompter::printDouble(0, "Push back orbitals", t);
 }
 
 /** Verify that the orbital overlap between the two last iterations
@@ -196,7 +189,7 @@ bool Accelerator::verifyOverlap() {
             complex<double> overlap = last.dot(secondLast);
             if (overlap.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
             if (overlap.real() < 0.5*sqNorm) {
-                println(0, "Overlap not verified " << overlap.real() << " < " << 0.5*sqNorm);
+                TelePrompter::printDouble(0, "Overlap not verified ", overlap.real());
                 verified = false;
             }
         }
@@ -212,33 +205,42 @@ bool Accelerator::verifyOverlap() {
  * is less than minHistory, the latest orbitals are copied directly into
  * the output sets without solving the linear problem. Existing input
  * orbitals and updates are replaced by new ones. */
-void Accelerator::calcUpdates(OrbitalVector &phi,
-                              OrbitalVector &dPhi,
-                              MatrixXd *F,
-                              MatrixXd *dF) {
+void Accelerator::accelerate(OrbitalVector &phi,
+                             OrbitalVector &dPhi,
+                             MatrixXd *F,
+                             MatrixXd *dF) {
     Timer timer;
     timer.restart();
 
+    TelePrompter::printHeader(0, "Iterative subspace accelerator");
+
+    this->push_back(phi, dPhi, F, dF);
+
     int nHistory = this->orbitals.size() - 1;
-    if (nHistory < 0) {
-        // Do nothing
-    } else if (nHistory <= this->minHistory) {
+    if (nHistory <= this->minHistory) {
         copyOrbitals(phi);
         copyOrbitalUpdates(dPhi);
     } else {
         setupLinearSystem();
-        this->c.clear();
-        int N = this->A.size();
-        for (int n = 0; n < N; n++) {
-            VectorXd *tmpC = new VectorXd;
-            *tmpC = this->A[n]->colPivHouseholderQr().solve(*this->b[n]);
-            this->c.push_back(tmpC);
-        }
+        solveLinearSystem();
         expandSolution(phi, dPhi, F, dF);
         clearLinearSystem();
     }
+    TelePrompter::printFooter(0, timer, 2);
+}
+
+void Accelerator::solveLinearSystem() {
+    Timer timer;
+    timer.restart();
+    this->c.clear();
+    int N = this->A.size();
+    for (int n = 0; n < N; n++) {
+        VectorXd *tmpC = new VectorXd;
+        *tmpC = this->A[n]->colPivHouseholderQr().solve(*this->b[n]);
+        this->c.push_back(tmpC);
+    }
     double t = timer.getWallTime();
-    TelePrompter::printDouble(0, "Calculating iterative subspace update", t);
+    TelePrompter::printDouble(0, "Solve linear system", t);
 }
 
 
@@ -247,14 +249,19 @@ void Accelerator::calcUpdates(OrbitalVector &phi,
  * Input set is overwritten if it contains orbitals. Counts backwards,
  * zero history input returns latest orbital set. */
 void Accelerator::copyOrbitals(OrbitalVector &phi, int nHistory) {
-    NOT_IMPLEMENTED_ABORT;
-//    int totHistory = this->orbitals.size();
-//    if (nHistory >= totHistory or nHistory < 0) {
-//        MSG_FATAL("Requested orbitals unavailable");
-//    }
-//    int n = totHistory - 1 - nHistory;
-//    orbs.initialize(*this->orbitals[n]);
-//    orbs = *this->orbitals[n];
+    Timer timer;
+    timer.restart();
+
+    int totHistory = this->orbitals.size();
+    if (nHistory >= totHistory or nHistory < 0) {
+        MSG_FATAL("Requested orbitals unavailable");
+    }
+    int n = totHistory - 1 - nHistory;
+    MatrixXd I = MatrixXd::Identity(phi.size(), phi.size());
+    this->add.rotate(phi, I, *this->orbitals[n]);
+
+    double t = timer.getWallTime();
+    TelePrompter::printDouble(0, "Copy orbitals", t);
 }
 
 /** Copy orbital updates at the given point in history into the given set.
@@ -262,14 +269,19 @@ void Accelerator::copyOrbitals(OrbitalVector &phi, int nHistory) {
  * Input set is overwritten if it contains orbitals. Counts backwards,
  * zero history input returns latest orbital set. */
 void Accelerator::copyOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
-    NOT_IMPLEMENTED_ABORT;
-//    int totHistory = this->dOrbitals.size();
-//    if (nHistory >= totHistory or nHistory < 0) {
-//        MSG_FATAL("Requested orbitals unavailable");
-//    }
-//    int n = totHistory - 1 - nHistory;
-//    dOrbs.initialize(*this->dOrbitals[n]);
-//    dOrbs = *this->dOrbitals[n];
+    Timer timer;
+    timer.restart();
+
+    int totHistory = this->dOrbitals.size();
+    if (nHistory >= totHistory or nHistory < 0) {
+        MSG_FATAL("Requested orbitals unavailable");
+    }
+    int n = totHistory - 1 - nHistory;
+    MatrixXd I = MatrixXd::Identity(dPhi.size(), dPhi.size());
+    this->add.rotate(dPhi, I, *this->dOrbitals[n]);
+
+    double t = timer.getWallTime();
+    TelePrompter::printDouble(0, "Copy orbital updates", t);
 }
 
 /** Replaces the orbital set from a given point in history.

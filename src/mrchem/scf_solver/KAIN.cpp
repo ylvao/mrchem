@@ -16,78 +16,86 @@ using namespace Eigen;
   * used for the Fock matrix. If separateOrbitals is false the A's and b's
   * are later collected to single entities. */
 void KAIN::setupLinearSystem() {
-    NOT_IMPLEMENTED_ABORT;
-//    int nHistory = this->orbitals.size() - 1;
-//    if (nHistory < 1) {
-//        MSG_FATAL("Not enough history to setup system of equations");
-//    }
-//    int nOrbitals = this->orbitals[nHistory]->size();
+    Timer timer;
+    timer.restart();
 
-//    vector<MatrixXd *> A_matrices;
-//    vector<VectorXd *> b_vectors;
+    int nHistory = this->orbitals.size() - 1;
+    if (nHistory < 1) {
+        MSG_FATAL("Not enough history to setup system of equations");
+    }
 
-//    for (int n = 0; n < nOrbitals; n++) {
-//        MatrixXd *orbA = new MatrixXd;
-//        VectorXd *orbB = new VectorXd;
-//        *orbA = MatrixXd::Zero(nHistory, nHistory);
-//        *orbB = VectorXd::Zero(nHistory);
+    vector<MatrixXd *> A_matrices;
+    vector<VectorXd *> b_vectors;
 
-//        Orbital &phi_m = this->orbitals[nHistory]->getOrbital(n);
-//        Orbital &fPhi_m = this->dOrbitals[nHistory]->getOrbital(n);
+    int nOrbitals = this->orbitals[nHistory]->size();
+    for (int n = 0; n < nOrbitals; n++) {
+        MatrixXd *orbA = new MatrixXd;
+        VectorXd *orbB = new VectorXd;
+        *orbA = MatrixXd::Zero(nHistory, nHistory);
+        *orbB = VectorXd::Zero(nHistory);
 
-//        for (int i = 0; i < nHistory; i++) {
-//            Orbital &phi_i = this->orbitals[i]->getOrbital(n);
-//            Orbital dPhi_im;
-//            dPhi_im.add(1.0, phi_i, -1.0, phi_m);
+        Orbital &phi_m = this->orbitals[nHistory]->getOrbital(n);
+        Orbital &fPhi_m = this->dOrbitals[nHistory]->getOrbital(n);
 
-//            for (int j = 0; j < nHistory; j++) {
-//                Orbital &fPhi_j = this->dOrbitals[j]->getOrbital(n);
-//                Orbital dfPhi_jm;
-//                dfPhi_jm.add(1.0, fPhi_j, -1.0, fPhi_m);
+        for (int i = 0; i < nHistory; i++) {
+            Orbital &phi_i = this->orbitals[i]->getOrbital(n);
+            Orbital dPhi_im(phi_i);
+            this->add(dPhi_im, 1.0, phi_i, -1.0, phi_m);
 
-//                // Ref. Harrisons KAIN paper the following has the wrong sign,
-//                // but we define the updates (lowercase f) with opposite sign.
-//                (*orbA)(i,j) -= dPhi_im.innerProduct(dfPhi_jm);
-//            }
-//            (*orbB)(i) += dPhi_im.innerProduct(fPhi_m);
-//        }
-//        A_matrices.push_back(orbA);
-//        b_vectors.push_back(orbB);
-//    }
+            for (int j = 0; j < nHistory; j++) {
+                Orbital &fPhi_j = this->dOrbitals[j]->getOrbital(n);
+                Orbital dfPhi_jm(fPhi_j);
+                this->add(dfPhi_jm, 1.0, fPhi_j, -1.0, fPhi_m);
+
+                // Ref. Harrisons KAIN paper the following has the wrong sign,
+                // but we define the updates (lowercase f) with opposite sign.
+                complex<double> inner_prod = dPhi_im.dot(fPhi_m);
+                if (inner_prod.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
+                (*orbA)(i,j) -= inner_prod.real();
+            }
+            complex<double> inner_prod = dPhi_im.dot(fPhi_m);
+            if (inner_prod.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
+            (*orbB)(i) += inner_prod.real();
+        }
+        A_matrices.push_back(orbA);
+        b_vectors.push_back(orbB);
+    }
 
 //    // Fock matrix is treated as a whole using the Frobenius inner product
-//    if (this->orbitals.size() == this->fock.size()) {
-//        const MatrixXd &X_m = this->fock[nHistory];
-//        const MatrixXd &fX_m = this->dFock[nHistory];
+    if (this->orbitals.size() == this->fock.size()) {
+        const MatrixXd &X_m = this->fock[nHistory];
+        const MatrixXd &fX_m = this->dFock[nHistory];
 
-//        MatrixXd *fockA = new MatrixXd;
-//        *fockA = MatrixXd::Zero(nHistory, nHistory);
+        MatrixXd *fockA = new MatrixXd;
+        *fockA = MatrixXd::Zero(nHistory, nHistory);
 
-//        VectorXd *fockB = new VectorXd;
-//        *fockB = VectorXd::Zero(nHistory);
+        VectorXd *fockB = new VectorXd;
+        *fockB = VectorXd::Zero(nHistory);
 
-//        for (int i = 0; i < nHistory; i++) {
-//            const MatrixXd &X_i = this->fock[i];
-//            MatrixXd dX_im = X_i - X_m;
-//            for (int j = 0; j < nHistory; j++) {
-//                const MatrixXd &fX_j = this->dFock[j];
-//                MatrixXd dfX_jm = fX_j - fX_m;
-//                MatrixXd prod = dX_im.transpose()*dfX_jm;
-//                (*fockA)(i,j) -= prod.trace();
-//            }
-//            MatrixXd prod = dX_im.transpose()*fX_m;
-//            (*fockB)(i) += prod.trace();
-//        }
-//        A_matrices.push_back(fockA);
-//        b_vectors.push_back(fockB);
-//    }
+        for (int i = 0; i < nHistory; i++) {
+            const MatrixXd &X_i = this->fock[i];
+            MatrixXd dX_im = X_i - X_m;
+            for (int j = 0; j < nHistory; j++) {
+                const MatrixXd &fX_j = this->dFock[j];
+                MatrixXd dfX_jm = fX_j - fX_m;
+                MatrixXd prod = dX_im.transpose()*dfX_jm;
+                (*fockA)(i,j) -= prod.trace();
+            }
+            MatrixXd prod = dX_im.transpose()*fX_m;
+            (*fockB)(i) += prod.trace();
+        }
+        A_matrices.push_back(fockA);
+        b_vectors.push_back(fockB);
+    }
 
-//    sortLinearSystem(A_matrices, b_vectors);
+    sortLinearSystem(A_matrices, b_vectors);
 
-//    for (int n = 0; n < A_matrices.size(); n++) {
-//        delete A_matrices[n];
-//        delete b_vectors[n];
-//    }
+    for (int n = 0; n < A_matrices.size(); n++) {
+        delete A_matrices[n];
+        delete b_vectors[n];
+    }
+    double t = timer.getWallTime();
+    TelePrompter::printDouble(0, "Setup linear system", t);
 }
 
 /** Compute the next step for orbitals and orbital updates given the
@@ -100,94 +108,92 @@ void KAIN::expandSolution(OrbitalVector &phi,
                           OrbitalVector &dPhi,
                           MatrixXd *F,
                           MatrixXd *dF) {
-    NOT_IMPLEMENTED_ABORT;
-//    int nHistory = this->orbitals.size() - 1;
-//    int nOrbitals = this->orbitals[nHistory]->size();
+    Timer timer;
+    timer.restart();
 
-//    orbs.clear();
-//    dOrbs.clear();
+    int nHistory = this->orbitals.size() - 1;
+    int nOrbitals = this->orbitals[nHistory]->size();
 
-//    int m = 0;
-//    for (int n = 0; n < nOrbitals; n++) {
-//        if (this->sepOrbitals) {
-//            m = n;
-//        }
-//        vector<double> totCoefs;
-//        vector<FunctionTree<3> *> totOrbs;
+    phi.clear();
+    dPhi.clear();
 
-//        Orbital &phi_m = this->orbitals[nHistory]->getOrbital(n);
+    // Orbitals are unchanged, new updates are computed
+    copyOrbitals(phi);
 
-//        Orbital *orb = new Orbital(phi_m);
-//        *orb = phi_m;
+    int m = 0;
+    for (int n = 0; n < nOrbitals; n++) {
+        if (this->sepOrbitals) {
+            m = n;
+        }
+        vector<double> totCoefs;
+        vector<Orbital *> totOrbs;
 
-//        Orbital &fPhi_m = this->dOrbitals[nHistory]->getOrbital(n);
-//        Orbital *orbStep = new Orbital(fPhi_m);
-//        totCoefs.push_back(1.0);
-//        totOrbs.push_back(&fPhi_m);
+        Orbital &phi_m = this->orbitals[nHistory]->getOrbital(n);
+        Orbital &fPhi_m = this->dOrbitals[nHistory]->getOrbital(n);
+        totCoefs.push_back(1.0);
+        totOrbs.push_back(&fPhi_m);
 
-//        // Ref. Harrisons KAIN paper the following has the wrong sign,
-//        // but we define the updates (lowercase f) with opposite sign
-//        // (but not the orbitals themselves).
-//        for (int j = 0; j < nHistory; j++) {
-//            vector<double> partCoefs;
-//            vector<FunctionTree<3> *> partOrbs;
-//            Orbital *partStep = new Orbital(*orbStep);
+        // Ref. Harrisons KAIN paper the following has the wrong sign,
+        // but we define the updates (lowercase f) with opposite sign
+        // (but not the orbitals themselves).
+        for (int j = 0; j < nHistory; j++) {
+            vector<double> partCoefs;
+            vector<Orbital *> partOrbs;
 
-//            Orbital &phi_j = this->orbitals[j]->getOrbital(n);
-//            partCoefs.push_back(1.0);
-//            partOrbs.push_back(&phi_j);
+            Orbital &phi_j = this->orbitals[j]->getOrbital(n);
+            partCoefs.push_back(1.0);
+            partOrbs.push_back(&phi_j);
 
-//            Orbital &fPhi_j = this->dOrbitals[j]->getOrbital(n);
-//            partCoefs.push_back(1.0);
-//            partOrbs.push_back(&fPhi_j);
+            Orbital &fPhi_j = this->dOrbitals[j]->getOrbital(n);
+            partCoefs.push_back(1.0);
+            partOrbs.push_back(&fPhi_j);
 
-//            partCoefs.push_back(-1.0);
-//            partOrbs.push_back(&phi_m);
-//            partCoefs.push_back(-1.0);
-//            partOrbs.push_back(&fPhi_m);
-//            partStep->add(partCoefs, partOrbs, 0);
+            partCoefs.push_back(-1.0);
+            partOrbs.push_back(&phi_m);
+            partCoefs.push_back(-1.0);
+            partOrbs.push_back(&fPhi_m);
 
-//            double c_j = (*this->c[m])(j);
-//            totCoefs.push_back(c_j);
-//            totOrbs.push_back(partStep);
-//        }
+            Orbital *partStep = new Orbital(fPhi_m);
+            this->add(*partStep, partCoefs, partOrbs);
 
-//        orbStep->add(totCoefs, totOrbs, 0);
-//        for (int k = 0; k < totOrbs.size(); k++) {
-//            // First entry is the last orbital update and should not be deallocated,
-//            // all other entries are locally allocated partSteps that must be deleted
-//            if (k != 0) delete totOrbs[k];
-//            totOrbs[k] = 0;
-//        }
+            double c_j = (*this->c[m])(j);
+            totCoefs.push_back(c_j);
+            totOrbs.push_back(partStep);
+        }
 
-//        orbStep->setError(fPhi_m.getError());
-//        orbStep->setOccupancy(fPhi_m.getOccupancy());
+        Orbital &dPhi_n = dPhi.getOrbital(n);
+        this->add(dPhi_n, totCoefs, totOrbs);
+        for (int k = 0; k < totOrbs.size(); k++) {
+            // First entry is the last orbital update and should not be deallocated,
+            // all other entries are locally allocated partSteps that must be deleted
+            if (k != 0) delete totOrbs[k];
+            totOrbs[k] = 0;
+        }
+    }
 
-//        orbs.replaceOrbital(n, &orb);
-//        dOrbs.replaceOrbital(n, &orbStep);
-//    }
+    // Treat Fock matrix as a whole using Frobenius inner product
+    if (this->fock.size() == this->orbitals.size()) {
+        if (F == 0 or dF == 0) MSG_ERROR("Invalid fock matrix");
 
-//    // Treat Fock matrix as a whole using Frobenius inner product
-//    if (this->fock.size() == this->orbitals.size()) {
-//        if (F == 0 or dF == 0) MSG_ERROR("Invalid fock matrix");
-
-//        MatrixXd X_m = this->fock[nHistory];
-//        const MatrixXd &fX_m = this->dFock[nHistory];
-//        MatrixXd fockStep = MatrixXd::Zero(nOrbitals, nOrbitals);
-//        fockStep = fX_m;
-//        m = this->c.size();
-//        for (int j = 0; j < nHistory; j++) {
-//            const MatrixXd &X_j = this->fock[j];
-//            const MatrixXd &fX_j = this->dFock[j];
-//            MatrixXd tmpX = MatrixXd::Zero(nOrbitals,nOrbitals);
-//            tmpX += X_j;
-//            tmpX -= X_m;
-//            tmpX += fX_j;
-//            tmpX -= fX_m;
-//            tmpX *= (*this->c[m-1])(j);
-//            fockStep += tmpX;
-//        }
-//        *F = X_m;
-//        *dF = fockStep;
-//    }
+        MatrixXd X_m = this->fock[nHistory];
+        const MatrixXd &fX_m = this->dFock[nHistory];
+        MatrixXd fockStep = MatrixXd::Zero(nOrbitals, nOrbitals);
+        fockStep = fX_m;
+        m = this->c.size();
+        for (int j = 0; j < nHistory; j++) {
+            const MatrixXd &X_j = this->fock[j];
+            const MatrixXd &fX_j = this->dFock[j];
+            MatrixXd tmpX = MatrixXd::Zero(nOrbitals,nOrbitals);
+            tmpX += X_j;
+            tmpX -= X_m;
+            tmpX += fX_j;
+            tmpX -= fX_m;
+            tmpX *= (*this->c[m-1])(j);
+            fockStep += tmpX;
+        }
+        *F = X_m;
+        *dF = fockStep;
+    }
+    double t = timer.getWallTime();
+    TelePrompter::printDouble(0, "Expand solution", t);
 }

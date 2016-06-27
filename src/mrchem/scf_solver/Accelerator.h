@@ -31,14 +31,10 @@ public:
     void setMaxHistory(int max) { this->maxHistory = max; }
     void setMinHistory(int min) { this->minHistory = min; }
 
-    void pushBack(OrbitalVector &phi,
-                  OrbitalVector &dPhi,
-                  Eigen::MatrixXd *F = 0,
-                  Eigen::MatrixXd *dF = 0);
-    void calcUpdates(OrbitalVector &phi,
-                     OrbitalVector &dPhi,
-                     Eigen::MatrixXd *F = 0,
-                     Eigen::MatrixXd *dF = 0);
+    void accelerate(OrbitalVector &phi,
+                    OrbitalVector &dPhi,
+                    Eigen::MatrixXd *F = 0,
+                    Eigen::MatrixXd *dF = 0);
 
     void copyOrbitals(OrbitalVector &phi, int nHistory = 0);
     void copyOrbitalUpdates(OrbitalVector &dPhi, int nHistory = 0);
@@ -66,6 +62,12 @@ protected:
 
     bool verifyOverlap();
 
+    void push_back(OrbitalVector &phi,
+                   OrbitalVector &dPhi,
+                   Eigen::MatrixXd *F = 0,
+                   Eigen::MatrixXd *dF = 0);
+
+    void solveLinearSystem();
     void clearLinearSystem();
     void sortLinearSystem(std::vector<Eigen::MatrixXd *> &A_mat,
                           std::vector<Eigen::VectorXd *> &b_vec);
