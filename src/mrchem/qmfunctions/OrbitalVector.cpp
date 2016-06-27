@@ -77,6 +77,19 @@ OrbitalVector::OrbitalVector(const OrbitalVector &orb_set) {
     }
 }
 
+OrbitalVector& OrbitalVector::operator=(const OrbitalVector &inp) {
+    OrbitalVector &out = *this;
+    if (&inp != &out) {
+        if (inp.size() != out.size()) MSG_ERROR("Size mismatch");
+        for (int i = 0; i < out.size(); i++) {
+            const Orbital &inp_i = inp.getOrbital(i);
+            Orbital &out_i = out.getOrbital(i);
+            out_i = inp_i;
+        }
+    }
+    return out;
+}
+
 /** OrbitalVector destructor
  *
  * Deletes all orbitals in the vector
@@ -146,24 +159,6 @@ void OrbitalVector::push_back(int n_orbs, int occ, int spin) {
 //            n++;
 //        }
 //    }
-//}
-
-//OrbitalVector& OrbitalVector::operator=(const OrbitalVector &orb_set) {
-//    NOT_IMPLEMENTED_ABORT;
-//    if (this == &orb_set) {
-//        return *this;
-//    }
-//    if (this->size() > orb_set.size()) MSG_ERROR("Size mismatch");
-
-//    int nOrbs = this->size();
-//    for (int i = 0; i < nOrbs; i++) {
-//        const Orbital *thatOrb = orb_set.getOrbitalPtr(i);
-//        Orbital *thisOrb = this->getOrbitalPtr(i);
-//        if (thatOrb == 0) MSG_ERROR("Reading NULL orbital");
-//        if (thisOrb == 0) MSG_ERROR("Orbital not initialized");
-//        *thisOrb = *thatOrb;
-//    }
-//    return *this;
 //}
 
 //void OrbitalVector::writeOrbitals(const string &of) {

@@ -21,6 +21,19 @@ Orbital::Orbital(const Orbital &orb)
           imag(0) {
 }
 
+Orbital& Orbital::operator=(const Orbital &orb) {
+    if (this != &orb) {
+        if (this->real != 0) MSG_ERROR("Orbial not empty");
+        if (this->imag != 0) MSG_ERROR("Orbial not empty");
+        this->spin = orb.spin;
+        this->occupancy = orb.occupancy;
+        this->error = orb.error;
+        this->real = orb.real;
+        this->imag = orb.imag;
+    }
+    return *this;
+}
+
 void Orbital::clear(bool free) {
     if (this->real != 0 and free) delete this->real;
     if (this->imag != 0 and free) delete this->imag;

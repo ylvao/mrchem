@@ -55,22 +55,24 @@ void OrbitalAdder::operator()(Orbital &out, const VectorXd &c, OrbitalVector &in
     if (c.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Output not empty");
 
-    FunctionTreeVector<3> real_vec;
-    FunctionTreeVector<3> imag_vec;
+    double thrs = MachineZero;
+    FunctionTreeVector<3> rvec;
+    FunctionTreeVector<3> ivec;
     for (int i = 0; i < inp.size(); i++) {
+        double c_i = c(i);
         Orbital &phi_i = inp.getOrbital(i);
-        if (phi_i.hasReal()) real_vec.push_back(c(i), phi_i.real);
-        if (phi_i.hasImag()) imag_vec.push_back(c(i), phi_i.imag);
+        if (phi_i.hasReal() and fabs(c_i) > thrs) rvec.push_back(c_i, phi_i.real);
+        if (phi_i.hasImag() and fabs(c_i) > thrs) ivec.push_back(c_i, phi_i.imag);
     }
-    if (real_vec.size() != 0) out.real = (*this)(real_vec);
-    if (imag_vec.size() != 0) out.imag = (*this)(imag_vec);
+    if (rvec.size() != 0) out.real = (*this)(rvec);
+    if (ivec.size() != 0) out.imag = (*this)(ivec);
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
     if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.size() != U.rows()) MSG_ERROR("Invalid arguments");
     for (int i = 0; i < out.size(); i++) {
-        VectorXd c = U.row(i);
+        const VectorXd &c = U.row(i);
         Orbital &out_i = out.getOrbital(i);
         (*this)(out_i, c, inp);
     }

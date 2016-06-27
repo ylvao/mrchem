@@ -14,12 +14,11 @@ public:
     OrbitalVector(int n_alpha, int n_beta);
     OrbitalVector(int ne, int mult, bool rest);
     OrbitalVector(const OrbitalVector &orb_set);
+    OrbitalVector& operator=(const OrbitalVector &orb_set);
     virtual ~OrbitalVector();
 
     void push_back(int n_orbs, int occ, int spin);
     void clear(bool free = true);
-
-//    OrbitalVector& operator=(const OrbitalVector &orb_set);
 
 //    void writeOrbitals(const std::string &of);
 //    void readOrbitals(const std::string &of);
