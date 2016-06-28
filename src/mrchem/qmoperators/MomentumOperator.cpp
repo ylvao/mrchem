@@ -7,7 +7,8 @@ using namespace std;
 MomentumOperator::MomentumOperator(double build_prec,
                                    const MultiResolutionAnalysis<3> &mra,
                                    int dir)
-        : derivative(mra, build_prec, build_prec) {
+        : grid(mra),
+          derivative(mra, build_prec, build_prec) {
     derivative.setApplyDir(dir);
 }
 
@@ -28,10 +29,12 @@ Orbital* MomentumOperator::operator() (Orbital &orb_p) {
     timer.restart();
     Orbital *dOrb_p = new Orbital(orb_p);
     if (orb_p.real != 0) {
-        dOrb_p->imag = this->derivative(*orb_p.real);
+        dOrb_p->imag = this->grid(*orb_p.real);
+        this->derivative(*dOrb_p->imag, *orb_p.real, 0);
     }
     if (orb_p.imag != 0) {
-        dOrb_p->real = this->derivative(*orb_p.imag);
+        dOrb_p->real = this->grid(*orb_p.imag);
+        this->derivative(*dOrb_p->real, *orb_p.imag, 0);
         *dOrb_p->real *= -1.0;
     }
     timer.stop();

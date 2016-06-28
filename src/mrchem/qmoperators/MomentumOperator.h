@@ -3,6 +3,7 @@
 
 #include "QMOperator.h"
 #include "DerivativeOperator.h"
+#include "GridGenerator.h"
 
 template<int D> class DerivativeOperator;
 template<int D> class MultiResolutionAnalysis;
@@ -26,6 +27,7 @@ public:
     using QMOperator::adjoint;
 
 protected:
+    GridGenerator<3> grid;
     DerivativeOperator<3> derivative;
 };
 
