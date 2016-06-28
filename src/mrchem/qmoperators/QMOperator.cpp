@@ -6,6 +6,12 @@
 using namespace std;
 using namespace Eigen;
 
+QMOperator::QMOperator(const MultiResolutionAnalysis<3> &mra)
+    : apply_prec(-1.0),
+      clean(mra),
+      grid(mra){
+}
+
 /**
 
 Calculates the matrix element of the operator between two orbitals:

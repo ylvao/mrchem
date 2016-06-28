@@ -8,7 +8,8 @@ using namespace Eigen;
 
 KineticOperator::KineticOperator(double build_prec,
                                  const MultiResolutionAnalysis<3> &mra)
-        : momentum_x(build_prec, mra, 0),
+        : QMOperator(mra),
+          momentum_x(build_prec, mra, 0),
           momentum_y(build_prec, mra, 1),
           momentum_z(build_prec, mra, 2) {
 }

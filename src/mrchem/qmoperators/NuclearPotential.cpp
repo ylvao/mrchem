@@ -5,7 +5,6 @@ NuclearPotential::NuclearPotential(double build_prec,
                                    const MultiResolutionAnalysis<3> &mra,
                                    Nuclei &nucs)
         : Potential(mra),
-          clean(mra),
           project(mra),
           nuc_func(nucs, build_prec) {
 }

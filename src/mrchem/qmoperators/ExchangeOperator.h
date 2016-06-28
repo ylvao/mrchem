@@ -6,8 +6,6 @@
 #include "QMOperator.h"
 #include "OrbitalAdder.h"
 #include "OrbitalMultiplier.h"
-#include "GridCleaner.h"
-#include "GridGenerator.h"
 #include "PoissonOperator.h"
 
 class OrbitalVector;
@@ -33,7 +31,6 @@ public:
 protected:
     OrbitalAdder add;
     OrbitalMultiplier mult;
-    GridGenerator<3> grid;
     PoissonOperator poisson;   ///< Poisson operator to compute potential
 
     double x_factor;            ///< Exchange factor for Hybrid XC functionals

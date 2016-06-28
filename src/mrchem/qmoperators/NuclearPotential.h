@@ -3,7 +3,6 @@
 
 #include "Potential.h"
 #include "NuclearFunction.h"
-#include "GridCleaner.h"
 #include "MWProjector.h"
 
 class NuclearPotential : public Potential {
@@ -22,7 +21,6 @@ public:
 
 protected:
     NuclearFunction nuc_func;
-    GridCleaner<3> clean;
     MWProjector<3> project;
 };
 

@@ -7,7 +7,7 @@ using namespace std;
 MomentumOperator::MomentumOperator(double build_prec,
                                    const MultiResolutionAnalysis<3> &mra,
                                    int dir)
-        : grid(mra),
+        : QMOperator(mra),
           derivative(mra, build_prec, build_prec) {
     derivative.setApplyDir(dir);
 }

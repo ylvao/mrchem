@@ -4,7 +4,6 @@
 #include "QMOperator.h"
 #include "Density.h"
 #include "Potential.h"
-#include "GridCleaner.h"
 #include "PoissonOperator.h"
 #include "DensityProjector.h"
 
@@ -29,8 +28,6 @@ public:
     using QMOperator::adjoint;
 
 protected:
-    GridCleaner<3> clean;
-    GridGenerator<3> grid;
     PoissonOperator poisson;
     DensityProjector project;
 

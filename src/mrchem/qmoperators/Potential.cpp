@@ -12,7 +12,8 @@ using namespace std;
 using namespace Eigen;
 
 Potential::Potential(const MultiResolutionAnalysis<3> &mra)
-    : add(mra),
+    : QMOperator(mra),
+      add(mra),
       mult(mra),
       real(0),
       imag(0) {

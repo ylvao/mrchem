@@ -5,8 +5,7 @@
 CoulombOperator::CoulombOperator(double build_prec,
                                  const MultiResolutionAnalysis<3> &mra,
                                  OrbitalVector &phi)
-        : clean(mra),
-          grid(mra),
+        : QMOperator(mra),
           poisson(mra, build_prec, build_prec),
           project(mra),
           density(Paired),

@@ -35,7 +35,6 @@ public:
 protected:
     const int order;
     XCFunctional *functional;
-    GridGenerator<3> grid;
     DensityProjector project;
 //    DerivativeOperator<3> derivative;  ///< Derivative operator for GGAs
 

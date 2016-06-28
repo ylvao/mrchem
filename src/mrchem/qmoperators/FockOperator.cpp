@@ -17,7 +17,7 @@ FockOperator::FockOperator(const MultiResolutionAnalysis<3> &mra,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
-        : QMOperator(),
+        : QMOperator(mra),
           add(mra),
           T(t),
           V(v),

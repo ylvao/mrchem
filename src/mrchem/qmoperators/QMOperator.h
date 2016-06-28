@@ -4,6 +4,9 @@
 #include <Eigen/Core>
 #include <string>
 
+#include "GridCleaner.h"
+#include "GridGenerator.h"
+
 class OrbitalVector;
 class Orbital;
 
@@ -14,7 +17,7 @@ class Orbital;
   */
 class QMOperator {
 public:
-    QMOperator() : apply_prec(-1.0) { }
+    QMOperator(const MultiResolutionAnalysis<3> &mra);
     virtual ~QMOperator() { }
 
     virtual void rotate(Eigen::MatrixXd &U) { }
@@ -41,6 +44,8 @@ public:
 
 protected:
     double apply_prec;
+    GridCleaner<3> clean;
+    GridGenerator<3> grid;
 };
 
 #endif // QMOPERATOR_H
