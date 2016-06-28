@@ -49,7 +49,7 @@ void KAIN::setupLinearSystem() {
 
                 // Ref. Harrisons KAIN paper the following has the wrong sign,
                 // but we define the updates (lowercase f) with opposite sign.
-                complex<double> inner_prod = dPhi_im.dot(fPhi_m);
+                complex<double> inner_prod = dPhi_im.dot(dfPhi_jm);
                 if (inner_prod.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
                 (*orbA)(i,j) -= inner_prod.real();
             }
