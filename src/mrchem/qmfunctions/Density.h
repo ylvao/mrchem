@@ -14,10 +14,13 @@ public:
     Density &operator=(const Density &rho) { NOT_IMPLEMENTED_ABORT; }
     virtual ~Density();
 
+    bool isSpinDensity() const { return this->spin; }
     int getNNodes() const;
     void clear();
 
+    void setDensity(int s, FunctionTree<3> *rho);
     FunctionTree<3> &getDensity(int s = Paired);
+
     int printTreeSizes() const;
 
     friend class DensityProjector;
@@ -30,3 +33,4 @@ protected:
 };
 
 #endif // DENSITY_H
+

@@ -41,6 +41,12 @@ int Density::getNNodes() const {
     return nNodes;
 }
 
+void Density::setDensity(int s, FunctionTree<3> *rho) {
+    if (s == Paired) this->total = rho;
+    if (s == Alpha) this->alpha = rho;
+    if (s == Beta) this->beta = rho;
+}
+
 FunctionTree<3>& Density::getDensity(int s) {
     FunctionTree<3> *rho = 0;
     if (s == Paired) rho = this->total;

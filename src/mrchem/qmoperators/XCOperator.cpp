@@ -5,7 +5,6 @@
 #include "Density.h"
 #include "Potential.h"
 #include "TelePrompter.h"
-#include "Timer.h"
 
 using namespace std;
 using namespace Eigen;
@@ -18,9 +17,13 @@ XCOperator::XCOperator(int k,
         : QMOperator(mra),
           order(k),
           functional(&func),
+          add(mra),
+          mult(mra),
+          project(mra),
+          derivative(mra, build_prec, build_prec),
           orbitals_0(&phi),
           density_0(func.isSpinSeparated()),
-          project(mra),
+          gradient_0(0),
           energy(0.0),
           xcInput(0),
           xcOutput(0) {
@@ -34,7 +37,7 @@ XCOperator::~XCOperator() {
     if (this->xcOutput != 0) MSG_ERROR("XC output not deallocated");
     this->functional = 0;
     this->orbitals_0 = 0;
-//    this->gradient_0 = deletePtrArray<Density>(3, &this->gradient_0);
+    this->gradient_0 = deletePtrArray<Density>(3, &this->gradient_0);
     for (int i = 0; i < 3; i++) {
         if (this->potential[i] == 0) MSG_ERROR("Invalid potential");
         delete this->potential[i];
@@ -44,10 +47,9 @@ XCOperator::~XCOperator() {
 
 void XCOperator::calcUnperturbedDensity() {
     if (this->orbitals_0 == 0) MSG_ERROR("Orbitals not initialized");
-//    if (this->gradient_0 != 0) MSG_ERROR("Gradient not empty");
+    if (this->gradient_0 != 0) MSG_ERROR("Gradient not empty");
 
     Density &rho = this->density_0;
-//    Density **dRho = this->density_0;
     OrbitalVector &phi = *this->orbitals_0;
 
     this->project.setPrecision(this->apply_prec);
@@ -62,15 +64,43 @@ void XCOperator::calcUnperturbedDensity() {
     }
 
     if (this->functional->isGGA()) {
-        NOT_IMPLEMENTED_ABORT;
-//        Timer timer;
-//        timer.restart();
-//        dRho = calcDensityGradient(rho);
-//        double t = timer.getWallTime();
-//        int n = sumNodes<Density>(dRho, 3);
-//        TelePrompter::printTree(0, "XC density gradient", n, t);
-//        printout(1, endl);
+        Timer timer;
+        timer.restart();
+        this->gradient_0 = calcDensityGradient(rho);
+        double t = timer.getWallTime();
+        int n = sumNodes<Density>(this->gradient_0, 3);
+        TelePrompter::printTree(0, "XC density gradient", n, t);
+        printout(1, endl);
     }
+}
+
+Density** XCOperator::calcDensityGradient(Density &rho) {
+    Density **out = allocPtrArray<Density>(3);
+
+    out[0] = new Density(rho);
+    out[1] = new Density(rho);
+    out[2] = new Density(rho);
+
+    if (rho.isSpinDensity()) {
+        FunctionTree<3> &rho_a = rho.getDensity(Alpha);
+        FunctionTreeVector<3> grad_a = this->derivative.grad(rho_a);
+        out[0]->setDensity(Alpha, grad_a[0]);
+        out[1]->setDensity(Alpha, grad_a[1]);
+        out[2]->setDensity(Alpha, grad_a[2]);
+
+        FunctionTree<3> &rho_b = rho.getDensity(Beta);
+        FunctionTreeVector<3> grad_b = this->derivative.grad(rho_b);
+        out[0]->setDensity(Beta, grad_b[0]);
+        out[1]->setDensity(Beta, grad_b[1]);
+        out[2]->setDensity(Beta, grad_b[2]);
+    } else {
+        FunctionTree<3> &rho_t = rho.getDensity(Paired);
+        FunctionTreeVector<3> grad_t = this->derivative.grad(rho_t);
+        out[0]->setDensity(Paired, grad_t[0]);
+        out[1]->setDensity(Paired, grad_t[1]);
+        out[2]->setDensity(Paired, grad_t[2]);
+    }
+    return out;
 }
 
 /** Compute the required input functions for XCFun. In the case of GGA
@@ -93,19 +123,31 @@ void XCOperator::setupXCInput() {
     this->xcInput = allocPtrArray<FunctionTree<3> >(nInp);
 
     if (not this->functional->isSpinSeparated()) {
-        this->xcInput[0] = &this->density_0.getDensity();
+        this->xcInput[0] = &this->density_0.getDensity(Paired);
         if (this->functional->isGGA()) {
-            NOT_IMPLEMENTED_ABORT;
-//            this->xcInput[1] = calcDotProduct<Density>(&this->rho_0[2], &this->rho_0[2]);
+            FunctionTreeVector<3> vec;
+            vec.push_back(&this->gradient_0[0]->getDensity(Paired));
+            vec.push_back(&this->gradient_0[1]->getDensity(Paired));
+            vec.push_back(&this->gradient_0[2]->getDensity(Paired));
+            this->xcInput[1] = calcDotProduct(vec, vec);
+            vec.clear();
         }
     } else {
         this->xcInput[0] = &this->density_0.getDensity(Alpha);
         this->xcInput[1] = &this->density_0.getDensity(Beta);
         if (this->functional->isGGA()) {
-            NOT_IMPLEMENTED_ABORT;
-//            this->xcInput[2] = calcDotProduct<Density>(&this->rho_0[2], &this->rho_0[2]);
-//            this->xcInput[3] = calcDotProduct<Density>(&this->rho_0[2], &this->rho_0[5]);
-//            this->xcInput[4] = calcDotProduct<Density>(&this->rho_0[5], &this->rho_0[5]);
+            FunctionTreeVector<3> vec;
+            vec.push_back(&this->gradient_0[0]->getDensity(Alpha));
+            vec.push_back(&this->gradient_0[1]->getDensity(Alpha));
+            vec.push_back(&this->gradient_0[2]->getDensity(Alpha));
+            this->xcInput[1] = calcDotProduct(vec, vec);
+            vec.clear();
+
+            vec.push_back(&this->gradient_0[0]->getDensity(Beta));
+            vec.push_back(&this->gradient_0[1]->getDensity(Beta));
+            vec.push_back(&this->gradient_0[2]->getDensity(Beta));
+            this->xcInput[2] = calcDotProduct(vec, vec);
+            vec.clear();
         }
     }
 
@@ -127,15 +169,8 @@ void XCOperator::clearXCInput() {
         this->xcInput[1] = 0;
     }
 
-    int nFuncs = this->functional->getInputLength();
-    for (int i = 0; i < nFuncs; i++) {
-        if (this->xcInput[i] != 0) {
-            delete this->xcInput[i];
-        }
-        this->xcInput[i] = 0;
-    }
-    delete[] this->xcInput;
-    this->xcInput = 0;
+    int nInp = this->functional->getInputLength();
+    this->xcInput = deletePtrArray<FunctionTree<3> >(nInp, &this->xcInput);
 }
 
 void XCOperator::setupXCOutput() {
@@ -156,15 +191,8 @@ void XCOperator::setupXCOutput() {
 void XCOperator::clearXCOutput() {
     if (this->xcOutput == 0) MSG_ERROR("XC output not initialized");
 
-    int nFuncs = this->functional->getOutputLength(this->order);
-    for (int i = 0; i < nFuncs; i++) {
-        if (this->xcOutput[i] != 0) {
-            delete this->xcOutput[i];
-        }
-        this->xcOutput[i] = 0;
-    }
-    delete[] this->xcOutput;
-    this->xcOutput = 0;
+    int nOut = this->functional->getOutputLength(this->order);
+    this->xcOutput = deletePtrArray<FunctionTree<3> >(nOut, &this->xcOutput);
 }
 
 void XCOperator::evaluateXCFunctional() {
@@ -201,34 +229,35 @@ void XCOperator::calcEnergy() {
     TelePrompter::printTree(0, "XC energy", nNodes, time);
 }
 
-//Potential** XCOperator::calcGradDotPotDensVec(Potential *pot, Density **dens) {
-//    NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
-//    int nNodes;
-//    double time;
+FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
+                                                   FunctionTreeVector<3> &dens) {
+    FunctionTreeVector<3> vec;
+    for (int d = 0; d < 3; d++) {
+        if (dens[d] == 0) MSG_ERROR("Invalid density");
 
-//    Potential **result = allocPtrArray<Potential>(3);
-//    for (int d = 0; d < 3; d++) {
-//        if (dens[d] == 0) continue;
-//        if (pot == 0) MSG_ERROR("Invalid XC output");
+        Timer timer;
+        timer.restart();
 
-//        timer.restart();
-//        Potential potDens;
-//        potDens.mult(1.0, *pot, 1.0, *dens[d], 0);
-//        time = timer.elapsed();
-//        nNodes = potDens.getNNodes();
-//        TelePrompter::printTree(2, "Multiply", nNodes, time);
+        FunctionTree<3> *potDens = this->grid(*dens[d]);
+        this->mult(*potDens, 1.0, pot, *dens[d], 0);
+        vec.push_back(potDens);
 
-//        timer.restart();
-//        result[d] = new Potential;
-//        this->derivative->setApplyDir(d);
-//        this->derivative->apply(*result[d], potDens);
-//        time = timer.elapsed();
-//        nNodes = result[d]->getNNodes();
-//        TelePrompter::printTree(2, "Gradient", nNodes, time);
-//    }
-//    return result;
-//}
+        double t = timer.getWallTime();
+        int n = potDens->getNNodes();
+        TelePrompter::printTree(2, "Multiply", n, t);
+    }
+
+    Timer timer;
+    timer.restart();
+
+    FunctionTree<3> *result = this->derivative.div(vec);
+    vec.clear(true);
+
+    double t = timer.getWallTime();
+    int n = result->getNNodes();
+    TelePrompter::printTree(2, "Gradient", n, t);
+    return result;
+}
 
 //Potential* calcPotDensVecDotDensVec(Potential *pot, Density **dens_1, Density **dens_2) {
 //    NOT_IMPLEMENTED_ABORT;
@@ -279,9 +308,9 @@ Orbital* XCOperator::adjoint(Orbital &orb) {
 int XCOperator::printTreeSizes() const {
     int nNodes = 0;
     nNodes += this->density_0.printTreeSizes();
-//    this->gradient_0[0]->printTreeSizes();
-//    this->gradient_0[1]->printTreeSizes();
-//    this->gradient_0[2]->printTreeSizes();
+    this->gradient_0[0]->printTreeSizes();
+    this->gradient_0[1]->printTreeSizes();
+    this->gradient_0[2]->printTreeSizes();
 
     if (this->potential != 0) {
         nNodes += this->potential[0]->printTreeSizes();
@@ -342,3 +371,25 @@ void XCOperator::expandTreeData(int nFuncs, FunctionTree<3> **trees, MatrixXd &d
         trees[i]->setEndValues(col_i);
     }
 }
+
+FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
+                                            FunctionTreeVector<3> &vec_b) {
+    if (vec_a.size() != vec_b.size()) MSG_ERROR("Invalid input");
+
+    FunctionTreeVector<3> out_vec;
+    for (int d = 0; d < vec_a.size(); d++) {
+        FunctionTree<3> &tree_a = vec_a.getFunc(d);
+        FunctionTree<3> &tree_b = vec_b.getFunc(d);
+        FunctionTree<3> *out_d = this->grid();
+        this->grid(*out_d, tree_a);
+        this->grid(*out_d, tree_b);
+        this->mult(*out_d, 1.0, tree_a, tree_b, 0);
+        out_vec.push_back(out_d);
+    }
+    FunctionTree<3> *out = this->grid(out_vec);
+    this->add(*out, out_vec);
+
+    out_vec.clear(true);
+    return out;
+}
+

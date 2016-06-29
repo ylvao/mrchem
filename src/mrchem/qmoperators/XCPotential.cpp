@@ -37,7 +37,10 @@ void XCPotential::clear() {
     this->potential[0]->clear();
     this->potential[1]->clear();
     this->potential[2]->clear();
-//    clearPtrArray<Density>(3, this->gradient_0);
+    if (this->gradient_0[0] != 0) this->gradient_0[0]->clear();
+    if (this->gradient_0[1] != 0) this->gradient_0[1]->clear();
+    if (this->gradient_0[2] != 0) this->gradient_0[2]->clear();
+    this->gradient_0 = deletePtrArray<Density>(3, &this->gradient_0);
 }
 
 void XCPotential::calcPotential() {
@@ -53,7 +56,12 @@ void XCPotential::calcPotential() {
             calcPotentialLDA(Beta);
         }
     } else if (this->functional->isGGA()) {
-        NOT_IMPLEMENTED_ABORT;
+        if (not this->functional->isSpinSeparated()) {
+            calcPotentialGGA(Paired);
+        } else {
+            calcPotentialGGA(Alpha);
+            calcPotentialGGA(Beta);
+        }
     } else {
         MSG_FATAL("Invalid functional type");
     }
@@ -90,95 +98,91 @@ void XCPotential::calcPotentialLDA(int spin) {
 }
 
 void XCPotential::calcPotentialGGA(int spin) {
-    NOT_IMPLEMENTED_ABORT;
-//    FunctionTreeVector<3> xc_funcs;
-//    FunctionTreeVector<3> dRho_a;
-//    FunctionTreeVector<3> dRho_b;
+    FunctionTreeVector<3> xc_funcs;
+    FunctionTreeVector<3> dRho_a;
+    FunctionTreeVector<3> dRho_b;
 
-//    FunctionTree<3> *pot = 0;
-//    if (spin == Paired) {
-//        xc_funcs.push_back(this->xcOutput[1]);
-//        xc_funcs.push_back(this->xcOutput[2]);
-//        xc_funcs.push_back(0);
-//        dRho_a.push_back(this->gradient_0[0]->total);
-//        dRho_a.push_back(this->gradient_0[1]->total);
-//        dRho_a.push_back(this->gradient_0[2]->total);
-//        dRho_b.push_back(0);
-//        dRho_b.push_back(0);
-//        dRho_b.push_back(0);
+    if (spin == Paired) {
+        xc_funcs.push_back(this->xcOutput[1]);
+        xc_funcs.push_back(this->xcOutput[2]);
+        xc_funcs.push_back(0);
+        dRho_a.push_back(&this->gradient_0[0]->getDensity(Paired));
+        dRho_a.push_back(&this->gradient_0[1]->getDensity(Paired));
+        dRho_a.push_back(&this->gradient_0[2]->getDensity(Paired));
+        dRho_b.push_back(0);
+        dRho_b.push_back(0);
+        dRho_b.push_back(0);
 
-//        pot = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[0]->real = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[0]->setup(this->apply_prec);
 
-//        xc_funcs.clear();
-//        dRho_a.clear();
-//        dRho_b.clear();
-//    }
-//    if (spin == Alpha) {
-//        xc_funcs.push_back(this->xcOutput[1]);
-//        xc_funcs.push_back(this->xcOutput[3]);
-//        xc_funcs.push_back(this->xcOutput[4]);
-//        dRho_a.push_back(this->gradient_0[0]->alpha);
-//        dRho_a.push_back(this->gradient_0[1]->alpha);
-//        dRho_a.push_back(this->gradient_0[2]->alpha);
-//        dRho_b.push_back(this->gradient_0[0]->beta);
-//        dRho_b.push_back(this->gradient_0[1]->beta);
-//        dRho_b.push_back(this->gradient_0[2]->beta);
+        xc_funcs.clear();
+        dRho_a.clear();
+        dRho_b.clear();
+    }
+    if (spin == Alpha) {
+        xc_funcs.push_back(this->xcOutput[1]);
+        xc_funcs.push_back(this->xcOutput[3]);
+        xc_funcs.push_back(this->xcOutput[4]);
+        dRho_a.push_back(&this->gradient_0[0]->getDensity(Alpha));
+        dRho_a.push_back(&this->gradient_0[1]->getDensity(Alpha));
+        dRho_a.push_back(&this->gradient_0[2]->getDensity(Alpha));
+        dRho_b.push_back(&this->gradient_0[0]->getDensity(Beta));
+        dRho_b.push_back(&this->gradient_0[1]->getDensity(Beta));
+        dRho_b.push_back(&this->gradient_0[2]->getDensity(Beta));
 
-//        pot = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[1]->real = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[1]->setup(this->apply_prec);
 
-//        xc_funcs.clear();
-//        dRho_a.clear();
-//        dRho_b.clear();
-//    }
-//    if (spin == Beta) {
-//        xc_funcs.push_back(this->xcOutput[2]);
-//        xc_funcs.push_back(this->xcOutput[5]);
-//        xc_funcs.push_back(this->xcOutput[4]);
-//        dRho_a.push_back(this->gradient_0[0]->beta);
-//        dRho_a.push_back(this->gradient_0[1]->beta);
-//        dRho_a.push_back(this->gradient_0[2]->beta);
-//        dRho_b.push_back(this->gradient_0[0]->alpha);
-//        dRho_b.push_back(this->gradient_0[1]->alpha);
-//        dRho_b.push_back(this->gradient_0[2]->alpha);
+        xc_funcs.clear();
+        dRho_a.clear();
+        dRho_b.clear();
+    }
+    if (spin == Beta) {
+        xc_funcs.push_back(this->xcOutput[2]);
+        xc_funcs.push_back(this->xcOutput[5]);
+        xc_funcs.push_back(this->xcOutput[4]);
+        dRho_a.push_back(&this->gradient_0[0]->getDensity(Beta));
+        dRho_a.push_back(&this->gradient_0[1]->getDensity(Beta));
+        dRho_a.push_back(&this->gradient_0[2]->getDensity(Beta));
+        dRho_b.push_back(&this->gradient_0[0]->getDensity(Alpha));
+        dRho_b.push_back(&this->gradient_0[1]->getDensity(Alpha));
+        dRho_b.push_back(&this->gradient_0[2]->getDensity(Alpha));
 
-//        pot = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[2]->real = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[2]->setup(this->apply_prec);
 
-//        xc_funcs.clear();
-//        dRho_a.clear();
-//        dRho_b.clear();
-//    }
-//    return pot;
+        xc_funcs.clear();
+        dRho_a.clear();
+        dRho_b.clear();
+    }
 }
 
 FunctionTree<3>* XCPotential::calcPotentialGGA(FunctionTreeVector<3> &xc_funcs,
                                                FunctionTreeVector<3> &dRho_a,
                                                FunctionTreeVector<3> &dRho_b) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (xc_funcs[0] == 0) MSG_ERROR("Invalid XC output");
+    if (xc_funcs[0] == 0) MSG_ERROR("Invalid XC output");
 
-//    FunctionTreeVector<3> funcs;
-//    funcs.push_back(1.0, xc_funcs[0]);
+    FunctionTreeVector<3> funcs;
+    funcs.push_back(1.0, xc_funcs[0]);
 
-//    FunctionTreeVector<3> tmp_1;
-//    if (xc_funcs[1] != 0) {
-//        tmp_1 = calcGradDotPotDensVec(xc_funcs[1], dRho_a);
-//        funcs.push_back(-2.0, tmp_1[0]);
-//        funcs.push_back(-2.0, tmp_1[1]);
-//        funcs.push_back(-2.0, tmp_1[2]);
-//    }
+    FunctionTree<3> *tmp_1 = 0;
+    if (xc_funcs[1] != 0) {
+        tmp_1 = calcGradDotPotDensVec(*xc_funcs[1], dRho_a);
+        funcs.push_back(-2.0, tmp_1);
+    }
 
-//    FunctionTreeVector<3> tmp_2;
-//    if (xc_funcs[2] != 0) {
-//        tmp_2 = calcGradDotPotDensVec(xc_funcs[2], dRho_b);
-//        funcs.push_back(-1.0, tmp_2[0]);
-//        funcs.push_back(-1.0, tmp_2[1]);
-//        funcs.push_back(-1.0, tmp_2[2]);
-//    }
+    FunctionTree<3> *tmp_2 = 0;
+    if (xc_funcs[2] != 0) {
+        tmp_2 = calcGradDotPotDensVec(*xc_funcs[2], dRho_b);
+        funcs.push_back(-1.0, tmp_2);
+    }
 
-//    FunctionTree<3> *pot = this->add(funcs);
-//    tmp_1.clear(true);
-//    tmp_2.clear(true);
-//    funcs.clear(false);
+    FunctionTree<3> *pot = this->add(funcs);
+    funcs.clear(false);
 
-//    return pot;
+    if (tmp_1 != 0) delete tmp_1;
+    if (tmp_2 != 0) delete tmp_2;
+
+    return pot;
 }
