@@ -13,20 +13,16 @@ class OrbitalVector;
 class OrbitalOptimizer;
 class EnergyOptimizer;
 class GroundStateSolver;
-class LinearResponseSolver;
 class HelmholtzOperatorSet;
 class KAIN;
 
 class QMOperator;
 class FockOperator;
 class CoulombPotential;
-class CoulombHessian;
 class KineticOperator;
 class NuclearPotential;
 class ExchangePotential;
-class ExchangeHessian;
 class XCPotential;
-class XCHessian;
 class XCFunctional;
 
 template<int D> class MultiResolutionAnalysis;
@@ -54,23 +50,9 @@ protected:
     std::vector<double> gauge;
 
     // Run parameters
-    bool run_el_field_rsp;
-    bool run_mag_field_rsp;
-    bool run_mag_moment_rsp;
     bool run_ground_state;
     bool run_dipole_moment;
     bool run_quadrupole_moment;
-    bool run_polarizability;
-    bool run_optrot_electric;
-    bool run_optrot_magnetic;
-    bool run_magnetizability;
-    bool run_nmr_shielding;
-    bool run_spin_spin;
-    bool velocity_gauge;
-    std::vector<int> nmr_nuclei;
-    std::vector<int> spin_spin_k;
-    std::vector<int> spin_spin_l;
-    std::vector<double> frequencies;
 
     // Molecule input
     int mol_charge;
@@ -101,25 +83,9 @@ protected:
     double scf_lambda_thrs;
     std::vector<double> scf_orbital_prec;
 
-    // Response input
-    std::string rsp_start;
-    std::string rsp_acc;
-    int rsp_history;
-    int rsp_max_iter;
-    bool rsp_localize;
-    bool rsp_write_orbitals;
-    double rsp_orbital_thrs;
-    double rsp_property_thrs;
-    std::vector<int> rsp_dir;
-    std::vector<double> rsp_orbital_prec;
-
     // File input
     std::string file_start_orbitals;
     std::string file_final_orbitals;
-    std::string file_start_x_orbs;
-    std::string file_final_x_orbs;
-    std::string file_start_y_orbs;
-    std::string file_final_y_orbs;
     std::string file_basis_set;
     std::string file_dens_mat;
     std::string file_fock_mat;
@@ -134,8 +100,6 @@ protected:
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;
     KAIN *scf_kain;
-    KAIN *rsp_kain_x;
-    KAIN *rsp_kain_y;
 
     // Unperturbed quantities
     Molecule *molecule;
@@ -156,45 +120,24 @@ protected:
     FockOperator *fock_np1;
     Eigen::MatrixXd F_np1;
 
-    // Perturbed quantities
-    OrbitalVector *x_phi;
-    OrbitalVector *y_phi;
-    CoulombHessian *dJ;
-    ExchangeHessian *dK;
-    XCHessian *dXC;
-    FockOperator *d_fock;
-
     // XCFun
     XCFunctional *xcfun;
 
     bool sanityCheck() const;
     bool runInitialGuess(FockOperator &oper, Eigen::MatrixXd &F, OrbitalVector &orbs);
     bool runGroundState();
-    void runElectricFieldResponse(double omega);
-    void runMagneticFieldResponse(double omega);
-    void runMagneticMomentResponse(const std::string &type, int L);
 
     void calcGroundStateProperties();
-    void calcElectricFieldProperties(int d, double omega);
-    void calcMagneticFieldProperties(int d, double omega);
-    void calcMagneticMomentProperties(const std::string &type, int d, int L);
 
+    void setupInitialGroundState();
     GroundStateSolver *setupInitialGuessSolver();
     OrbitalOptimizer *setupOrbitalOptimizer();
     EnergyOptimizer *setupEnergyOptimizer();
-    LinearResponseSolver *setupLinearResponseSolver(bool dynamic);
 
     void setup_np1();
     void clear_np1();
 
-    void setupInitialGroundState();
-    void setupInitialResponse(QMOperator &h, int d, bool dynamic, double omega);
-
-    void setupPerturbedOrbitals(bool dynamic);
-    void clearPerturbedOrbitals(bool dynamic);
-
-    void setupPerturbedOperators(QMOperator &dH, bool dynamic);
-    void clearPerturbedOperators();
+    void printEigenvalues(Eigen::MatrixXd &f_mat, OrbitalVector &orbs);
 };
 
 #endif
