@@ -28,7 +28,9 @@
 #include "OrbitalProjector.h"
 
 #include "SCFEnergy.h"
-//#include "DipoleMoment.h"
+#include "DipoleMoment.h"
+
+#include "DipoleOperator.h"
 
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
@@ -53,7 +55,6 @@ SCFDriver::SCFDriver(Getkw &input) {
 
     run_ground_state = input.get<bool>("Properties.ground_state");
     run_dipole_moment = input.get<bool>("Properties.dipole_moment");
-    run_quadrupole_moment = input.get<bool>("Properties.quadrupole_moment");
 
     mol_charge = input.get<int>("Molecule.charge");
     mol_multiplicity = input.get<int>("Molecule.multiplicity");
@@ -159,9 +160,6 @@ void SCFDriver::setup() {
     if (run_dipole_moment) {
         molecule->initDipoleMoment(r_O);
     }
-    if (run_quadrupole_moment) {
-        molecule->initQuadrupoleMoment(r_O);
-    }
 
     // Setting up SCF
     helmholtz = new HelmholtzOperatorSet(rel_prec, *MRA, scf_lambda_thrs);
@@ -249,16 +247,6 @@ void SCFDriver::setupInitialGroundState() {
     // Reading initial guess
     if (scf_start == "none") {
         NOT_IMPLEMENTED_ABORT;
-//        OrbitalVector initOrbs("initOrbs");
-//        initOrbs.initialize(*nuclei);
-//        MatrixXd S = initOrbs.calcOverlapMatrix();
-//        println(0, endl << S << endl);
-//        CoreHamiltonian h(*T, *V);
-//        MatrixXd F = h(initOrbs, initOrbs);
-//        println(0, endl << F << endl);
-//        initOrbs.diagonalize(-1.0, &F);
-//        println(0, endl << F << endl);
-//        phi->readOrbitals(initOrbs);
 //        runInitialGuess(*f_oper, F, *phi);
     } else if (scf_start == "gto") {
         OrbitalProjector OP(*MRA, rel_prec);
@@ -334,6 +322,16 @@ bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &
     NOT_IMPLEMENTED_ABORT;
 //    if (phi == 0) MSG_ERROR("Orbitals not initialized");
 
+//        OrbitalVector initOrbs("initOrbs");
+//        initOrbs.initialize(*nuclei);
+//        MatrixXd S = initOrbs.calcOverlapMatrix();
+//        println(0, endl << S << endl);
+//        CoreHamiltonian h(*T, *V);
+//        MatrixXd F = h(initOrbs, initOrbs);
+//        println(0, endl << F << endl);
+//        initOrbs.diagonalize(-1.0, &F);
+//        println(0, endl << F << endl);
+//        phi->readOrbitals(initOrbs);
 //    GroundStateSolver *gss = setupInitialGuessSolver();
 //    gss->setup(oper, F, orbs);
 //    bool converged = gss->optimize();
@@ -378,23 +376,21 @@ bool SCFDriver::runGroundState() {
 }
 
 void SCFDriver::calcGroundStateProperties() {
-    fock->setup(rel_prec);
     SCFEnergy &energy = molecule->getSCFEnergy();
+    fock->setup(rel_prec);
     energy.compute(*nuclei);
     energy.compute(*fock, F, *phi);
     fock->clear();
 
     if (run_dipole_moment) {
-        NOT_IMPLEMENTED_ABORT;
-//        DipoleMoment &dipole = molecule->getDipoleMoment();
-//        dipole.compute(*nuclei);
-//        dipole.compute(*phi);
-    }
-    if (run_quadrupole_moment) {
-        NOT_IMPLEMENTED_ABORT;
-//        QuadrupoleMoment &quadrupole = molecule->getQuadrupoleMoment();
-//        quadrupole.compute(*nuclei);
-//        quadrupole.compute(*phi);
+        DipoleMoment &dipole = molecule->getDipoleMoment();
+        for (int d = 0; d < 3; d++) {
+            DipoleOperator mu_d(*MRA, d, r_O[d]);
+            mu_d.setup(rel_prec);
+            dipole.compute(d, mu_d, *nuclei);
+            dipole.compute(d, mu_d, *phi);
+            mu_d.clear();
+        }
     }
 }
 

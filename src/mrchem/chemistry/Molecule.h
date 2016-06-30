@@ -18,12 +18,6 @@
 #include "Nucleus.h"
 
 class DipoleMoment;
-class QuadrupoleMoment;
-class Polarizability;
-class OpticalRotation;
-class Magnetizability;
-class NMRShielding;
-class SpinSpinCoupling;
 
 class Molecule {
 public:
@@ -47,20 +41,8 @@ public:
     const double *getCenterOfMass() const { return this->COM; }
 
     void initDipoleMoment(const double *o = 0);
-    void initQuadrupoleMoment(const double *o = 0);
-    void initPolarizability(double omega = 0, const double *o = 0, bool v = false);
-    void initOpticalRotation(double omega = 0, const double *o = 0, bool v = false);
-    void initMagnetizability(double omega = 0, const double *o = 0);
-    void initNMRShielding(int k, const double *o = 0);
-    void initSpinSpinCoupling(int k, int l);
 
     DipoleMoment &getDipoleMoment();
-    QuadrupoleMoment &getQuadrupoleMoment();
-    Polarizability &getPolarizability(double omega = 0);
-    OpticalRotation &getOpticalRotation(double omega = 0);
-    Magnetizability &getMagnetizability(double omega = 0);
-    NMRShielding &getNMRShielding(int k);
-    SpinSpinCoupling &getSpinSpinCoupling(int k, int l);
 
 protected:
     int charge;
@@ -70,25 +52,10 @@ protected:
     double COM[3];
     SCFEnergy energy;
     DipoleMoment *dipole;
-    QuadrupoleMoment *quadrupole;
-    NMRShielding **nmrShielding;
-    SpinSpinCoupling ***spinSpinCoupling;
-    std::vector<Polarizability *> polarizability;
-    std::vector<OpticalRotation *> opticalRotation;
-    std::vector<Magnetizability *> magnetizability;
-
-    void allocProperties();
-    void freeProperties();
-
-    void clearDipoleMoment();
-    void clearQuadrupoleMoment();
-    void clearPolarizability();
-    void clearOpticalRotation();
-    void clearMagnetizability();
-    void clearNMRShielding(int k);
-    void clearSpinSpinCoupling(int k, int l);
 
     void calcCenterOfMass();
+
+    void clearDipoleMoment();
 
     void readCoordinateFile(const std::string &file);
     void readCoordinateString(const std::vector<std::string> &coord_str);

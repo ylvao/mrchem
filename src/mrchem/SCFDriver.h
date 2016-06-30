@@ -52,7 +52,6 @@ protected:
     // Run parameters
     bool run_ground_state;
     bool run_dipole_moment;
-    bool run_quadrupole_moment;
 
     // Molecule input
     int mol_charge;
