@@ -9,23 +9,23 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
                               double a, Orbital &phi_a,
                               double b, Orbital &phi_b) {
     if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
-    FunctionTreeVector<3> real_vec;
-    FunctionTreeVector<3> imag_vec;
+    FunctionTreeVector<3> rvec;
+    FunctionTreeVector<3> ivec;
 
-    if (phi_a.hasReal()) real_vec.push_back(a, phi_a.real);
-    if (phi_b.hasReal()) real_vec.push_back(b, phi_b.real);
+    if (phi_a.hasReal()) rvec.push_back(a, phi_a.real);
+    if (phi_b.hasReal()) rvec.push_back(b, phi_b.real);
 
-    if (phi_a.hasImag()) imag_vec.push_back(a, phi_a.imag);
-    if (phi_b.hasImag()) imag_vec.push_back(b, phi_b.imag);
+    if (phi_a.hasImag()) ivec.push_back(a, phi_a.imag);
+    if (phi_b.hasImag()) ivec.push_back(b, phi_b.imag);
 
     // Fixed union grids
-    if (real_vec.size() > 0) {
-        phi_ab.real = this->grid(real_vec);
-        this->add(*phi_ab.real, real_vec, 0);
+    if (rvec.size() > 0) {
+        phi_ab.real = this->grid(rvec);
+        this->add(*phi_ab.real, rvec, 0);
     }
-    if (imag_vec.size() > 0) {
-        phi_ab.imag = this->grid(imag_vec);
-        this->add(*phi_ab.imag, imag_vec, 0);
+    if (ivec.size() > 0) {
+        phi_ab.imag = this->grid(ivec);
+        this->add(*phi_ab.imag, ivec, 0);
     }
 }
 
@@ -34,21 +34,27 @@ void OrbitalAdder::operator()(Orbital &out,
                               std::vector<Orbital *> &orbs) {
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Orbital not empty");
     if (coefs.size() != orbs.size()) MSG_ERROR("Invalid arguments");
-    FunctionTreeVector<3> real_vec;
-    FunctionTreeVector<3> imag_vec;
+    FunctionTreeVector<3> rvec;
+    FunctionTreeVector<3> ivec;
     for (int i = 0; i < orbs.size(); i++) {
-        if (orbs[i]->hasReal()) real_vec.push_back(coefs[i], orbs[i]->real);
-        if (orbs[i]->hasImag()) imag_vec.push_back(coefs[i], orbs[i]->imag);
+        if (orbs[i]->hasReal()) rvec.push_back(coefs[i], orbs[i]->real);
+        if (orbs[i]->hasImag()) ivec.push_back(coefs[i], orbs[i]->imag);
     }
 
     // Adaptive grids
-    if (real_vec.size() > 0) {
+    if (rvec.size() > 2) {
         out.real = this->grid();
-        this->add(*out.real, real_vec);
+        this->add(*out.real, rvec);
+    } else if (rvec.size() > 0) {
+        out.real = this->grid(rvec);
+        this->add(*out.real, rvec, 0);
     }
-    if (imag_vec.size() > 0) {
+    if (ivec.size() > 2) {
         out.imag = this->grid();
-        this->add(*out.imag, imag_vec);
+        this->add(*out.imag, ivec);
+    } else if (ivec.size() > 0) {
+        out.imag = this->grid(ivec);
+        this->add(*out.imag, ivec, 0);
     }
 }
 
@@ -81,13 +87,19 @@ void OrbitalAdder::operator()(Orbital &out, const VectorXd &c, OrbitalVector &in
     }
 
     // Adaptive grids
-    if (rvec.size() != 0) {
+    if (rvec.size() > 2) {
         out.real = this->grid();
         this->add(*out.real, rvec);
+    } else if (rvec.size() > 0) {
+        out.real = this->grid(rvec);
+        this->add(*out.real, rvec, 0);
     }
-    if (ivec.size() != 0) {
+    if (ivec.size() > 2) {
         out.imag = this->grid();
         this->add(*out.imag, ivec);
+    } else if (ivec.size() > 0) {
+        out.imag = this->grid(ivec);
+        this->add(*out.imag, ivec, 0);
     }
 }
 

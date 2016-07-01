@@ -60,14 +60,16 @@ Orbital* Potential::operator() (Orbital &orb_p) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(this->real);
             tree_vec.push_back(orb_p.real);
-            real_1 = this->mult(tree_vec);
+            real_1 = this->grid();
+            this->mult(*real_1, tree_vec);
             real_vec.push_back(1.0, real_1);
         }
         if (this->imag != 0) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(this->imag);
             tree_vec.push_back(orb_p.real);
-            imag_1 = this->mult(tree_vec);
+            imag_1 = this->grid();
+            this->mult(*imag_1, tree_vec);
             imag_vec.push_back(1.0, imag_1);
         }
     }
@@ -76,22 +78,26 @@ Orbital* Potential::operator() (Orbital &orb_p) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(this->real);
             tree_vec.push_back(orb_p.imag);
-            imag_2 = this->mult(tree_vec);
+            imag_2 = this->grid();
+            this->mult(*imag_2, tree_vec);
             imag_vec.push_back(1.0, imag_2);
         }
         if (this->imag != 0) {
             FunctionTreeVector<3> tree_vec;
             tree_vec.push_back(this->imag);
             tree_vec.push_back(orb_p.imag);
-            real_2 = this->mult(tree_vec);
+            real_2 = this->grid();
+            this->mult(*real_2, tree_vec);
             real_vec.push_back(-1.0, real_2);
         }
     }
     if (real_vec.size() > 0) {
-        Vorb->real = this->add(real_vec);
+        Vorb->real = this->grid(real_vec);
+        this->add(*Vorb->real, real_vec, 0);
     }
     if (imag_vec.size() > 0) {
-        Vorb->imag = this->add(imag_vec);
+        Vorb->imag = this->grid(imag_vec);
+        this->add(*Vorb->imag, imag_vec, 0);
     }
 
     if (real_1 != 0) delete real_1;
