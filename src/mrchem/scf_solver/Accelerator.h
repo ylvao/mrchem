@@ -30,6 +30,7 @@ public:
 
     void setMaxHistory(int max) { this->maxHistory = max; }
     void setMinHistory(int min) { this->minHistory = min; }
+    void setPrecision(double prec) { this->add.setPrecision(prec); }
 
     void accelerate(OrbitalVector &phi,
                     OrbitalVector &dPhi,

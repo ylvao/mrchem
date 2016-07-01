@@ -39,9 +39,11 @@ void XCPotential::clear() {
     if (this->potential[0] != 0) this->potential[0]->clear();
     if (this->potential[1] != 0) this->potential[1]->clear();
     if (this->potential[2] != 0) this->potential[2]->clear();
-    if (this->gradient_0[0] != 0) this->gradient_0[0]->clear();
-    if (this->gradient_0[1] != 0) this->gradient_0[1]->clear();
-    if (this->gradient_0[2] != 0) this->gradient_0[2]->clear();
+    if (this->gradient_0 != 0) {
+        if (this->gradient_0[0] != 0) this->gradient_0[0]->clear();
+        if (this->gradient_0[1] != 0) this->gradient_0[1]->clear();
+        if (this->gradient_0[2] != 0) this->gradient_0[2]->clear();
+    }
     this->gradient_0 = deletePtrArray<Density>(3, &this->gradient_0);
     XCOperator::clear();
 }
