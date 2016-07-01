@@ -42,6 +42,8 @@ void SCF::adjustPrecision(double error) {
     this->orbPrec[0] = min(10.0*error*error, this->orbPrec[0]);
     this->orbPrec[0] = max(this->orbPrec[0], this->orbPrec[2]);
 
+    this->add->precision(this->orbPrec[0]);
+
     TelePrompter::printSeparator(0, '=');
     TelePrompter::printDouble(0, "Current precision", this->orbPrec[0]);
     TelePrompter::printSeparator(0, '-');
