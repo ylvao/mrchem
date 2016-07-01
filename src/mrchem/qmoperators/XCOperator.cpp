@@ -17,10 +17,10 @@ XCOperator::XCOperator(int k,
         : QMOperator(mra),
           order(k),
           functional(&func),
-          add(mra),
-          mult(mra),
-          project(mra),
-          derivative(mra, build_prec, build_prec),
+          add(mra, -1.0),
+          mult(mra, -1.0),
+          project(mra, -1.0),
+          derivative(mra, -1.0, build_prec),
           orbitals_0(&phi),
           density_0(func.isSpinSeparated()),
           gradient_0(0),
@@ -45,14 +45,28 @@ XCOperator::~XCOperator() {
     }
 }
 
-void XCOperator::calcUnperturbedDensity() {
+void XCOperator::setup(double prec) {
+    QMOperator::setup(prec);
+    this->add.setPrecision(-1.0);
+    this->mult.setPrecision(-1.0);
+    this->project.setPrecision(prec);
+    this->derivative.setPrecision(prec);
+}
+
+void XCOperator::clear() {
+    this->add.setPrecision(-1.0);
+    this->mult.setPrecision(-1.0);
+    this->project.setPrecision(-1.0);
+    this->derivative.setPrecision(-1.0);
+    QMOperator::clear();
+}
+
+void XCOperator::calcDensity() {
     if (this->orbitals_0 == 0) MSG_ERROR("Orbitals not initialized");
     if (this->gradient_0 != 0) MSG_ERROR("Gradient not empty");
 
     Density &rho = this->density_0;
     OrbitalVector &phi = *this->orbitals_0;
-
-    this->project.setPrecision(this->apply_prec);
 
     {
         Timer timer;
@@ -387,7 +401,7 @@ FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
         out_vec.push_back(out_d);
     }
     FunctionTree<3> *out = this->grid(out_vec);
-    this->add(*out, out_vec);
+    this->add(*out, out_vec, 0);
 
     out_vec.clear(true);
     return out;

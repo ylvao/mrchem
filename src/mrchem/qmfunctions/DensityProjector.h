@@ -12,11 +12,11 @@ class Density;
 
 class DensityProjector {
 public:
-    DensityProjector(const MultiResolutionAnalysis<3> &mra)
+    DensityProjector(const MultiResolutionAnalysis<3> &mra, double pr = -1.0)
         : grid(mra),
-          clean(mra),
-          add(mra),
-          mult(mra) { }
+          clean(mra, pr),
+          add(mra, pr),
+          mult(mra, pr) { }
     virtual ~DensityProjector() { }
 
     void setPrecision(double prec);

@@ -15,13 +15,13 @@ ExchangePotential::~ExchangePotential() {
 }
 
 void ExchangePotential::setup(double prec) {
-    this->apply_prec = prec;
+    ExchangeOperator::setup(prec);
 //    calcInternalExchange();
 }
 
 void ExchangePotential::clear() {
-    this->apply_prec = -1.0;
     this->exchange_0.clear();
+    ExchangeOperator::clear();
 }
 
 void ExchangePotential::rotate(MatrixXd &U) {
@@ -44,91 +44,92 @@ Orbital* ExchangePotential::adjoint(Orbital &phi_p) {
 
 /** Compute exchange on the fly */
 Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
-    Timer timer;
-    timer.restart();
+    NOT_IMPLEMENTED_ABORT;
+//    Timer timer;
+//    timer.restart();
 
-    int maxNodes = 0;
-    FunctionTreeVector<3> real_vec;
-    FunctionTreeVector<3> imag_vec;
-    int nOrbs = this->orbitals_0->size();
-    for (int i = 0; i < nOrbs; i++) {
-        Orbital &phi_i = this->orbitals_0->getOrbital(i);
+//    int maxNodes = 0;
+//    FunctionTreeVector<3> real_vec;
+//    FunctionTreeVector<3> imag_vec;
+//    int nOrbs = this->orbitals_0->size();
+//    for (int i = 0; i < nOrbs; i++) {
+//        Orbital &phi_i = this->orbitals_0->getOrbital(i);
 
-        Orbital *phi_ip = new Orbital(phi_p);
-        { // compute phi_ip = phi_i^dag * phi_p
-            this->mult.setPrecision(this->apply_prec);
-            this->mult.adjoint(*phi_ip, 1.0, phi_i, phi_p);
-            int nNodes = phi_ip->getNNodes();
-            double time = timer.getWallTime();
-            maxNodes = max(maxNodes, nNodes);
-            TelePrompter::printTree(2, "Multiply", nNodes, time);
-        }
+//        Orbital *phi_ip = new Orbital(phi_p);
+//        { // compute phi_ip = phi_i^dag * phi_p
+//            this->mult.setPrecision(this->apply_prec);
+//            this->mult.adjoint(*phi_ip, 1.0, phi_i, phi_p);
+//            int nNodes = phi_ip->getNNodes();
+//            double time = timer.getWallTime();
+//            maxNodes = max(maxNodes, nNodes);
+//            TelePrompter::printTree(2, "Multiply", nNodes, time);
+//        }
 
-        Orbital *V_ip = new Orbital(phi_p);
-        { // compute V_ip = P[phi_ip]
-            Timer timer;
-            timer.restart();
-            this->poisson.setPrecision(this->apply_prec);
-            if (phi_ip->hasReal()) {
-                V_ip->real = this->grid();
-                this->poisson(*V_ip->real, *phi_ip->real);
-            }
-            if (phi_ip->hasImag()) {
-                V_ip->imag = this->grid();
-                this->poisson(*V_ip->imag, *phi_ip->imag);
-            }
-            int nNodes = V_ip->getNNodes();
-            double time = timer.getWallTime();
-            maxNodes = max(maxNodes, nNodes);
-            TelePrompter::printTree(2, "Applying Poisson", nNodes, time);
-        }
-        delete phi_ip;
+//        Orbital *V_ip = new Orbital(phi_p);
+//        { // compute V_ip = P[phi_ip]
+//            Timer timer;
+//            timer.restart();
+//            this->poisson.setPrecision(this->apply_prec);
+//            if (phi_ip->hasReal()) {
+//                V_ip->real = this->grid();
+//                this->poisson(*V_ip->real, *phi_ip->real);
+//            }
+//            if (phi_ip->hasImag()) {
+//                V_ip->imag = this->grid();
+//                this->poisson(*V_ip->imag, *phi_ip->imag);
+//            }
+//            int nNodes = V_ip->getNNodes();
+//            double time = timer.getWallTime();
+//            maxNodes = max(maxNodes, nNodes);
+//            TelePrompter::printTree(2, "Applying Poisson", nNodes, time);
+//        }
+//        delete phi_ip;
 
-        Orbital *phi_iip = new Orbital(phi_p);
-        { // compute phi_iij = phi_i * V_ip
-            Timer timer;
-            timer.restart();
-            double fac = -(this->x_factor/phi_i.getSquareNorm());
-            this->mult(*phi_iip, fac, phi_i, *V_ip);
-            int nNodes = phi_iip->getNNodes();
-            double time = timer.getWallTime();
-            maxNodes = max(maxNodes, nNodes);
-            TelePrompter::printTree(2, "Multiply", nNodes, time);
-        }
-        delete V_ip;
+//        Orbital *phi_iip = new Orbital(phi_p);
+//        { // compute phi_iij = phi_i * V_ip
+//            Timer timer;
+//            timer.restart();
+//            double fac = -(this->x_factor/phi_i.getSquareNorm());
+//            this->mult(*phi_iip, fac, phi_i, *V_ip);
+//            int nNodes = phi_iip->getNNodes();
+//            double time = timer.getWallTime();
+//            maxNodes = max(maxNodes, nNodes);
+//            TelePrompter::printTree(2, "Multiply", nNodes, time);
+//        }
+//        delete V_ip;
 
-        if (phi_iip->hasReal()) real_vec.push_back(phi_iip->real);
-        if (phi_iip->hasImag()) imag_vec.push_back(phi_iip->imag);
-        phi_iip->real = 0;
-        phi_iip->imag = 0;
-        delete phi_iip;
-    }
+//        if (phi_iip->hasReal()) real_vec.push_back(phi_iip->real);
+//        if (phi_iip->hasImag()) imag_vec.push_back(phi_iip->imag);
+//        phi_iip->real = 0;
+//        phi_iip->imag = 0;
+//        delete phi_iip;
+//    }
 
-    Orbital *ex_p = new Orbital(phi_p);
-    if (real_vec.size() > 0) {
-        Timer timer;
-        timer.restart();
-        ex_p->real = this->add(real_vec);
-        double time = timer.getWallTime();
-        double nNodes = ex_p->real->getNNodes();
-        TelePrompter::printTree(2, "Sum exchange", nNodes, time);
-    }
-    real_vec.clear(true);
+//    Orbital *ex_p = new Orbital(phi_p);
+//    if (real_vec.size() > 0) {
+//        Timer timer;
+//        timer.restart();
+//        ex_p->real = this->add(real_vec);
+//        double time = timer.getWallTime();
+//        double nNodes = ex_p->real->getNNodes();
+//        TelePrompter::printTree(2, "Sum exchange", nNodes, time);
+//    }
+//    real_vec.clear(true);
 
-    if (imag_vec.size() > 0) {
-        Timer timer;
-        timer.restart();
-        ex_p->imag = this->add(imag_vec);
-        double time = timer.getWallTime();
-        double nNodes = ex_p->imag->getNNodes();
-        TelePrompter::printTree(2, "Sum exchange", nNodes, time);
-    }
-    imag_vec.clear(true);
+//    if (imag_vec.size() > 0) {
+//        Timer timer;
+//        timer.restart();
+//        ex_p->imag = this->add(imag_vec);
+//        double time = timer.getWallTime();
+//        double nNodes = ex_p->imag->getNNodes();
+//        TelePrompter::printTree(2, "Sum exchange", nNodes, time);
+//    }
+//    imag_vec.clear(true);
 
-    double nNodes = ex_p->getNNodes();
-    double time = timer.getWallTime();
-    TelePrompter::printTree(1, "Applied exchange", nNodes, time);
-    return ex_p;
+//    double nNodes = ex_p->getNNodes();
+//    double time = timer.getWallTime();
+//    TelePrompter::printTree(1, "Applied exchange", nNodes, time);
+//    return ex_p;
 }
 
 /** Precompute the internal exchange */

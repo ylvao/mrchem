@@ -8,8 +8,17 @@ using namespace Eigen;
 
 QMOperator::QMOperator(const MultiResolutionAnalysis<3> &mra)
     : apply_prec(-1.0),
-      clean(mra),
+      clean(mra, -1.0),
       grid(mra){
+}
+
+void QMOperator::setup(double prec) {
+    this->apply_prec = prec;
+    this->clean.setPrecision(prec);
+}
+void QMOperator::clear() {
+    this->apply_prec = -1.0;
+    this->clean.setPrecision(-1.0);
 }
 
 /**

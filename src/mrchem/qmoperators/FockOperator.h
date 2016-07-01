@@ -39,9 +39,6 @@ public:
 
     virtual void rotate(Eigen::MatrixXd &U);
 
-    virtual void setupUnperturbed(double prec);
-    virtual void clearUnperturbed();
-
     virtual void setup(double prec);
     virtual void clear();
 

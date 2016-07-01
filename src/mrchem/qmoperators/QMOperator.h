@@ -22,11 +22,8 @@ public:
 
     virtual void rotate(Eigen::MatrixXd &U) { }
 
-    virtual void setupUnperturbed(double prec = -1.0) { }
-    virtual void clearUnperturbed() { }
-
-    virtual void setup(double prec) { this->apply_prec = prec; }
-    virtual void clear() { this->apply_prec = -1.0; }
+    virtual void setup(double prec);
+    virtual void clear();
 
     virtual int printTreeSizes() const;
 

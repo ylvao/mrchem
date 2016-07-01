@@ -8,7 +8,7 @@ MomentumOperator::MomentumOperator(double build_prec,
                                    const MultiResolutionAnalysis<3> &mra,
                                    int dir)
         : QMOperator(mra),
-          derivative(mra, build_prec, build_prec) {
+          derivative(mra, -1.0, build_prec) {
     derivative.setApplyDir(dir);
 }
 
@@ -16,12 +16,13 @@ MomentumOperator::~MomentumOperator() {
 }
 
 void MomentumOperator::setup(double prec) {
-    this->apply_prec = prec;
+    QMOperator::setup(prec);
     this->derivative.setPrecision(prec);
 }
 
 void MomentumOperator::clear() {
-    this->apply_prec = -1.0;
+    this->derivative.setPrecision(-1.0);
+    QMOperator::clear();
 }
 
 Orbital* MomentumOperator::operator() (Orbital &orb_p) {

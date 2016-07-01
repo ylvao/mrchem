@@ -18,17 +18,17 @@ KineticOperator::~KineticOperator() {
 }
 
 void KineticOperator::setup(double prec) {
-    this->apply_prec = prec;
+    QMOperator::setup(prec);
     this->momentum_x.setup(prec);
     this->momentum_y.setup(prec);
     this->momentum_z.setup(prec);
 }
 
 void KineticOperator::clear() {
-    this->apply_prec = -1.0;
     this->momentum_x.clear();
     this->momentum_y.clear();
     this->momentum_z.clear();
+    QMOperator::clear();
 }
 
 Orbital* KineticOperator::operator() (Orbital &orb_p) {

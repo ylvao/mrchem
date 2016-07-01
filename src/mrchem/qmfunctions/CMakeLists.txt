@@ -11,6 +11,7 @@ add_library(qmfunctions STATIC
     NuclearFunction.cpp
     Orbital.cpp
     OrbitalAdder.cpp
+    OrbitalMultiplier.cpp
     OrbitalProjector.cpp
     OrbitalVector.cpp
 )

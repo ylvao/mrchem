@@ -6,7 +6,7 @@ CoulombOperator::CoulombOperator(double build_prec,
                                  const MultiResolutionAnalysis<3> &mra,
                                  OrbitalVector &phi)
         : QMOperator(mra),
-          poisson(mra, build_prec, build_prec),
+          poisson(mra, -1.0, build_prec),
           project(mra),
           density(Paired),
           potential(mra),
@@ -17,17 +17,17 @@ CoulombOperator::~CoulombOperator() {
 }
 
 void CoulombOperator::setup(double prec) {
-    this->apply_prec = prec;
+    QMOperator::setup(prec);
     this->clean.setPrecision(this->apply_prec);
     this->poisson.setPrecision(this->apply_prec);
     this->project.setPrecision(this->apply_prec);
 }
 
 void CoulombOperator::clear() {
-    this->apply_prec = -1.0;
     this->clean.setPrecision(-1.0);
     this->poisson.setPrecision(-1.0);
     this->project.setPrecision(-1.0);
+    QMOperator::clear();
 }
 
 int CoulombOperator::printTreeSizes() const {

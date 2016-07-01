@@ -18,8 +18,15 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
     if (phi_a.hasImag()) imag_vec.push_back(a, phi_a.imag);
     if (phi_b.hasImag()) imag_vec.push_back(b, phi_b.imag);
 
-    if (real_vec.size() > 0) phi_ab.real = (*this)(real_vec);
-    if (imag_vec.size() > 0) phi_ab.imag = (*this)(imag_vec);
+    // Fixed union grids
+    if (real_vec.size() > 0) {
+        phi_ab.real = this->grid(real_vec);
+        this->add(*phi_ab.real, real_vec, 0);
+    }
+    if (imag_vec.size() > 0) {
+        phi_ab.imag = this->grid(imag_vec);
+        this->add(*phi_ab.imag, imag_vec, 0);
+    }
 }
 
 void OrbitalAdder::operator()(Orbital &out,
@@ -33,8 +40,16 @@ void OrbitalAdder::operator()(Orbital &out,
         if (orbs[i]->hasReal()) real_vec.push_back(coefs[i], orbs[i]->real);
         if (orbs[i]->hasImag()) imag_vec.push_back(coefs[i], orbs[i]->imag);
     }
-    if (real_vec.size() > 0) out.real = (*this)(real_vec);
-    if (imag_vec.size() > 0) out.imag = (*this)(imag_vec);
+
+    // Adaptive grids
+    if (real_vec.size() > 0) {
+        out.real = this->grid();
+        this->add(*out.real, real_vec);
+    }
+    if (imag_vec.size() > 0) {
+        out.imag = this->grid();
+        this->add(*out.imag, imag_vec);
+    }
 }
 
 void OrbitalAdder::operator()(OrbitalVector &out,
@@ -64,8 +79,16 @@ void OrbitalAdder::operator()(Orbital &out, const VectorXd &c, OrbitalVector &in
         if (phi_i.hasReal() and fabs(c_i) > thrs) rvec.push_back(c_i, phi_i.real);
         if (phi_i.hasImag() and fabs(c_i) > thrs) ivec.push_back(c_i, phi_i.imag);
     }
-    if (rvec.size() != 0) out.real = (*this)(rvec);
-    if (ivec.size() != 0) out.imag = (*this)(ivec);
+
+    // Adaptive grids
+    if (rvec.size() != 0) {
+        out.real = this->grid();
+        this->add(*out.real, rvec);
+    }
+    if (ivec.size() != 0) {
+        out.imag = this->grid();
+        this->add(*out.imag, ivec);
+    }
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
@@ -98,16 +121,6 @@ void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     tmp.clear();
 }
 
-void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {
-    if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
-
-    for (int i = 0; i < out.size(); i++) {
-        Orbital &out_i = out.getOrbital(i);
-        Orbital &inp_i = inp.getOrbital(i);
-        this->inPlace(out_i, c, inp_i);
-    }
-}
-
 void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
     Orbital tmp(out);
     (*this)(tmp, 1.0, out, c, inp);
@@ -116,4 +129,14 @@ void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
     out.imag = tmp.imag;
     tmp.real = 0;
     tmp.imag = 0;
+}
+
+void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {
+    if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
+
+    for (int i = 0; i < out.size(); i++) {
+        Orbital &out_i = out.getOrbital(i);
+        Orbital &inp_i = inp.getOrbital(i);
+        this->inPlace(out_i, c, inp_i);
+    }
 }

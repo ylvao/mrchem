@@ -28,6 +28,9 @@ public:
 
     double getEnergy() const { return this->energy; }
 
+    virtual void setup(double prec);
+    virtual void clear();
+
     virtual int printTreeSizes() const;
 
     virtual Orbital* operator() (Orbital &orb_p);
@@ -60,7 +63,7 @@ protected:
     void clearXCInput();
     void clearXCOutput();
 
-    void calcUnperturbedDensity();
+    void calcDensity();
     Density **calcDensityGradient(Density &rho);
 
     virtual void calcPotential() = 0;

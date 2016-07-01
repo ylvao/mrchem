@@ -19,8 +19,8 @@ public:
                      double x_fac);
     virtual ~ExchangeOperator();
 
-    virtual void setup(double prec) = 0;
-    virtual void clear() = 0;
+    virtual void setup(double prec);
+    virtual void clear();
 
     void setExchangeFactor(double x_fac) { this->x_factor = x_fac; }
     double getExchangeFactor() const { return this->x_factor; }

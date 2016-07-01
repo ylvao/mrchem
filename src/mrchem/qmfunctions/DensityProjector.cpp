@@ -20,32 +20,43 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
 
     FunctionTreeVector<3> sum_vec;
     if (phi.hasReal()) {
-        FunctionTree<3> *real_2 = this->mult(occ, phi.re(), phi.re());
+        FunctionTree<3> *real_2 = this->grid(phi.re());
+        this->mult(*real_2, occ, phi.re(), phi.re(), 1);
         sum_vec.push_back(real_2);
     }
     if (phi.hasImag()) {
-        FunctionTree<3> *imag_2 = this->mult(occ, phi.im(), phi.im());
+        FunctionTree<3> *imag_2 = this->grid(phi.im());
+        this->mult(*imag_2, occ, phi.im(), phi.im(), 1);
         sum_vec.push_back(imag_2);
     }
 
     if (rho.spin) {
         if (phi.getSpin() == Paired) {
-            rho.alpha = this->add(sum_vec);
-            rho.beta = this->add(sum_vec);
+            rho.alpha = this->grid(sum_vec);
+            rho.beta = this->grid(sum_vec);
+            this->add(*rho.alpha, sum_vec, 0);
+            this->add(*rho.beta, sum_vec, 0);
         }
         if (phi.getSpin() == Alpha) {
-            rho.alpha = this->add(sum_vec);
-            rho.beta = this->grid(*rho.alpha);
+            rho.alpha = this->grid(sum_vec);
+            this->add(*rho.alpha, sum_vec);
+            rho.beta = this->grid(sum_vec);
             rho.beta->setZero();
         }
         if (phi.getSpin() == Beta) {
-            rho.beta = this->add(sum_vec);
-            rho.alpha = this->grid(*rho.beta);
+            rho.beta = this->grid(sum_vec);
+            this->add(*rho.beta, sum_vec, 0);
+            rho.alpha = this->grid(sum_vec);
             rho.alpha->setZero();
         }
-        rho.total = this->add(1.0, *rho.alpha, 1.0, *rho.beta);
+        FunctionTreeVector<3> tot_vec;
+        tot_vec.push_back(1.0, rho.alpha);
+        tot_vec.push_back(1.0, rho.beta);
+        rho.total = this->grid(tot_vec);
+        this->add(*rho.total, tot_vec, 0);
     } else {
-        rho.total =  this->add(sum_vec);
+        rho.total = this->grid(sum_vec);
+        this->add(*rho.total, sum_vec, 0);
         rho.alpha = 0;
         rho.beta = 0;
     }
@@ -69,7 +80,10 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
         if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
     }
     if (not rho.spin) {
-        if (total_vec.size() > 0) rho.total = this->add(total_vec);
+        if (total_vec.size() > 0) {
+            rho.total = this->grid(total_vec);
+            this->add(*rho.total, total_vec, 0);
+        }
         rho.alpha = 0;
         rho.beta = 0;
     } else {

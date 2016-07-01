@@ -13,8 +13,8 @@ using namespace Eigen;
 
 Potential::Potential(const MultiResolutionAnalysis<3> &mra)
     : QMOperator(mra),
-      add(mra),
-      mult(mra),
+      add(mra, -1.0),
+      mult(mra, -1.0),
       real(0),
       imag(0) {
 }
@@ -25,17 +25,19 @@ Potential::~Potential() {
 }
 
 void Potential::setup(double prec) {
-    this->apply_prec = prec;
+    QMOperator::setup(prec);
     this->add.setPrecision(prec);
     this->mult.setPrecision(prec);
 }
 
 void Potential::clear() {
-    this->apply_prec = -1.0;
     if (this->real != 0) delete this->real;
     if (this->imag != 0) delete this->imag;
     this->real = 0;
     this->imag = 0;
+    this->add.setPrecision(-1.0);
+    this->mult.setPrecision(-1.0);
+    QMOperator::clear();
 }
 
 

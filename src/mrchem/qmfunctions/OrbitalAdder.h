@@ -4,15 +4,18 @@
 #include <Eigen/Core>
 
 #include "MWAdder.h"
+#include "GridGenerator.h"
 
 class Orbital;
 class OrbitalVector;
 
-class OrbitalAdder : public MWAdder<3> {
+class OrbitalAdder {
 public:
     OrbitalAdder(const MultiResolutionAnalysis<3> &mra, double pr = -1.0)
-        : MWAdder(mra, pr) { }
+        : add(mra, pr), grid(mra) { }
     virtual ~OrbitalAdder() { }
+
+    void setPrecision(double prec) { this->add.setPrecision(prec); }
 
     void operator()(Orbital &phi_ab,
                     double a, Orbital &phi_a,
@@ -36,7 +39,9 @@ public:
     void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
     void inPlace(Orbital &out, double c, Orbital &inp);
 
-    using MWAdder<3>::operator();
+protected:
+    MWAdder<3> add;
+    GridGenerator<3> grid;
 };
 
 #endif // ORBITALADDER_H

@@ -34,37 +34,12 @@ FockOperator::~FockOperator() {
     this->XC = 0;
 }
 
-void FockOperator::setupUnperturbed(double prec) {
-    Timer timer;
-    timer.restart();
-    TelePrompter::printHeader(0, "Setting up unperturbed Fock operator");
-    if (this->T != 0) this->T->setupUnperturbed(prec);
-    if (this->V != 0) this->V->setupUnperturbed(prec);
-    if (this->J != 0) this->J->setupUnperturbed(prec);
-    if (this->K != 0) this->K->setupUnperturbed(prec);
-    if (this->XC != 0) this->XC->setupUnperturbed(prec);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        getPerturbationOperator(i).setupUnperturbed(prec);
-    }
-    timer.stop();
-    TelePrompter::printFooter(0, timer, 2);
-}
-
-void FockOperator::clearUnperturbed() {
-    if (this->T != 0) this->T->clearUnperturbed();
-    if (this->V != 0) this->V->clearUnperturbed();
-    if (this->J != 0) this->J->clearUnperturbed();
-    if (this->K != 0) this->K->clearUnperturbed();
-    if (this->XC != 0) this->XC->clearUnperturbed();
-    for (int i = 0; i < getNPerturbations(); i++) {
-        getPerturbationOperator(i).clearUnperturbed();
-    }
-}
-
 void FockOperator::setup(double prec) {
     Timer timer;
     timer.restart();
     TelePrompter::printHeader(0, "Setting up Fock operator");
+    this->apply_prec = prec;
+    this->add.setPrecision(prec);
     if (this->T != 0) this->T->setup(prec);
     if (this->V != 0) this->V->setup(prec);
     if (this->J != 0) this->J->setup(prec);
@@ -78,6 +53,8 @@ void FockOperator::setup(double prec) {
 }
 
 void FockOperator::clear() {
+    this->apply_prec = -1.0;
+    this->add.setPrecision(-1.0);
     if (this->T != 0) this->T->clear();
     if (this->V != 0) this->V->clear();
     if (this->J != 0) this->J->clear();
