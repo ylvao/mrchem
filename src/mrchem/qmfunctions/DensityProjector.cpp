@@ -18,15 +18,18 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
     double occ = 1.0;
     if (not rho.spin) occ = (double) phi.getOccupancy();
 
+    double prec = mult.getPrecision();
+    if (prec < 0.0) MSG_ERROR("Adaptive multiplication with negative prec");
+
     FunctionTreeVector<3> sum_vec;
     if (phi.hasReal()) {
         FunctionTree<3> *real_2 = this->grid(phi.re());
-        this->mult(*real_2, occ, phi.re(), phi.re(), 1);
+        this->mult(*real_2, occ, phi.re(), phi.re(), 0);
         sum_vec.push_back(real_2);
     }
     if (phi.hasImag()) {
         FunctionTree<3> *imag_2 = this->grid(phi.im());
-        this->mult(*imag_2, occ, phi.im(), phi.im(), 1);
+        this->mult(*imag_2, occ, phi.im(), phi.im(), 0);
         sum_vec.push_back(imag_2);
     }
 
@@ -39,7 +42,7 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
         }
         if (phi.getSpin() == Alpha) {
             rho.alpha = this->grid(sum_vec);
-            this->add(*rho.alpha, sum_vec);
+            this->add(*rho.alpha, sum_vec, 0);
             rho.beta = this->grid(sum_vec);
             rho.beta->setZero();
         }

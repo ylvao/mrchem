@@ -2,8 +2,7 @@
 #define POTENTIAL_H
 
 #include "QMOperator.h"
-#include "MWAdder.h"
-#include "MWMultiplier.h"
+#include "OrbitalMultiplier.h"
 
 template<int D> class FunctionTree;
 template<int D> class MultiResolutionAnalysis;
@@ -37,10 +36,10 @@ public:
 
     friend class XCPotential;
     friend class CoulombPotential;
+    friend class OrbitalMultiplier;
 
 protected:
-    MWAdder<3> add;
-    MWMultiplier<3> mult;
+    OrbitalMultiplier mult;
     FunctionTree<3> *real;
     FunctionTree<3> *imag;
 };

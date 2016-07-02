@@ -7,7 +7,7 @@ CoulombOperator::CoulombOperator(double build_prec,
                                  OrbitalVector &phi)
         : QMOperator(mra),
           poisson(mra, -1.0, build_prec),
-          project(mra),
+          project(mra, -1.0),
           density(Paired),
           potential(mra),
           orbitals(&phi) {

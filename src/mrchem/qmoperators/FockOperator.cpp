@@ -18,7 +18,7 @@ FockOperator::FockOperator(const MultiResolutionAnalysis<3> &mra,
                            ExchangeOperator *k,
                            XCOperator *xc)
         : QMOperator(mra),
-          add(mra),
+          add(mra, -1.0),
           T(t),
           V(v),
           J(j),
@@ -38,7 +38,7 @@ void FockOperator::setup(double prec) {
     Timer timer;
     timer.restart();
     TelePrompter::printHeader(0, "Setting up Fock operator");
-    this->apply_prec = prec;
+    QMOperator::setup(prec);
     this->add.setPrecision(prec);
     if (this->T != 0) this->T->setup(prec);
     if (this->V != 0) this->V->setup(prec);
@@ -53,7 +53,6 @@ void FockOperator::setup(double prec) {
 }
 
 void FockOperator::clear() {
-    this->apply_prec = -1.0;
     this->add.setPrecision(-1.0);
     if (this->T != 0) this->T->clear();
     if (this->V != 0) this->V->clear();
@@ -63,6 +62,7 @@ void FockOperator::clear() {
     for (int i = 0; i < getNPerturbations(); i++) {
         getPerturbationOperator(i).clear();
     }
+    QMOperator::clear();
 }
 
 void FockOperator::rotate(MatrixXd &U) {

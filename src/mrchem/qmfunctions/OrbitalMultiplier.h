@@ -1,9 +1,12 @@
 #ifndef ORBITALMULTIPLIER_H
 #define ORBITALMULTIPLIER_H
 
-#include "MWMultiplier.h"
 #include "MWAdder.h"
-#include "Orbital.h"
+#include "MWMultiplier.h"
+#include "GridGenerator.h"
+
+class Orbital;
+class Potential;
 
 class OrbitalMultiplier {
 public:
@@ -15,13 +18,25 @@ public:
     void operator()(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b);
     void adjoint(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b);
 
+    void operator()(Orbital &Vphi, double c, Potential &V, Orbital &phi);
+    void adjoint(Orbital &Vphi, double c, Potential &V, Orbital &phi);
+
 protected:
     MWAdder<3> add;
     MWMultiplier<3> mult;
     GridGenerator<3> grid;
 
-    FunctionTree<3> *calcRealPart(double c, Orbital &phi_a, Orbital &phi_b);
-    FunctionTree<3> *calcImagPart(double c, Orbital &phi_a, Orbital &phi_b, bool adjoint);
+    FunctionTree<3> *calcRealPart(double c,
+                                  FunctionTree<3> *re_a,
+                                  FunctionTree<3> *im_a,
+                                  FunctionTree<3> *re_b,
+                                  FunctionTree<3> *im_b);
+    FunctionTree<3> *calcImagPart(double c,
+                                  FunctionTree<3> *re_a,
+                                  FunctionTree<3> *im_a,
+                                  FunctionTree<3> *re_b,
+                                  FunctionTree<3> *im_b,
+                                  bool adjoint);
 };
 
 

@@ -4,8 +4,6 @@
 #include "FunctionTreeVector.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
-#include "MWAdder.h"
-#include "MWMultiplier.h"
 #include "Timer.h"
 
 using namespace std;
@@ -13,7 +11,6 @@ using namespace Eigen;
 
 Potential::Potential(const MultiResolutionAnalysis<3> &mra)
     : QMOperator(mra),
-      add(mra, -1.0),
       mult(mra, -1.0),
       real(0),
       imag(0) {
@@ -26,7 +23,6 @@ Potential::~Potential() {
 
 void Potential::setup(double prec) {
     QMOperator::setup(prec);
-    this->add.setPrecision(prec);
     this->mult.setPrecision(prec);
 }
 
@@ -35,81 +31,25 @@ void Potential::clear() {
     if (this->imag != 0) delete this->imag;
     this->real = 0;
     this->imag = 0;
-    this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
     QMOperator::clear();
 }
 
 
-Orbital* Potential::operator() (Orbital &orb_p) {
+Orbital* Potential::operator() (Orbital &phi_p) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     Timer timer;
     timer.restart();
 
-    FunctionTree<3> *real_1 = 0;
-    FunctionTree<3> *real_2 = 0;
-    FunctionTree<3> *imag_1 = 0;
-    FunctionTree<3> *imag_2 = 0;
-
-    FunctionTreeVector<3> real_vec;
-    FunctionTreeVector<3> imag_vec;
-
-    Orbital *Vorb = new Orbital(orb_p);
-    if (orb_p.real != 0) {
-        if (this->real != 0) {
-            FunctionTreeVector<3> tree_vec;
-            tree_vec.push_back(this->real);
-            tree_vec.push_back(orb_p.real);
-            real_1 = this->grid();
-            this->mult(*real_1, tree_vec);
-            real_vec.push_back(1.0, real_1);
-        }
-        if (this->imag != 0) {
-            FunctionTreeVector<3> tree_vec;
-            tree_vec.push_back(this->imag);
-            tree_vec.push_back(orb_p.real);
-            imag_1 = this->grid();
-            this->mult(*imag_1, tree_vec);
-            imag_vec.push_back(1.0, imag_1);
-        }
-    }
-    if (orb_p.imag != 0) {
-        if (this->real != 0) {
-            FunctionTreeVector<3> tree_vec;
-            tree_vec.push_back(this->real);
-            tree_vec.push_back(orb_p.imag);
-            imag_2 = this->grid();
-            this->mult(*imag_2, tree_vec);
-            imag_vec.push_back(1.0, imag_2);
-        }
-        if (this->imag != 0) {
-            FunctionTreeVector<3> tree_vec;
-            tree_vec.push_back(this->imag);
-            tree_vec.push_back(orb_p.imag);
-            real_2 = this->grid();
-            this->mult(*real_2, tree_vec);
-            real_vec.push_back(-1.0, real_2);
-        }
-    }
-    if (real_vec.size() > 0) {
-        Vorb->real = this->grid(real_vec);
-        this->add(*Vorb->real, real_vec, 0);
-    }
-    if (imag_vec.size() > 0) {
-        Vorb->imag = this->grid(imag_vec);
-        this->add(*Vorb->imag, imag_vec, 0);
-    }
-
-    if (real_1 != 0) delete real_1;
-    if (real_2 != 0) delete real_2;
-    if (imag_1 != 0) delete imag_1;
-    if (imag_2 != 0) delete imag_2;
+    Potential &V = *this;
+    Orbital *Vphi_p = new Orbital(phi_p);
+    this->mult(*Vphi_p, 1.0, V, phi_p);
 
     timer.stop();
-    int n = Vorb->getNNodes();
+    int n = Vphi_p->getNNodes();
     double t = timer.getWallTime();
     TelePrompter::printTree(1, "Applied potential", n, t);
-    return Vorb;
+    return Vphi_p;
 }
 
 Orbital* Potential::adjoint(Orbital &orb) {

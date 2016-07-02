@@ -42,6 +42,8 @@ void OrbitalAdder::operator()(Orbital &out,
     }
 
     // Adaptive grids
+    double prec = this->add.getPrecision();
+    if (prec < 0.0) MSG_ERROR("Adaptive addition with negative prec");
     if (rvec.size() > 2) {
         out.real = this->grid();
         this->add(*out.real, rvec);
@@ -87,6 +89,8 @@ void OrbitalAdder::operator()(Orbital &out, const VectorXd &c, OrbitalVector &in
     }
 
     // Adaptive grids
+    double prec = this->add.getPrecision();
+    if (prec < 0.0) MSG_ERROR("Adaptive addition with negative prec");
     if (rvec.size() > 2) {
         out.real = this->grid();
         this->add(*out.real, rvec);

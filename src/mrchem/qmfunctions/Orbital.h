@@ -60,13 +60,11 @@ public:
         return o;
     }
 
-    friend class MomentumOperator;
-    friend class Potential;
-    friend class ExchangePotential;
     friend class OrbitalAdder;
     friend class OrbitalMultiplier;
     friend class OrbitalProjector;
     friend class HelmholtzOperatorSet;
+    friend class MomentumOperator;
 
 protected:
     int spin;

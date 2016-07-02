@@ -15,7 +15,7 @@ SCF::SCF(const MultiResolutionAnalysis<3> &mra, HelmholtzOperatorSet &h)
       orbThrs(-1.0),
       propThrs(-1.0),
       helmholtz(&h),
-      add(mra),
+      add(mra, -1.0),
       MRA(mra) {
     this->orbPrec[0] = -1.0;
     this->orbPrec[1] = -1.0;
