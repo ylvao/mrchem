@@ -8,7 +8,7 @@ MomentumOperator::MomentumOperator(double build_prec,
                                    const MultiResolutionAnalysis<3> &mra,
                                    int dir)
         : QMOperator(mra),
-          derivative(mra, -1.0, build_prec) {
+          derivative(mra, 0.0, 0.0) {
     derivative.setApplyDir(dir);
 }
 
