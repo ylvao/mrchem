@@ -154,7 +154,7 @@ void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector 
     TelePrompter::printTree(0, "Calculating localization matrix", n_it, t);
     printout(0, endl);
 
-    F = U.transpose()*F*U;
+    F = U*F*U.transpose();
     fock.rotate(U);
     this->add.rotate(phi, U);
 }
@@ -185,7 +185,7 @@ void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVect
 
 void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     MatrixXd U = calcOrthonormalizationMatrix(phi);
-    F = U.transpose()*F*U;
+    F = U*F*U.transpose();
     fock.rotate(U);
     this->add.rotate(phi, U);
 }
@@ -280,13 +280,13 @@ RR::RR(double prec, const MultiResolutionAnalysis<3> &mra, OrbitalVector &phi) {
  */
 double RR::functional() {
 //    //s1 is what should be maximized (i.e. the sum of <i R i>^2)
-//    double s1=0.0;
-//    for (int dim=0; dim<3; dim++) {
-//        for (int j=0; j<N; j++) {
-//            s1+=r_i(j,j+dim*N)*r_i(j,j+dim*N);
-//        }
-//    }
-//    return s1;
+    double s1=0.0;
+    for (int dim=0; dim<3; dim++) {
+        for (int j=0; j<N; j++) {
+            s1+=r_i(j,j+dim*N)*r_i(j,j+dim*N);
+        }
+    }
+    return s1;
 }
 
 /** Make gradient vector for the RR case

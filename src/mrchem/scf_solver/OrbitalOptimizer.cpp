@@ -70,6 +70,7 @@ bool OrbitalOptimizer::optimize() {
         // Rotate orbitals
         if (needLocalization()) {
             localize(fock, F, phi_n);
+            if (this->kain != 0) this->kain->clear();
         } else if (needDiagonalization()) {
             diagonalize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
