@@ -2,9 +2,9 @@
 #define MOMENTUMOPERATOR_H
 
 #include "QMOperator.h"
-#include "DerivativeConvolution.h"
+#include "DerivativeOperator.h"
 
-template<int D> class DerivativeConvolution;
+template<int D> class DerivativeOperator;
 template<int D> class MultiResolutionAnalysis;
 
 class MomentumOperator : public QMOperator {
@@ -26,7 +26,7 @@ public:
     using QMOperator::adjoint;
 
 protected:
-    DerivativeConvolution<3> derivative;
+    DerivativeOperator<3> derivative;
 };
 
 #endif // MOMENTUMOPERATOR_H
