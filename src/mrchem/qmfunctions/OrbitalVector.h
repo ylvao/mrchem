@@ -113,28 +113,4 @@ private:
     std::vector<Orbital *> orbitals;
 };
 
-/** subclass which defines the particular Gradient and Hessian
- * and other specific functions for a maximization of
- * f$  \sum_{i=1,N}\langle i| {\bf R}| i \rangle^2\f$
- * The resulting transformation includes the orthonormalization of the orbitals.
- * For details see the tex documentation in doc directory
- *
- */
-//class RR : public NonlinearMaximizer {
-//public:
-//    RR(OrbitalVector &orbitals);//make the matrices <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
-//    const Eigen::MatrixXd &getTotalU() const { return this->total_U; }
-//protected:
-//    int N;//number of orbitals
-//    Eigen::MatrixXd r_i_orig;//<i|R_x|j>,<i|R_y|j>,<i|R_z|j>
-//    Eigen::MatrixXd r_i ;// rotated  r_i_orig
-//    Eigen::MatrixXd total_U;// the rotation matrix of the orbitals
-
-//    //NB:total_U is not Unitary if the basis set is not orthonormal
-//    double functional(); //the functional to maximize
-//    double make_gradient();
-//    double make_hessian();
-//    void do_step(Eigen::VectorXd step);
-//};
-
 #endif // ORBITALVECTOR_H

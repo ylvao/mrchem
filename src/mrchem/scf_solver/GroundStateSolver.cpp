@@ -13,6 +13,8 @@
 #include "SCFEnergy.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
+#include "DipoleOperator.h"
+#include "MathUtils.h"
 #include "eigen_disable_warnings.h"
 
 using namespace std;
@@ -133,38 +135,28 @@ void GroundStateSolver::printProperty() const {
  * For details see the tex documentation in doc directory
  */
 void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
-    NOT_IMPLEMENTED_ABORT;
-//    double optTime = 0.0;
-//    double rotTime = 0.0;
-//    double totTime = 0.0;
+    Timer timer;
+    timer.restart();
+    RR rr(this->orbPrec[0], this->MRA, phi);
+    int n_it = rr.maximize();//compute total U, rotation matrix
+    timer.stop();
 
-//    mpi::timer totTimer, timer;
-//    totTimer.restart();
+    MatrixXd U;
+    if (nIter > 0) {
+        U = rr.getTotalU().transpose();
+    } else {
+        timer.restart();
+        U = calcOrthonormalizationMatrix(phi);
+        timer.stop();
+    }
 
-//    int oldPrec = TelePrompter::setPrecision(5);
-//    println(0, endl);
+    double t = timer.getWallTime();
+    TelePrompter::printTree(0, "Calculating localization matrix", n_it, t);
+    printout(0, endl);
 
-//    timer.restart();
-//    RR rr(*this);
-//    int nIter = rr.maximize();//compute total U, rotation matrix
-//    optTime += timer.elapsed();
-//    println(0, "Localized after iteration               " << setw(20) << nIter);
-
-//    MatrixXd U;
-//    if (nIter > 0) {
-//        U = rr.getTotalU().transpose();
-//    } else {
-//        timer.restart();
-//        U = calcOrthonormalizationMatrix();
-//        optTime += timer.elapsed();
-//    }
-
-//    println(0, "Calculating rotation matrix                      " << optTime);
-//    println(0, "Total time localization                          " << totTimer.elapsed());
-//    printout(0, endl);
-
-//    TelePrompter::setPrecision(oldPrec);
-//    return U;
+    F = U.transpose()*F*U;
+    fock.rotate(U);
+    this->add.rotate(phi, U);
 }
 
 /** Perform the orbital rotation that diagonalizes the Fock matrix
@@ -216,4 +208,187 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
 
     println(1, timer.getWallTime());
     return U;
+}
+
+/** Compute the position matrix <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
+ */
+RR::RR(double prec, const MultiResolutionAnalysis<3> &mra, OrbitalVector &phi) {
+    N = phi.size();
+    if (N < 2) MSG_ERROR("Cannot localize less than two orbitals");
+    total_U = MatrixXd::Identity(N,N);
+    N2h = N*(N-1)/2;
+    gradient = VectorXd(N2h);
+    hessian = MatrixXd(N2h, N2h);
+    r_i_orig = MatrixXd(N,3*N);
+    r_i = MatrixXd(N,3*N);
+
+    //Make R matrix
+    DipoleOperator r_x(mra, 0, 0.0);
+    DipoleOperator r_y(mra, 1, 0.0);
+    DipoleOperator r_z(mra, 2, 0.0);
+
+    r_x.setup(prec);
+    r_y.setup(prec);
+    r_z.setup(prec);
+
+    for (int i = 0; i < N; i++) {
+        Orbital &phi_i = phi.getOrbital(i);
+        int spin_i = phi_i.getSpin();
+        for (int j = 0; j <= i; j++) {
+            Orbital &phi_j =  phi.getOrbital(j);
+            int spin_j = phi_j.getSpin();
+            if (spin_i != spin_j) {
+                MSG_ERROR("Spins must be separated before localization");
+            }
+            r_i_orig(i,j) = r_x(phi_i, phi_j);
+            r_i_orig(i,j+N) = r_y(phi_i, phi_j);
+            r_i_orig(i,j+2*N) = r_z(phi_i, phi_j);
+            r_i_orig(j,i) = r_i_orig(i,j);
+            r_i_orig(j,i+N) = r_i_orig(i,j+N);
+            r_i_orig(j,i+2*N) = r_i_orig(i,j+2*N);
+        }
+    }
+    r_x.clear();
+    r_y.clear();
+    r_z.clear();
+
+    //rotate R matrices into orthonormal basis
+    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+    MatrixXd S_tilde_m12 = MathUtils::hermitianMatrixPow(S_tilde, -1.0/2.0);
+
+    total_U=S_tilde_m12*total_U;
+    MatrixXd r(N, N);
+    for(int dim=0; dim<3; dim++){
+        for (int j=0; j<N; j++) {
+            for (int i=0; i<=j; i++) {
+                r(i,j)=r_i_orig(i,j+dim*N);
+                r(j,i)=r_i_orig(i,j+dim*N);//Enforce symmetry
+            }
+        }
+        r=total_U.transpose()*r*total_U;
+        for (int j=0; j<N; j++) {
+            for (int i=0; i<=j; i++) {
+                r_i(i,j+dim*N)=r(i,j);
+                r_i(j,i+dim*N)=r(i,j);//Enforce symmetry
+            }
+        }
+    }
+}
+
+/** compute the value of
+ * f$  \sum_{i=1,N}\langle i| {\bf R}| i \rangle^2\f$
+ */
+double RR::functional() {
+//    //s1 is what should be maximized (i.e. the sum of <i R i>^2)
+//    double s1=0.0;
+//    for (int dim=0; dim<3; dim++) {
+//        for (int j=0; j<N; j++) {
+//            s1+=r_i(j,j+dim*N)*r_i(j,j+dim*N);
+//        }
+//    }
+//    return s1;
+}
+
+/** Make gradient vector for the RR case
+ */
+double RR::make_gradient() {
+    double norm = 0.0;
+    for (int i=0; i<N2h; i++) gradient(i)=0.0 ;
+    for (int dim=0; dim<3; dim++) {
+        int ij=0;
+        for (int j=0; j<N; j++) {
+            for (int i=0; i<j; i++) {
+                gradient(ij)+=4.0*r_i(i,j+dim*N)*(r_i(i,i+dim*N)-r_i(j,j+dim*N));
+                ij++;
+            }
+        }
+    }
+    for (int ij=0; ij<N2h; ij++) {
+        norm += gradient(ij)*gradient(ij);
+    }
+    return sqrt(norm);
+}
+
+
+/** Make Hessian matrix for the RR case
+ */
+double RR::make_hessian() {
+    double djk,djl,dik,dil;
+    for (int j=0; j<N2h; j++){
+        for (int i=0; i<N2h; i++){
+            hessian(i,j)=0.0 ;
+        }
+    }
+    for (int dim=0; dim<3; dim++) {
+        int kl=0;
+        for (int l=0; l<N; l++) {
+            for (int k=0; k<l; k++) {
+                int ij=0;
+                for (int j=0; j<N; j++) {
+                    for (int i=0; i<j; i++) {
+                        djk = j==k ? 1.0: 0.0;
+                        djl = j==l ? 1.0: 0.0;
+                        dik = i==k ? 1.0: 0.0;
+                        dil = i==l ? 1.0: 0.0;
+
+                        hessian(ij,kl)+=2.0*(
+                                    djk*r_i(i,i+dim*N)*r_i(l,i+dim*N)
+                                    -djl*r_i(i,i+dim*N)*r_i(k,i+dim*N)
+                                    -dik*r_i(j,j+dim*N)*r_i(l,j+dim*N)
+                                    +dil*r_i(j,j+dim*N)*r_i(k,j+dim*N)
+                                    -2*dil*r_i(i,i+dim*N)*r_i(k,j+dim*N)
+                                    +2.0*dik*r_i(i,i+dim*N)*r_i(l,j+dim*N)
+                                    +2*djl*r_i(j,j+dim*N)*r_i(k,i+dim*N)
+                                    -2.0*djk*r_i(j,j+dim*N)*r_i(l,i+dim*N)
+                                    +djk*r_i(l,l+dim*N)*r_i(i,l+dim*N)
+                                    -dik*r_i(l,l+dim*N)*r_i(j,l+dim*N)
+                                    -djl*r_i(k,k+dim*N)*r_i(i,k+dim*N)
+                                    +dil*r_i(k,k+dim*N)*r_i(j,k+dim*N)
+                                    -4*(dil-dik-djl+djk)*r_i(i,j+dim*N)*r_i(k,l+dim*N));
+
+                        ij++;
+                    }
+                }
+                kl++;
+            }
+        }
+    }
+
+    return 0;
+}
+
+/** Given the step matrix, update the rotation matrix and the R matrix
+ */
+void RR::do_step(VectorXd step){
+    MatrixXd A(N,N);
+    //define rotation U=exp(-A), A real antisymmetric, from step
+    int ij=0;
+    for (int j=0; j<N; j++) {
+        for (int i=0; i<j; i++) {
+            A(i,j)=step(ij);
+            A(j,i)=-A(i,j);
+            ij++;
+        }
+        A(j,j)=0.0;
+    }
+
+    //calculate U=exp(-A) by diagonalization and U=Vexp(id)Vt with VdVt=iA
+    //could also sum the term in the expansion if A is small
+    total_U*=MathUtils::SkewMatrixExp(A);
+
+    //rotate the original r matrix with total U
+    MatrixXd r(N, N);
+    for(int dim=0; dim<3; dim++){
+        for (int j=0; j<N; j++) {
+            for (int i=0; i<N; i++) {
+                r(i,j)=r_i_orig(i,j+dim*N);
+            }
+        }
+        r=total_U.transpose()*r*total_U;
+        for (int j=0; j<N; j++) {
+            for (int i=0; i<N; i++) {
+                r_i(i,j+dim*N)=r(i,j);
+            }
+        }
+    }
 }

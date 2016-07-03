@@ -11,6 +11,7 @@ add_library(scf_solver STATIC
     EnergyOptimizer.cpp
     OrbitalOptimizer.cpp
     HelmholtzOperatorSet.cpp
+    NonlinearMaximizer.cpp
     KAIN.cpp
     SCF.cpp
 )
