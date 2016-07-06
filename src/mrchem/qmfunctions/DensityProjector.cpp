@@ -71,6 +71,11 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     if (rho.alpha != 0) MSG_ERROR("Density not empty");
     if (rho.beta != 0) MSG_ERROR("Density not empty");
 
+    int nOrbs = phi.size();
+    double prec = mult.getPrecision();
+    if (prec < 0.0) MSG_ERROR("Adaptive addition with negative prec");
+    add.setPrecision(prec/nOrbs);
+
     FunctionTreeVector<3> total_vec, alpha_vec, beta_vec;
     vector<Density *> dens_vec;
     for (int i = 0; i < phi.size(); i++) {
@@ -83,7 +88,10 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
         if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
     }
     if (not rho.spin) {
-        if (total_vec.size() > 0) {
+        if (total_vec.size() > 5) {
+            rho.total = this->grid();
+            this->add(*rho.total, total_vec);
+        } else if (total_vec.size() > 0) {
             rho.total = this->grid(total_vec);
             this->add(*rho.total, total_vec, 0);
         }

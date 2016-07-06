@@ -249,7 +249,7 @@ void SCFDriver::setupInitialGroundState() {
         NOT_IMPLEMENTED_ABORT;
 //        runInitialGuess(*f_oper, F, *phi);
     } else if (scf_start == "gto") {
-        OrbitalProjector OP(*MRA, scf_orbital_prec[0]);
+        OrbitalProjector OP(*MRA, rel_prec);
         if (wf_restricted) {
             OP(*phi, file_basis_set, file_mo_mat_a);
         } else {

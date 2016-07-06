@@ -43,7 +43,7 @@ Orbital* Potential::operator() (Orbital &phi_p) {
 
     Potential &V = *this;
     Orbital *Vphi_p = new Orbital(phi_p);
-    this->mult(*Vphi_p, 1.0, V, phi_p);
+    this->mult(*Vphi_p, V, phi_p);
 
     timer.stop();
     int n = Vphi_p->getNNodes();
