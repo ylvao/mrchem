@@ -189,9 +189,13 @@ void XCFunctional::evaluate(int k, MatrixXd &inp, MatrixXd &out) const {
     double *oDat = new double[nOut];
 
     for (int i = 0; i < nPts; i++) {
-        for (int j = 0; j < nInp; j++) iDat[j] = inp(i,j);
-        xc_eval(this->functional, k, iDat, oDat);
-        for (int j = 0; j < nOut; j++) out(i,j) = oDat[j];
+        if (inp(i,0) > MachineZero) {
+            for (int j = 0; j < nInp; j++) iDat[j] = inp(i,j);
+            xc_eval(this->functional, k, iDat, oDat);
+            for (int j = 0; j < nOut; j++) out(i,j) = oDat[j];
+        } else {
+            for (int j = 0; j < nOut; j++) out(i,j) = 0.0;
+        }
     }
     delete[] iDat;
     delete[] oDat;
