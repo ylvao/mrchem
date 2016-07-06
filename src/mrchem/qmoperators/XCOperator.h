@@ -75,6 +75,9 @@ protected:
     void compressTreeData(int nFuncs, FunctionTree<3> **trees, Eigen::MatrixXd &data);
     void expandTreeData(int nFuncs, FunctionTree<3> **trees, Eigen::MatrixXd &data);
 
+    void compressNodeData(int n, int nFuncs, FunctionTree<3> **trees, Eigen::MatrixXd &data);
+    void expandNodeData(int n, int nFuncs, FunctionTree<3> **trees, Eigen::MatrixXd &data);
+
     FunctionTree<3>* calcDotProduct(FunctionTreeVector<3> &vec_a,
                                     FunctionTreeVector<3> &vec_b);
     FunctionTree<3>* calcGradDotPotDensVec(FunctionTree<3> &pot,

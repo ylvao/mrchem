@@ -1,6 +1,7 @@
 #include "XCOperator.h"
 #include "XCFunctional.h"
 #include "FunctionTree.h"
+#include "FunctionNode.h"
 #include "Orbital.h"
 #include "Density.h"
 #include "Potential.h"
@@ -220,14 +221,21 @@ void XCOperator::evaluateXCFunctional() {
     int nInp = this->functional->getInputLength();
     int nOut = this->functional->getOutputLength(this->order);
 
-    MatrixXd inpData, outData;
-    compressTreeData(nInp, this->xcInput, inpData);
-    this->functional->evaluate(this->order, inpData, outData);
-    expandTreeData(nOut, this->xcOutput, outData);
+    int nNodes = this->xcInput[0]->getNEndNodes();
+    for (int n = 0; n < nNodes; n++) {
+        MatrixXd inpData, outData;
+        compressNodeData(n, nInp, this->xcInput, inpData);
+        this->functional->evaluate(this->order, inpData, outData);
+        expandNodeData(n, nOut, this->xcOutput, outData);
+    }
+    for (int i = 0; i < nOut; i++) {
+        this->xcOutput[i]->mwTransform(BottomUp);
+        this->xcOutput[i]->calcSquareNorm();
+    }
 
     double t = timer.getWallTime();
-    int nNodes = sumNodes<FunctionTree<3> >(this->xcOutput, nOut);
-    TelePrompter::printTree(0, "XC evaluate xcfun", nNodes, t);
+    int n = sumNodes<FunctionTree<3> >(this->xcOutput, nOut);
+    TelePrompter::printTree(0, "XC evaluate xcfun", n, t);
     printout(2, endl);
 }
 
@@ -383,6 +391,34 @@ void XCOperator::expandTreeData(int nFuncs, FunctionTree<3> **trees, MatrixXd &d
         if (trees[i] == 0) MSG_ERROR("Uninitialized output tree " << i);
         VectorXd col_i = data.col(i);
         trees[i]->setEndValues(col_i);
+    }
+}
+
+void XCOperator::compressNodeData(int n, int nFuncs, FunctionTree<3> **trees, MatrixXd &data) {
+    if (trees == 0) MSG_ERROR("Invalid input");
+    if (trees[0] == 0) MSG_ERROR("Invalid input");
+
+    FunctionTree<3> &tree = *trees[0];
+    int nCoefs = tree.getTDim()*tree.getKp1_d();
+    data = MatrixXd::Zero(nCoefs, nFuncs);
+
+    for (int i = 0; i < nFuncs; i++) {
+        if (trees[i] == 0) MSG_ERROR("Uninitialized input tree");
+        FunctionNode<3> &node = trees[i]->getEndFuncNode(n);
+        VectorXd col_i;
+        node.getValues(col_i);
+        data.col(i) = col_i;
+    }
+}
+
+void XCOperator::expandNodeData(int n, int nFuncs, FunctionTree<3> **trees, MatrixXd &data) {
+    if (trees == 0) MSG_ERROR("Invalid input");
+
+    for (int i = 0; i < nFuncs; i++) {
+        if (trees[i] == 0) MSG_ERROR("Uninitialized output tree " << i);
+        VectorXd col_i = data.col(i);
+        FunctionNode<3> &node = trees[i]->getEndFuncNode(n);
+        node.setValues(col_i);
     }
 }
 
