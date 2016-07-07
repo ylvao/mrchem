@@ -5,7 +5,8 @@
 using namespace std;
 using namespace Eigen;
 
-XCFunctional::XCFunctional(bool s) : spin(s) {
+XCFunctional::XCFunctional(bool s, double thrs)
+        : spin(s), cutoff(thrs) {
     this->functional = xc_new_functional();
     if (this->spin) {
         xc_set_mode(this->functional, XC_VARS_AB);
@@ -189,7 +190,7 @@ void XCFunctional::evaluate(int k, MatrixXd &inp, MatrixXd &out) const {
     double *oDat = new double[nOut];
 
     for (int i = 0; i < nPts; i++) {
-        if (inp(i,0) > MachineZero) {
+        if (inp(i,0) > this->cutoff) {
             for (int j = 0; j < nInp; j++) iDat[j] = inp(i,j);
             xc_eval(this->functional, k, iDat, oDat);
             for (int j = 0; j < nOut; j++) out(i,j) = oDat[j];

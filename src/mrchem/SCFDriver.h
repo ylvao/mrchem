@@ -65,7 +65,7 @@ protected:
     // DFT input
     bool dft_spin;
     double dft_x_fac;
-    std::vector<double> dft_cutoff;
+    double dft_cutoff;
     std::vector<double> dft_func_coefs;
     std::vector<std::string> dft_func_names;
 

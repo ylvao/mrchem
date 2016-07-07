@@ -7,9 +7,10 @@
 
 class XCFunctional {
 public:
-    XCFunctional(bool s);
+    XCFunctional(bool s, double thrs = 0.0);
     virtual ~XCFunctional();
 
+    void setDensityCutoff(double thrs) { this->cutoff = thrs; }
     void setFunctional(const std::string &name, double coef = 1.0);
 
     int getInputLength() const { return xc_input_length(this->functional); }
@@ -23,6 +24,7 @@ public:
 
 private:
     bool spin;
+    double cutoff;
     xc_functional functional;
 
     int getParamFromName(const std::string &name);

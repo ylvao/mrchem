@@ -66,7 +66,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     if (wf_method == "DFT") {
         dft_spin = input.get<bool>("DFT.spin");
         dft_x_fac = input.get<double>("DFT.exact_exchange");
-        dft_cutoff = input.getDblVec("DFT.density_cutoff");
+        dft_cutoff = input.get<double>("DFT.density_cutoff");
         dft_func_coefs = input.getDblVec("DFT.func_coefs");
         dft_func_names = input.getData("DFT.functionals");
     }
@@ -180,7 +180,7 @@ void SCFDriver::setup() {
         fock = new HartreeFock(*MRA, *T, *V, *J, *K);
     } else if (wf_method == "DFT") {
         J = new CoulombPotential(rel_prec, *MRA, *phi);
-        xcfun = new XCFunctional(dft_spin);
+        xcfun = new XCFunctional(dft_spin, dft_cutoff);
         for (int i = 0; i < dft_func_names.size(); i++) {
             xcfun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
         }
