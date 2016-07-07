@@ -7,6 +7,7 @@
 
 class OrbitalVector;
 class OrbitalExp;
+class Nuclei;
 
 class OrbitalProjector {
 public:
@@ -15,14 +16,12 @@ public:
           project(mra, prec) { }
     virtual ~OrbitalProjector() { }
 
-//    void readOrbitals(const OrbitalVector &orbs);
-//    void readVirtuals(const std::string &bf,
-//                      const std::string &mo,
-//                      int n_occ);
-    void operator()(OrbitalVector &orbs,
+    OrbitalVector* operator()(const Nuclei &nucs);
+
+    void operator()(OrbitalVector &phi,
                     const std::string &bf,
                     const std::string &mo);
-    void operator()(OrbitalVector &orbs,
+    void operator()(OrbitalVector &phi,
                     const std::string &bf,
                     const std::string &mo_a,
                     const std::string &mo_b);

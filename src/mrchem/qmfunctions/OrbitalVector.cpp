@@ -132,35 +132,6 @@ void OrbitalVector::push_back(int n_orbs, int occ, int spin) {
     }
 }
 
-//void OrbitalVector::initialize(const Nuclei &nucs) {
-//    NOT_IMPLEMENTED_ABORT;
-//    this->clear();
-//    this->orbitals.clear();
-//    for (int i = 0; i < nucs.size(); i++) {
-//        const Nucleus &nuc = *nucs[i];
-//        int minOrbs = ceil(nuc.getElement().getZ()/2.0);
-//        double Z = nuc.getCharge();
-//        const double *R = nuc.getCoord();
-//        int n = 1;
-//        int nOrbs = 0;
-//        while (nOrbs < minOrbs) {
-//            for (int l = 0; l < n; l++) {
-//                if (nOrbs >= minOrbs) continue;
-//                int M = 2*l+1;
-//                for (int m = 0; m < M; m++) {
-//                    HydrogenicFunction h_func(n, l, m, Z, R);
-//                    Orbital *h_orb = new Orbital(0, Orbital::Paired);
-//                    h_orb->projectFunction(h_func);
-//                    this->orbitals.push_back(h_orb);
-//                    println(0, "Orb " << size() << " " << n << " " << l << " " << m << "   " << h_orb->getSquareNorm());
-//                    nOrbs++;
-//                }
-//            }
-//            n++;
-//        }
-//    }
-//}
-
 //void OrbitalVector::writeOrbitals(const string &of) {
 //    for (int i = 0; i < this->size(); i++) {
 //        stringstream name;

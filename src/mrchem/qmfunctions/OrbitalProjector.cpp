@@ -1,5 +1,7 @@
 #include "OrbitalProjector.h"
 #include "GaussExp.h"
+#include "HydrogenicFunction.h"
+#include "Nucleus.h"
 #include "Intgrl.h"
 #include "OrbitalExp.h"
 #include "OrbitalVector.h"
@@ -31,6 +33,52 @@ using namespace Eigen;
 //    println(0, rolex.elapsed() << " =================\n");
 //    TelePrompter::setPrecision(oldPrec);
 //}
+
+OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
+    Timer rolex;
+    rolex.restart();
+    TelePrompter::printHeader(0, "Setting up occupied orbitals");
+    println(0, "    n  Spin  Occ                           SquareNorm");
+    TelePrompter::printSeparator(0, '-');
+
+    OrbitalVector *phi = new OrbitalVector(0);
+
+    int totOrbs = 0;
+    for (int i = 0; i < nucs.size(); i++) {
+        const Nucleus &nuc = nucs[i];
+        int minOrbs = ceil(nuc.getElement().getZ()/2.0);
+        double Z = nuc.getCharge();
+        const double *R = nuc.getCoord();
+        int n = 1;
+        int nOrbs = 0;
+        while (nOrbs < minOrbs) {
+            for (int l = 0; l < n; l++) {
+                if (nOrbs >= minOrbs) continue;
+                int M = 2*l+1;
+                for (int m = 0; m < M; m++) {
+                    phi->push_back(1, 0, Paired);
+                    Orbital &phi_i = phi->getOrbital(totOrbs);
+
+                    phi_i.real = this->grid();
+                    phi_i.imag = 0;
+
+                    HydrogenicFunction h_func(n, l, m, Z, R);
+                    this->project(*phi_i.real, h_func);
+
+                    printout(0, setw(5) << totOrbs);
+                    printout(0, setw(5) << phi_i.printSpin());
+                    printout(0, setw(5) << phi_i.getOccupancy());
+                    printout(0, setw(44) << phi_i.getSquareNorm() << endl);
+                    totOrbs++;
+                    nOrbs++;
+                }
+            }
+            n++;
+        }
+    }
+    TelePrompter::printFooter(0, rolex, 2);
+    return phi;
+}
 
 void OrbitalProjector::operator()(OrbitalVector &orbs,
                                   const string &bf,

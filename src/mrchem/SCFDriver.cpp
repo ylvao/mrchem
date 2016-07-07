@@ -7,6 +7,7 @@
 
 #include "mrchem.h"
 #include "TelePrompter.h"
+#include "MathUtils.h"
 #include "eigen_disable_warnings.h"
 
 #include "InterpolatingBasis.h"
@@ -117,6 +118,10 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
+    if (not wf_restricted) {
+        MSG_ERROR("Unrestricted SCF not implemented");
+        return false;
+    }
     if (wf_restricted and wf_method == "DFT" and dft_spin) {
         MSG_ERROR("Restricted spin DFT not implemented");
         return false;
@@ -246,8 +251,31 @@ void SCFDriver::clear_np1() {
 void SCFDriver::setupInitialGroundState() {
     // Reading initial guess
     if (scf_start == "none") {
-        NOT_IMPLEMENTED_ABORT;
-//        runInitialGuess(*f_oper, F, *phi);
+        // Project minimal basis set of hydrogen orbitals
+        OrbitalProjector OP(*MRA, rel_prec);
+        OrbitalVector *tmp = OP(*nuclei);
+
+        // Compute orthonormalization matrix
+        MatrixXd S = tmp->calcOverlapMatrix().real();
+        println(0, endl << S << endl);
+        MatrixXd S_m12 = MathUtils::hermitianMatrixPow(S, -1.0/2.0);
+
+        // Compute core Hamiltonian matrix
+        CoreHamiltonian h(*MRA, *T, *V);
+        h.setup(rel_prec);
+        MatrixXd f_mat = h(*tmp, *tmp);
+        h.clear();
+        println(0, endl << f_mat << endl);
+
+        // Diagonalize core Hamiltonian matrix
+        MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
+        MatrixXd U = M.transpose()*S_m12;
+        println(0, endl << f_mat << endl);
+
+        // Rotate n lowest energy orbitals of U*tmp into phi
+        OrbitalAdder add(*MRA, rel_prec);
+        add.rotate(*phi, U, *tmp);
+        delete tmp;
     } else if (scf_start == "gto") {
         OrbitalProjector OP(*MRA, rel_prec);
         if (wf_restricted) {
@@ -260,18 +288,6 @@ void SCFDriver::setupInitialGroundState() {
     } else {
         NOT_IMPLEMENTED_ABORT;
     }
-}
-
-GroundStateSolver* SCFDriver::setupInitialGuessSolver() {
-    NOT_IMPLEMENTED_ABORT;
-//    if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
-
-//    GroundStateSolver *gss = new GroundStateSolver(*helmholtz);
-//    gss->setMaxIterations(-1);
-//    gss->setRotation(-1);
-//    gss->setThreshold(1.0e-1, 1.0);
-//    gss->setOrbitalPrec(1.0e-3, -1.0);
-//    return gss;
 }
 
 OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
@@ -316,29 +332,6 @@ void SCFDriver::run() {
     printEigenvalues(F, *phi);
     molecule->printGeometry();
     molecule->printProperties();
-}
-
-bool SCFDriver::runInitialGuess(FockOperator &oper, MatrixXd &F, OrbitalVector &orbs) {
-    NOT_IMPLEMENTED_ABORT;
-//    if (phi == 0) MSG_ERROR("Orbitals not initialized");
-
-//        OrbitalVector initOrbs("initOrbs");
-//        initOrbs.initialize(*nuclei);
-//        MatrixXd S = initOrbs.calcOverlapMatrix();
-//        println(0, endl << S << endl);
-//        CoreHamiltonian h(*T, *V);
-//        MatrixXd F = h(initOrbs, initOrbs);
-//        println(0, endl << F << endl);
-//        initOrbs.diagonalize(-1.0, &F);
-//        println(0, endl << F << endl);
-//        phi->readOrbitals(initOrbs);
-//    GroundStateSolver *gss = setupInitialGuessSolver();
-//    gss->setup(oper, F, orbs);
-//    bool converged = gss->optimize();
-//    gss->clear();
-
-//    delete gss;
-//    return converged;
 }
 
 bool SCFDriver::runGroundState() {

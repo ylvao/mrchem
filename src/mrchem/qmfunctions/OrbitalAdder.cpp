@@ -108,8 +108,9 @@ void OrbitalAdder::operator()(Orbital &out, const VectorXd &c, OrbitalVector &in
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
-    if (out.size() != inp.size()) MSG_ERROR("Invalid arguments");
-    if (out.size() != U.rows()) MSG_ERROR("Invalid arguments");
+    if (U.cols() != inp.size()) MSG_ERROR("Invalid arguments");
+    if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
+
     for (int i = 0; i < out.size(); i++) {
         const VectorXd &c = U.row(i);
         Orbital &out_i = out.getOrbital(i);

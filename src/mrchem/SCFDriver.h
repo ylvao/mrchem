@@ -123,9 +123,8 @@ protected:
     XCFunctional *xcfun;
 
     bool sanityCheck() const;
-    bool runInitialGuess(FockOperator &oper, Eigen::MatrixXd &F, OrbitalVector &orbs);
-    bool runGroundState();
 
+    bool runGroundState();
     void calcGroundStateProperties();
 
     void setupInitialGroundState();
