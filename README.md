@@ -3,11 +3,13 @@
 
 # MRChem: MultiResolution Chemistry
 
-This project is configured and built using CMake (http://www.cmake.org).
-Please make sure you have a recent version (minimum 2.8) of CMake installed.
+- Documentation: http://mrchemdoc.readthedocs.io
 
 
 ## Quick install for the impatient
+
+This project is configured and built using CMake (http://www.cmake.org).
+Please make sure you have a recent version (minimum 2.8) of CMake installed.
 
 To configure, build and install the package, use:
 ```
