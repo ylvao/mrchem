@@ -4,6 +4,7 @@
 #include <string>
 
 #include "MWProjector.h"
+#include "GridGenerator.h"
 
 class OrbitalVector;
 class OrbitalExp;
