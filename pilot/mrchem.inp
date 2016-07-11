@@ -6,65 +6,15 @@ printlevel = 0
 
 World {
   scale = -3                      # Root scale defines world size 2^{-scale}
-  corner = [-1, -1, -1 ]            # Translation of corner root box [x,y,z]
+  corner = [-1, -1, -1 ]          # Translation of corner root box [x,y,z]
   boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
-  gauge_origin = [0.0, 0.0, 0.0]  # Gauge origin (relative to molecular geometry given in input)
-}
-
-Molecule {
-  charge = 0                      # Total charge of molecule
-  multiplicity = 1                # Spin multiplicity
-  angstrom = true                 # Angstom or atomic (bohr) units
-$coords
-H       0.0     0.0     -0.3705
-H       0.0     0.0      0.3705
-$end
-}
-
-WaveFunction {
-  method = DFT                    # Wave function method (HF or DFT)
-  restricted = true               # Restricted/unrestricted
-}
-
-DFT {
-  spin = false                        # Use spin-separated DFT
-  exact_exchange = 0.0                # Amount of exact Hartree-Fock exchange
-$functionals
-SLATERX     1.0
-VWN5C       1.0
-$end
-}
-
-Properties {
-  ground_state = false            # Compute ground state energy
-  dipole_moment = false           # Compute dipole moment
-}
-
-SCF {
-  property_thrs = 1.0             # Relative threshold in total energy (hartree)
-  orbital_thrs = 1.0e-3           # Relative threshold in orbitals
-  orbital_prec = [1.0e-3,-1.0]    # Variable prec for orbitals [init, final] (negative gives default)
-  lambda_thrs = 1.0e-4            # Threshold for reusing Helmholtz operators
-  rotation = 50                   # Iterations between each diagonalization/localization
-  max_iter = -1                   # Maximum number of iterations
-  history = 3                     # Maximum length of accelerator history
-  localize = false                # Localized or canonical orbitals (only for ground state)
-  initial_guess = none            # Type of initial guess: none, mw, gto
-  write_orbitals = false          # Write final orbitals
-}
-
-LSDalton {
-  run = false                     # Run LSDalton initial guess
-  method = LDA                    # Initial guess method
-  basis = cc-pVDZ                 # Gaussian basis set
 }
 
 Pilot {
   run_projection = false
   run_addition = false
   run_multiplication = false
-  run_poisson = false
   run_derivative = false
+  run_poisson = false
   run_scf = false
-  run_molecule = false
 }
