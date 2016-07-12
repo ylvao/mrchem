@@ -24,8 +24,8 @@ Chemistry <http://www.ctcc.no/>`_ (CTCC) at
 ---
 
 We are currently in the process of rewriting the code and making it publicly 
-available, and the latest version (with limited functionality) can be found at
-`GitHub <https://github.com/MRChemSoft/mrchem>`_. This is 'not' a stable
+available, and the latest version (with limited functionality) can be found on
+`GitHub <https://github.com/MRChemSoft/mrchem>`_. This is **not** a stable
 version, expect major changes in the future.
 
 Features as of July 2016:
