@@ -3,7 +3,7 @@
 
 # MRChem: MultiResolution Chemistry
 
-- Documentation: http://mrchem.readthedocs.io
+- Documentation: http://mrchemdoc.readthedocs.io
 
 
 ## Quick install for the impatient
