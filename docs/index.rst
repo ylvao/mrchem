@@ -21,10 +21,33 @@ The code is being developed at the `Centre for Theoretical and Computational
 Chemistry <http://www.ctcc.no/>`_ (CTCC) at 
 `UiT - The Arctic University of Norway <http://en.uit.no>`_. 
 
+- - -
+
+We are currently in the process of rewriting the code and making it publicly 
+available, and the latest version (with limited functionality) can be found at
+`GitHub <https://github.com/MRChemSoft/mrchem>`_. This is 'not' a stable
+version, expect major changes in the future.
+
+Features as of July 2016:
+
+* Closed-shell Hartree-Fock and Kohn-Sham DFT
+* Ground state energy and dipole moment
+* Localized orbitals
+* Shared memory parallelization (OpenMP)
+* Size limitation: ~50 orbitals
+* Accuracy limitation: ~nanoHartree
+
+Upcoming features:
+
+* Open-shell Hartree-Fock and Kohn-Sham DFT
+* Linear response properties (electric, magnetic)
+* Distributed memory parallelization (MPI + OpenMP)
+
 
 .. toctree::
    :maxdepth: 2
 
    installation
    mrcpp_api
+   mrchem_manual
 
