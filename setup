@@ -284,12 +284,12 @@ def print_build_help(build_path):
     print('')
     print('   to compile with configured parameters (recommended):')
     print('   $ cd ' + build_path)
-    print('   $ make')
+    print('   $ make install')
     print('')
     print('   to modify configured parameters and then compile:')
     print('   $ cd ' + build_path)
     print('   $ ccmake ' + root_directory)
-    print('   $ make')
+    print('   $ make install')
 
 def gen_reconfigure_script(command, build_path):
     file_name = os.path.join(build_path, 'reconfigure')
