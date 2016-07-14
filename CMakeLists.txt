@@ -1,26 +1,29 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
-project(MRCHEM CXX C)
+project(MRCHEM)
+
+enable_language(C)
 enable_language(CXX)
 
-include(code_coverage)
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_SOURCE_DIR}/cmake
+    ${CMAKE_SOURCE_DIR}/cmake/custom
+    )
+
 include(GNUInstallDirs)
+
+
+
+include(code_coverage)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigCompilerFlags)
 
-find_package(PythonInterp REQUIRED)
-set(PYTHON_SITE_INSTALL_DIR lib/python2.7/site-packages)
-
-find_package(Eigen3 REQUIRED)
-set(Boost_USE_MULTITHREADED OFF)
-find_package(Boost REQUIRED serialization system timer)
-
 include(mpi)
 include(omp)
-include(blas)
 
+include(blas)
 option(ENABLE_BLAS "Use BLAS backend for linear algebra" ON)
 if (ENABLE_BLAS)
     if (BLAS_TYPE)
@@ -30,51 +33,15 @@ if (ENABLE_BLAS)
     endif()
 endif ()
 
-include_directories(${PROJECT_BINARY_DIR})
 
-if (NOT DEFINED ${MW_FILTER_DIR})
-    set (MW_FILTER_DIR "/home/jonas/dev/MultiwaveletFilters"
-        CACHE STRING "Path to MW filters and cross-correlation coefs")
-endif()
 
-include(ConfigGitRevision)
-
-if (NOT INITIAL_GUESS_PROGRAM)
-    set (INITIAL_GUESS_PROGRAM "lsdalton")
-endif()
-
-if (NOT INITIAL_GUESS_PROGRAM_DIR)
-    set (INITIAL_GUESS_PROGRAM_DIR "/unknown")
-endif()
-
-add_subdirectory(external)
-add_subdirectory(src)
-add_subdirectory(pilot)
-add_subdirectory(tools EXCLUDE_FROM_ALL)
-
+include(python)
+include(eigen)
+include(boost)
+include(git)
+include(initial_guess)
 include(mw_filters)
-
-option(ENABLE_TESTS "Enable test suite" ON)
-if (ENABLE_TESTS)
-    enable_testing()
-    include(CTest)
-    add_subdirectory(tests)
-endif()
-
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-    add_subdirectory(doc EXCLUDE_FROM_ALL)
-endif()
-
-configure_file (
-    "${PROJECT_SOURCE_DIR}/config.h.in"
-    "${PROJECT_BINARY_DIR}/config.h"
-    )
-
-find_package(Git REQUIRED)
-
-include(FeatureSummary)
-feature_summary(
-   DESCRIPTION "Found packages:" 
-   WHAT PACKAGES_FOUND
-   )
+include(doxygen)
+include(tests)
+include(main)
+include(feature_summary)
