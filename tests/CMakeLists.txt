@@ -4,6 +4,7 @@ add_subdirectory(mrcpp)
 
 get_property(test_sources GLOBAL PROPERTY TestSources)
 
+include_directories(${PROJECT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/external/catch)
 include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp)
 include_directories(${CMAKE_SOURCE_DIR}/src/mrcpp/mwanalytic)
