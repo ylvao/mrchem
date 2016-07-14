@@ -115,6 +115,10 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
+    if (wf_method == "HF" or dft_x_fac > MachineZero) {
+        MSG_ERROR("Hartree-Fock exchange not implemented");
+        return false;
+    }
     if (not wf_restricted) {
         MSG_ERROR("Unrestricted SCF not implemented");
         return false;
