@@ -19,14 +19,14 @@ Obtaining and building the code
 
 An experimental version of MRCPP is available on GitHub. There is no official
 MRChem program yet, but you can write your own main program in a file called 
-``mrcpp.cpp`` in the ``/pilot`` directory. You will find a sample code called 
-``mrcpp.cpp.sample`` in this directory where some of the functionality is 
-demonstrated. To activate it, rename it ``mrcpp.cpp`` *before* you run the 
+``mrchem.cpp`` in the ``/pilot`` directory. You will find a sample code called 
+``mrchem.cpp.sample`` in this directory where some of the functionality is 
+demonstrated. To activate it, rename it ``mrchem.cpp`` *before* you run the 
 setup script::
 
-    $ git clone git@github.com:MRChemSoft/MRChem.git mrcpp
-    $ cd mrcpp/pilot
-    $ cp mrcpp.cpp.sample mrcpp.cpp
+    $ git clone git@github.com:MRChemSoft/mrchem.git
+    $ cd mrchem/pilot
+    $ cp mrchem.cpp.sample mrchem.cpp
     $ cd ..
     $ ./setup --release
 
