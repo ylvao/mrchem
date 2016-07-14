@@ -133,10 +133,6 @@ group.add_argument('--enable-tests',
         action='store_true',
         default=False,
         help='build test suite [default: %(default)s]')
-group.add_argument('--check',
-        action='store_true',
-        default=False,
-        help='enable bounds checking [default: %(default)s]')
 group.add_argument('--coverage',
         action='store_true',
         default=False,
@@ -219,9 +215,6 @@ def gen_cmake_command():
 
     if args.blas_dir:
         command += ' -DBLAS_ROOT={0}'.format(args.blas_dir)
-
-    if args.check:
-        command += ' -DENABLE_BOUNDS_CHECK=ON'
 
     if args.coverage:
         command += ' -DENABLE_CODE_COVERAGE=ON'
