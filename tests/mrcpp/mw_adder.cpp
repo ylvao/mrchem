@@ -69,8 +69,8 @@ template<int D> void testAddition() {
 
     FunctionTreeVector<D> sum_vec;
     WHEN("the functions are added") {
-        sum_vec.push_back(a_coef, *a_tree);
-        sum_vec.push_back(b_coef, *b_tree);
+        sum_vec.push_back(a_coef, a_tree);
+        sum_vec.push_back(b_coef, b_tree);
         FunctionTree<D> *c_tree = add(sum_vec);
         sum_vec.clear();
 
@@ -90,8 +90,8 @@ template<int D> void testAddition() {
         }
 
         AND_WHEN("the first function is subtracted") {
-            sum_vec.push_back(*c_tree);
-            sum_vec.push_back(-1.0, *a_tree);
+            sum_vec.push_back(c_tree);
+            sum_vec.push_back(-1.0, a_tree);
             FunctionTree<D> *d_tree = add(sum_vec);
             sum_vec.clear();
 
@@ -102,8 +102,8 @@ template<int D> void testAddition() {
             }
 
             AND_WHEN("the second function is subtracted") {
-                sum_vec.push_back(*d_tree);
-                sum_vec.push_back(-b_coef, *b_tree);
+                sum_vec.push_back(d_tree);
+                sum_vec.push_back(-b_coef, b_tree);
                 FunctionTree<D> *e_tree = add(sum_vec);
                 sum_vec.clear();
 
