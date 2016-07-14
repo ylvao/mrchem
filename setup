@@ -106,11 +106,6 @@ group.add_argument('--mwfilter-dir',
         default=None,
         help='set the path for the MW filters [default: %(default)s]',
         metavar='PATH')
-group.add_argument('--lsdalton-dir',
-        action='store',
-        default=None,
-        help='set the path LSDalton [default: %(default)s]',
-        metavar='PATH')
 
 group = parser.add_argument_group('Advanced options')
 group.add_argument('--force',
@@ -246,9 +241,6 @@ def gen_cmake_command():
 
     if args.mwfilter_dir:
         command += ' -DMW_FILTER_DIR=' + args.mwfilter_dir
-
-    if args.lsdalton_dir:
-        command += ' -DINITIAL_GUESS_PROGRAM_DIR=' + args.lsdalton_dir
 
     if args.boost_dir:
         command += ' -DBOOST_ROOT={0}'.format(args.boost_dir)
