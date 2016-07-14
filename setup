@@ -106,11 +106,6 @@ group.add_argument('--mwfilter-dir',
         default=None,
         help='set the path for the MW filters [default: %(default)s]',
         metavar='PATH')
-group.add_argument('--lsdalton-dir',
-        action='store',
-        default=None,
-        help='set the path LSDalton [default: %(default)s]',
-        metavar='PATH')
 
 group = parser.add_argument_group('Advanced options')
 group.add_argument('--force',
@@ -133,26 +128,10 @@ group.add_argument('--enable-tests',
         action='store_true',
         default=False,
         help='build test suite [default: %(default)s]')
-group.add_argument('--check',
-        action='store_true',
-        default=False,
-        help='enable bounds checking [default: %(default)s]')
 group.add_argument('--coverage',
         action='store_true',
         default=False,
         help='enable code coverage [default: %(default)s]')
-group.add_argument('--profiling',
-        action='store_true',
-        default=False,
-        help='enable profiling [default: %(default)s]')
-group.add_argument('--nochecks',
-        action='store_true',
-        default=False,
-        help='disable compatibility checks [default: %(default)s]')
-group.add_argument('--static',
-        action='store_true',
-        default=False,
-        help='link statically [default: %(default)s]')
 group.add_argument('-D',
         action="append",
         dest='define',
@@ -224,20 +203,8 @@ def gen_cmake_command():
     if args.blas_dir:
         command += ' -DBLAS_ROOT={0}'.format(args.blas_dir)
 
-    if args.check:
-        command += ' -DENABLE_BOUNDS_CHECK=ON'
-
     if args.coverage:
         command += ' -DENABLE_CODE_COVERAGE=ON'
-
-    if args.profiling:
-        command += ' -DENABLE_PROFILING=ON'
-
-    if args.nochecks:
-        command += ' -DENABLE_SANITY_CHECKS=OFF'
-
-    if args.static:
-        command += ' -DENABLE_STATIC_LINKING=ON'
 
     if args.prefix:
         command += ' -DCMAKE_INSTALL_PREFIX=' + args.prefix
@@ -260,9 +227,6 @@ def gen_cmake_command():
 
     if args.mwfilter_dir:
         command += ' -DMW_FILTER_DIR=' + args.mwfilter_dir
-
-    if args.lsdalton_dir:
-        command += ' -DINITIAL_GUESS_PROGRAM_DIR=' + args.lsdalton_dir
 
     if args.boost_dir:
         command += ' -DBOOST_ROOT={0}'.format(args.boost_dir)
