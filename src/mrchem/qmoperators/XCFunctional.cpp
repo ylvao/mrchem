@@ -27,10 +27,8 @@ void XCFunctional::setFunctional(const string &name, double coef) {
 int XCFunctional::getParamFromName(const string &name) {
     int param = -1;
     if (name == "SLATERX") {
-        MSG_WARN("Functional not tested");
         param = XC_SLATERX;
     } else if (name == "VWN5C") {
-        MSG_WARN("Functional not tested");
         param = XC_VWN5C;
     } else if (name == "BECKEX") {
         MSG_WARN("Functional not tested");
