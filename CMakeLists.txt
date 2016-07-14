@@ -73,9 +73,6 @@ configure_file (
 
 find_package(Git REQUIRED)
 
-# Configure CPack
-include(ConfigPackaging) 
-
 include(FeatureSummary)
 feature_summary(
    DESCRIPTION "Found packages:" 
