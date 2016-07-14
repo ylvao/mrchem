@@ -46,7 +46,6 @@ int XCFunctional::getParamFromName(const string &name) {
         MSG_WARN("Functional not tested");
         param = XC_LYPC;
     } else if (name == "PBEX") {
-        MSG_WARN("Functional not tested");
         param = XC_PBEX;
     } else if (name == "REVPBEX") {
         MSG_WARN("Functional not tested");
@@ -55,7 +54,6 @@ int XCFunctional::getParamFromName(const string &name) {
         MSG_WARN("Functional not tested");
         param = XC_RPBEX;
     } else if (name == "PBEC") {
-        MSG_WARN("Functional not tested");
         param = XC_PBEC;
     } else if (name == "SPBEC") {
         MSG_WARN("Functional not tested");
