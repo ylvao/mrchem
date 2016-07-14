@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 project(MRCHEM CXX C)
 enable_language(CXX)
+
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_SOURCE_DIR}/cmake
+    ${CMAKE_SOURCE_DIR}/cmake/custom
+    )
 
 include(code_coverage)
 include(GNUInstallDirs)
@@ -73,8 +78,4 @@ configure_file (
 
 find_package(Git REQUIRED)
 
-include(FeatureSummary)
-feature_summary(
-   DESCRIPTION "Found packages:" 
-   WHAT PACKAGES_FOUND
-   )
+include(feature_summary)
