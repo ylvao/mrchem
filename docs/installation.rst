@@ -10,11 +10,7 @@ Build prerequisites
 On Stallo the supplied setup script should be able to configure things 
 correctly, provided all the necessary modules have been loaded::
 
-    $ module load eigen
-    $ module load cmake
-    $ module load mkl
-    $ module load boost
-    $ module load python
+    $ module load eigen cmake mkl boost python
 
 
 -------------------------------
