@@ -136,10 +136,6 @@ group.add_argument('--profiling',
         action='store_true',
         default=False,
         help='enable profiling [default: %(default)s]')
-group.add_argument('--static',
-        action='store_true',
-        default=False,
-        help='link statically [default: %(default)s]')
 group.add_argument('-D',
         action="append",
         dest='define',
@@ -216,9 +212,6 @@ def gen_cmake_command():
 
     if args.profiling:
         command += ' -DENABLE_PROFILING=ON'
-
-    if args.static:
-        command += ' -DENABLE_STATIC_LINKING=ON'
 
     if args.prefix:
         command += ' -DCMAKE_INSTALL_PREFIX=' + args.prefix
