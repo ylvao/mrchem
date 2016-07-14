@@ -41,13 +41,16 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
             InterpolatingBasis basis(2*k+1);
             MultiResolutionAnalysis<1> kern_mra(box, basis);
 
+
             MWProjector<1> Q(kern_mra, proj_prec);
+            GridGenerator<1> G(kern_mra);
 
             FunctionTreeVector<1> kern_vec;
             for (int i = 0; i < poisson.size(); i++) {
                 Gaussian<1> &kern_gauss = *poisson[i];
-                FunctionTree<1> *kern_tree = Q(kern_gauss);
-                kern_vec.push_back(*kern_tree);
+                FunctionTree<1> *kern_tree = G(kern_gauss);
+                Q(*kern_tree, kern_gauss);
+                kern_vec.push_back(kern_tree);
             }
 
             SECTION("Build operator tree by cross correlation") {
@@ -63,7 +66,7 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
                 for (int i = 0; i < kern_vec.size(); i++) {
                     FunctionTree<1> &kern_tree = *kern_vec[i];
                     OperatorTree *oper_tree = G(kern_tree);
-                    oper_vec.push_back(*oper_tree);
+                    oper_vec.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
                     BandWidth bw_1 = oper_tree->getBandWidth();
