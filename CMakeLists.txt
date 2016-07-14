@@ -60,18 +60,8 @@ add_subdirectory(pilot)
 add_subdirectory(tools EXCLUDE_FROM_ALL)
 
 include(mw_filters)
-
-option(ENABLE_TESTS "Enable test suite" ON)
-if (ENABLE_TESTS)
-    enable_testing()
-    include(CTest)
-    add_subdirectory(tests)
-endif()
-
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-    add_subdirectory(doc EXCLUDE_FROM_ALL)
-endif()
+include(doxygen)
+include(tests)
 
 configure_file (
     "${PROJECT_SOURCE_DIR}/config.h.in"
