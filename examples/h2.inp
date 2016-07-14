@@ -1,0 +1,39 @@
+# vim:syntax=sh:
+
+order = 7                         # Polynomial order of the MW basis
+rel_prec = 1.0e-4                 # Overall relative precision
+
+World {
+  scale = -3                      # Root scale defines world size 2^{-scale}
+  corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
+  boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
+}
+
+Molecule {
+$coords
+H   0.0     0.0    -0.7
+H   0.0     0.0     0.7
+$end
+}
+
+WaveFunction {
+  method = DFT                    # Wave function method (HF or DFT)
+}
+
+DFT {
+$functionals
+SLATERX
+VWN5C
+$end
+}
+
+Properties {
+  ground_state = true             # Compute ground state energy
+}
+
+SCF {
+  orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
+  property_thrs = 1.0e-5          # Convergence threshold in total energy
+  initial_guess = none            # Type of initial guess: none, mw, gto
+  history = 3                     # Length of KAIN iterative history
+}
