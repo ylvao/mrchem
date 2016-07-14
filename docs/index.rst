@@ -30,7 +30,7 @@ version, expect major changes in the future.
 
 Features as of July 2016:
 
-* Closed-shell Hartree-Fock and Kohn-Sham DFT
+* Spin restricted (closed-shell) Kohn-Sham DFT (LDA and GGA)
 * Ground state energy and dipole moment
 * Localized orbitals
 * Shared memory parallelization (OpenMP)
@@ -39,7 +39,8 @@ Features as of July 2016:
 
 Upcoming features:
 
-* Open-shell Hartree-Fock and Kohn-Sham DFT
+* Hartree-Fock exchange
+* Spin unrestricted (open-shell) HF and DFT
 * Linear response properties (electric, magnetic)
 * Distributed memory parallelization (MPI + OpenMP)
 
