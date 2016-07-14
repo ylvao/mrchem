@@ -76,6 +76,4 @@ configure_file (
     "${PROJECT_BINARY_DIR}/config.h"
     )
 
-find_package(Git REQUIRED)
-
 include(feature_summary)
