@@ -8,8 +8,7 @@ Build prerequisites
 -------------------
 
 On Stallo the supplied setup script should be able to configure things 
-correctly, provided all the necessary modules have been loaded (if you 
-put them in your ``.bashrc`` or ``.zshrc`` they will be loaded automatically)::
+correctly, provided all the necessary modules have been loaded::
 
     $ module load eigen
     $ module load cmake
