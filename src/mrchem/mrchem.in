@@ -13,7 +13,7 @@ executable="@MRCHEM_EXECUTABLE@"
 debug=@MRCHEM_DRIVER_DEBUG@
 printlevel=0
 dryrun=False
-version="@PROJECT_VERSION@"
+version="@PROGRAM_VERSION@"
 
 import sys, re, optparse, os, string, subprocess, tempfile, math
 from copy import deepcopy
