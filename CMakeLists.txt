@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(MRCHEM CXX C)
+project(MRCHEM)
+
+enable_language(C)
 enable_language(CXX)
 
 set(CMAKE_MODULE_PATH
