@@ -21,7 +21,7 @@ An experimental version of MRChem is available on GitHub::
 
     $ git clone git@github.com:MRChemSoft/mrchem.git
     $ cd mrchem
-    $ ./setup --cc=icc --cxx=icpc
+    $ ./setup [--cc=icc --cxx=icpc]
     $ cd build
     $ make
 
@@ -38,7 +38,7 @@ run the setup script::
     $ cd mrchem/pilot
     $ cp mrchem.cpp.sample mrchem.cpp
     $ cd ..
-    $ ./setup --cc=icc --cxx=icpc
+    $ ./setup [--cc=icc --cxx=icpc]
     $ cd build
     $ make
 
