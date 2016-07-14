@@ -86,7 +86,7 @@ double GroundStateSolver::calcProperty() {
     OrbitalVector &phi = *this->orbitals_n;
 
     SCFEnergy scfEnergy;
-    scfEnergy.compute(fock, F, phi);
+    scfEnergy.compute(fock, phi, F);
     this->energy.push_back(scfEnergy);
     return scfEnergy.getElectronicEnergy();
 }

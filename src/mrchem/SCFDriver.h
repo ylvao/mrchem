@@ -135,7 +135,7 @@ protected:
     void setup_np1();
     void clear_np1();
 
-    void printEigenvalues(Eigen::MatrixXd &f_mat, OrbitalVector &orbs);
+    void printEigenvalues(OrbitalVector &orbs, Eigen::MatrixXd &f_mat);
 };
 
 #endif

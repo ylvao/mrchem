@@ -63,7 +63,7 @@ void SCFEnergy::compute(const Nuclei &nuclei) {
     TelePrompter::printFooter(0, timer, 2);
 }
 
-void SCFEnergy::compute(FockOperator &f_oper, MatrixXd &f_mat, OrbitalVector &phi) {
+void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_mat) {
     Timer timer;
     timer.restart();
 

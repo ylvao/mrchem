@@ -15,8 +15,8 @@ public:
 
     void compute(const Nuclei &nuclei);
     void compute(FockOperator &f_oper,
-                 Eigen::MatrixXd &f_mat,
-                 OrbitalVector &orbs);
+                 OrbitalVector &orbs,
+                 Eigen::MatrixXd &f_mat);
 
     double getTotalEnergy() const { return this->E_nuc + this->E_el; }
     double getNuclearEnergy() const { return this->E_nuc; }

@@ -1,14 +1,13 @@
-#include "SCFDriver.h"
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <Eigen/Eigenvalues>
 
+#include "eigen_disable_warnings.h"
 #include "mrchem.h"
+#include "SCFDriver.h"
 #include "TelePrompter.h"
 #include "MathUtils.h"
-#include "eigen_disable_warnings.h"
 
 #include "InterpolatingBasis.h"
 #include "MultiResolutionAnalysis.h"
@@ -18,21 +17,19 @@
 #include "HartreeFock.h"
 #include "DFT.h"
 
+#include "HelmholtzOperatorSet.h"
 #include "OrbitalOptimizer.h"
 #include "EnergyOptimizer.h"
-#include "HelmholtzOperatorSet.h"
 #include "KAIN.h"
 
 #include "Molecule.h"
 #include "OrbitalVector.h"
-
 #include "OrbitalProjector.h"
 
 #include "SCFEnergy.h"
 #include "DipoleMoment.h"
 
 #include "DipoleOperator.h"
-
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -49,10 +46,10 @@ SCFDriver::SCFDriver(Getkw &input) {
     max_depth = input.get<int>("max_depth");
 
     scale = input.get<int>("World.scale");
-    center_of_mass = input.get<bool>("World.center_of_mass");
     boxes = input.getIntVec("World.boxes");
     corner = input.getIntVec("World.corner");
     gauge = input.getDblVec("World.gauge_origin");
+    center_of_mass = input.get<bool>("World.center_of_mass");
 
     run_ground_state = input.get<bool>("Properties.ground_state");
     run_dipole_moment = input.get<bool>("Properties.dipole_moment");
@@ -257,7 +254,6 @@ void SCFDriver::setupInitialGroundState() {
 
         // Compute orthonormalization matrix
         MatrixXd S = tmp->calcOverlapMatrix().real();
-        println(0, endl << S << endl);
         MatrixXd S_m12 = MathUtils::hermitianMatrixPow(S, -1.0/2.0);
 
         // Compute core Hamiltonian matrix
@@ -265,12 +261,10 @@ void SCFDriver::setupInitialGroundState() {
         h.setup(rel_prec);
         MatrixXd f_mat = h(*tmp, *tmp);
         h.clear();
-        println(0, endl << f_mat << endl);
 
         // Diagonalize core Hamiltonian matrix
         MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
         MatrixXd U = M.transpose()*S_m12;
-        println(0, endl << f_mat << endl);
 
         // Rotate n lowest energy orbitals of U*tmp into phi
         OrbitalAdder add(*MRA, rel_prec);
@@ -329,7 +323,7 @@ void SCFDriver::run() {
     }
     calcGroundStateProperties();
 
-    printEigenvalues(F, *phi);
+    printEigenvalues(*phi, F);
     molecule->printGeometry();
     molecule->printProperties();
 }
@@ -339,7 +333,9 @@ bool SCFDriver::runGroundState() {
     if (fock == 0) MSG_ERROR("Fock operator not initialized");
 
     bool converged = false;
-    {   // Optimize orbitals
+
+    // Optimize orbitals
+    if (scf_orbital_thrs > 0.0) {
         OrbitalOptimizer *solver = setupOrbitalOptimizer();
         solver->setup(*fock, *phi, F);
         converged = solver->optimize();
@@ -347,7 +343,7 @@ bool SCFDriver::runGroundState() {
         delete solver;
     }
 
-        // Optimize energy
+    // Optimize energy
     if (scf_property_thrs > 0.0) {
         setup_np1();
 
@@ -362,7 +358,6 @@ bool SCFDriver::runGroundState() {
 
     if (scf_write_orbitals) {
         NOT_IMPLEMENTED_ABORT;
-//        phi->writeOrbitals(file_final_orbitals);
     }
 
     return converged;
@@ -372,7 +367,7 @@ void SCFDriver::calcGroundStateProperties() {
     SCFEnergy &energy = molecule->getSCFEnergy();
     fock->setup(rel_prec);
     energy.compute(*nuclei);
-    energy.compute(*fock, F, *phi);
+    energy.compute(*fock, *phi, F);
     fock->clear();
 
     if (run_dipole_moment) {
@@ -387,7 +382,7 @@ void SCFDriver::calcGroundStateProperties() {
     }
 }
 
-void SCFDriver::printEigenvalues(MatrixXd &f_mat, OrbitalVector &orbs) {
+void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     int oldprec = TelePrompter::setPrecision(5);
     TelePrompter::printHeader(0, "Fock matrix");
     println(0, f_mat);
