@@ -22,6 +22,10 @@ modules:
     - '%(url_root)modules/safeguards.cmake'
     - '%(url_root)modules/version.cmake'
     - '%(url_root)modules/code_coverage.cmake'
+- libs:
+  - source:
+    - 'custom/eigen.cmake'
+    - 'custom/boost.cmake'
 - tests:
   - docopt: "--enable-tests Enable tests [default: False]."
   - define: "'-DENABLE_TESTS={0}'.format(arguments['--enable-tests'])"
@@ -30,8 +34,6 @@ modules:
 - custom:
   - source:
     - 'custom/python.cmake'
-    - 'custom/eigen.cmake'
-    - 'custom/boost.cmake'
     - 'custom/git.cmake'
     - 'custom/initial_guess.cmake'
     - 'custom/doxygen.cmake'
