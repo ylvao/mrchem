@@ -259,12 +259,12 @@ wavelet norm of the representation). Note that with a negative precision (which
 is the default) the grid will not be refined beyond the initial grid, which
 contains only root nodes in this case.
 
-MWAdder and MWMultiplier
------------------------
+MWAdder
+-------
 
 Arithmetic operations in the MW representation are performed using the
-``FunctionTreeVector``, and the general sum :math:`g = \sum_i c_i f_i(x)` and
-product :math:`h = \prod_i c_i f_i(x)` are done in the following way
+``FunctionTreeVector``, and the general sum :math:`g = \sum_i c_i f_i(x)`
+is done in the following way
 
 .. code-block:: cpp
 
@@ -276,18 +276,36 @@ product :math:`h = \prod_i c_i f_i(x)` are done in the following way
     MWAdder<D> add(MRA, prec);
     FunctionTree<D> *g_tree = add(inp_vec);
 
-    MWMultiplier<D> mult(MRA, prec);
-    FunctionTree<D> *h_tree = mult(inp_vec);
-
 The default initial grid is again only the root nodes, and a positive ``prec``
 is required to build an adaptive tree structure for the result. The special
-case of adding/multiplying two functions can be done directly without
-initializing a ``FunctionTreeVector``
+case of adding two functions can be done directly without initializing a
+``FunctionTreeVector``
 
 .. code-block:: cpp
 
     MWAdder<D> add(MRA, prec);
     FunctionTree<D> *g_tree = add(c_1, *f_tree_1, c_2, *f_tree_2);
+
+MWMultiplier
+------------
+
+The multiplication follows the exact same syntax as the addition, where the
+product :math:`h = \prod_i c_i f_i(x)` is done in the following way
+
+.. code-block:: cpp
+
+    FunctionTreeVector<D> inp_vec;
+    inp_vec.push_back(c_1, f_tree_1);
+    inp_vec.push_back(c_2, f_tree_2);
+    inp_vec.push_back(c_3, f_tree_3);
+
+    MWMultiplier<D> mult(MRA, prec);
+    FunctionTree<D> *h_tree = mult(inp_vec);
+
+In the special case of multiplying two functions the coefficients are collected
+into one argument
+
+.. code-block:: cpp
 
     MWMultiplier<D> mult(MRA, prec);
     FunctionTree<D> *h_tree = mult(c_1*c_2, *f_tree_1, *f_tree_2);
