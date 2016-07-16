@@ -240,8 +240,8 @@ projected in the following way (the MRA must be initialized as above)
 
 .. code-block:: cpp
 
-    double beta = 10.0;                                         // Gaussian exponent
-    double alpha = pow(beta/pi, 3.0/2.0);                       // Unit charge coefficient
+    double beta = 10.0;                                     // Gaussian exponent
+    double alpha = pow(beta/pi, 3.0/2.0);                   // Unit charge coefficient
     auto f = [alpha, beta] (const double *r) -> double {
         double R = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
         return alpha*exp(-beta*R*R);
@@ -319,11 +319,11 @@ to the :math:`\partial_{xyz}` operator)
 
 .. code-block:: cpp
 
-    double prec;                                                // Precision of operator application
-    double a = 0.0, b = 0.0;                                    // Boundary conditions for operator
+    double prec;                                            // Precision of operator application
+    double a = 0.0, b = 0.0;                                // Boundary conditions for operator
     DerivativeOperator<3> D(MRA, prec, a, b);
-    D.setApplyDir(1);                                           // Differentiate in y direction
-    FunctionTree<3> *g_tree = D(*f_tree);                       // Build result adaptively
+    D.setApplyDir(1);                                       // Differentiate in y direction
+    FunctionTree<3> *g_tree = D(*f_tree);                   // Build result adaptively
 
 As for all ``TreeBuilders``, this operator will start at the root nodes and
 build adaptively according to ``prec``. The derivative is usually applied
@@ -332,12 +332,12 @@ advanced initialization below)
 
 .. code-block:: cpp
 
-    GridGenerator<3> G(MRA);                                    // TreeBuilder that copy grids
-    FunctionTree<3> *g_tree = G(*f_tree);                       // Copy grid from density function
+    GridGenerator<3> G(MRA);                                // TreeBuilder that copy grids
+    FunctionTree<3> *g_tree = G(*f_tree);                   // Copy grid from density function
 
-    DerivativeOperator<3> D(MRA);                               // Default parameters prec = -1, a=b=0
-    D.setApplyDir(1);                                           // Differentiate in y direction    
-    D(*g_tree, *f_tree, 0);                                     // Compute derivative on given grid
+    DerivativeOperator<3> D(MRA);                           // Default parameters prec = -1, a=b=0
+    D.setApplyDir(1);                                       // Differentiate in y direction    
+    D(*g_tree, *f_tree, 0);                                 // Compute derivative on given grid
 
 ### Poisson operator
 
@@ -358,10 +358,10 @@ potential is computed in the following way
 
 .. code-block:: cpp
 
-    double apply_prec;                                          // Precision defining the operator application
-    double build_prec;                                          // Precision defining the operator construction
+    double apply_prec;                                      // Precision defining the operator application
+    double build_prec;                                      // Precision defining the operator construction
     PoissonOperator P(MRA, apply_prec, build_prec);
-    FunctionTree<3> *g_tree = P(*f_tree);                       // Apply operator adaptively
+    FunctionTree<3> *g_tree = P(*f_tree);                   // Apply operator adaptively
 
 The Coulomb self-interaction energy can now be computed as the dot product
 
@@ -386,11 +386,11 @@ application is similar to the Poisson operator, with an extra argument for the
 
 .. code-block:: cpp
 
-    double mu;                                                  // Must be a positive real number
-    double apply_prec;                                          // Precision defining the operator application
-    double build_prec;                                          // Precision defining the operator construction
+    double mu;                                              // Must be a positive real number
+    double apply_prec;                                      // Precision defining the operator application
+    double build_prec;                                      // Precision defining the operator construction
     HelmholtzOperator H(MRA, mu, apply_prec, build_prec);
-    FunctionTree<3> *g_tree = H(*f_tree);                       // Apply operator adaptively
+    FunctionTree<3> *g_tree = H(*f_tree);                   // Apply operator adaptively
 
 -----------------------
 Advanced initialization
