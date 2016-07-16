@@ -58,8 +58,8 @@ template<int D> void testMultiplication() {
 
     FunctionTreeVector<D> prod_vec;
     WHEN("the functions are multiplied") {
-        prod_vec.push_back(*a_tree);
-        prod_vec.push_back(*b_tree);
+        prod_vec.push_back(a_tree);
+        prod_vec.push_back(b_tree);
         FunctionTree<D> *c_tree = mult(prod_vec);
         prod_vec.clear();
 
