@@ -1,6 +1,10 @@
-# MRCPP: Application Program Interface
+====================================
+MRCPP: Application Program Interface
+====================================
 
-## Introduction
+------------
+Introduction
+------------
 
 The main features of MRCPP are the numerical multiwavelet (MW) representations
 of functions and operators. Two integral convolution operators are implemented
@@ -10,7 +14,9 @@ to the numerical representations there are a limited number of analytic
 functions that are usually used as starting point for the numerical
 computations.
 
-## Analytic functions
+------------------
+Analytic functions
+------------------
 
 The general way of defining an analytic function is to use lambdas
 (or std::function), which provide lightweight functions that can be used on the
@@ -46,7 +52,9 @@ the capture list (square brackets), see e.g. `cppreference.com
 <http://en.cppreference.com/w/cpp/language/lambda>`_ for more
 details on lambda functions and how to use the capture list.
 
-## MultiResolution Analysis (MRA)
+------------------------------
+MultiResolution Analysis (MRA)
+------------------------------
 
 In order to combine different functions and operators in mathematical
 operations they must be compatible, that is, they must be
@@ -79,7 +87,9 @@ Two types of ``ScalingBasis`` are supported (``LegendreBasis`` and
 intermediates of order :math:`2k`, so in that case the maximum order available
 is :math:`k=20`).
 
-## Function representations
+------------------------
+Function representations
+------------------------
 
 MW representations of functions are called ``FunctionTrees``, and are in
 principle available in any dimension using the template parameter D (in
@@ -103,7 +113,8 @@ possible and even necessary. In the latter case it is important to be able to
 reuse the existing grids in e.g. iterative algorithms without excessive
 allocation/deallocation of memory.
 
-### FunctionTree
+FunctionTree
+------------
 
 Constructing a full grown ``FunctionTree`` involves a number of steps, including
 setting up a memory allocator, constructing root nodes according to the given
@@ -134,7 +145,8 @@ another ``FunctionTree`` (both over the full computational domain)
     double integral = f_tree->integrate();
     double dot_prod = f_tree->dot(*g_tree);
 
-### FunctionTreeVector
+FunctionTreeVector
+------------------
 
 The ``FunctionTreeVector`` is a convenience class for a collection of
 ``FunctionTrees`` which basically consists of two STL vectors, one containing
@@ -152,7 +164,9 @@ where ``tree_b`` will be appended with a default coefficient of 1.0. Clearing
 the vector means removing all its elements, and the ``bool`` argument tells if
 the elements should be properly deallocated (default ``false``).
 
-## TreeBuilders
+-----------
+TreeBuilder
+-----------
 
 This is the class that is responsible for the construction of
 ``FunctionTrees``, which involves allocating memory, growing a tree structure
@@ -216,7 +230,8 @@ grid, even if the accuracy criterion is not met. This will of course not
 guarantee the accuracy of the representation, but is useful in certain
 situations, e.g. when you want to work on fixed grid sizes.
 
-### MWProjector
+MWProjector
+-----------
 
 The ``MWProjector`` takes an analytic D-dimensional scalar function (which can
 be defined as a lambda function or one of the explicitly implemented sub-classes
@@ -244,7 +259,8 @@ wavelet norm of the representation). Note that with a negative precision (which
 is the default) the grid will not be refined beyond the initial grid, which
 contains only root nodes in this case.
 
-### MWAdder and MWMultiplier
+MWAdder and MWMultiplier
+-----------------------
 
 Arithmetic operations in the MW representation are performed using the
 ``FunctionTreeVector``, and the general sum :math:`g = \sum_i c_i f_i(x)` and
@@ -276,7 +292,8 @@ initializing a ``FunctionTreeVector``
     MWMultiplier<D> mult(MRA, prec);
     FunctionTree<D> *h_tree = mult(c_1*c_2, *f_tree_1, *f_tree_2);
 
-### MWOperator
+MWOperator
+----------
 
 Two types of operators are currently implemented in MRCPP:
 the Cartesian derivative
@@ -290,7 +307,8 @@ and integral convolution
 The syntax for construction and application follows closely the other
 ``TreeBuilders`` presented above.
 
-#### Derivative operator
+DerivativeOperator
+..................
 
 The derivative operator is initialized with two parameters :math:`a` and
 :math:`b` accounting for the boundary conditions between adjacent nodes 
@@ -323,7 +341,8 @@ advanced initialization below)
     D.setApplyDir(1);                                       // Differentiate in y direction    
     D(*g_tree, *f_tree, 0);                                 // Compute derivative on given grid
 
-#### Poisson operator
+PoissonOperator
+...............
 
 The electrostatic potential :math:`g` arising from a charge distribution
 :math:`f` are related through the Poisson equation
@@ -353,7 +372,8 @@ The Coulomb self-interaction energy can now be computed as the dot product
 
     double E = g_tree->dot(*f_tree);
 
-#### Helmholtz operator
+HelmholtzOperator
+.................
 
 The Helmholtz operator is a generalization of the Poisson operator and is given
 as the integral convolution
@@ -376,7 +396,9 @@ application is similar to the Poisson operator, with an extra argument for the
     HelmholtzOperator H(MRA, mu, apply_prec, build_prec);
     FunctionTree<3> *g_tree = H(*f_tree);                   // Apply operator adaptively
 
-## Advanced initialization
+-----------------------
+Advanced initialization
+-----------------------
 
 The ``TreeBuilders``, as presented above, have a clear and limited interface,
 but there are two important drawbacks: every operation require the construction
@@ -397,7 +419,8 @@ where the former constructs empty grids from scratch and the latter clears the
 MW coefficients on existing ``FunctionTrees``. The end result is in both cases
 an empty tree skeleton with no MW coefficients (undefined function).
 
-### GridGenerator
+GridGenerator
+-------------
 
 Sometimes it is useful to construct an empty grid based on some available
 information of the function that is about to be represented. This can be e.g.
@@ -558,7 +581,8 @@ Here you can of course also add a positive ``prec`` to the ``MWAdder``
 and the resulting function will be built adaptively starting from the given
 initial grid.
 
-### GridCleaner
+GridCleaner
+-----------
 
 Given a ``FunctionTree`` that is a valid function representation we can clear
 its MW expansion coefficients (while keeping the grid refinement) with the
