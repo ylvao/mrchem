@@ -12,11 +12,11 @@ type
 .. code-block:: bash
 
      Section {
-        keyword_1 = 1
-        keyword_2 = 3.14
-        keyword_3 = [1, 2, 3]
-        keyword_4 = "foo"
-        keyword_5 = True
+        keyword_1 = 1                       # int
+        keyword_2 = 3.14                    # double
+        keyword_3 = [1, 2, 3]               # int array
+        keyword_4 = foo                     # string
+        keyword_5 = true                    # bool
      }
 
 Top section
@@ -30,12 +30,12 @@ directly, e.g
 
 .. code-block:: bash
 
-    order = 7                           # Polynomial order of MW basis
-    rel_prec = 1.0e-5                   # Overall relative precision
+    order = 7                               # Polynomial order of MW basis
+    rel_prec = 1.0e-5                       # Overall relative precision
 
-Increased precision requires higher polynomial order (use e.g :math:`k = 5``
+Increased precision requires higher polynomial order (use e.g :math:`k = 5`
 for :math:`\epsilon_{rel} = 10^{-3}`, and :math:`k = 13` for
-:math:`rel_prec = 1.0e-9`, and interpolate in between). If the ``order``
+:math:`\epsilon_{rel} = 10^{-9}`, and interpolate in between). If the ``order``
 keyword is left out it will be set automatically according to
 
 .. math:: k=-1.5*log_{10}(\epsilon_{rel})
@@ -49,11 +49,11 @@ with ``abs_prec``. This will provide e.g. mHa precision in the total energy
 regardless of the molecular size (this might get `very` expensive for large
 systems). In this case the magnitude of the energy is estimated as
 
-.. math:: \tilde{E} = \sum_i^{nuc} Z_i^{5/2} 
+.. math:: E = \sum_i^{nuc} Z_i^{5/2} 
 
 and the relative precision is set as
 
-.. math:: \epsilon_{rel} = \frac{\epsilon_{abs}}{\tilde{E}}
+.. math:: \epsilon_{rel} = \frac{\epsilon_{abs}}{E}
 
 With the ``abs_prec`` keyword one can also use kcal/mol or kJ/mol as energy
 unit instead of Hartree by setting the ``energy_unit`` keyword. The following
@@ -93,8 +93,8 @@ geometry, use a larger box or translate your molecular coordinates). The
 computational world should be large enough so
 that the electron density vanishes at the boundaries. The ``gauge_origin`` can
 also be specified (relevant for molecular properties), otherwise it will be the
-molecular center of mass. If this section is left out you get the default
-computational domain which is the unit cube.
+molecular center of mass. The default computational domain displayed above
+corresponds to the unit cube (in bohr).
 
 Molecule
 --------
@@ -127,12 +127,12 @@ must be specified, otherwise defaults are shown)
 
     WaveFunction {
         method = <wavefunction_method>      # Core, Hartree, HF or DFT
-        restricted = true                   # spin restricted/unrestricted
+        restricted = true                   # Spin restricted/unrestricted
     }
 
 There are currently four methods available: Core Hamiltonian, Hartree,
-Hartree-Fock (HF) and Density Functional Theory (DFT). When running DFT we must
-also specify the functional to be used in a separate DFT section (see below)
+Hartree-Fock (HF) and Density Functional Theory (DFT). When running DFT the
+functional(s) must be specified in a separate DFT section (see below)
 
 DFT
 ---
@@ -144,11 +144,11 @@ defaults are shown)
 .. code-block:: bash
 
     DFT {
-        spin_polarized = false              # spin-polarized DFT
-        exact_exchange = 0.0                # amount of exact HF exchange
-        density_cutoff = 0.0                # cutoff to set XC potential to zero
+        spin_polarized = false              # Use spin-polarized functionals
+        exact_exchange = 0.0                # Amount of exact HF exchange
+        density_cutoff = 0.0                # Cutoff to set XC potential to zero
         $functionals
-        <func1>     1.0                     # functional name and coefficient
+        <func1>     1.0                     # Functional name and coefficient
         <func2>     1.0
         $end
     }
@@ -160,7 +160,7 @@ standard LDA functional. For hybrid functionals you must
 specify the amount of exact Hartree-Fock exchange that should be used (0.2 for
 B3LYP and 0.25 for PBE0 etc.). Option to use spin-polarized functionals (for
 open-shell systems). XC functionals are provided by the `XCFun 
-<https://github.com/dftlibs/xcfun>`_ library 
+<https://github.com/dftlibs/xcfun>`_ library.
 
 Properties
 ----------
@@ -171,8 +171,8 @@ Specify which properties to compute. Currently the following are available
 .. code-block:: bash
 
     Properties {
-        total_energy = false            # compute total energy
-        dipole_moment = false           # compute dipole moment
+        total_energy = false                # Compute total energy
+        dipole_moment = false               # Compute dipole moment
     }
 
 SCF
@@ -184,29 +184,30 @@ function (defaults shown)
 .. code-block:: bash
 
     SCF {
-        run = true                      # run optimization
-        orbital_thrs = 1.0              # convergence threshold orbitals
-        property_thrs = 1.0             # convergence threshold energy
-        orbital_prec = [1.0e-4, -1.0]   # initial and final relative precision in SCF
-        history = 0                     # length of KAIN iterative subspace
-        rotation = 0                    # number of iterations between each localization/diagonalization
-        max_iter = -1                   # maximum number of SCF iterations
-        localize = false                # use localized or canonical orbitals
-        write_orbitals = false          # write final orbitals to disk
-        initial_guess = none            # type of inital guess (none, gto, mw)
+        run = true                          # Run SCF optimization
+        orbital_thrs = 1.0                  # Convergence threshold orbitals
+        property_thrs = 1.0                 # Convergence threshold energy
+        orbital_prec = [1.0e-4, -1.0]       # Initial and final relative precision in SCF
+        history = 0                         # Length of KAIN iterative subspace
+        rotation = 0                        # Iterations between each localization/diagonalization
+        max_iter = -1                       # Maximum number of SCF iterations
+        localize = false                    # Use localized or canonical orbitals
+        write_orbitals = false              # Write final orbitals to disk
+        initial_guess = none                # Type of inital guess (none, gto, mw)
     }
 
 With ``run=false`` no SCF optimization is performed, and the requested molecular
 properties are computed directly from the initial guess wave function.
+
 Here we specify the convergence thresholds for the orbitals
-(:math:`\|\Delta \phi_i \|`) and the property (total energy, :math:`\Delta E`).
+(:math:`\|\Delta \phi_i \|`) and the property (:math:`\Delta E`).
 Notice that these corresponds to two separate optimizations: first the orbitals
 are converged within ``orbital_thrs`` using a KAIN optimization that yields
 energy accuracy that is linear in the orbital errors. Then a separate algorithm
 that is quadratic in the orbital error is used (one that avoids the use of the
 kinetic energy operator) to converge the energy within ``property_thrs``. This
 algorithm does not use KAIN, and is thus not efficient for converging the 
-orbitals. If one is not interested in the total energy to high precision, one
+orbitals. If one is `not` interested in the total energy to high precision, one
 can avoid the second optimization by setting ``property_thrs = -1.0``, and
 simply converge the orbitals to the desired precision. This should yield similar
 accuracy for all properties. Notice also that even if the energy error is
@@ -241,24 +242,30 @@ If these thresholds are not set explicitly they will be computed from the top
 level ``rel_prec`` as
 
 .. math:: \Delta E < \epsilon_{rel}/10
-          \|\Delta \phi_i \| < \sqrt{\epsilon_{rel}/10}
+.. math:: \|\Delta \phi_i \| < \sqrt{\epsilon_{rel}/10}
 
 The ``orbital_prec=[init,final]`` keyword controls the dynamic precision used
 in the SCF iterations. To improve efficiency, the first iterations are done
-with reduced precision, staring at `ìnit`` and gradually increased until it
-reaches ``final``. The initial precision should not be set lower than
+with reduced precision, staring at ``init`` and gradually increased
+to ``final``. The initial precision should not be set lower than
 ``init=1.0e-3``, and the final precision should not exceed the top level
 ``rel_prec``. Negative values sets them equal to ``rel_prec``. 
 
 The ``rotation`` keyword says how often the Fock matrix should be
 diagonalized/localized (for iterations in between a Löwdin orthonormalization
-is used). Option to use localized molecular orbitals, and whether the final
-orbitals should be written to disk (for later use with ``initial_guess=mw``).
+is used). Option to use Foster-Boys localization or Fock matrix diagonalization
+in these rotations. Note that the KAIN history is cleared every time this
+rotation is employed to avoid mixing of orbtials in the history, so
+``rotation=1`` effectively cancels the KAIN accelerator. The default
+``rotation=0`` will localize/diagonalize the first two iterations and then
+perform Lövdin orthonormalizations (this is usually the way to go).
 
-``history`` sets the size of the iterative subspace that is used in the KAIN
-accelerator for the orbital optimization. You also need to specify which
-initial guess to use, "none" means starting from hydrogen solutions, "gto"
-means start with an Gaussian type calculation (basis and MO input files must
-be provided), "mw" means starting from a previous MRChem calculation
-(compatible orbitals must have been written to disk).
+The ``history`` keyword sets the size of the iterative subspace that is used
+in the KAIN accelerator for the orbital optimization.
+
+You also need to specify which initial guess to use, "none" means starting
+from hydrogen solutions, "gto" means start with a Gaussian type calculation
+(basis and MO matrix input files must be provided) and "mw" means starting
+from a previous MRChem calculation (compatible orbitals must have been written
+to disk using the ``write_orbitals`` keyword).
 
