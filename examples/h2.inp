@@ -28,7 +28,7 @@ $end
 }
 
 Properties {
-  ground_state = true             # Compute ground state energy
+  total_energy = true             # Compute ground state energy
 }
 
 SCF {

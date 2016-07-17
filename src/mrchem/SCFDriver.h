@@ -50,8 +50,8 @@ protected:
     std::vector<double> gauge;
 
     // Run parameters
-    bool run_ground_state;
-    bool run_dipole_moment;
+    bool calc_total_energy;
+    bool calc_dipole_moment;
 
     // Molecule input
     int mol_charge;
@@ -75,6 +75,7 @@ protected:
     int scf_history;
     int scf_max_iter;
     int scf_rotation;
+    bool scf_run;
     bool scf_localize;
     bool scf_write_orbitals;
     double scf_orbital_thrs;

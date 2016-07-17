@@ -180,15 +180,16 @@ def setup_keywords():
     top.add_sect(properties)
 
     scf=getkw.Section('SCF', callback=verify_scf)
-    scf.add_kw('history',               'INT', 3)
-    scf.add_kw('max_iter',              'INT', 100)
-    scf.add_kw('rotation',              'INT', 100)
+    scf.add_kw('run',                   'BOOL', True)
+    scf.add_kw('max_iter',              'INT', -1)
+    scf.add_kw('history',               'INT', 0)
+    scf.add_kw('rotation',              'INT', 0)
     scf.add_kw('localize',              'BOOL', False)
     scf.add_kw('orbital_thrs',          'DBL', 1.0)
-    scf.add_kw('property_thrs',         'DBL', -1.0)
+    scf.add_kw('property_thrs',         'DBL', 1.0)
     scf.add_kw('lambda_thrs',           'DBL', 1.0e-4)
     scf.add_kw('orbital_prec',          'DBL_ARRAY', [1.0e-4,-1.0])
-    scf.add_kw('initial_guess',         'STR', 'gto')
+    scf.add_kw('initial_guess',         'STR', 'none')
     scf.add_kw('write_orbitals',        'BOOL', False)
     top.add_sect(scf)
 
@@ -255,7 +256,7 @@ def verify_top(top):
                 est_au = estimate_energy(coords)
                 if top['energy_unit'][0] == 'eV':
                     top['est_norm'][0] = 27.2*est_au
-                elif top['energy_unit'][0] == 'kCal':
+                elif top['energy_unit'][0] == 'kcal':
                     top['est_norm'][0] = 627.5*est_au
                 elif top['energy_unit'][0] == 'kJ':
                     top['est_norm'][0] = 2625.5*est_au

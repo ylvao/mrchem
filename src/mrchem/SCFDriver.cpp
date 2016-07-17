@@ -51,8 +51,8 @@ SCFDriver::SCFDriver(Getkw &input) {
     gauge = input.getDblVec("World.gauge_origin");
     center_of_mass = input.get<bool>("World.center_of_mass");
 
-    run_ground_state = input.get<bool>("Properties.ground_state");
-    run_dipole_moment = input.get<bool>("Properties.dipole_moment");
+    calc_total_energy = input.get<bool>("Properties.total_energy");
+    calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
 
     mol_charge = input.get<int>("Molecule.charge");
     mol_multiplicity = input.get<int>("Molecule.multiplicity");
@@ -73,6 +73,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     scf_history = input.get<int>("SCF.history");
     scf_max_iter = input.get<int>("SCF.max_iter");
     scf_rotation = input.get<int>("SCF.rotation");
+    scf_run = input.get<bool>("SCF.run");
     scf_localize = input.get<bool>("SCF.localize");
     scf_write_orbitals = input.get<bool>("SCF.write_orbitals");
     scf_orbital_thrs = input.get<double>("SCF.orbital_thrs");
@@ -163,7 +164,7 @@ void SCFDriver::setup() {
         r_O[2] = gauge[2];
     }
 
-    if (run_dipole_moment) {
+    if (calc_dipole_moment) {
         molecule->initDipoleMoment(r_O);
     }
 
@@ -318,7 +319,7 @@ void SCFDriver::run() {
         return;
     }
     setupInitialGroundState();
-    if (run_ground_state) {
+    if (scf_run) {
         converged = runGroundState();
     } else {
         fock->setup(rel_prec);
@@ -368,13 +369,15 @@ bool SCFDriver::runGroundState() {
 }
 
 void SCFDriver::calcGroundStateProperties() {
-    SCFEnergy &energy = molecule->getSCFEnergy();
-    fock->setup(rel_prec);
-    energy.compute(*nuclei);
-    energy.compute(*fock, *phi, F);
-    fock->clear();
+    if (calc_total_energy) {
+        SCFEnergy &energy = molecule->getSCFEnergy();
+        fock->setup(rel_prec);
+        energy.compute(*nuclei);
+        energy.compute(*fock, *phi, F);
+        fock->clear();
+    }
 
-    if (run_dipole_moment) {
+    if (calc_dipole_moment) {
         DipoleMoment &dipole = molecule->getDipoleMoment();
         for (int d = 0; d < 3; d++) {
             DipoleOperator mu_d(*MRA, d, r_O[d]);
