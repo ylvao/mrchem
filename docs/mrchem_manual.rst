@@ -199,8 +199,8 @@ function (defaults shown)
 With ``run=false`` no SCF optimization is performed, and the requested molecular
 properties are computed directly from the initial guess wave function.
 
-Here we specify the convergence thresholds for the orbitals
-(:math:`\|\Delta \phi_i \|`) and the property (:math:`\Delta E`).
+We specify the convergence thresholds for the orbitals
+(:math:`\|\Delta \phi_i \|`) and the property (:math:`\Delta E`) separately.
 Notice that these corresponds to two separate optimizations: first the orbitals
 are converged within ``orbital_thrs`` using a KAIN optimization that yields
 energy accuracy that is linear in the orbital errors. Then a separate algorithm
@@ -238,34 +238,37 @@ instabilities)
     }
 
 
-If these thresholds are not set explicitly they will be computed from the top
-level ``rel_prec`` as
+If these thresholds are not set explicitly in the input file, they will be
+set such that the total energy is computed within the top level ``rel_prec`` 
 
 .. math:: \Delta E < \epsilon_{rel}/10
 .. math:: \|\Delta \phi_i \| < \sqrt{\epsilon_{rel}/10}
 
 The ``orbital_prec=[init,final]`` keyword controls the dynamic precision used
 in the SCF iterations. To improve efficiency, the first iterations are done
-with reduced precision, staring at ``init`` and gradually increased
+with reduced precision, starting at ``init`` and gradually increased
 to ``final``. The initial precision should not be set lower than
 ``init=1.0e-3``, and the final precision should not exceed the top level
 ``rel_prec``. Negative values sets them equal to ``rel_prec``. 
 
-The ``rotation`` keyword says how often the Fock matrix should be
-diagonalized/localized (for iterations in between a Löwdin orthonormalization
-is used). Option to use Foster-Boys localization or Fock matrix diagonalization
-in these rotations. Note that the KAIN history is cleared every time this
-rotation is employed to avoid mixing of orbtials in the history, so
-``rotation=1`` effectively cancels the KAIN accelerator. The default
-``rotation=0`` will localize/diagonalize the first two iterations and then
-perform Lövdin orthonormalizations (this is usually the way to go).
-
 The ``history`` keyword sets the size of the iterative subspace that is used
 in the KAIN accelerator for the orbital optimization.
 
-You also need to specify which initial guess to use, "none" means starting
-from hydrogen solutions, "gto" means start with a Gaussian type calculation
-(basis and MO matrix input files must be provided) and "mw" means starting
-from a previous MRChem calculation (compatible orbitals must have been written
-to disk using the ``write_orbitals`` keyword).
+The ``rotation`` and ``localize`` keywords says how often the Fock matrix
+should be diagonalized/localized (for iterations in between, a Löwdin
+orthonormalization using the overlat matrix :math:`S^{-1/2}` is used).
+Option to use Foster-Boys localization or Fock matrix diagonalization in
+these rotations. Note that the KAIN history is cleared every time this
+rotation is employed to avoid mixing of orbtials in the history, so
+``rotation=1`` effectively cancels the KAIN accelerator. The default
+``rotation=0`` will localize/diagonalize the first two iterations and then
+perform Löwdin orthonormalizations from that point on (this is usually the
+way to go).
+
+You also need to specify which ``initial_guess`` to use, "none" means starting
+from hydrogen solutions (this requires no extra input, but is a quite poor
+guess), "gto" means starting with a wave function from a converged calculation
+using a small GTO basis set (basis and MO matrix input files must be provided)
+and "mw" means starting from a previous MRChem calculation (compatible orbitals
+must have been written to disk using the ``write_orbitals`` keyword).
 
