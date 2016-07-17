@@ -49,11 +49,11 @@ with ``abs_prec``. This will provide e.g. mHa precision in the total energy
 regardless of the molecular size (this might get `very` expensive for large
 systems). In this case the magnitude of the energy is estimated as
 
-.. math:: E = \sum_i^{nuc} Z_i^{5/2} 
+.. math:: \tilde{E} = \sum_i^{nuc} Z_i^{5/2} 
 
 and the relative precision is set as
 
-.. math:: \epsilon_{rel} = \frac{\epsilon_{abs}}{E}
+.. math:: \epsilon_{rel} = \frac{\epsilon_{abs}}{\tilde{E}}
 
 With the ``abs_prec`` keyword one can also use kcal/mol or kJ/mol as energy
 unit instead of Hartree by setting the ``energy_unit`` keyword. The following
@@ -241,8 +241,8 @@ instabilities)
 If these thresholds are not set explicitly in the input file, they will be
 set such that the total energy is computed within the top level ``rel_prec`` 
 
-.. math:: \Delta E < \epsilon_{rel}/10
-.. math:: \|\Delta \phi_i \| < \sqrt{\epsilon_{rel}/10}
+.. math:: \Delta E < \frac{\epsilon_{rel}}{10}
+.. math:: \|\Delta \phi_i \| < \sqrt{\frac{\epsilon_{rel}}{10}}
 
 The ``orbital_prec=[init,final]`` keyword controls the dynamic precision used
 in the SCF iterations. To improve efficiency, the first iterations are done
@@ -256,7 +256,7 @@ in the KAIN accelerator for the orbital optimization.
 
 The ``rotation`` and ``localize`` keywords says how often the Fock matrix
 should be diagonalized/localized (for iterations in between, a Löwdin
-orthonormalization using the overlat matrix :math:`S^{-1/2}` is used).
+orthonormalization using the overlap matrix :math:`S^{-1/2}` is used).
 Option to use Foster-Boys localization or Fock matrix diagonalization in
 these rotations. Note that the KAIN history is cleared every time this
 rotation is employed to avoid mixing of orbtials in the history, so
