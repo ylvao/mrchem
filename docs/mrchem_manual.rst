@@ -137,9 +137,8 @@ functional(s) must be specified in a separate DFT section (see below)
 DFT
 ---
  
-This section specifies the exchange-correlation functional used in DFT. For HF
-this section should be omitted (functionals must be specified, otherwise
-defaults are shown)
+This section specifies the exchange-correlation functional used in DFT
+(functional names must be specified, otherwise defaults are shown)
 
 .. code-block:: bash
 
