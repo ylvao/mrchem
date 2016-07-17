@@ -40,7 +40,7 @@ which can be written as the lambda function
 
 .. code-block:: cpp
 
-    double Z = 1.0;                                         // Hydrogen nuclear charge
+    double Z = 1.0;                                 // Hydrogen nuclear charge
     auto f = [Z] (const double *r) -> double {
         double R = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
         return Z/R;
@@ -67,18 +67,18 @@ computational domain is given by a ``BoundingBox`` (D is the dimension)
 
 .. code-block:: cpp
 
-    int n;                                                  // Root scale defines box size 2^{-n}
-    int l[D];                                               // Translation of first box
-    int nb[D];                                              // Number of boxes
-    NodeIndex<D> idx(n, l);                                 // Index defining the first box
+    int n;                                          // Root scale defines box size 2^{-n}
+    int l[D];                                       // Translation of first box
+    int nb[D];                                      // Number of boxes
+    NodeIndex<D> idx(n, l);                         // Index defining the first box
     BoundingBox<D> world(idx, nb);
 
 which is combined with a ``ScalingBasis`` to give an MRA
 
 .. code-block:: cpp
 
-    int k;                                                  // Polynomial order
-    ScalingBasis basis(k);                                  // Legendre or Interpolating basis
+    int k;                                          // Polynomial order
+    ScalingBasis basis(k);                          // Legendre or Interpolating basis
     MultiResolutionAnalysis<D> MRA(world, basis);
 
 Two types of ``ScalingBasis`` are supported (``LegendreBasis`` and
@@ -156,9 +156,9 @@ Elements can be appended to the vector
 .. code-block:: cpp
     
     FunctionTreeVector<D> tree_vec;
-    tree_vec.push_back(2.0, tree_a);                            // Push back pointer to FunctionTree
-    tree_vec.push_back(tree_b);                                 // Push back pointer to FunctionTree
-    tree_vec.clear(false);                                      // Bool argument for tree destruction
+    tree_vec.push_back(2.0, tree_a);                // Push back pointer to FunctionTree
+    tree_vec.push_back(tree_b);                     // Push back pointer to FunctionTree
+    tree_vec.clear(false);                          // Bool argument for tree destruction
 
 where ``tree_b`` will be appended with a default coefficient of 1.0. Clearing
 the vector means removing all its elements, and the ``bool`` argument tells if
@@ -241,8 +241,8 @@ projected in the following way (the MRA must be initialized as above)
 
 .. code-block:: cpp
 
-    double beta = 10.0;                                     // Gaussian exponent
-    double alpha = pow(beta/pi, 3.0/2.0);                   // Unit charge coefficient
+    double beta = 10.0;                             // Gaussian exponent
+    double alpha = pow(beta/pi, 3.0/2.0);           // Unit charge coefficient
     auto f = [alpha, beta] (const double *r) -> double {
         double R = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2]);
         return alpha*exp(-beta*R*R);
@@ -339,25 +339,16 @@ to the :math:`\partial_{xyz}` operator)
 
 .. code-block:: cpp
 
-    double prec;                                            // Precision of operator application
-    double a = 0.0, b = 0.0;                                // Boundary conditions for operator
+    double prec;                                    // Precision of operator application
+    double a = 0.0, b = 0.0;                        // Boundary conditions for operator
     DerivativeOperator<3> D(MRA, prec, a, b);
-    D.setApplyDir(1);                                       // Differentiate in y direction
-    FunctionTree<3> *g_tree = D(*f_tree);                   // Build result adaptively
+    D.setApplyDir(1);                               // Differentiate in y direction
+    FunctionTree<3> *g_tree = D(*f_tree);           // Build result adaptively
 
 As for all ``TreeBuilders``, this operator will start at the root nodes and
-build adaptively according to ``prec``. The derivative is usually applied
-directly on the grid of the input function, without further refinement (see
-advanced initialization below)
-
-.. code-block:: cpp
-
-    GridGenerator<3> G(MRA);                                // TreeBuilder that copy grids
-    FunctionTree<3> *g_tree = G(*f_tree);                   // Copy grid from density function
-
-    DerivativeOperator<3> D(MRA);                           // Default parameters prec = -1, a=b=0
-    D.setApplyDir(1);                                       // Differentiate in y direction    
-    D(*g_tree, *f_tree, 0);                                 // Compute derivative on given grid
+build adaptively according to ``prec``. The derivative is however usually
+applied directly on the grid of the input function, without further refinement
+(see advanced initialization below).
 
 PoissonOperator
 ...............
@@ -379,10 +370,10 @@ potential is computed in the following way
 
 .. code-block:: cpp
 
-    double apply_prec;                                      // Precision defining the operator application
-    double build_prec;                                      // Precision defining the operator construction
+    double apply_prec;                              // Precision defining the operator application
+    double build_prec;                              // Precision defining the operator construction
     PoissonOperator P(MRA, apply_prec, build_prec);
-    FunctionTree<3> *g_tree = P(*f_tree);                   // Apply operator adaptively
+    FunctionTree<3> *g_tree = P(*f_tree);           // Apply operator adaptively
 
 The Coulomb self-interaction energy can now be computed as the dot product
 
@@ -408,11 +399,11 @@ application is similar to the Poisson operator, with an extra argument for the
 
 .. code-block:: cpp
 
-    double mu;                                              // Must be a positive real number
-    double apply_prec;                                      // Precision defining the operator application
-    double build_prec;                                      // Precision defining the operator construction
+    double mu;                                      // Must be a positive real number
+    double apply_prec;                              // Precision defining the operator application
+    double build_prec;                              // Precision defining the operator construction
     HelmholtzOperator H(MRA, mu, apply_prec, build_prec);
-    FunctionTree<3> *g_tree = H(*f_tree);                   // Apply operator adaptively
+    FunctionTree<3> *g_tree = H(*f_tree);           // Apply operator adaptively
 
 -----------------------
 Advanced initialization
@@ -487,8 +478,8 @@ to the regular ``TreeBuilders`` presented above, e.g for projection
 
     GridGenerator<D> G(MRA);
     MWProjector<D> Q(MRA, prec);
-    FunctionTree<D> *f_tree = G(f_func);                    // Empty grid from analytic function
-    Q(*f_tree, f_func, max_iter);                           // Starts projecting from given grid
+    FunctionTree<D> *f_tree = G(f_func);            // Empty grid from analytic function
+    Q(*f_tree, f_func, max_iter);                   // Starts projecting from given grid
 
 This will first produce an empty grid suited for representing the analytic
 function ``f_func`` (this is meant as a way to make sure that the projection
@@ -496,7 +487,17 @@ starts on a grid where the function is actually visible, as for very narrow
 Gaussians, it's `not` meant to be a good approximation of the final grid) and
 then perform the projection on the given numerical grid. With a negative
 ``prec`` (or ``max_iter = 0``) the projection will be performed strictly on the
-given initial grid, with no further refinements.
+given initial grid, with no further refinements. This is usually how the partial
+drivative is computed
+
+.. code-block:: cpp
+
+    GridGenerator<3> G(MRA);                        // TreeBuilder that copy grids
+    FunctionTree<3> *g_tree = G(*f_tree);           // Copy grid from density function
+
+    DerivativeOperator<3> D(MRA);                   // Default parameters prec = -1, a=b=0
+    D.setApplyDir(1);                               // Differentiate in y direction
+    D(*g_tree, *f_tree, 0);                         // Compute derivative on given grid
 
 Similar notation applies for all ``TreeBuilders``: if a ``FunctionTree`` is
 given as the first argument, it will not construct a new tree but perform the
@@ -504,8 +505,8 @@ operation on the one given. E.g. the grid copy can be done in two steps as
 
 .. code-block:: cpp
 
-    f_tree = G();                                           // Construct empty grid of root nodes
-    G(*f_tree, *g_tree);                                    // Extend grid with missing nodes relative to g
+    f_tree = G();                                   // Construct empty grid of root nodes
+    G(*f_tree, *g_tree);                            // Extend grid with missing nodes relative to g
 
 Actually, the effect of the ``GridGenerator`` is to *extend* the existing grid
 with any missing nodes relative to the input. This means that we can build the
@@ -513,16 +514,16 @@ union of two grids by successive application of the generator
 
 .. code-block:: cpp
 
-    f_tree = G();                                           // Construct empty grid of root nodes
-    G(*f_tree, *g_tree);                                    // Extend f with missing nodes relative to g
-    G(*f_tree, *h_tree);                                    // Extend f with missing nodes relative to h
+    f_tree = G();                                   // Construct empty grid of root nodes
+    G(*f_tree, *g_tree);                            // Extend f with missing nodes relative to g
+    G(*f_tree, *h_tree);                            // Extend f with missing nodes relative to h
 
 and one can make the grids of two functions equal to their union
 
 .. code-block:: cpp
 
-    G(*f_tree, *g_tree);                                    // Extend f with missing nodes relative to g
-    G(*g_tree, *f_tree);                                    // Extend g with missing nodes relative to f
+    G(*f_tree, *g_tree);                            // Extend f with missing nodes relative to g
+    G(*g_tree, *f_tree);                            // Extend g with missing nodes relative to f
 
 The union grid of several trees can be constructed in one go using a
 ``FunctionTreeVector``
@@ -539,13 +540,13 @@ Addition of two functions is usually done on their union grid
 
 .. code-block:: cpp
 
-    MWAdder<D> add(MRA);                                    // Default negative precision
+    MWAdder<D> add(MRA);                            // Default negative precision
     GridGenerator<D> G(MRA);
 
-    FunctionTree<D> *f_tree = G();                          // Construct empty root grid
-    G(*f_tree, *g_tree);                                    // Copy grid of g
-    G(*f_tree, *h_tree);                                    // Copy grid of h
-    add(*f_tree, 1.0, *g_tree, 1.0, *h_tree);               // Add functions on union grid
+    FunctionTree<D> *f_tree = G();                  // Construct empty root grid
+    G(*f_tree, *g_tree);                            // Copy grid of g
+    G(*f_tree, *h_tree);                            // Copy grid of h
+    add(*f_tree, 1.0, *g_tree, 1.0, *h_tree);       // Add functions on union grid
 
 Note that in the case of addition there is no extra information to be gained
 by going beyond the finest refinement levels of the input functions, so the
@@ -573,10 +574,10 @@ and function mappings)
     MWMultiplier<D> mult(MRA, prec);
     GridGenerator<D> G(MRA);
 
-    FunctionTree<D> *f_tree = G();                          // Construct empty root grid
-    G(*f_tree, *g_tree);                                    // Copy grid of g
-    G(*f_tree, *h_tree);                                    // Copy grid of h
-    mult(*f_tree, 1.0, *g_tree, *h_tree, 1);                // Allow 1 extra refinement
+    FunctionTree<D> *f_tree = G();                  // Construct empty root grid
+    G(*f_tree, *g_tree);                            // Copy grid of g
+    G(*f_tree, *h_tree);                            // Copy grid of h
+    mult(*f_tree, 1.0, *g_tree, *h_tree, 1);        // Allow 1 extra refinement
 
 If you have a summation over several functions but want to perform the
 addition on the grid given by the `first` input function, you first copy the
@@ -589,11 +590,11 @@ wanted grid and then perform the operation on that grid
     inp_vec.push_back(coef_2, tree_2);
     inp_vec.push_back(coef_3, tree_3);
 
-    MWAdder<D> add(MRA);                                    // Default negative precision
+    MWAdder<D> add(MRA);                            // Default negative precision
     GridGenerator<D> G(MRA);
 
-    FunctionTree<D> *f_tree = G(tree_1);                    // Copy grid of first input function
-    add(*f_tree, inp_vec);                                  // Perform addition on given grid
+    FunctionTree<D> *f_tree = G(tree_1);            // Copy grid of first input function
+    add(*f_tree, inp_vec);                          // Perform addition on given grid
 
 Here you can of course also add a positive ``prec`` to the ``MWAdder``
 and the resulting function will be built adaptively starting from the given
@@ -639,14 +640,14 @@ in the process)
 .. code-block:: cpp
 
     double prec;
-    GridCleaner<D> C(MRA, prec);                            // The precision parameter is passed as
-    MWProjector<D> Q(MRA);                                  // argument to the cleaner, not the projector
+    GridCleaner<D> C(MRA, prec);                    // The precision parameter is passed as
+    MWProjector<D> Q(MRA);                          // argument to the cleaner, not the projector
 
     int n_nodes = 1;
     while (n_nodes > 0) {
-        Q(*f_tree, f);                                      // Project f on given grid
-        n_nodes = C(*f_tree);                               // Refine grid and clear coefficients
+        Q(*f_tree, f);                              // Project f on given grid
+        n_nodes = C(*f_tree);                       // Refine grid and clear coefficients
     }
-    Q(*f_tree, f);                                          // Project f on final converged grid
+    Q(*f_tree, f);                                  // Project f on final converged grid
 
 
