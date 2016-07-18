@@ -163,7 +163,7 @@ def setup_keywords():
     top.add_sect(dft)
 
     properties=getkw.Section('Properties', callback = verify_properties)
-    properties.add_kw('ground_state',           'BOOL', False)
+    properties.add_kw('total_energy',           'BOOL', False)
     properties.add_kw('dipole_moment',          'BOOL', False)
     properties.add_kw('quadrupole_moment',      'BOOL', False)
     properties.add_kw('polarizability',         'BOOL', False)
