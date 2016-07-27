@@ -346,6 +346,10 @@ bool SCFDriver::runGroundState() {
         converged = solver->optimize();
         solver->clear();
         delete solver;
+    } else {
+        fock->setup(rel_prec);
+        F = (*fock)(*phi, *phi);
+        fock->clear();
     }
 
     // Optimize energy
