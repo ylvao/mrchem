@@ -74,8 +74,6 @@ bool OrbitalOptimizer::optimize() {
         } else if (needDiagonalization()) {
             diagonalize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
-        } else {
-            orthonormalize(fock, F, phi_n);
         }
 
         // Compute electronic energy
