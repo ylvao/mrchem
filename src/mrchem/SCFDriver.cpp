@@ -306,7 +306,11 @@ EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
 
     EnergyOptimizer *optimizer = new EnergyOptimizer(*MRA, *helmholtz);
     optimizer->setMaxIterations(scf_max_iter);
-    optimizer->setRotation(0);
+    if (scf_localize) {
+        optimizer->setRotation(1);
+    } else {
+        optimizer->setRotation(-1);
+    }
     optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
     optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
 

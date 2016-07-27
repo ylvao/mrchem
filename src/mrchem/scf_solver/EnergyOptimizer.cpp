@@ -92,7 +92,17 @@ bool EnergyOptimizer::optimize() {
         fock.clear();
 
         // Rotate orbitals
-        MatrixXd U = calcOrthonormalizationMatrix(phi_np1);
+        if (needLocalization()) {
+            localize(fock, F_np1, phi_np1);
+        } else if (needDiagonalization()) {
+            diagonalize(fock, F_np1, phi_np1);
+        } else {
+            orthonormalize(fock, F_np1, phi_np1);
+        }
+
+        // Update orbitals and Fock matrix
+        int nOrbs = phi_np1.size();
+        MatrixXd U = MatrixXd::Identity(nOrbs, nOrbs);
         F_n = U.transpose()*F_np1*U;
         this->add.rotate(phi_n, U, phi_np1);
         phi_np1.clear();
