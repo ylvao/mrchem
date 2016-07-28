@@ -21,7 +21,7 @@ The code is being developed at the `Centre for Theoretical and Computational
 Chemistry <http://www.ctcc.no/>`_ (CTCC) at
 `UiT - The Arctic University of Norway <http://en.uit.no>`_.
 
----
+--------------------------------------------------------------------------------
 
 We are currently in the process of rewriting the code and making it publicly
 available, and the latest version (with limited functionality) can be found on
