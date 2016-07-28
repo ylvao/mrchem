@@ -269,7 +269,7 @@ Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
     if (orbs.size() > 0) {
         Timer timer;
         timer.restart();
-        this->add(*result, coefs, orbs);
+        this->add(*result, coefs, orbs, false);
         double time = timer.getWallTime();
         int nNodes = result->getNNodes();
         TelePrompter::printTree(2, "Added matrix part", nNodes, time);

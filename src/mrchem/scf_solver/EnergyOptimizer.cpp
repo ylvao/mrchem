@@ -75,7 +75,7 @@ bool EnergyOptimizer::optimize() {
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F_n.diagonal());
         applyHelmholtzOperators(phi_np1, F_n, phi_n);
-        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
+        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
@@ -196,7 +196,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
 
     // Re-computing non-orthogonal phi_np1
     phi_np1.clear();
-    this->add(phi_np1, 1.0, phi_n, 1.0, dPhi_n);
+    this->add(phi_np1, 1.0, phi_n, 1.0, dPhi_n, true);
 
     MatrixXd L = this->helmholtz->getLambda().asDiagonal();
     MatrixXd dF_1 = dS_1*(*this->fMat_n);

@@ -237,7 +237,7 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
     Timer timer;
     timer.restart();
     Orbital *result = new Orbital(orb_p);
-    this->add(*result, coefs, orbs);
+    this->add(*result, coefs, orbs, false);
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
     TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
