@@ -4,12 +4,10 @@
 
 using namespace std;
 
-MomentumOperator::MomentumOperator(double build_prec,
-                                   const MultiResolutionAnalysis<3> &mra,
-                                   int dir)
+MomentumOperator::MomentumOperator(int dir, double build_prec,
+                                   const MultiResolutionAnalysis<3> &mra)
         : QMOperator(mra),
-          derivative(mra, 0.0, 0.0) {
-    derivative.setApplyDir(dir);
+          derivative(dir, mra, 0.0, 0.0) {
 }
 
 MomentumOperator::~MomentumOperator() {

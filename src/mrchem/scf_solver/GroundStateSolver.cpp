@@ -68,7 +68,7 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
     Timer timer;
     timer.restart();
     Orbital *arg = new Orbital(phi_i);
-    this->add(*arg, coef, *part_1, coef, *part_2);
+    this->add(*arg, coef, *part_1, coef, *part_2, true);
 
     double time = timer.getWallTime();
     int nNodes = arg->getNNodes();

@@ -53,7 +53,7 @@ int HelmholtzOperatorSet::initHelmholtzOperator(double energy) {
     }
     TelePrompter::printDouble(0, "Creating operator with lambda", energy);
 
-    HelmholtzOperator *oper = new HelmholtzOperator(this->MRA, mu,
+    HelmholtzOperator *oper = new HelmholtzOperator(mu, this->MRA,
                                                     this->build_prec,
                                                     this->build_prec);
     this->operators.push_back(oper);
