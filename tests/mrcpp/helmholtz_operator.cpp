@@ -137,7 +137,7 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     double E = -Z/(2.0*n*n);    // Total energy
 
     double mu = sqrt(-2*E);
-    HelmholtzOperator H(MRA, mu, apply_prec, build_prec);
+    HelmholtzOperator H(mu, MRA, apply_prec, build_prec);
 
     double R[3] = {0.0, 0.0, 0.0};
     HydrogenicFunction hFunc(n, l, m_l, Z, R);
