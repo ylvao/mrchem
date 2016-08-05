@@ -221,13 +221,17 @@ void XCOperator::evaluateXCFunctional() {
     int nInp = this->functional->getInputLength();
     int nOut = this->functional->getOutputLength(this->order);
 
-    int nNodes = this->xcInput[0]->getNEndNodes();
-    for (int n = 0; n < nNodes; n++) {
-        MatrixXd inpData, outData;
-        compressNodeData(n, nInp, this->xcInput, inpData);
-        this->functional->evaluate(this->order, inpData, outData);
-        expandNodeData(n, nOut, this->xcOutput, outData);
-    }
+#pragma omp parallel firstprivate(nInp, nOut)
+{
+    	int nNodes = this->xcInput[0]->getNEndNodes();
+#pragma omp for schedule(guided)
+    	for (int n = 0; n < nNodes; n++) {
+            MatrixXd inpData, outData;
+            compressNodeData(n, nInp, this->xcInput, inpData);
+            this->functional->evaluate(this->order, inpData, outData);
+            expandNodeData(n, nOut, this->xcOutput, outData);
+        }
+}
     for (int i = 0; i < nOut; i++) {
         this->xcOutput[i]->mwTransform(BottomUp);
         this->xcOutput[i]->calcSquareNorm();
