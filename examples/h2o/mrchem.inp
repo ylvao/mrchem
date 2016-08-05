@@ -40,3 +40,7 @@ SCF {
   history = 3                     # Length of KAIN iterative history
   rotation = 5                    # Diagonalize Fock matrix every n'th iteration
 }
+
+Pilot {
+  run_scf = true
+}

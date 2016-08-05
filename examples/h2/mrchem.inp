@@ -4,7 +4,7 @@ order = 7                         # Polynomial order of the MW basis
 rel_prec = 1.0e-4                 # Overall relative precision
 
 World {
-  scale = -3                      # Root scale defines world size 2^{-scale}
+  scale = -4                      # Root scale defines world size 2^{-scale}
   corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
   boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
 }
@@ -38,3 +38,6 @@ SCF {
   history = 3                     # Length of KAIN iterative history
 }
 
+Pilot {
+  run_scf = true
+}
