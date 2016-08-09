@@ -41,6 +41,7 @@
 #include "Molecule.h"
 #include "Nucleus.h"
 #include "MolPlot.h"
+#include "SCFDriver.h"
 
 #include "GaussFunc.h"
 #include "HydrogenicFunction.h"
@@ -95,7 +96,13 @@ int main(int argc, char **argv) {
     if (run_multiplication) testMultiplication();
     if (run_derivative) testDerivative();
     if (run_poisson) testPoisson();
-    if (run_scf) testSCF();
+    //if (run_scf) testSCF();
+    if (run_scf) {
+    	SCFDriver driver(Input);
+    	driver.setup();
+    	driver.run();
+    	driver.clear();
+    }
 
     MREnv::finalizeMRCPP(rolex);
 
@@ -281,7 +288,7 @@ void testDerivative() {
     MWAdder<1> add(MRA);
     MWProjector<1> Q(MRA, proj_prec);
     GridGenerator<1> G(MRA);
-    DerivativeOperator<1> D_x(0, MRA, 0.0, 0.0);
+    DerivativeOperator<1> D_x(0, MRA, 0.5, 0.5);
 
     auto f = [] (const double *r) -> double {
         const double alpha = 3.0;
@@ -315,7 +322,10 @@ void testDerivative() {
     println(0, " Applying D_x      " << apply_t);
 
     add_t.restart();
-    FunctionTree<1> *err_tree = add(1.0, *df_tree, -1.0, *dg_tree);
+    FunctionTree<1> *err_tree = G();
+    G(*err_tree, *df_tree);
+    G(*err_tree, *dg_tree);
+    add(*err_tree, 1.0, *df_tree, -1.0, *dg_tree, 0);
     add_t.stop();
     println(0, " Computing error   " << add_t << endl);
 
