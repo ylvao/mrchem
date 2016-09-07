@@ -6,7 +6,7 @@ using namespace std;
 
 void MREnv::initializeMRCPP(int argc, char **argv) {
     int nThreads = omp_get_max_threads();
-    int nHosts = node_group.size();
+    int nHosts = 1;
 
     omp_set_dynamic(0);
     Eigen::setNbThreads(1);

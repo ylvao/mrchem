@@ -97,7 +97,7 @@ protected:
 
 //    template<class T>
 //    T* calcDivergence(T **vec) {
-//        boost::timer timer;
+//        Timer timer;
 //        if (vec == 0) MSG_ERROR("Input vector not initialized");
 
 //        vector<FunctionTree<3> *> trees;

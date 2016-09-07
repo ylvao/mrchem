@@ -16,8 +16,6 @@
 Getkw Input;
 
 int main(int argc, char **argv) {
-    mpi::environment env(argc, argv);
-
     Timer rolex;
     rolex.restart();
 

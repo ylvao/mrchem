@@ -14,7 +14,7 @@ using namespace std;
 using namespace Eigen;
 
 //void OrbitalVector::readOrbitals(const OrbitalVector &orbs) {
-//    boost::timer rolex;
+//    Timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
 //    printout(0, "\n\n================ Setting up starting guess ");
@@ -111,7 +111,7 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
                                        const string &mo_a,
                                        const string &mo_b) {
     NOT_IMPLEMENTED_ABORT;
-//    boost::timer rolex;
+//    Timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
 //    printout(0, "\n\n================ Setting up starting guess ");
@@ -152,7 +152,7 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
 }
 
 //void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
-//    boost::timer rolex;
+//    Timer rolex;
 //    rolex.restart();
 //    int oldPrec = TelePrompter::setPrecision(15);
 //    printout(0, "\n\n=============== Setting up virtual orbitals ");
