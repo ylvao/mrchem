@@ -454,7 +454,6 @@ void OrbitalVector::normalize() {
 void OrbitalVector::orthogonalize() {
     NOT_IMPLEMENTED_ABORT;
 //    Timer rolex;
-//    rolex.restart();
 //    for (int i = 0; i < this->size(); i++) {
 //        Orbital &iOrb = getOrbital(i);
 //        for (int j = 0; j < i; j++) {
@@ -474,7 +473,6 @@ void OrbitalVector::orthogonalize() {
 void OrbitalVector::orthogonalize(OrbitalVector &orbs) {
     NOT_IMPLEMENTED_ABORT;
 //    Timer rolex;
-//    rolex.restart();
 //    for (int i = 0; i < this->size(); i++) {
 //        Orbital &iOrb = getOrbital(i);
 //        for (int j = 0; j < orbs.size(); j++) {

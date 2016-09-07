@@ -51,8 +51,6 @@ void XCPotential::clear() {
 void XCPotential::calcPotential() {
     if (this->xcOutput == 0) MSG_ERROR("XC output not initialized");
     Timer timer;
-    timer.restart();
-
     if (this->functional->isLDA()) {
         if (not this->functional->isSpinSeparated()) {
             calcPotentialLDA(Paired);

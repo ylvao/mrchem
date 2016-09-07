@@ -68,7 +68,6 @@ int Density::printTreeSizes() const {
 //void Density::setup(double prec) {
 //    NOT_IMPLEMENTED_ABORT;
 //    Timer timer;
-//    timer.restart();
 
 //    FunctionTreeVector<3> sq_vec;
 //    FunctionTreeVector<3> sum_vec;

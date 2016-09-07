@@ -53,7 +53,7 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     }
 }
 
-void MREnv::finalizeMRCPP(Timer t) {
+void MREnv::finalizeMRCPP(const Timer t) {
     double wt = t.getWallTime();
     double ut = t.getUserTime();
     double st = t.getSystemTime();

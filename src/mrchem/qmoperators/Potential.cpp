@@ -39,7 +39,6 @@ void Potential::clear() {
 Orbital* Potential::operator() (Orbital &phi_p) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     Timer timer;
-    timer.restart();
 
     Potential &V = *this;
     Orbital *Vphi_p = new Orbital(phi_p);
@@ -72,7 +71,6 @@ double Potential::adjoint(Orbital &orb_i, Orbital &orb_j) {
 
 MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(1, "Compute Potential Matrix Elements");
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
@@ -86,6 +84,7 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
         }
         delete operOrb;
     }
+    timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (M.imag().norm() > MachineZero) {
         MSG_ERROR("Hermitian operator should have real expectation value");

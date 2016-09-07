@@ -17,8 +17,6 @@ using namespace Eigen;
   * are later collected to single entities. */
 void KAIN::setupLinearSystem() {
     Timer timer;
-    timer.restart();
-
     int nHistory = this->orbitals.size() - 1;
     if (nHistory < 1) {
         MSG_FATAL("Not enough history to setup system of equations");
@@ -109,8 +107,6 @@ void KAIN::expandSolution(OrbitalVector &phi,
                           MatrixXd *F,
                           MatrixXd *dF) {
     Timer timer;
-    timer.restart();
-
     int nHistory = this->orbitals.size() - 1;
     int nOrbitals = this->orbitals[nHistory]->size();
 

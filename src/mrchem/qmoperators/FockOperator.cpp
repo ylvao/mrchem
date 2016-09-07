@@ -36,7 +36,6 @@ FockOperator::~FockOperator() {
 
 void FockOperator::setup(double prec) {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Setting up Fock operator");
     QMOperator::setup(prec);
     this->add.setPrecision(prec);
@@ -90,7 +89,6 @@ Orbital* FockOperator::operator() (Orbital &orb_p) {
 //        orbs.push_back(h1(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    ->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -116,7 +114,6 @@ Orbital* FockOperator::adjoint(Orbital &orb_p) {
 //        orbs.push_back(h1.adjoint(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -234,7 +231,6 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
     }
 
     Timer timer;
-    timer.restart();
     Orbital *result = new Orbital(orb_p);
     this->add(*result, coefs, orbs, false);
     double time = timer.getWallTime();
@@ -276,7 +272,6 @@ Orbital* FockOperator::applyAdjointPotential(Orbital &orb_p) {
 //    if (this->K != 0) orbs.push_back((*this->K).adjoint(orb_p));
 //    if (this->XC != 0) orbs.push_back((*this->XC).adjoint(orb_p));
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -317,7 +312,6 @@ Orbital* FockOperator::applyPerturbations(Orbital &orb_p) {
 //        orbs.push_back(h(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -358,7 +352,6 @@ Orbital* FockOperator::applyAdjointPerturbations(Orbital &orb_p) {
 //        orbs.push_back(h.adjoint(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();

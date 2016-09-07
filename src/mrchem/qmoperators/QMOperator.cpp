@@ -69,7 +69,6 @@ Calculates the matrix representation of the operator: \f$O\f$, given two sets of
 MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     TelePrompter::printHeader(1, "Compute Matrix Element");
     Timer timer;
-    timer.restart();
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXcd result = MatrixXcd::Zero(Ni,Nj);
@@ -82,6 +81,7 @@ MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
         }
         delete operOrb;
     }
+    timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (result.imag().norm() > MachineZero) {
         MSG_ERROR("Hermitian operator should have real expectation value");
@@ -100,7 +100,6 @@ Calculates the matrix representation of the adjoint operator: \f$O\f$, given two
  */
 MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(1, "Compute Matrix Element");
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
@@ -114,6 +113,7 @@ MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
         }
         delete operOrb;
     }
+    timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (result.imag().norm() > MachineZero) {
         MSG_ERROR("Hermitian operator should have real expectation value");

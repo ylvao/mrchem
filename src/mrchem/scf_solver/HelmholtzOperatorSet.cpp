@@ -18,10 +18,9 @@ HelmholtzOperatorSet::HelmholtzOperatorSet(double build,
 }
 
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
-    Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Initializing Helmholtz Operators");
 
+    Timer timer;
     this->operIdx.clear();
     this->lambda.clear();
     for (int i = 0; i < energies.size(); i++) {
@@ -35,6 +34,7 @@ void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
         this->lambda.push_back(-0.5*mu*mu);
     }
     clearUnused();
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 
