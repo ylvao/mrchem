@@ -15,7 +15,7 @@ set(PYTHON_SITE_INSTALL_DIR lib/python2.7/site-packages)
 
 find_package(Eigen3 REQUIRED)
 set(Boost_USE_MULTITHREADED OFF)
-find_package(Boost REQUIRED serialization system timer)
+find_package(Boost REQUIRED timer)
 
 include(mpi)
 include(omp)
