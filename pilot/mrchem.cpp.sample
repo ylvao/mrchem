@@ -64,11 +64,7 @@ template<int D> MultiResolutionAnalysis<D>* initializeMRA();
 template<int D> GaussFunc<D>* initializeGauss(const double *pos = 0);
 
 int main(int argc, char **argv) {
-    mpi::environment env(argc, argv);
-
-    Timer rolex;
-    rolex.restart();
-
+    Timer timer;
     MREnv::initializeMRCPP(argc, argv);
 
     bool run_projection = Input.get<bool>("Pilot.run_projection");
@@ -85,7 +81,8 @@ int main(int argc, char **argv) {
     if (run_poisson) testPoisson();
     if (run_scf) testSCF();
 
-    MREnv::finalizeMRCPP(rolex);
+    timer.stop();
+    MREnv::finalizeMRCPP(timer);
 
     return 0;
 }
@@ -123,7 +120,6 @@ GaussFunc<D>* initializeGauss(const double *pos) {
 
 void testProjection() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing MWProjector");
 
     MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
@@ -149,12 +145,12 @@ void testProjection() {
 
     delete f_tree;
     delete MRA;
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 
 void testAddition() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing MWAdder");
 
     MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
@@ -185,12 +181,12 @@ void testAddition() {
     delete f_func;
     delete g_func;
     delete MRA;
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 
 void testMultiplication() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing MWMultiplier");
 
     MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
@@ -223,11 +219,10 @@ void testMultiplication() {
 }
 
 void testDerivative() {
-    Timer proj_t1, proj_t2, apply_t, add_t, tot_t;
-    tot_t.restart();
     TelePrompter::printHeader(0, "Testing derivative operator");
     printout(0, endl);
 
+    Timer tot_t;
     MultiResolutionAnalysis<1> *MRA = initializeMRA<1>();
 
     double prec = Input.get<double>("rel_prec");
@@ -237,7 +232,7 @@ void testDerivative() {
     MWAdder<1> add(*MRA);
     MWProjector<1> Q(*MRA, proj_prec);
     GridGenerator<1> G(*MRA);
-    DerivativeOperator<1> D_x(*MRA, 0.0, 0.0);
+    DerivativeOperator<1> D_x(0, *MRA, 0.0, 0.0);
 
     auto f = [] (const double *r) -> double {
         const double alpha = 3.0;
@@ -254,23 +249,23 @@ void testDerivative() {
         return sign*alpha*exp(-alpha*R);
     };
 
-    proj_t1.restart();
+    Timer proj_t1;
     FunctionTree<1> *f_tree = Q(f);
     proj_t1.stop();
     println(0, " Projecting f      " << proj_t1);
 
-    proj_t2.restart();
+    Timer proj_t2;
     FunctionTree<1> *df_tree = Q(df);
     proj_t2.stop();
     println(0, " Projecting df     " << proj_t2);
 
-    apply_t.restart();
+    Timer apply_t;
     FunctionTree<1> *dg_tree = G(*f_tree);  // Copy grid from f_tree
     D_x(*dg_tree, *f_tree, 0);              // Does not refine grid further
     apply_t.stop();
     println(0, " Applying D_x      " << apply_t);
 
-    add_t.restart();
+    Timer add_t;
     FunctionTree<1> *err_tree = add(1.0, *df_tree, -1.0, *dg_tree);
     add_t.stop();
     println(0, " Computing error   " << add_t << endl);
@@ -299,15 +294,15 @@ void testDerivative() {
     delete dg_tree;
     delete err_tree;
     delete MRA;
+    tot_t.stop();
     TelePrompter::printFooter(0, tot_t, 2);
 }
 
 void testPoisson() {
-    Timer analy_t, proj_t, build_t, apply_t, tot_t;
-    tot_t.restart();
     TelePrompter::printHeader(0, "Testing Poisson operator");
     printout(0, endl);
 
+    Timer tot_t;
     MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
 
     double prec = Input.get<double>("rel_prec");
@@ -324,26 +319,26 @@ void testPoisson() {
     GaussFunc<3> f_func(beta, alpha, pos);
 
     TelePrompter::printHeader(0, "Computing analytic energy");
-    analy_t.restart();
+    Timer analy_t;
     double ana_energy = f_func.calcCoulombEnergy(f_func);
     analy_t.stop();
     TelePrompter::printFooter(0, analy_t, 2);
 
     TelePrompter::printHeader(0, "Projecting function");
-    proj_t.restart();
+    Timer proj_t;
     FunctionTree<3> *f_tree = G(f_func);
     Q(*f_tree, f_func);
     proj_t.stop();
     TelePrompter::printFooter(0, proj_t, 2);
 
     TelePrompter::printHeader(0, "Constructing Poisson operator");
-    build_t.restart();
+    Timer build_t;
     PoissonOperator P(*MRA, apply_prec, build_prec);
     build_t.stop();
     TelePrompter::printFooter(0, build_t, 2);
 
     TelePrompter::printHeader(0, "Applying Poisson operator");
-    apply_t.restart();
+    Timer apply_t;
     FunctionTree<3> *g_tree = G();
     P(*g_tree, *f_tree);
     apply_t.stop();
@@ -369,6 +364,7 @@ void testPoisson() {
     delete f_tree;
     delete g_tree;
     delete MRA;
+    tot_t.stop();
     TelePrompter::printFooter(0, tot_t, 2);
 }
 
@@ -410,8 +406,7 @@ void testSCF() {
     double d_epsilon_n = 0.0;
 
     {
-        Timer rolex;
-        rolex.restart();
+        Timer timer;
         int oldlevel = TelePrompter::setPrintLevel(10);
         TelePrompter::printHeader(0, "Projecting nuclear potential");
 
@@ -425,13 +420,13 @@ void testSCF() {
         };
 
         V = Q(f);
-        TelePrompter::printFooter(0, rolex, 2);
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
         TelePrompter::setPrintLevel(oldlevel);
     }
 
     {
-        Timer rolex;
-        rolex.restart();
+        Timer timer;
         int oldlevel = TelePrompter::setPrintLevel(10);
         TelePrompter::printHeader(0, "Projecting initial guess");
 
@@ -442,7 +437,8 @@ void testSCF() {
 
         phi_n = Q(f);
         phi_n->normalize();
-        TelePrompter::printFooter(0, rolex, 2);
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
         TelePrompter::setPrintLevel(oldlevel);
     }
 
@@ -460,7 +456,6 @@ void testSCF() {
     vector<Timer> scf_t;
     while (error > scf_thrs) {
         Timer cycle_t;
-        cycle_t.restart();
 
         // Adjust precision
         scf_prec = min(scf_prec, error/100.0);
@@ -469,7 +464,7 @@ void testSCF() {
         // Initialize Helmholtz operator
         if (epsilon_n > 0.0) epsilon_n *= -1.0;
         double mu_n = sqrt(-2.0*epsilon_n);
-        HelmholtzOperator H(MRA, mu_n, scf_prec);
+        HelmholtzOperator H(mu_n, MRA, scf_prec);
 
         // Initialize arithmetic operators
         MWAdder<3> add(MRA, scf_prec);
@@ -537,7 +532,6 @@ void testSCF() {
 
 void testTreeCleaner() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing TreeCleaner");
 
     MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
@@ -566,6 +560,7 @@ void testTreeCleaner() {
     delete f_tree;
     delete f_func;
     delete MRA;
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 

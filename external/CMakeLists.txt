@@ -14,8 +14,7 @@ ExternalProject_Add(submodule-libgetkw
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libgetkw
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libgetkw
     INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    -DCMAKE_BUILD_TYPE=Release
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/external -DCMAKE_BUILD_TYPE=Release
     )
 add_dependencies(submodule-libgetkw git-submodule-init)
 add_dependencies(external-modules submodule-libgetkw)
@@ -30,13 +29,10 @@ if (ENABLE_XCFUN)
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/xcfun
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/xcfun
         INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        -DCMAKE_BUILD_TYPE=Release
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/external -DCMAKE_BUILD_TYPE=Release
         )
     add_dependencies(submodule-xcfun git-submodule-init)
     add_dependencies(external-modules submodule-xcfun)
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/external/catch)
-
-# vim:et:sw=4:ts=4:

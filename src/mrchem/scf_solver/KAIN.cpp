@@ -17,8 +17,6 @@ using namespace Eigen;
   * are later collected to single entities. */
 void KAIN::setupLinearSystem() {
     Timer timer;
-    timer.restart();
-
     int nHistory = this->orbitals.size() - 1;
     if (nHistory < 1) {
         MSG_FATAL("Not enough history to setup system of equations");
@@ -40,12 +38,12 @@ void KAIN::setupLinearSystem() {
         for (int i = 0; i < nHistory; i++) {
             Orbital &phi_i = this->orbitals[i]->getOrbital(n);
             Orbital dPhi_im(phi_i);
-            this->add(dPhi_im, 1.0, phi_i, -1.0, phi_m);
+            this->add(dPhi_im, 1.0, phi_i, -1.0, phi_m, true);
 
             for (int j = 0; j < nHistory; j++) {
                 Orbital &fPhi_j = this->dOrbitals[j]->getOrbital(n);
                 Orbital dfPhi_jm(fPhi_j);
-                this->add(dfPhi_jm, 1.0, fPhi_j, -1.0, fPhi_m);
+                this->add(dfPhi_jm, 1.0, fPhi_j, -1.0, fPhi_m, true);
 
                 // Ref. Harrisons KAIN paper the following has the wrong sign,
                 // but we define the updates (lowercase f) with opposite sign.
@@ -109,8 +107,6 @@ void KAIN::expandSolution(OrbitalVector &phi,
                           MatrixXd *F,
                           MatrixXd *dF) {
     Timer timer;
-    timer.restart();
-
     int nHistory = this->orbitals.size() - 1;
     int nOrbitals = this->orbitals[nHistory]->size();
 
@@ -155,7 +151,7 @@ void KAIN::expandSolution(OrbitalVector &phi,
             partOrbs.push_back(&fPhi_m);
 
             Orbital *partStep = new Orbital(fPhi_m);
-            this->add(*partStep, partCoefs, partOrbs);
+            this->add(*partStep, partCoefs, partOrbs, true);
 
             double c_j = (*this->c[m])(j);
             totCoefs.push_back(c_j);
@@ -163,7 +159,7 @@ void KAIN::expandSolution(OrbitalVector &phi,
         }
 
         Orbital &dPhi_n = dPhi.getOrbital(n);
-        this->add(dPhi_n, totCoefs, totOrbs);
+        this->add(dPhi_n, totCoefs, totOrbs, true);
         for (int k = 0; k < totOrbs.size(); k++) {
             // First entry is the last orbital update and should not be deallocated,
             // all other entries are locally allocated partSteps that must be deleted

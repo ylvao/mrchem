@@ -9,9 +9,9 @@ using namespace Eigen;
 KineticOperator::KineticOperator(double build_prec,
                                  const MultiResolutionAnalysis<3> &mra)
         : QMOperator(mra),
-          momentum_x(build_prec, mra, 0),
-          momentum_y(build_prec, mra, 1),
-          momentum_z(build_prec, mra, 2) {
+          momentum_x(0, build_prec, mra),
+          momentum_y(1, build_prec, mra),
+          momentum_z(2, build_prec, mra) {
 }
 
 KineticOperator::~KineticOperator() {
@@ -71,7 +71,6 @@ double KineticOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
 
 MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(1, "Compute Kinetic Matrix Elements");
 
     int Ni = i_orbs.size();
@@ -81,7 +80,6 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
     MatrixXcd T_z = MatrixXcd::Zero(Ni, Nj);
     {
         Timer timer;
-        timer.restart();
         for (int j = 0; j < Nj; j++) {
             Orbital &orb_j = j_orbs.getOrbital(j);
             Orbital *xOrb_j = this->momentum_x(orb_j);
@@ -98,7 +96,6 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
     }
     {
         Timer timer;
-        timer.restart();
         for (int j = 0; j < Nj; j++) {
             Orbital &orb_j = j_orbs.getOrbital(j);
             Orbital *yOrb_j = this->momentum_y(orb_j);
@@ -115,7 +112,6 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
     }
     {
         Timer timer;
-        timer.restart();
         for (int j = 0; j < Nj; j++) {
             Orbital &orb_j = j_orbs.getOrbital(j);
             Orbital *zOrb_j = this->momentum_z(orb_j);
@@ -132,6 +128,7 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
     }
     MatrixXcd T_tot = T_x + T_y + T_z;
 
+    timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (T_tot.imag().norm() > MachineZero) {
         MSG_ERROR("Hermitian operator should have real expectation value");

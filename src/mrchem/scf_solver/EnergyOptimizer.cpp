@@ -60,10 +60,8 @@ bool EnergyOptimizer::optimize() {
 
     bool converged = false;
     while(this->nIter++ < this->maxIter or this->maxIter < 0) {
-        Timer timer;
-        timer.restart();
-
         // Initialize SCF cycle
+        Timer timer;
         printCycle();
         adjustPrecision(err_o);
 
@@ -75,7 +73,7 @@ bool EnergyOptimizer::optimize() {
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F_n.diagonal());
         applyHelmholtzOperators(phi_np1, F_n, phi_n);
-        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
+        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
@@ -92,7 +90,17 @@ bool EnergyOptimizer::optimize() {
         fock.clear();
 
         // Rotate orbitals
-        MatrixXd U = calcOrthonormalizationMatrix(phi_np1);
+        if (needLocalization()) {
+            localize(fock, F_np1, phi_np1);
+        } else if (needDiagonalization()) {
+            diagonalize(fock, F_np1, phi_np1);
+        } else {
+            orthonormalize(fock, F_np1, phi_np1);
+        }
+
+        // Update orbitals and Fock matrix
+        int nOrbs = phi_np1.size();
+        MatrixXd U = MatrixXd::Identity(nOrbs, nOrbs);
         F_n = U.transpose()*F_np1*U;
         this->add.rotate(phi_n, U, phi_np1);
         phi_np1.clear();
@@ -121,8 +129,6 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     TelePrompter::printHeader(0,"Computing Fock matrix update");
 
     Timer timer;
-    timer.restart();
-
     MatrixXd dS_1 = dPhi_n.calcOverlapMatrix(phi_n).real();
     MatrixXd dS_2 = phi_np1.calcOverlapMatrix(dPhi_n).real();
 
@@ -134,7 +140,6 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     MatrixXd dV_n;
     {   // Nuclear potential matrix is computed explicitly
         Timer timer;
-        timer.restart();
         dV_n = (*v_n)(phi_np1, dPhi_n);
         double t = timer.getWallTime();
         TelePrompter::printDouble(0, "Nuclear potential matrix", t);
@@ -143,7 +148,6 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     MatrixXd F_n;
     {   // Computing potential matrix excluding nuclear part
         Timer timer;
-        timer.restart();
         FockOperator fock_n(this->MRA, 0, 0, j_n, k_n, xc_n);
         F_n = fock_n(phi_np1, phi_n);
         double t = timer.getWallTime();
@@ -169,8 +173,6 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     MatrixXd F_np1;
     {   // Computing potential matrix excluding nuclear part
         Timer timer;
-        timer.restart();
-
         FockOperator fock_np1(this->MRA, 0, 0, j_np1, k_np1, xc_np1);
         MatrixXd F_1 = fock_np1(phi_n, phi_n);
         MatrixXd F_2 = fock_np1(phi_n, dPhi_n);
@@ -186,7 +188,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
 
     // Re-computing non-orthogonal phi_np1
     phi_np1.clear();
-    this->add(phi_np1, 1.0, phi_n, 1.0, dPhi_n);
+    this->add(phi_np1, 1.0, phi_n, 1.0, dPhi_n, true);
 
     MatrixXd L = this->helmholtz->getLambda().asDiagonal();
     MatrixXd dF_1 = dS_1*(*this->fMat_n);
@@ -200,6 +202,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     MatrixXd sym = dF_n + dF_n.transpose();
     dF_n = 0.5 * sym;
 
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
     return dF_n;
 }

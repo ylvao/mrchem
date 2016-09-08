@@ -13,11 +13,12 @@ executable="@MRCHEM_EXECUTABLE@"
 debug=@MRCHEM_DRIVER_DEBUG@
 printlevel=0
 dryrun=False
-version="@PROJECT_VERSION@"
+version="@PROGRAM_VERSION@"
 
 import sys, re, optparse, os, string, subprocess, tempfile, math
 from copy import deepcopy
 
+sys.path.append("@CMAKE_INSTALL_PREFIX@/external/share/libgetkw/")
 sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
 if not os.environ.has_key('MRCHEM_FILTER_DIR'):
     os.environ['MRCHEM_FILTER_DIR'] = "@MW_FILTER_DIR@"
@@ -162,7 +163,7 @@ def setup_keywords():
     top.add_sect(dft)
 
     properties=getkw.Section('Properties', callback = verify_properties)
-    properties.add_kw('ground_state',           'BOOL', False)
+    properties.add_kw('total_energy',           'BOOL', False)
     properties.add_kw('dipole_moment',          'BOOL', False)
     properties.add_kw('quadrupole_moment',      'BOOL', False)
     properties.add_kw('polarizability',         'BOOL', False)
@@ -179,15 +180,16 @@ def setup_keywords():
     top.add_sect(properties)
 
     scf=getkw.Section('SCF', callback=verify_scf)
-    scf.add_kw('history',               'INT', 3)
-    scf.add_kw('max_iter',              'INT', 100)
-    scf.add_kw('rotation',              'INT', 100)
+    scf.add_kw('run',                   'BOOL', True)
+    scf.add_kw('max_iter',              'INT', -1)
+    scf.add_kw('history',               'INT', 0)
+    scf.add_kw('rotation',              'INT', 0)
     scf.add_kw('localize',              'BOOL', False)
     scf.add_kw('orbital_thrs',          'DBL', 1.0)
-    scf.add_kw('property_thrs',         'DBL', -1.0)
+    scf.add_kw('property_thrs',         'DBL', 1.0)
     scf.add_kw('lambda_thrs',           'DBL', 1.0e-4)
     scf.add_kw('orbital_prec',          'DBL_ARRAY', [1.0e-4,-1.0])
-    scf.add_kw('initial_guess',         'STR', 'gto')
+    scf.add_kw('initial_guess',         'STR', 'none')
     scf.add_kw('write_orbitals',        'BOOL', False)
     top.add_sect(scf)
 
@@ -254,20 +256,20 @@ def verify_top(top):
                 est_au = estimate_energy(coords)
                 if top['energy_unit'][0] == 'eV':
                     top['est_norm'][0] = 27.2*est_au
-                elif top['energy_unit'][0] == 'kCal':
+                elif top['energy_unit'][0] == 'kcal':
                     top['est_norm'][0] = 627.5*est_au
                 elif top['energy_unit'][0] == 'kJ':
                     top['est_norm'][0] = 2625.5*est_au
                 else:
                     top['est_norm'][0] = est_au
-                print "\nPrecision is set by energy estimate Z^(5/2)"
+                #print "\nPrecision is set by energy estimate Z^(5/2)"
         top['rel_prec'][0] = 10*top['abs_prec'][0] / top['est_norm'][0]
-        print "   est_norm  ", top['est_norm'][0]
-        print "   abs_prec  ", top['abs_prec'][0]
-        print "   rel_prec  ", top['rel_prec'][0]
+        #print "   est_norm  ", top['est_norm'][0]
+        #print "   abs_prec  ", top['abs_prec'][0]
+        #print "   rel_prec  ", top['rel_prec'][0]
     if not top.get('order').is_set():
         top['order'][0] = int(math.ceil(-1.5*math.log10(top['rel_prec'][0])));
-        print "\nPolynomial order is set by rel_prec ", top['order'][0]
+        #print "\nPolynomial order is set by rel_prec ", top['order'][0]
 
 def verify_world(world):
     if not world.get('gauge_origin').is_set():
@@ -332,10 +334,10 @@ def verify_scf(scf):
         scf['orbital_prec'][0] = scf['orbital_prec'][1]
     if not scf['property_thrs'].is_set():
         scf['property_thrs'][0] = topsect['rel_prec'][0]/10
-        print "   property_thrs  ", scf['property_thrs'][0]
+        #print "   property_thrs  ", scf['property_thrs'][0]
     if not scf['orbital_thrs'].is_set():
         scf['orbital_thrs'][0] = math.sqrt(scf['property_thrs'][0])
-        print "   orbital_thrs  ", scf['orbital_thrs'][0]
+        #print "   orbital_thrs  ", scf['orbital_thrs'][0]
 
 
 if __name__ == '__main__':

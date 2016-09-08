@@ -36,7 +36,6 @@ FockOperator::~FockOperator() {
 
 void FockOperator::setup(double prec) {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Setting up Fock operator");
     QMOperator::setup(prec);
     this->add.setPrecision(prec);
@@ -90,7 +89,6 @@ Orbital* FockOperator::operator() (Orbital &orb_p) {
 //        orbs.push_back(h1(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    ->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -105,7 +103,6 @@ Orbital* FockOperator::operator() (Orbital &orb_p) {
 
 Orbital* FockOperator::adjoint(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
 //    vector<FunctionTree<3> *> orbs;
 //    if (this->T != 0) orbs.push_back((*this->T).adjoint(orb_p));
 //    if (this->V != 0) orbs.push_back((*this->V).adjoint(orb_p));
@@ -117,7 +114,6 @@ Orbital* FockOperator::adjoint(Orbital &orb_p) {
 //        orbs.push_back(h1.adjoint(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -235,9 +231,8 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
     }
 
     Timer timer;
-    timer.restart();
     Orbital *result = new Orbital(orb_p);
-    this->add(*result, coefs, orbs);
+    this->add(*result, coefs, orbs, false);
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
     TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
@@ -270,7 +265,6 @@ MatrixXd FockOperator::applyPotential(OrbitalVector &i_orbs, OrbitalVector &j_or
 
 Orbital* FockOperator::applyAdjointPotential(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
 //    vector<FunctionTree<3> *> orbs;
 
 //    if (this->V != 0) orbs.push_back((*this->V).adjoint(orb_p));
@@ -278,7 +272,6 @@ Orbital* FockOperator::applyAdjointPotential(Orbital &orb_p) {
 //    if (this->K != 0) orbs.push_back((*this->K).adjoint(orb_p));
 //    if (this->XC != 0) orbs.push_back((*this->XC).adjoint(orb_p));
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -312,7 +305,6 @@ MatrixXd FockOperator::applyAdjointPotential(OrbitalVector &i_orbs, OrbitalVecto
 
 Orbital* FockOperator::applyPerturbations(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
 //    vector<FunctionTree<3> *> orbs;
 
 //    for (int i = 0; i < getNPerturbations(); i++) {
@@ -320,7 +312,6 @@ Orbital* FockOperator::applyPerturbations(Orbital &orb_p) {
 //        orbs.push_back(h(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();
@@ -354,7 +345,6 @@ MatrixXd FockOperator::applyPerturbations(OrbitalVector &i_orbs, OrbitalVector &
 
 Orbital* FockOperator::applyAdjointPerturbations(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    boost::timer timer;
 //    vector<FunctionTree<3> *> orbs;
 
 //    for (int i = 0; i < getNPerturbations(); i++) {
@@ -362,7 +352,6 @@ Orbital* FockOperator::applyAdjointPerturbations(Orbital &orb_p) {
 //        orbs.push_back(h.adjoint(orb_p));
 //    }
 
-//    timer.restart();
 //    Orbital *result = new Orbital(orb_p);
 //    result->add(orbs, 0);
 //    double time = timer.elapsed();

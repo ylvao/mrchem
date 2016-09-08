@@ -76,8 +76,6 @@ void Accelerator::clearLinearSystem() {
  * set or not. */
 void Accelerator::rotate(const MatrixXd &U, bool rotAll) {
     Timer timer;
-    timer.restart();
-
     int nOrbs = this->orbitals.size() - 1;
     int nFock = this->fock.size() - 1;
     if (rotAll) {
@@ -118,8 +116,6 @@ void Accelerator::push_back(OrbitalVector &phi,
                             MatrixXd *F,
                             MatrixXd *dF) {
     Timer timer;
-    timer.restart();
-
     int nHistory = this->orbitals.size();
     bool historyIsFull = false;
     if (nHistory >= this->maxHistory) {
@@ -209,11 +205,9 @@ void Accelerator::accelerate(OrbitalVector &phi,
                              OrbitalVector &dPhi,
                              MatrixXd *F,
                              MatrixXd *dF) {
-    Timer timer;
-    timer.restart();
-
     TelePrompter::printHeader(0, "Iterative subspace accelerator");
 
+    Timer timer;
     this->push_back(phi, dPhi, F, dF);
 
     int nHistory = this->orbitals.size() - 1;
@@ -226,12 +220,12 @@ void Accelerator::accelerate(OrbitalVector &phi,
         expandSolution(phi, dPhi, F, dF);
         clearLinearSystem();
     }
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 
 void Accelerator::solveLinearSystem() {
     Timer timer;
-    timer.restart();
     this->c.clear();
     int N = this->A.size();
     for (int n = 0; n < N; n++) {
@@ -250,8 +244,6 @@ void Accelerator::solveLinearSystem() {
  * zero history input returns latest orbital set. */
 void Accelerator::copyOrbitals(OrbitalVector &phi, int nHistory) {
     Timer timer;
-    timer.restart();
-
     int totHistory = this->orbitals.size();
     if (nHistory >= totHistory or nHistory < 0) {
         MSG_FATAL("Requested orbitals unavailable");
@@ -270,8 +262,6 @@ void Accelerator::copyOrbitals(OrbitalVector &phi, int nHistory) {
  * zero history input returns latest orbital set. */
 void Accelerator::copyOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
     Timer timer;
-    timer.restart();
-
     int totHistory = this->dOrbitals.size();
     if (nHistory >= totHistory or nHistory < 0) {
         MSG_FATAL("Requested orbitals unavailable");

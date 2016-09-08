@@ -19,19 +19,23 @@ public:
 
     void operator()(Orbital &phi_ab,
                     double a, Orbital &phi_a,
-                    double b, Orbital &phi_b);
+                    double b, Orbital &phi_b,
+                    bool union_grid);
 
     void operator()(Orbital &out,
                     std::vector<double> &coefs,
-                    std::vector<Orbital *> &orbs);
+                    std::vector<Orbital *> &orbs,
+                    bool union_grid);
 
     void operator()(OrbitalVector &out,
                     double a, OrbitalVector &inp_a,
-                    double b, OrbitalVector &inp_b);
+                    double b, OrbitalVector &inp_b,
+                    bool union_grid);
 
     void operator()(Orbital &out,
                     const Eigen::VectorXd &c,
-                    OrbitalVector &inp);
+                    OrbitalVector &inp,
+                    bool union_grid);
 
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U);

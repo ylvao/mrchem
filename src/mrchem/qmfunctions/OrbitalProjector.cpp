@@ -14,8 +14,7 @@ using namespace std;
 using namespace Eigen;
 
 //void OrbitalVector::readOrbitals(const OrbitalVector &orbs) {
-//    boost::timer rolex;
-//    rolex.restart();
+//    Timer timer;
 //    int oldPrec = TelePrompter::setPrecision(15);
 //    printout(0, "\n\n================ Setting up starting guess ");
 //    printout(0, "=================\n\n");
@@ -30,17 +29,16 @@ using namespace Eigen;
 //    }
 //    TelePrompter::setPrecision(5);
 //    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
+//    println(0, timer.elapsed() << " =================\n");
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
 OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
-    Timer rolex;
-    rolex.restart();
     TelePrompter::printHeader(0, "Setting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
     TelePrompter::printSeparator(0, '-');
 
+    Timer timer;
     OrbitalVector *phi = new OrbitalVector(0);
 
     int totOrbs = 0;
@@ -76,19 +74,19 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
             n++;
         }
     }
-    TelePrompter::printFooter(0, rolex, 2);
+    timer.stop();
+    TelePrompter::printFooter(0, timer, 2);
     return phi;
 }
 
 void OrbitalProjector::operator()(OrbitalVector &orbs,
                                   const string &bf,
                                   const string &mo) {
-    Timer rolex;
-    rolex.restart();
     TelePrompter::printHeader(0, "Setting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
     TelePrompter::printSeparator(0, '-');
 
+    Timer timer;
     OrbitalExp *moExp = readOrbitalExpansion(bf, mo);
     for (int i = 0; i < orbs.size(); i++) {
         Orbital &mwOrb = orbs.getOrbital(i);
@@ -103,7 +101,8 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
     }
     delete moExp;
 
-    TelePrompter::printFooter(0, rolex, 2);
+    timer.stop();
+    TelePrompter::printFooter(0, timer, 2);
 }
 
 void OrbitalProjector::operator()(OrbitalVector &orbs,
@@ -111,8 +110,7 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
                                        const string &mo_a,
                                        const string &mo_b) {
     NOT_IMPLEMENTED_ABORT;
-//    boost::timer rolex;
-//    rolex.restart();
+//    Timer timer;
 //    int oldPrec = TelePrompter::setPrecision(15);
 //    printout(0, "\n\n================ Setting up starting guess ");
 //    printout(0, "=================\n\n");
@@ -147,13 +145,12 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
 
 //    TelePrompter::setPrecision(5);
 //    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
+//    println(0, timer.elapsed() << " =================\n");
 //    TelePrompter::setPrecision(oldPrec);
 }
 
 //void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
-//    boost::timer rolex;
-//    rolex.restart();
+//    Timer timer;
 //    int oldPrec = TelePrompter::setPrecision(15);
 //    printout(0, "\n\n=============== Setting up virtual orbitals ");
 //    printout(0, "================\n\n");
@@ -170,7 +167,7 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
 //    delete moExp;
 //    TelePrompter::setPrecision(5);
 //    printout(0, "\n================ Elapsed time: ");
-//    println(0, rolex.elapsed() << " =================\n");
+//    println(0, timer.elapsed() << " =================\n");
 //    TelePrompter::setPrecision(oldPrec);
 //}
 

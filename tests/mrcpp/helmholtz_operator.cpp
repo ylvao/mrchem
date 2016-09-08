@@ -9,7 +9,7 @@
 #include "BandWidth.h"
 #include "CrossCorrelationGenerator.h"
 #include "HydrogenicFunction.h"
-#include "NuclearFunction.h"
+#include "MathUtils.h"
 
 using namespace std;
 
@@ -47,12 +47,14 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
             MultiResolutionAnalysis<1> kern_mra(box, basis);
 
             MWProjector<1> Q(kern_mra, proj_prec);
+            GridGenerator<1> G(kern_mra);
 
             FunctionTreeVector<1> kern_vec;
             for (int i = 0; i < helmholtz.size(); i++) {
                 Gaussian<1> &kern_gauss = *helmholtz[i];
-                FunctionTree<1> *kern_tree = Q(kern_gauss);
-                kern_vec.push_back(*kern_tree);
+                FunctionTree<1> *kern_tree = G(kern_gauss);
+                Q(*kern_tree, kern_gauss);
+                kern_vec.push_back(kern_tree);
             }
 
             SECTION("Build operator tree by cross correlation") {
@@ -68,7 +70,7 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
                 for (int i = 0; i < kern_vec.size(); i++) {
                     FunctionTree<1> &kern_tree = *kern_vec[i];
                     OperatorTree *oper_tree = G(kern_tree);
-                    oper_vec.push_back(*oper_tree);
+                    oper_vec.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
                     BandWidth bw_1 = oper_tree->getBandWidth();
@@ -135,20 +137,20 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     double E = -Z/(2.0*n*n);    // Total energy
 
     double mu = sqrt(-2*E);
-    HelmholtzOperator H(MRA, mu, apply_prec, build_prec);
+    HelmholtzOperator H(mu, MRA, apply_prec, build_prec);
 
-    double pos[3] = {0.0, 0.0, 0.0};
-    HydrogenicFunction hFunc(n, l, m_l, Z, pos);
+    double R[3] = {0.0, 0.0, 0.0};
+    HydrogenicFunction hFunc(n, l, m_l, Z, R);
     FunctionTree<3> *psi_n = Q(hFunc);
 
-    NuclearFunction nucFunc;
-    nucFunc.addNucleus(pos, Z, 1.0e-6);
-    FunctionTree<3> *V = Q(nucFunc);
+    auto f = [Z, R] (const double *r) -> double {
+        double x = MathUtils::calcDistance(3, r, R);
+        return -Z/x;
+    };
+    FunctionTree<3> *V = Q(f);
 
-    tree_vec.push_back(*V);
-    tree_vec.push_back(*psi_n);
-    FunctionTree<3> *Vpsi = mult(tree_vec);
-    tree_vec.clear();
+    FunctionTree<3> *Vpsi = G(*psi_n);
+    mult(*Vpsi, 1.0, *V, *psi_n);
 
     FunctionTree<3> *psi_np1 = G(*psi_n);
     H(*psi_np1, *Vpsi);
@@ -157,10 +159,8 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     double norm = sqrt(psi_np1->getSquareNorm());
     REQUIRE( norm == Approx(1.0).epsilon(apply_prec) );
 
-    tree_vec.push_back(1.0, *psi_np1);
-    tree_vec.push_back(-1.0, *psi_n);
-    FunctionTree<3> *d_psi = add(tree_vec);
-    tree_vec.clear();
+    FunctionTree<3> *d_psi = G(*psi_np1);
+    add(*d_psi, 1.0, *psi_np1, -1.0, *psi_n);
 
     double error = sqrt(d_psi->getSquareNorm());
     REQUIRE( error < apply_prec );

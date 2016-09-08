@@ -60,10 +60,8 @@ bool OrbitalOptimizer::optimize() {
 
     bool converged = false;
     while(this->nIter++ < this->maxIter or this->maxIter < 0) {
-        Timer timer;
-        timer.restart();
-
         // Initialize SCF cycle
+        Timer timer;
         printCycle();
         adjustPrecision(err_o);
 
@@ -74,8 +72,6 @@ bool OrbitalOptimizer::optimize() {
         } else if (needDiagonalization()) {
             diagonalize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
-        } else {
-            orthonormalize(fock, F, phi_n);
         }
 
         // Compute electronic energy
@@ -90,7 +86,7 @@ bool OrbitalOptimizer::optimize() {
         orthonormalize(fock, F, phi_np1);
 
         // Compute orbital updates
-        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n);
+        this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
         phi_np1.clear();
 
         // Employ KAIN accelerator

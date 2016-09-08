@@ -1,14 +1,13 @@
-#include "SCFDriver.h"
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <Eigen/Eigenvalues>
 
+#include "eigen_disable_warnings.h"
 #include "mrchem.h"
+#include "SCFDriver.h"
 #include "TelePrompter.h"
 #include "MathUtils.h"
-#include "eigen_disable_warnings.h"
 
 #include "InterpolatingBasis.h"
 #include "MultiResolutionAnalysis.h"
@@ -18,21 +17,19 @@
 #include "HartreeFock.h"
 #include "DFT.h"
 
+#include "HelmholtzOperatorSet.h"
 #include "OrbitalOptimizer.h"
 #include "EnergyOptimizer.h"
-#include "HelmholtzOperatorSet.h"
 #include "KAIN.h"
 
 #include "Molecule.h"
 #include "OrbitalVector.h"
-
 #include "OrbitalProjector.h"
 
 #include "SCFEnergy.h"
 #include "DipoleMoment.h"
 
 #include "DipoleOperator.h"
-
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -49,13 +46,13 @@ SCFDriver::SCFDriver(Getkw &input) {
     max_depth = input.get<int>("max_depth");
 
     scale = input.get<int>("World.scale");
-    center_of_mass = input.get<bool>("World.center_of_mass");
     boxes = input.getIntVec("World.boxes");
     corner = input.getIntVec("World.corner");
     gauge = input.getDblVec("World.gauge_origin");
+    center_of_mass = input.get<bool>("World.center_of_mass");
 
-    run_ground_state = input.get<bool>("Properties.ground_state");
-    run_dipole_moment = input.get<bool>("Properties.dipole_moment");
+    calc_total_energy = input.get<bool>("Properties.total_energy");
+    calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
 
     mol_charge = input.get<int>("Molecule.charge");
     mol_multiplicity = input.get<int>("Molecule.multiplicity");
@@ -76,6 +73,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     scf_history = input.get<int>("SCF.history");
     scf_max_iter = input.get<int>("SCF.max_iter");
     scf_rotation = input.get<int>("SCF.rotation");
+    scf_run = input.get<bool>("SCF.run");
     scf_localize = input.get<bool>("SCF.localize");
     scf_write_orbitals = input.get<bool>("SCF.write_orbitals");
     scf_orbital_thrs = input.get<double>("SCF.orbital_thrs");
@@ -118,6 +116,10 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
+    if (wf_method == "HF" or dft_x_fac > MachineZero) {
+        MSG_ERROR("Hartree-Fock exchange not implemented");
+        return false;
+    }
     if (not wf_restricted) {
         MSG_ERROR("Unrestricted SCF not implemented");
         return false;
@@ -162,7 +164,7 @@ void SCFDriver::setup() {
         r_O[2] = gauge[2];
     }
 
-    if (run_dipole_moment) {
+    if (calc_dipole_moment) {
         molecule->initDipoleMoment(r_O);
     }
 
@@ -257,7 +259,6 @@ void SCFDriver::setupInitialGroundState() {
 
         // Compute orthonormalization matrix
         MatrixXd S = tmp->calcOverlapMatrix().real();
-        println(0, endl << S << endl);
         MatrixXd S_m12 = MathUtils::hermitianMatrixPow(S, -1.0/2.0);
 
         // Compute core Hamiltonian matrix
@@ -265,12 +266,10 @@ void SCFDriver::setupInitialGroundState() {
         h.setup(rel_prec);
         MatrixXd f_mat = h(*tmp, *tmp);
         h.clear();
-        println(0, endl << f_mat << endl);
 
         // Diagonalize core Hamiltonian matrix
         MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
         MatrixXd U = M.transpose()*S_m12;
-        println(0, endl << f_mat << endl);
 
         // Rotate n lowest energy orbitals of U*tmp into phi
         OrbitalAdder add(*MRA, rel_prec);
@@ -307,7 +306,11 @@ EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
 
     EnergyOptimizer *optimizer = new EnergyOptimizer(*MRA, *helmholtz);
     optimizer->setMaxIterations(scf_max_iter);
-    optimizer->setRotation(0);
+    if (scf_localize) {
+        optimizer->setRotation(1);
+    } else {
+        optimizer->setRotation(-1);
+    }
     optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
     optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
 
@@ -320,7 +323,7 @@ void SCFDriver::run() {
         return;
     }
     setupInitialGroundState();
-    if (run_ground_state) {
+    if (scf_run) {
         converged = runGroundState();
     } else {
         fock->setup(rel_prec);
@@ -329,7 +332,7 @@ void SCFDriver::run() {
     }
     calcGroundStateProperties();
 
-    printEigenvalues(F, *phi);
+    printEigenvalues(*phi, F);
     molecule->printGeometry();
     molecule->printProperties();
 }
@@ -339,15 +342,21 @@ bool SCFDriver::runGroundState() {
     if (fock == 0) MSG_ERROR("Fock operator not initialized");
 
     bool converged = false;
-    {   // Optimize orbitals
+
+    // Optimize orbitals
+    if (scf_orbital_thrs > 0.0) {
         OrbitalOptimizer *solver = setupOrbitalOptimizer();
         solver->setup(*fock, *phi, F);
         converged = solver->optimize();
         solver->clear();
         delete solver;
+    } else {
+        fock->setup(rel_prec);
+        F = (*fock)(*phi, *phi);
+        fock->clear();
     }
 
-        // Optimize energy
+    // Optimize energy
     if (scf_property_thrs > 0.0) {
         setup_np1();
 
@@ -362,20 +371,21 @@ bool SCFDriver::runGroundState() {
 
     if (scf_write_orbitals) {
         NOT_IMPLEMENTED_ABORT;
-//        phi->writeOrbitals(file_final_orbitals);
     }
 
     return converged;
 }
 
 void SCFDriver::calcGroundStateProperties() {
-    SCFEnergy &energy = molecule->getSCFEnergy();
-    fock->setup(rel_prec);
-    energy.compute(*nuclei);
-    energy.compute(*fock, F, *phi);
-    fock->clear();
+    if (calc_total_energy) {
+        SCFEnergy &energy = molecule->getSCFEnergy();
+        fock->setup(rel_prec);
+        energy.compute(*nuclei);
+        energy.compute(*fock, *phi, F);
+        fock->clear();
+    }
 
-    if (run_dipole_moment) {
+    if (calc_dipole_moment) {
         DipoleMoment &dipole = molecule->getDipoleMoment();
         for (int d = 0; d < 3; d++) {
             DipoleOperator mu_d(*MRA, d, r_O[d]);
@@ -387,7 +397,7 @@ void SCFDriver::calcGroundStateProperties() {
     }
 }
 
-void SCFDriver::printEigenvalues(MatrixXd &f_mat, OrbitalVector &orbs) {
+void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     int oldprec = TelePrompter::setPrecision(5);
     TelePrompter::printHeader(0, "Fock matrix");
     println(0, f_mat);
