@@ -21,7 +21,6 @@ add_subdirectory (scf_solver)
 add_subdirectory (properties)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
-link_directories (${Boost_LIBRARY_DIRS})
 
 add_executable(mrchem.x mrchem.cpp)
 add_dependencies(mrchem.x external-modules)
@@ -66,7 +65,6 @@ target_link_libraries(mrchem.x
     mwbuilders
     getkw
     xcfun
-    ${Boost_LIBRARIES}
     ${BLAS_LIBRARIES}
 )
 

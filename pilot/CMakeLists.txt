@@ -38,7 +38,6 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
         mwbuilders
         getkw
         xcfun
-        ${Boost_LIBRARIES}
         ${BLAS_LIBRARIES}
     )
     configure_file(${CMAKE_SOURCE_DIR}/src/mrchem/mrchem.in ${CMAKE_BINARY_DIR}/pilot/mrchem)

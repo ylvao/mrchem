@@ -1,4 +1,3 @@
-@Boost_INCLUDE_DIR@/include
 @EIGEN3_INCLUDE_DIR@
 external/include
 src/mrchem
