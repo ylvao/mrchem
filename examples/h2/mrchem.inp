@@ -2,6 +2,7 @@
 
 order = 7                         # Polynomial order of the MW basis
 rel_prec = 1.0e-4                 # Overall relative precision
+printlevel = 100
 
 World {
   scale = -4                      # Root scale defines world size 2^{-scale}
