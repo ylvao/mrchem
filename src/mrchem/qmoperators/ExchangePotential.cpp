@@ -46,7 +46,6 @@ Orbital* ExchangePotential::adjoint(Orbital &phi_p) {
 Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
     NOT_IMPLEMENTED_ABORT;
 //    Timer timer;
-//    timer.restart();
 
 //    int maxNodes = 0;
 //    FunctionTreeVector<3> real_vec;
@@ -68,7 +67,6 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 //        Orbital *V_ip = new Orbital(phi_p);
 //        { // compute V_ip = P[phi_ip]
 //            Timer timer;
-//            timer.restart();
 //            this->poisson.setPrecision(this->apply_prec);
 //            if (phi_ip->hasReal()) {
 //                V_ip->real = this->grid();
@@ -88,7 +86,6 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 //        Orbital *phi_iip = new Orbital(phi_p);
 //        { // compute phi_iij = phi_i * V_ip
 //            Timer timer;
-//            timer.restart();
 //            double fac = -(this->x_factor/phi_i.getSquareNorm());
 //            this->mult(*phi_iip, fac, phi_i, *V_ip);
 //            int nNodes = phi_iip->getNNodes();
@@ -108,7 +105,6 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 //    Orbital *ex_p = new Orbital(phi_p);
 //    if (real_vec.size() > 0) {
 //        Timer timer;
-//        timer.restart();
 //        ex_p->real = this->add(real_vec);
 //        double time = timer.getWallTime();
 //        double nNodes = ex_p->real->getNNodes();
@@ -118,7 +114,6 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 
 //    if (imag_vec.size() > 0) {
 //        Timer timer;
-//        timer.restart();
 //        ex_p->imag = this->add(imag_vec);
 //        double time = timer.getWallTime();
 //        double nNodes = ex_p->imag->getNNodes();
@@ -136,7 +131,6 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 void ExchangePotential::calcInternalExchange() {
     NOT_IMPLEMENTED_ABORT;
     //Timer timer;
-    //timer.restart();
 
     //int nNodes = 0;
     //int maxNodes = 0;
@@ -172,7 +166,6 @@ int ExchangePotential::calcInternal(int i) {
     //Orbital *phi_ii = new Orbital(phi_i);
     //{ // compute phi_ii = phi_i^dag * phi_i
         //Timer timer;
-        //timer.restart();
         //this->mult.setPrecision(prec);
         //this->mult.adjoint(*phi_ii, 1.0, phi_i, phi_i);
         //int nNodes = phi_ii->getNNodes();
@@ -184,7 +177,6 @@ int ExchangePotential::calcInternal(int i) {
     //Orbital *V_ii = new Orbital(phi_i);
     //{ // compute V_ii = P[phi_ii]
         //Timer timer;
-        //timer.restart();
         //this->poisson.setPrecision(prec);
         //if (phi_ii->hasReal()) {
             //V_ii->real = this->grid();
@@ -204,7 +196,6 @@ int ExchangePotential::calcInternal(int i) {
     //Orbital *phi_iii = new Orbital(phi_i);
     //{ // compute phi_iii = phi_i * V_ii
         //Timer timer;
-        //timer.restart();
         //double fac = -(this->x_factor/phi_i.getSquareNorm());
         //this->mult(*phi_iii, fac, phi_i, *V_ii);
         //this->part_norms(i,i) = sqrt(phi_iii->getSquareNorm());
@@ -217,7 +208,6 @@ int ExchangePotential::calcInternal(int i) {
 
     //{ // compute x_i += phi_iii
         //Timer timer;
-        //timer.restart();
         //Orbital &oldEx_i = this->exchange_0.getOrbital(i);
         //Orbital *newEx_i = new Orbital(oldEx_i);
         //this->add(*newEx_i, 1.0, oldEx_i, 1.0, *phi_iii);
@@ -255,7 +245,6 @@ int ExchangePotential::calcInternal(int i, int j) {
     //Orbital *phi_ij = new Orbital(phi_i);
     //{ // compute phi_ij = phi_i^dag * phi_j
         //Timer timer;
-        //timer.restart();
         //if (phi_i.hasImag()) NOT_IMPLEMENTED_ABORT;
         //this->mult.adjoint(*phi_ij, 1.0, phi_i, phi_j);
         //int nNodes = phi_ij->getNNodes();
@@ -267,7 +256,6 @@ int ExchangePotential::calcInternal(int i, int j) {
     //Orbital *V_ij = new Orbital(phi_i);
     //{ // compute V_ij = P[phi_ij]
         //Timer timer;
-        //timer.restart();
         //prec = min(prec, 1.0e-1);
         //this->poisson.setPrecision(prec);
         //if (phi_ij->hasReal()) {
@@ -288,7 +276,6 @@ int ExchangePotential::calcInternal(int i, int j) {
     //Orbital *phi_iij = new Orbital(phi_i);
     //{ // compute phi_iij = phi_i * V_ij
         //Timer timer;
-        //timer.restart();
         //double fac = -(this->x_factor/phi_i.getSquareNorm());
         //this->mult(*phi_iij, fac, phi_i, *V_ij);
         //this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
@@ -301,7 +288,6 @@ int ExchangePotential::calcInternal(int i, int j) {
     //Orbital *phi_jij = new Orbital(phi_i);
     //{ // compute phi_jij = phi_j * V_ij
         //Timer timer;
-        //timer.restart();
         //double fac = -(this->x_factor/phi_j.getSquareNorm());
         //this->mult(*phi_jij, fac, phi_j, *V_ij);
         //this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
@@ -314,7 +300,6 @@ int ExchangePotential::calcInternal(int i, int j) {
 
     //{ // compute x_i += phi_jij
         //Timer timer;
-        //timer.restart();
         //Orbital &oldEx_i = this->exchange_0.getOrbital(i);
         //Orbital *newEx_i = new Orbital(oldEx_i);
         //this->add(*newEx_i, 1.0, oldEx_i, i_factor, *phi_jij);
@@ -328,7 +313,6 @@ int ExchangePotential::calcInternal(int i, int j) {
 
     //{ // compute x_j += phi_iij
         //Timer timer;
-        //timer.restart();
         //Orbital &oldEx_j = this->exchange_0.getOrbital(j);
         //Orbital *newEx_j = new Orbital(oldEx_j);
         //this->add(*newEx_j, 1.0, oldEx_j, j_factor, *phi_iij);

@@ -16,11 +16,7 @@
 Getkw Input;
 
 int main(int argc, char **argv) {
-    mpi::environment env(argc, argv);
-
-    Timer rolex;
-    rolex.restart();
-
+    Timer timer;
     MREnv::initializeMRCPP(argc, argv);
 
     SCFDriver driver(Input);
@@ -28,7 +24,8 @@ int main(int argc, char **argv) {
     driver.run();
     driver.clear();
 
-    MREnv::finalizeMRCPP(rolex);
+    timer.stop();
+    MREnv::finalizeMRCPP(timer);
 
     return 0;
 }

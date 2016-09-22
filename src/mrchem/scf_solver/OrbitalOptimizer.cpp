@@ -60,10 +60,8 @@ bool OrbitalOptimizer::optimize() {
 
     bool converged = false;
     while(this->nIter++ < this->maxIter or this->maxIter < 0) {
-        Timer timer;
-        timer.restart();
-
         // Initialize SCF cycle
+        Timer timer;
         printCycle();
         adjustPrecision(err_o);
 

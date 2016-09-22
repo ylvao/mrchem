@@ -54,7 +54,8 @@ int NonlinearMaximizer::maximize(){
     double lamb1,lamb2,sq,a,c,x,U00,U10,U01,U11,fac=10.0,direction=0.0;
     int N_newton_step=0,n_threads,newton_step_exact=0;
     double maxEiVal;
-    if(world.rank()>0)print=0;
+    int world_rank = 0;
+    if(world_rank>0)print=0;
     //value_functional is what should be maximized (i.e. the sum of <i R i>^2 for orbitals)
     value_functional = this->functional();
     value_functional_old = value_functional;
@@ -379,7 +380,7 @@ int NonlinearMaximizer::maximize(){
         if(print>0)cout << "localization: convergence after " << iter-1<<" iterations" << endl;
         return iter-1;
     }else	{
-        if(world.rank()==0)cout << "WARNING: localization convergence only to " <<gradient_norm<<" after "<< iter-1<<" iterations" << " max eigenval was: "<<maxEiVal <<endl;
+        if(world_rank==0)cout << "WARNING: localization convergence only to " <<gradient_norm<<" after "<< iter-1<<" iterations" << " max eigenval was: "<<maxEiVal <<endl;
         return -1;
     }
 }

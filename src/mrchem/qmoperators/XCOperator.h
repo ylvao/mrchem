@@ -97,12 +97,12 @@ protected:
 
 //    template<class T>
 //    T* calcDivergence(T **vec) {
-//        boost::timer timer;
+//        Timer timer;
 //        if (vec == 0) MSG_ERROR("Input vector not initialized");
 
 //        vector<FunctionTree<3> *> trees;
 //        for (int d = 0; d < 3; d++) {
-//            timer.restart();
+//            timer.resume();
 //            if (vec[d] == 0) MSG_ERROR("Invalid input");
 //            FunctionTree<3> *tree = new FunctionTree<3>;
 //            this->derivative->setApplyDir(d);
@@ -112,7 +112,7 @@ protected:
 //            int nNodes = tree->getNNodes();
 //            TelePrompter::printTree(1, "Gradient", nNodes, time);
 //        }
-//        timer.restart();
+//        timer.resume();
 //        T *result = new T;
 //        result->add(trees, 0);
 //        double time = timer.elapsed();

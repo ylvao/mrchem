@@ -22,8 +22,8 @@ WaveFunction {
 
 DFT {
 $functionals
-SLATERX
-VWN5C
+PBEX
+PBEC
 $end
 }
 
@@ -33,7 +33,7 @@ Properties {
 
 SCF {
   orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
-  property_thrs = 1.0e-5          # Convergence threshold in total energy
+  property_thrs = 1.0e-6          # Convergence threshold in total energy
   initial_guess = gto             # Type of initial guess: none, mw, gto
   history = 3                     # Length of KAIN iterative history
 }

@@ -37,11 +37,8 @@ void SCFEnergy::clearElectronic() {
 }
 
 void SCFEnergy::compute(const Nuclei &nuclei) {
-    Timer timer;
-    timer.restart();
-
     TelePrompter::printHeader(0, "Calculating Nuclear Energy");
-
+    Timer timer;
     clearNuclear();
 
     int nNucs = nuclei.size();
@@ -57,6 +54,7 @@ void SCFEnergy::compute(const Nuclei &nuclei) {
             this->E_nuc += (Z_i*Z_j)/r_ij;
         }
     }
+    timer.stop();
     int oldPrec = TelePrompter::setPrecision(15);
     println(0, " Nuclear energy              " << setw(30) << this->E_nuc    );
     TelePrompter::setPrecision(oldPrec);
@@ -64,19 +62,16 @@ void SCFEnergy::compute(const Nuclei &nuclei) {
 }
 
 void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_mat) {
-    Timer timer;
-    timer.restart();
-
     TelePrompter::printHeader(0, "Calculating Electronic Energy");
-
+    Timer timer;
     clearElectronic();
-    double E_xc2 = 0.0;
 
     NuclearPotential *V = f_oper.getNuclearPotential();
     CoulombOperator *J = f_oper.getCoulombOperator();
     ExchangeOperator *K = f_oper.getExchangeOperator();
     XCOperator *XC = f_oper.getXCOperator();
 
+    double E_xc2 = 0.0;
     if (XC != 0) this->E_xc = XC->getEnergy();
     for (int i = 0; i < phi.size(); i++) {
         Orbital &phi_i = phi.getOrbital(i);
@@ -106,6 +101,7 @@ void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_ma
     this->E_kin = E_orbxc2 - 2.0*E_eex - this->E_en;
     this->E_el = E_orbxc2 - E_eex + this->E_xc;
 
+    timer.stop();
     int oldPrec = TelePrompter::setPrecision(15);
     println(2, "                                                            ");
     println(0, " Electronic energy           " << setw(30) << this->E_el     );

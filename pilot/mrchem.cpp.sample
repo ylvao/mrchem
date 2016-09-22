@@ -60,27 +60,11 @@ void testTreeCleaner();
 
 Getkw Input;
 
-template<int D>
-GaussFunc<D>* initializeGauss(const double *pos) {
-    // Constructing analytic function
-    double beta = 20.0;
-    double alpha = pow(beta/pi, D/2.0);
-    int pow[3] = {0, 0, 0};
-    if (pos != 0) {
-        return new GaussFunc<D>(beta, alpha, pos, pow);
-    } else {
-        double o[3] = {0.0, 0.0, 0.0};
-        return new GaussFunc<D>(beta, alpha, o, pow);
-    }
-}
-
+template<int D> MultiResolutionAnalysis<D>* initializeMRA();
+template<int D> GaussFunc<D>* initializeGauss(const double *pos = 0);
 
 int main(int argc, char **argv) {
-    mpi::environment env(argc, argv);
-
-    Timer rolex;
-    rolex.restart();
-
+    Timer timer;
     MREnv::initializeMRCPP(argc, argv);
 
     bool run_projection = Input.get<bool>("Pilot.run_projection");
@@ -97,45 +81,60 @@ int main(int argc, char **argv) {
     if (run_poisson) testPoisson();
     if (run_scf) testSCF();
 
-    MREnv::finalizeMRCPP(rolex);
+    timer.stop();
+    MREnv::finalizeMRCPP(timer);
 
     return 0;
 }
 
-void testProjection() {
-    Timer timer;
-    timer.restart();
-    TelePrompter::printHeader(0, "Testing MWProjector");
-
-    // Precision parameter
-    double prec = Input.get<double>("rel_prec");
-
-    // Computational domain
+template<int D>
+MultiResolutionAnalysis<D>* initializeMRA() {
+    // Constructing world box
     int scale = Input.get<int>("World.scale");
     vector<int> corner = Input.getIntVec("World.corner");
     vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
+    NodeIndex<D> idx(scale, corner.data());
+    BoundingBox<D> world(idx, boxes.data());
 
-    // MW basis
+    // Constructing scaling basis
     int order = Input.get<int>("order");
     InterpolatingBasis basis(order);
 
     // Initializing MRA
-    MultiResolutionAnalysis<3> MRA(world, basis);
+    return new MultiResolutionAnalysis<D>(world, basis);
+}
 
-    // Initializing projector
-    MWProjector<3> Q(MRA, prec);
+template<int D>
+GaussFunc<D>* initializeGauss(const double *pos) {
+    // Constructing analytic function
+    double beta = 20.0;
+    double alpha = pow(beta/pi, D/2.0);
+    int pow[3] = {0, 0, 0};
+    if (pos != 0) {
+        return new GaussFunc<D>(beta, alpha, pos, pow);
+    } else {
+        double o[3] = {0.0, 0.0, 0.0};
+        return new GaussFunc<D>(beta, alpha, o, pow);
+    }
+}
+
+void testProjection() {
+    Timer timer;
+    TelePrompter::printHeader(0, "Testing MWProjector");
+
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
+
+    double prec = Input.get<double>("rel_prec");
+    MWProjector<3> Q(*MRA, prec);
 
     auto f = [] (const double *r) -> double {
-        const double beta = 10.0;
+        const double beta = 100.0;
         const double alpha = pow(beta/pi, 3.0/2.0);;
         const double r_0[3] = {0.0, 0.0, 0.0};
         double R = MathUtils::calcDistance(3, r, r_0);
         return alpha*exp(-beta*R*R);
     };
 
-    // Projecting function onto MW basis
     FunctionTree<3> *f_tree = Q(f);
 
     double integral = f_tree->integrate();
@@ -145,46 +144,29 @@ void testProjection() {
     println(0, " Square norm                 " << setw(30) << sq_norm);
 
     delete f_tree;
+    delete MRA;
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 
 void testAddition() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing MWAdder");
 
-    // Precision parameter
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
+
     double prec = Input.get<double>("rel_prec");
-
-    // Computational domain
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
-
-    // MW basis
-    int order = Input.get<int>("order");
-    InterpolatingBasis basis(order);
-
-    // Initializing MRA
-    MultiResolutionAnalysis<3> MRA(world, basis);
-
-    // Initializing tree builders
-    GridGenerator<3> G(MRA);
-    MWProjector<3> Q(MRA, prec);
-    MWAdder<3> add(MRA, prec);
+    GridGenerator<3> G(*MRA);
+    MWProjector<3> Q(*MRA, prec);
+    MWAdder<3> add(*MRA, prec);
 
     double f_pos[3] = {0.0, 0.0,  0.1};
     double g_pos[3] = {0.0, 0.0, -0.1};
     GaussFunc<3> *f_func = initializeGauss<3>(f_pos);
     GaussFunc<3> *g_func = initializeGauss<3>(g_pos);
 
-    // Projecting functions onto MW basis
     FunctionTree<3> *f_tree = Q(*f_func);
     FunctionTree<3> *g_tree = Q(*g_func);
-
-    // Adding MW functions
     FunctionTree<3> *h_tree = add(1.0, *f_tree, -2.0, *g_tree);
 
     double integral = h_tree->integrate();
@@ -198,45 +180,28 @@ void testAddition() {
     delete h_tree;
     delete f_func;
     delete g_func;
+    delete MRA;
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 
 void testMultiplication() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing MWMultiplier");
 
-    // Precision parameter
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
+
     double prec = Input.get<double>("rel_prec");
-
-    // Computational domain
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
-
-    // MW basis
-    int order = Input.get<int>("order");
-    InterpolatingBasis basis(order);
-
-    // Initializing MRA
-    MultiResolutionAnalysis<3> MRA(world, basis);
-
-    // Initializing projector and multiplier
-    MWProjector<3> Q(MRA, prec);
-    MWMultiplier<3> mult(MRA, prec);
+    MWProjector<3> Q(*MRA, prec);
+    MWMultiplier<3> mult(*MRA, prec);
 
     double f_pos[3] = {0.0, 0.0,  0.1};
     double g_pos[3] = {0.0, 0.0, -0.1};
     GaussFunc<3> *f_func = initializeGauss<3>(f_pos);
     GaussFunc<3> *g_func = initializeGauss<3>(g_pos);
 
-    // Projecting functions onto MW basis
     FunctionTree<3> *f_tree = Q(*f_func);
     FunctionTree<3> *g_tree = Q(*g_func);
-
-    // Multiplying MW functions
     FunctionTree<3> *h_tree = mult(1.0, *f_tree, *g_tree);
 
     double integral = h_tree->integrate();
@@ -250,38 +215,24 @@ void testMultiplication() {
     delete h_tree;
     delete f_func;
     delete g_func;
+    delete MRA;
 }
 
 void testDerivative() {
-    Timer proj_t1, proj_t2, apply_t, add_t, tot_t;
-    tot_t.restart();
     TelePrompter::printHeader(0, "Testing derivative operator");
     printout(0, endl);
 
-    // Precision parameters
+    Timer tot_t;
+    MultiResolutionAnalysis<1> *MRA = initializeMRA<1>();
+
     double prec = Input.get<double>("rel_prec");
     double proj_prec = prec/10.0;
     double apply_prec = prec;
 
-    // Computational domain
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<1> idx(scale, corner.data());
-    BoundingBox<1> world(idx, boxes.data());
-
-    // MW basis
-    int order = Input.get<int>("order");
-    InterpolatingBasis basis(order);
-
-    // Initializing MRA
-    MultiResolutionAnalysis<1> MRA(world, basis);
-
-    // Initializing tree builders
-    MWAdder<1> add(MRA);
-    MWProjector<1> Q(MRA, proj_prec);
-    GridGenerator<1> G(MRA);
-    DerivativeOperator<1> D_x(0, MRA, 0.0, 0.0);
+    MWAdder<1> add(*MRA);
+    MWProjector<1> Q(*MRA, proj_prec);
+    GridGenerator<1> G(*MRA);
+    DerivativeOperator<1> D_x(0, *MRA, 0.0, 0.0);
 
     auto f = [] (const double *r) -> double {
         const double alpha = 3.0;
@@ -298,23 +249,23 @@ void testDerivative() {
         return sign*alpha*exp(-alpha*R);
     };
 
-    proj_t1.restart();
+    Timer proj_t1;
     FunctionTree<1> *f_tree = Q(f);
     proj_t1.stop();
     println(0, " Projecting f      " << proj_t1);
 
-    proj_t2.restart();
+    Timer proj_t2;
     FunctionTree<1> *df_tree = Q(df);
     proj_t2.stop();
     println(0, " Projecting df     " << proj_t2);
 
-    apply_t.restart();
+    Timer apply_t;
     FunctionTree<1> *dg_tree = G(*f_tree);  // Copy grid from f_tree
     D_x(*dg_tree, *f_tree, 0);              // Does not refine grid further
     apply_t.stop();
     println(0, " Applying D_x      " << apply_t);
 
-    add_t.restart();
+    Timer add_t;
     FunctionTree<1> *err_tree = add(1.0, *df_tree, -1.0, *dg_tree);
     add_t.stop();
     println(0, " Computing error   " << add_t << endl);
@@ -342,64 +293,52 @@ void testDerivative() {
     delete df_tree;
     delete dg_tree;
     delete err_tree;
+    delete MRA;
+    tot_t.stop();
     TelePrompter::printFooter(0, tot_t, 2);
 }
 
 void testPoisson() {
-    Timer analy_t, proj_t, build_t, apply_t, tot_t;
-    tot_t.restart();
+    TelePrompter::printHeader(0, "Testing Poisson operator");
+    printout(0, endl);
 
-    // Precision parameters
+    Timer tot_t;
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
+
     double prec = Input.get<double>("rel_prec");
     double proj_prec = prec/10.0;
     double build_prec = prec/10.0;
     double apply_prec = prec;
 
-    // Computational domain
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
+    GridGenerator<3> G(*MRA);
+    MWProjector<3> Q(*MRA, proj_prec);
 
-    // MW basis
-    int order = Input.get<int>("order");
-    InterpolatingBasis basis(order);
-
-    // Initializing MRA
-    MultiResolutionAnalysis<3> MRA(world, basis);
-
-    // Initializing projector
-    GridGenerator<3> G(MRA);
-    MWProjector<3> Q(MRA, proj_prec);
-
-    // Initializing analytic function
     double beta = 100.0;
     double alpha = pow(beta/pi, 3.0/2.0);
     double pos[3] = {pi/3.0,pi/3.0,pi/3.0};
     GaussFunc<3> f_func(beta, alpha, pos);
 
     TelePrompter::printHeader(0, "Computing analytic energy");
-    analy_t.restart();
+    Timer analy_t;
     double ana_energy = f_func.calcCoulombEnergy(f_func);
     analy_t.stop();
     TelePrompter::printFooter(0, analy_t, 2);
 
     TelePrompter::printHeader(0, "Projecting function");
-    proj_t.restart();
+    Timer proj_t;
     FunctionTree<3> *f_tree = G(f_func);
     Q(*f_tree, f_func);
     proj_t.stop();
     TelePrompter::printFooter(0, proj_t, 2);
 
     TelePrompter::printHeader(0, "Constructing Poisson operator");
-    build_t.restart();
-    PoissonOperator P(MRA, apply_prec, build_prec);
+    Timer build_t;
+    PoissonOperator P(*MRA, apply_prec, build_prec);
     build_t.stop();
     TelePrompter::printFooter(0, build_t, 2);
 
     TelePrompter::printHeader(0, "Applying Poisson operator");
-    apply_t.restart();
+    Timer apply_t;
     FunctionTree<3> *g_tree = G();
     P(*g_tree, *f_tree);
     apply_t.stop();
@@ -412,22 +351,25 @@ void testPoisson() {
     double num_energy = g_tree->dot(*f_tree);
     double error = (num_energy-ana_energy)/num_energy;
 
-    TelePrompter::printHeader(0, "Testing Poisson operator");
+    println(0, endl);
     println(0," f_tree integral:            " << setw(30) << f_int);
     println(0," f_tree norm:                " << setw(30) << f_norm << endl);
     println(0," g_tree integral:            " << setw(30) << g_int);
     println(0," g_tree norm:                " << setw(30) << g_norm << endl);
     println(0," Analytic energy:            " << setw(30) << ana_energy);
     println(0," Numerical energy:           " << setw(30) << num_energy);
-    println(0," Relative error:             " << setw(30) << error);
-    TelePrompter::printFooter(0, tot_t, 2);
+    println(0," Relative error:             " << setw(30) << error << endl);
+    println(0, endl);
 
     delete f_tree;
     delete g_tree;
+    delete MRA;
+    tot_t.stop();
+    TelePrompter::printFooter(0, tot_t, 2);
 }
 
 void testSCF() {
-    // Precision parameter
+    // Precision parameters
     double prec = Input.get<double>("rel_prec");
 
     // Computational domain
@@ -453,19 +395,18 @@ void testSCF() {
     double R[3] = {0.0, 0.0, 0.0};      // Nuclear position
 
     // Placeholders for functions
-    FunctionTree<3> *V;                 // Nuclear potential
-    FunctionTree<3> *phi_n = 0;         // Wavefunction iteration n
-    FunctionTree<3> *phi_np1 = 0;       // Wavefunction iteration n+1
-    FunctionTree<3> *d_phi_n = 0;       // Wavefunction update
+    FunctionTree<3> *V;
+    FunctionTree<3> *phi_n = 0;
+    FunctionTree<3> *phi_np1 = 0;
+    FunctionTree<3> *d_phi_n = 0;
 
     // Orbtial energies
-    double epsilon_n = -0.5;            // Energy iteration n
-    double epsilon_np1 = 0.0;           // Energy iteration n+1
-    double d_epsilon_n = 0.0;           // Energy update
+    double epsilon_n = -0.5;
+    double epsilon_np1 = 0.0;
+    double d_epsilon_n = 0.0;
 
     {
-        Timer rolex;
-        rolex.restart();
+        Timer timer;
         int oldlevel = TelePrompter::setPrintLevel(10);
         TelePrompter::printHeader(0, "Projecting nuclear potential");
 
@@ -478,14 +419,14 @@ void testSCF() {
             return -1.0*Z*u(x/c)/c;
         };
 
-        V = Q(f);           // Projecting potential onto MW basis
-        TelePrompter::printFooter(0, rolex, 2);
+        V = Q(f);
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
         TelePrompter::setPrintLevel(oldlevel);
     }
 
     {
-        Timer rolex;
-        rolex.restart();
+        Timer timer;
         int oldlevel = TelePrompter::setPrintLevel(10);
         TelePrompter::printHeader(0, "Projecting initial guess");
 
@@ -494,9 +435,10 @@ void testSCF() {
             return 1.0*exp(-1.0*x*x);
         };
 
-        phi_n = Q(f);       // Projecting initial guess onto MW basis
+        phi_n = Q(f);
         phi_n->normalize();
-        TelePrompter::printFooter(0, rolex, 2);
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
         TelePrompter::setPrintLevel(oldlevel);
     }
 
@@ -514,7 +456,6 @@ void testSCF() {
     vector<Timer> scf_t;
     while (error > scf_thrs) {
         Timer cycle_t;
-        cycle_t.restart();
 
         // Adjust precision
         scf_prec = min(scf_prec, error/100.0);
@@ -530,11 +471,11 @@ void testSCF() {
         MWMultiplier<3> mult(MRA, scf_prec);
 
         // Compute Helmholtz argument V*phi
-        FunctionTree<3> *Vphi = G(*phi_n);          // Copy grid from orbital
-        mult(*Vphi, 1.0, *V, *phi_n, 1);            // Relax grid max one level
+        FunctionTree<3> *Vphi = G(*phi_n);  // Copy grid from orbital
+        mult(*Vphi, 1.0, *V, *phi_n, 1);    // Relax grid max one level
 
         // Apply Helmholtz operator phi^n+1 = H[V*phi^n]
-        phi_np1 = H(*Vphi);                         // Adaptive grid
+        phi_np1 = H(*Vphi);
         *phi_np1 *= -1.0/(2.0*pi);
 
         // Compute orbital residual
@@ -591,47 +532,24 @@ void testSCF() {
 
 void testTreeCleaner() {
     Timer timer;
-    timer.restart();
     TelePrompter::printHeader(0, "Testing TreeCleaner");
 
-    // Precision parameter
+    MultiResolutionAnalysis<3> *MRA = initializeMRA<3>();
+    GaussFunc<3> *f_func = initializeGauss<3>();
+
     double prec = Input.get<double>("rel_prec");
-
-    // Computational domain
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
-
-    // MW basis
-    int order = Input.get<int>("order");
-    InterpolatingBasis basis(order);
-
-    // Initializing MRA
-    MultiResolutionAnalysis<3> MRA(world, basis);
-
-    // Defining analytic function
-    auto f = [] (const double *r) -> double {
-        const double beta = 10.0;
-        const double alpha = pow(beta/pi, 3.0/2.0);;
-        const double r_0[3] = {0.0, 0.0, 0.0};
-        double R = MathUtils::calcDistance(3, r, r_0);
-        return alpha*exp(-beta*R*R);
-    };
-
-    MWProjector<3> Q(MRA);
-    GridCleaner<3> C(MRA, prec);
-    GridGenerator<3> G(MRA);
+    MWProjector<3> Q(*MRA);
+    GridCleaner<3> C(*MRA, prec);
+    GridGenerator<3> G(*MRA);
 
     FunctionTree<3> *f_tree = G();
 
     int n_nodes = 1;
     while (n_nodes > 0) {
-        Q(*f_tree, f);
+        Q(*f_tree, *f_func);
         n_nodes = C(*f_tree);
     }
-    Q(*f_tree, f);
+    Q(*f_tree, *f_func);
 
     double integral = f_tree->integrate();
     double sq_norm = f_tree->getSquareNorm();
@@ -640,6 +558,9 @@ void testTreeCleaner() {
     println(0, " Square norm                 " << setw(30) << sq_norm);
 
     delete f_tree;
+    delete f_func;
+    delete MRA;
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
 

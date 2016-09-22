@@ -22,5 +22,4 @@ target_link_libraries(unit_tests.x
     mwtrees
     mwoperators
     mwbuilders
-    ${Boost_LIBRARIES}
 )

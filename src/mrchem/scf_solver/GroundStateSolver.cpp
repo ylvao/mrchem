@@ -66,7 +66,6 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
     if (part_2 == 0) part_2 = new Orbital(phi_i);
 
     Timer timer;
-    timer.restart();
     Orbital *arg = new Orbital(phi_i);
     this->add(*arg, coef, *part_1, coef, *part_2, true);
 
@@ -136,7 +135,6 @@ void GroundStateSolver::printProperty() const {
  */
 void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     Timer timer;
-    timer.restart();
     RR rr(this->orbPrec[0], this->MRA, phi);
     int n_it = rr.maximize();//compute total U, rotation matrix
     timer.stop();
@@ -145,7 +143,7 @@ void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector 
     if (nIter > 0) {
         U = rr.getTotalU().transpose();
     } else {
-        timer.restart();
+        timer.resume();
         U = calcOrthonormalizationMatrix(phi);
         timer.stop();
     }
@@ -168,7 +166,6 @@ void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVect
     F = S_m12.transpose()*F*S_m12;
 
     Timer timer;
-    timer.restart();
     printout(1, "Calculating diagonalization matrix               ");
 
     SelfAdjointEigenSolver<MatrixXd> es(F.cols());
@@ -192,7 +189,6 @@ void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalV
 
 MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     Timer timer;
-    timer.restart();
     printout(1, "Calculating orthonormalization matrix            ");
 
     MatrixXd S_tilde = phi.calcOverlapMatrix().real();

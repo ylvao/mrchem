@@ -26,7 +26,6 @@ void MomentumOperator::clear() {
 Orbital* MomentumOperator::operator() (Orbital &orb_p) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     Timer timer;
-    timer.restart();
     Orbital *dOrb_p = new Orbital(orb_p);
     if (orb_p.real != 0) {
         dOrb_p->imag = this->grid(*orb_p.real);

@@ -209,21 +209,18 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
                                   MatrixXd &F_n,
                                   OrbitalVector &phi_n,
                                   bool adjoint) {
-    Timer timer;
-    timer.restart();
-
     TelePrompter::printHeader(0, "Applying Helmholtz Operators");
     println(0, " Orb    OrbNorm       NormDiff       nNodes         Timing   ");
     TelePrompter::printSeparator(0, '-');
     int oldprec = TelePrompter::setPrecision(5);
 
+    Timer timer;
     HelmholtzOperatorSet &H = *this->helmholtz;
     H.setPrecision(getOrbitalPrecision());
 
     phi_np1.clear();
     for (int i = 0; i < phi_n.size(); i++) {
         Timer timer;
-        timer.restart();
         Orbital &nPhi_i = phi_n.getOrbital(i);
         Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
@@ -242,6 +239,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         printout(0, " " << setw(9) << nNodes);
         printout(0, setw(18) << timer.getWallTime() << endl);
     }
+    timer.stop();
     TelePrompter::printFooter(0, timer, 2);
     TelePrompter::setPrecision(oldprec);
 }
@@ -268,7 +266,6 @@ Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
     Orbital *result = new Orbital(phi_i);
     if (orbs.size() > 0) {
         Timer timer;
-        timer.restart();
         this->add(*result, coefs, orbs, false);
         double time = timer.getWallTime();
         int nNodes = result->getNNodes();

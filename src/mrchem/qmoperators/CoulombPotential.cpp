@@ -15,7 +15,6 @@ void CoulombPotential::setup(double prec) {
 
     {
         Timer timer;
-        timer.restart();
         this->project(this->density, *this->orbitals);
         double t = timer.getWallTime();
         int n = this->density.getNNodes();
@@ -23,7 +22,6 @@ void CoulombPotential::setup(double prec) {
     }
 
     Timer timer;
-    timer.restart();
     FunctionTree<3> &rho = this->density.getDensity(Paired);
     if (not this->potential.hasReal()) {
         this->potential.real = this->grid();

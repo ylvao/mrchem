@@ -73,16 +73,6 @@ protected:
     double error;
     FunctionTree<3> *real;
     FunctionTree<3> *imag;
-
-//    friend class boost::serialization::access;
-//    template<class Archive>
-//    void serialize(Archive & ar, const unsigned int version) {
-//        ar.register_type(static_cast<Orbital *>(NULL));
-//        ar & spin;
-//        ar & occupancy;
-//        ar & error;
-//        ar & boost::serialization::base_object<FunctionTree<3> >(*this);
-//    }
 };
 
 #endif // ORBITAL_H

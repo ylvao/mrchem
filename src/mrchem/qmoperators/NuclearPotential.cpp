@@ -14,7 +14,6 @@ NuclearPotential::~NuclearPotential() {
 
 void NuclearPotential::setup(double prec) {
     Timer timer;
-    timer.restart();
     Potential::setup(prec);
     this->project.setPrecision(prec);
     if (this->real == 0) {
