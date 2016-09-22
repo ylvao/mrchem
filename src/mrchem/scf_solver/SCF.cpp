@@ -233,6 +233,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
         double dNorm_n = fabs(norm_np1-norm_n);
 
+        timer.stop();
         printout(0, setw(3) << i);
         printout(0, " " << setw(13) << norm_np1);
         printout(0, " " << setw(13) << dNorm_n);
@@ -267,6 +268,7 @@ Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
     if (orbs.size() > 0) {
         Timer timer;
         this->add(*result, coefs, orbs, false);
+        timer.stop();
         double time = timer.getWallTime();
         int nNodes = result->getNNodes();
         TelePrompter::printTree(2, "Added matrix part", nNodes, time);

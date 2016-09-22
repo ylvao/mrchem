@@ -16,6 +16,7 @@ void CoulombPotential::setup(double prec) {
     {
         Timer timer;
         this->project(this->density, *this->orbitals);
+        timer.stop();
         double t = timer.getWallTime();
         int n = this->density.getNNodes();
         TelePrompter::printTree(0, "Coulomb density", n, t);

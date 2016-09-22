@@ -98,6 +98,7 @@ void Accelerator::rotate(const MatrixXd &U, bool rotAll) {
         dF = U*dF*U.transpose();
     }
 
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Rotating iterative subspace", t);
 }
@@ -162,6 +163,7 @@ void Accelerator::push_back(OrbitalVector &phi,
         println(0, " Clearing accelerator");
         this->clear();
     }
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Push back orbitals", t);
 }
@@ -233,6 +235,7 @@ void Accelerator::solveLinearSystem() {
         *tmpC = this->A[n]->colPivHouseholderQr().solve(*this->b[n]);
         this->c.push_back(tmpC);
     }
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Solve linear system", t);
 }
@@ -252,6 +255,7 @@ void Accelerator::copyOrbitals(OrbitalVector &phi, int nHistory) {
     MatrixXd I = MatrixXd::Identity(phi.size(), phi.size());
     this->add.rotate(phi, I, *this->orbitals[n]);
 
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Copy orbitals", t);
 }
@@ -270,6 +274,7 @@ void Accelerator::copyOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
     MatrixXd I = MatrixXd::Identity(dPhi.size(), dPhi.size());
     this->add.rotate(dPhi, I, *this->dOrbitals[n]);
 
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Copy orbital updates", t);
 }

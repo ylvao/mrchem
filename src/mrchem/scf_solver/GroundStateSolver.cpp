@@ -69,6 +69,7 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
     Orbital *arg = new Orbital(phi_i);
     this->add(*arg, coef, *part_1, coef, *part_2, true);
 
+    timer.stop();
     double time = timer.getWallTime();
     int nNodes = arg->getNNodes();
     TelePrompter::printTree(2, "Added arguments", nNodes, time);
@@ -173,6 +174,7 @@ void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVect
     MatrixXd M = es.eigenvectors();
     MatrixXd U = M.transpose()*S_m12;
 
+    timer.stop();
     println(1, timer.getWallTime());
 
     F = es.eigenvalues().asDiagonal();
@@ -202,6 +204,7 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     MatrixXd B = es.eigenvectors();
     MatrixXd U = B*A*B.transpose();
 
+    timer.stop();
     println(1, timer.getWallTime());
     return U;
 }
