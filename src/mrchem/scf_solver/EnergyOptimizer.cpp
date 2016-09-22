@@ -106,6 +106,7 @@ bool EnergyOptimizer::optimize() {
         phi_np1.clear();
 
         // Finalize SCF cycle
+        timer.stop();
         printOrbitals(F_n, phi_n);
         printProperty();
         printTimer(timer.getWallTime());
@@ -141,6 +142,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     {   // Nuclear potential matrix is computed explicitly
         Timer timer;
         dV_n = (*v_n)(phi_np1, dPhi_n);
+        timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(0, "Nuclear potential matrix", t);
     }
@@ -150,6 +152,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
         Timer timer;
         FockOperator fock_n(this->MRA, 0, 0, j_n, k_n, xc_n);
         F_n = fock_n(phi_np1, phi_n);
+        timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(0, "Fock matrix n", t);
     }
@@ -182,6 +185,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
         //MatrixXd F_3 = f_np1(*this->dPhi_n, *this->phi_n);
         //MatrixXd F_4 = f_np1(*this->dPhi_n, *this->dPhi_n);
         //MatrixXd F_np1 = F_1 + F_2 + F_3 + F_4;
+        timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(0, "Fock matrix n+1", t);
     }

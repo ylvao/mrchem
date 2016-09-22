@@ -72,6 +72,7 @@ void XCOperator::calcDensity() {
     {
         Timer timer;
         this->project(rho, phi);
+        timer.stop();
         double t = timer.getWallTime();
         int n = rho.getNNodes();
         TelePrompter::printTree(0, "XC density", n, t);
@@ -80,6 +81,7 @@ void XCOperator::calcDensity() {
     if (this->functional->isGGA()) {
         Timer timer;
         this->gradient_0 = calcDensityGradient(rho);
+        timer.stop();
         double t = timer.getWallTime();
         int n = sumNodes<Density>(this->gradient_0, 3);
         TelePrompter::printTree(0, "XC density gradient", n, t);
@@ -166,6 +168,7 @@ void XCOperator::setupXCInput() {
     for (int i = 0; i < nInp; i++) {
         if (this->xcInput[i] == 0) MSG_ERROR("Invalid XC input");
     }
+    timer.stop();
     double t = timer.getWallTime();
     int n = sumNodes<FunctionTree<3> >(this->xcInput, nInp);
     TelePrompter::printTree(0, "XC preprocess xcfun", n, t);
@@ -233,6 +236,7 @@ void XCOperator::evaluateXCFunctional() {
         this->xcOutput[i]->calcSquareNorm();
     }
 
+    timer.stop();
     double t = timer.getWallTime();
     int n = sumNodes<FunctionTree<3> >(this->xcOutput, nOut);
     TelePrompter::printTree(0, "XC evaluate xcfun", n, t);
@@ -244,6 +248,7 @@ void XCOperator::calcEnergy() {
     if (this->xcOutput[0] == 0) MSG_ERROR("Invalid XC output");
     Timer timer;
     this->energy = this->xcOutput[0]->integrate();
+    timer.stop();
     double time = timer.getWallTime();
     int nNodes = this->xcOutput[0]->getNNodes();
     TelePrompter::printTree(0, "XC energy", nNodes, time);
@@ -260,6 +265,7 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
         this->mult(*potDens, 1.0, pot, *dens[d], 0);
         vec.push_back(potDens);
 
+        timer.stop();
         double t = timer.getWallTime();
         int n = potDens->getNNodes();
         TelePrompter::printTree(2, "Multiply", n, t);
@@ -269,6 +275,7 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
     FunctionTree<3> *result = this->derivative.div(vec);
     vec.clear(true);
 
+    timer.stop();
     double t = timer.getWallTime();
     int n = result->getNNodes();
     TelePrompter::printTree(2, "Gradient", n, t);
