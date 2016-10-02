@@ -5,8 +5,12 @@
 using namespace std;
 
 void MREnv::initializeMRCPP(int argc, char **argv) {
+
+#ifdef HAVE_MPI
+    MPI_Init(NULL, NULL);
+    MPI_Initializations();
+#endif
     int nThreads = omp_get_max_threads();
-    int nHosts = 1;
 
     omp_set_dynamic(0);
     Eigen::setNbThreads(1);
@@ -42,15 +46,18 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     println(0,endl);
     println(0,"Print level  : " <<  printlevel << endl);
 
-    if (nHosts > 1 or nThreads > 1) {
+    if (MPI_size > 1 or nThreads > 1) {
         println(0,"+++ Parallel execution: ");
-        println(0,"  MPI hosts available     : " << nHosts);
+        println(0,"  MPI hosts available     : " << MPI_size);
         println(0,"  Threads/host            : " << nThreads);
-        println(0,"  Total used CPUs         : " << nHosts*nThreads);
+        println(0,"  Total used CPUs         : " << MPI_size*nThreads);
         println(0,"");
     } else {
         println(0,"+++ Serial execution" << endl);
     }
+#ifdef HAVE_MPI
+    MPI_Finalize();
+#endif
 }
 
 void MREnv::finalizeMRCPP(const Timer t) {
