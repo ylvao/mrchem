@@ -55,9 +55,6 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     } else {
         println(0,"+++ Serial execution" << endl);
     }
-#ifdef HAVE_MPI
-    MPI_Finalize();
-#endif
 }
 
 void MREnv::finalizeMRCPP(const Timer t) {
@@ -76,4 +73,8 @@ void MREnv::finalizeMRCPP(const Timer t) {
     println(0,"***                                                      ***");
     println(0,"************************************************************");
     println(0,endl);
+
+#ifdef HAVE_MPI
+    MPI_Finalize();
+#endif
 }
