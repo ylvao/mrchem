@@ -92,6 +92,7 @@ void KAIN::setupLinearSystem() {
         delete A_matrices[n];
         delete b_vectors[n];
     }
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Setup linear system", t);
 }
@@ -191,6 +192,7 @@ void KAIN::expandSolution(OrbitalVector &phi,
         *F = X_m;
         *dF = fockStep;
     }
+    timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Expand solution", t);
 }

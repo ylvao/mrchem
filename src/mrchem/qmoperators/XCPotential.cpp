@@ -68,6 +68,7 @@ void XCPotential::calcPotential() {
     } else {
         MSG_FATAL("Invalid functional type");
     }
+    timer.stop();
     double t = timer.getWallTime();
     int n = 0;
     if (this->potential[0] != 0) n += this->potential[0]->getNNodes();

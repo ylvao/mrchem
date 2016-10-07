@@ -91,6 +91,7 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
             }
             delete xOrb_j;
         }
+        timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(1, "T_x", t);
     }
@@ -107,6 +108,7 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
             }
             delete yOrb_j;
         }
+        timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(1, "T_y", t);
     }
@@ -123,6 +125,7 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
             }
             delete zOrb_j;
         }
+        timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(1, "T_z", t);
     }
