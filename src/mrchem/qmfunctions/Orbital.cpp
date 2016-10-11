@@ -23,8 +23,8 @@ Orbital::Orbital(const Orbital &orb)
 
 Orbital& Orbital::operator=(const Orbital &orb) {
     if (this != &orb) {
-        if (this->real != 0) MSG_ERROR("Orbial not empty");
-        if (this->imag != 0) MSG_ERROR("Orbial not empty");
+        if (this->real != 0) MSG_ERROR("Orbital not empty");
+        if (this->imag != 0) MSG_ERROR("Orbital not empty");
         this->spin = orb.spin;
         this->occupancy = orb.occupancy;
         this->error = orb.error;
