@@ -159,35 +159,52 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     int Nj = j_orbs.size();
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
 
- /*   for(int i = 0; i<i_orbs.size();i++){
+#ifdef HAVE_MPI
+    for(int i = 0; i<i_orbs.size();i++){
          Orbital& orb_i = i_orbs.getOrbital(i);
-	 
-	 if(MPI_rank==0)SendRcv_Orbital(&orb_i, 0, 1, 55, MPI_COMM_WORLD);
-	 if(MPI_rank==1)SendRcv_Orbital(&orb_i, 0, 1, 55, MPI_COMM_WORLD);
+
+	 if(i%MPI_size==MPI_rank){
+	   //responsible for this orbital, send it to everybody else. Could use Bcast, but will go another way
+	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
+	     if(i_mpi!= MPI_rank)SendRcv_Orbital(&orb_i, MPI_rank, i_mpi, 55, MPI_COMM_WORLD);
+	   }
+	 }else{
+	   //get orbital 
+	   SendRcv_Orbital(&orb_i, i%MPI_size, MPI_rank, 55, MPI_COMM_WORLD);
+	 }
+
 	 for(int j = 0; j<j_orbs.size();j++){
 	     Orbital &orb_j = j_orbs.getOrbital(j);
-	     if (this->T != 0) result(i,j) += (*this->T)(orb_i, orb_j);
-	     if (this->V != 0) result(i,j) += (*this->V)(orb_i, orb_j);
-	     if (this->J != 0) result(i,j) += (*this->J)(orb_i, orb_j);
-	     if (this->K != 0) result(i,j) += (*this->K)(orb_i, orb_j);
-	     if (this->XC != 0) result(i,j) += (*this->XC)(orb_i, orb_j);
+
+	     if(j%MPI_size==MPI_rank){
+	       //Only one proces does the computations
+	       if (this->T != 0) result(i,j) += (*this->T)(orb_i, orb_j);
+	       if (this->V != 0) result(i,j) += (*this->V)(orb_i, orb_j);
+	       if (this->J != 0) result(i,j) += (*this->J)(orb_i, orb_j);
+	       if (this->K != 0) result(i,j) += (*this->K)(orb_i, orb_j);
+	       if (this->XC != 0) result(i,j) += (*this->XC)(orb_i, orb_j);
+	     }
 	 }
-      }*/
+      }
 
+    MPI_Allreduce(MPI_IN_PLACE, &result(0,0), Ni*Nj,
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
+#else
+    
     if (this->T != 0) result += (*this->T)(i_orbs, j_orbs);
     if (this->V != 0) result += (*this->V)(i_orbs, j_orbs);
     if (this->J != 0) result += (*this->J)(i_orbs, j_orbs);
     if (this->K != 0) result += (*this->K)(i_orbs, j_orbs);
     if (this->XC != 0) result += (*this->XC)(i_orbs, j_orbs);
 
+#endif
 
 
     for (int i = 0; i < getNPerturbations(); i++) {
         QMOperator &h1 = getPerturbationOperator(i);
         result += h1(i_orbs, j_orbs);
     }
-
     return result;
 }
 
