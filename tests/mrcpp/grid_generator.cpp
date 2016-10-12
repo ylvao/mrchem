@@ -34,7 +34,6 @@ template<int D> void testGridGenerator() {
             REQUIRE( f_tree->getDepth() == 1 );
             REQUIRE( f_tree->getNNodes() == f_tree->getNEndNodes() );
             REQUIRE( f_tree->getNGenNodes() == 0 );
-            REQUIRE( f_tree->getNAllocGenNodes() == 0 );
 
             AND_WHEN("the GridGenerator is given the analytic function") {
                 G(*f_tree, *f_func, 2);
@@ -44,7 +43,6 @@ template<int D> void testGridGenerator() {
                     REQUIRE( f_tree->getDepth() == 3 );
                     REQUIRE( f_tree->getNNodes() > f_tree->getNEndNodes() );
                     REQUIRE( f_tree->getNGenNodes() == 0 );
-                    REQUIRE( f_tree->getNAllocGenNodes() == 0 );
                 }
             }
         }
@@ -59,7 +57,6 @@ template<int D> void testGridGenerator() {
             REQUIRE( f_tree->getDepth() == 3 );
             REQUIRE( f_tree->getNNodes() > f_tree->getNEndNodes() );
             REQUIRE( f_tree->getNGenNodes() == 0 );
-            REQUIRE( f_tree->getNAllocGenNodes() == 0 );
 
             AND_WHEN("the empty tree is passed to the GridGenerator") {
                 FunctionTree<D> *g_tree = G(*f_tree);
@@ -70,7 +67,6 @@ template<int D> void testGridGenerator() {
                     REQUIRE( g_tree->getNNodes() == f_tree->getNNodes() );
                     REQUIRE( g_tree->getNEndNodes() == f_tree->getNEndNodes() );
                     REQUIRE( g_tree->getNGenNodes() == 0 );
-                    REQUIRE( g_tree->getNAllocGenNodes() == 0 );
                 }
                 delete g_tree;
             }

@@ -71,7 +71,6 @@ template<int D> void testGeneratedNodes() {
 
     THEN("there are no GenNodes") {
         REQUIRE( tree->getNGenNodes() == 0 );
-        REQUIRE( tree->getNAllocGenNodes() == 0 );
     }
 
     WHEN("a non-existing node is fetched") {
@@ -79,22 +78,11 @@ template<int D> void testGeneratedNodes() {
 
         THEN("there will be allocated GenNodes") {
             REQUIRE( tree->getNGenNodes() > 0 );
-            REQUIRE( tree->getNAllocGenNodes() > 0 );
-
-            AND_WHEN("the GenNodes are cleared") {
-                tree->clearGenerated();
-
-                THEN("there will be un-allocated GenNodes") {
-                    REQUIRE( tree->getNGenNodes() > 0 );
-                    REQUIRE( tree->getNAllocGenNodes() == 0 );
-                }
-            }
 
             AND_WHEN("the GenNodes are deleted") {
                 tree->deleteGenerated();
                 THEN("there will be no GenNodes") {
                     REQUIRE( tree->getNGenNodes() == 0 );
-                    REQUIRE( tree->getNAllocGenNodes() == 0 );
                 }
             }
         }
