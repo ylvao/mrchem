@@ -252,23 +252,23 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 
 	if(i%MPI_size==MPI_rank){
 	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	     if(i_mpi!= MPI_rank)SendRcv_Orbital(&np1Phi_i, MPI_rank, i_mpi, 54, MPI_COMM_WORLD);
+	     if(i_mpi!= MPI_rank)SendRcv_Orbital(&np1Phi_i, MPI_rank, i_mpi, 54);
 	   }
 	  timer.stop();
 	  printout(0, setw(3) << i);
 	  printout(0, "sendtime " <<setw(18) << timer.getWallTime() << endl);	
 	}else{
-	  if(not np1Phi_i.hasReal()){
+	   //if(not np1Phi_i.hasReal()){
 	    //need to define Tree
-	    MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).re().getMRA();
-	    np1Phi_i.real = new FunctionTree<3>(mra,MAXALLOCNODES);
-	  }
-	  if(not np1Phi_i.hasImag() and phi_n.getOrbital(MPI_rank).hasImag()){
+	   //  MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).re().getMRA();
+	   //  np1Phi_i.real = new FunctionTree<3>(mra,MAXALLOCNODES);
+	   //}
+	   //if(not np1Phi_i.hasImag() and phi_n.getOrbital(MPI_rank).hasImag()){
 	    //need to define Tree
-	    MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).im().getMRA();
-	    np1Phi_i.imag = new FunctionTree<3>(mra,MAXALLOCNODES);
-	  }
-	  SendRcv_Orbital(&np1Phi_i, i%MPI_size, MPI_rank, 54, MPI_COMM_WORLD);
+	   //  MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).im().getMRA();
+	   //  np1Phi_i.imag = new FunctionTree<3>(mra,MAXALLOCNODES);
+	   //}
+	  SendRcv_Orbital(&np1Phi_i, i%MPI_size, MPI_rank, 54);
 	  printout(0, MPI_rank<<"   "<<setw(3) << i);
 	  printout(0, "rcvtime " <<setw(18) << timer.getWallTime() << endl);	
 	}
