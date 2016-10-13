@@ -261,12 +261,12 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 	  if(not np1Phi_i.hasReal()){
 	    //need to define Tree
 	    MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).re().getMRA();
-	    np1Phi_i.real = new FunctionTree<3>(mra,MAXALLOCNODES);
+	    np1Phi_i.real = new FunctionTree<3>(mra, MaxAllocNodes);
 	  }
 	  if(not np1Phi_i.hasImag() and phi_n.getOrbital(MPI_rank).hasImag()){
 	    //need to define Tree
 	    MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).im().getMRA();
-	    np1Phi_i.imag = new FunctionTree<3>(mra,MAXALLOCNODES);
+	    np1Phi_i.imag = new FunctionTree<3>(mra, MaxAllocNodes);
 	  }
 	  SendRcv_Orbital(&np1Phi_i, i%MPI_size, MPI_rank, 54, MPI_COMM_WORLD);
 	  printout(0, MPI_rank<<"   "<<setw(3) << i);
