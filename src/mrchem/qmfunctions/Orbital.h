@@ -66,6 +66,10 @@ public:
     friend class HelmholtzOperatorSet;
     friend class MomentumOperator;
     friend class SCF;
+    friend class OrbitalVector;
+#ifdef HAVE_MPI
+    friend void SendRcv_Orbital(Orbital* Orb, int source, int dest, int tag);
+#endif
 
 protected:
     int spin;

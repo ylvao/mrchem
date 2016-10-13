@@ -166,11 +166,11 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	 if(i%MPI_size==MPI_rank){
 	   //responsible for this orbital, send it to everybody else. Could use Bcast, but will go another way
 	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	     if(i_mpi!= MPI_rank)SendRcv_Orbital(&orb_i, MPI_rank, i_mpi, 55, MPI_COMM_WORLD);
+	     if(i_mpi!= MPI_rank)SendRcv_Orbital(&orb_i, MPI_rank, i_mpi, 55);
 	   }
 	 }else{
 	   //get orbital 
-	   SendRcv_Orbital(&orb_i, i%MPI_size, MPI_rank, 55, MPI_COMM_WORLD);
+	   SendRcv_Orbital(&orb_i, i%MPI_size, MPI_rank, 55);
 	 }
 
 	 for(int j = 0; j<j_orbs.size();j++){
