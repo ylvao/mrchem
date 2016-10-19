@@ -18,7 +18,7 @@ $end
 }
 
 WaveFunction {
-  method = DFT                    # Wave function method (HF or DFT)
+  method = DFT                     # Wave function method (HF or DFT)
 }
 
 DFT {
@@ -39,6 +39,3 @@ SCF {
   history = 3                     # Length of KAIN iterative history
 }
 
-Pilot {
-  run_scf = true
-}
