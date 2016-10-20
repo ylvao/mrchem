@@ -8,6 +8,7 @@
 #include "TelePrompter.h"
 
 template<int D> class FunctionTree;
+template<int D> class FunctionSerialTree;
 
 class Orbital {
 public:
@@ -52,6 +53,8 @@ public:
         return sp;
     }
 
+    void sendRcv_Orbital(int source, int dest, int tag);
+
     friend std::ostream& operator<<(std::ostream &o, Orbital &orb) {
         o << std::setw(25) << orb.getSquareNorm();
         o << std::setw(3) << orb.getOccupancy();
@@ -67,9 +70,6 @@ public:
     friend class MomentumOperator;
     friend class SCF;
     friend class OrbitalVector;
-#ifdef HAVE_MPI
-    friend void SendRcv_Orbital(Orbital* Orb, int source, int dest, int tag);
-#endif
 
 protected:
     int spin;

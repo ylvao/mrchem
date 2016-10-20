@@ -2,8 +2,16 @@
 
 #include "Orbital.h"
 #include "FunctionTree.h"
+#include "SerialFunctionTree.h"
+#include "parallel.h"
+
+//used for MRA only:
+#include "InterpolatingBasis.h"
+#include "mrchem.h"
+const MultiResolutionAnalysis<3> *default_mra=0;//used to define mra when not explicitely defined
 
 using namespace std;
+
 
 Orbital::Orbital(int occ, int s)
         : spin(s),
@@ -124,3 +132,84 @@ void Orbital::orthogonalize(Orbital &phi) {
     NOT_IMPLEMENTED_ABORT;
 }
 
+
+MultiResolutionAnalysis<3>* initializeMRA() {
+    // Constructing world box
+  const int D=3;
+    int scale = Input.get<int>("World.scale");
+    int max_depth = Input.get<int>("max_depth");
+    vector<int> corner = Input.getIntVec("World.corner");
+    vector<int> boxes = Input.getIntVec("World.boxes");
+    NodeIndex<D> idx(scale, corner.data());
+    BoundingBox<D> world(idx, boxes.data());
+
+    // Constructing scaling basis
+    int order = Input.get<int>("order");
+    InterpolatingBasis basis(order);
+
+    // Initializing MRA
+    return new MultiResolutionAnalysis<D>(world, basis, max_depth);
+}
+
+//send an orbital with MPI
+void Orbital::sendRcv_Orbital(int source, int dest, int tag){
+#ifdef HAVE_MPI
+  MPI_Status status;
+  MPI_Comm comm=MPI_COMM_WORLD;
+
+  struct Metadata{
+    int spin;
+    int occupancy;
+    int NchunksReal;
+    int NchunksImag;
+    double error;
+  };
+
+  Metadata Orbinfo;
+
+  if(MPI_rank==source){
+    Orbinfo.spin=this->getSpin();
+    Orbinfo.occupancy=this->getOccupancy();
+    Orbinfo.error=this->getError();
+    if(this->hasReal()){
+      Orbinfo.NchunksReal = this->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    }else{Orbinfo.NchunksReal = 0;}
+    if(this->hasImag()){
+      Orbinfo.NchunksImag = this->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    }else{Orbinfo.NchunksImag = 0;}
+
+    int count=sizeof(Metadata);
+    MPI_Send(&Orbinfo, count, MPI_BYTE, dest, 0, comm);
+
+    if(this->hasReal())SendRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, dest, tag, comm);
+    if(this->hasImag())SendRcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, dest, tag*10000, comm);
+
+  }
+  if(MPI_rank==dest){
+    int count=sizeof(Metadata);
+    MPI_Recv(&Orbinfo, count, MPI_BYTE, source, 0, comm, &status);
+    this->setSpin(Orbinfo.spin);
+    this->setOccupancy(Orbinfo.occupancy);
+    this->setError(Orbinfo.error);
+
+    if(Orbinfo.NchunksReal>0){
+      if(not this->hasReal()){
+	//We must have a tree defined for receiving nodes. Define one:
+	if(default_mra==0){
+	  default_mra = initializeMRA();
+	  cout<<" defined new MRA with depth "<<default_mra->getMaxDepth()<<endl;
+	}
+	this->real = new FunctionTree<3>(*default_mra,MaxAllocNodes);
+      }
+    SendRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, dest, tag, comm);}
+
+    if(Orbinfo.NchunksImag>0){
+      SendRcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, dest, tag*10000, comm);
+    }else{
+      //&(this->im())=0;
+    }
+  }
+
+#endif
+
+}
