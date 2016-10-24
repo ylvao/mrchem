@@ -9,7 +9,6 @@ template<int D> class FunctionTreeVector;
 class XCPotential : public XCOperator {
 public:
     XCPotential(double build_prec,
-                const MultiResolutionAnalysis<3> &mra,
                 XCFunctional &func,
                 OrbitalVector &phi);
     virtual ~XCPotential();

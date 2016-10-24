@@ -23,8 +23,7 @@
   * an extra orbital) using the Frobenius inner product of matrices. */
 class Accelerator {
 public:
-    Accelerator(const MultiResolutionAnalysis<3> &mra,
-                int max, int min, bool sep);
+    Accelerator(int max, int min, bool sep);
     virtual ~Accelerator();
     void clear();
 

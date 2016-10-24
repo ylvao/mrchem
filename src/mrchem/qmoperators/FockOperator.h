@@ -16,8 +16,7 @@ class XCOperator;
 
 class FockOperator : public QMOperator {
 public:
-    FockOperator(const MultiResolutionAnalysis<3> &mra,
-                 KineticOperator *t = 0,
+    FockOperator(KineticOperator *t = 0,
                  NuclearPotential *v = 0,
                  CoulombOperator *j = 0,
                  ExchangeOperator *k = 0,

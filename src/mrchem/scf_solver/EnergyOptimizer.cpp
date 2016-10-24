@@ -11,9 +11,8 @@
 using namespace std;
 using namespace Eigen;
 
-EnergyOptimizer::EnergyOptimizer(const MultiResolutionAnalysis<3> &mra,
-                                 HelmholtzOperatorSet &h)
-        : GroundStateSolver(mra, h),
+EnergyOptimizer::EnergyOptimizer(HelmholtzOperatorSet &h)
+        : GroundStateSolver(h),
           fOper_np1(0) {
 }
 
@@ -150,7 +149,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     MatrixXd F_n;
     {   // Computing potential matrix excluding nuclear part
         Timer timer;
-        FockOperator fock_n(this->MRA, 0, 0, j_n, k_n, xc_n);
+        FockOperator fock_n(0, 0, j_n, k_n, xc_n);
         F_n = fock_n(phi_np1, phi_n);
         timer.stop();
         double t = timer.getWallTime();
@@ -176,7 +175,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     MatrixXd F_np1;
     {   // Computing potential matrix excluding nuclear part
         Timer timer;
-        FockOperator fock_np1(this->MRA, 0, 0, j_np1, k_np1, xc_np1);
+        FockOperator fock_np1(0, 0, j_np1, k_np1, xc_np1);
         MatrixXd F_1 = fock_np1(phi_n, phi_n);
         MatrixXd F_2 = fock_np1(phi_n, dPhi_n);
         fock_np1.clear();

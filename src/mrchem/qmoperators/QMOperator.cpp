@@ -2,14 +2,15 @@
 #include "OrbitalVector.h"
 #include "Orbital.h"
 #include "Timer.h"
+#include "mrchem.h"
 
 using namespace std;
 using namespace Eigen;
 
-QMOperator::QMOperator(const MultiResolutionAnalysis<3> &mra)
+QMOperator::QMOperator()
     : apply_prec(-1.0),
-      clean(mra, -1.0),
-      grid(mra){
+      clean(*MRA, -1.0),
+      grid(*MRA){
 }
 
 void QMOperator::setup(double prec) {

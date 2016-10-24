@@ -15,9 +15,8 @@
   */
 class KAIN : public Accelerator {
 public:
-    KAIN(const MultiResolutionAnalysis<3> &mra,
-         int max, int min = 0, bool sep = false)
-        : Accelerator(mra, max, min, sep) { }
+    KAIN(int max, int min = 0, bool sep = false)
+        : Accelerator(max, min, sep) { }
     virtual ~KAIN() { }
 
 protected:

@@ -2,19 +2,17 @@
 #include "OrbitalVector.h"
 #include "OperatorTree.h"
 #include "Timer.h"
+#include "mrchem.h"
 #include "eigen_disable_warnings.h"
 
 using namespace std;
 using namespace Eigen;
 
-HelmholtzOperatorSet::HelmholtzOperatorSet(double build,
-                                           const MultiResolutionAnalysis<3> &mra,
-                                           double thrs)
+HelmholtzOperatorSet::HelmholtzOperatorSet(double build, double thrs)
         : threshold(thrs),
           build_prec(build),
           apply_prec(build),
-          MRA(mra),
-          grid(mra) {
+          grid(*MRA) {
 }
 
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
@@ -53,7 +51,7 @@ int HelmholtzOperatorSet::initHelmholtzOperator(double energy) {
     }
     TelePrompter::printDouble(0, "Creating operator with lambda", energy);
 
-    HelmholtzOperator *oper = new HelmholtzOperator(mu, this->MRA,
+    HelmholtzOperator *oper = new HelmholtzOperator(mu, *MRA,
                                                     this->build_prec,
                                                     this->build_prec);
     this->operators.push_back(oper);

@@ -9,9 +9,8 @@
 using namespace std;
 using namespace Eigen;
 
-Potential::Potential(const MultiResolutionAnalysis<3> &mra)
-    : QMOperator(mra),
-      mult(mra, -1.0),
+Potential::Potential()
+    : mult(-1.0),
       real(0),
       imag(0) {
 }

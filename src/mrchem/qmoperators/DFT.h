@@ -5,13 +5,12 @@
 
 class DFT : public FockOperator {
 public:
-    DFT(const MultiResolutionAnalysis<3> &mra,
-        KineticOperator &t,
+    DFT(KineticOperator &t,
         NuclearPotential &v,
         CoulombOperator &j,
         XCOperator &xc,
         ExchangeOperator *k = 0)
-        : FockOperator(mra, &t, &v, &j, k, &xc) { }
+        : FockOperator(&t, &v, &j, k, &xc) { }
     virtual ~DFT() { }
 };
 

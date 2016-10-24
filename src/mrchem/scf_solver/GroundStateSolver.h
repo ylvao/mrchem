@@ -8,8 +8,7 @@
 
 class GroundStateSolver : public SCF {
 public:
-    GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
-                      HelmholtzOperatorSet &h);
+    GroundStateSolver(HelmholtzOperatorSet &h);
     virtual ~GroundStateSolver();
 
 protected:
@@ -49,7 +48,7 @@ protected:
 
 class RR : public NonlinearMaximizer {
 public:
-    RR(double prec, const MultiResolutionAnalysis<3> &mra, OrbitalVector &phi);//make the matrices <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
+    RR(double prec, OrbitalVector &phi);//make the matrices <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
     const Eigen::MatrixXd &getTotalU() const { return this->total_U; }
 protected:
     int N;//number of orbitals

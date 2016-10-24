@@ -11,9 +11,7 @@ class Orbital;
 
 class HelmholtzOperatorSet {
 public:
-    HelmholtzOperatorSet(double build,
-                         const MultiResolutionAnalysis<3> &mra,
-                         double thrs = -1.0);
+    HelmholtzOperatorSet(double build, double thrs = -1.0);
     virtual ~HelmholtzOperatorSet() { clear(); }
 
     void initialize(const Eigen::VectorXd &energies);
@@ -35,7 +33,6 @@ private:
     double threshold; //For re-using operators. Negative means always recreate
     double build_prec;
     double apply_prec;
-    const MultiResolutionAnalysis<3> MRA;
     GridGenerator<3> grid;
 
     std::vector<int> operIdx;

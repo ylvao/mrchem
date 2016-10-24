@@ -1,9 +1,15 @@
 #include "OrbitalAdder.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
+#include "mrchem.h"
 
 using namespace std;
 using namespace Eigen;
+
+OrbitalAdder::OrbitalAdder(double pr)
+    : add(*MRA, pr),
+      grid(*MRA) {
+}
 
 void OrbitalAdder::operator()(Orbital &phi_ab,
                               double a, Orbital &phi_a,

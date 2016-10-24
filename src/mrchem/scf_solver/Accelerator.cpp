@@ -8,9 +8,8 @@
 using namespace std;
 using namespace Eigen;
 
-Accelerator::Accelerator(const MultiResolutionAnalysis<3> &mra,
-                         int max, int min, bool sep)
-        : add(mra, -1.0),
+Accelerator::Accelerator(int max, int min, bool sep)
+        : add(-1.0),
           sepOrbitals(sep),
           minHistory(min),
           maxHistory(max) {

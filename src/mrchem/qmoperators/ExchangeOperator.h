@@ -14,7 +14,6 @@ template<int D> class MultiResolutionAnalysis;
 class ExchangeOperator : public QMOperator {
 public:
     ExchangeOperator(double build_prec,
-                     const MultiResolutionAnalysis<3> &mr,
                      OrbitalVector &phi,
                      double x_fac);
     virtual ~ExchangeOperator();

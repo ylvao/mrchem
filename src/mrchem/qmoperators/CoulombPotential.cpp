@@ -2,12 +2,6 @@
 
 using namespace std;
 
-CoulombPotential::CoulombPotential(double build_prec,
-                    const MultiResolutionAnalysis<3> &mra,
-                    OrbitalVector &phi)
-    : CoulombOperator(build_prec, mra, phi) {
-}
-
 void CoulombPotential::setup(double prec) {
     if (this->orbitals == 0) MSG_ERROR("Orbitals not initialized");
 

@@ -7,10 +7,9 @@
 using namespace std;
 using namespace Eigen;
 
-OrbitalOptimizer::OrbitalOptimizer(const MultiResolutionAnalysis<3> &mra,
-                                   HelmholtzOperatorSet &h,
+OrbitalOptimizer::OrbitalOptimizer(HelmholtzOperatorSet &h,
                                    Accelerator *k)
-        : GroundStateSolver(mra, h),
+        : GroundStateSolver(h),
           kain(k) {
 }
 

@@ -11,8 +11,7 @@ class OrbitalVector;
 
 class OrbitalAdder {
 public:
-    OrbitalAdder(const MultiResolutionAnalysis<3> &mra, double pr = -1.0)
-        : add(mra, pr), grid(mra) { }
+    OrbitalAdder(double pr = -1.0);
     virtual ~OrbitalAdder() { }
 
     void setPrecision(double prec) { this->add.setPrecision(prec); }

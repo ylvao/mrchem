@@ -7,8 +7,7 @@ class Accelerator;
 
 class OrbitalOptimizer : public GroundStateSolver {
 public:
-    OrbitalOptimizer(const MultiResolutionAnalysis<3> &mra,
-                     HelmholtzOperatorSet &h,
+    OrbitalOptimizer(HelmholtzOperatorSet &h,
                      Accelerator *k = 0);
     virtual ~OrbitalOptimizer();
 
