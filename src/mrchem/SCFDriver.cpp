@@ -140,12 +140,6 @@ bool SCFDriver::sanityCheck() const {
 }
 
 void SCFDriver::setup() {
-    // Setting up MRA
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
-    InterpolatingBasis basis(order);
-    MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
-
     // Setting up molecule
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
@@ -202,8 +196,6 @@ void SCFDriver::setup() {
 }
 
 void SCFDriver::clear() {
-    if (MRA != 0) delete MRA;
-
     if (molecule != 0) delete molecule;
     if (phi != 0) delete phi;
 

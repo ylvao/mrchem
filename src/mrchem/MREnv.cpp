@@ -1,11 +1,14 @@
 #include "MREnv.h"
 #include "Timer.h"
 #include "mrchem.h"
+#include "LegendreBasis.h"
+#include "InterpolatingBasis.h"
 
 using namespace std;
 
-void MREnv::initializeMRCPP(int argc, char **argv) {
+MultiResolutionAnalysis<3> *MRA;
 
+void MREnv::initializeMRCPP(int argc, char **argv) {
 #ifdef HAVE_MPI
     MPI_Init(NULL, NULL);
     MPI_Initializations();
@@ -55,21 +58,24 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     } else {
         println(0,"+++ Serial execution" << endl);
     }
+
+    // Initialize global MRA
+    initializeMRA();
 }
 
 void MREnv::finalizeMRCPP(const Timer t) {
+    // Delete global MRA
+    if (MRA != 0) delete MRA;
+    MRA = 0;
+
     double wt = t.getWallTime();
-    double ut = t.getUserTime();
-    double st = t.getSystemTime();
     SET_PRINT_PRECISION(6);
     println(0,endl);
     println(0,"************************************************************");
     println(0,"***                                                      ***");
     println(0,"***                    Exiting MRChem                    ***");
     println(0,"***                                                      ***");
-    println(0,"***                 Wall:   " << wt << "                 ***");
-    println(0,"***                 User:   " << ut << "                 ***");
-    println(0,"***                 System: " << st << "                 ***");
+    println(0,"***               Wall time: " << wt << "                ***");
     println(0,"***                                                      ***");
     println(0,"************************************************************");
     println(0,endl);
@@ -77,4 +83,28 @@ void MREnv::finalizeMRCPP(const Timer t) {
 #ifdef HAVE_MPI
     MPI_Finalize();
 #endif
+}
+
+void MREnv::initializeMRA() {
+    // Constructing world box
+    int scale = Input.get<int>("World.scale");
+    vector<int> corner = Input.getIntVec("World.corner");
+    vector<int> boxes = Input.getIntVec("World.boxes");
+    NodeIndex<3> idx(scale, corner.data());
+    BoundingBox<3> world(idx, boxes.data());
+
+    // Constructing scaling basis
+    int order = Input.get<int>("order");
+    string wtype = Input.get<string>("wavelet");
+
+    // Initializing MRA
+    if (wtype == "I") {
+        InterpolatingBasis basis(order);
+        MRA = new MultiResolutionAnalysis<3>(world, basis);
+    } else if (wtype == "L") {
+        LegendreBasis basis(order);
+        MRA = new MultiResolutionAnalysis<3>(world, basis);
+    } else {
+        MSG_FATAL("Invalid wavelet type!");
+    }
 }
