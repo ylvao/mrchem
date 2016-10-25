@@ -5,7 +5,7 @@
 #include "SerialFunctionTree.h"
 #include "parallel.h"
 
-extern MultiResolutionAnalysis<3> *MRA; //< Default MRA
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
@@ -128,12 +128,7 @@ void Orbital::orthogonalize(Orbital &phi) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-<<<<<<< HEAD
-
 //send or receive an orbital with MPI
-=======
-//send an orbital with MPI
->>>>>>> dc678c847d5cec066e14b6ddd9e4b47ba19997e1
 void Orbital::sendRcv_Orbital(int source, int dest, int tag){
 #ifdef HAVE_MPI
   MPI_Status status;
@@ -177,11 +172,7 @@ void Orbital::sendRcv_Orbital(int source, int dest, int tag){
     if(Orbinfo.NchunksReal>0){
       if(not this->hasReal()){
 	//We must have a tree defined for receiving nodes. Define one:
-<<<<<<< HEAD
-	this->real = new FunctionTree<3>(*MRA,MaxAllocNodes);
-=======
 	this->real = new FunctionTree<3>(*MRA, MaxAllocNodes);
->>>>>>> dc678c847d5cec066e14b6ddd9e4b47ba19997e1
       }
     SendRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, dest, tag, comm);}
 
