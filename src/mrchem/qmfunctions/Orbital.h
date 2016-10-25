@@ -53,7 +53,6 @@ public:
         return sp;
     }
 
-    void sendRcv_Orbital(int source, int dest, int tag);
     void send_Orbital(int dest, int tag);
     void Rcv_Orbital(int source, int tag);
     void Isend_Orbital(int dest, int tag);

@@ -254,8 +254,8 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 	     if(i_mpi!= MPI_rank)np1Phi_i.send_Orbital(i_mpi, 54);
 	   }
 	  timer.stop();
-	  printout(0, setw(3) << i);
-	  printout(0, "sendtime " <<setw(18) << timer.getWallTime() << endl);	
+	  printout(10, setw(3) << i);
+	  printout(10, "sendtime " <<setw(18) << timer.getWallTime() << endl);	
 	}else{
 	   //if(not np1Phi_i.hasReal()){
 	    //need to define Tree
@@ -268,8 +268,8 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 	   //  np1Phi_i.imag = new FunctionTree<3>(mra, MaxAllocNodes);
 	   //}
 	  np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
-	  printout(0, MPI_rank<<"   "<<setw(3) << i);
-	  printout(0, "rcvtime " <<setw(18) << timer.getWallTime() << endl);	
+	  printout(10, MPI_rank<<"   "<<setw(3) << i);
+	  printout(10, "rcvtime " <<setw(18) << timer.getWallTime() << endl);	
 	}
     }
 #endif
