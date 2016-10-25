@@ -6,7 +6,8 @@
 #include "Density.h"
 #include "Potential.h"
 #include "TelePrompter.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 using namespace Eigen;

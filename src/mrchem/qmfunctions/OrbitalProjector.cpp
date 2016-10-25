@@ -9,7 +9,8 @@
 #include "TelePrompter.h"
 #include "Timer.h"
 #include "MathUtils.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 using namespace Eigen;

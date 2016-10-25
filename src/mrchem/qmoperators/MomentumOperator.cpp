@@ -1,7 +1,8 @@
 #include "MomentumOperator.h"
 #include "Orbital.h"
 #include "Timer.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 

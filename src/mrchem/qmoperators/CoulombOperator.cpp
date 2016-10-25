@@ -1,7 +1,8 @@
 #include "CoulombOperator.h"
 #include "Density.h"
 #include "FunctionTree.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 CoulombOperator::CoulombOperator(double build_prec, OrbitalVector &phi)
         : QMOperator(),
