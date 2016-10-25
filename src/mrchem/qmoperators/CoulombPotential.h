@@ -5,9 +5,9 @@
 
 class CoulombPotential : public CoulombOperator {
 public:
-    CoulombPotential(double build_prec,
-                    const MultiResolutionAnalysis<3> &mra,
-                    OrbitalVector &phi);
+    CoulombPotential(double build_prec, OrbitalVector &phi)
+        : CoulombOperator(build_prec, phi) { }
+    virtual ~CoulombPotential() { }
 
     void setup(double prec);
     void clear();

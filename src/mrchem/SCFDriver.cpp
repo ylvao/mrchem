@@ -140,12 +140,6 @@ bool SCFDriver::sanityCheck() const {
 }
 
 void SCFDriver::setup() {
-    // Setting up MRA
-    NodeIndex<3> idx(scale, corner.data());
-    BoundingBox<3> world(idx, boxes.data());
-    InterpolatingBasis basis(order);
-    MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
-
     // Setting up molecule
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
@@ -169,41 +163,39 @@ void SCFDriver::setup() {
     }
 
     // Setting up SCF
-    helmholtz = new HelmholtzOperatorSet(rel_prec, *MRA, scf_lambda_thrs);
-    if (scf_history > 0) scf_kain = new KAIN(*MRA, scf_history);
+    helmholtz = new HelmholtzOperatorSet(rel_prec, scf_lambda_thrs);
+    if (scf_history > 0) scf_kain = new KAIN(scf_history);
 
     // Setting up Fock operator
-    T = new KineticOperator(rel_prec, *MRA);
-    V = new NuclearPotential(rel_prec, *MRA, *nuclei);
+    T = new KineticOperator(rel_prec);
+    V = new NuclearPotential(rel_prec, *nuclei);
 
     if (wf_method == "Core") {
-        fock = new CoreHamiltonian(*MRA, *T, *V);
+        fock = new CoreHamiltonian(*T, *V);
     } else if (wf_method == "Hartree") {
-        J = new CoulombPotential(rel_prec, *MRA, *phi);
-        fock = new Hartree(*MRA, *T, *V, *J);
+        J = new CoulombPotential(rel_prec, *phi);
+        fock = new Hartree(*T, *V, *J);
     } else if (wf_method == "HF") {
-        J = new CoulombPotential(rel_prec, *MRA, *phi);
-        K = new ExchangePotential(rel_prec, *MRA, *phi);
-        fock = new HartreeFock(*MRA, *T, *V, *J, *K);
+        J = new CoulombPotential(rel_prec, *phi);
+        K = new ExchangePotential(rel_prec, *phi);
+        fock = new HartreeFock(*T, *V, *J, *K);
     } else if (wf_method == "DFT") {
-        J = new CoulombPotential(rel_prec, *MRA, *phi);
+        J = new CoulombPotential(rel_prec, *phi);
         xcfun = new XCFunctional(dft_spin, dft_cutoff);
         for (int i = 0; i < dft_func_names.size(); i++) {
             xcfun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
         }
-        XC = new XCPotential(rel_prec, *MRA, *xcfun, *phi);
+        XC = new XCPotential(rel_prec, *xcfun, *phi);
         if (dft_x_fac > MachineZero) {
-            K = new ExchangePotential(rel_prec, *MRA, *phi, dft_x_fac);
+            K = new ExchangePotential(rel_prec, *phi, dft_x_fac);
         }
-        fock = new DFT(*MRA, *T, *V, *J, *XC, 0);
+        fock = new DFT(*T, *V, *J, *XC, 0);
     } else {
         MSG_ERROR("Invalid method");
     }
 }
 
 void SCFDriver::clear() {
-    if (MRA != 0) delete MRA;
-
     if (molecule != 0) delete molecule;
     if (phi != 0) delete phi;
 
@@ -225,21 +217,21 @@ void SCFDriver::setup_np1() {
 
     if (wf_method == "Core") {
     } else if (wf_method == "Hartree") {
-        J_np1 = new CoulombPotential(rel_prec, *MRA, *phi_np1);
+        J_np1 = new CoulombPotential(rel_prec, *phi_np1);
     } else if (wf_method == "HF") {
-        J_np1 = new CoulombPotential(rel_prec, *MRA, *phi_np1);
-        K_np1 = new ExchangePotential(rel_prec, *MRA, *phi_np1);
+        J_np1 = new CoulombPotential(rel_prec, *phi_np1);
+        K_np1 = new ExchangePotential(rel_prec, *phi_np1);
     } else if (wf_method == "DFT") {
-        J_np1 = new CoulombPotential(rel_prec, *MRA, *phi_np1);
-        XC_np1 = new XCPotential(rel_prec, *MRA, *xcfun, *phi_np1);
+        J_np1 = new CoulombPotential(rel_prec, *phi_np1);
+        XC_np1 = new XCPotential(rel_prec, *xcfun, *phi_np1);
         if (dft_x_fac > MachineZero) {
-            K_np1 = new ExchangePotential(rel_prec, *MRA, *phi_np1, dft_x_fac);
+            K_np1 = new ExchangePotential(rel_prec, *phi_np1, dft_x_fac);
         }
     } else {
         MSG_ERROR("Invalid method");
     }
 
-    fock_np1 = new FockOperator(*MRA, 0, V, J_np1, K_np1, XC_np1);
+    fock_np1 = new FockOperator(0, V, J_np1, K_np1, XC_np1);
 }
 
 void SCFDriver::clear_np1() {
@@ -254,7 +246,7 @@ void SCFDriver::setupInitialGroundState() {
     // Reading initial guess
     if (scf_start == "none") {
         // Project minimal basis set of hydrogen orbitals
-        OrbitalProjector OP(*MRA, rel_prec);
+        OrbitalProjector OP(rel_prec);
         OrbitalVector *tmp = OP(*nuclei);
 
         // Compute orthonormalization matrix
@@ -262,7 +254,7 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd S_m12 = MathUtils::hermitianMatrixPow(S, -1.0/2.0);
 
         // Compute core Hamiltonian matrix
-        CoreHamiltonian h(*MRA, *T, *V);
+        CoreHamiltonian h(*T, *V);
         h.setup(rel_prec);
         MatrixXd f_mat = h(*tmp, *tmp);
         h.clear();
@@ -272,11 +264,11 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd U = M.transpose()*S_m12;
 
         // Rotate n lowest energy orbitals of U*tmp into phi
-        OrbitalAdder add(*MRA, rel_prec);
+        OrbitalAdder add(rel_prec);
         add.rotate(*phi, U, *tmp);
         delete tmp;
     } else if (scf_start == "gto") {
-        OrbitalProjector OP(*MRA, rel_prec);
+        OrbitalProjector OP(rel_prec);
         if (wf_restricted) {
             OP(*phi, file_basis_set, file_mo_mat_a);
         } else {
@@ -292,7 +284,7 @@ void SCFDriver::setupInitialGroundState() {
 OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*MRA, *helmholtz, scf_kain);
+    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, scf_kain);
     optimizer->setMaxIterations(scf_max_iter);
     optimizer->setRotation(scf_rotation);
     optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
@@ -304,7 +296,7 @@ OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
 EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-    EnergyOptimizer *optimizer = new EnergyOptimizer(*MRA, *helmholtz);
+    EnergyOptimizer *optimizer = new EnergyOptimizer(*helmholtz);
     optimizer->setMaxIterations(scf_max_iter);
     if (scf_localize) {
         optimizer->setRotation(1);
@@ -388,7 +380,7 @@ void SCFDriver::calcGroundStateProperties() {
     if (calc_dipole_moment) {
         DipoleMoment &dipole = molecule->getDipoleMoment();
         for (int d = 0; d < 3; d++) {
-            DipoleOperator mu_d(*MRA, d, r_O[d]);
+            DipoleOperator mu_d(d, r_O[d]);
             mu_d.setup(rel_prec);
             dipole.compute(d, mu_d, *nuclei);
             dipole.compute(d, mu_d, *phi);

@@ -25,8 +25,6 @@ class ExchangePotential;
 class XCPotential;
 class XCFunctional;
 
-template<int D> class MultiResolutionAnalysis;
-
 class SCFDriver {
 public:
     SCFDriver(Getkw &input);
@@ -93,9 +91,8 @@ protected:
     std::string file_mo_mat_a;
     std::string file_mo_mat_b;
 
-    // Computational domain
+    // Gauge origin
     double r_O[3];
-    MultiResolutionAnalysis<3> *MRA;
 
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;

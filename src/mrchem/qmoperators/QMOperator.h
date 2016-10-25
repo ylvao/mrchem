@@ -17,7 +17,7 @@ class Orbital;
   */
 class QMOperator {
 public:
-    QMOperator(const MultiResolutionAnalysis<3> &mra);
+    QMOperator();
     virtual ~QMOperator() { }
 
     virtual void rotate(Eigen::MatrixXd &U) { }

@@ -6,31 +6,31 @@
 #include "Density.h"
 #include "Potential.h"
 #include "TelePrompter.h"
+#include "mrchem.h"
 
 using namespace std;
 using namespace Eigen;
 
 XCOperator::XCOperator(int k,
                        double build_prec,
-                       const MultiResolutionAnalysis<3> &mra,
                        XCFunctional &func,
                        OrbitalVector &phi)
-        : QMOperator(mra),
+        : QMOperator(),
           order(k),
           functional(&func),
-          add(mra, -1.0),
-          mult(mra, -1.0),
-          project(mra, -1.0),
-          derivative(-1, mra, 0.0, 0.0),
+          add(*MRA, -1.0),
+          mult(*MRA, -1.0),
+          project(*MRA, -1.0),
+          derivative(-1, *MRA, 0.0, 0.0),
           orbitals_0(&phi),
           density_0(func.isSpinSeparated()),
           gradient_0(0),
           energy(0.0),
           xcInput(0),
           xcOutput(0) {
-    this->potential[0] = new Potential(mra);
-    this->potential[1] = new Potential(mra);
-    this->potential[2] = new Potential(mra);
+    this->potential[0] = new Potential();
+    this->potential[1] = new Potential();
+    this->potential[2] = new Potential();
 }
 
 XCOperator::~XCOperator() {

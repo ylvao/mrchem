@@ -20,9 +20,8 @@
 using namespace std;
 using namespace Eigen;
 
-GroundStateSolver::GroundStateSolver(const MultiResolutionAnalysis<3> &mra,
-                                     HelmholtzOperatorSet &h)
-        : SCF(mra, h),
+GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
+        : SCF(h),
           fOper_n(0),
           fMat_n(0),
           orbitals_n(0),
@@ -136,7 +135,7 @@ void GroundStateSolver::printProperty() const {
  */
 void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     Timer timer;
-    RR rr(this->orbPrec[0], this->MRA, phi);
+    RR rr(this->orbPrec[0], phi);
     int n_it = rr.maximize();//compute total U, rotation matrix
     timer.stop();
 
@@ -211,7 +210,7 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
 
 /** Compute the position matrix <i|R_x|j>,<i|R_y|j>,<i|R_z|j>
  */
-RR::RR(double prec, const MultiResolutionAnalysis<3> &mra, OrbitalVector &phi) {
+RR::RR(double prec, OrbitalVector &phi) {
     N = phi.size();
     if (N < 2) MSG_ERROR("Cannot localize less than two orbitals");
     total_U = MatrixXd::Identity(N,N);
@@ -222,9 +221,9 @@ RR::RR(double prec, const MultiResolutionAnalysis<3> &mra, OrbitalVector &phi) {
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
-    DipoleOperator r_x(mra, 0, 0.0);
-    DipoleOperator r_y(mra, 1, 0.0);
-    DipoleOperator r_z(mra, 2, 0.0);
+    DipoleOperator r_x(0, 0.0);
+    DipoleOperator r_y(1, 0.0);
+    DipoleOperator r_z(2, 0.0);
 
     r_x.setup(prec);
     r_y.setup(prec);

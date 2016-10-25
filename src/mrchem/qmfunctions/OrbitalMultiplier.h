@@ -10,7 +10,7 @@ class Potential;
 
 class OrbitalMultiplier {
 public:
-    OrbitalMultiplier(const MultiResolutionAnalysis<3> &mra, double pr = -1.0);
+    OrbitalMultiplier(double pr = -1.0);
     virtual ~OrbitalMultiplier() { }
 
     void setPrecision(double prec);

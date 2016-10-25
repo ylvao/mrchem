@@ -5,8 +5,7 @@
 
 class EnergyOptimizer : public GroundStateSolver {
 public:
-    EnergyOptimizer(const MultiResolutionAnalysis<3> &mra,
-                    HelmholtzOperatorSet &h);
+    EnergyOptimizer(HelmholtzOperatorSet &h);
     virtual ~EnergyOptimizer();
 
     void setup(FockOperator &fock, OrbitalVector &phi, Eigen::MatrixXd &F,

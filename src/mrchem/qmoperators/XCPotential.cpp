@@ -9,10 +9,9 @@ using namespace std;
 using namespace Eigen;
 
 XCPotential::XCPotential(double build_prec,
-                         const MultiResolutionAnalysis<3> &mra,
                          XCFunctional &func,
                          OrbitalVector &phi)
-        : XCOperator(1, build_prec, mra, func, phi) {
+        : XCOperator(1, build_prec, func, phi) {
 }
 
 XCPotential::~XCPotential() {

@@ -8,15 +8,14 @@
 using namespace std;
 using namespace Eigen;
 
-SCF::SCF(const MultiResolutionAnalysis<3> &mra, HelmholtzOperatorSet &h)
+SCF::SCF(HelmholtzOperatorSet &h)
     : nIter(0),
       maxIter(-1),
       iterPerRotation(0),
       orbThrs(-1.0),
       propThrs(-1.0),
       helmholtz(&h),
-      add(mra, -1.0),
-      MRA(mra) {
+      add(-1.0) {
     this->orbPrec[0] = -1.0;
     this->orbPrec[1] = -1.0;
     this->orbPrec[2] = -1.0;

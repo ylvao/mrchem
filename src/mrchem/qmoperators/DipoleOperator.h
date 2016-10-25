@@ -4,12 +4,13 @@
 #include "Potential.h"
 #include "Nucleus.h"
 #include "MWProjector.h"
+#include "mrchem.h"
 
 class DipoleOperator : public Potential {
 public:
-    DipoleOperator(const MultiResolutionAnalysis<3> &mra, int dir, double r_0)
-            : Potential(mra),
-              project(mra, -1.0) {
+    DipoleOperator(int dir, double r_0)
+            : Potential(),
+              project(*MRA, -1.0) {
         if (dir < 0 or dir > 2) MSG_ERROR("Invalid direction");
 
         this->func = [dir, r_0] (const double *r) -> double {

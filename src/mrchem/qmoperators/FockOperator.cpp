@@ -11,14 +11,13 @@
 using namespace std;
 using namespace Eigen;
 
-FockOperator::FockOperator(const MultiResolutionAnalysis<3> &mra,
-                           KineticOperator *t,
+FockOperator::FockOperator(KineticOperator *t,
                            NuclearPotential *v,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
-        : QMOperator(mra),
-          add(mra, -1.0),
+        : QMOperator(),
+          add(-1.0),
           T(t),
           V(v),
           J(j),

@@ -1,13 +1,13 @@
 #include "MomentumOperator.h"
 #include "Orbital.h"
 #include "Timer.h"
+#include "mrchem.h"
 
 using namespace std;
 
-MomentumOperator::MomentumOperator(int dir, double build_prec,
-                                   const MultiResolutionAnalysis<3> &mra)
-        : QMOperator(mra),
-          derivative(dir, mra, 0.0, 0.0) {
+MomentumOperator::MomentumOperator(int dir, double build_prec)
+        : QMOperator(),
+          derivative(dir, *MRA, 0.0, 0.0) {
 }
 
 MomentumOperator::~MomentumOperator() {

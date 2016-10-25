@@ -11,6 +11,7 @@ class MREnv {
 public:
     static void initializeMRCPP(int argc, char **argv);
     static void finalizeMRCPP(const Timer t);
+    static void initializeMRA();
 };
 
 #endif // MRENV_H

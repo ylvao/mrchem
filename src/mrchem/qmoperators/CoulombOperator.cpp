@@ -1,15 +1,14 @@
 #include "CoulombOperator.h"
 #include "Density.h"
 #include "FunctionTree.h"
+#include "mrchem.h"
 
-CoulombOperator::CoulombOperator(double build_prec,
-                                 const MultiResolutionAnalysis<3> &mra,
-                                 OrbitalVector &phi)
-        : QMOperator(mra),
-          poisson(mra, -1.0, build_prec),
-          project(mra, -1.0),
+CoulombOperator::CoulombOperator(double build_prec, OrbitalVector &phi)
+        : QMOperator(),
+          poisson(*MRA, -1.0, build_prec),
+          project(*MRA, -1.0),
           density(Paired),
-          potential(mra),
+          potential(),
           orbitals(&phi) {
 }
 

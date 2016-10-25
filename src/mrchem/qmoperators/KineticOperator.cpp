@@ -6,12 +6,11 @@
 using namespace std;
 using namespace Eigen;
 
-KineticOperator::KineticOperator(double build_prec,
-                                 const MultiResolutionAnalysis<3> &mra)
-        : QMOperator(mra),
-          momentum_x(0, build_prec, mra),
-          momentum_y(1, build_prec, mra),
-          momentum_z(2, build_prec, mra) {
+KineticOperator::KineticOperator(double build_prec)
+        : QMOperator(),
+          momentum_x(0, build_prec),
+          momentum_y(1, build_prec),
+          momentum_z(2, build_prec) {
 }
 
 KineticOperator::~KineticOperator() {

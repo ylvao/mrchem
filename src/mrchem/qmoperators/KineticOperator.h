@@ -9,8 +9,7 @@ class MomentumOperator;
 
 class KineticOperator : public QMOperator {
 public:
-    KineticOperator(double build_prec,
-                    const MultiResolutionAnalysis<3> &mra);
+    KineticOperator(double build_prec);
     virtual ~KineticOperator();
 
     virtual void setup(double prec);

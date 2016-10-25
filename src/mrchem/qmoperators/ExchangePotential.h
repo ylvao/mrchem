@@ -7,7 +7,6 @@
 class ExchangePotential : public ExchangeOperator {
 public:
     ExchangePotential(double build_prec,
-                      const MultiResolutionAnalysis<3> &mra,
                       OrbitalVector &phi,
                       double x_fac = 1.0);
     virtual ~ExchangePotential();

@@ -4,11 +4,10 @@ using namespace std;
 using namespace Eigen;
 
 ExchangePotential::ExchangePotential(double build_prec,
-                                     const MultiResolutionAnalysis<3> &mra,
                                      OrbitalVector &phi,
                                      double x_fac)
-            : ExchangeOperator(build_prec, mra, phi, x_fac),
-              exchange_0(phi) {
+        : ExchangeOperator(build_prec, phi, x_fac),
+          exchange_0(phi) {
 }
 
 ExchangePotential::~ExchangePotential() {

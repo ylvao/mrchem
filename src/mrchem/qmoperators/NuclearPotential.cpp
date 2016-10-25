@@ -1,11 +1,10 @@
 #include "NuclearPotential.h"
 #include "NuclearFunction.h"
+#include "mrchem.h"
 
-NuclearPotential::NuclearPotential(double build_prec,
-                                   const MultiResolutionAnalysis<3> &mra,
-                                   Nuclei &nucs)
-        : Potential(mra),
-          project(mra, -1.0),
+NuclearPotential::NuclearPotential(double build_prec, Nuclei &nucs)
+        : Potential(),
+          project(*MRA, -1.0),
           nuc_func(nucs, build_prec) {
 }
 

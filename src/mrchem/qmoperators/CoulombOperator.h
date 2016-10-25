@@ -11,9 +11,7 @@ class OrbitalVector;
 
 class CoulombOperator : public QMOperator {
 public:
-    CoulombOperator(double build_prec,
-                    const MultiResolutionAnalysis<3> &mra,
-                    OrbitalVector &phi);
+    CoulombOperator(double build_prec, OrbitalVector &phi);
     virtual ~CoulombOperator();
 
     virtual void setup(double prec);

@@ -9,10 +9,15 @@
 #include "TelePrompter.h"
 #include "Timer.h"
 #include "MathUtils.h"
+#include "mrchem.h"
 
 using namespace std;
 using namespace Eigen;
 
+OrbitalProjector::OrbitalProjector(double prec)
+        : grid(*MRA),
+          project(*MRA, prec) {
+}
 //void OrbitalVector::readOrbitals(const OrbitalVector &orbs) {
 //    Timer timer;
 //    int oldPrec = TelePrompter::setPrecision(15);

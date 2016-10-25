@@ -1,18 +1,18 @@
 #include "ExchangeOperator.h"
 #include "MultiResolutionAnalysis.h"
 #include "OrbitalVector.h"
+#include "mrchem.h"
 
 using namespace std;
 using namespace Eigen;
 
 ExchangeOperator::ExchangeOperator(double build_prec,
-                                   const MultiResolutionAnalysis<3> &mra,
                                    OrbitalVector &phi,
                                    double x_fac)
-        : QMOperator(mra),
-          add(mra),
-          mult(mra),
-          poisson(mra, -1.0, build_prec),
+        : QMOperator(),
+          add(),
+          mult(),
+          poisson(*MRA, -1.0, build_prec),
           x_factor(x_fac),
           orbitals_0(&phi),
           screen(true) {

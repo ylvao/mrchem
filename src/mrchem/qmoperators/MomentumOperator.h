@@ -9,8 +9,7 @@ template<int D> class MultiResolutionAnalysis;
 
 class MomentumOperator : public QMOperator {
 public:
-    MomentumOperator(int dir, double build_prec,
-                     const MultiResolutionAnalysis<3> &mra);
+    MomentumOperator(int dir, double build_prec);
     virtual ~MomentumOperator();
 
     virtual void setup(double prec);

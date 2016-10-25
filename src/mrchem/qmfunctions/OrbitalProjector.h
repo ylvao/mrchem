@@ -12,9 +12,7 @@ class Nuclei;
 
 class OrbitalProjector {
 public:
-    OrbitalProjector(const MultiResolutionAnalysis<3> &mra, double prec)
-        : grid(mra),
-          project(mra, prec) { }
+    OrbitalProjector(double prec);
     virtual ~OrbitalProjector() { }
 
     OrbitalVector* operator()(const Nuclei &nucs);

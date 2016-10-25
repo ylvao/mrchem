@@ -1,11 +1,12 @@
 #include "OrbitalMultiplier.h"
 #include "Orbital.h"
 #include "Potential.h"
+#include "mrchem.h"
 
-OrbitalMultiplier::OrbitalMultiplier(const MultiResolutionAnalysis<3> &mra, double pr)
-    : add(mra, pr),
-      mult(mra, pr),
-      grid(mra) {
+OrbitalMultiplier::OrbitalMultiplier(double pr)
+    : add(*MRA, pr),
+      mult(*MRA, pr),
+      grid(*MRA) {
 }
 
 void OrbitalMultiplier::setPrecision(double prec) {

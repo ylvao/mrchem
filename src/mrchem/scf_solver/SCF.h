@@ -15,7 +15,7 @@ class Orbital;
 
 class SCF {
 public:
-    SCF(const MultiResolutionAnalysis<3> &mra, HelmholtzOperatorSet &h);
+    SCF(HelmholtzOperatorSet &h);
     virtual ~SCF();
 
     virtual bool optimize() = 0;
@@ -46,7 +46,6 @@ protected:
 
     OrbitalAdder add;
     HelmholtzOperatorSet *helmholtz;// Pointer to external object, do not delete!
-    const MultiResolutionAnalysis<3> MRA;
 
     bool needLocalization() const;
     bool needDiagonalization() const;
