@@ -2,14 +2,13 @@
 
 #include "OrbitalVector.h"
 #include "Orbital.h"
-//#include "PositionFunction.h"
-//#include "HydrogenicFunction.h"
-//#include "NonlinearMaximizer.h"
-//#include "eigen_disable_warnings.h"
+#include "parallel.h"
 #include "Timer.h"
 
 using namespace std;
 using namespace Eigen;
+
+Orbital* workOrb;
 
 /** OrbitalVector constructor
  *
@@ -489,12 +488,19 @@ void OrbitalVector::orthogonalize(OrbitalVector &orbs) {
 MatrixXcd OrbitalVector::calcOverlapMatrix() {
     OrbitalVector &bra = *this;
     OrbitalVector &ket = *this;
-    return bra.calcOverlapMatrix(ket);
+
+    //    bra.calcOverlapMatrix_P(ket);//testing
+    if(MPI_size>1){
+      return bra.calcOverlapMatrix_P_H(ket);
+    }else{
+      return bra.calcOverlapMatrix(ket);
+    }
 }
 
 /** Calculate overlap matrix between two orbital sets */
 MatrixXcd OrbitalVector::calcOverlapMatrix(OrbitalVector &ket) {
     OrbitalVector &bra = *this;
+    Timer tottime;
     MatrixXcd S = MatrixXcd::Zero(bra.size(), ket.size());
     for (int i = 0; i < bra.size(); i++) {
         Orbital &bra_i = bra.getOrbital(i);
@@ -503,9 +509,197 @@ MatrixXcd OrbitalVector::calcOverlapMatrix(OrbitalVector &ket) {
             S(i,j) = bra_i.dot(ket_j);
         }
     }
-    return S;
+    tottime.stop();
+     return S;
 }
 
+/** Calculate overlap matrix between two orbital sets using MPI*/
+MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
+    OrbitalVector &bra = *this;
+    MatrixXcd S = MatrixXcd::Zero(bra.size(), ket.size());
+    MatrixXcd S_MPI = MatrixXcd::Zero(bra.size(), ket.size());
+    assert(bra.size()==ket.size());
+    int N = bra.size();
+    int NiterMax = ((N+MPI_size-1)/MPI_size)*((N+MPI_size-1)/MPI_size)*MPI_size;
+    int doi[NiterMax];
+    int doj[NiterMax];
+    int sendto[NiterMax];
+    int sendorb[NiterMax];
+    int rcvfrom[NiterMax];
+    int rcvorb[NiterMax];
+    int MaxIter=NiterMax;
+    Assign_NxN(N, doi, doj, sendto, sendorb, rcvorb, &MaxIter);
+ 
+    Orbital* bra_i;//NB: empty
+    Orbital* ket_j;//NB: empty
+    Orbital* ket_i;//NB: empty
+    Orbital* bra_j;//NB: empty
+    Orbital rcvOrb(bra.getOrbital(0));//NB: empty
+    Timer timer, timerw, tottime;
+    timerw.stop();
+    timer.stop();
+
+    for (int iter = 0; iter <= MaxIter; iter++) {
+    timer.resume();
+      int i = doi[iter];
+      int j = doj[iter];
+      if(sendorb[iter]>=0){
+	assert(sendto[iter]>=0);
+	if(i%MPI_size >= j%MPI_size){
+	  bra_i = &(bra.getOrbital(i));
+	  //send first bra, then receive ket
+	  bra_i->send_Orbital(sendto[iter], sendorb[iter]);
+	  if(rcvorb[iter]>=0)rcvOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	}else{
+	  ket_i = &(ket.getOrbital(i));
+	  //receive first bra, then send ket
+	  if(rcvorb[iter]>=0)rcvOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	  ket_i->send_Orbital(sendto[iter], sendorb[iter]);
+	}
+      }else if(rcvorb[iter]>=0){
+	//receive only, do not send anything
+	rcvOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+      }
+    timer.stop();
+    timerw.resume();
+	  
+      //sendings finished, do the work
+      if(doi[iter]>=0 ){
+	assert(i%MPI_size==MPI_rank);//in present implementation, i is always owned locally
+	assert(doj[iter]>=0);
+	bra_i = &(bra.getOrbital(i));
+	ket_i = &(ket.getOrbital(i));
+	if(i%MPI_size >= j%MPI_size){
+	  if(j%MPI_size!=MPI_rank){ket_j=&rcvOrb;
+	  }else{ket_j= &(ket.getOrbital(j));}
+            S_MPI(i,j) =  bra_i->dot(*ket_j);	
+	}else{
+	  if(j%MPI_size!=MPI_rank){bra_j=&rcvOrb;
+	  }else{bra_j=&(bra.getOrbital(j));}
+	  S_MPI(i,j) =  bra_j->dot(*ket_i);		  
+	}
+      }
+      timerw.stop();
+   }
+    Timer t1;
+    MPI_Allreduce(MPI_IN_PLACE, &S_MPI(0,0), N*N,
+                  MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    t1.stop();
+    tottime.stop();
+    cout<<MPI_rank<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
+
+    for (int i = 0; i < bra.size(); i++) {
+      for (int j = 0; j < ket.size(); j++) {
+	if(MPI_rank==0)cout<<i<<" "<<j<<" "<<S_MPI(i,j).real()<<endl;
+      }
+    } 
+    /*   for (int i = 0; i < bra.size(); i++) {
+        Orbital &bra_i = bra.getOrbital(i);
+        for (int j = 0; j < ket.size(); j++) {
+            Orbital &ket_j = ket.getOrbital(j);
+	                S(i,j) = bra_i.dot(ket_j);
+			cout<<i<<" "<<j<<" overlap serial "<<S(i,j)<<" MPI "<<S_MPI(i,j)<<endl;
+        }
+	}*/
+    return S_MPI;
+}
+/** Calculate overlap matrix between two orbital sets using MPI
+ * assumes Hermitian overlap
+ */
+MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
+    OrbitalVector &bra = *this;
+    MatrixXcd S = MatrixXcd::Zero(bra.size(), ket.size());
+    MatrixXcd S_MPI = MatrixXcd::Zero(bra.size(), ket.size());
+    assert(bra.size()==ket.size());
+    int N = bra.size();
+    int NiterMax = ((N+MPI_size-1)/MPI_size)*((N+MPI_size-1)/MPI_size)*MPI_size;
+    int doi[NiterMax];
+    int doj[NiterMax];
+    int sendto[NiterMax];
+    int sendorb[NiterMax];
+    int rcvfrom[NiterMax];
+    int rcvorb[NiterMax];
+    int MaxIter=NiterMax;
+    Assign_NxN_sym(N, doi, doj, sendto, sendorb, rcvorb, &MaxIter);
+ 
+    Orbital* bra_i;//NB: empty
+    Orbital* ket_j;//NB: empty
+    Orbital* ket_i;//NB: empty
+    Orbital* bra_j;//NB: empty
+    //  Orbital rcvOrb(bra.getOrbital(0));//NB: empty
+    Timer timer, timerw, tottime;
+    timerw.stop();
+    timer.stop();
+    
+    if (workOrb==0){
+      println(10, MPI_rank<<" making empty work orbital");
+      workOrb = new Orbital(bra.getOrbital(0));//NB: empty now, but will fill up
+    }
+
+    for (int iter = 0; iter <= MaxIter; iter++) {
+    timer.resume();
+      int i = doi[iter];
+      int j = doj[iter];
+      if(sendorb[iter]>=0){
+	assert(sendto[iter]>=0);
+	if(i%MPI_size >= j%MPI_size){
+	  bra_i = &(bra.getOrbital(i));
+	  //send first bra, then receive ket
+	  bra_i->Isend_Orbital(sendto[iter], sendorb[iter]);
+	  if(rcvorb[iter]>=0)cout<<MPI_rank<<" iter "<<iter<<" processing "<<i<<" "<<j<<" rcving from "<<rcvorb[iter]%MPI_size<<endl;
+	  if(rcvorb[iter]>=0)workOrb->IRcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	}else{
+	  ket_i = &(ket.getOrbital(i));
+	  //receive first bra, then send ket
+	  if(rcvorb[iter]>=0)cout<<MPI_rank<<" iter "<<iter<<" processing "<<i<<" "<<j<<" rcving from "<<rcvorb[iter]%MPI_size<<endl;
+	  if(rcvorb[iter]>=0)workOrb->IRcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	  ket_i->Isend_Orbital(sendto[iter], sendorb[iter]);
+	}
+      }else if(rcvorb[iter]>=0){
+	//receive only, do not send anything
+	 cout<<MPI_rank<<" iter "<<iter<<" processing "<<i<<" "<<j<<" rcving from "<<rcvorb[iter]%MPI_size<<endl;
+	workOrb->IRcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+      }
+    timer.stop();
+    timerw.resume();
+	  
+      //sendings finished, do the work
+      if(doi[iter]>=0 ){
+	assert(i%MPI_size==MPI_rank);//in present implementation, i is always owned locally
+	assert(doj[iter]>=0);
+	bra_i = &(bra.getOrbital(i));
+	ket_i = &(ket.getOrbital(i));
+	if(i%MPI_size >= j%MPI_size){
+	  if(j%MPI_size!=MPI_rank){ket_j=workOrb;
+	  }else{ket_j= &(ket.getOrbital(j));}
+            S_MPI(i,j) =  bra_i->dot(*ket_j);	
+            S_MPI(j,i) =  S_MPI(i,j).real() - S_MPI(i,j).imag();	
+	}else{
+	  if(j%MPI_size!=MPI_rank){bra_j=workOrb;
+	  }else{bra_j=&(bra.getOrbital(j));}
+	  S_MPI(i,j) =  bra_j->dot(*ket_i);		  
+	  S_MPI(j,i) =  S_MPI(i,j).real() - S_MPI(i,j).imag();	
+	}
+      }
+      timerw.stop();
+   }
+    Timer t1;
+    MPI_Allreduce(MPI_IN_PLACE, &S_MPI(0,0), N*N,
+                  MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+    t1.stop();
+    tottime.stop();
+    cout<<MPI_rank<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
+
+    /*   for (int i = 0; i < bra.size(); i++) {
+        Orbital &bra_i = bra.getOrbital(i);
+        for (int j = 0; j < ket.size(); j++) {
+            Orbital &ket_j = ket.getOrbital(j);
+	                S(i,j) = bra_i.dot(ket_j);
+			cout<<i<<" "<<j<<" overlap serial "<<S(i,j)<<" MPI "<<S_MPI(i,j)<<endl;
+        }
+	}*/
+    return S_MPI;
+}
 int OrbitalVector::printTreeSizes() const {
     int nNodes = 0;
     int nTrees = 0;

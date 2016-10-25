@@ -54,6 +54,10 @@ public:
     }
 
     void sendRcv_Orbital(int source, int dest, int tag);
+    void send_Orbital(int dest, int tag);
+    void Rcv_Orbital(int source, int tag);
+    void Isend_Orbital(int dest, int tag);
+    void IRcv_Orbital(int source, int tag);
 
     friend std::ostream& operator<<(std::ostream &o, Orbital &orb) {
         o << std::setw(25) << orb.getSquareNorm();

@@ -29,6 +29,8 @@ public:
 
     Eigen::MatrixXcd calcOverlapMatrix();
     Eigen::MatrixXcd calcOverlapMatrix(OrbitalVector &ket);
+    Eigen::MatrixXcd calcOverlapMatrix_P(OrbitalVector &ket);
+    Eigen::MatrixXcd calcOverlapMatrix_P_H(OrbitalVector &ket);
 
     int size() const { return this->orbitals.size(); }
     int getNOccupied() const;
