@@ -4,14 +4,9 @@
 #include "FunctionTree.h"
 #include "SerialFunctionTree.h"
 #include "parallel.h"
-
-//used for MRA only:
-#include "InterpolatingBasis.h"
 #include "mrchem.h"
-const MultiResolutionAnalysis<3> *default_mra=0;//used to define mra when not explicitely defined
 
 using namespace std;
-
 
 Orbital::Orbital(int occ, int s)
         : spin(s),
@@ -132,25 +127,6 @@ void Orbital::orthogonalize(Orbital &phi) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-
-MultiResolutionAnalysis<3>* initializeMRA() {
-    // Constructing world box
-  const int D=3;
-    int scale = Input.get<int>("World.scale");
-    int max_depth = Input.get<int>("max_depth");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<D> idx(scale, corner.data());
-    BoundingBox<D> world(idx, boxes.data());
-
-    // Constructing scaling basis
-    int order = Input.get<int>("order");
-    InterpolatingBasis basis(order);
-
-    // Initializing MRA
-    return new MultiResolutionAnalysis<D>(world, basis, max_depth);
-}
-
 //send an orbital with MPI
 void Orbital::sendRcv_Orbital(int source, int dest, int tag){
 #ifdef HAVE_MPI
@@ -195,11 +171,7 @@ void Orbital::sendRcv_Orbital(int source, int dest, int tag){
     if(Orbinfo.NchunksReal>0){
       if(not this->hasReal()){
 	//We must have a tree defined for receiving nodes. Define one:
-	if(default_mra==0){
-	  default_mra = initializeMRA();
-	  cout<<" defined new MRA with depth "<<default_mra->getMaxDepth()<<endl;
-	}
-	this->real = new FunctionTree<3>(*default_mra,MaxAllocNodes);
+	this->real = new FunctionTree<3>(*MRA, MaxAllocNodes);
       }
     SendRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, dest, tag, comm);}
 
