@@ -622,10 +622,9 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
     int MaxIter=NiterMax;
     Assign_NxN_sym(N, doi, doj, sendto, sendorb, rcvorb, &MaxIter);
  
-    Orbital* bra_i;//NB: empty
-    Orbital* ket_j;//NB: empty
-    Orbital* ket_i;//NB: empty
-    Orbital* bra_j;//NB: empty
+    Orbital* myOrb_i;//NB: empty
+    Orbital* Orb_j;//NB: empty
+
     //  Orbital rcvOrb(bra.getOrbital(0));//NB: empty
     Timer timer, timerw, tottime;
     timerw.stop();
@@ -637,58 +636,43 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
     }
 
     for (int iter = 0; iter <= MaxIter; iter++) {
-    timer.resume();
+      timer.resume();
       int i = doi[iter];
       int j = doj[iter];
+      //send first , then receive 
       if(sendorb[iter]>=0){
 	assert(sendto[iter]>=0);
-	if(i%MPI_size >= j%MPI_size){
-	  bra_i = &(bra.getOrbital(i));
-	  //send first bra, then receive ket
-	  bra_i->Isend_Orbital(sendto[iter], sendorb[iter]);
-	  if(rcvorb[iter]>=0)cout<<MPI_rank<<" iter "<<iter<<" processing "<<i<<" "<<j<<" rcving from "<<rcvorb[iter]%MPI_size<<endl;
-	  if(rcvorb[iter]>=0)workOrb->IRcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
-	}else{
-	  ket_i = &(ket.getOrbital(i));
-	  //receive first bra, then send ket
-	  if(rcvorb[iter]>=0)cout<<MPI_rank<<" iter "<<iter<<" processing "<<i<<" "<<j<<" rcving from "<<rcvorb[iter]%MPI_size<<endl;
-	  if(rcvorb[iter]>=0)workOrb->IRcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
-	  ket_i->Isend_Orbital(sendto[iter], sendorb[iter]);
-	}
-      }else if(rcvorb[iter]>=0){
-	//receive only, do not send anything
-	 cout<<MPI_rank<<" iter "<<iter<<" processing "<<i<<" "<<j<<" rcving from "<<rcvorb[iter]%MPI_size<<endl;
-	workOrb->IRcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	myOrb_i = &(bra.getOrbital(i));
+	myOrb_i->Isend_Orbital(sendto[iter], sendorb[iter]);
       }
-    timer.stop();
-    timerw.resume();
-	  
+      if(rcvorb[iter]>=0){
+	//receive 
+	workOrb->Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+      }
+      timer.stop();
+      timerw.resume();
+      
       //sendings finished, do the work
       if(doi[iter]>=0 ){
 	assert(i%MPI_size==MPI_rank);//in present implementation, i is always owned locally
 	assert(doj[iter]>=0);
-	bra_i = &(bra.getOrbital(i));
-	ket_i = &(ket.getOrbital(i));
-	if(i%MPI_size >= j%MPI_size){
-	  if(j%MPI_size!=MPI_rank){ket_j=workOrb;
-	  }else{ket_j= &(ket.getOrbital(j));}
-            S_MPI(i,j) =  bra_i->dot(*ket_j);	
-            S_MPI(j,i) =  S_MPI(i,j).real() - S_MPI(i,j).imag();	
+	myOrb_i = &(bra.getOrbital(i));
+	if(j%MPI_size!=MPI_rank){
+	  Orb_j=workOrb;
 	}else{
-	  if(j%MPI_size!=MPI_rank){bra_j=workOrb;
-	  }else{bra_j=&(bra.getOrbital(j));}
-	  S_MPI(i,j) =  bra_j->dot(*ket_i);		  
-	  S_MPI(j,i) =  S_MPI(i,j).real() - S_MPI(i,j).imag();	
+	  Orb_j= &(ket.getOrbital(j));
 	}
+	S_MPI(i,j) =  myOrb_i->dot(*Orb_j);	
+	S_MPI(j,i) =  conj(S_MPI(i,j));	
       }
       timerw.stop();
-   }
+    }
     Timer t1;
     MPI_Allreduce(MPI_IN_PLACE, &S_MPI(0,0), N*N,
                   MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
     t1.stop();
     tottime.stop();
-    cout<<MPI_rank<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
+    if(MPI_rank==0)cout<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
 
     /*   for (int i = 0; i < bra.size(); i++) {
         Orbital &bra_i = bra.getOrbital(i);

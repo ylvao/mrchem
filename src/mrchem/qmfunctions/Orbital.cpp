@@ -128,64 +128,6 @@ void Orbital::orthogonalize(Orbital &phi) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-//send or receive an orbital with MPI
-void Orbital::sendRcv_Orbital(int source, int dest, int tag){
-#ifdef HAVE_MPI
-  MPI_Status status;
-  MPI_Comm comm=MPI_COMM_WORLD;
-
-  struct Metadata{
-    int spin;
-    int occupancy;
-    int NchunksReal;
-    int NchunksImag;
-    double error;
-  };
-
-  Metadata Orbinfo;
-
-  if(MPI_rank==source){
-    Orbinfo.spin=this->getSpin();
-    Orbinfo.occupancy=this->getOccupancy();
-    Orbinfo.error=this->getError();
-    if(this->hasReal()){
-      Orbinfo.NchunksReal = this->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
-    }else{Orbinfo.NchunksReal = 0;}
-    if(this->hasImag()){
-      Orbinfo.NchunksImag = this->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
-    }else{Orbinfo.NchunksImag = 0;}
-
-    int count=sizeof(Metadata);
-    MPI_Send(&Orbinfo, count, MPI_BYTE, dest, 0, comm);
-
-    if(this->hasReal())SendRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, dest, tag, comm);
-    if(this->hasImag())SendRcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, dest, tag*10000, comm);
-
-  }
-  if(MPI_rank==dest){
-    int count=sizeof(Metadata);
-    MPI_Recv(&Orbinfo, count, MPI_BYTE, source, 0, comm, &status);
-    this->setSpin(Orbinfo.spin);
-    this->setOccupancy(Orbinfo.occupancy);
-    this->setError(Orbinfo.error);
-
-    if(Orbinfo.NchunksReal>0){
-      if(not this->hasReal()){
-	//We must have a tree defined for receiving nodes. Define one:
-	this->real = new FunctionTree<3>(*MRA, MaxAllocNodes);
-      }
-    SendRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, dest, tag, comm);}
-
-    if(Orbinfo.NchunksImag>0){
-      SendRcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, dest, tag*10000, comm);
-    }else{
-      //&(this->im())=0;
-    }
-  }
-
-#endif
-
-}
 //send an orbital with MPI
 void Orbital::send_Orbital(int dest, int tag){
 #ifdef HAVE_MPI
@@ -250,7 +192,6 @@ void Orbital::Isend_Orbital(int dest, int tag){
   MPI_Request request;
   int count=sizeof(Metadata);
   MPI_Isend(&Orbinfo, count, MPI_BYTE, dest, 0, comm, &request);
-  MPI_Wait(&request, &status);
   
   if(this->hasReal())ISend_SerialTree(&this->re(), Orbinfo.NchunksReal, dest, tag, comm);
   if(this->hasImag())ISend_SerialTree(&this->im(), Orbinfo.NchunksImag, dest, tag*10000, comm);
@@ -315,7 +256,7 @@ void Orbital::IRcv_Orbital(int source, int tag){
 
   int count=sizeof(Metadata);
   MPI_Irecv(&Orbinfo, count, MPI_BYTE, source, 0, comm, &request);
-  MPI_Wait(&request, &status);
+
   this->setSpin(Orbinfo.spin);
   this->setOccupancy(Orbinfo.occupancy);
   this->setError(Orbinfo.error);
