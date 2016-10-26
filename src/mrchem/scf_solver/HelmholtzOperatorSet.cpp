@@ -2,8 +2,9 @@
 #include "OrbitalVector.h"
 #include "OperatorTree.h"
 #include "Timer.h"
-#include "mrchem.h"
 #include "eigen_disable_warnings.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 using namespace Eigen;

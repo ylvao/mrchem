@@ -4,7 +4,8 @@
 #include "Potential.h"
 #include "Nucleus.h"
 #include "MWProjector.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 class DipoleOperator : public Potential {
 public:

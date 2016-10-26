@@ -1,6 +1,7 @@
 #include "NuclearPotential.h"
 #include "NuclearFunction.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 NuclearPotential::NuclearPotential(double build_prec, Nuclei &nucs)
         : Potential(),

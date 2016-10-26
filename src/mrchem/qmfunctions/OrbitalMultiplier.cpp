@@ -1,7 +1,8 @@
 #include "OrbitalMultiplier.h"
 #include "Orbital.h"
 #include "Potential.h"
-#include "mrchem.h"
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 OrbitalMultiplier::OrbitalMultiplier(double pr)
     : add(*MRA, pr),
