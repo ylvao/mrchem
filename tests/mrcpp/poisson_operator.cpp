@@ -2,7 +2,8 @@
 
 #include "factory_functions.h"
 #include "PoissonOperator.h"
-#include "OperatorTreeVector.h"
+#include "MWOperator.h"
+#include "OperatorApplier.h"
 #include "MWProjector.h"
 #include "BandWidth.h"
 #include "CrossCorrelationGenerator.h"
@@ -63,12 +64,12 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
 
                 CrossCorrelationGenerator G(ccc_prec);
 
-                OperatorTreeVector oper_vec;
+                MWOperator O(oper_mra);
                 for (int i = 0; i < kern_vec.size(); i++) {
                     FunctionTree<1> &kern_tree = *kern_vec[i];
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
                     G(*oper_tree, kern_tree);
-                    oper_vec.push_back(oper_tree);
+                    O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
                     BandWidth bw_1 = oper_tree->getBandWidth();
@@ -87,16 +88,13 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
                         REQUIRE( bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i) );
                     }
                 }
-                oper_vec.calcBandWidths(band_prec);
-                REQUIRE( oper_vec.getMaxBandWidth(3) == 3 );
-                REQUIRE( oper_vec.getMaxBandWidth(7) == 5 );
-                REQUIRE( oper_vec.getMaxBandWidth(13) == 9 );
-                REQUIRE( oper_vec.getMaxBandWidth(15) == -1 );
+                O.calcBandWidths(band_prec);
+                REQUIRE( O.getMaxBandWidth(3) == 3 );
+                REQUIRE( O.getMaxBandWidth(7) == 5 );
+                REQUIRE( O.getMaxBandWidth(13) == 9 );
+                REQUIRE( O.getMaxBandWidth(15) == -1 );
 
-                for (int i = 0; i < oper_vec.size(); i++) {
-                    delete oper_vec[i];
-                }
-                oper_vec.clear();
+                O.clear(true);
             }
             for (int i = 0; i < kern_vec.size(); i++) {
                 delete kern_vec[i];
@@ -118,13 +116,14 @@ TEST_CASE("Apply Poisson's operator", "[apply_poisson], [poisson_operator], [mw_
     initialize(&mra);
 
     MWProjector<3> Q(proj_prec);
-    PoissonOperator P(*mra, apply_prec, build_prec);
+    PoissonOperator P(*mra, build_prec);
+    OperatorApplier<3> apply(apply_prec);
 
     FunctionTree<3> fTree(*mra);
     FunctionTree<3> gTree(*mra);
 
     Q(fTree, *fFunc);
-    P(gTree, fTree);
+    apply(gTree, P, fTree);
 
     double E_num = gTree.dot(fTree);
     double E_ana = fFunc->calcCoulombEnergy(*fFunc);

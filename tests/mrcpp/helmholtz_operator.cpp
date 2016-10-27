@@ -2,7 +2,8 @@
 
 #include "factory_functions.h"
 #include "HelmholtzOperator.h"
-#include "OperatorTreeVector.h"
+#include "MWOperator.h"
+#include "OperatorApplier.h"
 #include "MWProjector.h"
 #include "MWMultiplier.h"
 #include "MWAdder.h"
@@ -49,13 +50,13 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
             MWProjector<1> Q(proj_prec);
             GridGenerator<1> G;
 
-            FunctionTreeVector<1> kern_vec;
+            FunctionTreeVector<1> K;
             for (int i = 0; i < helmholtz.size(); i++) {
                 Gaussian<1> &kern_gauss = *helmholtz[i];
                 FunctionTree<1> *kern_tree = new FunctionTree<1>(kern_mra);
                 G(*kern_tree, kern_gauss);
                 Q(*kern_tree, kern_gauss);
-                kern_vec.push_back(kern_tree);
+                K.push_back(kern_tree);
             }
 
             SECTION("Build operator tree by cross correlation") {
@@ -67,12 +68,12 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
 
                 CrossCorrelationGenerator G(ccc_prec);
 
-                OperatorTreeVector oper_vec;
-                for (int i = 0; i < kern_vec.size(); i++) {
-                    FunctionTree<1> &kern_tree = *kern_vec[i];
+                MWOperator O(oper_mra);
+                for (int i = 0; i < K.size(); i++) {
+                    FunctionTree<1> &kern_tree = *K[i];
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
                     G(*oper_tree, kern_tree);
-                    oper_vec.push_back(oper_tree);
+                    O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
                     BandWidth bw_1 = oper_tree->getBandWidth();
@@ -91,21 +92,15 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
                         REQUIRE( bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i) );
                     }
                 }
-                oper_vec.calcBandWidths(band_prec);
-                REQUIRE( oper_vec.getMaxBandWidth(3) == 3 );
-                REQUIRE( oper_vec.getMaxBandWidth(7) == 5 );
-                REQUIRE( oper_vec.getMaxBandWidth(13) == 9 );
-                REQUIRE( oper_vec.getMaxBandWidth(19) == -1 );
+                O.calcBandWidths(band_prec);
+                REQUIRE( O.getMaxBandWidth(3) == 3 );
+                REQUIRE( O.getMaxBandWidth(7) == 5 );
+                REQUIRE( O.getMaxBandWidth(13) == 9 );
+                REQUIRE( O.getMaxBandWidth(19) == -1 );
 
-                for (int i = 0; i < oper_vec.size(); i++) {
-                    delete oper_vec[i];
-                }
-                oper_vec.clear();
+                O.clear(true);
             }
-            for (int i = 0; i < kern_vec.size(); i++) {
-                delete kern_vec[i];
-            }
-            kern_vec.clear();
+            K.clear(true);
         }
     }
 }
@@ -131,6 +126,7 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     MWMultiplier<3> mult;
     MWProjector<3> Q(proj_prec);
     GridGenerator<3> G;
+    OperatorApplier<3> apply(apply_prec);
 
     int n = 2;                  // Principal quantum number
     int l = 1;                  // Angular quantum number
@@ -139,7 +135,7 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     double E = -Z/(2.0*n*n);    // Total energy
 
     double mu = sqrt(-2*E);
-    HelmholtzOperator H(mu, MRA, apply_prec, build_prec);
+    HelmholtzOperator H(MRA, mu, build_prec);
 
     double R[3] = {0.0, 0.0, 0.0};
     HydrogenicFunction hFunc(n, l, m_l, Z, R);
@@ -159,7 +155,7 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
 
     FunctionTree<3> psi_np1(MRA);
     G(psi_np1, psi_n);
-    H(psi_np1, Vpsi);
+    apply(psi_np1, H, Vpsi);
     psi_np1 *= -1.0/(2.0*pi);
 
     double norm = sqrt(psi_np1.getSquareNorm());

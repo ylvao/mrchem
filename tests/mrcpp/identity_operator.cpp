@@ -6,6 +6,7 @@
 #include "IdentityKernel.h"
 #include "CrossCorrelationGenerator.h"
 #include "OperatorTree.h"
+#include "OperatorApplier.h"
 #include "BandWidth.h"
 
 namespace identity_operator {
@@ -95,13 +96,14 @@ template<int D> void applyIdentity() {
     initialize(&mra);
 
     MWProjector<D> Q(proj_prec);
-    IdentityOperator<D> I(*mra, apply_prec, build_prec);
+    IdentityOperator<D> I(*mra, build_prec);
+    OperatorApplier<D> apply(apply_prec);
 
     FunctionTree<D> fTree(*mra);
     FunctionTree<D> gTree(*mra);
 
     Q(fTree, *fFunc);
-    I(gTree, fTree);
+    apply(gTree, I, fTree);
 
     REQUIRE( gTree.getDepth() <= fTree.getDepth() );
     REQUIRE( gTree.getNNodes() <= fTree.getNNodes() );
