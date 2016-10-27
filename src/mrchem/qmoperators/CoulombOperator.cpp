@@ -6,8 +6,9 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 CoulombOperator::CoulombOperator(double build_prec, OrbitalVector &phi)
         : QMOperator(),
-          poisson(*MRA, -1.0, build_prec),
+          poisson(*MRA, build_prec),
           project(-1.0),
+          apply(-1.0),
           density(Paired),
           potential(),
           orbitals(&phi) {
@@ -16,13 +17,13 @@ CoulombOperator::CoulombOperator(double build_prec, OrbitalVector &phi)
 void CoulombOperator::setup(double prec) {
     QMOperator::setup(prec);
     this->clean.setPrecision(this->apply_prec);
-    this->poisson.setPrecision(this->apply_prec);
+    this->apply.setPrecision(this->apply_prec);
     this->project.setPrecision(this->apply_prec);
 }
 
 void CoulombOperator::clear() {
     this->clean.setPrecision(-1.0);
-    this->poisson.setPrecision(-1.0);
+    this->apply.setPrecision(-1.0);
     this->project.setPrecision(-1.0);
     QMOperator::clear();
 }

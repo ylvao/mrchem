@@ -9,6 +9,7 @@
 #include "MWMultiplier.h"
 #include "DensityProjector.h"
 #include "DerivativeOperator.h"
+#include "OperatorApplier.h"
 #include "Timer.h"
 
 class XCFunctional;
@@ -44,6 +45,7 @@ protected:
     MWMultiplier<3> mult;
     DensityProjector project;
     DerivativeOperator<3> derivative;  ///< Derivative operator for GGAs
+    OperatorApplier<3> apply;
 
     Density density_0;              ///< Unperturbed density
     Density **gradient_0;           ///< Unperturbed density gradient
