@@ -7,11 +7,6 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
-OrbitalAdder::OrbitalAdder(double pr)
-    : add(*MRA, pr),
-      grid(*MRA) {
-}
-
 void OrbitalAdder::operator()(Orbital &phi_ab,
                               double a, Orbital &phi_a,
                               double b, Orbital &phi_b,
@@ -31,19 +26,21 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
 
     if (rvec.size() > 0) {
         if (union_grid) {
-            phi_ab.real = this->grid(rvec);
+            phi_ab.real = new FunctionTree<3>(*MRA);
+            this->grid(*phi_ab.real, rvec);
             this->add(*phi_ab.real, rvec, 0);
         } else {
-            phi_ab.real = this->grid();
+            phi_ab.real = new FunctionTree<3>(*MRA);
             this->add(*phi_ab.real, rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
-            phi_ab.imag = this->grid(ivec);
+            phi_ab.imag = new FunctionTree<3>(*MRA);
+            this->grid(*phi_ab.imag, ivec);
             this->add(*phi_ab.imag, ivec, 0);
         } else {
-            phi_ab.imag = this->grid();
+            phi_ab.imag = new FunctionTree<3>(*MRA);
             this->add(*phi_ab.imag, ivec);
         }
     }
@@ -67,19 +64,21 @@ void OrbitalAdder::operator()(Orbital &out,
 
     if (rvec.size() > 0) {
         if (union_grid) {
-            out.real = this->grid(rvec);
+            out.real = new FunctionTree<3>(*MRA);
+            this->grid(*out.real, rvec);
             this->add(*out.real, rvec, 0);
         } else {
-            out.real = this->grid();
+            out.real = new FunctionTree<3>(*MRA);
             this->add(*out.real, rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
-            out.imag = this->grid(ivec);
+            out.imag = new FunctionTree<3>(*MRA);
+            this->grid(*out.imag, ivec);
             this->add(*out.imag, ivec, 0);
         } else {
-            out.imag = this->grid();
+            out.imag = new FunctionTree<3>(*MRA);
             this->add(*out.imag, ivec);
         }
     }
@@ -121,19 +120,21 @@ void OrbitalAdder::operator()(Orbital &out,
 
     if (rvec.size() > 0) {
         if (union_grid) {
-            out.real = this->grid(rvec);
+            out.real = new FunctionTree<3>(*MRA);
+            this->grid(*out.real, rvec);
             this->add(*out.real, rvec, 0);
         } else {
-            out.real = this->grid();
+            out.real = new FunctionTree<3>(*MRA);
             this->add(*out.real, rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
-            out.imag = this->grid(ivec);
+            out.imag = new FunctionTree<3>(*MRA);
+            this->grid(*out.imag, ivec);
             this->add(*out.imag, ivec, 0);
         } else {
-            out.imag = this->grid();
+            out.imag = new FunctionTree<3>(*MRA);
             this->add(*out.imag, ivec);
         }
     }

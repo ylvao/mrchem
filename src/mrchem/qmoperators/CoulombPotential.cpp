@@ -1,5 +1,7 @@
 #include "CoulombPotential.h"
 
+extern MultiResolutionAnalysis<3> *MRA;
+
 using namespace std;
 
 void CoulombPotential::setup(double prec) {
@@ -19,7 +21,7 @@ void CoulombPotential::setup(double prec) {
     Timer timer;
     FunctionTree<3> &rho = this->density.getDensity(Paired);
     if (not this->potential.hasReal()) {
-        this->potential.real = this->grid();
+        this->potential.real = new FunctionTree<3>(*MRA);
         this->poisson(*this->potential.real, rho);
         this->potential.imag = 0;
     } else {

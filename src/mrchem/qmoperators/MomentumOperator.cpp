@@ -7,11 +7,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 
 MomentumOperator::MomentumOperator(int dir, double build_prec)
-        : QMOperator(),
-          derivative(dir, *MRA, 0.0, 0.0) {
-}
-
-MomentumOperator::~MomentumOperator() {
+        : derivative(dir, *MRA, 0.0, 0.0) {
 }
 
 void MomentumOperator::setup(double prec) {
@@ -29,11 +25,13 @@ Orbital* MomentumOperator::operator() (Orbital &orb_p) {
     Timer timer;
     Orbital *dOrb_p = new Orbital(orb_p);
     if (orb_p.real != 0) {
-        dOrb_p->imag = this->grid(*orb_p.real);
+        dOrb_p->imag = new FunctionTree<3>(*MRA);
+        this->grid(*dOrb_p->imag, *orb_p.real);
         this->derivative(*dOrb_p->imag, *orb_p.real, 0);
     }
     if (orb_p.imag != 0) {
-        dOrb_p->real = this->grid(*orb_p.imag);
+        dOrb_p->real = new FunctionTree<3>(*MRA);
+        this->grid(*dOrb_p->real, *orb_p.imag);
         this->derivative(*dOrb_p->real, *orb_p.imag, 0);
         *dOrb_p->real *= -1.0;
     }

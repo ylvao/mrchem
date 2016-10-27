@@ -11,7 +11,7 @@ class OrbitalVector;
 
 class OrbitalAdder {
 public:
-    OrbitalAdder(double pr = -1.0);
+    OrbitalAdder(double prec = -1.0) : add(prec) { }
     virtual ~OrbitalAdder() { }
 
     void setPrecision(double prec) { this->add.setPrecision(prec); }

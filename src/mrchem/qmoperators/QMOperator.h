@@ -17,7 +17,7 @@ class Orbital;
   */
 class QMOperator {
 public:
-    QMOperator();
+    QMOperator() : apply_prec(-1.0), clean(-1.0) { }
     virtual ~QMOperator() { }
 
     virtual void rotate(Eigen::MatrixXd &U) { }

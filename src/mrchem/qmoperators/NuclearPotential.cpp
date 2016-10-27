@@ -4,12 +4,8 @@
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 NuclearPotential::NuclearPotential(double build_prec, Nuclei &nucs)
-        : Potential(),
-          project(*MRA, -1.0),
+        : project(-1.0),
           nuc_func(nucs, build_prec) {
-}
-
-NuclearPotential::~NuclearPotential() {
 }
 
 void NuclearPotential::setup(double prec) {
@@ -17,7 +13,7 @@ void NuclearPotential::setup(double prec) {
     Potential::setup(prec);
     this->project.setPrecision(prec);
     if (this->real == 0) {
-        this->real = this->grid();
+        this->real = new FunctionTree<3>(*MRA);
         this->project(*this->real, this->nuc_func);
         this->imag = 0;
     } else {

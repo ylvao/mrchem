@@ -5,17 +5,10 @@
 
 #include "constants.h"
 
+extern MultiResolutionAnalysis<3> *MRA;
+
 using namespace std;
 using namespace Eigen;
-
-XCPotential::XCPotential(double build_prec,
-                         XCFunctional &func,
-                         OrbitalVector &phi)
-        : XCOperator(1, build_prec, func, phi) {
-}
-
-XCPotential::~XCPotential() {
-}
 
 void XCPotential::setup(double prec) {
     XCOperator::setup(prec);
@@ -186,7 +179,8 @@ FunctionTree<3>* XCPotential::calcPotentialGGA(FunctionTreeVector<3> &xc_funcs,
         funcs.push_back(-1.0, tmp_2);
     }
 
-    FunctionTree<3> *pot = this->grid(funcs);
+    FunctionTree<3> *pot = new FunctionTree<3>(*MRA);
+    this->grid(*pot, funcs);
     this->add(*pot, funcs, 0);
     funcs.clear(false);
 

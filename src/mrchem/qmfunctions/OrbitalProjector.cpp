@@ -15,10 +15,6 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
-OrbitalProjector::OrbitalProjector(double prec)
-        : grid(*MRA),
-          project(*MRA, prec) {
-}
 //void OrbitalVector::readOrbitals(const OrbitalVector &orbs) {
 //    Timer timer;
 //    int oldPrec = TelePrompter::setPrecision(15);
@@ -63,7 +59,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                     phi->push_back(1, 0, Paired);
                     Orbital &phi_i = phi->getOrbital(totOrbs);
 
-                    phi_i.real = this->grid();
+                    phi_i.real = new FunctionTree<3>(*MRA);
                     phi_i.imag = 0;
 
                     HydrogenicFunction h_func(n, l, m, Z, R);
@@ -98,7 +94,7 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
         Orbital &mwOrb = orbs.getOrbital(i);
         GaussExp<3> &gtOrb = moExp->getOrbital(i);
         mwOrb.clear();
-        mwOrb.real = this->grid();
+        mwOrb.real = new FunctionTree<3>(*MRA);
         this->project(*mwOrb.real, gtOrb);
         printout(0, setw(5) << i);
         printout(0, setw(5) << mwOrb.printSpin());

@@ -12,7 +12,7 @@ class OrbitalVector;
 class CoulombOperator : public QMOperator {
 public:
     CoulombOperator(double build_prec, OrbitalVector &phi);
-    virtual ~CoulombOperator();
+    virtual ~CoulombOperator() { }
 
     virtual void setup(double prec);
     virtual void clear();

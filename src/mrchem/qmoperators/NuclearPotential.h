@@ -9,7 +9,7 @@ class NuclearPotential : public Potential {
 public:
     NuclearPotential(double build_prec, Nuclei &nucs);
     NuclearPotential &operator=(const NuclearPotential &pot) { NOT_IMPLEMENTED_ABORT; }
-    virtual ~NuclearPotential();
+    virtual ~NuclearPotential() { }
 
     virtual void setup(double prec);
     virtual void clear();

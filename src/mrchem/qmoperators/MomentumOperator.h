@@ -5,12 +5,11 @@
 #include "DerivativeOperator.h"
 
 template<int D> class DerivativeOperator;
-template<int D> class MultiResolutionAnalysis;
 
 class MomentumOperator : public QMOperator {
 public:
     MomentumOperator(int dir, double build_prec);
-    virtual ~MomentumOperator();
+    virtual ~MomentumOperator() { }
 
     virtual void setup(double prec);
     virtual void clear();

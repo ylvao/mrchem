@@ -9,13 +9,6 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
-HelmholtzOperatorSet::HelmholtzOperatorSet(double build, double thrs)
-        : threshold(thrs),
-          build_prec(build),
-          apply_prec(build),
-          grid(*MRA) {
-}
-
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
     TelePrompter::printHeader(0, "Initializing Helmholtz Operators");
 
@@ -142,11 +135,11 @@ void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
     H_i.setPrecision(this->apply_prec);
 
     if (inp.hasReal()) {
-        out.real = this->grid();
+        out.real = new FunctionTree<3>(*MRA);
         H_i(*out.real, *inp.real);
     }
     if (inp.hasImag()) {
-        out.imag = this->grid();
+        out.imag = new FunctionTree<3>(*MRA);
         H_i(*out.imag, *inp.imag);
     }
 }

@@ -15,7 +15,6 @@ class XCFunctional;
 class OrbitalVector;
 class Potential;
 template<int D> class FunctionTree;
-template<int D> class MultiResolutionAnalysis;
 
 class XCOperator : public QMOperator {
 public:

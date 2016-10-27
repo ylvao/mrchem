@@ -8,10 +8,9 @@ template<int D> class FunctionTreeVector;
 
 class XCPotential : public XCOperator {
 public:
-    XCPotential(double build_prec,
-                XCFunctional &func,
-                OrbitalVector &phi);
-    virtual ~XCPotential();
+    XCPotential(double build_prec, XCFunctional &func, OrbitalVector &phi)
+        : XCOperator(1, build_prec, func, phi) { }
+    virtual ~XCPotential() { } 
 
     virtual void setup(double prec);
     virtual void clear();

@@ -4,12 +4,6 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-OrbitalMultiplier::OrbitalMultiplier(double pr)
-    : add(*MRA, pr),
-      mult(*MRA, pr),
-      grid(*MRA) {
-}
-
 void OrbitalMultiplier::setPrecision(double prec) {
     this->add.setPrecision(prec);
     this->mult.setPrecision(prec);
@@ -44,12 +38,14 @@ void OrbitalMultiplier::adjoint(Orbital &phi_ab, double c, Orbital &phi_a, Orbit
 FunctionTree<3>* OrbitalMultiplier::calcRealPart(Potential &V, Orbital &phi) {
     FunctionTreeVector<3> vec;
     if (V.hasReal() and phi.hasReal()) {
-        FunctionTree<3> *tree = this->grid(phi.re());
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        this->grid(*tree, phi.re());
         this->mult(*tree, 1.0, V.re(), phi.re(), 0);
         vec.push_back(1.0, tree);
     }
     if (V.hasImag() and phi.hasImag()) {
-        FunctionTree<3> *tree = this->grid(phi.im());
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        this->grid(*tree, phi.im());
         this->mult(*tree, 1.0, V.im(), phi.im(), 0);
         vec.push_back(-1.0, tree);
     }
@@ -59,7 +55,8 @@ FunctionTree<3>* OrbitalMultiplier::calcRealPart(Potential &V, Orbital &phi) {
         vec.clear();
     }
     if (vec.size() == 2) {
-        real = this->grid(vec);
+        real = new FunctionTree<3>(*MRA);
+        this->grid(*real, vec);
         this->add(*real, vec, 0);
         vec.clear(true);
     }
@@ -69,12 +66,14 @@ FunctionTree<3>* OrbitalMultiplier::calcRealPart(Potential &V, Orbital &phi) {
 FunctionTree<3>* OrbitalMultiplier::calcImagPart(Potential &V, Orbital &phi, bool adjoint) {
     FunctionTreeVector<3> vec;
     if (V.hasReal() and phi.hasImag()) {
-        FunctionTree<3> *tree = this->grid(phi.im());
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        this->grid(*tree, phi.im());
         this->mult(*tree, 1.0, V.re(), phi.im(), 0);
         vec.push_back(1.0, tree);
     }
     if (V.hasImag() and phi.hasReal()) {
-        FunctionTree<3> *tree = this->grid(phi.re());
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        this->grid(*tree, phi.re());
         this->mult(*tree, 1.0, V.im(), phi.re(), 0);
         if (adjoint) {
             vec.push_back(-1.0, tree);
@@ -88,7 +87,8 @@ FunctionTree<3>* OrbitalMultiplier::calcImagPart(Potential &V, Orbital &phi, boo
         vec.clear();
     }
     if (vec.size() == 2) {
-        imag = this->grid(vec);
+        imag = new FunctionTree<3>(*MRA);
+        this->grid(*imag, vec);
         this->add(*imag, vec, 0);
         vec.clear(true);
     }
@@ -97,14 +97,14 @@ FunctionTree<3>* OrbitalMultiplier::calcImagPart(Potential &V, Orbital &phi, boo
 FunctionTree<3>* OrbitalMultiplier::calcRealPart(double c, Orbital &phi_a, Orbital &phi_b) {
     FunctionTreeVector<3> vec;
     if (phi_a.hasReal() and phi_b.hasReal()) {
-        FunctionTree<3> *tree = this->grid();
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         this->grid(*tree, phi_a.re());
         this->grid(*tree, phi_b.re());
         this->mult(*tree, c, phi_a.re(), phi_b.re(), 0);
         vec.push_back(1.0, tree);
     }
     if (phi_a.hasImag() and phi_b.hasImag()) {
-        FunctionTree<3> *tree = this->grid();
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         this->grid(*tree, phi_a.im());
         this->grid(*tree, phi_b.im());
         this->mult(*tree, c, phi_a.im(), phi_b.im(), 0);
@@ -116,7 +116,8 @@ FunctionTree<3>* OrbitalMultiplier::calcRealPart(double c, Orbital &phi_a, Orbit
         vec.clear();
     }
     if (vec.size() == 2) {
-        real = this->grid(vec);
+        real = new FunctionTree<3>(*MRA);
+        this->grid(*real, vec);
         this->add(*real, vec, 0);
         vec.clear(true);
     }
@@ -126,14 +127,14 @@ FunctionTree<3>* OrbitalMultiplier::calcRealPart(double c, Orbital &phi_a, Orbit
 FunctionTree<3>* OrbitalMultiplier::calcImagPart(double c, Orbital &phi_a, Orbital &phi_b, bool adjoint) {
     FunctionTreeVector<3> vec;
     if (phi_a.hasReal() and phi_b.hasImag()) {
-        FunctionTree<3> *tree = this->grid();
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         this->grid(*tree, phi_a.re());
         this->grid(*tree, phi_b.im());
         this->mult(*tree, c, phi_a.re(), phi_b.im(), 0);
         vec.push_back(1.0, tree);
     }
     if (phi_a.hasImag() and phi_b.hasReal()) {
-        FunctionTree<3> *tree = this->grid();
+        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         this->grid(*tree, phi_a.im());
         this->grid(*tree, phi_b.re());
         this->mult(*tree, c, phi_a.im(), phi_b.re(), 0);
@@ -149,7 +150,8 @@ FunctionTree<3>* OrbitalMultiplier::calcImagPart(double c, Orbital &phi_a, Orbit
         vec.clear();
     }
     if (vec.size() == 2) {
-        imag = this->grid(vec);
+        imag = new FunctionTree<3>(*MRA);
+        this->grid(*imag, vec);
         this->add(*imag, vec, 0);
         vec.clear(true);
     }
