@@ -32,12 +32,13 @@ TEST_CASE("Initialize identity operator", "[init_identity], [identity_operator],
 
             InterpolatingBasis basis(2*k+1);
             MultiResolutionAnalysis<1> kern_mra(box, basis);
-            GridGenerator<1> G(kern_mra);
-            MWProjector<1> Q(kern_mra, proj_prec);
+            GridGenerator<1> G;
+            MWProjector<1> Q(proj_prec);
 
-            FunctionTree<1> *kern_tree = G(id_kern);
-            Q(*kern_tree, id_kern);
-            REQUIRE( kern_tree->integrate() == Approx(1.0).epsilon(proj_prec) );
+            FunctionTree<1> kern_tree(kern_mra);
+            G(kern_tree, id_kern);
+            Q(kern_tree, id_kern);
+            REQUIRE( kern_tree.integrate() == Approx(1.0).epsilon(proj_prec) );
 
             SECTION("Build operator tree by cross correlation") {
                 NodeIndex<2> idx(n);
@@ -46,29 +47,27 @@ TEST_CASE("Initialize identity operator", "[init_identity], [identity_operator],
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator G(oper_mra, ccc_prec);
-                OperatorTree *oper_tree = G(*kern_tree);
+                CrossCorrelationGenerator CCG(ccc_prec);
+                OperatorTree oper_tree(oper_mra, ccc_prec);
+                CCG(oper_tree, kern_tree);
 
-                oper_tree->calcBandWidth(1.0);
-                BandWidth bw_1 = oper_tree->getBandWidth();
-                oper_tree->clearBandWidth();
+                oper_tree.calcBandWidth(1.0);
+                BandWidth bw_1 = oper_tree.getBandWidth();
+                oper_tree.clearBandWidth();
 
-                oper_tree->calcBandWidth(0.001);
-                BandWidth bw_2 = oper_tree->getBandWidth();
-                oper_tree->clearBandWidth();
+                oper_tree.calcBandWidth(0.001);
+                BandWidth bw_2 = oper_tree.getBandWidth();
+                oper_tree.clearBandWidth();
 
-                oper_tree->calcBandWidth(-1.0);
-                BandWidth bw_3 = oper_tree->getBandWidth();
-                oper_tree->clearBandWidth();
+                oper_tree.calcBandWidth(-1.0);
+                BandWidth bw_3 = oper_tree.getBandWidth();
+                oper_tree.clearBandWidth();
 
-                for (int i = 0; i < oper_tree->getDepth(); i++) {
+                for (int i = 0; i < oper_tree.getDepth(); i++) {
                     REQUIRE( bw_1.getMaxWidth(i) <= bw_2.getMaxWidth(i) );
                     REQUIRE( bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i) );
                 }
-
-                delete oper_tree;
             }
-            delete kern_tree;
         }
     }
 }
@@ -95,21 +94,19 @@ template<int D> void applyIdentity() {
     initialize(&fFunc);
     initialize(&mra);
 
-    MWProjector<D> Q(*mra, proj_prec);
-    FunctionTree<D> *fTree = Q(*fFunc);
-
-    GridGenerator<D> G(*mra);
-    FunctionTree<D> *gTree = G();
-
+    MWProjector<D> Q(proj_prec);
     IdentityOperator<D> I(*mra, apply_prec, build_prec);
-    I(*gTree, *fTree);
 
-    REQUIRE( gTree->getDepth() <= fTree->getDepth() );
-    REQUIRE( gTree->getNNodes() <= fTree->getNNodes() );
-    REQUIRE( gTree->integrate() == Approx(fTree->integrate()).epsilon(apply_prec) );
+    FunctionTree<D> fTree(*mra);
+    FunctionTree<D> gTree(*mra);
 
-    delete gTree;
-    delete fTree;
+    Q(fTree, *fFunc);
+    I(gTree, fTree);
+
+    REQUIRE( gTree.getDepth() <= fTree.getDepth() );
+    REQUIRE( gTree.getNNodes() <= fTree.getNNodes() );
+    REQUIRE( gTree.integrate() == Approx(fTree.integrate()).epsilon(apply_prec) );
+
     finalize(&fFunc);
     finalize(&mra);
 }

@@ -42,13 +42,14 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
             MultiResolutionAnalysis<1> kern_mra(box, basis);
 
 
-            MWProjector<1> Q(kern_mra, proj_prec);
-            GridGenerator<1> G(kern_mra);
+            MWProjector<1> Q(proj_prec);
+            GridGenerator<1> G;
 
             FunctionTreeVector<1> kern_vec;
             for (int i = 0; i < poisson.size(); i++) {
                 Gaussian<1> &kern_gauss = *poisson[i];
-                FunctionTree<1> *kern_tree = G(kern_gauss);
+                FunctionTree<1> *kern_tree = new FunctionTree<1>(kern_mra);
+                G(*kern_tree, kern_gauss);
                 Q(*kern_tree, kern_gauss);
                 kern_vec.push_back(kern_tree);
             }
@@ -60,12 +61,13 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator G(oper_mra, ccc_prec);
+                CrossCorrelationGenerator G(ccc_prec);
 
                 OperatorTreeVector oper_vec;
                 for (int i = 0; i < kern_vec.size(); i++) {
                     FunctionTree<1> &kern_tree = *kern_vec[i];
-                    OperatorTree *oper_tree = G(kern_tree);
+                    OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
+                    G(*oper_tree, kern_tree);
                     oper_vec.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
@@ -115,22 +117,19 @@ TEST_CASE("Apply Poisson's operator", "[apply_poisson], [poisson_operator], [mw_
     initialize(&fFunc);
     initialize(&mra);
 
-    MWProjector<3> Q(*mra, proj_prec);
-    FunctionTree<3> *fTree = Q(*fFunc);
-
-    GridGenerator<3> G(*mra);
-    FunctionTree<3> *gTree = G();
-
+    MWProjector<3> Q(proj_prec);
     PoissonOperator P(*mra, apply_prec, build_prec);
-    P(*gTree, *fTree);
 
-    double E_num = gTree->dot(*fTree);
+    FunctionTree<3> fTree(*mra);
+    FunctionTree<3> gTree(*mra);
+
+    Q(fTree, *fFunc);
+    P(gTree, fTree);
+
+    double E_num = gTree.dot(fTree);
     double E_ana = fFunc->calcCoulombEnergy(*fFunc);
 
     REQUIRE( E_num == Approx(E_ana).epsilon(apply_prec) );
-
-    delete gTree;
-    delete fTree;
 
     finalize(&fFunc);
     finalize(&mra);

@@ -31,17 +31,16 @@ template<int D> void testNodeFetchers() {
 
     MultiResolutionAnalysis<D> *mra = 0;
     initialize(&mra);
-    GridGenerator<D> G(*mra);
     finalize(&mra);
 
-    FunctionTree<D> *tree = G();
-    tree->setZero();
+    FunctionTree<D> tree(*mra);
+    tree.setZero();
 
-    const FunctionTree<D> *const_tree = const_cast<const FunctionTree<D> *>(tree);
+    const FunctionTree<D> &const_tree = const_cast<const FunctionTree<D> &>(tree);
 
     // Fetch by NodeIndex
     SECTION("Find node by NodeIndex: existing node") {
-        MWNode<D> *node = tree->findNode(idx_0);
+        MWNode<D> *node = tree.findNode(idx_0);
         REQUIRE( node != 0 );
         REQUIRE( node->getNodeIndex() == idx_0 );
         REQUIRE( node->isAllocated() );
@@ -49,7 +48,7 @@ template<int D> void testNodeFetchers() {
         REQUIRE_FALSE( node->isGenNode() );
     }
     SECTION("Find const node by NodeIndex: existing node") {
-        const MWNode<D> *node = const_tree->findNode(idx_0);
+        const MWNode<D> *node = const_tree.findNode(idx_0);
         REQUIRE( node != 0 );
         REQUIRE( node->getNodeIndex() == idx_0 );
         REQUIRE( node->isAllocated() );
@@ -57,43 +56,43 @@ template<int D> void testNodeFetchers() {
         REQUIRE_FALSE( node->isGenNode() );
     }
     SECTION("Find node by NodeIndex: non-existing node") {
-        MWNode<D> *node = tree->findNode(idx_1);
+        MWNode<D> *node = tree.findNode(idx_1);
         REQUIRE( node == 0 );
     }
     SECTION("Find const node by NodeIndex: non-existing node") {
-        const MWNode<D> *node = const_tree->findNode(idx_2);
+        const MWNode<D> *node = const_tree.findNode(idx_2);
         REQUIRE( node == 0 );
     }
     SECTION("Get node by NodeIndex: existing node") {
-        MWNode<D> &node = tree->getNode(idx_0);
+        MWNode<D> &node = tree.getNode(idx_0);
         REQUIRE( node.getNodeIndex() == idx_0 );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
         REQUIRE_FALSE( node.isGenNode() );
     }
     SECTION("Get node by NodeIndex: non-existing node") {
-        MWNode<D> &node = tree->getNode(idx_2);
+        MWNode<D> &node = tree.getNode(idx_2);
         REQUIRE( node.getNodeIndex() == idx_2 );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
         REQUIRE( node.isGenNode() );
     }
     SECTION("Get node or end node by NodeIndex: existing node") {
-        MWNode<D> &node = tree->getNodeOrEndNode(idx_0);
+        MWNode<D> &node = tree.getNodeOrEndNode(idx_0);
         REQUIRE( node.getNodeIndex() == idx_0 );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
         REQUIRE_FALSE( node.isGenNode() );
     }
     SECTION("Get const node or end node by NodeIndex: existing node") {
-        const MWNode<D> &node = const_tree->getNodeOrEndNode(idx_0);
+        const MWNode<D> &node = const_tree.getNodeOrEndNode(idx_0);
         REQUIRE( node.getNodeIndex() == idx_0 );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
         REQUIRE_FALSE( node.isGenNode() );
     }
     SECTION("Get node or end node by NodeIndex: non-existing node") {
-        MWNode<D> &node = tree->getNodeOrEndNode(idx_2);
+        MWNode<D> &node = tree.getNodeOrEndNode(idx_2);
         REQUIRE( node.getNodeIndex() != idx_2 );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
@@ -101,7 +100,7 @@ template<int D> void testNodeFetchers() {
         REQUIRE_FALSE( node.isGenNode() );
     }
     SECTION("Get const node or end node by NodeIndex: non-existing node") {
-        const MWNode<D> &node = const_tree->getNodeOrEndNode(idx_1);
+        const MWNode<D> &node = const_tree.getNodeOrEndNode(idx_1);
         REQUIRE( node.getNodeIndex() != idx_2 );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
@@ -112,7 +111,7 @@ template<int D> void testNodeFetchers() {
     // Fetch by coordinate
     SECTION("Get node by coord: existing node") {
         int depth = 0;
-        MWNode<D> &node = tree->getNode(r, depth);
+        MWNode<D> &node = tree.getNode(r, depth);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
@@ -120,7 +119,7 @@ template<int D> void testNodeFetchers() {
     }
     SECTION("Get node by coord: non-existing node") {
         int depth = 3;
-        MWNode<D> &node = tree->getNode(r, depth);
+        MWNode<D> &node = tree.getNode(r, depth);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
@@ -128,7 +127,7 @@ template<int D> void testNodeFetchers() {
     }
     SECTION("Get node or end node by coord: existing node") {
         int depth = 0;
-        MWNode<D> &node = tree->getNodeOrEndNode(r, depth);
+        MWNode<D> &node = tree.getNodeOrEndNode(r, depth);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
@@ -136,7 +135,7 @@ template<int D> void testNodeFetchers() {
     }
     SECTION("Get const node or end node by coord: existing node") {
         int depth = 0;
-        const MWNode<D> &node = const_tree->getNodeOrEndNode(r, depth);
+        const MWNode<D> &node = const_tree.getNodeOrEndNode(r, depth);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
@@ -144,7 +143,7 @@ template<int D> void testNodeFetchers() {
     }
     SECTION("Get node or end node by coord: non-existing node") {
         int depth = 3;
-        MWNode<D> &node = tree->getNodeOrEndNode(r, depth);
+        MWNode<D> &node = tree.getNodeOrEndNode(r, depth);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.isEndNode() );
         REQUIRE( node.isAllocated() );
@@ -153,14 +152,13 @@ template<int D> void testNodeFetchers() {
     }
     SECTION("Get const node or end node by coord: non-existing node") {
         int depth = 3;
-        const MWNode<D> &node = const_tree->getNodeOrEndNode(r, depth);
+        const MWNode<D> &node = const_tree.getNodeOrEndNode(r, depth);
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.isEndNode() );
         REQUIRE( node.isAllocated() );
         REQUIRE( node.hasCoefs() );
         REQUIRE( node.getDepth() != depth );
     }
-    delete tree;
 }
 
 } // namespace
