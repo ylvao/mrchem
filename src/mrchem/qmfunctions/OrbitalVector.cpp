@@ -515,6 +515,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix(OrbitalVector &ket) {
 
 /** Calculate overlap matrix between two orbital sets using MPI*/
 MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
+#ifdef HAVE_MPI
     OrbitalVector &bra = *this;
     MatrixXcd S = MatrixXcd::Zero(bra.size(), ket.size());
     MatrixXcd S_MPI = MatrixXcd::Zero(bra.size(), ket.size());
@@ -602,11 +603,15 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
         }
 	}*/
     return S_MPI;
+#else
+    NOT_REACHED_ABORT;
+#endif
 }
 /** Calculate overlap matrix between two orbital sets using MPI
  * assumes Hermitian overlap
  */
 MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
+#ifdef HAVE_MPI
     OrbitalVector &bra = *this;
     MatrixXcd S = MatrixXcd::Zero(bra.size(), ket.size());
     MatrixXcd S_MPI = MatrixXcd::Zero(bra.size(), ket.size());
@@ -683,7 +688,11 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
         }
 	}*/
     return S_MPI;
+#else
+    NOT_REACHED_ABORT;
+#endif
 }
+
 int OrbitalVector::printTreeSizes() const {
     int nNodes = 0;
     int nTrees = 0;
