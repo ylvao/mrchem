@@ -9,7 +9,7 @@ template<int D> class DerivativeOperator;
 
 class MomentumOperator : public QMOperator {
 public:
-    MomentumOperator(int dir, double build_prec);
+    MomentumOperator(int dir, double build_prec = -1.0);
     virtual ~MomentumOperator() { }
 
     virtual void setup(double prec);

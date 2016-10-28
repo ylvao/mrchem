@@ -9,7 +9,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 class DipoleOperator : public Potential {
 public:
-    DipoleOperator(int dir, double r_0) : project(-1.0) {
+    DipoleOperator(int dir, double r_0) : project(-1.0, MRA->getMaxScale()) {
         if (dir < 0 or dir > 2) MSG_ERROR("Invalid direction");
 
         this->func = [dir, r_0] (const double *r) -> double {

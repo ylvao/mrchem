@@ -32,6 +32,12 @@ public:
     bool hasReal() const { if (this->real == 0) return false; return true; }
     bool hasImag() const { if (this->imag == 0) return false; return true; }
 
+    void allocReal();
+    void allocImag();
+
+    void setReal(FunctionTree<3> *re) { this->real = re; }
+    void setImag(FunctionTree<3> *im) { this->imag = im; }
+
     FunctionTree<3> &re() { return *this->real; }
     FunctionTree<3> &im() { return *this->imag; }
 
@@ -65,14 +71,6 @@ public:
         o << std::setw(24) << orb.getError() << std::endl;
         return o;
     }
-
-    friend class OrbitalAdder;
-    friend class OrbitalMultiplier;
-    friend class OrbitalProjector;
-    friend class HelmholtzOperatorSet;
-    friend class MomentumOperator;
-    friend class SCF;
-    friend class OrbitalVector;
 
 protected:
     int spin;

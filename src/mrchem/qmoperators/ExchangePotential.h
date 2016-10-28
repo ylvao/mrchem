@@ -6,10 +6,8 @@
 
 class ExchangePotential : public ExchangeOperator {
 public:
-    ExchangePotential(double build_prec,
-                      OrbitalVector &phi,
-                      double x_fac = 1.0);
-    virtual ~ExchangePotential();
+    ExchangePotential(double prec, OrbitalVector &phi, double x_fac = 1.0);
+    virtual ~ExchangePotential() { }
 
     virtual void rotate(Eigen::MatrixXd &U);
 

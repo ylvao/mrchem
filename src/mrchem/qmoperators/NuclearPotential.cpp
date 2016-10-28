@@ -3,9 +3,9 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-NuclearPotential::NuclearPotential(double build_prec, Nuclei &nucs)
-        : project(-1.0),
-          nuc_func(nucs, build_prec) {
+NuclearPotential::NuclearPotential(double prec, Nuclei &nucs)
+        : project(-1.0, MRA->getMaxScale()),
+          nuc_func(nucs, prec) {
 }
 
 void NuclearPotential::setup(double prec) {

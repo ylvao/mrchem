@@ -1,7 +1,6 @@
 #include "HelmholtzOperatorSet.h"
 #include "OrbitalVector.h"
 #include "OperatorTree.h"
-#include "OperatorApplier.h"
 #include "Timer.h"
 #include "eigen_disable_warnings.h"
 
@@ -9,6 +8,12 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 using namespace Eigen;
+
+HelmholtzOperatorSet::HelmholtzOperatorSet(double build, double thrs)
+    : threshold(thrs),
+      build_prec(build),
+      apply(-1.0, MRA->getMaxScale()) {
+}
 
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
     TelePrompter::printHeader(0, "Initializing Helmholtz Operators");
@@ -131,15 +136,13 @@ void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
     if (out.hasImag()) MSG_ERROR("Orbital not empty");
 
     HelmholtzOperator &H_i = getOperator(i);
-    OperatorApplier<3> apply(this->apply_prec);
-    apply.setPrecision(this->apply_prec);
 
     if (inp.hasReal()) {
-        out.real = new FunctionTree<3>(*MRA);
-        apply(*out.real, H_i, *inp.real);
+        out.allocReal();
+        this->apply(out.re(), H_i, inp.re());
     }
     if (inp.hasImag()) {
-        out.imag = new FunctionTree<3>(*MRA);
-        apply(*out.imag, H_i, *inp.imag);
+        out.allocImag();
+        this->apply(out.im(), H_i, inp.im());
     }
 }

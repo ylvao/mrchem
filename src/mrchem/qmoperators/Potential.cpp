@@ -6,6 +6,8 @@
 #include "Orbital.h"
 #include "Timer.h"
 
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+
 using namespace std;
 using namespace Eigen;
 

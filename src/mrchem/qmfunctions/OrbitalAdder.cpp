@@ -7,41 +7,46 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
+OrbitalAdder::OrbitalAdder(double prec)
+    : add(prec, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) {
+}
+
 void OrbitalAdder::operator()(Orbital &phi_ab,
                               double a, Orbital &phi_a,
                               double b, Orbital &phi_b,
                               bool union_grid) {
     double prec = this->add.getPrecision();
-    if (not union_grid and prec < 0.0) MSG_ERROR("Nagative adaptive prec");
+    if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
     if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
 
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
 
-    if (phi_a.hasReal()) rvec.push_back(a, phi_a.real);
-    if (phi_b.hasReal()) rvec.push_back(b, phi_b.real);
+    if (phi_a.hasReal()) rvec.push_back(a, &phi_a.re());
+    if (phi_b.hasReal()) rvec.push_back(b, &phi_b.re());
 
-    if (phi_a.hasImag()) ivec.push_back(a, phi_a.imag);
-    if (phi_b.hasImag()) ivec.push_back(b, phi_b.imag);
+    if (phi_a.hasImag()) ivec.push_back(a, &phi_a.im());
+    if (phi_b.hasImag()) ivec.push_back(b, &phi_b.im());
 
     if (rvec.size() > 0) {
         if (union_grid) {
-            phi_ab.real = new FunctionTree<3>(*MRA);
-            this->grid(*phi_ab.real, rvec);
-            this->add(*phi_ab.real, rvec, 0);
+            phi_ab.allocReal();
+            this->grid(phi_ab.re(), rvec);
+            this->add(phi_ab.re(), rvec, 0);
         } else {
-            phi_ab.real = new FunctionTree<3>(*MRA);
-            this->add(*phi_ab.real, rvec);
+            phi_ab.allocReal();
+            this->add(phi_ab.re(), rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
-            phi_ab.imag = new FunctionTree<3>(*MRA);
-            this->grid(*phi_ab.imag, ivec);
-            this->add(*phi_ab.imag, ivec, 0);
+            phi_ab.allocImag();
+            this->grid(phi_ab.im(), ivec);
+            this->add(phi_ab.im(), ivec, 0);
         } else {
-            phi_ab.imag = new FunctionTree<3>(*MRA);
-            this->add(*phi_ab.imag, ivec);
+            phi_ab.allocImag();
+            this->add(phi_ab.im(), ivec);
         }
     }
 }
@@ -58,28 +63,28 @@ void OrbitalAdder::operator()(Orbital &out,
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
     for (int i = 0; i < orbs.size(); i++) {
-        if (orbs[i]->hasReal()) rvec.push_back(coefs[i], orbs[i]->real);
-        if (orbs[i]->hasImag()) ivec.push_back(coefs[i], orbs[i]->imag);
+        if (orbs[i]->hasReal()) rvec.push_back(coefs[i], &orbs[i]->re());
+        if (orbs[i]->hasImag()) ivec.push_back(coefs[i], &orbs[i]->im());
     }
 
     if (rvec.size() > 0) {
         if (union_grid) {
-            out.real = new FunctionTree<3>(*MRA);
-            this->grid(*out.real, rvec);
-            this->add(*out.real, rvec, 0);
+            out.allocReal();
+            this->grid(out.re(), rvec);
+            this->add(out.re(), rvec, 0);
         } else {
-            out.real = new FunctionTree<3>(*MRA);
-            this->add(*out.real, rvec);
+            out.allocReal();
+            this->add(out.re(), rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
-            out.imag = new FunctionTree<3>(*MRA);
-            this->grid(*out.imag, ivec);
-            this->add(*out.imag, ivec, 0);
+            out.allocImag();
+            this->grid(out.im(), ivec);
+            this->add(out.im(), ivec, 0);
         } else {
-            out.imag = new FunctionTree<3>(*MRA);
-            this->add(*out.imag, ivec);
+            out.allocImag();
+            this->add(out.im(), ivec);
         }
     }
 }
@@ -104,7 +109,7 @@ void OrbitalAdder::operator()(Orbital &out,
                               OrbitalVector &inp,
                               bool union_grid) {
     double prec = this->add.getPrecision();
-    if (not union_grid and prec < 0.0) MSG_ERROR("Nagative adaptive prec");
+    if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
     if (c.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Output not empty");
 
@@ -114,28 +119,28 @@ void OrbitalAdder::operator()(Orbital &out,
     for (int i = 0; i < inp.size(); i++) {
         double c_i = c(i);
         Orbital &phi_i = inp.getOrbital(i);
-        if (phi_i.hasReal() and fabs(c_i) > thrs) rvec.push_back(c_i, phi_i.real);
-        if (phi_i.hasImag() and fabs(c_i) > thrs) ivec.push_back(c_i, phi_i.imag);
+        if (phi_i.hasReal() and fabs(c_i) > thrs) rvec.push_back(c_i, &phi_i.re());
+        if (phi_i.hasImag() and fabs(c_i) > thrs) ivec.push_back(c_i, &phi_i.im());
     }
 
     if (rvec.size() > 0) {
         if (union_grid) {
-            out.real = new FunctionTree<3>(*MRA);
-            this->grid(*out.real, rvec);
-            this->add(*out.real, rvec, 0);
+            out.allocReal();
+            this->grid(out.re(), rvec);
+            this->add(out.re(), rvec, 0);
         } else {
-            out.real = new FunctionTree<3>(*MRA);
-            this->add(*out.real, rvec);
+            out.allocReal();
+            this->add(out.re(), rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
-            out.imag = new FunctionTree<3>(*MRA);
-            this->grid(*out.imag, ivec);
-            this->add(*out.imag, ivec, 0);
+            out.allocImag();
+            this->grid(out.im(), ivec);
+            this->add(out.im(), ivec, 0);
         } else {
-            out.imag = new FunctionTree<3>(*MRA);
-            this->add(*out.imag, ivec);
+            out.allocImag();
+            this->add(out.im(), ivec);
         }
     }
 }
@@ -155,30 +160,17 @@ void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     OrbitalVector tmp(out);
     rotate(tmp, U, out);
-    out.clear();
-    for (int i = 0; i < out.size(); i++) {
-        Orbital &tmp_phi = tmp.getOrbital(i);
-        Orbital &out_phi = out.getOrbital(i);
-        if (tmp_phi.hasReal()) {
-            out_phi.real = tmp_phi.real;
-            tmp_phi.real = 0;
-        }
-        if (tmp_phi.hasImag()) {
-            out_phi.imag = tmp_phi.imag;
-            tmp_phi.imag = 0;
-        }
-    }
-    tmp.clear();
+    out.clear(true);    // Delete pointers
+    out = tmp;          // Copy pointers
+    tmp.clear(false);   // Clear pointers
 }
 
 void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
     Orbital tmp(out);//shallow copy
     (*this)(tmp, 1.0, out, c, inp, true); // Union grid
-    out.clear();
-    out.real = tmp.real;
-    out.imag = tmp.imag;
-    tmp.real = 0;
-    tmp.imag = 0;
+    out.clear(true);    // Delete pointers
+    out = tmp;          // Copy pointers
+    tmp.clear(false);   // Clear pointers
 }
 
 void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {

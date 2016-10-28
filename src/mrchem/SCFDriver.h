@@ -36,15 +36,10 @@ public:
 
 protected:
     // Top level input
-    int order;
     double rel_prec;
-    double max_depth;
 
     // World input
-    int scale;
     bool center_of_mass;
-    std::vector<int> boxes;
-    std::vector<int> corner;
     std::vector<double> gauge;
 
     // Run parameters

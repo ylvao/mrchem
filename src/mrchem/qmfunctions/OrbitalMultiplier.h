@@ -10,7 +10,7 @@ class Potential;
 
 class OrbitalMultiplier {
 public:
-    OrbitalMultiplier(double prec = -1.0) : add(prec), mult(prec) { }
+    OrbitalMultiplier(double prec = -1.0);
     virtual ~OrbitalMultiplier() { }
 
     void setPrecision(double prec);
@@ -26,11 +26,11 @@ protected:
     MWMultiplier<3> mult;
     GridGenerator<3> grid;
 
-    FunctionTree<3> *calcRealPart(Potential &V, Orbital &phi);
-    FunctionTree<3> *calcImagPart(Potential &V, Orbital &phi, bool adjoint);
+    void calcRealPart(Orbital &Vphi, Potential &V, Orbital &phi);
+    void calcImagPart(Orbital &Vphi, Potential &V, Orbital &phi, bool adjoint);
 
-    FunctionTree<3> *calcRealPart(double c, Orbital &phi_a, Orbital &phi_b);
-    FunctionTree<3> *calcImagPart(double c, Orbital &phi_a, Orbital &phi_b, bool adjoint);
+    void calcRealPart(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b);
+    void calcImagPart(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b, bool adjoint);
 };
 
 

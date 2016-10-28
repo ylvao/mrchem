@@ -41,13 +41,8 @@ using namespace std;
 using namespace Eigen;
 
 SCFDriver::SCFDriver(Getkw &input) {
-    order = input.get<int>("order");
     rel_prec = input.get<double>("rel_prec");
-    max_depth = input.get<int>("max_depth");
 
-    scale = input.get<int>("World.scale");
-    boxes = input.getIntVec("World.boxes");
-    corner = input.getIntVec("World.corner");
     gauge = input.getDblVec("World.gauge_origin");
     center_of_mass = input.get<bool>("World.center_of_mass");
 
@@ -116,10 +111,6 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
-    if (wf_method == "HF" or dft_x_fac > MachineZero) {
-        MSG_ERROR("Hartree-Fock exchange not implemented");
-        return false;
-    }
     if (not wf_restricted) {
         MSG_ERROR("Unrestricted SCF not implemented");
         return false;

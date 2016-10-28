@@ -12,7 +12,7 @@ class Nuclei;
 
 class OrbitalProjector {
 public:
-    OrbitalProjector(double prec) : project(prec) { }
+    OrbitalProjector(double prec);
     virtual ~OrbitalProjector() { }
 
     OrbitalVector* operator()(const Nuclei &nucs);
@@ -25,8 +25,8 @@ public:
                     const std::string &mo_a,
                     const std::string &mo_b);
 protected:
-    GridGenerator<3> grid;
     MWProjector<3> project;
+    GridGenerator<3> grid;
 
     OrbitalExp* readOrbitalExpansion(const std::string &bf,
                                      const std::string &mo);

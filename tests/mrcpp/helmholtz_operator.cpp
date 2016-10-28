@@ -66,13 +66,13 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator G(ccc_prec);
+                CrossCorrelationGenerator CCG(ccc_prec, oper_mra.getMaxScale());
 
                 MWOperator O(oper_mra);
                 for (int i = 0; i < K.size(); i++) {
                     FunctionTree<1> &kern_tree = *K[i];
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
-                    G(*oper_tree, kern_tree);
+                    CCG(*oper_tree, kern_tree);
                     O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);

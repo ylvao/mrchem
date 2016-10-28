@@ -9,7 +9,7 @@ using namespace std;
 MomentumOperator::MomentumOperator(int dir, double build_prec)
         : apply_dir(dir),
           derivative(*MRA, 0.0, 0.0),
-          apply(-1.0) {
+          apply(-1.0, MRA->getMaxScale()) {
 }
 
 void MomentumOperator::setup(double prec) {
@@ -26,16 +26,16 @@ Orbital* MomentumOperator::operator() (Orbital &orb_p) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     Timer timer;
     Orbital *dOrb_p = new Orbital(orb_p);
-    if (orb_p.real != 0) {
-        dOrb_p->imag = new FunctionTree<3>(*MRA);
-        this->grid(*dOrb_p->imag, *orb_p.real);
-        this->apply(*dOrb_p->imag, this->derivative, *orb_p.real, 0, this->apply_dir);
+    if (orb_p.hasReal()) {
+        dOrb_p->allocImag();
+        this->grid(dOrb_p->im(), orb_p.re());
+        this->apply(dOrb_p->im(), this->derivative, orb_p.re(), 0, this->apply_dir);
     }
-    if (orb_p.imag != 0) {
-        dOrb_p->real = new FunctionTree<3>(*MRA);
-        this->grid(*dOrb_p->real, *orb_p.imag);
-        this->apply(*dOrb_p->real, this->derivative, *orb_p.imag, 0, this->apply_dir);
-        *dOrb_p->real *= -1.0;
+    if (orb_p.hasImag()) {
+        dOrb_p->allocReal();
+        this->grid(dOrb_p->re(), orb_p.im());
+        this->apply(dOrb_p->re(), this->derivative, orb_p.im(), 0, this->apply_dir);
+        dOrb_p->re() *= -1.0;
     }
     timer.stop();
     int n = dOrb_p->getNNodes();

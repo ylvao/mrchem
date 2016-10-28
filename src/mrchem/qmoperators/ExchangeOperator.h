@@ -10,13 +10,10 @@
 #include "OperatorApplier.h"
 
 class OrbitalVector;
-template<int D> class MultiResolutionAnalysis;
 
 class ExchangeOperator : public QMOperator {
 public:
-    ExchangeOperator(double build_prec,
-                     OrbitalVector &phi,
-                     double x_fac);
+    ExchangeOperator(double prec, OrbitalVector &phi, double x_fac);
     virtual ~ExchangeOperator();
 
     virtual void setup(double prec);

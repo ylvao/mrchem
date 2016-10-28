@@ -35,6 +35,11 @@ using namespace Eigen;
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
+OrbitalProjector::OrbitalProjector(double prec)
+    : project(prec, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) {
+}
+
 OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
     TelePrompter::printHeader(0, "Setting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
@@ -59,11 +64,10 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                     phi->push_back(1, 0, Paired);
                     Orbital &phi_i = phi->getOrbital(totOrbs);
 
-                    phi_i.real = new FunctionTree<3>(*MRA);
-                    phi_i.imag = 0;
-
                     HydrogenicFunction h_func(n, l, m, Z, R);
-                    this->project(*phi_i.real, h_func);
+
+                    phi_i.allocReal();
+                    this->project(phi_i.re(), h_func);
 
                     printout(0, setw(5) << totOrbs);
                     printout(0, setw(5) << phi_i.printSpin());
@@ -93,9 +97,9 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
     for (int i = 0; i < orbs.size(); i++) {
         Orbital &mwOrb = orbs.getOrbital(i);
         GaussExp<3> &gtOrb = moExp->getOrbital(i);
-        mwOrb.clear();
-        mwOrb.real = new FunctionTree<3>(*MRA);
-        this->project(*mwOrb.real, gtOrb);
+        mwOrb.clear(true);
+        mwOrb.allocReal();
+        this->project(mwOrb.re(), gtOrb);
         printout(0, setw(5) << i);
         printout(0, setw(5) << mwOrb.printSpin());
         printout(0, setw(5) << mwOrb.getOccupancy());

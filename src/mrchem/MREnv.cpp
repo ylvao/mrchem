@@ -87,6 +87,7 @@ void MREnv::finalizeMRCPP(const Timer t) {
 
 void MREnv::initializeMRA() {
     // Constructing world box
+    int depth = Input.get<int>("max_depth");
     int scale = Input.get<int>("World.scale");
     vector<int> corner = Input.getIntVec("World.corner");
     vector<int> boxes = Input.getIntVec("World.boxes");
@@ -100,10 +101,10 @@ void MREnv::initializeMRA() {
     // Initializing MRA
     if (wtype == "I") {
         InterpolatingBasis basis(order);
-        MRA = new MultiResolutionAnalysis<3>(world, basis);
+        MRA = new MultiResolutionAnalysis<3>(world, basis, depth);
     } else if (wtype == "L") {
         LegendreBasis basis(order);
-        MRA = new MultiResolutionAnalysis<3>(world, basis);
+        MRA = new MultiResolutionAnalysis<3>(world, basis, depth);
     } else {
         MSG_FATAL("Invalid wavelet type!");
     }
