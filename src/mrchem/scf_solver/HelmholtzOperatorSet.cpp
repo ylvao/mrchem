@@ -135,11 +135,11 @@ void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
     apply.setPrecision(this->apply_prec);
 
     if (inp.hasReal()) {
-        out.real = new FunctionTree<3>(*MRA);
-        apply(*out.real, H_i, *inp.real);
+        out.allocReal();
+        apply(out.re(), H_i, inp.re());
     }
     if (inp.hasImag()) {
-        out.imag = new FunctionTree<3>(*MRA);
-        apply(*out.imag, H_i, *inp.imag);
+        out.allocImag();
+        apply(out.im(), H_i, inp.im());
     }
 }

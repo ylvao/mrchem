@@ -10,32 +10,31 @@ void OrbitalMultiplier::setPrecision(double prec) {
 }
 
 void OrbitalMultiplier::operator()(Orbital &Vphi, Potential &V, Orbital &phi) {
-    if (Vphi.hasReal() or Vphi.hasImag()) MSG_ERROR("Orbital not empty");
-    Vphi.real = calcRealPart(V, phi);
-    Vphi.imag = calcImagPart(V, phi, false);
+    calcRealPart(Vphi, V, phi);
+    calcImagPart(Vphi, V, phi, false);
 }
 
 void OrbitalMultiplier::adjoint(Orbital &Vphi, Potential &V, Orbital &phi) {
-    if (Vphi.hasReal() or Vphi.hasImag()) MSG_ERROR("Orbital not empty");
-    Vphi.real = calcRealPart(V, phi);
-    Vphi.imag = calcImagPart(V, phi, true);
+    calcRealPart(Vphi, V, phi);
+    calcImagPart(Vphi, V, phi, true);
 }
 
 // phi_ab = c * phi_a * phi_b
 void OrbitalMultiplier::operator()(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b) {
-    if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
-    phi_ab.real = calcRealPart(c, phi_a, phi_b);
-    phi_ab.imag = calcImagPart(c, phi_a, phi_b, false);
+    calcRealPart(phi_ab, c, phi_a, phi_b);
+    calcImagPart(phi_ab, c, phi_a, phi_b, false);
 }
 
 // phi_ab = c * phi_a^dag * phi_b
 void OrbitalMultiplier::adjoint(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b) {
-    if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
-    phi_ab.real = calcRealPart(c, phi_a, phi_b);
-    phi_ab.imag = calcImagPart(c, phi_a, phi_b, true);
+    calcRealPart(phi_ab, c, phi_a, phi_b);
+    calcImagPart(phi_ab, c, phi_a, phi_b, true);
 }
 
-FunctionTree<3>* OrbitalMultiplier::calcRealPart(Potential &V, Orbital &phi) {
+void OrbitalMultiplier::calcRealPart(Orbital &Vphi,
+                                     Potential &V,
+                                     Orbital &phi) {
+    if (Vphi.hasReal()) MSG_ERROR("Orbital not empty");
     FunctionTreeVector<3> vec;
     if (V.hasReal() and phi.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
@@ -49,21 +48,23 @@ FunctionTree<3>* OrbitalMultiplier::calcRealPart(Potential &V, Orbital &phi) {
         this->mult(*tree, 1.0, V.im(), phi.im(), 0);
         vec.push_back(-1.0, tree);
     }
-    FunctionTree<3> *real = 0;
     if (vec.size() == 1) {
-        real = vec[0];
-        vec.clear();
+        Vphi.setReal(vec[0]);
+        vec.clear(false);
     }
     if (vec.size() == 2) {
-        real = new FunctionTree<3>(*MRA);
-        this->grid(*real, vec);
-        this->add(*real, vec, 0);
+        Vphi.allocReal();
+        this->grid(Vphi.re(), vec);
+        this->add(Vphi.re(), vec, 0);
         vec.clear(true);
     }
-    return real;
 }
 
-FunctionTree<3>* OrbitalMultiplier::calcImagPart(Potential &V, Orbital &phi, bool adjoint) {
+void OrbitalMultiplier::calcImagPart(Orbital &Vphi,
+                                     Potential &V,
+                                     Orbital &phi,
+                                     bool adjoint) {
+    if (Vphi.hasImag()) MSG_ERROR("Orbital not empty");
     FunctionTreeVector<3> vec;
     if (V.hasReal() and phi.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
@@ -81,20 +82,23 @@ FunctionTree<3>* OrbitalMultiplier::calcImagPart(Potential &V, Orbital &phi, boo
             vec.push_back(1.0, tree);
         }
     }
-    FunctionTree<3> *imag = 0;
     if (vec.size() == 1) {
-        imag = vec[0];
-        vec.clear();
+        Vphi.setImag(vec[0]);
+        vec.clear(false);
     }
     if (vec.size() == 2) {
-        imag = new FunctionTree<3>(*MRA);
-        this->grid(*imag, vec);
-        this->add(*imag, vec, 0);
+        Vphi.allocImag();
+        this->grid(Vphi.im(), vec);
+        this->add(Vphi.im(), vec, 0);
         vec.clear(true);
     }
-    return imag;
 }
-FunctionTree<3>* OrbitalMultiplier::calcRealPart(double c, Orbital &phi_a, Orbital &phi_b) {
+
+void OrbitalMultiplier::calcRealPart(Orbital &phi_ab,
+                                     double c,
+                                     Orbital &phi_a,
+                                     Orbital &phi_b) {
+    if (phi_ab.hasReal()) MSG_ERROR("Orbital not empty");
     FunctionTreeVector<3> vec;
     if (phi_a.hasReal() and phi_b.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
@@ -110,21 +114,24 @@ FunctionTree<3>* OrbitalMultiplier::calcRealPart(double c, Orbital &phi_a, Orbit
         this->mult(*tree, c, phi_a.im(), phi_b.im(), 0);
         vec.push_back(-1.0, tree);
     }
-    FunctionTree<3> *real = 0;
     if (vec.size() == 1) {
-        real = vec[0];
-        vec.clear();
+        phi_ab.setReal(vec[0]);
+        vec.clear(false);
     }
     if (vec.size() == 2) {
-        real = new FunctionTree<3>(*MRA);
-        this->grid(*real, vec);
-        this->add(*real, vec, 0);
+        phi_ab.allocReal();
+        this->grid(phi_ab.re(), vec);
+        this->add(phi_ab.re(), vec, 0);
         vec.clear(true);
     }
-    return real;
 }
 
-FunctionTree<3>* OrbitalMultiplier::calcImagPart(double c, Orbital &phi_a, Orbital &phi_b, bool adjoint) {
+void OrbitalMultiplier::calcImagPart(Orbital &phi_ab,
+                                     double c,
+                                     Orbital &phi_a,
+                                     Orbital &phi_b,
+                                     bool adjoint) {
+    if (phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
     FunctionTreeVector<3> vec;
     if (phi_a.hasReal() and phi_b.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
@@ -144,16 +151,14 @@ FunctionTree<3>* OrbitalMultiplier::calcImagPart(double c, Orbital &phi_a, Orbit
             vec.push_back(1.0, tree);
         }
     }
-    FunctionTree<3> *imag = 0;
     if (vec.size() == 1) {
-        imag = vec[0];
-        vec.clear();
+        phi_ab.setImag(vec[0]);
+        vec.clear(false);
     }
     if (vec.size() == 2) {
-        imag = new FunctionTree<3>(*MRA);
-        this->grid(*imag, vec);
-        this->add(*imag, vec, 0);
+        phi_ab.allocImag();
+        this->grid(phi_ab.im(), vec);
+        this->add(phi_ab.im(), vec, 0);
         vec.clear(true);
     }
-    return imag;
 }

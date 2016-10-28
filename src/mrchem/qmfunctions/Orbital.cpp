@@ -45,6 +45,16 @@ void Orbital::clear(bool free) {
     this->imag = 0;
 }
 
+void Orbital::allocReal() {
+    if (this->real != 0) MSG_ERROR("Orbital not empty");
+    this->real = new FunctionTree<3>(*MRA);
+}
+
+void Orbital::allocImag() {
+    if (this->imag != 0) MSG_ERROR("Orbital not empty");
+    this->imag = new FunctionTree<3>(*MRA);
+}
+
 int Orbital::getNNodes() const {
     int nNodes = 0;
     if (this->real != 0) nNodes += this->real->getNNodes();
