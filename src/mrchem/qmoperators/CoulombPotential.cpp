@@ -22,7 +22,7 @@ void CoulombPotential::setup(double prec) {
     FunctionTree<3> &rho = this->density.getDensity(Paired);
     if (not this->potential.hasReal()) {
         this->potential.real = new FunctionTree<3>(*MRA);
-        this->poisson(*this->potential.real, rho);
+        this->apply(*this->potential.real, this->poisson, rho);
         this->potential.imag = 0;
     } else {
         NOT_IMPLEMENTED_ABORT;

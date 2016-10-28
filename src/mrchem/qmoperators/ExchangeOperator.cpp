@@ -13,7 +13,8 @@ ExchangeOperator::ExchangeOperator(double build_prec,
         : QMOperator(),
           add(),
           mult(),
-          poisson(*MRA, -1.0, build_prec),
+          poisson(*MRA, build_prec),
+          apply(-1.0),
           x_factor(x_fac),
           orbitals_0(&phi),
           screen(true) {
@@ -30,13 +31,13 @@ void ExchangeOperator::setup(double prec) {
     QMOperator::setup(prec);
     this->add.setPrecision(prec);
     this->mult.setPrecision(prec);
-    this->poisson.setPrecision(prec);
+    this->apply.setPrecision(prec);
 }
 
 void ExchangeOperator::clear() {
     this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
-    this->poisson.setPrecision(-1.0);
+    this->apply.setPrecision(-1.0);
     QMOperator::clear();
 }
 

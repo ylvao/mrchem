@@ -21,7 +21,8 @@ XCOperator::XCOperator(int k,
           add(-1.0),
           mult(-1.0),
           project(-1.0),
-          derivative(-1, *MRA, 0.0, 0.0),
+          derivative(*MRA, 0.0, 0.0),
+          apply(-1.0),
           density_0(func.isSpinSeparated()),
           gradient_0(0),
           orbitals_0(&phi),
@@ -51,14 +52,14 @@ void XCOperator::setup(double prec) {
     this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
     this->project.setPrecision(prec);
-    this->derivative.setPrecision(prec);
+    this->apply.setPrecision(prec);
 }
 
 void XCOperator::clear() {
     this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
     this->project.setPrecision(-1.0);
-    this->derivative.setPrecision(-1.0);
+    this->apply.setPrecision(-1.0);
     QMOperator::clear();
 }
 
@@ -99,21 +100,24 @@ Density** XCOperator::calcDensityGradient(Density &rho) {
     if (rho.isSpinDensity()) {
         FunctionTree<3> &rho_a = rho.getDensity(Alpha);
         FunctionTreeVector<3> grad_a;
-        this->derivative.grad(grad_a, rho_a);
+        NOT_IMPLEMENTED_ABORT;
+        //this->derivative.grad(grad_a, rho_a);
         out[0]->setDensity(Alpha, grad_a[0]);
         out[1]->setDensity(Alpha, grad_a[1]);
         out[2]->setDensity(Alpha, grad_a[2]);
 
         FunctionTree<3> &rho_b = rho.getDensity(Beta);
         FunctionTreeVector<3> grad_b;
-        this->derivative.grad(grad_b, rho_b);
+        NOT_IMPLEMENTED_ABORT;
+        //this->derivative.grad(grad_b, rho_b);
         out[0]->setDensity(Beta, grad_b[0]);
         out[1]->setDensity(Beta, grad_b[1]);
         out[2]->setDensity(Beta, grad_b[2]);
     } else {
         FunctionTree<3> &rho_t = rho.getDensity(Paired);
         FunctionTreeVector<3> grad_t;
-        this->derivative.grad(grad_t, rho_t);
+        NOT_IMPLEMENTED_ABORT;
+        //this->derivative.grad(grad_t, rho_t);
         out[0]->setDensity(Paired, grad_t[0]);
         out[1]->setDensity(Paired, grad_t[1]);
         out[2]->setDensity(Paired, grad_t[2]);
@@ -278,7 +282,8 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
 
     Timer timer;
     FunctionTree<3> *result = new FunctionTree<3>(*MRA);
-    this->derivative.div(*result, vec);
+    NOT_IMPLEMENTED_ABORT;
+    //this->derivative.div(*result, vec);
     vec.clear(true);
 
     timer.stop();

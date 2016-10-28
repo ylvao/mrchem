@@ -4,12 +4,10 @@
 #include "MWOperator.h"
 
 template<int D>
-class DerivativeOperator : public MWOperator<D> {
+class DerivativeOperator : public MWOperator {
 public:
-    DerivativeOperator(int dir,
-                       const MultiResolutionAnalysis<D> &mra,
-                       double a = 0.5,
-                       double b = 0.5);
+    DerivativeOperator(const MultiResolutionAnalysis<D> &mra,
+                       double a = 0.5, double b = 0.5);
     virtual ~DerivativeOperator();
 
     void grad(FunctionTreeVector<D> &out, FunctionTree<D> &inp);

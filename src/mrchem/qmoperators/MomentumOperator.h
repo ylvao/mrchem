@@ -3,6 +3,7 @@
 
 #include "QMOperator.h"
 #include "DerivativeOperator.h"
+#include "OperatorApplier.h"
 
 template<int D> class DerivativeOperator;
 
@@ -23,7 +24,9 @@ public:
     using QMOperator::adjoint;
 
 protected:
+    const int apply_dir;
     DerivativeOperator<3> derivative;
+    OperatorApplier<3> apply;
 };
 
 #endif // MOMENTUMOPERATOR_H
