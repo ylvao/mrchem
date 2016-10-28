@@ -48,7 +48,7 @@ TEST_CASE("Initialize identity operator", "[init_identity], [identity_operator],
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator CCG(ccc_prec);
+                CrossCorrelationGenerator CCG(ccc_prec, oper_mra.getMaxScale());
                 OperatorTree oper_tree(oper_mra, ccc_prec);
                 CCG(oper_tree, kern_tree);
 
