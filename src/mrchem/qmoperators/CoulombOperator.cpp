@@ -4,11 +4,10 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-CoulombOperator::CoulombOperator(double build_prec, OrbitalVector &phi)
-        : QMOperator(),
-          poisson(*MRA, build_prec),
+CoulombOperator::CoulombOperator(double prec, OrbitalVector &phi)
+        : poisson(*MRA, prec),
           project(-1.0),
-          apply(-1.0),
+          apply(-1.0, MRA->getMaxScale()),
           density(Paired),
           potential(),
           orbitals(&phi) {

@@ -35,6 +35,11 @@ using namespace Eigen;
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
+OrbitalProjector::OrbitalProjector(double prec)
+    : project(prec, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) {
+}
+
 OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
     TelePrompter::printHeader(0, "Setting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");

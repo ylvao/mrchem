@@ -7,6 +7,11 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
+OrbitalAdder::OrbitalAdder(double prec)
+    : add(prec, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) {
+}
+
 void OrbitalAdder::operator()(Orbital &phi_ab,
                               double a, Orbital &phi_a,
                               double b, Orbital &phi_b,

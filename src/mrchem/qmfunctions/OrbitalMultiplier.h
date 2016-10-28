@@ -10,7 +10,7 @@ class Potential;
 
 class OrbitalMultiplier {
 public:
-    OrbitalMultiplier(double prec = -1.0) : add(prec), mult(prec) { }
+    OrbitalMultiplier(double prec = -1.0);
     virtual ~OrbitalMultiplier() { }
 
     void setPrecision(double prec);

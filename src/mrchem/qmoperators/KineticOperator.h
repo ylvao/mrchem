@@ -4,12 +4,11 @@
 #include "QMOperator.h"
 #include "MomentumOperator.h"
 
-template<int D> class MultiResolutionAnalysis;
 class MomentumOperator;
 
 class KineticOperator : public QMOperator {
 public:
-    KineticOperator(double build_prec);
+    KineticOperator(double build_prec = -1.0);
     virtual ~KineticOperator();
 
     virtual void setup(double prec);

@@ -41,13 +41,8 @@ using namespace std;
 using namespace Eigen;
 
 SCFDriver::SCFDriver(Getkw &input) {
-    order = input.get<int>("order");
     rel_prec = input.get<double>("rel_prec");
-    max_depth = input.get<int>("max_depth");
 
-    scale = input.get<int>("World.scale");
-    boxes = input.getIntVec("World.boxes");
-    corner = input.getIntVec("World.corner");
     gauge = input.getDblVec("World.gauge_origin");
     center_of_mass = input.get<bool>("World.center_of_mass");
 

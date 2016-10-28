@@ -6,6 +6,12 @@ extern MultiResolutionAnalysis<3> *MRA;
 
 using namespace std;
 
+DensityProjector::DensityProjector(double prec)
+    : add(prec, MRA->getMaxScale()),
+      mult(prec, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) {
+}
+
 void DensityProjector::setPrecision(double prec) {
     this->add.setPrecision(prec);
     this->mult.setPrecision(prec);

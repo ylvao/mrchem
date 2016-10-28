@@ -8,6 +8,8 @@
 #include "Orbital.h"
 #include "Timer.h"
 
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+
 using namespace std;
 using namespace Eigen;
 
@@ -16,8 +18,7 @@ FockOperator::FockOperator(KineticOperator *t,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
-        : QMOperator(),
-          add(-1.0),
+        : add(-1.0),
           T(t),
           V(v),
           J(j),

@@ -9,7 +9,7 @@ using namespace std;
 MomentumOperator::MomentumOperator(int dir, double build_prec)
         : apply_dir(dir),
           derivative(*MRA, 0.0, 0.0),
-          apply(-1.0) {
+          apply(-1.0, MRA->getMaxScale()) {
 }
 
 void MomentumOperator::setup(double prec) {

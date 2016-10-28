@@ -11,7 +11,7 @@ class Density;
 
 class DensityProjector {
 public:
-    DensityProjector(double prec = -1.0) : add(prec), mult(prec) { }
+    DensityProjector(double prec = -1.0);
     virtual ~DensityProjector() { }
 
     void setPrecision(double prec);

@@ -3,8 +3,15 @@
 #include "Orbital.h"
 #include "Timer.h"
 
+extern MultiResolutionAnalysis<3> *MRA;
+
 using namespace std;
 using namespace Eigen;
+
+QMOperator::QMOperator()
+    : apply_prec(-1.0),
+      clean(-1.0, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) { }
 
 void QMOperator::setup(double prec) {
     this->apply_prec = prec;

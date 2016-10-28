@@ -7,7 +7,7 @@
 
 class NuclearPotential : public Potential {
 public:
-    NuclearPotential(double build_prec, Nuclei &nucs);
+    NuclearPotential(double prec, Nuclei &nucs);
     NuclearPotential &operator=(const NuclearPotential &pot) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NuclearPotential() { }
 

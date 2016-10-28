@@ -4,6 +4,12 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
+OrbitalMultiplier::OrbitalMultiplier(double prec)
+    : add(prec, MRA->getMaxScale()),
+      mult(prec, MRA->getMaxScale()),
+      grid(MRA->getMaxScale()) {
+}
+
 void OrbitalMultiplier::setPrecision(double prec) {
     this->add.setPrecision(prec);
     this->mult.setPrecision(prec);

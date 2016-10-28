@@ -5,13 +5,13 @@
 #include <vector>
 
 #include "HelmholtzOperator.h"
+#include "OperatorApplier.h"
 
 class Orbital;
 
 class HelmholtzOperatorSet {
 public:
-    HelmholtzOperatorSet(double build, double thrs = -1.0)
-        : threshold(thrs), build_prec(build), apply_prec(build) { }
+    HelmholtzOperatorSet(double build, double thrs = -1.0);
     virtual ~HelmholtzOperatorSet() { clear(); }
 
     void initialize(const Eigen::VectorXd &energies);
@@ -19,7 +19,7 @@ public:
 
     int printTreeSizes() const;
 
-    void setPrecision(double prec) { this->apply_prec = prec; }
+    void setPrecision(double prec) { this->apply.setPrecision(prec); }
     void setThreshold(double thrs) { this->threshold = thrs; }
     double getThreshold() const { return this->threshold; }
 
@@ -32,7 +32,7 @@ public:
 private:
     double threshold; //For re-using operators. Negative means always recreate
     double build_prec;
-    double apply_prec;
+    OperatorApplier<3> apply;
 
     std::vector<int> operIdx;
     std::vector<double> lambda;
