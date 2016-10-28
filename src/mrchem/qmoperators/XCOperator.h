@@ -78,6 +78,8 @@ protected:
     void compressNodeData(int n, int nFuncs, FunctionTree<3> **trees, Eigen::MatrixXd &data);
     void expandNodeData(int n, int nFuncs, FunctionTree<3> **trees, Eigen::MatrixXd &data);
 
+    FunctionTreeVector<3> calcGradient(FunctionTree<3> &inp);
+    FunctionTree<3>* calcDivergence(FunctionTreeVector<3> &inp);
     FunctionTree<3>* calcDotProduct(FunctionTreeVector<3> &vec_a,
                                     FunctionTreeVector<3> &vec_b);
     FunctionTree<3>* calcGradDotPotDensVec(FunctionTree<3> &pot,
@@ -94,35 +96,6 @@ protected:
         }
         return nNodes;
     }
-
-//    template<class T>
-//    T* calcDivergence(T **vec) {
-//        Timer timer;
-//        if (vec == 0) MSG_ERROR("Input vector not initialized");
-
-//        vector<FunctionTree<3> *> trees;
-//        for (int d = 0; d < 3; d++) {
-//            timer.resume();
-//            if (vec[d] == 0) MSG_ERROR("Invalid input");
-//            FunctionTree<3> *tree = new FunctionTree<3>;
-//            this->derivative->setApplyDir(d);
-//            this->derivative->apply(*tree, *vec[d]);
-//            trees.push_back(tree);
-//            double time = timer.elapsed();
-//            int nNodes = tree->getNNodes();
-//            TelePrompter::printTree(1, "Gradient", nNodes, time);
-//        }
-//        timer.resume();
-//        T *result = new T;
-//        result->add(trees, 0);
-//        double time = timer.elapsed();
-//        int nNodes = result->getNNodes();
-//        TelePrompter::printTree(1, "Sum divergence", nNodes, time);
-//        delete trees[0];
-//        delete trees[1];
-//        delete trees[2];
-//        return result;
-//    }
 
     template<class T>
     T** allocPtrArray(int n_funcs) {

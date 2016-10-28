@@ -99,29 +99,48 @@ Density** XCOperator::calcDensityGradient(Density &rho) {
 
     if (rho.isSpinDensity()) {
         FunctionTree<3> &rho_a = rho.getDensity(Alpha);
-        FunctionTreeVector<3> grad_a;
-        NOT_IMPLEMENTED_ABORT;
-        //this->derivative.grad(grad_a, rho_a);
+        FunctionTreeVector<3> grad_a = calcGradient(rho_a);
         out[0]->setDensity(Alpha, grad_a[0]);
         out[1]->setDensity(Alpha, grad_a[1]);
         out[2]->setDensity(Alpha, grad_a[2]);
 
         FunctionTree<3> &rho_b = rho.getDensity(Beta);
-        FunctionTreeVector<3> grad_b;
-        NOT_IMPLEMENTED_ABORT;
-        //this->derivative.grad(grad_b, rho_b);
+        FunctionTreeVector<3> grad_b = calcGradient(rho_b);
         out[0]->setDensity(Beta, grad_b[0]);
         out[1]->setDensity(Beta, grad_b[1]);
         out[2]->setDensity(Beta, grad_b[2]);
     } else {
         FunctionTree<3> &rho_t = rho.getDensity(Paired);
-        FunctionTreeVector<3> grad_t;
-        NOT_IMPLEMENTED_ABORT;
-        //this->derivative.grad(grad_t, rho_t);
+        FunctionTreeVector<3> grad_t = calcGradient(rho_t);
         out[0]->setDensity(Paired, grad_t[0]);
         out[1]->setDensity(Paired, grad_t[1]);
         out[2]->setDensity(Paired, grad_t[2]);
     }
+    return out;
+}
+
+FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
+    FunctionTreeVector<3> out;
+    for (int d = 0; d < 3; d++) {
+        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
+        this->grid(*out_d, inp);
+        this->apply(*out_d, this->derivative, inp, 0, d);
+        out.push_back(out_d);
+    }
+    return out;
+}
+
+FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
+    FunctionTreeVector<3> tmp_vec;
+    for (int d = 0; d < 3; d++) {
+        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
+        this->grid(*out_d, *inp[d]);
+        this->apply(*out_d, this->derivative, *inp[d], 0, d);
+        tmp_vec.push_back(out_d);
+    }
+    FunctionTree<3> *out = new FunctionTree<3>(*MRA);
+    this->add(*out, tmp_vec, 0);
+    tmp_vec.clear(true);
     return out;
 }
 
@@ -281,9 +300,7 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
     }
 
     Timer timer;
-    FunctionTree<3> *result = new FunctionTree<3>(*MRA);
-    NOT_IMPLEMENTED_ABORT;
-    //this->derivative.div(*result, vec);
+    FunctionTree<3> *result = calcDivergence(vec);
     vec.clear(true);
 
     timer.stop();
