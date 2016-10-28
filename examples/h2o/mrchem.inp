@@ -1,6 +1,6 @@
 # vim:syntax=sh:
 
-rel_prec = 1.0e-5                 # Overall relative precision
+rel_prec = 1.0e-4                 # Overall relative precision
 printlevel = 0
 
 World {
@@ -38,7 +38,7 @@ SCF {
   property_thrs = 1.0e-6          # Convergence threshold in total energy
   initial_guess = gto             # Type of initial guess: none, mw, gto
   history = 3                     # Length of KAIN iterative history
-  max_iter = 10
+  max_iter = 2
   rotation = 30                   # Diagonalize Fock matrix every n'th iteration
 }
 

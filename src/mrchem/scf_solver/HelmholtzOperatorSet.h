@@ -5,13 +5,13 @@
 #include <vector>
 
 #include "HelmholtzOperator.h"
-#include "GridGenerator.h"
 
 class Orbital;
 
 class HelmholtzOperatorSet {
 public:
-    HelmholtzOperatorSet(double build, double thrs = -1.0);
+    HelmholtzOperatorSet(double build, double thrs = -1.0)
+        : threshold(thrs), build_prec(build), apply_prec(build) { }
     virtual ~HelmholtzOperatorSet() { clear(); }
 
     void initialize(const Eigen::VectorXd &energies);
@@ -33,7 +33,6 @@ private:
     double threshold; //For re-using operators. Negative means always recreate
     double build_prec;
     double apply_prec;
-    GridGenerator<3> grid;
 
     std::vector<int> operIdx;
     std::vector<double> lambda;

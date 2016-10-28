@@ -2,10 +2,11 @@
 #include "OrbitalVector.h"
 #include "Density.h"
 
+extern MultiResolutionAnalysis<3> *MRA;
+
 using namespace std;
 
 void DensityProjector::setPrecision(double prec) {
-    this->clean.setPrecision(prec);
     this->add.setPrecision(prec);
     this->mult.setPrecision(prec);
 }
@@ -23,42 +24,52 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
 
     FunctionTreeVector<3> sum_vec;
     if (phi.hasReal()) {
-        FunctionTree<3> *real_2 = this->grid(phi.re());
+        FunctionTree<3> *real_2 = new FunctionTree<3>(*MRA);
+        this->grid(*real_2, phi.re());
         this->mult(*real_2, occ, phi.re(), phi.re(), 0);
         sum_vec.push_back(real_2);
     }
     if (phi.hasImag()) {
-        FunctionTree<3> *imag_2 = this->grid(phi.im());
+        FunctionTree<3> *imag_2 = new FunctionTree<3>(*MRA);
+        this->grid(*imag_2, phi.im());
         this->mult(*imag_2, occ, phi.im(), phi.im(), 0);
         sum_vec.push_back(imag_2);
     }
 
     if (rho.spin) {
         if (phi.getSpin() == Paired) {
-            rho.alpha = this->grid(sum_vec);
-            rho.beta = this->grid(sum_vec);
+            rho.alpha = new FunctionTree<3>(*MRA);
+            rho.beta = new FunctionTree<3>(*MRA);
+            this->grid(*rho.alpha, sum_vec);
+            this->grid(*rho.beta, sum_vec);
             this->add(*rho.alpha, sum_vec, 0);
             this->add(*rho.beta, sum_vec, 0);
         }
         if (phi.getSpin() == Alpha) {
-            rho.alpha = this->grid(sum_vec);
+            rho.alpha = new FunctionTree<3>(*MRA);
+            this->grid(*rho.alpha, sum_vec);
             this->add(*rho.alpha, sum_vec, 0);
-            rho.beta = this->grid(sum_vec);
+            rho.beta = new FunctionTree<3>(*MRA);
+            this->grid(*rho.beta, sum_vec);
             rho.beta->setZero();
         }
         if (phi.getSpin() == Beta) {
-            rho.beta = this->grid(sum_vec);
+            rho.beta = new FunctionTree<3>(*MRA);
+            this->grid(*rho.beta, sum_vec);
             this->add(*rho.beta, sum_vec, 0);
-            rho.alpha = this->grid(sum_vec);
+            rho.alpha = new FunctionTree<3>(*MRA);
+            this->grid(*rho.alpha, sum_vec);
             rho.alpha->setZero();
         }
         FunctionTreeVector<3> tot_vec;
         tot_vec.push_back(1.0, rho.alpha);
         tot_vec.push_back(1.0, rho.beta);
-        rho.total = this->grid(tot_vec);
+        rho.total = new FunctionTree<3>(*MRA);
+        this->grid(*rho.total, tot_vec);
         this->add(*rho.total, tot_vec, 0);
     } else {
-        rho.total = this->grid(sum_vec);
+        rho.total = new FunctionTree<3>(*MRA);
+        this->grid(*rho.total, sum_vec);
         this->add(*rho.total, sum_vec, 0);
         rho.alpha = 0;
         rho.beta = 0;
@@ -88,11 +99,11 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
         if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
     }
     if (not rho.spin) {
+        rho.total = new FunctionTree<3>(*MRA);
         if (total_vec.size() > 5) {
-            rho.total = this->grid();
             this->add(*rho.total, total_vec);
         } else if (total_vec.size() > 0) {
-            rho.total = this->grid(total_vec);
+            this->grid(*rho.total, total_vec);
             this->add(*rho.total, total_vec, 0);
         }
         rho.alpha = 0;

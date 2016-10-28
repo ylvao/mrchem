@@ -192,13 +192,11 @@ void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalV
     MatrixXd U = calcOrthonormalizationMatrix(phi);
     F = U*F*U.transpose();
     fock.rotate(U);
-    Timer timer;
     this->add.rotate(phi, U);
-    timer.stop();
-    printout(0, "ROTATING"<<setw(18) << timer.getWallTime() << endl);	
 }
 
 void GroundStateSolver::orthonormalize_P(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
+#ifdef HAVE_MPI
     MatrixXd U = calcOrthonormalizationMatrix(phi);
     F = U*F*U.transpose();
     fock.rotate(U);
@@ -277,7 +275,7 @@ void GroundStateSolver::orthonormalize_P(FockOperator &fock, MatrixXd &F, Orbita
 	  }else{
 	    orbChunk.push_back(&workOrbVec->getOrbital(doj[iter]));
 	  }
-	  U_Chunk.push_back(U(doj[iter],doi[iter]));//NB: check if should not be the transpose!(is symmetric in test case)	
+	  U_Chunk.push_back(U(doi[iter],doj[iter]));//NB: check if should not be the transpose!(is symmetric in test case)	
 	}
 	if(orbChunk.size()==maxOrb or iter == MaxIter){
 	  if(first){
@@ -297,7 +295,7 @@ cout<<MPI_rank<<" FAILED "<<doi[iter]<<endl;
       }
     }
 
-#ifdef HAVE_MPI
+    //TEMPORARY
     //broadcast results
     for (int i = 0; i < phi.size(); i++) {
 
@@ -306,19 +304,21 @@ cout<<MPI_rank<<" FAILED "<<doi[iter]<<endl;
 	     if(i_mpi != MPI_rank){
 	       workOrbVec->getOrbital(i).send_Orbital(i_mpi, 54);
 	     }else{
-	       phi.replaceTrees(i,&workOrbVec->getOrbital(i));
+	       phi.getOrbital(i).clear(true);
+	       phi.getOrbital(i) = workOrbVec->getOrbital(i);//moves over *tree
+	       workOrbVec->getOrbital(i).clear(false);
 	     }
 	   }
 	}else{
 	  phi.getOrbital(i).Rcv_Orbital(i%MPI_size, 54);
 	}
     }
-    //Check
-    if(MPI_rank==0)cout<<"calculating overlap after ortho"<<endl;
-    phi.calcOverlapMatrix_P_H(phi);
-#endif
+
+
     timer.stop();
-    printout(0, "ROTATING parallel "<<setw(18) << timer.getWallTime() << endl);	
+#else
+    NOT_REACHED_ABORT;
+#endif
 }
 
 MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {

@@ -3,14 +3,14 @@
 
 #include "QMOperator.h"
 #include "DerivativeOperator.h"
+#include "OperatorApplier.h"
 
 template<int D> class DerivativeOperator;
-template<int D> class MultiResolutionAnalysis;
 
 class MomentumOperator : public QMOperator {
 public:
     MomentumOperator(int dir, double build_prec);
-    virtual ~MomentumOperator();
+    virtual ~MomentumOperator() { }
 
     virtual void setup(double prec);
     virtual void clear();
@@ -24,7 +24,9 @@ public:
     using QMOperator::adjoint;
 
 protected:
+    const int apply_dir;
     DerivativeOperator<3> derivative;
+    OperatorApplier<3> apply;
 };
 
 #endif // MOMENTUMOPERATOR_H

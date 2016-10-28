@@ -75,12 +75,11 @@ template<int D> void testNodeFetchers() {
 
     MultiResolutionAnalysis<D> *mra = 0;
     initialize(&mra);
-    GridGenerator<D> G(*mra);
-    FunctionTree<D> *tree = G();
+    FunctionTree<D> tree(*mra);
     finalize(&mra);
 
-    NodeBox<D> &node_box = tree->getRootBox();
-    const NodeBox<D> &const_box = tree->getRootBox();
+    NodeBox<D> &node_box = tree.getRootBox();
+    const NodeBox<D> &const_box = tree.getRootBox();
 
     // Fetch by NodeIndex
     SECTION("Find root node by NodeIndex") {
@@ -105,8 +104,6 @@ template<int D> void testNodeFetchers() {
         REQUIRE( node.hasCoord(r) );
         REQUIRE( node.getDepth() == 0 );
     }
-
-    delete tree;
 }
 
 } // namespace

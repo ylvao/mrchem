@@ -12,7 +12,7 @@ class Nuclei;
 
 class OrbitalProjector {
 public:
-    OrbitalProjector(double prec);
+    OrbitalProjector(double prec) : project(prec) { }
     virtual ~OrbitalProjector() { }
 
     OrbitalVector* operator()(const Nuclei &nucs);

@@ -5,6 +5,7 @@
 #include "Density.h"
 #include "Potential.h"
 #include "PoissonOperator.h"
+#include "OperatorApplier.h"
 #include "DensityProjector.h"
 
 class OrbitalVector;
@@ -12,7 +13,7 @@ class OrbitalVector;
 class CoulombOperator : public QMOperator {
 public:
     CoulombOperator(double build_prec, OrbitalVector &phi);
-    virtual ~CoulombOperator();
+    virtual ~CoulombOperator() { }
 
     virtual void setup(double prec);
     virtual void clear();
@@ -28,6 +29,7 @@ public:
 protected:
     PoissonOperator poisson;
     DensityProjector project;
+    OperatorApplier<3> apply;
 
     Density density;
     Potential potential;

@@ -2,7 +2,6 @@
 #define DENSITYPROJECTOR_H
 
 #include "GridGenerator.h"
-#include "GridCleaner.h"
 #include "MWAdder.h"
 #include "MWMultiplier.h"
 
@@ -12,11 +11,7 @@ class Density;
 
 class DensityProjector {
 public:
-    DensityProjector(const MultiResolutionAnalysis<3> &mra, double pr = -1.0)
-        : grid(mra),
-          clean(mra, pr),
-          add(mra, pr),
-          mult(mra, pr) { }
+    DensityProjector(double prec = -1.0) : add(prec), mult(prec) { }
     virtual ~DensityProjector() { }
 
     void setPrecision(double prec);
@@ -28,7 +23,6 @@ protected:
     MWAdder<3> add;
     MWMultiplier<3> mult;
     GridGenerator<3> grid;
-    GridCleaner<3> clean;
 };
 
 #endif // DENSITYPROJECTOR_H

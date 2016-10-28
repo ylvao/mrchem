@@ -1,6 +1,7 @@
 #include "HelmholtzOperatorSet.h"
 #include "OrbitalVector.h"
 #include "OperatorTree.h"
+#include "OperatorApplier.h"
 #include "Timer.h"
 #include "eigen_disable_warnings.h"
 
@@ -8,13 +9,6 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 using namespace Eigen;
-
-HelmholtzOperatorSet::HelmholtzOperatorSet(double build, double thrs)
-        : threshold(thrs),
-          build_prec(build),
-          apply_prec(build),
-          grid(*MRA) {
-}
 
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
     TelePrompter::printHeader(0, "Initializing Helmholtz Operators");
@@ -52,9 +46,7 @@ int HelmholtzOperatorSet::initHelmholtzOperator(double energy) {
     }
     TelePrompter::printDouble(0, "Creating operator with lambda", energy);
 
-    HelmholtzOperator *oper = new HelmholtzOperator(mu, *MRA,
-                                                    this->build_prec,
-                                                    this->build_prec);
+    HelmholtzOperator *oper = new HelmholtzOperator(*MRA, mu, this->build_prec);
     this->operators.push_back(oper);
 
     return this->operators.size() - 1;
@@ -124,7 +116,7 @@ int HelmholtzOperatorSet::printTreeSizes() const {
     int totTrees = 0;
     int nOperators = this->operators.size();
     for (int i = 0; i < nOperators; i++) {
-        int nTrees = this->operators[i]->getNTerms();
+        int nTrees = this->operators[i]->size();
         for (int j = 0; j < nTrees; j++) {
             totNodes += this->operators[i]->getComponent(j).getNNodes();
         }
@@ -139,14 +131,15 @@ void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
     if (out.hasImag()) MSG_ERROR("Orbital not empty");
 
     HelmholtzOperator &H_i = getOperator(i);
-    H_i.setPrecision(this->apply_prec);
+    OperatorApplier<3> apply(this->apply_prec);
+    apply.setPrecision(this->apply_prec);
 
     if (inp.hasReal()) {
-        out.real = this->grid();
-        H_i(*out.real, *inp.real);
+        out.real = new FunctionTree<3>(*MRA);
+        apply(*out.real, H_i, *inp.real);
     }
     if (inp.hasImag()) {
-        out.imag = this->grid();
-        H_i(*out.imag, *inp.imag);
+        out.imag = new FunctionTree<3>(*MRA);
+        apply(*out.imag, H_i, *inp.imag);
     }
 }

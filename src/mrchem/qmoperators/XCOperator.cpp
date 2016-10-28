@@ -16,16 +16,16 @@ XCOperator::XCOperator(int k,
                        double build_prec,
                        XCFunctional &func,
                        OrbitalVector &phi)
-        : QMOperator(),
-          order(k),
+        : order(k),
           functional(&func),
-          add(*MRA, -1.0),
-          mult(*MRA, -1.0),
-          project(*MRA, -1.0),
-          derivative(-1, *MRA, 0.0, 0.0),
-          orbitals_0(&phi),
+          add(-1.0),
+          mult(-1.0),
+          project(-1.0),
+          derivative(*MRA, 0.0, 0.0),
+          apply(-1.0),
           density_0(func.isSpinSeparated()),
           gradient_0(0),
+          orbitals_0(&phi),
           energy(0.0),
           xcInput(0),
           xcOutput(0) {
@@ -52,14 +52,14 @@ void XCOperator::setup(double prec) {
     this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
     this->project.setPrecision(prec);
-    this->derivative.setPrecision(prec);
+    this->apply.setPrecision(prec);
 }
 
 void XCOperator::clear() {
     this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
     this->project.setPrecision(-1.0);
-    this->derivative.setPrecision(-1.0);
+    this->apply.setPrecision(-1.0);
     QMOperator::clear();
 }
 
@@ -99,23 +99,48 @@ Density** XCOperator::calcDensityGradient(Density &rho) {
 
     if (rho.isSpinDensity()) {
         FunctionTree<3> &rho_a = rho.getDensity(Alpha);
-        FunctionTreeVector<3> grad_a = this->derivative.grad(rho_a);
+        FunctionTreeVector<3> grad_a = calcGradient(rho_a);
         out[0]->setDensity(Alpha, grad_a[0]);
         out[1]->setDensity(Alpha, grad_a[1]);
         out[2]->setDensity(Alpha, grad_a[2]);
 
         FunctionTree<3> &rho_b = rho.getDensity(Beta);
-        FunctionTreeVector<3> grad_b = this->derivative.grad(rho_b);
+        FunctionTreeVector<3> grad_b = calcGradient(rho_b);
         out[0]->setDensity(Beta, grad_b[0]);
         out[1]->setDensity(Beta, grad_b[1]);
         out[2]->setDensity(Beta, grad_b[2]);
     } else {
         FunctionTree<3> &rho_t = rho.getDensity(Paired);
-        FunctionTreeVector<3> grad_t = this->derivative.grad(rho_t);
+        FunctionTreeVector<3> grad_t = calcGradient(rho_t);
         out[0]->setDensity(Paired, grad_t[0]);
         out[1]->setDensity(Paired, grad_t[1]);
         out[2]->setDensity(Paired, grad_t[2]);
     }
+    return out;
+}
+
+FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
+    FunctionTreeVector<3> out;
+    for (int d = 0; d < 3; d++) {
+        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
+        this->grid(*out_d, inp);
+        this->apply(*out_d, this->derivative, inp, 0, d);
+        out.push_back(out_d);
+    }
+    return out;
+}
+
+FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
+    FunctionTreeVector<3> tmp_vec;
+    for (int d = 0; d < 3; d++) {
+        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
+        this->grid(*out_d, *inp[d]);
+        this->apply(*out_d, this->derivative, *inp[d], 0, d);
+        tmp_vec.push_back(out_d);
+    }
+    FunctionTree<3> *out = new FunctionTree<3>(*MRA);
+    this->add(*out, tmp_vec, 0);
+    tmp_vec.clear(true);
     return out;
 }
 
@@ -200,7 +225,8 @@ void XCOperator::setupXCOutput() {
     // Copy grid from input density
     FunctionTree<3> &rho = *this->xcInput[0];
     for (int i = 0; i < nOut; i++) {
-        this->xcOutput[i] = this->grid(rho);
+        this->xcOutput[i] = new FunctionTree<3>(*MRA);
+        this->grid(*this->xcOutput[i], rho);
     }
 }
 
@@ -262,7 +288,8 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
         if (dens[d] == 0) MSG_ERROR("Invalid density");
 
         Timer timer;
-        FunctionTree<3> *potDens = this->grid(*dens[d]);
+        FunctionTree<3> *potDens = new FunctionTree<3>(*MRA);
+        this->grid(*potDens, *dens[d]);
         this->mult(*potDens, 1.0, pot, *dens[d], 0);
         vec.push_back(potDens);
 
@@ -273,7 +300,7 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
     }
 
     Timer timer;
-    FunctionTree<3> *result = this->derivative.div(vec);
+    FunctionTree<3> *result = calcDivergence(vec);
     vec.clear(true);
 
     timer.stop();
@@ -432,13 +459,14 @@ FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
     for (int d = 0; d < vec_a.size(); d++) {
         FunctionTree<3> &tree_a = vec_a.getFunc(d);
         FunctionTree<3> &tree_b = vec_b.getFunc(d);
-        FunctionTree<3> *out_d = this->grid();
+        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
         this->grid(*out_d, tree_a);
         this->grid(*out_d, tree_b);
         this->mult(*out_d, 1.0, tree_a, tree_b, 0);
         out_vec.push_back(out_d);
     }
-    FunctionTree<3> *out = this->grid(out_vec);
+    FunctionTree<3> *out = new FunctionTree<3>(*MRA);
+    this->grid(*out, out_vec);
     this->add(*out, out_vec, 0);
 
     out_vec.clear(true);
