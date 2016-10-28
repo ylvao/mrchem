@@ -7,13 +7,13 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
-ExchangeOperator::ExchangeOperator(double build_prec,
+ExchangeOperator::ExchangeOperator(double prec,
                                    OrbitalVector &phi,
                                    double x_fac)
         : QMOperator(),
           add(),
           mult(),
-          poisson(*MRA, build_prec),
+          poisson(*MRA, prec),
           apply(-1.0),
           x_factor(x_fac),
           orbitals_0(&phi),
