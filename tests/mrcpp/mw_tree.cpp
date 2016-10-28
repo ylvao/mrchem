@@ -31,7 +31,6 @@ template<int D> void testNodeFetchers() {
 
     MultiResolutionAnalysis<D> *mra = 0;
     initialize(&mra);
-    finalize(&mra);
 
     FunctionTree<D> tree(*mra);
     tree.setZero();
@@ -159,6 +158,7 @@ template<int D> void testNodeFetchers() {
         REQUIRE( node.hasCoefs() );
         REQUIRE( node.getDepth() != depth );
     }
+    finalize(&mra);
 }
 
 } // namespace
