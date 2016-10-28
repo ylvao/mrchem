@@ -64,6 +64,7 @@ public:
 
 //    void replaceOrbitals(OrbitalVector &new_orbs);
     void replaceOrbital(int i, Orbital **orb);
+    void replaceTrees(int i, Orbital *orb);
 
     int printTreeSizes() const;
 

@@ -16,9 +16,16 @@
 #include "DipoleOperator.h"
 #include "MathUtils.h"
 #include "eigen_disable_warnings.h"
+#include "parallel.h"
+#include "SerialFunctionTree.h"
 
 using namespace std;
 using namespace Eigen;
+
+extern Orbital* workOrb;
+extern OrbitalVector* workOrbVec;
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+Orbital* rotOrb=0;
 
 GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
         : SCF(h),
@@ -185,7 +192,133 @@ void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalV
     MatrixXd U = calcOrthonormalizationMatrix(phi);
     F = U*F*U.transpose();
     fock.rotate(U);
+    Timer timer;
     this->add.rotate(phi, U);
+    timer.stop();
+    printout(0, "ROTATING"<<setw(18) << timer.getWallTime() << endl);	
+}
+
+void GroundStateSolver::orthonormalize_P(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
+    MatrixXd U = calcOrthonormalizationMatrix(phi);
+    F = U*F*U.transpose();
+    fock.rotate(U);
+    Timer timer;
+    
+    Orbital* Orb_i;//NB: empty
+    if(MPI_rank==0)cout<<"calculating overlap before ortho"<<endl;
+    phi.calcOverlapMatrix_P_H(phi);
+
+    if (workOrb==0){
+      println(10, MPI_rank<<" making empty work orbital");
+      workOrb = new Orbital(phi.getOrbital(0));//NB: empty now, but will fill up
+    }
+    if (workOrbVec==0){
+      println(10, MPI_rank<<" making empty work orbitalVec");
+      workOrbVec = new OrbitalVector(phi);//NB: empty now, but will fill up
+    }
+    if (rotOrb==0){
+      println(10, MPI_rank<<" making empty work orbital");
+      rotOrb = new Orbital(phi.getOrbital(0));//NB: empty now, but will fill up
+    }
+
+    int N=phi.size();
+    int NiterMax = ((N+MPI_size-1)/MPI_size)*((N+MPI_size-1)/MPI_size)*MPI_size;
+    int doi[NiterMax];
+    int doj[NiterMax];
+    int sendto[NiterMax];
+    int sendorb[NiterMax];
+    int rcvfrom[NiterMax];
+    int rcvorb[NiterMax];
+    int MaxIter=NiterMax;
+    Assign_NxN(N, doi, doj, sendto, sendorb, rcvorb, &MaxIter);
+
+    int maxOrb =5;
+    std::vector<int> orbChunkIx;
+    std::vector<double> U_Chunk;
+    std::vector<Orbital *> orbChunk;
+
+    bool first = true;
+
+    for (int i = 0; i <phi.size(); i++) {
+      if(i%MPI_size==MPI_rank){
+	workOrbVec->getOrbital(i).clear();//
+      }
+    }
+    if(MPI_size!=phi.size())cout<<"NOT YET IMPLEMENTED"<<endl;
+    for (int iter = 0; iter <= MaxIter; iter++) {
+      int i = doi[iter];
+      int j = doj[iter];
+      if(sendorb[iter]>=0){
+	if(i%MPI_size >= j%MPI_size){
+	  //send first bra, then receive ket
+	  phi.getOrbital(i).send_Orbital(sendto[iter], sendorb[iter]);
+	  if(rcvorb[iter]>=0)workOrbVec->getOrbital(doj[iter]).Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	}else{
+	  //receive first bra, then send ket
+	  if(rcvorb[iter]>=0)workOrbVec->getOrbital(doj[iter]).Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	  phi.getOrbital(i).send_Orbital(sendto[iter], sendorb[iter]);
+	}
+      }else if(rcvorb[iter]>=0){
+	//receive only, do not send anything
+	workOrbVec->getOrbital(doj[iter]).Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+      }
+      if(j%MPI_size==MPI_rank){//use phi directly
+      }
+
+      //sendings finished, do the work
+ 
+      if(doi[iter]>=0 ){
+	if(MPI_rank!=doi[iter])cout<<doi[iter]<<" NOT YET IMPLEMENTED "<<MPI_rank<<endl;
+	
+	if(orbChunk.size()<maxOrb){
+	  orbChunkIx.push_back(doi[iter]);
+	  if(doi[iter]==doj[iter]){
+	    orbChunk.push_back(&phi.getOrbital(i));
+	  }else{
+	    orbChunk.push_back(&workOrbVec->getOrbital(doj[iter]));
+	  }
+	  U_Chunk.push_back(U(doj[iter],doi[iter]));//NB: check if should not be the transpose!(is symmetric in test case)	
+	}
+	if(orbChunk.size()==maxOrb or iter == MaxIter){
+	  if(first){
+	    workOrbVec->getOrbital(doi[iter]).clear();//set trees=0
+	    this->add(workOrbVec->getOrbital(doi[iter]), U_Chunk, orbChunk, false);//
+	  }else{
+cout<<MPI_rank<<" FAILED "<<doi[iter]<<endl;
+	    rotOrb->clear();//set trees=0
+	    this->add(*rotOrb, U_Chunk, orbChunk, false);// should be +=
+	    this->add.inPlace(workOrbVec->getOrbital(doi[iter]),1.0, *rotOrb);//can start with empty orbital
+	  }
+	  first = false;
+	  orbChunkIx.clear();
+	  U_Chunk.clear();
+	  orbChunk.clear();
+	}
+      }
+    }
+
+#ifdef HAVE_MPI
+    //broadcast results
+    for (int i = 0; i < phi.size(); i++) {
+
+	if(i%MPI_size==MPI_rank){
+	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
+	     if(i_mpi != MPI_rank){
+	       workOrbVec->getOrbital(i).send_Orbital(i_mpi, 54);
+	     }else{
+	       phi.replaceTrees(i,&workOrbVec->getOrbital(i));
+	     }
+	   }
+	}else{
+	  phi.getOrbital(i).Rcv_Orbital(i%MPI_size, 54);
+	}
+    }
+    //Check
+    if(MPI_rank==0)cout<<"calculating overlap after ortho"<<endl;
+    phi.calcOverlapMatrix_P_H(phi);
+#endif
+    timer.stop();
+    printout(0, "ROTATING parallel "<<setw(18) << timer.getWallTime() << endl);	
 }
 
 MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {

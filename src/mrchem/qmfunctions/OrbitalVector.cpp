@@ -8,7 +8,8 @@
 using namespace std;
 using namespace Eigen;
 
-Orbital* workOrb;
+extern Orbital* workOrb;
+OrbitalVector* workOrbVec=0;
 
 /** OrbitalVector constructor
  *
@@ -437,6 +438,18 @@ void OrbitalVector::replaceOrbital(int i, Orbital **orb) {
     *orb = 0;
 }
 
+void OrbitalVector::replaceTrees(int i, Orbital *orb) {
+    if (i < 0 or i >= this->size()) {
+        MSG_ERROR("Orbital index out of bounds");
+    }
+    this->orbitals[i]->clear(true);
+
+    this->orbitals[i]->real = orb->real;
+    this->orbitals[i]->imag = orb->imag;
+    orb->real = 0;
+    orb->imag = 0;
+}
+
 /** Normalize all orbitals in the set
  */
 void OrbitalVector::normalize() {
@@ -664,7 +677,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
 	}
 	S_MPI(i,j) =  myOrb_i->dot(*Orb_j);	
 	S_MPI(j,i) =  conj(S_MPI(i,j));	
-      }
+     }
       timerw.stop();
     }
     Timer t1;
@@ -674,14 +687,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
     tottime.stop();
     if(MPI_rank==0)cout<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
 
-    /*   for (int i = 0; i < bra.size(); i++) {
-        Orbital &bra_i = bra.getOrbital(i);
-        for (int j = 0; j < ket.size(); j++) {
-            Orbital &ket_j = ket.getOrbital(j);
-	                S(i,j) = bra_i.dot(ket_j);
-			cout<<i<<" "<<j<<" overlap serial "<<S(i,j)<<" MPI "<<S_MPI(i,j)<<endl;
-        }
-	}*/
     return S_MPI;
 }
 int OrbitalVector::printTreeSizes() const {

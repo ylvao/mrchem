@@ -10,6 +10,7 @@ class GroundStateSolver : public SCF {
 public:
     GroundStateSolver(HelmholtzOperatorSet &h);
     virtual ~GroundStateSolver();
+    void orthonormalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
 
 protected:
     std::vector<SCFEnergy> energy;

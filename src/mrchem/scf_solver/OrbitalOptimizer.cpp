@@ -82,7 +82,7 @@ bool OrbitalOptimizer::optimize() {
         applyHelmholtzOperators(phi_np1, F, phi_n);
         fock.clear();
 
-        orthonormalize(fock, F, phi_np1);
+        orthonormalize_P(fock, F, phi_np1);
 
         // Compute orbital updates
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);

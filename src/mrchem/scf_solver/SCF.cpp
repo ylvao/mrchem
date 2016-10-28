@@ -254,22 +254,10 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 	     if(i_mpi!= MPI_rank)np1Phi_i.send_Orbital(i_mpi, 54);
 	   }
 	  timer.stop();
-	  printout(10, setw(3) << i);
-	  printout(10, "sendtime " <<setw(18) << timer.getWallTime() << endl);	
+	  printout(10, setw(3) << i<<" sendtime " <<setw(18) << timer.getWallTime() << endl);	
 	}else{
-	   //if(not np1Phi_i.hasReal()){
-	    //need to define Tree
-	   //  MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).re().getMRA();
-	   //  np1Phi_i.real = new FunctionTree<3>(mra, MaxAllocNodes);
-	   //}
-	   //if(not np1Phi_i.hasImag() and phi_n.getOrbital(MPI_rank).hasImag()){
-	    //need to define Tree
-	   //  MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).im().getMRA();
-	   //  np1Phi_i.imag = new FunctionTree<3>(mra, MaxAllocNodes);
-	   //}
 	  np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
-	  printout(10, MPI_rank<<"   "<<setw(3) << i);
-	  printout(10, "rcvtime " <<setw(18) << timer.getWallTime() << endl);	
+	  printout(10, MPI_rank<<" "<<setw(3)<<i<<" rcvtime "<<setw(18)<<timer.getWallTime()<<endl);	
 	}
     }
 #endif

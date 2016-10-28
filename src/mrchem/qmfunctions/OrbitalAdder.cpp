@@ -54,7 +54,7 @@ void OrbitalAdder::operator()(Orbital &out,
                               std::vector<Orbital *> &orbs,
                               bool union_grid) {
     double prec = this->add.getPrecision();
-    if (not union_grid and prec < 0.0) MSG_ERROR("Nagative adaptive prec");
+    if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Orbital not empty");
     if (coefs.size() != orbs.size()) MSG_ERROR("Invalid arguments");
 
@@ -171,7 +171,7 @@ void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
 }
 
 void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
-    Orbital tmp(out);
+    Orbital tmp(out);//shallow copy
     (*this)(tmp, 1.0, out, c, inp, true); // Union grid
     out.clear();
     out.real = tmp.real;
