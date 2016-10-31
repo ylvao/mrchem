@@ -100,7 +100,6 @@ bool OrbitalOptimizer::optimize() {
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
-        phi_n.setErrors(errors);
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
         this->orbError.push_back(err_t);
@@ -110,6 +109,7 @@ bool OrbitalOptimizer::optimize() {
         dPhi_n.clear();
 
         orthonormalize(fock, F, phi_n);
+        phi_n.setErrors(errors);
 
         // Compute Fock matrix
         fock.setup(getOrbitalPrecision());
