@@ -1,7 +1,7 @@
 # vim:syntax=sh:
 
-rel_prec = 1.0e-4                 # Overall relative precision
-printlevel = 0
+rel_prec = 1.0e-7                 # Overall relative precision
+printlevel = 1
 
 World {
   scale = -5                      # Root scale defines world size 2^{-scale}

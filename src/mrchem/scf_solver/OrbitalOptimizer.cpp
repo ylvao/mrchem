@@ -69,8 +69,12 @@ bool OrbitalOptimizer::optimize() {
             localize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
         } else if (needDiagonalization()) {
-            diagonalize(fock, F, phi_n);
-            if (this->kain != 0) this->kain->clear();
+	  if(MPI_size>1){
+            diagonalize_P(fock, F, phi_n);
+	  }else{
+	    diagonalize(fock, F, phi_n);
+	  }
+	  if (this->kain != 0) this->kain->clear();
         }
 
         // Compute electronic energy
@@ -109,7 +113,11 @@ bool OrbitalOptimizer::optimize() {
         this->add.inPlace(phi_n, 1.0, dPhi_n);
         dPhi_n.clear();
 
-        orthonormalize(fock, F, phi_n);
+	if(MPI_size>1){
+	  orthonormalize_P(fock, F, phi_n);
+	}else{
+	  orthonormalize(fock, F, phi_n);
+	}
 
         // Compute Fock matrix
         fock.setup(getOrbitalPrecision());

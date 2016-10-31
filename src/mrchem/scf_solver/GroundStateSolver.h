@@ -10,7 +10,6 @@ class GroundStateSolver : public SCF {
 public:
     GroundStateSolver(HelmholtzOperatorSet &h);
     virtual ~GroundStateSolver();
-    void orthonormalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
 
 protected:
     std::vector<SCFEnergy> energy;
@@ -35,6 +34,9 @@ protected:
     void diagonalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     void orthonormalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
+    void diagonalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
+    void orthonormalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
+    Eigen::MatrixXd calcOrthonormalizationMatrix_P(OrbitalVector &phi);
 };
 
 /** subclass which defines the particular Gradient and Hessian
