@@ -590,11 +590,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
     tottime.stop();
     cout<<MPI_rank<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
 
-    for (int i = 0; i < bra.size(); i++) {
-      for (int j = 0; j < ket.size(); j++) {
-	if(MPI_rank==0)cout<<i<<" "<<j<<" "<<S_MPI(i,j).real()<<endl;
-      }
-    } 
     /*   for (int i = 0; i < bra.size(); i++) {
         Orbital &bra_i = bra.getOrbital(i);
         for (int j = 0; j < ket.size(); j++) {

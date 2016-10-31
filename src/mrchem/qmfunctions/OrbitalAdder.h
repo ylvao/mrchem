@@ -37,9 +37,13 @@ public:
                     bool union_grid);
 
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
+    void rotate_P(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U);
+    void rotate_P(OrbitalVector &out, const Eigen::MatrixXd &U);
 
     void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
+    void inPlace(Orbital &out, std::vector<double> &coefs,std::vector<Orbital *> &inp,
+                    bool union_grid);
     void inPlace(Orbital &out, double c, Orbital &inp);
 
 protected:
