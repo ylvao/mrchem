@@ -202,7 +202,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
     }
     //TEMPORARY
     //broadcast results
-    for (int i = 0; i < phi.size(); i++) {      
+    /*    for (int i = 0; i < phi.size(); i++) {      
       if(i%MPI_size==MPI_rank){
 	for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
 	  if(i_mpi != MPI_rank){
@@ -212,7 +212,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
       }else{
 	out.getOrbital(i).Rcv_Orbital(i%MPI_size, 54);
       }
-    }
+      }*/
 
 }
 
