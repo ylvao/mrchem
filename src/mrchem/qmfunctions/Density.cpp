@@ -1,8 +1,12 @@
 #include "Density.h"
 #include "FunctionTree.h"
 #include "TelePrompter.h"
+#include "SerialFunctionTree.h"
+#include "parallel.h"
 
 using namespace std;
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 Density::Density(bool s)
     : spin(s),
@@ -64,6 +68,89 @@ int Density::printTreeSizes() const {
     println(0, " Density           " << setw(15) << 1 << setw(25) << nNodes);
     return nNodes;
 }
+
+
+//send Density with MPI
+void Density::send_Density(int dest, int tag){
+#ifdef HAVE_MPI
+  MPI_Status status;
+  MPI_Comm comm=MPI_COMM_WORLD;
+
+  struct Metadata{
+    bool spin;
+    int NchunksTotal;
+    int NchunksAlpha;
+    int NchunksBeta;
+  };
+
+  Metadata Densinfo;
+
+  Densinfo.spin = this->isSpinDensity();
+  if(this->total){
+    Densinfo.NchunksTotal = this->total->getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+  }else{Densinfo.NchunksTotal = 0;}
+  if(this->alpha){
+    Densinfo.NchunksAlpha = this->alpha->getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+  }else{Densinfo.NchunksAlpha = 0;}
+  if(this->beta){
+    Densinfo.NchunksBeta = this->beta->getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+  }else{Densinfo.NchunksBeta = 0;}
+ 
+
+  int count=sizeof(Metadata);
+  MPI_Send(&Densinfo, count, MPI_BYTE, dest, 0, comm);
+
+  if(this->total)Send_SerialTree(this->total, Densinfo.NchunksTotal, dest, tag, comm);
+  if(this->alpha)Send_SerialTree(this->alpha, Densinfo.NchunksAlpha, dest, tag+10000, comm);
+  if(this->beta)Send_SerialTree(this->beta, Densinfo.NchunksBeta, dest, tag+20000, comm);
+
+#endif
+}
+
+//receive Density with MPI
+void Density::Rcv_Density(int source, int tag){
+#ifdef HAVE_MPI
+  MPI_Status status;
+  MPI_Comm comm=MPI_COMM_WORLD;
+
+  struct Metadata{
+    bool spin;
+    int NchunksTotal;
+    int NchunksAlpha;
+    int NchunksBeta;
+  };
+
+  Metadata Densinfo;
+
+  int count=sizeof(Metadata);
+  MPI_Recv(&Densinfo, count, MPI_BYTE, source, 0, comm, &status);
+ 
+  assert(this->isSpinDensity() == Densinfo.spin);
+
+  if(Densinfo.NchunksTotal>0){
+    if(not this->total){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->total = new FunctionTree<3>(*MRA,MaxAllocNodes);
+    }
+    Rcv_SerialTree(this->total, Densinfo.NchunksTotal, source, tag, comm);}
+  if(Densinfo.NchunksAlpha>0){
+    if(not this->alpha){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->alpha = new FunctionTree<3>(*MRA,MaxAllocNodes);
+    }
+    Rcv_SerialTree(this->alpha, Densinfo.NchunksAlpha, source, tag, comm);}
+  if(Densinfo.NchunksBeta>0){
+    if(not this->beta){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->beta = new FunctionTree<3>(*MRA,MaxAllocNodes);
+    }
+    Rcv_SerialTree(this->beta, Densinfo.NchunksBeta, source, tag, comm);}
+  
+#endif
+
+}
+
+
 
 //void Density::setup(double prec) {
 //    NOT_IMPLEMENTED_ABORT;

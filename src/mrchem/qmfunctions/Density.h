@@ -22,6 +22,8 @@ public:
     FunctionTree<3> &getDensity(int s = Paired);
 
     int printTreeSizes() const;
+    void send_Density(int dest, int tag);
+    void Rcv_Density(int source, int tag);
 
     friend class DensityProjector;
 

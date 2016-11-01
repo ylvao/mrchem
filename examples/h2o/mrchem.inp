@@ -1,6 +1,6 @@
 # vim:syntax=sh:
 
-rel_prec = 1.0e-7                 # Overall relative precision
+rel_prec = 1.0e-8                 # Overall relative precision
 printlevel = 1
 
 World {
