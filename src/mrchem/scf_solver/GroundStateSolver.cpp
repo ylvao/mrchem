@@ -16,8 +16,6 @@
 #include "DipoleOperator.h"
 #include "MathUtils.h"
 #include "eigen_disable_warnings.h"
-#include "parallel.h"
-#include "SerialFunctionTree.h"
 
 using namespace std;
 using namespace Eigen;
