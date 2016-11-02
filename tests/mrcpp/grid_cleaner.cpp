@@ -13,10 +13,10 @@ SCENARIO("Projected trees can be cleaned and reused", "[grid_cleaner], [tree_bui
     GIVEN("A projected FunctionTree in 1D") {
         testGridCleaner<1>();
     }
-    GIVEN("A projected FunctionTree in 1D") {
+    GIVEN("A projected FunctionTree in 2D") {
         testGridCleaner<2>();
     }
-    GIVEN("A projected FunctionTree in 1D") {
+    GIVEN("A projected FunctionTree in 3D") {
         testGridCleaner<3>();
     }
 }
@@ -28,8 +28,10 @@ template<int D> void testGridCleaner() {
     initialize(&mra);
 
     const double prec = 1.0e-4;
+    GridGenerator<D> G;
     MWProjector<D> Q(prec);
     FunctionTree<D> tree(*mra);
+    G(tree, *func);
     Q(tree, *func);
 
     const int refDepth = tree.getDepth();
