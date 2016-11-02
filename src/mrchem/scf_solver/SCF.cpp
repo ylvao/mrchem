@@ -225,52 +225,40 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 
 	if(i%MPI_size==MPI_rank){
 	  //in charge for this orbital
-        Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
-        H(i, np1Phi_i, *arg_i);
-        delete arg_i;
-
-        int nNodes = np1Phi_i.getNNodes();
-        double norm_n = sqrt(nPhi_i.getSquareNorm());
-        double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
-        double dNorm_n = fabs(norm_np1-norm_n);
-
-        timer.stop();
-        printout(0, setw(3) << i);
-        printout(0, " " << setw(13) << norm_np1);
-        printout(0, " " << setw(13) << dNorm_n);
-        printout(0, " " << setw(9) << nNodes);
-        printout(0, setw(18) << timer.getWallTime() << endl);	
+	  Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
+	  H(i, np1Phi_i, *arg_i);
+	  delete arg_i;
+	  
+	  int nNodes = np1Phi_i.getNNodes();
+	  double norm_n = sqrt(nPhi_i.getSquareNorm());
+	  double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
+	  double dNorm_n = fabs(norm_np1-norm_n);
+	  
+	  timer.stop();
+	  printout(0, setw(3) << i);
+	  printout(0, " " << setw(13) << norm_np1);
+	  printout(0, " " << setw(13) << dNorm_n);
+	  printout(0, " " << setw(9) << nNodes);
+	  printout(0, setw(18) << timer.getWallTime() << endl);	
 	}
     }
 
 #ifdef HAVE_MPI
     //broadcast results
     for (int i = 0; i < phi_n.size(); i++) {
-        Timer timer;
-        Orbital &np1Phi_i = phi_np1.getOrbital(i);
-
-	if(i%MPI_size==MPI_rank){
-	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	     if(i_mpi!= MPI_rank)np1Phi_i.send_Orbital(i_mpi, 54);
-	   }
-	  timer.stop();
-	  printout(10, setw(3) << i);
-	  printout(10, "sendtime " <<setw(18) << timer.getWallTime() << endl);	
-	}else{
-	   //if(not np1Phi_i.hasReal()){
-	    //need to define Tree
-	   //  MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).re().getMRA();
-	   //  np1Phi_i.real = new FunctionTree<3>(mra, MaxAllocNodes);
-	   //}
-	   //if(not np1Phi_i.hasImag() and phi_n.getOrbital(MPI_rank).hasImag()){
-	    //need to define Tree
-	   //  MultiResolutionAnalysis<3> mra = phi_n.getOrbital(MPI_rank).im().getMRA();
-	   //  np1Phi_i.imag = new FunctionTree<3>(mra, MaxAllocNodes);
-	   //}
-	  np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
-	  printout(10, MPI_rank<<"   "<<setw(3) << i);
-	  printout(10, "rcvtime " <<setw(18) << timer.getWallTime() << endl);	
+      Timer timer;
+      Orbital &np1Phi_i = phi_np1.getOrbital(i);
+      
+      if(i%MPI_size==MPI_rank){
+	for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
+	  if(i_mpi!= MPI_rank)np1Phi_i.send_Orbital(i_mpi, 54);
 	}
+	timer.stop();
+	printout(10, setw(3) << i<<" sendtime " <<setw(18) << timer.getWallTime() << endl);	
+      }else{
+	np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
+	printout(10, MPI_rank<<" "<<setw(3)<<i<<" rcvtime "<<setw(18)<<timer.getWallTime()<<endl);	
+      }
     }
 #endif
 

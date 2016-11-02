@@ -139,6 +139,7 @@ FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
         tmp_vec.push_back(out_d);
     }
     FunctionTree<3> *out = new FunctionTree<3>(*MRA);
+    this->grid(*out, tmp_vec);
     this->add(*out, tmp_vec, 0);
     tmp_vec.clear(true);
     return out;

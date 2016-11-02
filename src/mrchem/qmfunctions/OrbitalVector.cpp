@@ -8,7 +8,8 @@
 using namespace std;
 using namespace Eigen;
 
-Orbital* workOrb;
+extern Orbital* workOrb;
+OrbitalVector* workOrbVec=0;
 
 /** OrbitalVector constructor
  *
@@ -589,11 +590,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
     tottime.stop();
     cout<<MPI_rank<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
 
-    for (int i = 0; i < bra.size(); i++) {
-      for (int j = 0; j < ket.size(); j++) {
-	if(MPI_rank==0)cout<<i<<" "<<j<<" "<<S_MPI(i,j).real()<<endl;
-      }
-    } 
     /*   for (int i = 0; i < bra.size(); i++) {
         Orbital &bra_i = bra.getOrbital(i);
         for (int j = 0; j < ket.size(); j++) {
@@ -669,7 +665,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
 	}
 	S_MPI(i,j) =  myOrb_i->dot(*Orb_j);	
 	S_MPI(j,i) =  conj(S_MPI(i,j));	
-      }
+     }
       timerw.stop();
     }
     Timer t1;
@@ -679,14 +675,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
     tottime.stop();
     if(MPI_rank==0)cout<<" time orbital send/rcv "<<timer<<" MPI_reduce "<<t1<<" overlap "<<timerw<<" total "<< tottime<<endl;
 
-    /*   for (int i = 0; i < bra.size(); i++) {
-        Orbital &bra_i = bra.getOrbital(i);
-        for (int j = 0; j < ket.size(); j++) {
-            Orbital &ket_j = ket.getOrbital(j);
-	                S(i,j) = bra_i.dot(ket_j);
-			cout<<i<<" "<<j<<" overlap serial "<<S(i,j)<<" MPI "<<S_MPI(i,j)<<endl;
-        }
-	}*/
     return S_MPI;
 #else
     NOT_REACHED_ABORT;

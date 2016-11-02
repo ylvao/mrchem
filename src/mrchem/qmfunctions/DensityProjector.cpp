@@ -95,15 +95,53 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 
     FunctionTreeVector<3> total_vec, alpha_vec, beta_vec;
     vector<Density *> dens_vec;
-    for (int i = 0; i < phi.size(); i++) {
-        Orbital &phi_i = phi.getOrbital(i);
-        Density *rho_i = new Density(rho);
-        (*this)(*rho_i, phi_i);
-        dens_vec.push_back(rho_i);
-        if (rho_i->total != 0) total_vec.push_back(rho_i->total);
-        if (rho_i->alpha != 0) alpha_vec.push_back(rho_i->alpha);
-        if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
+    
+    if(MPI_size>1){
+      for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
+	Density *rho_i = new Density(rho);	
+	if(i_Orb<phi.size()){
+	  Orbital &phi_i = phi.getOrbital(i_Orb);
+	  (*this)(*rho_i, phi_i);
+	  dens_vec.push_back(rho_i);
+	  if (rho_i->total != 0) total_vec.push_back(rho_i->total);
+	  if (rho_i->alpha != 0) alpha_vec.push_back(rho_i->alpha);
+	  if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
+	}
+	for (int iter = 0;  iter<MPI_size ; iter++) {
+	  int j_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
+	  int j_Orb = j_MPI;
+	  Density *rho_j = new Density(rho);
+	  if(MPI_rank > j_MPI){
+	    //send first bra, then receive ket
+	    rho_i->send_Density(j_MPI, i_Orb);
+	    rho_j->Rcv_Density(j_MPI, j_Orb);
+	  }else if(MPI_rank < j_MPI){
+	    //receive first bra, then send ket
+	    rho_j->Rcv_Density(j_MPI, j_Orb);
+	    rho_i->send_Density(j_MPI, i_Orb);
+	  }
+	  if(j_MPI%MPI_size!=MPI_rank){
+	    dens_vec.push_back(rho_j);
+	    if (rho_j->total != 0) total_vec.push_back(rho_j->total);
+	    if (rho_j->alpha != 0) alpha_vec.push_back(rho_j->alpha);
+	    if (rho_j->beta != 0) beta_vec.push_back(rho_j->beta);
+	  }
+	}
+      }
+    }else{
+      
+      //Serial processing
+      for (int i = 0; i < phi.size(); i++) {
+	Orbital &phi_i = phi.getOrbital(i);
+	Density *rho_i = new Density(rho);
+	(*this)(*rho_i, phi_i);
+	dens_vec.push_back(rho_i);
+	if (rho_i->total != 0) total_vec.push_back(rho_i->total);
+	if (rho_i->alpha != 0) alpha_vec.push_back(rho_i->alpha);
+	if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
+      }
     }
+
     if (not rho.spin) {
         rho.total = new FunctionTree<3>(*MRA);
         if (total_vec.size() > 5) {
@@ -123,4 +161,5 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
         delete dens_vec[i];
         dens_vec[i] = 0;
     }
+
 }

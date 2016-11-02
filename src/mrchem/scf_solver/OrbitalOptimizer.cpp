@@ -69,8 +69,12 @@ bool OrbitalOptimizer::optimize() {
             localize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
         } else if (needDiagonalization()) {
-            diagonalize(fock, F, phi_n);
-            if (this->kain != 0) this->kain->clear();
+	  if(MPI_size>1){
+            diagonalize_P(fock, F, phi_n);
+	  }else{
+	    diagonalize(fock, F, phi_n);
+	  }
+	  if (this->kain != 0) this->kain->clear();
         }
 
         // Compute electronic energy
@@ -81,8 +85,12 @@ bool OrbitalOptimizer::optimize() {
         this->helmholtz->initialize(F.diagonal());
         applyHelmholtzOperators(phi_np1, F, phi_n);
         fock.clear();
-
-        orthonormalize(fock, F, phi_np1);
+	
+	if(MPI_size>1){
+	  orthonormalize_P(fock, F, phi_np1);
+	}else{
+	  orthonormalize(fock, F, phi_np1);
+	}
 
         // Compute orbital updates
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
@@ -96,7 +104,6 @@ bool OrbitalOptimizer::optimize() {
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
-        phi_n.setErrors(errors);
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
         this->orbError.push_back(err_t);
@@ -105,7 +112,13 @@ bool OrbitalOptimizer::optimize() {
         this->add.inPlace(phi_n, 1.0, dPhi_n);
         dPhi_n.clear();
 
-        orthonormalize(fock, F, phi_n);
+	if(MPI_size>1){
+	  orthonormalize_P(fock, F, phi_n);
+	}else{
+	  orthonormalize(fock, F, phi_n);
+	}
+
+        phi_n.setErrors(errors);
 
         // Compute Fock matrix
         fock.setup(getOrbitalPrecision());
