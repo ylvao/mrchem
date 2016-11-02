@@ -145,15 +145,6 @@ void OrbitalAdder::operator()(Orbital &out,
     }
 }
 
-/** In place rotation of orbital vector */
-void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U) {
-    OrbitalVector tmp(out);
-    rotate_P(tmp, U, out);
-    out.clear(true);    // Delete pointers
-    out = tmp;          // Copy pointers
-    tmp.clear(false);   // Clear pointers
-}
-
 void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector &phi) {
     if (U.cols() != phi.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
@@ -219,18 +210,25 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
     if (U.cols() != inp.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
-
-    for (int i = 0; i < out.size(); i++) {
+    if(MPI_size>1){
+      rotate_P(out, U, inp);
+    }else{
+      for (int i = 0; i < out.size(); i++) {
         const VectorXd &c = U.row(i);
         Orbital &out_i = out.getOrbital(i);
         (*this)(out_i, c, inp, false); // Adaptive grids
+      }
     }
 }
 
 /** In place rotation of orbital vector */
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     OrbitalVector tmp(out);
-    rotate(tmp, U, out);
+    if(MPI_size>1){
+      rotate_P(tmp, U, out);
+    }else{
+      rotate(tmp, U, out);
+    }
     out.clear(true);    // Delete pointers
     out = tmp;          // Copy pointers
     tmp.clear(false);   // Clear pointers

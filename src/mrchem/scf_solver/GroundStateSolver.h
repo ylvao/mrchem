@@ -34,8 +34,6 @@ protected:
     void diagonalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     void orthonormalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
-    void diagonalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
-    void orthonormalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     Eigen::MatrixXd calcOrthonormalizationMatrix_P(OrbitalVector &phi);
 };
 

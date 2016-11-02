@@ -55,6 +55,7 @@ bool OrbitalOptimizer::optimize() {
     double err_t = 1.0;
 
     fock.setup(getOrbitalPrecision());
+
     F = fock(phi_n, phi_n);
 
     bool converged = false;
@@ -69,11 +70,7 @@ bool OrbitalOptimizer::optimize() {
             localize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
         } else if (needDiagonalization()) {
-	  if(MPI_size>1){
-            diagonalize_P(fock, F, phi_n);
-	  }else{
 	    diagonalize(fock, F, phi_n);
-	  }
 	  if (this->kain != 0) this->kain->clear();
         }
 
@@ -86,11 +83,7 @@ bool OrbitalOptimizer::optimize() {
         applyHelmholtzOperators(phi_np1, F, phi_n);
         fock.clear();
 	
-	if(MPI_size>1){
-	  orthonormalize_P(fock, F, phi_np1);
-	}else{
-	  orthonormalize(fock, F, phi_np1);
-	}
+	orthonormalize(fock, F, phi_np1);
 
         // Compute orbital updates
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
@@ -112,11 +105,7 @@ bool OrbitalOptimizer::optimize() {
         this->add.inPlace(phi_n, 1.0, dPhi_n);
         dPhi_n.clear();
 
-	if(MPI_size>1){
-	  orthonormalize_P(fock, F, phi_n);
-	}else{
-	  orthonormalize(fock, F, phi_n);
-	}
+	orthonormalize(fock, F, phi_n);
 
         phi_n.setErrors(errors);
 
