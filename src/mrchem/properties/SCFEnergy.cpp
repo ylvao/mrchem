@@ -72,8 +72,10 @@ void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_ma
     XCOperator *XC = f_oper.getXCOperator();
 
     double E_xc2 = 0.0;
+    double tmp[5];
     if (XC != 0) this->E_xc = XC->getEnergy();
     for (int i = 0; i < phi.size(); i++) {
+      if(i%MPI_size==MPI_rank){
         Orbital &phi_i = phi.getOrbital(i);
         double occ = (double) phi_i.getOccupancy();
         double e_i = occ*f_mat(i,i);
@@ -95,7 +97,24 @@ void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_ma
             println(2, "\n<" << i << "|V_xc|" << i << ">");
             E_xc2 += occ*(*XC)(phi_i,phi_i);
         }
+      }
     }
+    
+#ifdef HAVE_MPI
+    tmp[0]=this->E_orb;
+    tmp[1]=this->E_en;
+    tmp[2]=this->E_ee;
+    tmp[3]=this->E_x;
+    tmp[4]=E_xc2;
+    MPI_Allreduce(MPI_IN_PLACE,tmp, 5,
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    this->E_orb=tmp[0];
+    this->E_en=tmp[1];
+    this->E_ee=tmp[2];
+    this->E_x=tmp[3];
+    E_xc2=tmp[4];
+#endif
+
     double E_eex = this->E_ee + this->E_x;
     double E_orbxc2 = this->E_orb - E_xc2;
     this->E_kin = E_orbxc2 - 2.0*E_eex - this->E_en;
