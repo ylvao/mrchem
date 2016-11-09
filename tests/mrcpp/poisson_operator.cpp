@@ -4,9 +4,10 @@
 #include "PoissonOperator.h"
 #include "MWOperator.h"
 #include "OperatorApplier.h"
+#include "OperatorAdaptor.h"
 #include "MWProjector.h"
 #include "BandWidth.h"
-#include "CrossCorrelationGenerator.h"
+#include "CrossCorrelationCalculator.h"
 #include "GaussFunc.h"
 
 using namespace std;
@@ -42,7 +43,6 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
             InterpolatingBasis basis(2*k+1);
             MultiResolutionAnalysis<1> kern_mra(box, basis);
 
-
             MWProjector<1> Q(proj_prec);
             GridGenerator<1> G;
 
@@ -62,13 +62,16 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator CCG(ccc_prec, oper_mra.getMaxScale());
+                TreeBuilder<2> builder;
+                OperatorAdaptor adaptor(ccc_prec, oper_mra.getMaxScale());
 
                 MWOperator O(oper_mra);
                 for (int i = 0; i < kern_vec.size(); i++) {
                     FunctionTree<1> &kern_tree = *kern_vec[i];
+                    CrossCorrelationCalculator calculator(kern_tree);
+
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
-                    CCG(*oper_tree, kern_tree);
+                    builder.build(*oper_tree, calculator, adaptor, -1);
                     O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);

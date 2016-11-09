@@ -4,9 +4,10 @@
 #include "MWProjector.h"
 #include "IdentityOperator.h"
 #include "IdentityKernel.h"
-#include "CrossCorrelationGenerator.h"
 #include "OperatorTree.h"
 #include "OperatorApplier.h"
+#include "OperatorAdaptor.h"
+#include "CrossCorrelationCalculator.h"
 #include "BandWidth.h"
 
 namespace identity_operator {
@@ -48,9 +49,12 @@ TEST_CASE("Initialize identity operator", "[init_identity], [identity_operator],
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator CCG(ccc_prec, oper_mra.getMaxScale());
+                TreeBuilder<2> builder;
+                OperatorAdaptor adaptor(ccc_prec, oper_mra.getMaxScale());
+                CrossCorrelationCalculator calculator(kern_tree);
+
                 OperatorTree oper_tree(oper_mra, ccc_prec);
-                CCG(oper_tree, kern_tree);
+                builder.build(oper_tree, calculator, adaptor, -1);
 
                 oper_tree.calcBandWidth(1.0);
                 BandWidth bw_1 = oper_tree.getBandWidth();

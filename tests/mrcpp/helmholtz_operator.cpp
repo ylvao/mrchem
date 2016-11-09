@@ -4,11 +4,12 @@
 #include "HelmholtzOperator.h"
 #include "MWOperator.h"
 #include "OperatorApplier.h"
+#include "OperatorAdaptor.h"
 #include "MWProjector.h"
 #include "MWMultiplier.h"
 #include "MWAdder.h"
 #include "BandWidth.h"
-#include "CrossCorrelationGenerator.h"
+#include "CrossCorrelationCalculator.h"
 #include "HydrogenicFunction.h"
 #include "MathUtils.h"
 
@@ -66,13 +67,16 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
                 InterpolatingBasis basis(k);
                 MultiResolutionAnalysis<2> oper_mra(box, basis);
 
-                CrossCorrelationGenerator CCG(ccc_prec, oper_mra.getMaxScale());
+                TreeBuilder<2> builder;
+                OperatorAdaptor adaptor(ccc_prec, oper_mra.getMaxScale());
 
                 MWOperator O(oper_mra);
                 for (int i = 0; i < K.size(); i++) {
                     FunctionTree<1> &kern_tree = *K[i];
+                    CrossCorrelationCalculator calculator(kern_tree);
+
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
-                    CCG(*oper_tree, kern_tree);
+                    builder.build(*oper_tree, calculator, adaptor, -1);
                     O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
