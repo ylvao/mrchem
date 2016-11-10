@@ -1,0 +1,54 @@
+# vim:syntax=sh:
+
+rel_prec = 1.0e-4                 # Overall relative precision
+printlevel = 0
+
+World {
+  scale = -5                      # Root scale defines world size 2^{-scale}
+  corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
+  boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
+}
+
+Molecule {
+  angstrom = true
+$coords
+C            .000000    1.395248     .000000
+C           1.208320     .697624     .000000
+C           1.208320    -.697624     .000000
+C            .000000   -1.395248     .000000
+C          -1.208320    -.697624     .000000
+C          -1.208320     .697624     .000000
+H            .000000    2.482360     .000000
+H           2.149787    1.241180     .000000
+H           2.149787   -1.241180     .000000
+H            .000000   -2.482360     .000000
+H          -2.149787   -1.241180     .000000
+H          -2.149787    1.241180     .000000
+$end
+}
+
+WaveFunction {
+  method = DFT                    # Wave function method (HF or DFT)
+}
+
+DFT {
+$functionals
+SLATERX
+VWN5C
+$end
+}
+
+Properties {
+  total_energy = true             # Compute ground state energy
+  dipole_moment = true            # Compute electrostatic dipole moment
+}
+
+SCF {
+  orbital_thrs = 1.0e-3
+  property_thrs = 1.0e-5
+  initial_guess = gto             # Type of initial guess: none, mw, gto
+  history = 3                     # Length of KAIN iterative history
+  rotation = 30                   # Diagonalize Fock matrix every n'th iteration
+  localize = false
+}
+
