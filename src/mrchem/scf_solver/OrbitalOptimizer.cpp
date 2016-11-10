@@ -53,83 +53,82 @@ bool OrbitalOptimizer::optimize() {
 
     double err_o = phi_n.getErrors().maxCoeff();
     double err_t = 1.0;
-
+	
     fock.setup(getOrbitalPrecision());
     F = fock(phi_n, phi_n);
-
     bool converged = false;
     while(this->nIter++ < this->maxIter or this->maxIter < 0) {
         // Initialize SCF cycle
         Timer timer;
         printCycle();
         adjustPrecision(err_o);
-
+		
         // Rotate orbitals
         if (needLocalization()) {
             localize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
         } else if (needDiagonalization()) {
-	  if(MPI_size>1){
-            diagonalize_P(fock, F, phi_n);
-	  }else{
-	    diagonalize(fock, F, phi_n);
-	  }
-	  if (this->kain != 0) this->kain->clear();
+			if(MPI_size>1){
+				diagonalize_P(fock, F, phi_n);
+			} else {
+				diagonalize(fock, F, phi_n);
+			}
+			if (this->kain != 0) this->kain->clear();
         }
-
+		
         // Compute electronic energy
         double E = calcProperty();
         this->property.push_back(E);
-
+		
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F.diagonal());
         applyHelmholtzOperators(phi_np1, F, phi_n);
         fock.clear();
-	
-	if(MPI_size>1){
-	  orthonormalize_P(fock, F, phi_np1);
-	}else{
-	  orthonormalize(fock, F, phi_np1);
-	}
-
+		
+		if (MPI_size>1) {
+			orthonormalize_P(fock, F, phi_np1);
+		} else {
+			orthonormalize(fock, F, phi_np1);
+		}
+		
         // Compute orbital updates
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
         phi_np1.clear();
-
+		
         // Employ KAIN accelerator
         if (this->kain != 0) {
             this->kain->setPrecision(this->orbPrec[0]);
             this->kain->accelerate(phi_n, dPhi_n);
         }
-
+		
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
         this->orbError.push_back(err_t);
-
+		
         // Update orbitals
         this->add.inPlace(phi_n, 1.0, dPhi_n);
         dPhi_n.clear();
-
-	if(MPI_size>1){
-	  orthonormalize_P(fock, F, phi_n);
-	}else{
-	  orthonormalize(fock, F, phi_n);
-	}
-
+		
+		if(MPI_size>1) {
+			orthonormalize_P(fock, F, phi_n);
+		} else {
+			orthonormalize(fock, F, phi_n);
+		}
+		
         phi_n.setErrors(errors);
-
+		
         // Compute Fock matrix
         fock.setup(getOrbitalPrecision());
         F = fock(phi_n, phi_n);
-
+		
         // Finalize SCF cycle
         timer.stop();
         printOrbitals(F, phi_n);
         printProperty();
         printTimer(timer.getWallTime());
-
+		
         if (err_o < getOrbitalThreshold()) {
             converged = true;
             break;

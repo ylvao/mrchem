@@ -1,6 +1,7 @@
 # vim:syntax=sh:
 
 rel_prec = 1.0e-4                 # Overall relative precision
+printlevel = 2
 
 World {
   scale = -5                      # Root scale defines world size 2^{-scale}
@@ -9,12 +10,14 @@ World {
 }
 
 Molecule {
+multiplicity = 2
 $coords
-He   0.0     0.0     0.0
+Li   0.0     0.0     0.0
 $end
 }
 
 WaveFunction {
+  restricted = false
   method = Hartree                    # Wave function method (HF or DFT)
 }
 

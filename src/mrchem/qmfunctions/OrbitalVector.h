@@ -112,6 +112,7 @@ protected:
 //                             OrbitalVector &phi_b);
 private:
     //Data
+    //LUCA: ... or maybe just have two sets here?
     std::vector<Orbital *> orbitals;
 };
 

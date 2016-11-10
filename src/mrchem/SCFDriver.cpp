@@ -111,10 +111,12 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
+	/*
     if (not wf_restricted) {
         MSG_ERROR("Unrestricted SCF not implemented");
         return false;
     }
+	*/
     if (wf_restricted and wf_method == "DFT" and dft_spin) {
         MSG_ERROR("Restricted spin DFT not implemented");
         return false;
@@ -135,6 +137,7 @@ void SCFDriver::setup() {
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
+	// LUCA: we should consider dividing this in alpha and beta
     phi = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
 
     // Defining gauge origin
@@ -254,10 +257,13 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
         MatrixXd U = M.transpose()*S_m12;
 
+		extendRotationMatrix(*phi, U);
+
         // Rotate n lowest energy orbitals of U*tmp into phi
         OrbitalAdder add(rel_prec);
         add.rotate(*phi, U, *tmp);
         delete tmp;
+
     } else if (scf_start == "gto") {
         OrbitalProjector OP(rel_prec);
         if (wf_restricted) {
@@ -305,10 +311,13 @@ void SCFDriver::run() {
     if (not sanityCheck()) {
         return;
     }
+	// LUCA: Develop open-shell version of this!
     setupInitialGroundState();
     if (scf_run) {
+		cout << "=========== run scf" << endl;
         converged = runGroundState();
     } else {
+		cout << "=========== setup fock" << endl;
         fock->setup(rel_prec);
         F = (*fock)(*phi, *phi);
         fock->clear();
@@ -380,6 +389,8 @@ void SCFDriver::calcGroundStateProperties() {
     }
 }
 
+
+
 void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     int oldprec = TelePrompter::setPrecision(5);
     TelePrompter::printHeader(0, "Fock matrix");
@@ -403,4 +414,26 @@ void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     }
     TelePrompter::printSeparator(0, '=', 2);
     TelePrompter::setPrecision(oldprec);
+}
+
+void SCFDriver::extendRotationMatrix(const OrbitalVector &orbs, MatrixXd &O) {
+    int nPaired = orbs.getNPaired();
+    int nAlpha  = orbs.getNAlpha();
+    int nBeta   = orbs.getNBeta();
+	int nCols = O.cols(); 
+
+	if (nPaired + nAlpha != nCols) {
+		MSG_ERROR("Alpha and paired orbitals not consistent with number of columns");
+	}
+	if (nBeta > nAlpha) {
+		MSG_ERROR("Inconsistent orbital set: too many beta orbitals");
+	}
+	
+	cout << nAlpha << " " << nBeta << " " << nPaired << " " << nCols << endl;
+
+	O.conservativeResize(nPaired + nAlpha + nBeta, NoChange);
+	O.block(nPaired + nAlpha, 0, nBeta, nCols) = O.block(nPaired, 0, nBeta, nCols);
+
+	return;
+
 }

@@ -41,7 +41,7 @@ OrbitalProjector::OrbitalProjector(double prec)
 }
 
 OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
-    TelePrompter::printHeader(0, "Setting up occupied orbitals");
+    TelePrompter::printHeader(0, "xSetting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
     TelePrompter::printSeparator(0, '-');
 
@@ -61,6 +61,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                 if (nOrbs >= minOrbs) continue;
                 int M = 2*l+1;
                 for (int m = 0; m < M; m++) {
+					std::cout << m << " " << l << " " << nOrbs << " " << minOrbs << std::endl;
                     phi->push_back(1, 0, Paired);
                     Orbital &phi_i = phi->getOrbital(totOrbs);
 
@@ -88,7 +89,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
 void OrbitalProjector::operator()(OrbitalVector &orbs,
                                   const string &bf,
                                   const string &mo) {
-    TelePrompter::printHeader(0, "Setting up occupied orbitals");
+    TelePrompter::printHeader(0, "ySetting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
     TelePrompter::printSeparator(0, '-');
 
