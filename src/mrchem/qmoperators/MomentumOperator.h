@@ -5,8 +5,6 @@
 #include "DerivativeOperator.h"
 #include "OperatorApplier.h"
 
-template<int D> class DerivativeOperator;
-
 class MomentumOperator : public QMOperator {
 public:
     MomentumOperator(int dir, double build_prec = -1.0);
