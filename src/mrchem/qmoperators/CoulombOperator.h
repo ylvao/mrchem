@@ -4,9 +4,9 @@
 #include "QMOperator.h"
 #include "Density.h"
 #include "Potential.h"
-#include "PoissonOperator.h"
-#include "OperatorApplier.h"
 #include "DensityProjector.h"
+#include "PoissonOperator.h"
+#include "MWConvolution.h"
 
 class OrbitalVector;
 
@@ -29,7 +29,7 @@ public:
 protected:
     PoissonOperator poisson;
     DensityProjector project;
-    OperatorApplier<3> apply;
+    MWConvolution<3> apply;
 
     Density density;
     Potential potential;

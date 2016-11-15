@@ -7,7 +7,7 @@
 #include "OrbitalAdder.h"
 #include "OrbitalMultiplier.h"
 #include "PoissonOperator.h"
-#include "OperatorApplier.h"
+#include "MWConvolution.h"
 
 class OrbitalVector;
 
@@ -29,7 +29,7 @@ protected:
     OrbitalAdder add;
     OrbitalMultiplier mult;
     PoissonOperator poisson;   ///< Poisson operator to compute potential
-    OperatorApplier<3> apply;
+    MWConvolution<3> apply;
 
     double x_factor;            ///< Exchange factor for Hybrid XC functionals
     OrbitalVector *orbitals_0;  ///< The orbitals that define the exchange

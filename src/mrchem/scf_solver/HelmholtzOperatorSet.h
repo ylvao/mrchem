@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "HelmholtzOperator.h"
-#include "OperatorApplier.h"
+#include "MWConvolution.h"
 
 class Orbital;
 
@@ -32,7 +32,7 @@ public:
 private:
     double threshold; //For re-using operators. Negative means always recreate
     double build_prec;
-    OperatorApplier<3> apply;
+    MWConvolution<3> apply;
 
     std::vector<int> operIdx;
     std::vector<double> lambda;
