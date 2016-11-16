@@ -97,6 +97,11 @@ bool OrbitalOptimizer::optimize() {
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
+
+#ifdef HAVE_MPI
+	//distribute errors among all orbitals
+	MPI_Allgather(MPI_IN_PLACE, 0,MPI_DOUBLE, &errors(0), 1,MPI_DOUBLE, MPI_COMM_WORLD);
+#endif
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
         this->orbError.push_back(err_t);

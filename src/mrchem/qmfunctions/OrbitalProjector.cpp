@@ -67,12 +67,13 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                     HydrogenicFunction h_func(n, l, m, Z, R);
 
                     phi_i.allocReal();
-                    this->project(phi_i.re(), h_func);
-
-                    printout(0, setw(5) << totOrbs);
-                    printout(0, setw(5) << phi_i.printSpin());
-                    printout(0, setw(5) << phi_i.getOccupancy());
-                    printout(0, setw(44) << phi_i.getSquareNorm() << endl);
+		    if(MPI_rank==nOrbs%MPI_size){
+		      this->project(phi_i.re(), h_func);		    
+		      cout<< setw(5) << totOrbs;
+		      cout<< setw(5) << phi_i.printSpin();
+		      cout<< setw(5) << phi_i.getOccupancy();
+		      cout<< setw(44) << phi_i.getSquareNorm() << endl;
+		    }
                     totOrbs++;
                     nOrbs++;
                 }
@@ -99,11 +100,13 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
         GaussExp<3> &gtOrb = moExp->getOrbital(i);
         mwOrb.clear(true);
         mwOrb.allocReal();
+	if(MPI_rank==i%MPI_size){	
         this->project(mwOrb.re(), gtOrb);
         printout(0, setw(5) << i);
         printout(0, setw(5) << mwOrb.printSpin());
         printout(0, setw(5) << mwOrb.getOccupancy());
         printout(0, setw(44) << mwOrb.getSquareNorm() << endl);
+	}
     }
     delete moExp;
 

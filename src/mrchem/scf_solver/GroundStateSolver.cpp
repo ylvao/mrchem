@@ -20,7 +20,6 @@
 using namespace std;
 using namespace Eigen;
 
-extern OrbitalVector* workOrbVec;
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
@@ -62,7 +61,12 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
     MatrixXd LmF = L - F;
 
     Orbital *part_1 = fock.applyPotential(phi_i);
-    Orbital *part_2 = calcMatrixPart(i, LmF, phi);
+    Orbital *part_2;
+    if(MPI_size>1){
+      part_2 = calcMatrixPart_P(i, LmF, phi);
+    }else{
+      part_2 = calcMatrixPart(i, LmF, phi);
+    }
 
     if (part_1 == 0) part_1 = new Orbital(phi_i);
     if (part_2 == 0) part_2 = new Orbital(phi_i);

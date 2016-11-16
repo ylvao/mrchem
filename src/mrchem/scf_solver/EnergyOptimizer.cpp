@@ -73,9 +73,13 @@ bool EnergyOptimizer::optimize() {
         this->helmholtz->initialize(F_n.diagonal());
         applyHelmholtzOperators(phi_np1, F_n, phi_n);
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
-
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
+#ifdef HAVE_MPI
+	//distribute errors among all orbitals
+	MPI_Allgather(MPI_IN_PLACE, 0, MPI_DOUBLE, &errors(0), 1, MPI_DOUBLE, MPI_COMM_WORLD);
+#endif
+	
         phi_n.setErrors(errors);
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
@@ -104,7 +108,6 @@ bool EnergyOptimizer::optimize() {
         this->add.rotate(phi_n, U, phi_np1);
         phi_np1.clear();
 
-        // Finalize SCF cycle
         timer.stop();
         printOrbitals(F_n, phi_n);
         printProperty();
@@ -129,8 +132,15 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     TelePrompter::printHeader(0,"Computing Fock matrix update");
 
     Timer timer;
-    MatrixXd dS_1 = dPhi_n.calcOverlapMatrix(phi_n).real();
-    MatrixXd dS_2 = phi_np1.calcOverlapMatrix(dPhi_n).real();
+    MatrixXd dS_1;
+    MatrixXd dS_2;
+    if(MPI_size>1){
+      dS_1 = dPhi_n.calcOverlapMatrix_P(phi_n).real();
+      dS_2 = phi_np1.calcOverlapMatrix_P(dPhi_n).real();
+    }else{
+      dS_1 = dPhi_n.calcOverlapMatrix(phi_n).real();
+      dS_2 = phi_np1.calcOverlapMatrix(dPhi_n).real();
+    }
 
     NuclearPotential *v_n = this->fOper_n->getNuclearPotential();
     CoulombOperator *j_n = this->fOper_n->getCoulombOperator();

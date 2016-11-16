@@ -9,6 +9,7 @@
 #include "Timer.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+extern Orbital* workOrb;
 
 using namespace std;
 using namespace Eigen;
@@ -160,32 +161,61 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
 
 #ifdef HAVE_MPI
-    for(int i = 0; i<i_orbs.size();i++){
-         Orbital& orb_i = i_orbs.getOrbital(i);
+    if (workOrb==0){
+      println(10, MPI_rank<<" making empty work orbital");
+      workOrb = new Orbital(j_orbs.getOrbital(MPI_rank));//NB: empty now, but will fill up
+    }
 
+    Orbital* orb_i;
+    
+    for (int i_Orb = MPI_rank; i_Orb < i_orbs.size(); i_Orb+=MPI_size) {
+      for (int iter = 0;  iter<MPI_size ; iter++) {
+	int rcv_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
+	int rcv_Orb = rcv_MPI+MPI_size*(i_Orb/MPI_size);
+	if(MPI_rank > rcv_MPI){
+	  //send first bra, then receive ket
+	  i_orbs.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
+	  workOrb->Rcv_Orbital(rcv_MPI, rcv_Orb);
+	  orb_i=workOrb;
+	}else if(MPI_rank < rcv_MPI){
+	  //receive first bra, then send ket
+	  workOrb->Rcv_Orbital(rcv_MPI, rcv_Orb);
+	  i_orbs.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
+	  orb_i=workOrb;
+	}else{
+	  orb_i=&i_orbs.getOrbital(i_Orb);
+	}
+
+	for (int j = MPI_rank; j < j_orbs.size(); j+=MPI_size) {
+
+	  /*    for(int i = 0; i<i_orbs.size();i++){
 	 if(i%MPI_size==MPI_rank){
 	   //responsible for this orbital, send it to everybody else. Could use Bcast, but will go another way
 	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	     if(i_mpi!= MPI_rank)orb_i.send_Orbital(i_mpi, 55);
+	     if(i_mpi!= MPI_rank)i_orbs.getOrbital(i).send_Orbital(i_mpi, 55);
 	   }
+	   orb_i=&i_orbs.getOrbital(i);
 	 }else{
 	   //get orbital 
-	   orb_i.Rcv_Orbital(i%MPI_size, 55);
-	 }
+	   //orb_i.Rcv_Orbital(i%MPI_size, 55);
+	   workOrb->Rcv_Orbital(i%MPI_size, 55);
+	   orb_i=workOrb;
+	   }
 
 	 for(int j = 0; j<j_orbs.size();j++){
-	     Orbital &orb_j = j_orbs.getOrbital(j);
 
-	     if(j%MPI_size==MPI_rank){
+	     if(j%MPI_size==MPI_rank){*/
+	       Orbital &orb_j = j_orbs.getOrbital(j);
+
 	       //Only one process does the computations
-	       if (this->T != 0) result(i,j) += (*this->T)(orb_i, orb_j);
-	       if (this->V != 0) result(i,j) += (*this->V)(orb_i, orb_j);
-	       if (this->J != 0) result(i,j) += (*this->J)(orb_i, orb_j);
-	       if (this->K != 0) result(i,j) += (*this->K)(orb_i, orb_j);
-	       if (this->XC != 0) result(i,j) += (*this->XC)(orb_i, orb_j);
+	       if (this->T != 0) result(rcv_Orb,j) += (*this->T)(*orb_i, orb_j);
+	       if (this->V != 0) result(rcv_Orb,j) += (*this->V)(*orb_i, orb_j);
+	       if (this->J != 0) result(rcv_Orb,j) += (*this->J)(*orb_i, orb_j);
+	       if (this->K != 0) result(rcv_Orb,j) += (*this->K)(*orb_i, orb_j);
+	       if (this->XC != 0) result(rcv_Orb,j) += (*this->XC)(*orb_i, orb_j);
 	     }
 	 }
-      }
+    }
 
     MPI_Allreduce(MPI_IN_PLACE, &result(0,0), Ni*Nj,
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -209,6 +239,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 }
 
 MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+  if(MPI_size>1)cout<<"ERROR"<<endl;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
@@ -233,6 +264,7 @@ double FockOperator::applyKinetic(Orbital &orb_i, Orbital &orb_j) {
 }
 
 MatrixXd FockOperator::applyKinetic(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+  if(MPI_size>1)cout<<"ERROR"<<endl;
     return (*this->T)(i_orbs,j_orbs);
 }
 

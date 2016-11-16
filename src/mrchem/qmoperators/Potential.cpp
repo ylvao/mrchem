@@ -7,6 +7,7 @@
 #include "Timer.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+extern Orbital* workOrb;
 
 using namespace std;
 using namespace Eigen;
@@ -75,7 +76,58 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     TelePrompter::printHeader(1, "Compute Potential Matrix Elements");
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
+    int ix = 0;
     MatrixXcd M = MatrixXcd::Zero(Ni,Nj);
+    VectorXcd MM = VectorXcd::Zero(MPI_size*(Ni*Nj)/MPI_size);//same as M but in another order
+#ifdef HAVE_MPI
+    Orbital* orb_j;
+    for (int j_Orb = MPI_rank; j_Orb < Nj; j_Orb+=MPI_size) {
+        Orbital *operOrb = (*this)(j_orbs.getOrbital(j_Orb));//orbital to send
+
+	//exchange orbitals with others (One at a time)
+	for (int iter = 0;  iter<MPI_size ; iter++) {
+	  int rcv_MPI=(MPI_size+iter-MPI_rank)%MPI_size;//with who to exchange
+	  int rcv_Orb = rcv_MPI+MPI_size*(j_Orb/MPI_size);//witch orbital to receive
+	  if(MPI_rank > rcv_MPI){
+	    //send first bra, then receive ket
+	    operOrb->send_Orbital(rcv_MPI, j_Orb);
+	    workOrb->Rcv_Orbital(rcv_MPI, rcv_Orb);
+	    orb_j=workOrb;
+	  }else if(MPI_rank < rcv_MPI){
+	    //receive first bra, then send ket
+	    workOrb->Rcv_Orbital(rcv_MPI, rcv_Orb);
+	    operOrb->send_Orbital(rcv_MPI, j_Orb);
+	    orb_j=workOrb;
+	  }else{
+	    orb_j=operOrb;
+	  }
+
+	  //Project on all own orbitals 
+	  for (int i = MPI_rank; i < Ni; i+=MPI_size) {	    
+            Orbital &orb_i = i_orbs.getOrbital(i);
+            M(i,rcv_Orb) = orb_i.dot(*orb_j);
+	    MM((ix++) + MPI_rank*(Ni*Nj)/MPI_size) = M(i,rcv_Orb);
+	  }
+	}
+        delete operOrb;
+    }
+    MPI_Allgather(MPI_IN_PLACE, 0, MPI_DOUBLE_COMPLEX, &MM(0), (Ni*Nj)/MPI_size, MPI_DOUBLE_COMPLEX, MPI_COMM_WORLD);
+    //copy MM into M. do the same loop to get indices right
+    for (int I_rank=0; I_rank<MPI_size; I_rank++) {
+      ix=0;
+      for (int j_Orb = I_rank; j_Orb < Nj; j_Orb+=MPI_size) {
+	for (int iter = 0;  iter<MPI_size ; iter++) {
+	  int rcv_MPI=(MPI_size+iter-I_rank)%MPI_size;//with who to exchange
+	  int rcv_Orb = rcv_MPI+MPI_size*(j_Orb/MPI_size);//wich orbital to receive
+	  for (int i = I_rank; i < Ni; i+=MPI_size) {	    
+	    M(i,rcv_Orb) = MM((ix++) + I_rank*(Ni*Nj)/MPI_size);
+	  }
+	}
+      }
+      }
+    //MPI_Allreduce(MPI_IN_PLACE, &M(0,0), Ni*Nj,
+    //              MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+#else
     for (int j = 0; j < Nj; j++) {
         Orbital &orb_j = j_orbs.getOrbital(j);
         Orbital *operOrb = (*this)(orb_j);
@@ -85,6 +137,7 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
         }
         delete operOrb;
     }
+#endif
     timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (M.imag().norm() > MachineZero) {

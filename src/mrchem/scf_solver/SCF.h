@@ -76,6 +76,9 @@ protected:
     Orbital* calcMatrixPart(int i,
                             Eigen::MatrixXd &M,
                             OrbitalVector &phi);
+    Orbital* calcMatrixPart_P(int i,
+                            Eigen::MatrixXd &M,
+                            OrbitalVector &phi);
 };
 
 #endif // SCF_H
