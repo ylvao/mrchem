@@ -6,7 +6,6 @@
 #include "Potential.h"
 #include "DensityProjector.h"
 #include "PoissonOperator.h"
-#include "MWConvolution.h"
 
 class OrbitalVector;
 
@@ -29,7 +28,6 @@ public:
 protected:
     PoissonOperator poisson;
     DensityProjector project;
-    MWConvolution<3> apply;
 
     Density density;
     Potential potential;

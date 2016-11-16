@@ -8,20 +8,6 @@ extern MultiResolutionAnalysis<3> *MRA;
 using namespace std;
 using namespace Eigen;
 
-QMOperator::QMOperator()
-    : apply_prec(-1.0),
-      clean(-1.0, MRA->getMaxScale()),
-      grid(MRA->getMaxScale()) { }
-
-void QMOperator::setup(double prec) {
-    this->apply_prec = prec;
-    this->clean.setPrecision(prec);
-}
-void QMOperator::clear() {
-    this->apply_prec = -1.0;
-    this->clean.setPrecision(-1.0);
-}
-
 /**
 
 Calculates the matrix element of the operator between two orbitals:

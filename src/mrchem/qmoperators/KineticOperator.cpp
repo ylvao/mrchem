@@ -6,11 +6,13 @@
 using namespace std;
 using namespace Eigen;
 
-KineticOperator::KineticOperator(double build_prec)
-        : QMOperator(),
-          momentum_x(0, build_prec),
-          momentum_y(1, build_prec),
-          momentum_z(2, build_prec) {
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+
+KineticOperator::KineticOperator(double prec)
+    : QMOperator(MRA->getMaxScale()),
+      momentum_x(0, prec),
+      momentum_y(1, prec),
+      momentum_z(2, prec) {
 }
 
 KineticOperator::~KineticOperator() {

@@ -18,12 +18,13 @@ FockOperator::FockOperator(KineticOperator *t,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
-        : add(-1.0),
-          T(t),
-          V(v),
-          J(j),
-          K(k),
-          XC(xc) {
+    : QMOperator(MRA->getMaxScale()),
+      add(-1.0),
+      T(t),
+      V(v),
+      J(j),
+      K(k),
+      XC(xc) {
 }
 
 FockOperator::~FockOperator() {

@@ -17,13 +17,13 @@ class Orbital;
   */
 class QMOperator {
 public:
-    QMOperator();
+    QMOperator(int ms) : max_scale(ms), apply_prec(-1.0) { }
     virtual ~QMOperator() { }
 
     virtual void rotate(Eigen::MatrixXd &U) { }
 
-    virtual void setup(double prec);
-    virtual void clear();
+    virtual void setup(double prec) { this->apply_prec = prec; }
+    virtual void clear() { this->apply_prec = -1.0; }
 
     virtual int printTreeSizes() const;
 
@@ -40,9 +40,8 @@ public:
     double calcProperty(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y);
 
 protected:
+    const int max_scale;
     double apply_prec;
-    GridCleaner<3> clean;
-    GridGenerator<3> grid;
 };
 
 #endif // QMOPERATOR_H

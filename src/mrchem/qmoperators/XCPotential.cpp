@@ -73,17 +73,17 @@ void XCPotential::calcPotentialLDA(int spin) {
     if (spin == Paired) {
         if (this->potential[0] == 0) MSG_ERROR("Invalid XC potential");
         if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
-        this->potential[0]->real = this->xcOutput[1];
+        this->potential[0]->setReal(this->xcOutput[1]);
         this->xcOutput[1] = 0;
     } else if (spin == Alpha) {
         if (this->potential[1] == 0) MSG_ERROR("Invalid XC potential");
         if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
-        this->potential[1]->real = this->xcOutput[1];
+        this->potential[1]->setReal(this->xcOutput[1]);
         this->xcOutput[1] = 0;
     } else if (spin == Beta) {
         if (this->potential[2] == 0) MSG_ERROR("Invalid XC potential");
         if (this->xcOutput[2] == 0) MSG_ERROR("Invalid XC output");
-        this->potential[2]->real = this->xcOutput[2];
+        this->potential[2]->setReal(this->xcOutput[2]);
         this->xcOutput[2] = 0;
     } else {
         MSG_FATAL("Invalid spin");
@@ -109,7 +109,8 @@ void XCPotential::calcPotentialGGA(int spin) {
         dRho_b.push_back(0);
         dRho_b.push_back(0);
 
-        this->potential[0]->real = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        FunctionTree<3> *pot = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[0]->setReal(pot);
 
         xc_funcs.clear();
         dRho_a.clear();
@@ -130,7 +131,8 @@ void XCPotential::calcPotentialGGA(int spin) {
         dRho_b.push_back(&this->gradient_0[1]->getDensity(Beta));
         dRho_b.push_back(&this->gradient_0[2]->getDensity(Beta));
 
-        this->potential[1]->real = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        FunctionTree<3> *pot = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[1]->setReal(pot);
 
         xc_funcs.clear();
         dRho_a.clear();
@@ -151,7 +153,8 @@ void XCPotential::calcPotentialGGA(int spin) {
         dRho_b.push_back(&this->gradient_0[1]->getDensity(Alpha));
         dRho_b.push_back(&this->gradient_0[2]->getDensity(Alpha));
 
-        this->potential[2]->real = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        FunctionTree<3> *pot = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
+        this->potential[2]->setReal(pot);
 
         xc_funcs.clear();
         dRho_a.clear();
@@ -179,9 +182,12 @@ FunctionTree<3>* XCPotential::calcPotentialGGA(FunctionTreeVector<3> &xc_funcs,
         funcs.push_back(-1.0, tmp_2);
     }
 
+    GridGenerator<3> G(this->max_scale);
+    MWAdder<3> add(-1.0, this->max_scale);
+
     FunctionTree<3> *pot = new FunctionTree<3>(*MRA);
-    this->grid(*pot, funcs);
-    this->add(*pot, funcs, 0);
+    G(*pot, funcs);
+    add(*pot, funcs, 0);
     funcs.clear(false);
 
     if (tmp_1 != 0) delete tmp_1;

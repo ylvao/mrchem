@@ -13,7 +13,6 @@ add_library(qmoperators STATIC
     FockOperator.cpp
     KineticOperator.cpp
     MomentumOperator.cpp
-    NuclearPotential.cpp
     Potential.cpp
     QMOperator.cpp
     XCFunctional.cpp

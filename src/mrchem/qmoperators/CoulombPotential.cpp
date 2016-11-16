@@ -1,4 +1,5 @@
 #include "CoulombPotential.h"
+#include "MWConvolution.h"
 
 extern MultiResolutionAnalysis<3> *MRA;
 
@@ -8,6 +9,7 @@ void CoulombPotential::setup(double prec) {
     if (this->orbitals == 0) MSG_ERROR("Orbitals not initialized");
 
     CoulombOperator::setup(prec);
+    MWConvolution<3> apply(this->apply_prec, this->max_scale);
 
     {
         Timer timer;
@@ -21,9 +23,8 @@ void CoulombPotential::setup(double prec) {
     Timer timer;
     FunctionTree<3> &rho = this->density.getDensity(Paired);
     if (not this->potential.hasReal()) {
-        this->potential.real = new FunctionTree<3>(*MRA);
-        this->apply(*this->potential.real, this->poisson, rho);
-        this->potential.imag = 0;
+        this->potential.allocReal();
+        apply(this->potential.re(), this->poisson, rho);
     } else {
         NOT_IMPLEMENTED_ABORT;
 //        int nNodes = this->clean(*this->potential.real);

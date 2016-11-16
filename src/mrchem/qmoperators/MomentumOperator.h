@@ -2,12 +2,12 @@
 #define MOMENTUMOPERATOR_H
 
 #include "QMOperator.h"
-#include "DerivativeOperator.h"
-#include "OperatorApplier.h"
+#include "ABGVOperator.h"
+#include "PHOperator.h"
 
 class MomentumOperator : public QMOperator {
 public:
-    MomentumOperator(int dir, double build_prec = -1.0);
+    MomentumOperator(int dir, double prec = -1.0);
     virtual ~MomentumOperator() { }
 
     virtual void setup(double prec);
@@ -23,8 +23,8 @@ public:
 
 protected:
     const int apply_dir;
-    DerivativeOperator<3> derivative;
-    OperatorApplier<3> apply;
+    ABGVOperator<3> diff_oper;
+    //PHOperator<3> diff_oper;
 };
 
 #endif // MOMENTUMOPERATOR_H

@@ -5,11 +5,9 @@
 
 #include "QMOperator.h"
 #include "Density.h"
-#include "MWAdder.h"
-#include "MWMultiplier.h"
 #include "DensityProjector.h"
-#include "DerivativeOperator.h"
-#include "OperatorApplier.h"
+#include "ABGVOperator.h"
+#include "PHOperator.h"
 #include "Timer.h"
 
 class XCFunctional;
@@ -19,10 +17,7 @@ template<int D> class FunctionTree;
 
 class XCOperator : public QMOperator {
 public:
-    XCOperator(int k,
-               double build_prec,
-               XCFunctional &func,
-               OrbitalVector &phi);
+    XCOperator(int k, XCFunctional &func, OrbitalVector &phi);
     virtual ~XCOperator();
 
     double getEnergy() const { return this->energy; }
@@ -41,11 +36,8 @@ public:
 protected:
     const int order;
     XCFunctional *functional;
-    MWAdder<3> add;
-    MWMultiplier<3> mult;
+    ABGVOperator<3> diff_oper;      ///< Derivative operator for GGAs
     DensityProjector project;
-    DerivativeOperator<3> derivative;  ///< Derivative operator for GGAs
-    OperatorApplier<3> apply;
 
     Density density_0;              ///< Unperturbed density
     Density **gradient_0;           ///< Unperturbed density gradient

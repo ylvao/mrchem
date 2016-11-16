@@ -12,7 +12,8 @@ using namespace std;
 using namespace Eigen;
 
 Potential::Potential()
-    : mult(-1.0),
+    : QMOperator(MRA->getMaxScale()),
+      mult(-1.0),
       real(0),
       imag(0) {
 }
@@ -36,6 +37,15 @@ void Potential::clear() {
     QMOperator::clear();
 }
 
+void Potential::allocReal() {
+    if (this->real != 0) MSG_ERROR("Orbital not empty");
+    this->real = new FunctionTree<3>(*MRA);
+}
+
+void Potential::allocImag() {
+    if (this->imag != 0) MSG_ERROR("Orbital not empty");
+    this->imag = new FunctionTree<3>(*MRA);
+}
 
 Orbital* Potential::operator() (Orbital &phi_p) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");

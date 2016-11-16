@@ -8,7 +8,7 @@ class MomentumOperator;
 
 class KineticOperator : public QMOperator {
 public:
-    KineticOperator(double build_prec = -1.0);
+    KineticOperator(double prec = -1.0);
     virtual ~KineticOperator();
 
     virtual void setup(double prec);

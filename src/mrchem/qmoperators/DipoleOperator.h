@@ -9,7 +9,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 class DipoleOperator : public Potential {
 public:
-    DipoleOperator(int dir, double r_0) : project(-1.0, MRA->getMaxScale()) {
+    DipoleOperator(int dir, double r_0) {
         if (dir < 0 or dir > 2) MSG_ERROR("Invalid direction");
 
         this->func = [dir, r_0] (const double *r) -> double {
@@ -21,16 +21,15 @@ public:
 
     virtual void setup(double prec) {
         Potential::setup(prec);
-        this->project.setPrecision(prec);
+
         this->real = new FunctionTree<3>(*MRA);
-        this->project(*this->real, this->func);
         this->imag = 0;
+
+        MWProjector<3> project(this->apply_prec, this->max_scale);
+        project(*this->real, this->func);
     }
 
-    virtual void clear() {
-        this->project.setPrecision(-1.0);
-        Potential::clear();
-    }
+    virtual void clear() { Potential::clear(); }
 
     double operator() (const Nucleus &nuc) {
         const double *R = nuc.getCoord();
@@ -40,7 +39,6 @@ public:
     using Potential::operator();
 
 protected:
-    MWProjector<3> project;
     std::function<double (const double *r)> func;
 };
 

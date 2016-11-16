@@ -1,4 +1,5 @@
 #include "ExchangePotential.h"
+#include "MWConvolution.h"
 
 using namespace std;
 using namespace Eigen;
@@ -45,9 +46,9 @@ Orbital* ExchangePotential::adjoint(Orbital &phi_p) {
 Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
     Timer timer;
 
+    MWConvolution<3> apply(this->apply_prec, this->max_scale);
     this->add.setPrecision(this->apply_prec);
     this->mult.setPrecision(this->apply_prec);
-    this->apply.setPrecision(this->apply_prec);
 
     int maxNodes = 0;
     vector<double> coef_vec;
@@ -72,11 +73,11 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
             Timer timer;
             if (phi_ip->hasReal()) {
                 V_ip->allocReal();
-                this->apply(V_ip->re(), this->poisson, phi_ip->re());
+                apply(V_ip->re(), this->poisson, phi_ip->re());
             }
             if (phi_ip->hasImag()) {
                 V_ip->allocImag();
-                this->apply(V_ip->im(), this->poisson, phi_ip->im());
+                apply(V_ip->im(), this->poisson, phi_ip->im());
             }
             timer.stop();
             int nNodes = V_ip->getNNodes();
@@ -112,7 +113,6 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 
     this->add.setPrecision(-1.0);
     this->mult.setPrecision(-1.0);
-    this->apply.setPrecision(-1.0);
 
     timer.stop();
     double nNodes = ex_p->getNNodes();
@@ -149,9 +149,11 @@ void ExchangePotential::calcInternalExchange() {
 }
 
 int ExchangePotential::calcInternal(int i) {
-    int maxNodes = 0;
+    MWConvolution<3> apply(-1.0, this->max_scale);
+
     Orbital &phi_i = this->orbitals_0->getOrbital(i);
 
+    int maxNodes = 0;
     double prec = getScaledPrecision(i, i);
     prec = min(prec, 1.0e-1);
     println(2, "\n [" << i << "," << i << "]");
@@ -171,14 +173,14 @@ int ExchangePotential::calcInternal(int i) {
     Orbital *V_ii = new Orbital(phi_i);
     { // compute V_ii = P[phi_ii]
         Timer timer;
-        this->apply.setPrecision(prec);
+        apply.setPrecision(prec);
         if (phi_ii->hasReal()) {
             V_ii->allocReal();
-            this->apply(V_ii->re(), this->poisson, phi_ii->re());
+            apply(V_ii->re(), this->poisson, phi_ii->re());
         }
         if (phi_ii->hasImag()) {
             V_ii->allocImag();
-            this->apply(V_ii->im(), this->poisson, phi_ii->im());
+            apply(V_ii->im(), this->poisson, phi_ii->im());
         }
         timer.stop();
         int nNodes = V_ii->getNNodes();
@@ -217,11 +219,12 @@ int ExchangePotential::calcInternal(int i) {
 }
 
 int ExchangePotential::calcInternal(int i, int j) {
-    int maxNodes = 0;
+    MWConvolution<3> apply(-1.0, this->max_scale);
 
     Orbital &phi_i = this->orbitals_0->getOrbital(i);
     Orbital &phi_j = this->orbitals_0->getOrbital(j);
 
+    int maxNodes = 0;
     double i_factor = phi_i.getExchangeFactor(phi_j);
     double j_factor = phi_j.getExchangeFactor(phi_i);
     if (i_factor < MachineZero or j_factor < MachineZero) {
@@ -252,14 +255,14 @@ int ExchangePotential::calcInternal(int i, int j) {
     { // compute V_ij = P[phi_ij]
         Timer timer;
         prec = min(prec, 1.0e-1);
-        this->apply.setPrecision(prec);
+        apply.setPrecision(prec);
         if (phi_ij->hasReal()) {
             V_ij->allocReal();
-            this->apply(V_ij->re(), this->poisson, phi_ij->re());
+            apply(V_ij->re(), this->poisson, phi_ij->re());
         }
         if (phi_ij->hasImag()) {
             V_ij->allocImag();
-            this->apply(V_ij->im(), this->poisson, phi_ij->im());
+            apply(V_ij->im(), this->poisson, phi_ij->im());
         }
         timer.stop();
         int nNodes = V_ij->getNNodes();

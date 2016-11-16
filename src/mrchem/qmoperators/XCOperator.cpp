@@ -5,6 +5,7 @@
 #include "Orbital.h"
 #include "Density.h"
 #include "Potential.h"
+#include "MWDerivative.h"
 #include "TelePrompter.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
@@ -12,17 +13,12 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 using namespace Eigen;
 
-XCOperator::XCOperator(int k,
-                       double build_prec,
-                       XCFunctional &func,
-                       OrbitalVector &phi)
-        : order(k),
+XCOperator::XCOperator(int k, XCFunctional &func, OrbitalVector &phi)
+        : QMOperator(MRA->getMaxScale()),
+          order(k),
           functional(&func),
-          add(-1.0, MRA->getMaxScale()),
-          mult(-1.0, MRA->getMaxScale()),
+          diff_oper(*MRA, 0.0, 0.0),
           project(-1.0),
-          derivative(*MRA, 0.0, 0.0),
-          apply(-1.0, MRA->getMaxScale()),
           density_0(func.isSpinSeparated()),
           gradient_0(0),
           orbitals_0(&phi),
@@ -49,17 +45,11 @@ XCOperator::~XCOperator() {
 
 void XCOperator::setup(double prec) {
     QMOperator::setup(prec);
-    this->add.setPrecision(-1.0);
-    this->mult.setPrecision(-1.0);
     this->project.setPrecision(prec);
-    this->apply.setPrecision(prec);
 }
 
 void XCOperator::clear() {
-    this->add.setPrecision(-1.0);
-    this->mult.setPrecision(-1.0);
     this->project.setPrecision(-1.0);
-    this->apply.setPrecision(-1.0);
     QMOperator::clear();
 }
 
@@ -120,27 +110,34 @@ Density** XCOperator::calcDensityGradient(Density &rho) {
 }
 
 FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
+    MWDerivative<3> apply(this->max_scale);
+    GridGenerator<3> grid(this->max_scale);
+
     FunctionTreeVector<3> out;
     for (int d = 0; d < 3; d++) {
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        this->grid(*out_d, inp);
-        this->apply(*out_d, this->derivative, inp, 0, d);
+        grid(*out_d, inp);
+        apply(*out_d, this->diff_oper, inp, d);
         out.push_back(out_d);
     }
     return out;
 }
 
 FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
+    MWAdder<3> add(-1.0, this->max_scale);
+    MWDerivative<3> apply(this->max_scale);
+    GridGenerator<3> grid(this->max_scale);
+
     FunctionTreeVector<3> tmp_vec;
     for (int d = 0; d < 3; d++) {
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        this->grid(*out_d, *inp[d]);
-        this->apply(*out_d, this->derivative, *inp[d], 0, d);
+        grid(*out_d, *inp[d]);
+        apply(*out_d, this->diff_oper, *inp[d], d);
         tmp_vec.push_back(out_d);
     }
     FunctionTree<3> *out = new FunctionTree<3>(*MRA);
-    this->grid(*out, tmp_vec);
-    this->add(*out, tmp_vec, 0);
+    grid(*out, tmp_vec);
+    add(*out, tmp_vec, 0);
     tmp_vec.clear(true);
     return out;
 }
@@ -220,6 +217,8 @@ void XCOperator::setupXCOutput() {
     if (this->xcInput == 0) MSG_ERROR("XC input not initialized");
     if (this->xcInput[0] == 0) MSG_ERROR("XC input not initialized");
 
+    GridGenerator<3> grid(this->max_scale);
+
     int nOut = this->functional->getOutputLength(this->order);
     this->xcOutput = allocPtrArray<FunctionTree<3> >(nOut);
 
@@ -227,7 +226,7 @@ void XCOperator::setupXCOutput() {
     FunctionTree<3> &rho = *this->xcInput[0];
     for (int i = 0; i < nOut; i++) {
         this->xcOutput[i] = new FunctionTree<3>(*MRA);
-        this->grid(*this->xcOutput[i], rho);
+        grid(*this->xcOutput[i], rho);
     }
 }
 
@@ -284,14 +283,17 @@ void XCOperator::calcEnergy() {
 
 FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
                                                    FunctionTreeVector<3> &dens) {
+    MWMultiplier<3> mult(-1.0, this->max_scale);
+    GridGenerator<3> grid(this->max_scale);
+
     FunctionTreeVector<3> vec;
     for (int d = 0; d < 3; d++) {
         if (dens[d] == 0) MSG_ERROR("Invalid density");
 
         Timer timer;
         FunctionTree<3> *potDens = new FunctionTree<3>(*MRA);
-        this->grid(*potDens, *dens[d]);
-        this->mult(*potDens, 1.0, pot, *dens[d], 0);
+        grid(*potDens, *dens[d]);
+        mult(*potDens, 1.0, pot, *dens[d], 0);
         vec.push_back(potDens);
 
         timer.stop();
@@ -316,7 +318,6 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
 //}
 
 Orbital* XCOperator::operator() (Orbital &orb) {
-    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     switch (orb.getSpin()) {
     case Paired:
         if (this->potential[0] == 0) MSG_ERROR("XC potential not available");
@@ -456,19 +457,23 @@ FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
                                             FunctionTreeVector<3> &vec_b) {
     if (vec_a.size() != vec_b.size()) MSG_ERROR("Invalid input");
 
+    MWAdder<3> add(-1.0, this->max_scale);
+    MWMultiplier<3> mult(-1.0, this->max_scale);
+    GridGenerator<3> grid(this->max_scale);
+
     FunctionTreeVector<3> out_vec;
     for (int d = 0; d < vec_a.size(); d++) {
         FunctionTree<3> &tree_a = vec_a.getFunc(d);
         FunctionTree<3> &tree_b = vec_b.getFunc(d);
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        this->grid(*out_d, tree_a);
-        this->grid(*out_d, tree_b);
-        this->mult(*out_d, 1.0, tree_a, tree_b, 0);
+        grid(*out_d, tree_a);
+        grid(*out_d, tree_b);
+        mult(*out_d, 1.0, tree_a, tree_b, 0);
         out_vec.push_back(out_d);
     }
     FunctionTree<3> *out = new FunctionTree<3>(*MRA);
-    this->grid(*out, out_vec);
-    this->add(*out, out_vec, 0);
+    grid(*out, out_vec);
+    add(*out, out_vec, 0);
 
     out_vec.clear(true);
     return out;

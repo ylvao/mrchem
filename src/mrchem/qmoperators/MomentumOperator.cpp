@@ -1,4 +1,7 @@
 #include "MomentumOperator.h"
+#include "MWDerivative.h"
+#include "ABGVOperator.h"
+#include "PHOperator.h"
 #include "Orbital.h"
 #include "Timer.h"
 
@@ -6,35 +9,31 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
-MomentumOperator::MomentumOperator(int dir, double build_prec)
-        : apply_dir(dir),
-          derivative(*MRA, 0.0, 0.0),
-          apply(-1.0, MRA->getMaxScale()) {
+MomentumOperator::MomentumOperator(int dir, double prec)
+    : QMOperator(MRA->getMaxScale()),
+      apply_dir(dir),
+      diff_oper(*MRA, 0.5, 0.5) {
 }
 
 void MomentumOperator::setup(double prec) {
     QMOperator::setup(prec);
-    this->apply.setPrecision(prec);
 }
 
 void MomentumOperator::clear() {
-    this->apply.setPrecision(-1.0);
     QMOperator::clear();
 }
 
 Orbital* MomentumOperator::operator() (Orbital &orb_p) {
-    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     Timer timer;
+    MWDerivative<3> apply(this->max_scale);
     Orbital *dOrb_p = new Orbital(orb_p);
     if (orb_p.hasReal()) {
         dOrb_p->allocImag();
-        this->grid(dOrb_p->im(), orb_p.re());
-        this->apply(dOrb_p->im(), this->derivative, orb_p.re(), 0, this->apply_dir);
+        apply(dOrb_p->im(), this->diff_oper, orb_p.re(), this->apply_dir);
     }
     if (orb_p.hasImag()) {
         dOrb_p->allocReal();
-        this->grid(dOrb_p->re(), orb_p.im());
-        this->apply(dOrb_p->re(), this->derivative, orb_p.im(), 0, this->apply_dir);
+        apply(dOrb_p->re(), this->diff_oper, orb_p.im(), this->apply_dir);
         dOrb_p->re() *= -1.0;
     }
     timer.stop();
