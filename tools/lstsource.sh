@@ -5,5 +5,5 @@
 # handle git branch changes too well.
 #
 
-find src test pilot -name "*.cpp" -or -name "*.h" -or -name "*.c" 
+find src tests pilot -name "*.cpp" -or -name "*.h" -or -name "*.c" 
 
