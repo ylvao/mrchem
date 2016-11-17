@@ -18,7 +18,9 @@ public:
     virtual ~OrbitalVector();
 
     void push_back(int n_orbs, int occ, int spin);
+    void push_back(Orbital& Orb);
     void clear(bool free = true);
+    void clearVec(bool free = true);
 
 //    void writeOrbitals(const std::string &of);
 //    void readOrbitals(const std::string &of);

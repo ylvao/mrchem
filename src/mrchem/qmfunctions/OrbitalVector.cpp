@@ -105,6 +105,19 @@ OrbitalVector::~OrbitalVector() {
 
 /** Clears each orbital in the vector
  *
+ * Deletes the actual functions in the orbitals and removes them from vector
+ * Leaves an empty vector
+ */
+void OrbitalVector::clearVec(bool free) {
+    for (int i = 0; i < this->size(); i++) {
+      this->orbitals[i]->clear(free);//must first remove link to trees!
+      delete this->orbitals[i];
+    }
+    this->orbitals.clear();
+}
+
+/** Clears each orbital in the vector
+ *
  * Deletes the actual functions in the orbitals, keeps
  * the spin and occupancy.
  */
@@ -130,6 +143,15 @@ void OrbitalVector::push_back(int n_orbs, int occ, int spin) {
         Orbital *orb = new Orbital(occ, spin);
         this->orbitals.push_back(orb);
     }
+}
+
+/** Append an orbital to this set
+ *
+ */
+void OrbitalVector::push_back(Orbital& Orb) {
+    Orbital *newOrb = new Orbital(Orb);
+    *newOrb = Orb;
+    this->orbitals.push_back(newOrb);	
 }
 
 const Orbital& OrbitalVector::getOrbital(int i) const {

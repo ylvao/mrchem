@@ -78,8 +78,9 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     int Nj = j_orbs.size();
     int ix = 0;
     MatrixXcd M = MatrixXcd::Zero(Ni,Nj);
+
+    if(MPI_size>1){
     VectorXcd MM = VectorXcd::Zero(MPI_size*(Ni*Nj)/MPI_size);//same as M but in another order
-#ifdef HAVE_MPI
     Orbital* orb_j;
     for (int j_Orb = MPI_rank; j_Orb < Nj; j_Orb+=MPI_size) {
         Orbital *operOrb = (*this)(j_orbs.getOrbital(j_Orb));//orbital to send
@@ -111,7 +112,9 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
 	}
         delete operOrb;
     }
+#ifdef HAVE_MPI
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DOUBLE_COMPLEX, &MM(0), (Ni*Nj)/MPI_size, MPI_DOUBLE_COMPLEX, MPI_COMM_WORLD);
+#endif
     //copy MM into M. do the same loop to get indices right
     for (int I_rank=0; I_rank<MPI_size; I_rank++) {
       ix=0;
@@ -127,17 +130,19 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
       }
     //MPI_Allreduce(MPI_IN_PLACE, &M(0,0), Ni*Nj,
     //              MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
-#else
-    for (int j = 0; j < Nj; j++) {
+    }else{
+      //Serial treatment
+      for (int j = 0; j < Nj; j++) {
         Orbital &orb_j = j_orbs.getOrbital(j);
         Orbital *operOrb = (*this)(orb_j);
         for (int i = 0; i < Ni; i++) {
-            Orbital &orb_i = i_orbs.getOrbital(i);
-            M(i,j) = orb_i.dot(*operOrb);
+	  Orbital &orb_i = i_orbs.getOrbital(i);
+	  M(i,j) = orb_i.dot(*operOrb);
         }
         delete operOrb;
+      }
     }
-#endif
+
     timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (M.imag().norm() > MachineZero) {
