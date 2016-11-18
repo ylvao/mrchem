@@ -201,6 +201,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	    OrbVecChunk_j.getOrbital(0)=orb_j;
 
 	    if (this->T != 0) resultChunk += (*this->T)(OrbVecChunk_i,OrbVecChunk_j);
+	    if (this->V != 0) resultChunk += (*this->V)(OrbVecChunk_i,OrbVecChunk_j);
 	    if (this->J != 0) resultChunk += (*this->J)(OrbVecChunk_i,OrbVecChunk_j);
 	    if (this->K != 0) resultChunk += (*this->K)(OrbVecChunk_i,OrbVecChunk_j);
 	    if (this->XC != 0) resultChunk += (*this->XC)(OrbVecChunk_i,OrbVecChunk_j);
@@ -221,7 +222,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     //V is parallelized at a lower level!
-    if (this->V != 0) result += (*this->V)(i_orbs, j_orbs);
+    //if (this->V != 0) result += (*this->V)(i_orbs, j_orbs);
 
 #else
     

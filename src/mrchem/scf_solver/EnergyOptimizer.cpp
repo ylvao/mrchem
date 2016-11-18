@@ -11,6 +11,8 @@
 using namespace std;
 using namespace Eigen;
 
+extern OrbitalVector workOrbVec;
+
 EnergyOptimizer::EnergyOptimizer(HelmholtzOperatorSet &h)
         : GroundStateSolver(h),
           fOper_np1(0) {
@@ -147,10 +149,69 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     ExchangeOperator *k_n = this->fOper_n->getExchangeOperator();
     XCOperator *xc_n = this->fOper_n->getXCOperator();
 
-    MatrixXd dV_n;
+    int Ni = phi_np1.size();
+    int Nj = dPhi_n.size();
+    MatrixXd dV_n = MatrixXd::Zero(Ni,Nj);;
     {   // Nuclear potential matrix is computed explicitly
         Timer timer;
+#ifdef HAVE_MPI
+	
+    int orbVecIx = 0;
+    Orbital* orb_i;
+    OrbitalVector OrbVecChunk_i(0);
+    vector<int> rcv_OrbVec;
+    for (int i_Orb = MPI_rank; i_Orb < phi_np1.size(); i_Orb+=MPI_size) {
+      for (int iter = 0;  iter<MPI_size ; iter++) {
+	int rcv_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
+	int rcv_Orb = rcv_MPI+MPI_size*(i_Orb/MPI_size);
+	if(MPI_rank > rcv_MPI){
+	  //send first bra, then receive ket
+	  phi_np1.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
+	  workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(rcv_MPI, rcv_Orb);
+	  orb_i=&workOrbVec.getOrbital(orbVecIx++);
+	}else if(MPI_rank < rcv_MPI){
+	  //receive first bra, then send ket
+	  workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(rcv_MPI, rcv_Orb);
+	  phi_np1.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
+	  orb_i=&workOrbVec.getOrbital(orbVecIx++);
+	}else{
+	  orb_i=&phi_np1.getOrbital(i_Orb);
+	}
+
+	OrbVecChunk_i.push_back(*orb_i);
+	rcv_OrbVec.push_back(rcv_Orb);
+
+	if(OrbVecChunk_i.size()>=workOrbVecSize or (iter >= MPI_size-1 and i_Orb+MPI_size>=phi_np1.size())){
+	  for (int j = MPI_rank; j < dPhi_n.size(); j+=MPI_size) {
+	    
+	    Orbital &orb_j = dPhi_n.getOrbital(j);
+	    OrbitalVector OrbVecChunk_j(0);
+	    OrbVecChunk_j.push_back(orb_j);
+	    MatrixXd resultChunk = MatrixXd::Zero(OrbVecChunk_i.size(),OrbVecChunk_j.size());
+	    
+	    //Only one process does the computations
+	    OrbVecChunk_j.getOrbital(0).clear(false);
+	    OrbVecChunk_j.getOrbital(0)=orb_j;
+
+	     resultChunk += (*v_n)(OrbVecChunk_i,OrbVecChunk_j);
+	    OrbVecChunk_j.clear(false);
+	    //copy results into final matrix
+	    for (int ix = 0;  ix<OrbVecChunk_i.size() ; ix++) {
+	      dV_n(rcv_OrbVec[ix],j) += resultChunk(ix,0);
+	    }
+	  }
+	  OrbVecChunk_i.clearVec(false);
+	  rcv_OrbVec.clear();
+	  orbVecIx=0;
+	}
+      }
+    }
+
+    MPI_Allreduce(MPI_IN_PLACE, &dV_n(0,0), Ni*Nj,
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
         dV_n = (*v_n)(phi_np1, dPhi_n);
+#endif
         timer.stop();
         double t = timer.getWallTime();
         TelePrompter::printDouble(0, "Nuclear potential matrix", t);
