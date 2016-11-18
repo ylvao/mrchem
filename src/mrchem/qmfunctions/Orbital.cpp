@@ -9,7 +9,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
-Orbital* workOrb=0;
+Orbital workOrb(2, Paired);
 
 Orbital::Orbital(int occ, int s)
         : spin(s),

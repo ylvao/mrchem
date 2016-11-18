@@ -8,8 +8,7 @@
 using namespace std;
 using namespace Eigen;
 
-extern Orbital* workOrb;
-extern OrbitalVector* workOrbVec;
+extern OrbitalVector workOrbVec;
 
 SCF::SCF(HelmholtzOperatorSet &h)
     : nIter(0),
@@ -316,15 +315,12 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
     Orbital &phi_i = phi.getOrbital(i_Orb);
     Orbital *result = new Orbital(phi_i);//should use workOrb?
 
-    if (workOrbVec==0){
-      println(10, MPI_rank<<" making empty work orbital vector");
-      workOrbVec = new OrbitalVector(phi);//NB: empty now, but will fill up
-    }
     Timer timer;
     if(phi.size()%MPI_size)cout<<"NOT YET IMPLEMENTED"<<endl;
-    int maxOrb =10;//to put into constants.h , or set dynamically?
+
     std::vector<double> U_Chunk;
     std::vector<Orbital *> orbChunk;
+    int orbVecIx = 0;
 
     int nOrbs = phi.size();
     for (int iter = 0;  iter<MPI_size ; iter++) {
@@ -335,9 +331,9 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
 	if(MPI_rank > j_MPI){
 	  //send first bra, then receive ket
 	  if (fabs(M(j_Orb,i_Orb)) > MachineZero)phi.getOrbital(i_Orb).send_Orbital(j_MPI, i_Orb);
-	  if (fabs(M(i_Orb,j_Orb)) > MachineZero)workOrbVec->getOrbital(j_Orb).Rcv_Orbital(j_MPI, j_Orb);
+	  if (fabs(M(i_Orb,j_Orb)) > MachineZero)workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(j_MPI, j_Orb);
 	}else if(MPI_rank < j_MPI){
-	  if (fabs(M(i_Orb,j_Orb)) > MachineZero)workOrbVec->getOrbital(j_Orb).Rcv_Orbital(j_MPI, j_Orb);
+	  if (fabs(M(i_Orb,j_Orb)) > MachineZero)workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(j_MPI, j_Orb);
 	  if (fabs(M(j_Orb,i_Orb)) > MachineZero)phi.getOrbital(i_Orb).send_Orbital(j_MPI, i_Orb);
 	}else if(MPI_rank == j_MPI){//use phi directly
 	}
@@ -349,31 +345,30 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
 	  if(MPI_rank == j_MPI){
 	    norm_j = sqrt(phi.getOrbital(j_Orb).getSquareNorm());
 	  }else{
-	    norm_j = sqrt(workOrbVec->getOrbital(j_Orb).getSquareNorm());
+	    norm_j = sqrt(workOrbVec.getOrbital(orbVecIx).getSquareNorm());
 	  }
 	  if (norm_j > 0.01*getOrbitalPrecision()) {//NB: TODO should test before sending orbital!!
 	    //coefs.push_back(coef);
-	    //orbs.push_back(&workOrbVec->getOrbital(j_Orb));
+	    //orbs.push_back(&workOrbVec.getOrbital(j_Orb));
 	    
 	    //push orbital in vector (chunk)
 	    if(MPI_rank == j_MPI){
 	      orbChunk.push_back(&phi.getOrbital(j_Orb));
 	    }else{
-	      orbChunk.push_back(&workOrbVec->getOrbital(j_Orb));
+	      orbChunk.push_back(&workOrbVec.getOrbital(orbVecIx++));
 	    }
 	    U_Chunk.push_back(coef);	
 	  }
-	  if(orbChunk.size()>=maxOrb or iter >= MPI_size-1){
+	  if(orbChunk.size()>=workOrbVecSize or iter >= MPI_size-1){
 	    //Do the work for the chunk	  	  
 	    this->add.inPlace(*result,U_Chunk, orbChunk, false);//can start with empty orbital
 	    U_Chunk.clear();
 	    orbChunk.clear();
+	    orbVecIx = 0;
 	  }
 	}
       }
     }
-
-    workOrbVec->clear(true);
 
     timer.stop();
     double time = timer.getWallTime();

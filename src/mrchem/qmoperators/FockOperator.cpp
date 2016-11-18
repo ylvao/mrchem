@@ -9,8 +9,7 @@
 #include "Timer.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
-extern Orbital* workOrb;
-extern OrbitalVector* workOrbVec;
+extern OrbitalVector workOrbVec;
 
 using namespace std;
 using namespace Eigen;
@@ -162,16 +161,8 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
 
 #ifdef HAVE_MPI
-    if (workOrb==0){
-      println(10, MPI_rank<<" making empty work orbital");
-      workOrb = new Orbital(j_orbs.getOrbital(MPI_rank));//NB: empty now, but will fill up
-    }
-    if (workOrbVec==0){
-      println(10, MPI_rank<<" making empty work orbital vector");
-      workOrbVec = new OrbitalVector(j_orbs);//NB: empty now, but will fill up
-    }
 
-    int maxOrb =10;//to put into constants.h , or set dynamically?
+    int orbVecIx = 0;
     Orbital* orb_i;
     OrbitalVector OrbVecChunk_i(0);
     vector<int> rcv_OrbVec;
@@ -183,13 +174,13 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	if(MPI_rank > rcv_MPI){
 	  //send first bra, then receive ket
 	  i_orbs.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
-	  workOrbVec->getOrbital(rcv_Orb).Rcv_Orbital(rcv_MPI, rcv_Orb);
-	  orb_i=&workOrbVec->getOrbital(rcv_Orb);
+	  workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(rcv_MPI, rcv_Orb);
+	  orb_i=&workOrbVec.getOrbital(orbVecIx++);
 	}else if(MPI_rank < rcv_MPI){
 	  //receive first bra, then send ket
-	  workOrbVec->getOrbital(rcv_Orb).Rcv_Orbital(rcv_MPI, rcv_Orb);
+	  workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(rcv_MPI, rcv_Orb);
 	  i_orbs.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
-	  orb_i=&workOrbVec->getOrbital(rcv_Orb);
+	  orb_i=&workOrbVec.getOrbital(orbVecIx++);
 	}else{
 	  orb_i=&i_orbs.getOrbital(i_Orb);
 	}
@@ -197,7 +188,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	OrbVecChunk_i.push_back(*orb_i);
 	rcv_OrbVec.push_back(rcv_Orb);
 
-	if(OrbVecChunk_i.size()>=maxOrb or (iter >= MPI_size-1 and i_Orb+MPI_size>=i_orbs.size())){
+	if(OrbVecChunk_i.size()>=workOrbVecSize or (iter >= MPI_size-1 and i_Orb+MPI_size>=i_orbs.size())){
 	  for (int j = MPI_rank; j < j_orbs.size(); j+=MPI_size) {
 	    
 	    Orbital &orb_j = j_orbs.getOrbital(j);
@@ -221,6 +212,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	  }
 	  OrbVecChunk_i.clearVec(false);
 	  rcv_OrbVec.clear();
+	  orbVecIx=0;
 	}
       }
     }

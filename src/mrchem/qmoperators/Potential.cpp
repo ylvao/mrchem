@@ -7,7 +7,7 @@
 #include "Timer.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
-extern Orbital* workOrb;
+extern Orbital workOrb;
 
 using namespace std;
 using namespace Eigen;
@@ -92,13 +92,13 @@ MatrixXd Potential::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
 	  if(MPI_rank > rcv_MPI){
 	    //send first bra, then receive ket
 	    operOrb->send_Orbital(rcv_MPI, j_Orb);
-	    workOrb->Rcv_Orbital(rcv_MPI, rcv_Orb);
-	    orb_j=workOrb;
+	    workOrb.Rcv_Orbital(rcv_MPI, rcv_Orb);
+	    orb_j = &workOrb;
 	  }else if(MPI_rank < rcv_MPI){
 	    //receive first bra, then send ket
-	    workOrb->Rcv_Orbital(rcv_MPI, rcv_Orb);
+	    workOrb.Rcv_Orbital(rcv_MPI, rcv_Orb);
 	    operOrb->send_Orbital(rcv_MPI, j_Orb);
-	    orb_j=workOrb;
+	    orb_j = &workOrb;
 	  }else{
 	    orb_j=operOrb;
 	  }

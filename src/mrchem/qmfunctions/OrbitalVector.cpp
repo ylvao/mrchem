@@ -8,8 +8,8 @@
 using namespace std;
 using namespace Eigen;
 
-extern Orbital* workOrb;
-OrbitalVector* workOrbVec=0;
+extern Orbital workOrb;
+OrbitalVector workOrbVec(workOrbVecSize);
 
 /** OrbitalVector constructor
  *
@@ -563,11 +563,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
     timerw.stop();
     timer.stop();
 
-    if (workOrb==0){
-      println(10, MPI_rank<<" making empty work orbital");
-      workOrb = new Orbital(bra.getOrbital(0));//NB: empty now, but will fill up
-    }
-
     for (int iter = 0; iter <= MaxIter; iter++) {
     timer.resume();
       int i = doi[iter];
@@ -578,16 +573,16 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
 	  bra_i = &(bra.getOrbital(i));
 	  //send first bra, then receive 
 	  bra_i->send_Orbital(sendto[iter], sendorb[iter]);
-	  if(rcvorb[iter]>=0)workOrb->Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	  if(rcvorb[iter]>=0)workOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
 	}else{
 	  bra_i = &(bra.getOrbital(i));
 	  //receive first bra, then send 
-	  if(rcvorb[iter]>=0)workOrb->Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	  if(rcvorb[iter]>=0)workOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
 	  bra_i->send_Orbital(sendto[iter], sendorb[iter]);
 	}
       }else if(rcvorb[iter]>=0){
 	//receive only, do not send anything
-	workOrb->Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	workOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
       }
     timer.stop();
     timerw.resume();
@@ -597,7 +592,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
 	assert(i%MPI_size==MPI_rank);//in present implementation, i is always owned locally
 	assert(doj[iter]>=0);
 	ket_i = &(ket.getOrbital(i));
-	if(j%MPI_size!=MPI_rank){bra_j=workOrb;
+	if(j%MPI_size!=MPI_rank){bra_j=&workOrb;
 	  }else{bra_j= &(bra.getOrbital(j));}
             S_MPI(j,i) =  bra_j->dot(*ket_i);	
       }
@@ -640,11 +635,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
     timerw.stop();
     timer.stop();
     
-    if (workOrb==0){
-      println(10, MPI_rank<<" making empty work orbital");
-      workOrb = new Orbital(bra.getOrbital(0));//NB: empty now, but will fill up
-    }
-
     for (int iter = 0; iter <= MaxIter; iter++) {
       timer.resume();
       int i = doi[iter];
@@ -657,7 +647,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
       }
       if(rcvorb[iter]>=0){
 	//receive 
-	workOrb->Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
+	workOrb.Rcv_Orbital(rcvorb[iter]%MPI_size, rcvorb[iter]);
       }
       timer.stop();
       timerw.resume();
@@ -668,7 +658,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
 	assert(doj[iter]>=0);
 	myOrb_i = &(bra.getOrbital(i));
 	if(j%MPI_size!=MPI_rank){
-	  Orb_j=workOrb;
+	  Orb_j = &workOrb;
 	}else{
 	  Orb_j= &(ket.getOrbital(j));
 	}
