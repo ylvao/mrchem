@@ -3,7 +3,7 @@
 #include "factory_functions.h"
 #include "PoissonOperator.h"
 #include "MWOperator.h"
-#include "OperatorApplier.h"
+#include "MWConvolution.h"
 #include "OperatorAdaptor.h"
 #include "MWProjector.h"
 #include "BandWidth.h"
@@ -72,6 +72,7 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
 
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
                     builder.build(*oper_tree, calculator, adaptor, -1);
+                    oper_tree->setupOperNodeCache();
                     O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
@@ -120,7 +121,7 @@ TEST_CASE("Apply Poisson's operator", "[apply_poisson], [poisson_operator], [mw_
 
     MWProjector<3> Q(proj_prec);
     PoissonOperator P(*mra, build_prec);
-    OperatorApplier<3> apply(apply_prec);
+    MWConvolution<3> apply(apply_prec);
 
     FunctionTree<3> fTree(*mra);
     FunctionTree<3> gTree(*mra);

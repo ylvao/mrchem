@@ -5,7 +5,7 @@
 #include "IdentityOperator.h"
 #include "IdentityKernel.h"
 #include "OperatorTree.h"
-#include "OperatorApplier.h"
+#include "MWConvolution.h"
 #include "OperatorAdaptor.h"
 #include "CrossCorrelationCalculator.h"
 #include "BandWidth.h"
@@ -55,6 +55,7 @@ TEST_CASE("Initialize identity operator", "[init_identity], [identity_operator],
 
                 OperatorTree oper_tree(oper_mra, ccc_prec);
                 builder.build(oper_tree, calculator, adaptor, -1);
+                oper_tree.setupOperNodeCache();
 
                 oper_tree.calcBandWidth(1.0);
                 BandWidth bw_1 = oper_tree.getBandWidth();
@@ -101,7 +102,7 @@ template<int D> void applyIdentity() {
 
     MWProjector<D> Q(proj_prec);
     IdentityOperator<D> I(*mra, build_prec);
-    OperatorApplier<D> apply(apply_prec);
+    MWConvolution<D> apply(apply_prec);
 
     FunctionTree<D> fTree(*mra);
     FunctionTree<D> gTree(*mra);

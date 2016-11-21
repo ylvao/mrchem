@@ -3,7 +3,7 @@
 #include "factory_functions.h"
 #include "HelmholtzOperator.h"
 #include "MWOperator.h"
-#include "OperatorApplier.h"
+#include "MWConvolution.h"
 #include "OperatorAdaptor.h"
 #include "MWProjector.h"
 #include "MWMultiplier.h"
@@ -77,6 +77,7 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
 
                     OperatorTree *oper_tree = new OperatorTree(oper_mra, ccc_prec);
                     builder.build(*oper_tree, calculator, adaptor, -1);
+                    oper_tree->setupOperNodeCache();
                     O.push_back(oper_tree);
 
                     oper_tree->calcBandWidth(1.0);
@@ -130,7 +131,7 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     MWMultiplier<3> mult;
     MWProjector<3> Q(proj_prec);
     GridGenerator<3> G;
-    OperatorApplier<3> apply(apply_prec);
+    MWConvolution<3> apply(apply_prec);
 
     int n = 2;                  // Principal quantum number
     int l = 1;                  // Angular quantum number
