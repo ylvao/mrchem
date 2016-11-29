@@ -48,6 +48,25 @@ SCFDriver::SCFDriver(Getkw &input) {
 
     calc_total_energy = input.get<bool>("Properties.total_energy");
     calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
+    calc_quadrupole_moment = input.get<bool>("Properties.quadrupole_moment");
+    calc_polarizability = input.get<bool>("Properties.polarizability");
+    calc_hyperpolarizability = input.get<bool>("Properties.hyperpolarizability");
+    calc_optical_rotation = input.get<bool>("Properties.optical_rotation");
+    calc_magnetizability = input.get<bool>("Properties.magnetizability");
+    calc_nmr_shielding = input.get<bool>("Properties.nmr_shielding");
+    calc_spin_spin_coupling = input.get<bool>("Properties.spin_spin_coupling");
+    calc_hyperfine_coupling = input.get<bool>("Properties.hyperfine_coupling");
+
+    pol_velocity = input.get<bool>("Polarizability.velocity");
+    pol_frequency = input.getDblVec("Polarizability.frequency");
+    optrot_velocity = input.get<bool>("OpticalRotation.velocity");
+    optrot_frequency = input.getDblVec("OpticalRotation.frequency");
+    optrot_perturbation = input.get<string>("OpticalRotation.perturbation");
+    nmr_nucleus_k = input.getIntVec("NMRShielding.nucleus_k");
+    nmr_perturbation = input.get<string>("NMRShielding.perturbation");
+    sscc_nucleus_k = input.getIntVec("SpinSpinCoupling.nucleus_k");
+    sscc_nucleus_l = input.getIntVec("SpinSpinCoupling.nucleus_l");
+    hfcc_nucleus_k = input.getIntVec("HyperfineCoupling.nucleus_k");
 
     mol_charge = input.get<int>("Molecule.charge");
     mol_multiplicity = input.get<int>("Molecule.multiplicity");
@@ -64,11 +83,11 @@ SCFDriver::SCFDriver(Getkw &input) {
         dft_func_names = input.getData("DFT.functionals");
     }
 
+    scf_run = input.get<bool>("SCF.run");
     scf_start = input.get<string>("SCF.initial_guess");
     scf_history = input.get<int>("SCF.history");
     scf_max_iter = input.get<int>("SCF.max_iter");
     scf_rotation = input.get<int>("SCF.rotation");
-    scf_run = input.get<bool>("SCF.run");
     scf_localize = input.get<bool>("SCF.localize");
     scf_write_orbitals = input.get<bool>("SCF.write_orbitals");
     scf_orbital_thrs = input.get<double>("SCF.orbital_thrs");
@@ -127,6 +146,39 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Unrestricted HF not implemented");
         return false;
     }
+    if (calc_quadrupole_moment) {
+        MSG_ERROR("Quadrupole moment not implemented");
+        return false;
+    }
+    if (calc_polarizability) {
+        MSG_ERROR("Polarizability not implemented");
+        return false;
+    }
+    if (calc_hyperpolarizability) {
+        MSG_ERROR("Hyperpolarizability not implemented");
+        return false;
+    }
+    if (calc_optical_rotation) {
+        MSG_ERROR("Optical rotation not implemented");
+        return false;
+    }
+    if (calc_magnetizability) {
+        MSG_ERROR("Magnetizability not implemented");
+        return false;
+    }
+    if (calc_nmr_shielding) {
+        MSG_ERROR("NMR shielding not implemented");
+        return false;
+    }
+    if (calc_spin_spin_coupling) {
+        MSG_ERROR("Spin-spin coupling not implemented");
+        return false;
+    }
+    if (calc_hyperfine_coupling) {
+        MSG_ERROR("Hyperfine coupling not implemented");
+        return false;
+    }
+
     return true;
 }
 
@@ -147,6 +199,32 @@ void SCFDriver::setup() {
         r_O[0] = gauge[0];
         r_O[1] = gauge[1];
         r_O[2] = gauge[2];
+    }
+
+    // Setting up properties
+    if (nmr_nucleus_k[0] < 0) {
+        nmr_nucleus_k.clear();
+        for (int k = 0; k < molecule->getNNuclei(); k++) {
+            nmr_nucleus_k.push_back(k);
+        }
+    }
+    if (sscc_nucleus_k[0] < 0) {
+        sscc_nucleus_k.clear();
+        for (int k = 0; k < molecule->getNNuclei(); k++) {
+            sscc_nucleus_k.push_back(k);
+        }
+    }
+    if (sscc_nucleus_l[0] < 0) {
+        sscc_nucleus_l.clear();
+        for (int l = 0; l < molecule->getNNuclei(); l++) {
+            sscc_nucleus_l.push_back(l);
+        }
+    }
+    if (hfcc_nucleus_k[0] < 0) {
+        hfcc_nucleus_k.clear();
+        for (int k = 0; k < molecule->getNNuclei(); k++) {
+            hfcc_nucleus_k.push_back(k);
+        }
     }
 
     if (calc_dipole_moment) {

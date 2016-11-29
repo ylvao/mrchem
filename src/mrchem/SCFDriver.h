@@ -45,6 +45,25 @@ protected:
     // Run parameters
     bool calc_total_energy;
     bool calc_dipole_moment;
+    bool calc_quadrupole_moment;
+    bool calc_polarizability;
+    bool calc_hyperpolarizability;
+    bool calc_optical_rotation;
+    bool calc_magnetizability;
+    bool calc_nmr_shielding;
+    bool calc_spin_spin_coupling;
+    bool calc_hyperfine_coupling;
+
+    bool pol_velocity;
+    bool optrot_velocity;
+    string nmr_perturbation;
+    string optrot_perturbation;
+    std::vector<double> pol_frequency;
+    std::vector<double> optrot_frequency;
+    std::vector<int> nmr_nucleus_k;
+    std::vector<int> sscc_nucleus_k;
+    std::vector<int> sscc_nucleus_l;
+    std::vector<int> hfcc_nucleus_k;
 
     // Molecule input
     int mol_charge;
@@ -118,7 +137,10 @@ protected:
     bool sanityCheck() const;
 
     bool runGroundState();
+    bool runLinearResponse();
+
     void calcGroundStateProperties();
+    void calcLinearResponseProperties();
 
     void setupInitialGroundState();
     GroundStateSolver *setupInitialGuessSolver();

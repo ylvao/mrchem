@@ -162,22 +162,45 @@ def setup_keywords():
     dft.add_kw('func_coefs',            'DBL_ARRAY')
     top.add_sect(dft)
 
-    properties=getkw.Section('Properties', callback = verify_properties)
+    properties=getkw.Section('Properties')
     properties.add_kw('total_energy',           'BOOL', False)
     properties.add_kw('dipole_moment',          'BOOL', False)
     properties.add_kw('quadrupole_moment',      'BOOL', False)
     properties.add_kw('polarizability',         'BOOL', False)
-    properties.add_kw('optrot_electric',        'BOOL', False)
-    properties.add_kw('optrot_magnetic',        'BOOL', False)
+    properties.add_kw('hyperpolarizability',    'BOOL', False)
+    properties.add_kw('optical_rotation',       'BOOL', False)
     properties.add_kw('magnetizability',        'BOOL', False)
     properties.add_kw('nmr_shielding',          'BOOL', False)
-    properties.add_kw('nmr_nuclei',             'INT_ARRAY')
     properties.add_kw('spin_spin_coupling',     'BOOL', False)
-    properties.add_kw('spin_spin_k',            'INT_ARRAY')
-    properties.add_kw('spin_spin_l',            'INT_ARRAY')
-    properties.add_kw('frequencies',            'DBL_ARRAY')
-    properties.add_kw('velocity_gauge',         'BOOL', False)
+    properties.add_kw('hyperfine_coupling',     'BOOL', False)
     top.add_sect(properties)
+
+    polarizability=getkw.Section('Polarizability', callback=verify_pol)
+    polarizability.add_kw('velocity',           'BOOL', False)
+    polarizability.add_kw('frequency',          'DBL_ARRAY')
+    polarizability.add_kw('wavelength',         'DBL_ARRAY')
+    top.add_sect(polarizability)
+
+    optical_rotation=getkw.Section('OpticalRotation', callback=verify_optrot)
+    optical_rotation.add_kw('perturbation',     'STR', 'E')
+    optical_rotation.add_kw('velocity',         'BOOL', False)
+    optical_rotation.add_kw('frequency',        'DBL_ARRAY')
+    optical_rotation.add_kw('wavelength',       'DBL_ARRAY')
+    top.add_sect(optical_rotation)
+
+    nmr=getkw.Section('NMRShielding', callback=verify_nmr)
+    nmr.add_kw('perturbation',          'STR', 'B')
+    nmr.add_kw('nucleus_k',             'INT_ARRAY')
+    top.add_sect(nmr)
+
+    sscc=getkw.Section('SpinSpinCoupling', callback=verify_sscc)
+    sscc.add_kw('nucleus_k',            'INT_ARRAY')
+    sscc.add_kw('nucleus_l',            'INT_ARRAY')
+    top.add_sect(sscc)
+
+    hfcc=getkw.Section('HyperfineCoupling', callback=verify_hfcc)
+    hfcc.add_kw('nucleus_k',            'INT_ARRAY')
+    top.add_sect(hfcc)
 
     scf=getkw.Section('SCF', callback=verify_scf)
     scf.add_kw('run',                   'BOOL', True)
@@ -194,8 +217,9 @@ def setup_keywords():
     top.add_sect(scf)
 
     response=getkw.Section('Response', callback=verify_response)
-    response.add_kw('history',          'INT', 5)
-    response.add_kw('max_iter',         'INT', 100)
+    response.add_kw('run',              'BOOL', True)
+    response.add_kw('max_iter',         'INT', -1)
+    response.add_kw('history',          'INT', 0)
     response.add_kw('localize',         'BOOL', False)
     response.add_kw('orbital_thrs',     'DBL', 1.0)
     response.add_kw('property_thrs',    'DBL', 1.0)
@@ -299,15 +323,43 @@ def verify_response(rsp):
     if rsp['orbital_prec'][0] < 0:
         rsp['orbital_prec'][0] = rsp['orbital_prec'][1]
 
-def verify_properties(prop):
-    if not prop.get('nmr_nuclei').is_set():
-        prop['nmr_nuclei'].get().append(-1);
-    if not prop.get('spin_spin_k').is_set():
-        prop['spin_spin_k'].get().append(-1);
-    if not prop.get('spin_spin_l').is_set():
-        prop['spin_spin_l'].get().append(-1);
-    if not prop.get('frequencies').is_set():
-        prop['frequencies'].get().append(0.0);
+def verify_pol(pol):
+    if pol.get('wavelength').is_set():
+        for wlength in pol['wavelength'].get():
+            omega = 45.5640/wlength
+            pol['frequency'].get().append(omega);
+    if len(pol['frequency'].get()) == 0:
+        pol['frequency'].get().append(0.0);
+
+def verify_optrot(optrot):
+    pert = optrot['perturbation'].get()
+    if pert != 'B' and pert != 'E':
+        print "invalid optical rotation perturbation:", pert
+        exit()
+    if optrot.get('wavelength').is_set():
+        for wlength in optrot['wavelength'].get():
+            omega = 45.5640/wlength
+            optrot['frequency'].get().append(omega);
+    if len(optrot['frequency'].get()) == 0:
+        optrot['frequency'].get().append(0.0);
+
+def verify_nmr(nmr):
+    pert = nmr['perturbation'].get()
+    if pert != 'B' and pert != 'M':
+        print "invalid NMR shielding perturbation:", pert
+        exit()
+    if not nmr.get('nucleus_k').is_set():
+        nmr['nucleus_k'].get().append(-1);
+
+def verify_sscc(sscc):
+    if not sscc.get('nucleus_k').is_set():
+        sscc['nucleus_k'].get().append(-1);
+    if not sscc.get('nucleus_l').is_set():
+        sscc['nucleus_l'].get().append(-1);
+
+def verify_hfcc(hfcc):
+    if not hfcc.get('nucleus_k').is_set():
+        hfcc['nucleus_k'].get().append(-1);
 
 def verify_dft(dft):
     n = 0
