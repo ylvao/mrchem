@@ -12,7 +12,7 @@ using namespace std;
 MomentumOperator::MomentumOperator(int dir, double prec)
     : QMOperator(MRA->getMaxScale()),
       apply_dir(dir),
-      diff_oper(*MRA, 0.5, 0.5) {
+      diff_oper(*MRA, 0.0, 0.0) {
 }
 
 void MomentumOperator::setup(double prec) {
