@@ -49,24 +49,24 @@ SCFDriver::SCFDriver(Getkw &input) {
     calc_total_energy = input.get<bool>("Properties.total_energy");
     calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
     calc_quadrupole_moment = input.get<bool>("Properties.quadrupole_moment");
+    calc_magnetizability = input.get<bool>("Properties.magnetizability");
+    calc_nmr_shielding = input.get<bool>("Properties.nmr_shielding");
+    calc_hyperfine_coupling = input.get<bool>("Properties.hyperfine_coupling");
+    calc_spin_spin_coupling = input.get<bool>("Properties.spin_spin_coupling");
     calc_polarizability = input.get<bool>("Properties.polarizability");
     calc_hyperpolarizability = input.get<bool>("Properties.hyperpolarizability");
     calc_optical_rotation = input.get<bool>("Properties.optical_rotation");
-    calc_magnetizability = input.get<bool>("Properties.magnetizability");
-    calc_nmr_shielding = input.get<bool>("Properties.nmr_shielding");
-    calc_spin_spin_coupling = input.get<bool>("Properties.spin_spin_coupling");
-    calc_hyperfine_coupling = input.get<bool>("Properties.hyperfine_coupling");
 
+    nmr_perturbation = input.get<string>("NMRShielding.perturbation");
+    nmr_nucleus_k = input.getIntVec("NMRShielding.nucleus_k");
+    hfcc_nucleus_k = input.getIntVec("HyperfineCoupling.nucleus_k");
+    sscc_nucleus_k = input.getIntVec("SpinSpinCoupling.nucleus_k");
+    sscc_nucleus_l = input.getIntVec("SpinSpinCoupling.nucleus_l");
     pol_velocity = input.get<bool>("Polarizability.velocity");
     pol_frequency = input.getDblVec("Polarizability.frequency");
     optrot_velocity = input.get<bool>("OpticalRotation.velocity");
     optrot_frequency = input.getDblVec("OpticalRotation.frequency");
     optrot_perturbation = input.get<string>("OpticalRotation.perturbation");
-    nmr_nucleus_k = input.getIntVec("NMRShielding.nucleus_k");
-    nmr_perturbation = input.get<string>("NMRShielding.perturbation");
-    sscc_nucleus_k = input.getIntVec("SpinSpinCoupling.nucleus_k");
-    sscc_nucleus_l = input.getIntVec("SpinSpinCoupling.nucleus_l");
-    hfcc_nucleus_k = input.getIntVec("HyperfineCoupling.nucleus_k");
 
     mol_charge = input.get<int>("Molecule.charge");
     mol_multiplicity = input.get<int>("Molecule.multiplicity");
@@ -187,6 +187,8 @@ void SCFDriver::setup() {
     molecule = new Molecule(mol_coords, mol_charge);
     int nEl = molecule->getNElectrons();
     nuclei = &molecule->getNuclei();
+
+    // Setting up empty orbitals
     phi = new OrbitalVector(nEl, mol_multiplicity, wf_restricted);
 
     // Defining gauge origin
@@ -227,8 +229,39 @@ void SCFDriver::setup() {
         }
     }
 
-    if (calc_dipole_moment) {
-        molecule->initDipoleMoment(r_O);
+    if (calc_dipole_moment) molecule->initDipoleMoment();
+    if (calc_quadrupole_moment) molecule->initQuadrupoleMoment();
+    if (calc_magnetizability) molecule->initMagnetizability();
+    if (calc_nmr_shielding) {
+        for (int k = 0; k < nmr_nucleus_k.size(); k++) {
+            int K = nmr_nucleus_k[k];
+            molecule->initNMRShielding(K);
+        }
+    }
+    if (calc_hyperfine_coupling) {
+        for (int k = 0; k < hfcc_nucleus_k.size(); k++) {
+            int K = hfcc_nucleus_k[k];
+            molecule->initHyperfineCoupling(K);
+        }
+    }
+    if (calc_spin_spin_coupling) {
+        for (int k = 0; k < sscc_nucleus_k.size(); k++) {
+            int K = sscc_nucleus_k[k];
+            for (int l = 0; l < sscc_nucleus_l.size(); l++) {
+                int L = sscc_nucleus_l[l];
+                molecule->initSpinSpinCoupling(K, L);
+            }
+        }
+    }
+    if (calc_polarizability) {
+        for (int i = 0; i < pol_frequency.size(); i++) {
+            molecule->initPolarizability(pol_frequency[i]);
+        }
+    }
+    if (calc_optical_rotation) {
+        for (int i = 0; i < optrot_frequency.size(); i++) {
+            molecule->initOpticalRotation(optrot_frequency[i]);
+        }
     }
 
     // Setting up SCF

@@ -10,27 +10,90 @@ using namespace Eigen;
 Molecule::Molecule(const Nuclei &nucs, int c)
         : charge(c),
           nuclei(nucs),
-          dipole(0) {
+          dipole(0),
+          quadrupole(0),
+          magnetizability(0),
+          nmr(0),
+          hfcc(0),
+          sscc(0) {
     calcCenterOfMass();
+    //allocNuclearProperties();
 }
 
 Molecule::Molecule(const string &coord_file, int c)
         : charge(c),
-          dipole(0) {
+          dipole(0),
+          quadrupole(0),
+          magnetizability(0),
+          nmr(0),
+          hfcc(0),
+          sscc(0) {
     readCoordinateFile(coord_file);
     calcCenterOfMass();
+    //allocNuclearProperties();
 }
 
 Molecule::Molecule(const vector<string> &coord_str, int c)
         : charge(c),
-          dipole(0) {
+          dipole(0),
+          quadrupole(0),
+          magnetizability(0),
+          nmr(0),
+          hfcc(0),
+          sscc(0) {
     readCoordinateString(coord_str);
     calcCenterOfMass();
+    //allocNuclearProperties();
+}
+
+void Molecule::allocNuclearProperties() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    int nNucs = this->nuclei.size();
+    this->nmr = new NMRShielding*[nNucs];
+    this->hfcc = new HyperfineCoupling*[nNucs];
+    this->sscc = new SpinSpinCoupling**[nNucs];
+    for (int k = 0; k < nNucs; k++) {
+        this->nmr[k] = 0;
+        this->hfcc[k] = 0;
+        this->sscc[k] = new SpinSpinCoupling*[nNucs];
+        for (int l = 0; l < nNucs; l++) {
+            this->sscc[k][l] = 0; 
+        }
+    }
+    */
 }
 
 Molecule::~Molecule() {
-    this->nuclei.clear();
     clearDipoleMoment();
+    clearQuadrupoleMoment();
+    clearMagnetizability();
+    clearPolarizability();
+    clearOpticalRotation();
+    //freeNuclearProperties();
+    this->nuclei.clear();
+}
+
+void Molecule::freeNuclearProperties() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    int nNucs = this->nuclei.size();
+    for (int k = 0; k < nNucs; k++) {
+        clearNMRShielding(k);
+        clearHyperfineCoupling(k);
+        for (int l = 0; l < nNucs; l++) {
+            clearSpinSpinCoupling(k, l);
+        }
+        delete[] this->sscc[k];
+        this->sscc[k] = 0; 
+    }
+    delete[] this->nmr;
+    delete[] this->hfcc;
+    delete[] this->sscc;
+    this->nmr = 0; 
+    this->hfcc = 0; 
+    this->sscc = 0; 
+    */
 }
 
 void Molecule::clearDipoleMoment() {
@@ -40,22 +103,264 @@ void Molecule::clearDipoleMoment() {
     }
 }
 
+void Molecule::clearQuadrupoleMoment() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->quadrupole != 0) {
+        delete this->quadrupole;
+        this->quadrupole = 0;
+    }
+    */
+}
+
+void Molecule::clearMagnetizability() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->magnetizability != 0) {
+        delete this->magnetizability;
+        this->magnetizability = 0;
+    }
+}
+
+void Molecule::clearNMRShielding(int k) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->nmr == 0) MSG_ERROR("Properties not allocated");
+    if (this->nmr[k] != 0) {
+        delete this->nmr[k];
+        this->nmr[k] = 0;
+    }
+    */
+}
+
+void Molecule::clearHyperfineCoupling(int k) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->hfcc == 0) MSG_ERROR("Properties not allocated");
+    if (this->hfcc[k] != 0) {
+        delete this->hfcc[k];
+        this->hfcc[k] = 0;
+    }
+    */
+}
+
+void Molecule::clearSpinSpinCoupling(int k, int l) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->sscc == 0) MSG_ERROR("Properties not allocated");
+    if (this->sscc[k] == 0) MSG_ERROR("Properties not allocated");
+    if (this->sscc[k][l] != 0) {
+        delete this->sscc[k][l];
+        this->sscc[k][l] = 0;
+    }
+    */
+}
+
+void Molecule::clearPolarizability() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    int nPol = this->polarizability.size();
+    for (int i = 0; i < nPol; i++) {
+        if (this->polarizability[i] != 0) {
+            delete this->polarizability[i];
+            this->polarizability[i] = 0;
+        }
+    }
+    this->polarizability.clear();
+    */
+}
+
+void Molecule::clearOpticalRotation() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    int nOpt = this->optical_rotation.size();
+    for (int i = 0; i < nOpt; i++) {
+        if (this->optical_rotation[i] != 0) {
+            delete this->optical_rotation[i];
+            this->optical_rotation[i] = 0;
+        }
+    }
+    this->optical_rotation.clear();
+    */
+}
+
+void Molecule::initDipoleMoment() {
+    if (this->dipole != 0) MSG_WARN("Dipole moment already initialized");
+    this->dipole = new DipoleMoment();
+}
+
+void Molecule::initQuadrupoleMoment() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->quadrupole != 0) {
+        MSG_WARN("Quadrupole moment already initialized");
+    }
+    this->quadrupole = new QuadrupoleMoment();
+    */
+}
+
+void Molecule::initMagnetizability() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->magnetizability != 0) MSG_WARN("Magnetizability already initialized");
+    this->magnetizability = new Magnetizability();
+    */
+}
+
+void Molecule::initNMRShielding(int k) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->nmr == 0) MSG_ERROR("Properties not allocated");
+    if (this->nmr[k] != 0) MSG_ERROR("NMR shielding tensor already initialized");
+
+    const Nucleus &nuc_K = getNucleus(k);
+    this->nmr[k] = new NMRShielding(nuc_K);
+    */
+}
+
+void Molecule::initHyperfineCoupling(int k) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->hfcc == 0) MSG_ERROR("Properties not allocated");
+    if (this->hfcc[k] != 0) MSG_ERROR("Hyperfine coupling tensor already initialized");
+
+    const Nucleus &nuc_K = getNucleus(k);
+    this->hfcc[k] = new HyperfineCoupling(nuc_K);
+    */
+}
+
+void Molecule::initSpinSpinCoupling(int k, int l) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->sscc == 0) MSG_ERROR("Properties not allocated");
+    if (this->sscc[k] == 0) MSG_ERROR("Properties not allocated");
+    if (this->sscc[k][l] == 0) MSG_ERROR("Spin-spin coupling tensor already initialized");
+
+    const Nucleus &nuc_K = getNucleus(k);
+    const Nucleus &nuc_L = getNucleus(l);
+    this->sscc[k][l] = new SpinSpinCoupling(nuc_K, nuc_L);
+    */
+}
+
+void Molecule::initPolarizability(double omega) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    for (int i = 0; i < this->polarizability.size(); i++) {
+        Polarizability &pol_i = *this->polarizability[i];
+        double omega_i = pol_i.getFrequency();
+        if (fabs(omega_i - omega) < MachineZero) {
+            MSG_ERROR("Polarizability already initialized");
+            return;
+        }
+    }
+    Polarizability *pol = new Polarizability(omega);
+    this->polarizability.push_back(pol);
+    */
+}
+
+void Molecule::initOpticalRotation(double omega) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    for (int i = 0; i < this->optical_rotation.size(); i++) {
+        OpticalRotation &optrot_i = *this->optical_rotation[i];
+        double omega_i = optrot_i.getFrequency();
+        if (fabs(omega_i - omega) < MachineZero) {
+            MSG_ERROR("OpticalRotation already initialized");
+            return;
+        }
+    }
+    OpticalRotation *optrot = new OpticalRotation(omega);
+    this->optical_rotation.push_back(optrot);
+    */
+}
+
+DipoleMoment& Molecule::getDipoleMoment() {
+    if (this->dipole == 0) MSG_ERROR("Uninitialized dipole moment");
+    return *this->dipole;
+}
+
+QuadrupoleMoment& Molecule::getQuadrupoleMoment() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->quadrupole == 0) MSG_ERROR("Uninitialized quadrupole moment");
+    return *this->quadrupole;
+    */
+}
+
+Magnetizability& Molecule::getMagnetizability() {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->magnetizability == 0) MSG_ERROR("Uninitialized magnetizability");
+    return *this->magnetizability;
+    */
+}
+
+NMRShielding& Molecule::getNMRShielding(int k) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->nmr == 0) MSG_ERROR("Properties not allocated");
+    if (this->nmr[k] == 0) MSG_ERROR("Uninitialized NMR shielding tensor " << k);
+    return *this->nmr[k];
+    */
+}
+
+HyperfineCoupling& Molecule::getHyperfineCoupling(int k) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->hfcc == 0) MSG_ERROR("Properties not allocated");
+    if (this->hfcc[k] == 0) MSG_ERROR("Uninitialized hyperfine coupling tensor " << k);
+    return *this->hfcc[k];
+    */
+}
+
+SpinSpinCoupling& Molecule::getSpinSpinCoupling(int k, int l) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    if (this->sscc == 0) MSG_ERROR("Properties not allocated");
+    if (this->sscc[k] == 0) MSG_ERROR("Properties not allocated");
+    if (this->sscc[k][l] == 0) MSG_ERROR("Uninitialized spin-spin coupling tensor " << k << " " << l);
+    return *this->sscc[k][l];
+    */
+}
+
+Polarizability& Molecule::getPolarizability(double omega) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    Polarizability *pol_w = 0;
+    for (int i = 0; i < this->polarizability.size(); i++) {
+        double omega_i = this->polarizability[i]->getFrequency();
+        if (fabs(omega_i - omega) < MachineZero) {
+            pol_w = this->polarizability[i];
+            break;
+        }
+    }
+    if (pol_w == 0) MSG_ERROR("Uninitialized polarizability");
+    return *pol_w;
+    */
+}
+
+OpticalRotation& Molecule::getOpticalRotation(double omega) {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    OpticalRotation *optrot_w = 0;
+    for (int i = 0; i < this->optical_rotation.size(); i++) {
+        double omega_i = this->optical_rotation[i]->getFrequency();
+        if (fabs(omega_i - omega) < MachineZero) {
+            optrot_w = this->optical_rotation[i];
+            break;
+        }
+    }
+    if (optrot_w == 0) MSG_ERROR("Uninitialized optical rotation");
+    return *optrot_w;
+    */
+}
+
 int Molecule::getNElectrons() const {
     int totZ = 0;
     for (int i = 0; i < getNNuclei(); i++) {
         totZ += getNucleus(i).getElement().getZ();
     }
     return totZ - this->charge;
-}
-
-void Molecule::initDipoleMoment(const double *o) {
-    if (this->dipole != 0) MSG_WARN("Dipole moment already initialized");
-    this->dipole = new DipoleMoment();
-}
-
-DipoleMoment& Molecule::getDipoleMoment() {
-    if (this->dipole == 0) MSG_ERROR("Uninitialized dipole moment");
-    return *this->dipole;
 }
 
 void Molecule::calcCenterOfMass() {

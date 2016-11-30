@@ -18,6 +18,13 @@
 #include "Nucleus.h"
 
 class DipoleMoment;
+class QuadrupoleMoment;
+class Magnetizability;
+class NMRShielding;
+class HyperfineCoupling;
+class SpinSpinCoupling;
+class Polarizability;
+class OpticalRotation;
 
 class Molecule {
 public:
@@ -40,9 +47,23 @@ public:
     SCFEnergy &getSCFEnergy() { return this->energy; }
     const double *getCenterOfMass() const { return this->COM; }
 
-    void initDipoleMoment(const double *o = 0);
+    void initDipoleMoment();
+    void initMagnetizability();
+    void initQuadrupoleMoment();
+    void initNMRShielding(int k);
+    void initHyperfineCoupling(int k);
+    void initSpinSpinCoupling(int k, int l);
+    void initPolarizability(double omega);
+    void initOpticalRotation(double omega);
 
     DipoleMoment &getDipoleMoment();
+    QuadrupoleMoment& getQuadrupoleMoment();
+    Magnetizability& getMagnetizability();
+    NMRShielding& getNMRShielding(int k);
+    HyperfineCoupling& getHyperfineCoupling(int k);
+    SpinSpinCoupling& getSpinSpinCoupling(int k, int l);
+    Polarizability& getPolarizability(double omega);
+    OpticalRotation& getOpticalRotation(double omega);
 
 protected:
     int charge;
@@ -52,10 +73,27 @@ protected:
     double COM[3];
     SCFEnergy energy;
     DipoleMoment *dipole;
+    QuadrupoleMoment *quadrupole;
+    Magnetizability *magnetizability;
+    NMRShielding **nmr;
+    HyperfineCoupling **hfcc;
+    SpinSpinCoupling ***sscc;
+    std::vector<Polarizability *> polarizability;
+    std::vector<OpticalRotation *> optical_rotation;
 
     void calcCenterOfMass();
 
+    void allocNuclearProperties();
+    void freeNuclearProperties();
+
     void clearDipoleMoment();
+    void clearQuadrupoleMoment();
+    void clearMagnetizability();
+    void clearNMRShielding(int k);
+    void clearHyperfineCoupling(int k);
+    void clearSpinSpinCoupling(int k, int l);
+    void clearPolarizability();
+    void clearOpticalRotation();
 
     void readCoordinateFile(const std::string &file);
     void readCoordinateString(const std::vector<std::string> &coord_str);
