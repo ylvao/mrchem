@@ -3,6 +3,7 @@
 #include "Molecule.h"
 #include "Nucleus.h"
 #include "DipoleMoment.h"
+#include "Magnetizability.h"
 
 using namespace std;
 using namespace Eigen;
@@ -66,10 +67,10 @@ void Molecule::allocNuclearProperties() {
 
 Molecule::~Molecule() {
     clearDipoleMoment();
-    clearQuadrupoleMoment();
+    //clearQuadrupoleMoment();
     clearMagnetizability();
-    clearPolarizability();
-    clearOpticalRotation();
+    //clearPolarizability();
+    //clearOpticalRotation();
     //freeNuclearProperties();
     this->nuclei.clear();
 }
@@ -114,8 +115,6 @@ void Molecule::clearQuadrupoleMoment() {
 }
 
 void Molecule::clearMagnetizability() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->magnetizability != 0) {
         delete this->magnetizability;
         this->magnetizability = 0;
@@ -200,11 +199,8 @@ void Molecule::initQuadrupoleMoment() {
 }
 
 void Molecule::initMagnetizability() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->magnetizability != 0) MSG_WARN("Magnetizability already initialized");
     this->magnetizability = new Magnetizability();
-    */
 }
 
 void Molecule::initNMRShielding(int k) {
@@ -288,11 +284,8 @@ QuadrupoleMoment& Molecule::getQuadrupoleMoment() {
 }
 
 Magnetizability& Molecule::getMagnetizability() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->magnetizability == 0) MSG_ERROR("Uninitialized magnetizability");
     return *this->magnetizability;
-    */
 }
 
 NMRShielding& Molecule::getNMRShielding(int k) {

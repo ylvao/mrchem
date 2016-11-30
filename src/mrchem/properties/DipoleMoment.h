@@ -4,22 +4,35 @@
 #include <Eigen/Core>
 
 #include "TelePrompter.h"
-
-class Nuclei;
-class OrbitalVector;
-class DipoleOperator;
+#include "OrbitalVector.h"
+#include "DipoleOperator.h"
 
 class DipoleMoment {
 public:
-    DipoleMoment();
-    virtual ~DipoleMoment();
+    DipoleMoment() {
+        this->dipole_nuc.setZero();
+        this->dipole_el.setZero();
+    }
+    virtual ~DipoleMoment() { }
 
-    Eigen::VectorXd get() const { return this->dipole_nuc + this->dipole_el; }
-    Eigen::VectorXd getNuclear() const { return this->dipole_nuc; }
-    Eigen::VectorXd getElectronic() const { return this->dipole_el; }
+    Eigen::Vector3d get() const { return this->dipole_nuc + this->dipole_el; }
+    Eigen::Vector3d getNuclear() const { return this->dipole_nuc; }
+    Eigen::Vector3d getElectronic() const { return this->dipole_el; }
 
-    void compute(int d, DipoleOperator &mu, const Nuclei &nuc);
-    void compute(int d, DipoleOperator &mu, OrbitalVector &phi);
+    void compute(int d, DipoleOperator &mu, const Nuclei &nucs) {
+        for (int k = 0; k < nucs.size(); k++) {
+            const Nucleus &nuc_k = nucs[k];
+            double Z = nuc_k.getCharge();
+            this->dipole_nuc(d) += Z*mu(nuc_k);
+        }
+    }
+    void compute(int d, DipoleOperator &mu, OrbitalVector &orbs) {
+        for (int n = 0; n < orbs.size(); n++) {
+            Orbital &orb_n = orbs.getOrbital(n);
+            double occ = (double) orb_n.getOccupancy();
+            this->dipole_el(d) -= occ*mu(orb_n, orb_n);
+        }
+    }
 
     friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dipole) {
         int oldPrec = TelePrompter::setPrecision(10);
