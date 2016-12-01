@@ -10,7 +10,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 class DipoleOperator : public Potential {
 public:
     DipoleOperator(int i, const double *o = 0) {
-        setOrigin(o);
+        setCoord(this->r_O, o);
         setFunction(i);
     }
     virtual ~DipoleOperator() { }
@@ -40,21 +40,22 @@ public:
     }
 
     using Potential::operator();
+    using Potential::adjoint;
     using Potential::trace;
 
 protected:
     double r_O[3];
     std::function<double (const double *r)> func;
 
-    void setOrigin(const double *o) {
-        if (o != 0) {
-            this->r_O[0] = o[0];
-            this->r_O[1] = o[1];
-            this->r_O[2] = o[2];
+    void setCoord(double *out, const double *inp) {
+        if (inp != 0) {
+            out[0] = inp[0];
+            out[1] = inp[1];
+            out[2] = inp[2];
         } else {
-            this->r_O[0] = 0;
-            this->r_O[1] = 0;
-            this->r_O[2] = 0;
+            out[0] = 0.0;
+            out[1] = 0.0;
+            out[2] = 0.0;
         }
     }
 

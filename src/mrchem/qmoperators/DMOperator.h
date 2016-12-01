@@ -2,12 +2,11 @@
 #define DMOPERATOR_H
 
 #include "Potential.h"
-#include "MWProjector.h"
 
 class DMOperator : public Potential {
 public:
     DMOperator(int i, int j, const double *o = 0) {
-        setOrigin(o);
+        setCoord(this->r_O, o);
         setFunction(i, j);
     }
     virtual ~DMOperator() { }
@@ -24,20 +23,21 @@ public:
     virtual void clear() { Potential::clear(); }
 
     using Potential::operator();
+    using Potential::adjoint;
 
 protected:
     double r_O[3];
     std::function<double (const double *r)> func;
 
-    void setOrigin(const double *o) {
-        if (o != 0) {
-            this->r_O[0] = o[0];
-            this->r_O[1] = o[1];
-            this->r_O[2] = o[2];
+    void setCoord(double *out, const double *inp) {
+        if (inp != 0) {
+            out[0] = inp[0];
+            out[1] = inp[1];
+            out[2] = inp[2];
         } else {
-            this->r_O[0] = 0;
-            this->r_O[1] = 0;
-            this->r_O[2] = 0;
+            out[0] = 0.0;
+            out[1] = 0.0;
+            out[2] = 0.0;
         }
     }
 
