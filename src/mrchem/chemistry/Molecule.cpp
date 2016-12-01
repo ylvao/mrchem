@@ -442,7 +442,6 @@ void Molecule::printGeometry() const {
 
 void Molecule::printProperties() const {
     println(0, this->energy);
-    if (this->dipole != 0) {
-        println(0, *this->dipole);
-    }
+    if (this->dipole != 0) println(0, *this->dipole);
+    if (this->magnetizability != 0) println(0, *this->magnetizability);
 }

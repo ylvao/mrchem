@@ -8,15 +8,15 @@ class DMOperator;
 
 class Magnetizability {
 public:
-    Magnetizability() { }
+    Magnetizability() {
+        this->diamagnetic.setZero();
+        this->paramagnetic.setZero();
+    }
     virtual ~Magnetizability() { }
 
-    Eigen::MatrixXd get() const { return this->diamagnetic + this->paramagnetic; }
-    Eigen::MatrixXd getDiamagnetic() const { return this->diamagnetic; }
-    Eigen::MatrixXd getParamagnetic() const { return this->paramagnetic; }
-
-    void compute(DMOperator &h_ij, OrbitalVector &orbs) { NOT_IMPLEMENTED_ABORT; }
-    void compute(int j, AngularMomentumOperator &h_i, OrbitalVector &orbs_0, OrbitalVector &orbs_1) { NOT_IMPLEMENTED_ABORT; }
+    Eigen::Matrix3d get() const { return this->diamagnetic + this->paramagnetic; }
+    Eigen::Matrix3d& getDiamagnetic() { return this->diamagnetic; }
+    Eigen::Matrix3d& getParamagnetic() { return this->paramagnetic; }
 
     friend std::ostream& operator<<(std::ostream &o, const Magnetizability &mag) {
         double w_au = 0.0;  // Only static magnetizability
@@ -62,8 +62,8 @@ public:
         return o;
     }
 protected:
-    Eigen::MatrixXd diamagnetic;
-    Eigen::MatrixXd paramagnetic;
+    Eigen::Matrix3d diamagnetic;
+    Eigen::Matrix3d paramagnetic;
 };
 
 #endif // MAGNETIZABILITY_H

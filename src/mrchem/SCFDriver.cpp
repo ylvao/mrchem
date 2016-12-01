@@ -28,8 +28,10 @@
 
 #include "SCFEnergy.h"
 #include "DipoleMoment.h"
+#include "Magnetizability.h"
 
 #include "DipoleOperator.h"
+#include "DMOperator.h"
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -164,7 +166,6 @@ bool SCFDriver::sanityCheck() const {
     }
     if (calc_magnetizability) {
         MSG_ERROR("Magnetizability not implemented");
-        return false;
     }
     if (calc_nmr_shielding) {
         MSG_ERROR("NMR shielding not implemented");
@@ -481,12 +482,23 @@ void SCFDriver::calcGroundStateProperties() {
 
     if (calc_dipole_moment) {
         DipoleMoment &dipole = molecule->getDipoleMoment();
-        for (int d = 0; d < 3; d++) {
-            DipoleOperator mu_d(d, r_O[d]);
-            mu_d.setup(rel_prec);
-            dipole.compute(d, mu_d, *nuclei);
-            dipole.compute(d, mu_d, *phi);
-            mu_d.clear();
+        for (int i = 0; i < 3; i++) {
+            DipoleOperator mu_i(i, r_O[i]);
+            mu_i.setup(rel_prec);
+            dipole.compute(i, mu_i, *nuclei);
+            dipole.compute(i, mu_i, *phi);
+            mu_i.clear();
+        }
+    }
+    if (calc_magnetizability) {
+        Matrix3d &dia = molecule->getMagnetizability().getDiamagnetic();
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                DMOperator h_BB(i, j, r_O);
+                h_BB.setup(rel_prec);
+                dia(i,j) = h_BB.trace(*phi);
+                h_BB.clear();
+            }
         }
     }
 }
