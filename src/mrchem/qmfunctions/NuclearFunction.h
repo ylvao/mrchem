@@ -15,7 +15,8 @@ public:
     NuclearFunction &operator=(const NuclearFunction &func) { NOT_IMPLEMENTED_ABORT; }
     virtual ~NuclearFunction() { }
 
-    void push_back(const Nucleus &nuc, double smooth);
+    void push_back(const Nucleus &nuc, double S);
+    void push_back(double Z, const double *R, double S);
 
     double evalf(const double *r) const;
 

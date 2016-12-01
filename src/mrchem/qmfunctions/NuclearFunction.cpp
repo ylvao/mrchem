@@ -38,14 +38,18 @@ NuclearFunction::NuclearFunction(const Nuclei &nucs, double prec)
     TelePrompter::setPrecision(oldprec);
 }
 
-void NuclearFunction::push_back(const Nucleus &nuc, double smooth) {
+void NuclearFunction::push_back(const Nucleus &nuc, double S) {
     double Z = nuc.getCharge();
-    const double *pos = nuc.getCoord();
-    this->x_coords.push_back(pos[0]);
-    this->y_coords.push_back(pos[1]);
-    this->z_coords.push_back(pos[2]);
+    const double *R = nuc.getCoord();
+    push_back(Z, R, S);
+}
+
+void NuclearFunction::push_back(double Z, const double *R, double S) {
+    this->x_coords.push_back(R[0]);
+    this->y_coords.push_back(R[1]);
+    this->z_coords.push_back(R[2]);
     this->charges.push_back(Z);
-    this->smoothParam.push_back(smooth);
+    this->smoothParam.push_back(S);
 }
 
 double NuclearFunction::evalf(const double *x) const {
