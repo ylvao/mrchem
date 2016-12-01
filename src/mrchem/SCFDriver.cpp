@@ -29,9 +29,11 @@
 #include "SCFEnergy.h"
 #include "DipoleMoment.h"
 #include "Magnetizability.h"
+#include "NMRShielding.h"
 
 #include "DipoleOperator.h"
 #include "DMOperator.h"
+#include "DSOperator.h"
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -165,11 +167,10 @@ bool SCFDriver::sanityCheck() const {
         return false;
     }
     if (calc_magnetizability) {
-        MSG_ERROR("Magnetizability not implemented");
+        MSG_ERROR("Only diamagnetic magnetizability atm");
     }
     if (calc_nmr_shielding) {
-        MSG_ERROR("NMR shielding not implemented");
-        return false;
+        MSG_ERROR("Only diamagnetic NMR shielding atm");
     }
     if (calc_spin_spin_coupling) {
         MSG_ERROR("Spin-spin coupling not implemented");
@@ -481,13 +482,13 @@ void SCFDriver::calcGroundStateProperties() {
     }
 
     if (calc_dipole_moment) {
-        Vector3d &nuclear = molecule->getDipoleMoment().getNuclear();
-        Vector3d &electronic = molecule->getDipoleMoment().getElectronic();
+        Vector3d &nuc = molecule->getDipoleMoment().getNuclear();
+        Vector3d &el = molecule->getDipoleMoment().getElectronic();
         for (int i = 0; i < 3; i++) {
             DipoleOperator mu_i(i, r_O);
             mu_i.setup(rel_prec);
-            nuclear(i) = mu_i.trace(*nuclei);
-            electronic(i) = mu_i.trace(*phi);
+            nuc(i) = mu_i.trace(*nuclei);
+            el(i) = mu_i.trace(*phi);
             mu_i.clear();
         }
     }
@@ -499,6 +500,22 @@ void SCFDriver::calcGroundStateProperties() {
                 h_BB.setup(rel_prec);
                 dia(i,j) = h_BB.trace(*phi);
                 h_BB.clear();
+            }
+        }
+    }
+    if (calc_nmr_shielding) {
+        for (int k = 0; k < nmr_nucleus_k.size(); k++) {
+            int K = nmr_nucleus_k[k];
+            NMRShielding &nmr = molecule->getNMRShielding(K);
+            Matrix3d &dia = nmr.getDiamagnetic();
+            const double *r_K = nmr.getNucleus().getCoord();
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    DSOperator h_BM(i, j, r_O, r_K);
+                    h_BM.setup(rel_prec);
+                    dia(i,j) = h_BM.trace(*phi);
+                    h_BM.clear();
+                }
             }
         }
     }

@@ -4,6 +4,7 @@
 #include "Nucleus.h"
 #include "DipoleMoment.h"
 #include "Magnetizability.h"
+#include "NMRShielding.h"
 
 using namespace std;
 using namespace Eigen;
@@ -18,7 +19,7 @@ Molecule::Molecule(const Nuclei &nucs, int c)
           hfcc(0),
           sscc(0) {
     calcCenterOfMass();
-    //allocNuclearProperties();
+    allocNuclearProperties();
 }
 
 Molecule::Molecule(const string &coord_file, int c)
@@ -31,7 +32,7 @@ Molecule::Molecule(const string &coord_file, int c)
           sscc(0) {
     readCoordinateFile(coord_file);
     calcCenterOfMass();
-    //allocNuclearProperties();
+    allocNuclearProperties();
 }
 
 Molecule::Molecule(const vector<string> &coord_str, int c)
@@ -44,25 +45,22 @@ Molecule::Molecule(const vector<string> &coord_str, int c)
           sscc(0) {
     readCoordinateString(coord_str);
     calcCenterOfMass();
-    //allocNuclearProperties();
+    allocNuclearProperties();
 }
 
 void Molecule::allocNuclearProperties() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     int nNucs = this->nuclei.size();
     this->nmr = new NMRShielding*[nNucs];
-    this->hfcc = new HyperfineCoupling*[nNucs];
-    this->sscc = new SpinSpinCoupling**[nNucs];
+    //this->hfcc = new HyperfineCoupling*[nNucs];
+    //this->sscc = new SpinSpinCoupling**[nNucs];
     for (int k = 0; k < nNucs; k++) {
         this->nmr[k] = 0;
-        this->hfcc[k] = 0;
-        this->sscc[k] = new SpinSpinCoupling*[nNucs];
-        for (int l = 0; l < nNucs; l++) {
-            this->sscc[k][l] = 0; 
-        }
+        //this->hfcc[k] = 0;
+        //this->sscc[k] = new SpinSpinCoupling*[nNucs];
+        //for (int l = 0; l < nNucs; l++) {
+            //this->sscc[k][l] = 0;
+        //}
     }
-    */
 }
 
 Molecule::~Molecule() {
@@ -71,30 +69,26 @@ Molecule::~Molecule() {
     clearMagnetizability();
     //clearPolarizability();
     //clearOpticalRotation();
-    //freeNuclearProperties();
+    freeNuclearProperties();
     this->nuclei.clear();
 }
 
 void Molecule::freeNuclearProperties() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
-    int nNucs = this->nuclei.size();
-    for (int k = 0; k < nNucs; k++) {
+    for (int k = 0; k < this->nuclei.size(); k++) {
         clearNMRShielding(k);
-        clearHyperfineCoupling(k);
-        for (int l = 0; l < nNucs; l++) {
-            clearSpinSpinCoupling(k, l);
-        }
-        delete[] this->sscc[k];
-        this->sscc[k] = 0; 
+        //clearHyperfineCoupling(k);
+        //for (int l = 0; l < nNucs; l++) {
+            //clearSpinSpinCoupling(k, l);
+        //}
+        //delete[] this->sscc[k];
+        //this->sscc[k] = 0; 
     }
     delete[] this->nmr;
-    delete[] this->hfcc;
-    delete[] this->sscc;
+    //delete[] this->hfcc;
+    //delete[] this->sscc;
     this->nmr = 0; 
     this->hfcc = 0; 
     this->sscc = 0; 
-    */
 }
 
 void Molecule::clearDipoleMoment() {
@@ -122,14 +116,11 @@ void Molecule::clearMagnetizability() {
 }
 
 void Molecule::clearNMRShielding(int k) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->nmr == 0) MSG_ERROR("Properties not allocated");
     if (this->nmr[k] != 0) {
         delete this->nmr[k];
         this->nmr[k] = 0;
     }
-    */
 }
 
 void Molecule::clearHyperfineCoupling(int k) {
@@ -204,14 +195,11 @@ void Molecule::initMagnetizability() {
 }
 
 void Molecule::initNMRShielding(int k) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->nmr == 0) MSG_ERROR("Properties not allocated");
     if (this->nmr[k] != 0) MSG_ERROR("NMR shielding tensor already initialized");
 
     const Nucleus &nuc_K = getNucleus(k);
     this->nmr[k] = new NMRShielding(nuc_K);
-    */
 }
 
 void Molecule::initHyperfineCoupling(int k) {
@@ -289,12 +277,9 @@ Magnetizability& Molecule::getMagnetizability() {
 }
 
 NMRShielding& Molecule::getNMRShielding(int k) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->nmr == 0) MSG_ERROR("Properties not allocated");
     if (this->nmr[k] == 0) MSG_ERROR("Uninitialized NMR shielding tensor " << k);
     return *this->nmr[k];
-    */
 }
 
 HyperfineCoupling& Molecule::getHyperfineCoupling(int k) {
@@ -444,4 +429,9 @@ void Molecule::printProperties() const {
     println(0, this->energy);
     if (this->dipole != 0) println(0, *this->dipole);
     if (this->magnetizability != 0) println(0, *this->magnetizability);
+    if (this->nmr != 0) {
+        for (int k = 0; k < this->nuclei.size(); k++) {
+            if (this->nmr[k] != 0) println(0, *this->nmr[k]);
+        }
+    }
 }
