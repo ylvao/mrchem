@@ -20,10 +20,6 @@ public:
     Eigen::Matrix3d& getParamagnetic() { return this->paramagnetic; }
 
     friend std::ostream& operator<<(std::ostream &o, const NMRShielding &nmr) {
-        double x = nmr.getNucleus().getCoord()[0];
-        double y = nmr.getNucleus().getCoord()[1];
-        double z = nmr.getNucleus().getCoord()[2];
-
         double isoDSppm = nmr.diamagnetic.trace()/3.0;
         double isoPSppm = nmr.paramagnetic.trace()/3.0;
         double isoTSppm = isoDSppm + isoPSppm;
@@ -33,10 +29,10 @@ public:
         o<<"=================== NMR shielding tensor ==================="<<std::endl;
         o<<"                                                            "<<std::endl;
         TelePrompter::setPrecision(5);
-        o<<" " << nmr.getNucleus().getElement().getSymbol();
-        o<<std::setw(28) << x;
-        o<<std::setw(15) << y;
-        o<<std::setw(15) << z;
+        o<<std::setw(3)  << nmr.getNucleus().getElement().getSymbol();
+        o<<std::setw(26) << nmr.getNucleus().getCoord()[0];
+        o<<std::setw(15) << nmr.getNucleus().getCoord()[1];
+        o<<std::setw(15) << nmr.getNucleus().getCoord()[2];
         o<<std::endl;
         TelePrompter::setPrecision(10);
         o<<"                                                            "<<std::endl;
