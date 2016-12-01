@@ -5,6 +5,7 @@
 #include "DipoleMoment.h"
 #include "Magnetizability.h"
 #include "NMRShielding.h"
+#include "SpinSpinCoupling.h"
 
 using namespace std;
 using namespace Eigen;
@@ -52,14 +53,14 @@ void Molecule::allocNuclearProperties() {
     int nNucs = this->nuclei.size();
     this->nmr = new NMRShielding*[nNucs];
     //this->hfcc = new HyperfineCoupling*[nNucs];
-    //this->sscc = new SpinSpinCoupling**[nNucs];
+    this->sscc = new SpinSpinCoupling**[nNucs];
     for (int k = 0; k < nNucs; k++) {
         this->nmr[k] = 0;
         //this->hfcc[k] = 0;
-        //this->sscc[k] = new SpinSpinCoupling*[nNucs];
-        //for (int l = 0; l < nNucs; l++) {
-            //this->sscc[k][l] = 0;
-        //}
+        this->sscc[k] = new SpinSpinCoupling*[nNucs];
+        for (int l = 0; l < nNucs; l++) {
+            this->sscc[k][l] = 0;
+        }
     }
 }
 
@@ -74,18 +75,19 @@ Molecule::~Molecule() {
 }
 
 void Molecule::freeNuclearProperties() {
-    for (int k = 0; k < this->nuclei.size(); k++) {
+    int nNucs = this->nuclei.size();
+    for (int k = 0; k < nNucs; k++) {
         clearNMRShielding(k);
         //clearHyperfineCoupling(k);
-        //for (int l = 0; l < nNucs; l++) {
-            //clearSpinSpinCoupling(k, l);
-        //}
-        //delete[] this->sscc[k];
-        //this->sscc[k] = 0; 
+        for (int l = 0; l < nNucs; l++) {
+            clearSpinSpinCoupling(k, l);
+        }
+        delete[] this->sscc[k];
+        this->sscc[k] = 0; 
     }
     delete[] this->nmr;
     //delete[] this->hfcc;
-    //delete[] this->sscc;
+    delete[] this->sscc;
     this->nmr = 0; 
     this->hfcc = 0; 
     this->sscc = 0; 
@@ -135,15 +137,12 @@ void Molecule::clearHyperfineCoupling(int k) {
 }
 
 void Molecule::clearSpinSpinCoupling(int k, int l) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->sscc == 0) MSG_ERROR("Properties not allocated");
     if (this->sscc[k] == 0) MSG_ERROR("Properties not allocated");
     if (this->sscc[k][l] != 0) {
         delete this->sscc[k][l];
         this->sscc[k][l] = 0;
     }
-    */
 }
 
 void Molecule::clearPolarizability() {
@@ -214,16 +213,13 @@ void Molecule::initHyperfineCoupling(int k) {
 }
 
 void Molecule::initSpinSpinCoupling(int k, int l) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->sscc == 0) MSG_ERROR("Properties not allocated");
     if (this->sscc[k] == 0) MSG_ERROR("Properties not allocated");
-    if (this->sscc[k][l] == 0) MSG_ERROR("Spin-spin coupling tensor already initialized");
+    if (this->sscc[k][l] != 0) MSG_ERROR("Spin-spin coupling tensor already initialized");
 
     const Nucleus &nuc_K = getNucleus(k);
     const Nucleus &nuc_L = getNucleus(l);
     this->sscc[k][l] = new SpinSpinCoupling(nuc_K, nuc_L);
-    */
 }
 
 void Molecule::initPolarizability(double omega) {
@@ -292,13 +288,10 @@ HyperfineCoupling& Molecule::getHyperfineCoupling(int k) {
 }
 
 SpinSpinCoupling& Molecule::getSpinSpinCoupling(int k, int l) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     if (this->sscc == 0) MSG_ERROR("Properties not allocated");
     if (this->sscc[k] == 0) MSG_ERROR("Properties not allocated");
     if (this->sscc[k][l] == 0) MSG_ERROR("Uninitialized spin-spin coupling tensor " << k << " " << l);
     return *this->sscc[k][l];
-    */
 }
 
 Polarizability& Molecule::getPolarizability(double omega) {
@@ -432,6 +425,13 @@ void Molecule::printProperties() const {
     if (this->nmr != 0) {
         for (int k = 0; k < this->nuclei.size(); k++) {
             if (this->nmr[k] != 0) println(0, *this->nmr[k]);
+        }
+    }
+    if (this->sscc != 0) {
+        for (int k = 0; k < this->nuclei.size(); k++) {
+            for (int l = 0; l < this->nuclei.size(); l++) {
+                if (this->sscc[k][l] != 0) println(0, *this->sscc[k][l]);
+            }
         }
     }
 }

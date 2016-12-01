@@ -30,10 +30,12 @@
 #include "DipoleMoment.h"
 #include "Magnetizability.h"
 #include "NMRShielding.h"
+#include "SpinSpinCoupling.h"
 
 #include "DipoleOperator.h"
 #include "DMOperator.h"
 #include "DSOperator.h"
+#include "DSOOperator.h"
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -173,8 +175,7 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Only diamagnetic NMR shielding atm");
     }
     if (calc_spin_spin_coupling) {
-        MSG_ERROR("Spin-spin coupling not implemented");
-        return false;
+        MSG_ERROR("Only diamagnetic spin-spin coupling atm");
     }
     if (calc_hyperfine_coupling) {
         MSG_ERROR("Hyperfine coupling not implemented");
@@ -251,7 +252,7 @@ void SCFDriver::setup() {
             int K = sscc_nucleus_k[k];
             for (int l = 0; l < sscc_nucleus_l.size(); l++) {
                 int L = sscc_nucleus_l[l];
-                molecule->initSpinSpinCoupling(K, L);
+                if (K != L) molecule->initSpinSpinCoupling(K, L);
             }
         }
     }
@@ -515,6 +516,27 @@ void SCFDriver::calcGroundStateProperties() {
                     h_BM.setup(rel_prec);
                     dia(i,j) = h_BM.trace(*phi);
                     h_BM.clear();
+                }
+            }
+        }
+    }
+    if (calc_spin_spin_coupling) {
+        for (int k = 0; k < sscc_nucleus_k.size(); k++) {
+            int K = sscc_nucleus_k[k];
+            for (int l = 0; l < sscc_nucleus_l.size(); l++) {
+                int L = sscc_nucleus_l[l];
+                if (K == L) continue;
+                SpinSpinCoupling &sscc = molecule->getSpinSpinCoupling(K, L);
+                Matrix3d &dia = sscc.getDiamagnetic();
+                const double *r_K = sscc.getNucleusK().getCoord();
+                const double *r_L = sscc.getNucleusL().getCoord();
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        DSOOperator h_MM(i, j, r_K, r_L);
+                        h_MM.setup(rel_prec);
+                        dia(i,j) = h_MM.trace(*phi);
+                        h_MM.clear();
+                    }
                 }
             }
         }
