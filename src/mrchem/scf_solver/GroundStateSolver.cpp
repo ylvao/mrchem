@@ -284,9 +284,9 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
-    DipoleOperator r_x(0, 0.0);
-    DipoleOperator r_y(1, 0.0);
-    DipoleOperator r_z(2, 0.0);
+    DipoleOperator r_x(0);
+    DipoleOperator r_y(1);
+    DipoleOperator r_z(2);
 
     r_x.setup(prec);
     r_y.setup(prec);

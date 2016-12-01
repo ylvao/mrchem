@@ -3,9 +3,6 @@
 
 #include <Eigen/Core>
 
-class AngularMomentumOperator;
-class DMOperator;
-
 class Magnetizability {
 public:
     Magnetizability() {

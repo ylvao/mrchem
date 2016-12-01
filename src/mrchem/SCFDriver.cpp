@@ -481,12 +481,13 @@ void SCFDriver::calcGroundStateProperties() {
     }
 
     if (calc_dipole_moment) {
-        DipoleMoment &dipole = molecule->getDipoleMoment();
+        Vector3d &nuclear = molecule->getDipoleMoment().getNuclear();
+        Vector3d &electronic = molecule->getDipoleMoment().getElectronic();
         for (int i = 0; i < 3; i++) {
-            DipoleOperator mu_i(i, r_O[i]);
+            DipoleOperator mu_i(i, r_O);
             mu_i.setup(rel_prec);
-            dipole.compute(i, mu_i, *nuclei);
-            dipole.compute(i, mu_i, *phi);
+            nuclear(i) = mu_i.trace(*nuclei);
+            electronic(i) = mu_i.trace(*phi);
             mu_i.clear();
         }
     }

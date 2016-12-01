@@ -10,29 +10,14 @@
 class DipoleMoment {
 public:
     DipoleMoment() {
-        this->dipole_nuc.setZero();
-        this->dipole_el.setZero();
+        this->nuclear.setZero();
+        this->electronic.setZero();
     }
     virtual ~DipoleMoment() { }
 
-    Eigen::Vector3d get() const { return this->dipole_nuc + this->dipole_el; }
-    Eigen::Vector3d getNuclear() const { return this->dipole_nuc; }
-    Eigen::Vector3d getElectronic() const { return this->dipole_el; }
-
-    void compute(int d, DipoleOperator &mu, const Nuclei &nucs) {
-        for (int k = 0; k < nucs.size(); k++) {
-            const Nucleus &nuc_k = nucs[k];
-            double Z = nuc_k.getCharge();
-            this->dipole_nuc(d) += Z*mu(nuc_k);
-        }
-    }
-    void compute(int d, DipoleOperator &mu, OrbitalVector &orbs) {
-        for (int n = 0; n < orbs.size(); n++) {
-            Orbital &orb_n = orbs.getOrbital(n);
-            double occ = (double) orb_n.getOccupancy();
-            this->dipole_el(d) -= occ*mu(orb_n, orb_n);
-        }
-    }
+    Eigen::Vector3d get() const { return this->nuclear + this->electronic; }
+    Eigen::Vector3d& getNuclear() { return this->nuclear; }
+    Eigen::Vector3d& getElectronic() { return this->electronic; }
 
     friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dipole) {
         int oldPrec = TelePrompter::setPrecision(10);
@@ -54,8 +39,8 @@ public:
         return o;
     }
 protected:
-    Eigen::Vector3d dipole_nuc;
-    Eigen::Vector3d dipole_el;
+    Eigen::Vector3d nuclear;
+    Eigen::Vector3d electronic;
 };
 
 #endif // DIPOLEMOMENT_H
