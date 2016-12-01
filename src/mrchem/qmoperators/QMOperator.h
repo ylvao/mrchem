@@ -36,8 +36,9 @@ public:
     virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
-    double calcProperty(Orbital &phi_p, Orbital *x_p, Orbital *y_p);
-    double calcProperty(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y);
+    double trace(Orbital &phi_p, Orbital *x_p, Orbital *y_p);
+    double trace(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y);
+    double trace(OrbitalVector &phi);
 
 protected:
     const int max_scale;

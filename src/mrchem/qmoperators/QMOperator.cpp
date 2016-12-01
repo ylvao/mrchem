@@ -115,7 +115,7 @@ MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
               \left\langle y_p |O|\phi_p \right\rangle ) \f$
 
  */
-double QMOperator::calcProperty(Orbital &phi_p, Orbital *x_p, Orbital *y_p) {
+double QMOperator::trace(Orbital &phi_p, Orbital *x_p, Orbital *y_p) {
     if (x_p == 0) x_p = &phi_p;
     if (y_p == 0) y_p = x_p;
 
@@ -133,9 +133,7 @@ double QMOperator::calcProperty(Orbital &phi_p, Orbital *x_p, Orbital *y_p) {
               \left\langle y_p |O|\phi_p \right\rangle ) \f$
 
  */
-double QMOperator::calcProperty(OrbitalVector &phi,
-                                OrbitalVector *x,
-                                OrbitalVector *y) {
+double QMOperator::trace(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y) {
     if (x == 0) x = &phi;
     if (y == 0) y = x;
 
@@ -145,7 +143,17 @@ double QMOperator::calcProperty(OrbitalVector &phi,
         Orbital &phi_i = phi.getOrbital(i);
         Orbital &x_i = x->getOrbital(i);
         Orbital &y_i = y->getOrbital(i);
-        result += calcProperty(phi_i, &x_i, &y_i);
+        result += trace(phi_i, &x_i, &y_i);
+    }
+    return result;
+}
+
+double QMOperator::trace(OrbitalVector &phi) {
+    double result = 0.0;
+    for (int i = 0; i < phi.size(); i++) {
+        Orbital &phi_i = phi.getOrbital(i);
+        double occ_i = (double) phi_i.getOccupancy();
+        result += occ_i*(*this)(phi_i, phi_i);
     }
     return result;
 }
