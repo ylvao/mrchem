@@ -13,6 +13,7 @@ using namespace Eigen;
 Molecule::Molecule(const Nuclei &nucs, int c)
         : charge(c),
           nuclei(nucs),
+          energy(0),
           dipole(0),
           quadrupole(0),
           magnetizability(0),
@@ -25,6 +26,7 @@ Molecule::Molecule(const Nuclei &nucs, int c)
 
 Molecule::Molecule(const string &coord_file, int c)
         : charge(c),
+          energy(0),
           dipole(0),
           quadrupole(0),
           magnetizability(0),
@@ -38,6 +40,7 @@ Molecule::Molecule(const string &coord_file, int c)
 
 Molecule::Molecule(const vector<string> &coord_str, int c)
         : charge(c),
+          energy(0),
           dipole(0),
           quadrupole(0),
           magnetizability(0),
@@ -65,6 +68,7 @@ void Molecule::allocNuclearProperties() {
 }
 
 Molecule::~Molecule() {
+    clearSCFEnergy();
     clearDipoleMoment();
     //clearQuadrupoleMoment();
     clearMagnetizability();
@@ -91,6 +95,13 @@ void Molecule::freeNuclearProperties() {
     this->nmr = 0; 
     this->hfcc = 0; 
     this->sscc = 0; 
+}
+
+void Molecule::clearSCFEnergy() {
+    if (this->energy != 0) {
+        delete this->energy;
+        this->energy = 0;
+    }
 }
 
 void Molecule::clearDipoleMoment() {
@@ -173,6 +184,11 @@ void Molecule::clearOpticalRotation() {
     */
 }
 
+void Molecule::initSCFEnergy() {
+    if (this->energy != 0) MSG_WARN("SCFEnergy already initialized");
+    this->energy = new SCFEnergy();
+}
+
 void Molecule::initDipoleMoment() {
     if (this->dipole != 0) MSG_WARN("Dipole moment already initialized");
     this->dipole = new DipoleMoment();
@@ -252,6 +268,11 @@ void Molecule::initOpticalRotation(double omega) {
     OpticalRotation *optrot = new OpticalRotation(omega);
     this->optical_rotation.push_back(optrot);
     */
+}
+
+SCFEnergy& Molecule::getSCFEnergy() {
+    if (this->energy == 0) MSG_ERROR("Uninitialized SCF energy");
+    return *this->energy;
 }
 
 DipoleMoment& Molecule::getDipoleMoment() {
@@ -419,7 +440,7 @@ void Molecule::printGeometry() const {
 }
 
 void Molecule::printProperties() const {
-    println(0, this->energy);
+    if (this->energy != 0) println(0, *this->energy);
     if (this->dipole != 0) println(0, *this->dipole);
     if (this->magnetizability != 0) println(0, *this->magnetizability);
     if (this->nmr != 0) {

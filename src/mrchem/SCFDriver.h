@@ -43,7 +43,7 @@ protected:
     std::vector<double> gauge;
 
     // Run parameters
-    bool calc_total_energy;
+    bool calc_scf_energy;
     bool calc_dipole_moment;
     bool calc_quadrupole_moment;
     bool calc_polarizability;

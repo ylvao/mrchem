@@ -52,7 +52,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     gauge = input.getDblVec("World.gauge_origin");
     center_of_mass = input.get<bool>("World.center_of_mass");
 
-    calc_total_energy = input.get<bool>("Properties.total_energy");
+    calc_scf_energy = input.get<bool>("Properties.scf_energy");
     calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
     calc_quadrupole_moment = input.get<bool>("Properties.quadrupole_moment");
     calc_magnetizability = input.get<bool>("Properties.magnetizability");
@@ -232,6 +232,7 @@ void SCFDriver::setup() {
         }
     }
 
+    if (calc_scf_energy) molecule->initSCFEnergy();
     if (calc_dipole_moment) molecule->initDipoleMoment();
     if (calc_quadrupole_moment) molecule->initQuadrupoleMoment();
     if (calc_magnetizability) molecule->initMagnetizability();
@@ -474,14 +475,13 @@ bool SCFDriver::runGroundState() {
 }
 
 void SCFDriver::calcGroundStateProperties() {
-    if (calc_total_energy) {
+    if (calc_scf_energy) {
         SCFEnergy &energy = molecule->getSCFEnergy();
         fock->setup(rel_prec);
         energy.compute(*nuclei);
         energy.compute(*fock, *phi, F);
         fock->clear();
     }
-
     if (calc_dipole_moment) {
         Vector3d &nuc = molecule->getDipoleMoment().getNuclear();
         Vector3d &el = molecule->getDipoleMoment().getElectronic();

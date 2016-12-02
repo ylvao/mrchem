@@ -37,6 +37,8 @@ public:
     int getNNuclei() const { return this->nuclei.size(); }
     int getNElectrons() const;
 
+    const double *getCenterOfMass() const { return this->COM; }
+
     Nuclei &getNuclei() { return this->nuclei; }
     Nucleus &getNucleus(int i) { return this->nuclei[i]; }
     const Nucleus &getNucleus(int i) const { return this->nuclei[i]; }
@@ -44,9 +46,7 @@ public:
     void printGeometry() const;
     void printProperties() const;
 
-    SCFEnergy &getSCFEnergy() { return this->energy; }
-    const double *getCenterOfMass() const { return this->COM; }
-
+    void initSCFEnergy();
     void initDipoleMoment();
     void initMagnetizability();
     void initQuadrupoleMoment();
@@ -56,6 +56,7 @@ public:
     void initPolarizability(double omega);
     void initOpticalRotation(double omega);
 
+    SCFEnergy &getSCFEnergy();
     DipoleMoment &getDipoleMoment();
     QuadrupoleMoment& getQuadrupoleMoment();
     Magnetizability& getMagnetizability();
@@ -71,7 +72,7 @@ protected:
 
     // Properties
     double COM[3];
-    SCFEnergy energy;
+    SCFEnergy *energy;
     DipoleMoment *dipole;
     QuadrupoleMoment *quadrupole;
     Magnetizability *magnetizability;
@@ -86,6 +87,7 @@ protected:
     void allocNuclearProperties();
     void freeNuclearProperties();
 
+    void clearSCFEnergy();
     void clearDipoleMoment();
     void clearQuadrupoleMoment();
     void clearMagnetizability();
