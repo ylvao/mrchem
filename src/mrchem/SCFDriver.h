@@ -13,8 +13,13 @@ class OrbitalVector;
 class OrbitalOptimizer;
 class EnergyOptimizer;
 class GroundStateSolver;
+class LinearResponseSolver;
 class HelmholtzOperatorSet;
 class KAIN;
+
+class PSOOperator;
+class DipoleOperator;
+class AngularMomentumOperator;
 
 class QMOperator;
 class FockOperator;
@@ -24,6 +29,46 @@ class NuclearPotential;
 class ExchangePotential;
 class XCPotential;
 class XCFunctional;
+
+
+class ResponseCalculation {
+public:
+    ResponseCalculation(QMOperator *h, double w, bool im, int d)
+        : pert(h), freq(w), imag(im), dir(d) { }
+
+    bool isDynamic() const { if (fabs(this->freq) > MachineZero) return true; return false; }
+    bool isImaginary() const { return this->imag; }
+
+    QMOperator *pert;
+    double freq;
+    bool imag;
+    int dir;
+};
+
+class ResponseCalculations {
+public:
+    void push_back(QMOperator *h, double w, bool im, int d) {
+        ResponseCalculation rsp_calc(h, w, im, d);
+        bool unique = false;
+        for (int i = 0; i < this->calculations.size(); i++) {
+            const ResponseCalculation &i_calc = calculations[i];
+            if (i_calc.pert != rsp_calc.pert) unique = true;
+            if (fabs(i_calc.freq - rsp_calc.freq) > MachineZero) unique = true;
+            if (i_calc.dir != rsp_calc.dir) unique = true;
+        }
+        if (unique) {
+            this->calculations.push_back(rsp_calc);
+        }
+    }
+
+    void clear() { this->calculations.clear(); }
+
+    int size() const { return this->calculations.size(); }
+    const ResponseCalculation &operator[](int i) const { return this->calculations[i]; }
+
+protected:
+    std::vector<ResponseCalculation> calculations;
+};
 
 class SCFDriver {
 public:
@@ -53,6 +98,7 @@ protected:
     bool calc_nmr_shielding;
     bool calc_spin_spin_coupling;
     bool calc_hyperfine_coupling;
+    ResponseCalculations rsp_calculations;
 
     bool pol_velocity;
     bool optrot_velocity;
@@ -83,7 +129,6 @@ protected:
 
     // Ground state input
     std::string scf_start;
-    std::string scf_acc;
     int scf_history;
     int scf_max_iter;
     int scf_rotation;
@@ -94,6 +139,18 @@ protected:
     double scf_property_thrs;
     double scf_lambda_thrs;
     std::vector<double> scf_orbital_prec;
+
+    // Linear response input
+    std::string rsp_start;
+    int rsp_history;
+    int rsp_max_iter;
+    bool rsp_run;
+    bool rsp_localize;
+    bool rsp_write_orbitals;
+    double rsp_orbital_thrs;
+    double rsp_property_thrs;
+    std::vector<int> rsp_directions;
+    std::vector<double> rsp_orbital_prec;
 
     // File input
     std::string file_start_orbitals;
@@ -131,21 +188,41 @@ protected:
     FockOperator *fock_np1;
     Eigen::MatrixXd F_np1;
 
+    // Perturbed quantities
+    OrbitalVector *phi_x;
+    OrbitalVector *phi_y;
+    CoulombPotential *dJ;
+    ExchangePotential *dK;
+    XCPotential *dXC;
+    FockOperator *d_fock;
+
     // XCFun
     XCFunctional *xcfun;
+
+    // Perturbation operators
+    DipoleOperator **h_E;           // dH/dE   [x,y,z]
+    AngularMomentumOperator **h_B;  // dH/dB   [x,y,z]
+    PSOOperator ***h_M;             // dH/dM_K [x,y,z]
 
     bool sanityCheck() const;
 
     bool runGroundState();
-    bool runLinearResponse();
+    void runLinearResponse(const ResponseCalculation &rsp_calc);
 
     void calcGroundStateProperties();
     void calcLinearResponseProperties();
 
     void setupInitialGroundState();
+    void setupPerturbedOperators(const ResponseCalculation &rsp_calc);
+    void setupPerturbedOrbitals(bool dynamic);
+
+    void clearPerturbedOperators();
+    void clearPerturbedOrbitals(bool dynamic);
+
     GroundStateSolver *setupInitialGuessSolver();
     OrbitalOptimizer *setupOrbitalOptimizer();
     EnergyOptimizer *setupEnergyOptimizer();
+    LinearResponseSolver* setupLinearResponseSolver(bool dynamic);
 
     void setup_np1();
     void clear_np1();

@@ -20,6 +20,7 @@
 #include "HelmholtzOperatorSet.h"
 #include "OrbitalOptimizer.h"
 #include "EnergyOptimizer.h"
+//#include "LinearResponseSolver.h"
 #include "KAIN.h"
 
 #include "Molecule.h"
@@ -101,6 +102,17 @@ SCFDriver::SCFDriver(Getkw &input) {
     scf_lambda_thrs = input.get<double>("SCF.lambda_thrs");
     scf_orbital_prec = input.getDblVec("SCF.orbital_prec");
 
+    rsp_run = input.get<bool>("Response.run");
+    rsp_start = input.get<string>("Response.initial_guess");
+    rsp_history = input.get<int>("Response.history");
+    rsp_max_iter = input.get<int>("Response.max_iter");
+    rsp_localize = input.get<bool>("Response.localize");
+    rsp_write_orbitals = input.get<bool>("Response.write_orbitals");
+    rsp_orbital_thrs = input.get<double>("Response.orbital_thrs");
+    rsp_property_thrs = input.get<double>("Response.property_thrs");
+    rsp_directions = input.getIntVec("Response.directions");
+    rsp_orbital_prec = input.getDblVec("Response.orbital_prec");
+
     file_start_orbitals = input.get<string>("Files.start_orbitals");
     file_final_orbitals = input.get<string>("Files.final_orbitals");
     file_basis_set = input.get<string>("Files.basis_set");
@@ -133,6 +145,15 @@ SCFDriver::SCFDriver(Getkw &input) {
     fock_np1 = 0;
 
     xcfun = 0;
+
+    dJ = 0;
+    dK = 0;
+    dXC = 0;
+    d_fock = 0;
+
+    h_E = 0;
+    h_B = 0;
+    h_M = 0;
 }
 
 bool SCFDriver::sanityCheck() const {
@@ -235,11 +256,32 @@ void SCFDriver::setup() {
     if (calc_scf_energy) molecule->initSCFEnergy();
     if (calc_dipole_moment) molecule->initDipoleMoment();
     if (calc_quadrupole_moment) molecule->initQuadrupoleMoment();
-    if (calc_magnetizability) molecule->initMagnetizability();
+    if (calc_magnetizability) {
+        molecule->initMagnetizability();
+        //for (int d = 0; d < 3; d++) {
+        //    if (rsp_directions[d] == 0) continue;
+        //    if (h_B[d] == 0) h_B[d] = new AngularMomentumOperator(d, r_O);
+        //    rsp_calculations.push_back(h_B[d], 0.0, true, d);
+        //}
+    }
     if (calc_nmr_shielding) {
         for (int k = 0; k < nmr_nucleus_k.size(); k++) {
             int K = nmr_nucleus_k[k];
             molecule->initNMRShielding(K);
+            if (nmr_perturbation == "B") {
+                //for (int d = 0; d < 3; d++) {
+                //    if (rsp_directions[d] == 0) continue;
+                //    if (h_B[d] == 0) h_B[d] = new AngularMomentumOperator(d, r_O);
+                //    rsp_calculations.addPerturbation(h_B[d], 0.0, true, d);
+                //}
+            } else {
+                //const double *r_K = molecule->getNucleus(K).getCoord();
+                //for (int d = 0; d < 3; d++) {
+                //    if (rsp_directions[d] == 0) continue;
+                //    if (h_M[K][d] == 0) h_M[K][d] = new PSOOperator(d, r_K);
+                //    rsp_calculations.addPerturbation(h_M[K][d], 0.0, true, d);
+                //}
+            }
         }
     }
     if (calc_hyperfine_coupling) {
@@ -259,7 +301,13 @@ void SCFDriver::setup() {
     }
     if (calc_polarizability) {
         for (int i = 0; i < pol_frequency.size(); i++) {
-            molecule->initPolarizability(pol_frequency[i]);
+            double omega = pol_frequency[i];
+            molecule->initPolarizability(omega);
+            //for (int d = 0; d < 3; d++) {
+            //    if (rsp_directions[d] == 0) continue;
+            //    if (h_E[d] == 0) h_E[d] = new DipoleOperator(d, r_O);
+            //    rsp_calculations.push_back(h_E[d], omega, false, d);
+            //}
         }
     }
     if (calc_optical_rotation) {
@@ -315,6 +363,8 @@ void SCFDriver::clear() {
     if (XC != 0) delete XC;
     if (fock != 0) delete fock;
     if (xcfun != 0) delete xcfun;
+
+    if (h_E != 0) delete[] h_E;
 }
 
 /** Setup n+1 Fock operator for energy optimization */
@@ -415,20 +465,112 @@ EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
     return optimizer;
 }
 
+LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
+    if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
+
+    LinearResponseSolver *lrs = 0;
+    if (dynamic) {
+        NOT_IMPLEMENTED_ABORT;
+        //lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x, rsp_kain_y);
+    } else {
+        NOT_IMPLEMENTED_ABORT;
+        //lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x);
+    }
+    //lrs->setMaxIterations(rsp_max_iter);
+    //lrs->setThreshold(rsp_orbital_thrs, rsp_property_thrs);
+    //lrs->setOrbitalPrec(rsp_orbital_prec[0], rsp_orbital_prec[1]);
+    //lrs->setupUnperturbedSystem(*f_oper, *f_mat, *orbitals);
+
+    return lrs;
+}
+
+void SCFDriver::setupPerturbedOrbitals(bool dynamic) {
+    if (phi == 0) MSG_ERROR("Orbitals not initialized");
+
+    phi_x = new OrbitalVector(*phi);
+    if (dynamic) {
+        phi_y = new OrbitalVector(*phi);
+    } else {
+        phi_y = phi_x;
+    }
+}
+
+void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
+    if (phi_x != 0) delete phi_x;
+    if (dynamic) {
+        if (phi_y != 0) delete phi_y;
+    }
+    phi_x = 0;
+    phi_y = 0;
+}
+
+void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
+    if (phi == 0) MSG_ERROR("Orbitals not initialized");
+    if (phi_x == 0) MSG_ERROR("X orbitals not initialized");
+    if (phi_y == 0) MSG_ERROR("Y orbitals not initialized");
+
+    double xFac = 0.0;
+    if (wf_method == "HF") {
+        xFac = 1.0;
+    } else if (wf_method == "DFT") {
+        xFac = dft_x_fac;
+    }
+    if (xFac > MachineZero) {
+        NOT_IMPLEMENTED_ABORT;
+        //dK = new ExchangeHessian(*P, *orbitals, x_orbs, y_orbs, xFac);
+    }
+
+    QMOperator &dH = *rsp_calc.pert;
+    if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) {
+        NOT_IMPLEMENTED_ABORT;
+        //dJ = new CoulombHessian(*P, *orbitals, x_orbs, y_orbs);
+        //if (wf_method == "DFT") {
+        //    xcfun_2 = new XCFunctional(dft_spin, 2);
+        //    xcfun_2->setDensityCutoff(dft_cutoff[1]);
+        //    for (int i = 0; i < dft_func_names.size(); i++) {
+        //        xcfun_2->setFunctional(dft_func_names[i], dft_func_coefs[i]);
+        //    }
+        //    if (xcfun_2 == 0) MSG_ERROR("xcfun not initialized");
+        //    dXC = new XCHessian(*xcfun_2, *orbitals, x_orbs, y_orbs);
+        //}
+    }
+
+    d_fock = new FockOperator(0, 0, dJ, dK, dXC);
+    d_fock->addPerturbationOperator(dH);
+}
+
+void SCFDriver::clearPerturbedOperators() {
+    if (dJ != 0) delete dJ;
+    if (dK != 0) delete dK;
+    if (dXC != 0) delete dXC;
+    if (d_fock != 0) delete d_fock;
+
+    dJ = 0;
+    dK = 0;
+    dXC = 0;
+    d_fock = 0;
+}
+
+
 void SCFDriver::run() {
     bool converged = true;
     if (not sanityCheck()) {
         return;
     }
-    setupInitialGroundState();
     if (scf_run) {
         converged = runGroundState();
     } else {
+        setupInitialGroundState();
         fock->setup(rel_prec);
         F = (*fock)(*phi, *phi);
         fock->clear();
+        calcGroundStateProperties();
     }
-    calcGroundStateProperties();
+    if (converged) {
+        for (int i = 0; i < rsp_calculations.size(); i++) {
+            runLinearResponse(rsp_calculations[i]);
+        }
+    }
 
     printEigenvalues(*phi, F);
     molecule->printGeometry();
@@ -438,8 +580,10 @@ void SCFDriver::run() {
 bool SCFDriver::runGroundState() {
     if (phi == 0) MSG_ERROR("Orbitals not initialized");
     if (fock == 0) MSG_ERROR("Fock operator not initialized");
-
     bool converged = false;
+
+    // Setup initial guess
+    setupInitialGroundState();
 
     // Optimize orbitals
     if (scf_orbital_thrs > 0.0) {
@@ -467,11 +611,32 @@ bool SCFDriver::runGroundState() {
         delete solver;
     }
 
-    if (scf_write_orbitals) {
-        NOT_IMPLEMENTED_ABORT;
-    }
+    if (scf_write_orbitals) NOT_IMPLEMENTED_ABORT;
+
+    // Compute requested properties
+    if (converged) calcGroundStateProperties();
 
     return converged;
+}
+
+void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
+    double omega = rsp_calc.freq;
+    setupPerturbedOrbitals(omega);
+    setupPerturbedOperators(rsp_calc);
+
+    LinearResponseSolver *solver = setupLinearResponseSolver(omega);
+    //solver->setup(omega, *df_oper, *phi_x, *phi_y);
+    //bool converged = solver->optimize();
+    //solver->clear();
+    //delete solver;
+
+    if (rsp_write_orbitals) NOT_IMPLEMENTED_ABORT;
+
+    // Compute requested properties
+    //if (converged) calcLinearResponseProperties(rsp_calc);
+
+    clearPerturbedOperators();
+    clearPerturbedOrbitals(omega);
 }
 
 void SCFDriver::calcGroundStateProperties() {
