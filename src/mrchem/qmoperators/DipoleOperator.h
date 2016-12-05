@@ -87,5 +87,7 @@ protected:
     }
 };
 
+typedef class DipoleOperator PositionOperator;
+
 #endif // DIPOLEOPERATOR_H
 

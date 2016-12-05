@@ -15,15 +15,7 @@ MomentumOperator::MomentumOperator(int dir, double prec)
       diff_oper(*MRA, 0.0, 0.0) {
 }
 
-void MomentumOperator::setup(double prec) {
-    QMOperator::setup(prec);
-}
-
-void MomentumOperator::clear() {
-    QMOperator::clear();
-}
-
-Orbital* MomentumOperator::operator() (Orbital &orb_p) {
+Orbital* MomentumOperator::operator()(Orbital &orb_p) {
     Timer timer;
     MWDerivative<3> apply(this->max_scale);
     Orbital *dOrb_p = new Orbital(orb_p);

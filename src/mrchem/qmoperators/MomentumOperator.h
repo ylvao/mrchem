@@ -10,12 +10,12 @@ public:
     MomentumOperator(int dir, double prec = -1.0);
     virtual ~MomentumOperator() { }
 
-    virtual void setup(double prec);
-    virtual void clear();
+    virtual void setup(double prec) { QMOperator::setup(prec); }
+    virtual void clear() { QMOperator::clear(); }
 
     virtual int printTreeSizes() const;
 
-    virtual Orbital* operator() (Orbital &orb_p);
+    virtual Orbital* operator()(Orbital &orb_p);
     virtual Orbital* adjoint(Orbital &orb_p);
 
     using QMOperator::operator();
