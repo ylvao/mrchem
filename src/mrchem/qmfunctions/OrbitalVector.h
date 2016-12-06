@@ -24,8 +24,6 @@ public:
 //    void readOrbitals(const std::string &of);
 
     void normalize();
-    void orthogonalize();
-    void orthogonalize(OrbitalVector &phi);
 
     Eigen::MatrixXcd calcOverlapMatrix();
     Eigen::MatrixXcd calcOverlapMatrix(OrbitalVector &ket);

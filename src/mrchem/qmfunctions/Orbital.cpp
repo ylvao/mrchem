@@ -136,10 +136,6 @@ void Orbital::normalize() {
     if (hasImag()) this->im() *= 1.0/norm;
 }
 
-void Orbital::orthogonalize(Orbital &phi) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 //send an orbital with MPI
 void Orbital::send_Orbital(int dest, int tag){
 #ifdef HAVE_MPI

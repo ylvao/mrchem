@@ -447,44 +447,6 @@ void OrbitalVector::normalize() {
     }
 }
 
-/** Gram-Schmidt orthogonalize the orbitals in the set
- *
- * Nothing happens to the Fock matrix in this process.
- */
-void OrbitalVector::orthogonalize() {
-    NOT_IMPLEMENTED_ABORT;
-//    Timer rolex;
-//    for (int i = 0; i < this->size(); i++) {
-//        Orbital &iOrb = getOrbital(i);
-//        for (int j = 0; j < i; j++) {
-//            Orbital &jOrb = getOrbital(j);
-//            iOrb.orthogonalize(jOrb);
-//            iOrb.crop(prec);
-//        }
-//    }
-//    printout(0, "Orthogonalizing                                  ");
-//    printout(0, rolex.elapsed() << endl);
-}
-
-/** Orthogonalize all orbitals in this set against all orbitals in the input set
- *
- * Orbitals are NOT orthogonalized within this set
- */
-void OrbitalVector::orthogonalize(OrbitalVector &orbs) {
-    NOT_IMPLEMENTED_ABORT;
-//    Timer rolex;
-//    for (int i = 0; i < this->size(); i++) {
-//        Orbital &iOrb = getOrbital(i);
-//        for (int j = 0; j < orbs.size(); j++) {
-//            Orbital &jOrb = orbs.getOrbital(j);
-//            iOrb.orthogonalize(jOrb);
-//            iOrb.crop(prec);
-//        }
-//    }
-//    printout(0, "Orthogonalizing                                  ");
-//    printout(0, rolex.elapsed() << endl);
-}
-
 /** Calculate overlap matrix within orbital set */
 MatrixXcd OrbitalVector::calcOverlapMatrix() {
     OrbitalVector &bra = *this;
