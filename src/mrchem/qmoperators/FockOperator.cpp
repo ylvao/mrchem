@@ -77,29 +77,28 @@ void FockOperator::rotate(MatrixXd &U) {
 }
 
 Orbital* FockOperator::operator() (Orbital &orb_p) {
-    NOT_IMPLEMENTED_ABORT;
-//    Timer timer;
-//    FunctionTreeVector orbs;
-//    if (this->T != 0) orbs.push_back((*this->T)(orb_p));
-//    if (this->V != 0) orbs.push_back((*this->V)(orb_p));
-//    if (this->J != 0) orbs.push_back((*this->J)(orb_p));
-//    if (this->K != 0) orbs.push_back((*this->K)(orb_p));
-//    if (this->XC != 0) orbs.push_back((*this->XC)(orb_p));
-//    for (int i = 0; i < getNPerturbations(); i++) {
-//        QMOperator &h1 = getPerturbationOperator(i);
-//        orbs.push_back(h1(orb_p));
-//    }
+    vector<Orbital *> orbs;
+    if (this->T != 0) orbs.push_back((*this->T)(orb_p));
+    if (this->V != 0) orbs.push_back((*this->V)(orb_p));
+    if (this->J != 0) orbs.push_back((*this->J)(orb_p));
+    if (this->K != 0) orbs.push_back((*this->K)(orb_p));
+    if (this->XC != 0) orbs.push_back((*this->XC)(orb_p));
+    for (int i = 0; i < getNPerturbations(); i++) {
+        QMOperator &h1 = getPerturbationOperator(i);
+        orbs.push_back(h1(orb_p));
+    }
 
-//    Orbital *result = new Orbital(orb_p);
-//    ->add(orbs, 0);
-//    double time = timer.elapsed();
-//    int nNodes = result->getNNodes();
-//    TelePrompter::printTree(1, "Sum Fock operator", nNodes, time);
-//    for (int n = 0; n < orbs.size(); n++) {
-//        delete orbs[n];
-//        orbs[n] = 0;
-//    }
-//    return result;
+    vector<complex<double> > coefs;
+    for (int i = 0; i < orbs.size(); i++) coefs.push_back(1.0);
+
+    Orbital *result = new Orbital(orb_p);
+    this->add(*result, coefs, orbs, true);
+
+    for (int n = 0; n < orbs.size(); n++) {
+        if (orbs[n] != 0) delete orbs[n];
+        orbs[n] = 0;
+    }
+    return result;
 }
 
 Orbital* FockOperator::adjoint(Orbital &orb_p) {
@@ -250,24 +249,14 @@ MatrixXd FockOperator::applyAdjointKinetic(OrbitalVector &i_orbs, OrbitalVector 
 }
 
 Orbital* FockOperator::applyPotential(Orbital &orb_p) {
-    vector<double> coefs;
     vector<Orbital *> orbs;
-    if (this->V != 0) {
-        coefs.push_back(1.0);
-        orbs.push_back((*this->V)(orb_p));
-    }
-    if (this->J != 0) {
-        coefs.push_back(1.0);
-        orbs.push_back((*this->J)(orb_p));
-    }
-    if (this->K != 0) {
-        coefs.push_back(1.0);
-        orbs.push_back((*this->K)(orb_p));
-    }
-    if (this->XC != 0) {
-        coefs.push_back(1.0);
-        orbs.push_back((*this->XC)(orb_p));
-    }
+    if (this->V != 0) orbs.push_back((*this->V)(orb_p));
+    if (this->J != 0) orbs.push_back((*this->J)(orb_p));
+    if (this->K != 0) orbs.push_back((*this->K)(orb_p));
+    if (this->XC != 0) orbs.push_back((*this->XC)(orb_p));
+
+    vector<complex<double> > coefs;
+    for (int i = 0; i < orbs.size(); i++) coefs.push_back(1.0);
 
     Timer timer;
     Orbital *result = new Orbital(orb_p);

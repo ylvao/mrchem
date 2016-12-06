@@ -13,8 +13,8 @@ OrbitalAdder::OrbitalAdder(double prec)
 }
 
 void OrbitalAdder::operator()(Orbital &phi_ab,
-                              double a, Orbital &phi_a,
-                              double b, Orbital &phi_b,
+                              complex<double> a, Orbital &phi_a,
+                              complex<double> b, Orbital &phi_b,
                               bool union_grid) {
     double prec = this->add.getPrecision();
     if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
@@ -23,11 +23,20 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
 
-    if (phi_a.hasReal()) rvec.push_back(a, &phi_a.re());
-    if (phi_b.hasReal()) rvec.push_back(b, &phi_b.re());
+    bool aHasReal = (fabs(a.real()) > MachineZero);
+    bool aHasImag = (fabs(a.imag()) > MachineZero);
+    bool bHasReal = (fabs(b.real()) > MachineZero);
+    bool bHasImag = (fabs(b.imag()) > MachineZero);
 
-    if (phi_a.hasImag()) ivec.push_back(a, &phi_a.im());
-    if (phi_b.hasImag()) ivec.push_back(b, &phi_b.im());
+    if (phi_a.hasReal() and aHasReal) rvec.push_back(a.real(), &phi_a.re());
+    if (phi_b.hasReal() and bHasReal) rvec.push_back(b.real(), &phi_b.re());
+    if (phi_a.hasImag() and aHasImag) rvec.push_back(-a.imag(), &phi_a.im());
+    if (phi_b.hasImag() and bHasImag) rvec.push_back(-b.imag(), &phi_b.im());
+
+    if (phi_a.hasReal() and aHasImag) ivec.push_back(a.imag(), &phi_a.re());
+    if (phi_b.hasReal() and bHasImag) ivec.push_back(b.imag(), &phi_b.re());
+    if (phi_a.hasImag() and aHasReal) ivec.push_back(a.real(), &phi_a.im());
+    if (phi_b.hasImag() and bHasReal) ivec.push_back(b.real(), &phi_b.im());
 
     if (rvec.size() > 0) {
         if (union_grid) {
@@ -52,7 +61,7 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
 }
 
 void OrbitalAdder::operator()(Orbital &out,
-                              std::vector<double> &coefs,
+                              std::vector<complex<double> > &coefs,
                               std::vector<Orbital *> &orbs,
                               bool union_grid) {
     double prec = this->add.getPrecision();
@@ -63,8 +72,17 @@ void OrbitalAdder::operator()(Orbital &out,
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
     for (int i = 0; i < orbs.size(); i++) {
-        if (orbs[i]->hasReal()) rvec.push_back(coefs[i], &orbs[i]->re());
-        if (orbs[i]->hasImag()) ivec.push_back(coefs[i], &orbs[i]->im());
+        bool cHasReal = (fabs(coefs[i].real()) > MachineZero);
+        bool cHasImag = (fabs(coefs[i].imag()) > MachineZero);
+
+        bool oHasReal = orbs[i]->hasReal();
+        bool oHasImag = orbs[i]->hasImag();
+
+        if (cHasReal and oHasReal) rvec.push_back(coefs[i].real(), &orbs[i]->re());
+        if (cHasImag and oHasImag) rvec.push_back(-coefs[i].imag(), &orbs[i]->im());
+
+        if (cHasImag and oHasReal) ivec.push_back(coefs[i].imag(), &orbs[i]->re());
+        if (cHasReal and oHasImag) ivec.push_back(coefs[i].real(), &orbs[i]->im());
     }
 
     if (rvec.size() > 0) {
@@ -161,7 +179,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
     if(phi.size()%MPI_size)cout<<"NOT YET IMPLEMENTED"<<endl;
 
     int maxOrb =10;//to put into constants.h , or set dynamically?
-    std::vector<double> U_Chunk;
+    std::vector<complex<double> > U_Chunk;
     std::vector<Orbital *> orbChunk;
     for (int i = 0; i <phi.size(); i++) {
       out.getOrbital(i).clear(true);//
@@ -236,7 +254,7 @@ void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     tmp.clear(false);   // Clear pointers
 }
 
-void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
+void OrbitalAdder::inPlace(Orbital &out, complex<double> c, Orbital &inp) {
     Orbital tmp(out);//shallow copy
     (*this)(tmp, 1.0, out, c, inp, true); // Union grid
     out.clear(true);    // Delete pointers
@@ -244,17 +262,19 @@ void OrbitalAdder::inPlace(Orbital &out, double c, Orbital &inp) {
     tmp.clear(false);   // Clear pointers
 }
 
-void OrbitalAdder::inPlace(Orbital &out, std::vector<double> &c,std::vector<Orbital *> &inp,
-                              bool union_grid) {
-    Orbital tmp(out);//shallow copy
+void OrbitalAdder::inPlace(Orbital &out,
+                           vector<complex<double> > &c,
+                           vector<Orbital *> &inp,
+                           bool union_grid) {
+    Orbital tmp(out);   // Shallow copy
     inp.push_back(&out);
     c.push_back(1.0);
     (*this)(tmp, c, inp, union_grid);
     out.clear(true);    // Delete pointers
     out = tmp;          // Copy pointers
     tmp.clear(false);   // Clear pointers
-    inp.pop_back();//restore vector
-    c.pop_back();//restore vector
+    inp.pop_back();     // Restore vector
+    c.pop_back();       // Restore vector
    
 }
 
@@ -267,3 +287,43 @@ void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {
         this->inPlace(out_i, c, inp_i);
     }
 }
+
+/** Orthogonalize the out orbital against inp
+ */
+void OrbitalAdder::orthogonalize(Orbital &out, Orbital &inp) {
+    complex<double> inner_prod = out.dot(inp);
+    double norm = inp.getSquareNorm();
+    inPlace(out, -(inner_prod/norm), inp);
+}
+
+/** Orthogonalize the out orbital against all orbitals in inp
+ */
+void OrbitalAdder::orthogonalize(Orbital &out, OrbitalVector &inp) {
+    for (int i = 0; i < inp.size(); i++) {
+        Orbital &inp_i = inp.getOrbital(i);
+        orthogonalize(out, inp_i);
+    }
+}
+
+/** Orthogonalize all orbitals in out against the inp orbital
+ *
+ * Orbitals are NOT orthogonalized within the out set
+ */
+void OrbitalAdder::orthogonalize(OrbitalVector &out, Orbital &inp) {
+    for (int i = 0; i < out.size(); i++) {
+        Orbital &out_i = out.getOrbital(i);
+        orthogonalize(out_i, inp);
+    }
+}
+
+/** Orthogonalize all orbitals in out against all orbitals in inp
+ *
+ * Orbitals are NOT orthogonalized within the out set
+ */
+void OrbitalAdder::orthogonalize(OrbitalVector &out, OrbitalVector &inp) {
+    for (int i = 0; i < out.size(); i++) {
+        Orbital &out_i = out.getOrbital(i);
+        orthogonalize(out_i, inp);
+    }
+}
+

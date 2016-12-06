@@ -17,12 +17,12 @@ public:
     void setPrecision(double prec) { this->add.setPrecision(prec); }
 
     void operator()(Orbital &phi_ab,
-                    double a, Orbital &phi_a,
-                    double b, Orbital &phi_b,
+                    std::complex<double> a, Orbital &phi_a,
+                    std::complex<double> b, Orbital &phi_b,
                     bool union_grid);
 
     void operator()(Orbital &out,
-                    std::vector<double> &coefs,
+                    std::vector<std::complex<double> > &coefs,
                     std::vector<Orbital *> &orbs,
                     bool union_grid);
 
@@ -42,9 +42,13 @@ public:
     void rotate_P(OrbitalVector &out, const Eigen::MatrixXd &U);
 
     void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
-    void inPlace(Orbital &out, std::vector<double> &coefs,std::vector<Orbital *> &inp,
-                    bool union_grid);
-    void inPlace(Orbital &out, double c, Orbital &inp);
+    void inPlace(Orbital &out, std::vector<std::complex<double> > &coefs, std::vector<Orbital *> &inp, bool union_grid);
+    void inPlace(Orbital &out, std::complex<double> c, Orbital &inp);
+
+    void orthogonalize(Orbital &out, Orbital &inp);
+    void orthogonalize(Orbital &out, OrbitalVector &inp);
+    void orthogonalize(OrbitalVector &out, Orbital &inp);
+    void orthogonalize(OrbitalVector &out, OrbitalVector &inp);
 
 protected:
     MWAdder<3> add;

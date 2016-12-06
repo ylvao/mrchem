@@ -51,7 +51,7 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
     this->mult.setPrecision(this->apply_prec);
 
     int maxNodes = 0;
-    vector<double> coef_vec;
+    vector<complex<double> > coef_vec;
     vector<Orbital *> orb_vec;
     int nOrbs = this->orbitals_0->size();
     for (int i = 0; i < nOrbs; i++) {

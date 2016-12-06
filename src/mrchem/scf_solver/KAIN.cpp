@@ -123,7 +123,7 @@ void KAIN::expandSolution(OrbitalVector &phi,
         if (this->sepOrbitals) {
             m = n;
         }
-        vector<double> totCoefs;
+        vector<complex<double> > totCoefs;
         vector<Orbital *> totOrbs;
 
         Orbital &phi_m = this->orbitals[nHistory]->getOrbital(n);
@@ -135,7 +135,7 @@ void KAIN::expandSolution(OrbitalVector &phi,
         // but we define the updates (lowercase f) with opposite sign
         // (but not the orbitals themselves).
         for (int j = 0; j < nHistory; j++) {
-            vector<double> partCoefs;
+            vector<complex<double> > partCoefs;
             vector<Orbital *> partOrbs;
 
             Orbital &phi_j = this->orbitals[j]->getOrbital(n);

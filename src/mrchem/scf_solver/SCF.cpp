@@ -268,7 +268,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 }
 
 Orbital* SCF::calcMatrixPart(int i, MatrixXd &M, OrbitalVector &phi) {
-    vector<double> coefs;
+    vector<complex<double> > coefs;
     vector<Orbital *> orbs;
 
     int nOrbs = phi.size();
