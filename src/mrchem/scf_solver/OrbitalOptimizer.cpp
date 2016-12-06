@@ -98,7 +98,7 @@ bool OrbitalOptimizer::optimize() {
 
         // Employ KAIN accelerator
         if (this->kain != 0) {
-            this->kain->setPrecision(this->orbPrec[0]);
+            this->kain->setPrecision(getOrbitalPrecision());
             this->kain->accelerate(phi_n, dPhi_n);
         }
 
