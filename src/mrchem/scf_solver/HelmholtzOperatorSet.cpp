@@ -12,7 +12,7 @@ using namespace Eigen;
 HelmholtzOperatorSet::HelmholtzOperatorSet(double build, double thrs)
     : threshold(thrs),
       build_prec(build),
-      apply(-1.0, MRA->getMaxScale()) {
+      apply(-1.0, MRA->getMaxScale(), true) {
 }
 
 void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
