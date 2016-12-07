@@ -109,7 +109,7 @@ bool EnergyOptimizer::optimize() {
 
         // Finalize SCF cycle
         timer.stop();
-        printOrbitals(F_n, phi_n);
+        printOrbitals(F_n.diagonal(), phi_n);
         printProperty();
         printTimer(timer.getWallTime());
 

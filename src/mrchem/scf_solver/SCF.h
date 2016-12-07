@@ -56,7 +56,7 @@ protected:
     void printUpdate(const std::string &name, double P, double dP) const;
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
 
-    void printOrbitals(const Eigen::MatrixXd &F, const OrbitalVector &phi) const;
+    void printOrbitals(const Eigen::VectorXd &epsilon, const OrbitalVector &phi) const;
     void printConvergence(bool converged) const;
     void printCycle() const;
     void printTimer(double t) const;

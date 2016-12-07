@@ -110,7 +110,7 @@ double SCF::getUpdate(const vector<double> &vec, int i, bool absPrec) const {
     return E_diff;
 }
 
-void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
+void SCF::printOrbitals(const VectorXd &epsilon, const OrbitalVector &phi) const {
     TelePrompter::printHeader(0, "Orbitals");
     println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
     TelePrompter::printSeparator(0, '-');
@@ -119,7 +119,7 @@ void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
     for (int i = 0; i < phi.size(); i++) {
         const Orbital &phi_i = phi.getOrbital(i);
         printout(0, setw(3) << i);
-        printout(0, " " << setw(13) << F(i,i));
+        printout(0, " " << setw(13) << epsilon(i));
         printout(0, " " << setw(13) << phi_i.getError());
         printout(0, " " << setw(10) << phi_i.getNNodes());
         printout(0, setw(5) << phi_i.printSpin());

@@ -126,7 +126,7 @@ bool OrbitalOptimizer::optimize() {
 
         // Finalize SCF cycle
         timer.stop();
-        printOrbitals(F, phi_n);
+        printOrbitals(F.diagonal(), phi_n);
         printProperty();
         printTimer(timer.getWallTime());
 
