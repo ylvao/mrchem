@@ -288,10 +288,22 @@ void OrbitalAdder::inPlace(OrbitalVector &out, double c, OrbitalVector &inp) {
     }
 }
 
+/** Orthogonalize orbital within the set
+ */
+void OrbitalAdder::orthogonalize(OrbitalVector &out) {
+    for (int i = 0; i < out.size(); i++) {
+        Orbital &out_i = out.getOrbital(i);
+        for (int j = 0; j < i; j++) {
+            Orbital &out_j = out.getOrbital(j);
+            orthogonalize(out_j, out_i);
+        }
+    }
+}
+
 /** Orthogonalize the out orbital against inp
  */
 void OrbitalAdder::orthogonalize(Orbital &out, Orbital &inp) {
-    complex<double> inner_prod = out.dot(inp);
+    complex<double> inner_prod = inp.dot(out);
     double norm = inp.getSquareNorm();
     inPlace(out, -(inner_prod/norm), inp);
 }

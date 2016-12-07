@@ -45,6 +45,7 @@ public:
     void inPlace(Orbital &out, std::vector<std::complex<double> > &coefs, std::vector<Orbital *> &inp, bool union_grid);
     void inPlace(Orbital &out, std::complex<double> c, Orbital &inp);
 
+    void orthogonalize(OrbitalVector &out);
     void orthogonalize(Orbital &out, Orbital &inp);
     void orthogonalize(Orbital &out, OrbitalVector &inp);
     void orthogonalize(OrbitalVector &out, Orbital &inp);
