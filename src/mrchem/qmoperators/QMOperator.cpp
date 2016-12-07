@@ -21,7 +21,7 @@ double QMOperator::operator() (Orbital &orb_i, Orbital &orb_j) {
     delete operOrb;
 
     if (result.imag() > MachineZero) {
-        MSG_ERROR("Hermitian operator should have real expectation value");
+        MSG_WARN("Hermitian operator should have real expectation value " << result.imag());
     }
     return result.real();
 }
@@ -39,7 +39,7 @@ double QMOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
     delete operOrb;
 
     if (result.imag() > MachineZero) {
-        MSG_ERROR("Hermitian operator should have real expectation value");
+        MSG_WARN("Hermitian operator should have real expectation value " << result.imag());
     }
     return result.real();
 }
@@ -71,7 +71,7 @@ MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (result.imag().norm() > MachineZero) {
-        MSG_ERROR("Hermitian operator should have real expectation value");
+        MSG_WARN("Hermitian operator should have real expectation value " << result.imag().norm());
     }
     return result.real();
 }
@@ -103,7 +103,7 @@ MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     timer.stop();
     TelePrompter::printFooter(1, timer, 2);
     if (result.imag().norm() > MachineZero) {
-        MSG_ERROR("Hermitian operator should have real expectation value");
+        MSG_WARN("Hermitian operator should have real expectation value " << result.imag().norm());
     }
     return result.real();
 }
