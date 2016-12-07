@@ -50,6 +50,7 @@ public:
     double getExchangeFactor(const Orbital &orb) const;
 
     void normalize();
+    void operator*=(double c);
 
     char printSpin() const {
         char sp = 'u';

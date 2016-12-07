@@ -146,8 +146,12 @@ complex<double> Orbital::dot(Orbital &ket) {
 
 void Orbital::normalize() {
     double norm = sqrt(getSquareNorm());
-    if (hasReal()) this->re() *= 1.0/norm;
-    if (hasImag()) this->im() *= 1.0/norm;
+    *this *= 1.0/norm;
+}
+
+void Orbital::operator*=(double c) {
+    if (hasReal()) (*this->real) *= c;
+    if (hasImag()) (*this->imag) *= c;
 }
 
 //send an orbital with MPI
