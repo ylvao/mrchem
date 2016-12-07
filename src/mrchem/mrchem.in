@@ -322,6 +322,8 @@ def verify_response(rsp):
         rsp['orbital_prec'][1] = topsect['rel_prec'][0]
     if rsp['orbital_prec'][0] < 0:
         rsp['orbital_prec'][0] = rsp['orbital_prec'][1]
+    if rsp['property_thrs'][0] < 0:
+        rsp['property_thrs'][0] = 1.0
 
 def verify_pol(pol):
     if pol.get('wavelength').is_set():
