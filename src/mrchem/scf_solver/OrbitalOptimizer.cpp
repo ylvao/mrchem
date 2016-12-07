@@ -64,6 +64,9 @@ bool OrbitalOptimizer::optimize() {
         printCycle();
         adjustPrecision(err_o);
 
+        double orb_prec = getOrbitalPrecision();
+        double orb_thrs = getOrbitalThreshold();
+
         // Rotate orbitals
         if (needLocalization()) {
             localize(fock, F, phi_n);
@@ -97,10 +100,7 @@ bool OrbitalOptimizer::optimize() {
         phi_np1.clear();
 
         // Employ KAIN accelerator
-        if (this->kain != 0) {
-            this->kain->setPrecision(getOrbitalPrecision());
-            this->kain->accelerate(phi_n, dPhi_n);
-        }
+        if (this->kain != 0) this->kain->accelerate(orb_prec, phi_n, dPhi_n);
 
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
@@ -121,7 +121,7 @@ bool OrbitalOptimizer::optimize() {
         phi_n.setErrors(errors);
 
         // Compute Fock matrix
-        fock.setup(getOrbitalPrecision());
+        fock.setup(orb_prec);
         F = fock(phi_n, phi_n);
 
         // Finalize SCF cycle
@@ -130,7 +130,7 @@ bool OrbitalOptimizer::optimize() {
         printProperty();
         printTimer(timer.getWallTime());
 
-        if (err_o < getOrbitalThreshold()) {
+        if (err_o < orb_thrs) {
             converged = true;
             break;
         }

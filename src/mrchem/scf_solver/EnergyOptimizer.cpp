@@ -64,8 +64,11 @@ bool EnergyOptimizer::optimize() {
         printCycle();
         adjustPrecision(err_o);
 
+        double orb_prec = getOrbitalPrecision();
+        double prop_thrs = getPropertyThreshold();
+
         // Compute electronic energy
-        fock.setup(getOrbitalPrecision());
+        fock.setup(orb_prec);
         double E = calcProperty();
         this->property.push_back(E);
 
@@ -110,7 +113,7 @@ bool EnergyOptimizer::optimize() {
         printProperty();
         printTimer(timer.getWallTime());
 
-        if (err_p < getPropertyThreshold()) {
+        if (err_p < prop_thrs) {
             converged = true;
             break;
         }

@@ -202,10 +202,12 @@ bool Accelerator::verifyOverlap() {
  * is less than minHistory, the latest orbitals are copied directly into
  * the output sets without solving the linear problem. Existing input
  * orbitals and updates are replaced by new ones. */
-void Accelerator::accelerate(OrbitalVector &phi,
+void Accelerator::accelerate(double prec,
+                             OrbitalVector &phi,
                              OrbitalVector &dPhi,
                              MatrixXd *F,
                              MatrixXd *dF) {
+    this->add.setPrecision(prec);
     TelePrompter::printHeader(0, "Iterative subspace accelerator");
 
     Timer timer;
@@ -223,6 +225,7 @@ void Accelerator::accelerate(OrbitalVector &phi,
     }
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
+    this->add.setPrecision(-1.0);
 }
 
 void Accelerator::solveLinearSystem() {

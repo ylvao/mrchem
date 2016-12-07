@@ -29,9 +29,9 @@ public:
 
     void setMaxHistory(int max) { this->maxHistory = max; }
     void setMinHistory(int min) { this->minHistory = min; }
-    void setPrecision(double prec) { this->add.setPrecision(prec); }
 
-    void accelerate(OrbitalVector &phi,
+    void accelerate(double prec,
+                    OrbitalVector &phi,
                     OrbitalVector &dPhi,
                     Eigen::MatrixXd *F = 0,
                     Eigen::MatrixXd *dF = 0);
