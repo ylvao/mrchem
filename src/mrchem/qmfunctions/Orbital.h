@@ -18,7 +18,7 @@ public:
     virtual ~Orbital() { clear(); }
     void clear(bool free = true);
 
-    int getNNodes() const;
+    int getNNodes(int type = Total) const;
     int getSpin() const { return this->spin; }
     int getOccupancy() const { return this->occupancy; }
     double getError() const { return this->error; }
@@ -46,7 +46,7 @@ public:
     int compareOccupancy(const Orbital &orb) const;
 
     std::complex<double> dot(Orbital &ket);
-    double getSquareNorm() const;
+    double getSquareNorm(int type = Total) const;
     double getExchangeFactor(const Orbital &orb) const;
 
     void normalize();

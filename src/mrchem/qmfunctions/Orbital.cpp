@@ -57,18 +57,32 @@ void Orbital::allocImag() {
     this->imag = new FunctionTree<3>(*MRA);
 }
 
-int Orbital::getNNodes() const {
-    int nNodes = 0;
-    if (this->real != 0) nNodes += this->real->getNNodes();
-    if (this->imag != 0) nNodes += this->imag->getNNodes();
-    return nNodes;
+int Orbital::getNNodes(int type) const {
+    int rNodes = 0;
+    int iNodes = 0;
+    if (this->hasReal()) rNodes = this->real->getNNodes();
+    if (this->hasImag()) iNodes = this->imag->getNNodes();
+    if (type == Real) {
+        return rNodes;
+    }
+    if (type == Imag) {
+        return iNodes;
+    }
+    return rNodes + iNodes;
 }
 
-double Orbital::getSquareNorm() const {
-    double sqNorm = 0.0;
-    if (this->real != 0) sqNorm += this->real->getSquareNorm();
-    if (this->imag != 0) sqNorm += this->imag->getSquareNorm();
-    return sqNorm;
+double Orbital::getSquareNorm(int type) const {
+    double rNorm = 0;
+    double iNorm = 0;
+    if (this->hasReal()) rNorm = this->real->getSquareNorm();
+    if (this->hasImag()) iNorm = this->imag->getSquareNorm();
+    if (type == Real) {
+        return rNorm;
+    }
+    if (type == Imag) {
+        return iNorm;
+    }
+    return rNorm + iNorm;
 }
 
 void Orbital::compare(const Orbital &orb) const {
