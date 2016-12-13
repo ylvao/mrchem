@@ -143,6 +143,9 @@ bool OrbitalOptimizer::optimize() {
 
 /** Prints the number of trees and nodes kept in the solver at the given moment */
 void OrbitalOptimizer::printTreeSizes() const {
+    NOT_IMPLEMENTED_ABORT;
+    /*
+    void printTreeSizes() const;
     TelePrompter::printHeader(0, "Printing Tree Sizes");
 
     int nNodes = 0;
@@ -155,4 +158,5 @@ void OrbitalOptimizer::printTreeSizes() const {
     TelePrompter::printSeparator(0, '-');
     println(0," Total number of nodes                   " << setw(18) << nNodes);
     TelePrompter::printSeparator(0, '=', 2);
+*/
 }
