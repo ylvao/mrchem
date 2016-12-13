@@ -1,22 +1,29 @@
 #ifndef EXCHANGEOPERATOR_H
 #define EXCHANGEOPERATOR_H
 
-#include <Eigen/Core>
-
 #include "QMOperator.h"
-#include "OrbitalAdder.h"
-#include "OrbitalMultiplier.h"
-#include "PoissonOperator.h"
+#include "OrbitalVector.h"
+#include "MultiResolutionAnalysis.h"
 
-class OrbitalVector;
+class PoissonOperator;
+
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 class ExchangeOperator : public QMOperator {
 public:
-    ExchangeOperator(double prec, OrbitalVector &phi, double x_fac);
-    virtual ~ExchangeOperator();
+    ExchangeOperator(PoissonOperator &P, OrbitalVector &phi, double x_fac)
+            : QMOperator(MRA->getMaxScale()),
+              x_factor(x_fac),
+              poisson(&P),
+              orbitals(&phi),
+              screen(true) {
+        int nOrbs = this->orbitals->size();
+        this->tot_norms = Eigen::VectorXd::Zero(nOrbs);
+        this->part_norms = Eigen::MatrixXd::Zero(nOrbs, nOrbs);
+    }
+    virtual ~ExchangeOperator() { }
 
-    virtual void setup(double prec);
-    virtual void clear();
+    virtual void rotate(Eigen::MatrixXd &U) = 0;
 
     void setExchangeFactor(double x_fac) { this->x_factor = x_fac; }
     double getExchangeFactor() const { return this->x_factor; }
@@ -25,18 +32,23 @@ public:
     bool getScreen() const { return this->screen; }
 
 protected:
-    OrbitalAdder add;
-    OrbitalMultiplier mult;
-    PoissonOperator poisson;    ///< Poisson operator to compute potential
-
-    double x_factor;            ///< Exchange factor for Hybrid XC functionals
-    OrbitalVector *orbitals_0;  ///< The orbitals that define the exchange
+    double x_factor;            ///< Exchange factor for hybrid XC functionals
+    PoissonOperator *poisson;   ///< Pointer to external object
+    OrbitalVector *orbitals;    ///< Pointer to external object
 
     bool screen;                ///< Apply screening in exchange evaluation
     Eigen::VectorXd tot_norms;  ///< Total norms for use in screening
     Eigen::MatrixXd part_norms; ///< Partial norms for use in screening
 
-    double getScaledPrecision(int i, int j) const;
+    double getScaledPrecision(int i, int j) const {
+        double scaled_prec = this->apply_prec;
+        if (getScreen()) {
+            double tNorm = this->tot_norms(i);
+            double pNorm = std::max(this->part_norms(i,j), this->part_norms(j,i));
+            if (tNorm > 0.0) scaled_prec *= tNorm/pNorm;
+        }
+        return scaled_prec;
+    }
 };
 
 #endif // EXCHANGEOPERATOR_H

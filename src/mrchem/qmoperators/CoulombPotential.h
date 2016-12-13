@@ -5,8 +5,8 @@
 
 class CoulombPotential : public CoulombOperator {
 public:
-    CoulombPotential(double build_prec, OrbitalVector &phi)
-        : CoulombOperator(build_prec, phi) { }
+    CoulombPotential(PoissonOperator &P, OrbitalVector &phi)
+        : CoulombOperator(P, phi) { }
     virtual ~CoulombPotential() { }
 
     void setup(double prec);

@@ -6,7 +6,7 @@
 
 class ExchangePotential : public ExchangeOperator {
 public:
-    ExchangePotential(double prec, OrbitalVector &phi, double x_fac = 1.0);
+    ExchangePotential(PoissonOperator &P, OrbitalVector &phi, double x_fac = 1.0);
     virtual ~ExchangePotential() { }
 
     virtual void rotate(Eigen::MatrixXd &U);
@@ -19,8 +19,9 @@ public:
 
     using QMOperator::operator();
     using QMOperator::adjoint;
+
 protected:
-    OrbitalVector exchange_0;  ///< Set to keep precomputed exchange orbitals
+    OrbitalVector exchange;  ///< Set to keep precomputed exchange orbitals
 
     Orbital* calcExchange(Orbital &phi_p);
     Orbital* testPreComputed(Orbital &phi_p);

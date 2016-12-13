@@ -1,45 +1,41 @@
 #include "CoulombPotential.h"
+#include "DensityProjector.h"
+#include "PoissonOperator.h"
 #include "MWConvolution.h"
-
-extern MultiResolutionAnalysis<3> *MRA;
 
 using namespace std;
 
 void CoulombPotential::setup(double prec) {
+    QMOperator::setup(prec);
+
     if (this->orbitals == 0) MSG_ERROR("Orbitals not initialized");
+    OrbitalVector &phi = *this->orbitals;
+    Density &rho = this->density;
+    Potential &V = this->potential;
+    PoissonOperator &P = *this->poisson;
 
-    CoulombOperator::setup(prec);
     MWConvolution<3> apply(this->apply_prec, this->max_scale);
+    DensityProjector project(this->apply_prec, this->max_scale);
 
-    {
-        Timer timer;
-        this->project(this->density, *this->orbitals);
-        timer.stop();
-        double t = timer.getWallTime();
-        int n = this->density.getNNodes();
-        TelePrompter::printTree(0, "Coulomb density", n, t);
-    }
+    Timer timer1;
+    project(rho, phi);
+    timer1.stop();
+    double t1 = timer1.getWallTime();
+    int n1 = rho.getNNodes();
+    TelePrompter::printTree(0, "Coulomb density", n1, t1);
 
-    Timer timer;
-    FunctionTree<3> &rho = this->density.getDensity(Paired);
-    if (not this->potential.hasReal()) {
-        this->potential.allocReal();
-        apply(this->potential.re(), this->poisson, rho);
-    } else {
-        NOT_IMPLEMENTED_ABORT;
-//        int nNodes = this->clean(*this->potential.real);
-//        this->poisson(*this->potential.real, rho, 0);
-//        this->potential.imag = 0;
-    }
-    timer.stop();
-    int n = this->potential.getNNodes();
-    double t = timer.getWallTime();
-    TelePrompter::printTree(0, "Coulomb potential", n, t);
-    this->potential.setup(this->apply_prec);
+    Timer timer2;
+    V.allocReal();
+    apply(V.real(), P, rho.total());
+    timer2.stop();
+    int n2 = V.getNNodes();
+    double t2 = timer2.getWallTime();
+    TelePrompter::printTree(0, "Coulomb potential", n2, t2);
+
+    V.setup(this->apply_prec);
 }
 
 void CoulombPotential::clear() {
-    this->density.clear();
     this->potential.clear();
-    CoulombOperator::clear();
+    QMOperator::clear();
 }

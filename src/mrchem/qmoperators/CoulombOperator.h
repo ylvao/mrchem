@@ -4,34 +4,38 @@
 #include "QMOperator.h"
 #include "Density.h"
 #include "Potential.h"
-#include "DensityProjector.h"
-#include "PoissonOperator.h"
 
-class OrbitalVector;
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 class CoulombOperator : public QMOperator {
 public:
-    CoulombOperator(double prec, OrbitalVector &phi);
+    CoulombOperator(PoissonOperator &P, OrbitalVector &phi)
+        : QMOperator(MRA->getMaxScale()),
+          poisson(&P),
+          orbitals(&phi),
+          density(false),
+          potential() { }
     virtual ~CoulombOperator() { }
 
-    virtual void setup(double prec);
-    virtual void clear();
-
-    virtual int printTreeSizes() const;
-
-    virtual Orbital* operator() (Orbital &orb_p);
-    virtual Orbital* adjoint(Orbital &orb_p);
+    virtual Orbital* operator() (Orbital &phi_p) {
+        if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
+        Potential &V = this->potential;
+        return V(phi_p);
+    }
+    virtual Orbital* adjoint(Orbital &phi_p) {
+        if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
+        Potential &V = this->potential;
+        return V.adjoint(phi_p);
+    }
 
     using QMOperator::operator();
     using QMOperator::adjoint;
 
 protected:
-    PoissonOperator poisson;
-    DensityProjector project;
-
-    Density density;
-    Potential potential;
-    OrbitalVector *orbitals;
+    PoissonOperator *poisson;   // Pointer to external object
+    OrbitalVector *orbitals;    // Pointer to external object
+    Density density;            // Density that defines the potential
+    Potential potential;        // The actual operator
 };
 
 #endif // COULOMBOPERATOR_H
