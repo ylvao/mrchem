@@ -3,79 +3,61 @@
 #include "FunctionTree.h"
 #include "FunctionNode.h"
 #include "Orbital.h"
+#include "DensityProjector.h"
 #include "Density.h"
 #include "Potential.h"
 #include "MWDerivative.h"
 #include "TelePrompter.h"
 
-extern MultiResolutionAnalysis<3> *MRA; // Global MRA
-
 using namespace std;
 using namespace Eigen;
 
-XCOperator::XCOperator(int k, XCFunctional &func, OrbitalVector &phi)
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+
+XCOperator::XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D)
         : QMOperator(MRA->getMaxScale()),
           order(k),
-          functional(&func),
-          diff_oper(*MRA, 0.0, 0.0),
-          project(-1.0),
-          density_0(func.isSpinSeparated()),
-          gradient_0(0),
-          orbitals_0(&phi),
+          functional(&F),
+          derivative(D),
+          orbitals(&phi),
           energy(0.0),
+          density(F.isSpinSeparated()),
+          gradient(0),
           xcInput(0),
           xcOutput(0) {
-    this->potential[0] = new Potential();
-    this->potential[1] = new Potential();
-    this->potential[2] = new Potential();
 }
 
 XCOperator::~XCOperator() {
     if (this->xcInput != 0) MSG_ERROR("XC input not deallocated");
     if (this->xcOutput != 0) MSG_ERROR("XC output not deallocated");
     this->functional = 0;
-    this->orbitals_0 = 0;
-    this->gradient_0 = deletePtrArray<Density>(3, &this->gradient_0);
-    for (int i = 0; i < 3; i++) {
-        if (this->potential[i] == 0) MSG_ERROR("Invalid potential");
-        delete this->potential[i];
-        this->potential[i] = 0;
-    }
-}
-
-void XCOperator::setup(double prec) {
-    QMOperator::setup(prec);
-    this->project.setPrecision(prec);
-}
-
-void XCOperator::clear() {
-    this->project.setPrecision(-1.0);
-    QMOperator::clear();
+    this->derivative = 0;
+    this->gradient = deletePtrArray<Density>(3, &this->gradient);
 }
 
 void XCOperator::calcDensity() {
-    if (this->orbitals_0 == 0) MSG_ERROR("Orbitals not initialized");
-    if (this->gradient_0 != 0) MSG_ERROR("Gradient not empty");
+    if (this->orbitals == 0) MSG_ERROR("Orbitals not initialized");
+    if (this->gradient != 0) MSG_ERROR("Gradient not empty");
 
-    Density &rho = this->density_0;
-    OrbitalVector &phi = *this->orbitals_0;
+    Density &rho = this->density;
+    OrbitalVector &phi = *this->orbitals;
 
-    {
-        Timer timer;
-        this->project(rho, phi);
-        timer.stop();
-        double t = timer.getWallTime();
-        int n = rho.getNNodes();
-        TelePrompter::printTree(0, "XC density", n, t);
-    }
+    DensityProjector project(this->apply_prec, this->max_scale);
+
+    Timer timer1;
+    project(rho, phi);
+    timer1.stop();
+    double t1 = timer1.getWallTime();
+    int n1 = rho.getNNodes();
+    TelePrompter::printTree(0, "XC density", n1, t1);
 
     if (this->functional->isGGA()) {
-        Timer timer;
-        this->gradient_0 = calcDensityGradient(rho);
-        timer.stop();
-        double t = timer.getWallTime();
-        int n = sumNodes<Density>(this->gradient_0, 3);
-        TelePrompter::printTree(0, "XC density gradient", n, t);
+        Timer timer2;
+        this->gradient = calcDensityGradient(rho);
+        timer2.stop();
+        double t2 = timer2.getWallTime();
+        int n2 = sumNodes<Density>(this->gradient, 3);
+        TelePrompter::printTree(0, "XC density gradient", n2, t2);
         printout(1, endl);
     }
 }
@@ -88,42 +70,41 @@ Density** XCOperator::calcDensityGradient(Density &rho) {
     out[2] = new Density(rho);
 
     if (rho.isSpinDensity()) {
-        FunctionTree<3> &rho_a = rho.getDensity(Alpha);
-        FunctionTreeVector<3> grad_a = calcGradient(rho_a);
+        FunctionTreeVector<3> grad_a = calcGradient(rho.alpha());
         out[0]->setDensity(Alpha, grad_a[0]);
         out[1]->setDensity(Alpha, grad_a[1]);
         out[2]->setDensity(Alpha, grad_a[2]);
 
-        FunctionTree<3> &rho_b = rho.getDensity(Beta);
-        FunctionTreeVector<3> grad_b = calcGradient(rho_b);
+        FunctionTreeVector<3> grad_b = calcGradient(rho.beta());
         out[0]->setDensity(Beta, grad_b[0]);
         out[1]->setDensity(Beta, grad_b[1]);
         out[2]->setDensity(Beta, grad_b[2]);
     } else {
-        FunctionTree<3> &rho_t = rho.getDensity(Paired);
-        FunctionTreeVector<3> grad_t = calcGradient(rho_t);
-        out[0]->setDensity(Paired, grad_t[0]);
-        out[1]->setDensity(Paired, grad_t[1]);
-        out[2]->setDensity(Paired, grad_t[2]);
+        FunctionTreeVector<3> grad_p = calcGradient(rho.total());
+        out[0]->setDensity(Paired, grad_p[0]);
+        out[1]->setDensity(Paired, grad_p[1]);
+        out[2]->setDensity(Paired, grad_p[2]);
     }
     return out;
 }
 
 FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
+    if (this->derivative == 0) MSG_ERROR("No derivative operator");
+    DerivativeOperator<3> &D = *this->derivative;
     MWDerivative<3> apply(this->max_scale);
-    GridGenerator<3> grid(this->max_scale);
 
     FunctionTreeVector<3> out;
     for (int d = 0; d < 3; d++) {
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        grid(*out_d, inp);
-        apply(*out_d, this->diff_oper, inp, d);
+        apply(*out_d, D, inp, d);
         out.push_back(out_d);
     }
     return out;
 }
 
 FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
+    if (this->derivative == 0) MSG_ERROR("No derivative operator");
+    DerivativeOperator<3> &D = *this->derivative;
     MWAdder<3> add(-1.0, this->max_scale);
     MWDerivative<3> apply(this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -131,13 +112,12 @@ FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
     FunctionTreeVector<3> tmp_vec;
     for (int d = 0; d < 3; d++) {
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        grid(*out_d, *inp[d]);
-        apply(*out_d, this->diff_oper, *inp[d], d);
+        apply(*out_d, D, *inp[d], d);
         tmp_vec.push_back(out_d);
     }
     FunctionTree<3> *out = new FunctionTree<3>(*MRA);
     grid(*out, tmp_vec);
-    add(*out, tmp_vec, 0);
+    add(*out, tmp_vec, 0); // Addition on union grid
     tmp_vec.clear(true);
     return out;
 }
@@ -158,40 +138,50 @@ void XCOperator::setupXCInput() {
     println(2, "Preprocessing");
 
     int nInp = this->functional->getInputLength();
+    bool spin = this->functional->isSpinSeparated();
+    bool gga = this->functional->isGGA();
+
+    Density &rho = this->density;
+    Density &rho_x = *this->gradient[0];
+    Density &rho_y = *this->gradient[1];
+    Density &rho_z = *this->gradient[2];
+
     this->xcInput = allocPtrArray<FunctionTree<3> >(nInp);
 
-    if (not this->functional->isSpinSeparated()) {
-        this->xcInput[0] = &this->density_0.getDensity(Paired);
-        if (this->functional->isGGA()) {
+    if (not spin) {
+        this->xcInput[0] = &rho.total();
+        if (gga) {
             FunctionTreeVector<3> vec;
-            vec.push_back(&this->gradient_0[0]->getDensity(Paired));
-            vec.push_back(&this->gradient_0[1]->getDensity(Paired));
-            vec.push_back(&this->gradient_0[2]->getDensity(Paired));
+            vec.push_back(&rho_x.total());
+            vec.push_back(&rho_y.total());
+            vec.push_back(&rho_z.total());
             this->xcInput[1] = calcDotProduct(vec, vec);
             vec.clear();
         }
     } else {
-        this->xcInput[0] = &this->density_0.getDensity(Alpha);
-        this->xcInput[1] = &this->density_0.getDensity(Beta);
-        if (this->functional->isGGA()) {
+        this->xcInput[0] = &rho.alpha();
+        this->xcInput[1] = &rho.beta();
+        if (gga) {
             FunctionTreeVector<3> vec;
-            vec.push_back(&this->gradient_0[0]->getDensity(Alpha));
-            vec.push_back(&this->gradient_0[1]->getDensity(Alpha));
-            vec.push_back(&this->gradient_0[2]->getDensity(Alpha));
+            vec.push_back(&rho_x.alpha());
+            vec.push_back(&rho_y.alpha());
+            vec.push_back(&rho_z.alpha());
             this->xcInput[1] = calcDotProduct(vec, vec);
             vec.clear();
 
-            vec.push_back(&this->gradient_0[0]->getDensity(Beta));
-            vec.push_back(&this->gradient_0[1]->getDensity(Beta));
-            vec.push_back(&this->gradient_0[2]->getDensity(Beta));
+            vec.push_back(&rho_x.beta());
+            vec.push_back(&rho_y.beta());
+            vec.push_back(&rho_z.beta());
             this->xcInput[2] = calcDotProduct(vec, vec);
             vec.clear();
         }
     }
 
+    // sanity check
     for (int i = 0; i < nInp; i++) {
         if (this->xcInput[i] == 0) MSG_ERROR("Invalid XC input");
     }
+
     timer.stop();
     double t = timer.getWallTime();
     int n = sumNodes<FunctionTree<3> >(this->xcInput, nInp);
@@ -202,13 +192,14 @@ void XCOperator::setupXCInput() {
 void XCOperator::clearXCInput() {
     if (this->xcInput == 0) MSG_ERROR("XC input not initialized");
 
-    // These belong to density_0
-    this->xcInput[0] = 0;
-    if (this->functional->isSpinSeparated()) {
-        this->xcInput[1] = 0;
-    }
-
     int nInp = this->functional->getInputLength();
+    bool spin = this->functional->isSpinSeparated();
+
+    // these belong to density
+    this->xcInput[0] = 0;
+    if (spin) this->xcInput[1] = 0;
+
+    // the rest should be deleted
     this->xcInput = deletePtrArray<FunctionTree<3> >(nInp, &this->xcInput);
 }
 
@@ -219,6 +210,7 @@ void XCOperator::setupXCOutput() {
 
     GridGenerator<3> grid(this->max_scale);
 
+    // Alloc output trees
     int nOut = this->functional->getOutputLength(this->order);
     this->xcOutput = allocPtrArray<FunctionTree<3> >(nOut);
 
@@ -273,32 +265,32 @@ void XCOperator::evaluateXCFunctional() {
 void XCOperator::calcEnergy() {
     if (this->xcOutput == 0) MSG_ERROR("XC output not initialized");
     if (this->xcOutput[0] == 0) MSG_ERROR("Invalid XC output");
+
     Timer timer;
     this->energy = this->xcOutput[0]->integrate();
     timer.stop();
-    double time = timer.getWallTime();
-    int nNodes = this->xcOutput[0]->getNNodes();
-    TelePrompter::printTree(0, "XC energy", nNodes, time);
+    double t = timer.getWallTime();
+    int n = this->xcOutput[0]->getNNodes();
+    TelePrompter::printTree(0, "XC energy", n, t);
 }
 
-FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
-                                                   FunctionTreeVector<3> &dens) {
+FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &V, FunctionTreeVector<3> &rho) {
     MWMultiplier<3> mult(-1.0, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
 
     FunctionTreeVector<3> vec;
     for (int d = 0; d < 3; d++) {
-        if (dens[d] == 0) MSG_ERROR("Invalid density");
+        if (rho[d] == 0) MSG_ERROR("Invalid density");
 
         Timer timer;
-        FunctionTree<3> *potDens = new FunctionTree<3>(*MRA);
-        grid(*potDens, *dens[d]);
-        mult(*potDens, 1.0, pot, *dens[d], 0);
-        vec.push_back(potDens);
+        FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
+        grid(*Vrho, *rho[d]);
+        mult(*Vrho, 1.0, V, *rho[d], 0);
+        vec.push_back(Vrho);
 
         timer.stop();
         double t = timer.getWallTime();
-        int n = potDens->getNNodes();
+        int n = Vrho->getNNodes();
         TelePrompter::printTree(2, "Multiply", n, t);
     }
 
@@ -313,52 +305,52 @@ FunctionTree<3>* XCOperator::calcGradDotPotDensVec(FunctionTree<3> &pot,
     return result;
 }
 
-//Potential* calcPotDensVecDotDensVec(Potential *pot, Density **dens_1, Density **dens_2) {
-//    NOT_IMPLEMENTED_ABORT;
-//}
+FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
+                                            FunctionTreeVector<3> &vec_b) {
+    if (vec_a.size() != vec_b.size()) MSG_ERROR("Invalid input");
 
-Orbital* XCOperator::operator() (Orbital &orb) {
-    switch (orb.getSpin()) {
-    case Paired:
-        if (this->potential[0] == 0) MSG_ERROR("XC potential not available");
-        return (*this->potential[0])(orb);
-    case Alpha:
-        if (this->potential[1] == 0) MSG_ERROR("Alpha potential not available");
-        return (*this->potential[1])(orb);
-    case Beta:
-        if (this->potential[2] == 0) MSG_ERROR("Beta potential not available");
-        return (*this->potential[2])(orb);
-    default:
-        MSG_ERROR("Invalid spin");
-        return 0;
+    MWAdder<3> add(-1.0, this->max_scale);
+    MWMultiplier<3> mult(-1.0, this->max_scale);
+    GridGenerator<3> grid(this->max_scale);
+
+    FunctionTreeVector<3> out_vec;
+    for (int d = 0; d < vec_a.size(); d++) {
+        FunctionTree<3> &tree_a = vec_a.getFunc(d);
+        FunctionTree<3> &tree_b = vec_b.getFunc(d);
+        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
+        grid(*out_d, tree_a);
+        grid(*out_d, tree_b);
+        mult(*out_d, 1.0, tree_a, tree_b, 0);
+        out_vec.push_back(out_d);
     }
+    FunctionTree<3> *out = new FunctionTree<3>(*MRA);
+    grid(*out, out_vec);
+    add(*out, out_vec, 0);
+
+    out_vec.clear(true);
+    return out;
 }
 
-Orbital* XCOperator::adjoint(Orbital &orb) {
+Orbital* XCOperator::operator() (Orbital &orb_p) {
+    Potential &V_p = this->potential[0];
+    Potential &V_a = this->potential[1];
+    Potential &V_b = this->potential[2];
+
+    if (orb_p.getSpin() == Paired) return V_p(orb_p);
+    if (orb_p.getSpin() == Alpha) return V_a(orb_p);
+    if (orb_p.getSpin() == Beta) return V_b(orb_p);
+
+    MSG_ERROR("Invalid spin");
+    return 0;
+}
+
+Orbital* XCOperator::adjoint(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    if (this->potential == 0) {
-//        setup();
-//    }
-//    switch (orb.getSpin()) {
-//    case Orbital::Paired:
-//        if (this->potential[0] == 0) MSG_ERROR("XC potential not available");
-//        this->potential[0]->setMaxApplyDepth(this->maxApplyDepth);
-//        return this->potential[0]->adjoint(orb);
-//    case Orbital::Alpha:
-//        if (this->potential[1] == 0) MSG_ERROR("Alpha potential not available");
-//        this->potential[1]->setMaxApplyDepth(this->maxApplyDepth);
-//        return this->potential[1]->adjoint(orb);
-//    case Orbital::Beta:
-//        if (this->potential[2] == 0) MSG_ERROR("Beta potential not available");
-//        this->potential[2]->setMaxApplyDepth(this->maxApplyDepth);
-//        return this->potential[2]->adjoint(orb);
-//    default:
-//        MSG_ERROR("Invalid spin");
-//        return 0;
-//    }
 }
 
+/*
 int XCOperator::printTreeSizes() const {
+    NOT_IMPLEMENTED_ABORT;
     int nNodes = 0;
     nNodes += this->density_0.printTreeSizes();
     this->gradient_0[0]->printTreeSizes();
@@ -398,6 +390,7 @@ int XCOperator::printTreeSizes() const {
     nNodes += (nInput + nOutput);
     return nNodes;
 }
+*/
 
 void XCOperator::compressTreeData(int nFuncs, FunctionTree<3> **trees, MatrixXd &data) {
     if (trees == 0) MSG_ERROR("Invalid input");
@@ -451,31 +444,5 @@ void XCOperator::expandNodeData(int n, int nFuncs, FunctionTree<3> **trees, Matr
         FunctionNode<3> &node = trees[i]->getEndFuncNode(n);
         node.setValues(col_i);
     }
-}
-
-FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
-                                            FunctionTreeVector<3> &vec_b) {
-    if (vec_a.size() != vec_b.size()) MSG_ERROR("Invalid input");
-
-    MWAdder<3> add(-1.0, this->max_scale);
-    MWMultiplier<3> mult(-1.0, this->max_scale);
-    GridGenerator<3> grid(this->max_scale);
-
-    FunctionTreeVector<3> out_vec;
-    for (int d = 0; d < vec_a.size(); d++) {
-        FunctionTree<3> &tree_a = vec_a.getFunc(d);
-        FunctionTree<3> &tree_b = vec_b.getFunc(d);
-        FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        grid(*out_d, tree_a);
-        grid(*out_d, tree_b);
-        mult(*out_d, 1.0, tree_a, tree_b, 0);
-        out_vec.push_back(out_d);
-    }
-    FunctionTree<3> *out = new FunctionTree<3>(*MRA);
-    grid(*out, out_vec);
-    add(*out, out_vec, 0);
-
-    out_vec.clear(true);
-    return out;
 }
 

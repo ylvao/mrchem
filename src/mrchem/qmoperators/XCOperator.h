@@ -5,27 +5,20 @@
 
 #include "QMOperator.h"
 #include "Density.h"
-#include "DensityProjector.h"
-#include "ABGVOperator.h"
-#include "PHOperator.h"
-#include "Timer.h"
+#include "Potential.h"
 
 class XCFunctional;
 class OrbitalVector;
-class Potential;
 template<int D> class FunctionTree;
+template<int D> class FunctionTreeVector;
+template<int D> class DerivativeOperator;
 
 class XCOperator : public QMOperator {
 public:
-    XCOperator(int k, XCFunctional &func, OrbitalVector &phi);
+    XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D);
     virtual ~XCOperator();
 
     double getEnergy() const { return this->energy; }
-
-    virtual void setup(double prec);
-    virtual void clear();
-
-    virtual int printTreeSizes() const;
 
     virtual Orbital* operator() (Orbital &orb_p);
     virtual Orbital* adjoint(Orbital &orb_p);
@@ -34,20 +27,18 @@ public:
     using QMOperator::adjoint;
 
 protected:
-    const int order;
-    XCFunctional *functional;
-    ABGVOperator<3> diff_oper;      ///< Derivative operator for GGAs
-    DensityProjector project;
+    const int order;                    ///< Order of kernel derivative
+    XCFunctional *functional;           ///< Pointer to external object
+    DerivativeOperator<3> *derivative;  ///< Pointer to external object
+    OrbitalVector *orbitals;            ///< Pointer to external object
 
-    Density density_0;              ///< Unperturbed density
-    Density **gradient_0;           ///< Unperturbed density gradient
-    OrbitalVector *orbitals_0;      ///< Unperturbed orbitals
+    double energy;                      ///< XC energy
+    Density density;                    ///< Unperturbed density
+    Density **gradient;                 ///< Unperturbed density gradient
+    Potential potential[3];             ///< The actual operator [tot, alpha, beta]
 
-    double energy;                  ///< XC energy
-    Potential *potential[3];        ///< The actual operator [tot, alpha, beta]
-
-    FunctionTree<3> **xcInput;      ///< XCFun input
-    FunctionTree<3> **xcOutput;     ///< XCFun output
+    FunctionTree<3> **xcInput;          ///< XCFun input
+    FunctionTree<3> **xcOutput;         ///< XCFun output
 
     void setupXCInput();
     void setupXCOutput();
@@ -72,11 +63,8 @@ protected:
 
     FunctionTreeVector<3> calcGradient(FunctionTree<3> &inp);
     FunctionTree<3>* calcDivergence(FunctionTreeVector<3> &inp);
-    FunctionTree<3>* calcDotProduct(FunctionTreeVector<3> &vec_a,
-                                    FunctionTreeVector<3> &vec_b);
-    FunctionTree<3>* calcGradDotPotDensVec(FunctionTree<3> &pot,
-                                           FunctionTreeVector<3> &dens);
-//    Potential* calcPotDensVecDotDensVec(Potential *pot, Density **dens_1, Density **dens_2);
+    FunctionTree<3>* calcDotProduct(FunctionTreeVector<3> &vec_a, FunctionTreeVector<3> &vec_b);
+    FunctionTree<3>* calcGradDotPotDensVec(FunctionTree<3> &V, FunctionTreeVector<3> &rho);
 
     template<class T>
     int sumNodes(T **trees, int nTrees) {

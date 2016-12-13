@@ -3,13 +3,10 @@
 
 #include "XCOperator.h"
 
-class XCFunctional;
-template<int D> class FunctionTreeVector;
-
 class XCPotential : public XCOperator {
 public:
-    XCPotential(double prec, XCFunctional &func, OrbitalVector &phi)
-        : XCOperator(1, func, phi) { }
+    XCPotential(double prec, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D = 0)
+        : XCOperator(1, F, phi, D) { }
     virtual ~XCPotential() { } 
 
     virtual void setup(double prec);
@@ -17,7 +14,6 @@ public:
 
 protected:
     void calcPotential();
-
     void calcPotentialLDA(int spin);
     void calcPotentialGGA(int spin);
     FunctionTree<3>* calcPotentialGGA(FunctionTreeVector<3> &xc_funcs,
