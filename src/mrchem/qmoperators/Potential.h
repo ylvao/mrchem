@@ -2,47 +2,24 @@
 #define POTENTIAL_H
 
 #include "QMOperator.h"
+#include "ComplexFunction.h"
 #include "OrbitalMultiplier.h"
 
-template<int D> class FunctionTree;
-
-class Potential : public QMOperator {
+class Potential : public ComplexFunction<3>, public QMOperator {
 public:
     Potential();
+    Potential(const Potential &pot) : QMOperator(pot) { NOT_IMPLEMENTED_ABORT; }
     Potential &operator=(const Potential &pot) { NOT_IMPLEMENTED_ABORT; }
-    virtual ~Potential();
-
-    int getNNodes() const;
-    virtual int printTreeSizes() const;
+    virtual ~Potential() { }
 
     virtual void setup(double prec);
     virtual void clear();
 
-    bool hasReal() const { if (this->real == 0) return false; return true; }
-    bool hasImag() const { if (this->imag == 0) return false; return true; }
+    virtual Orbital* operator() (Orbital &phi_p);
+    virtual Orbital* adjoint(Orbital &phi_p);
 
-    void allocReal();
-    void allocImag();
-
-    void setReal(FunctionTree<3> *re) { this->real = re; }
-    void setImag(FunctionTree<3> *im) { this->imag = im; }
-
-    FunctionTree<3> &re() { return *this->real; }
-    FunctionTree<3> &im() { return *this->imag; }
-
-    virtual Orbital* operator() (Orbital &orb);
-    virtual Orbital* adjoint(Orbital &orb);
-
-    virtual double operator() (Orbital &orb_i, Orbital &orb_j);
-    virtual double adjoint(Orbital &orb_i, Orbital &orb_j);
-
-    virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-    virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-
-protected:
-    OrbitalMultiplier mult;
-    FunctionTree<3> *real;
-    FunctionTree<3> *imag;
+    using QMOperator::operator();
+    using QMOperator::adjoint;
 };
 
 #endif // POTENTIAL_H
