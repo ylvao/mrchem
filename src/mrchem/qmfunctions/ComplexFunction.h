@@ -12,7 +12,7 @@ public:
     ComplexFunction(FunctionTree<D> *r = 0, FunctionTree<D> *i = 0) : re(r), im(i) { }
     ComplexFunction(const ComplexFunction &func) { NOT_IMPLEMENTED_ABORT; }
     ComplexFunction<D> &operator=(const ComplexFunction<D> &func);
-    virtual ~ComplexFunction();
+    virtual ~ComplexFunction() { clearReal(); clearImag(); }
 
     bool hasReal() const { if (this->re == 0) return false; return true; }
     bool hasImag() const { if (this->im == 0) return false; return true; }
