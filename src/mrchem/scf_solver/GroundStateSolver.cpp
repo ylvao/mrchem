@@ -13,7 +13,7 @@
 #include "SCFEnergy.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
-#include "DipoleOperator.h"
+#include "PositionOperator.h"
 #include "MathUtils.h"
 #include "eigen_disable_warnings.h"
 #include "parallel.h"
@@ -284,9 +284,9 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
-    DipoleOperator r_x(0);
-    DipoleOperator r_y(1);
-    DipoleOperator r_z(2);
+    PositionOperator r_x(0);
+    PositionOperator r_y(1);
+    PositionOperator r_z(2);
 
     r_x.setup(prec);
     r_y.setup(prec);
