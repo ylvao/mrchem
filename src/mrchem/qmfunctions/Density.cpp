@@ -1,73 +1,85 @@
 #include "Density.h"
 #include "FunctionTree.h"
 #include "TelePrompter.h"
-#include "SerialFunctionTree.h"
 #include "parallel.h"
-
-using namespace std;
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
+using namespace std;
+
 Density::Density(bool s)
     : spin(s),
-      total(0),
-      alpha(0),
-      beta(0) {
+      dens_t(0),
+      dens_a(0),
+      dens_b(0) {
 }
 
 Density::Density(const Density &rho)
     : spin(rho.spin),
-      total(0),
-      alpha(0),
-      beta(0) {
+      dens_t(0),
+      dens_a(0),
+      dens_b(0) {
 }
 
 Density::~Density() {
-    if (this->total != 0) MSG_ERROR("Density not properly deallocated");
-    if (this->alpha != 0) MSG_ERROR("Density not properly deallocated");
-    if (this->beta != 0) MSG_ERROR("Density not properly deallocated");
+    if (this->hasTotal()) MSG_ERROR("Density not properly deallocated");
+    if (this->hasAlpha()) MSG_ERROR("Density not properly deallocated");
+    if (this->hasBeta()) MSG_ERROR("Density not properly deallocated");
 }
 
 void Density::clear() {
-    if (this->total != 0) delete this->total;
-    if (this->alpha != 0) delete this->alpha;
-    if (this->beta != 0) delete this->beta;
-    this->total = 0;
-    this->alpha = 0;
-    this->beta = 0;
+    if (this->hasTotal()) delete this->dens_t;
+    if (this->hasAlpha()) delete this->dens_a;
+    if (this->hasBeta()) delete this->dens_b;
+    this->dens_t = 0;
+    this->dens_a = 0;
+    this->dens_b = 0;
 }
 
-int Density::getNNodes() const {
-    int nNodes = 0;
-    if (this->total != 0) nNodes += this->total->getNNodes();
-    if (this->alpha != 0) nNodes += this->alpha->getNNodes();
-    if (this->beta != 0) nNodes += this->beta->getNNodes();
-    return nNodes;
+int Density::getNNodes(int type) const {
+    int tNodes = 0;
+    int aNodes = 0;
+    int bNodes = 0;
+    if (this->hasTotal()) tNodes = this->total().getNNodes();
+    if (this->hasAlpha()) aNodes = this->alpha().getNNodes();
+    if (this->hasBeta()) bNodes = this->beta().getNNodes();
+    if (type == Paired) return tNodes;
+    if (type == Alpha) return aNodes;
+    if (type == Beta) return bNodes;
+    return tNodes + aNodes + bNodes;
 }
 
 void Density::setDensity(int s, FunctionTree<3> *rho) {
-    if (s == Paired) this->total = rho;
-    if (s == Alpha) this->alpha = rho;
-    if (s == Beta) this->beta = rho;
+    if (s == Paired) this->dens_t = rho;
+    if (s == Alpha) this->dens_a = rho;
+    if (s == Beta) this->dens_b = rho;
 }
 
-FunctionTree<3>& Density::getDensity(int s) {
-    FunctionTree<3> *rho = 0;
-    if (s == Paired) rho = this->total;
-    if (s == Alpha) rho = this->alpha;
-    if (s == Beta) rho = this->beta;
-    if (rho == 0) MSG_FATAL("Uninitialized density");
-    return *rho;
+void Density::allocTotal() {
+    if (this->hasTotal()) MSG_ERROR("Density not empty");
+    this->dens_t = new FunctionTree<3>(*MRA);
 }
 
+void Density::allocAlpha() {
+    if (this->hasAlpha()) MSG_ERROR("Density not empty");
+    this->dens_a = new FunctionTree<3>(*MRA);
+}
+
+void Density::allocBeta() {
+    if (this->hasBeta()) MSG_ERROR("Density not empty");
+    this->dens_b = new FunctionTree<3>(*MRA);
+}
+
+/*
 int Density::printTreeSizes() const {
     int nNodes = 0;
-    if (this->total != 0) nNodes += this->total->getNNodes();
-    if (this->alpha != 0) nNodes += this->alpha->getNNodes();
-    if (this->beta != 0) nNodes += this->beta->getNNodes();
+    if (this->dens_t != 0) nNodes += this->total().getNNodes();
+    if (this->dens_a != 0) nNodes += this->alpha().getNNodes();
+    if (this->dens_b != 0) nNodes += this->beta().getNNodes();
     println(0, " Density           " << setw(15) << 1 << setw(25) << nNodes);
     return nNodes;
 }
+*/
 
 
 //send Density with MPI
@@ -86,23 +98,23 @@ void Density::send_Density(int dest, int tag){
   Metadata Densinfo;
 
   Densinfo.spin = this->isSpinDensity();
-  if(this->total){
-    Densinfo.NchunksTotal = this->total->getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+  if(this->dens_t){
+    Densinfo.NchunksTotal = this->total().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Densinfo.NchunksTotal = 0;}
-  if(this->alpha){
-    Densinfo.NchunksAlpha = this->alpha->getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+  if(this->dens_a){
+    Densinfo.NchunksAlpha = this->alpha().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Densinfo.NchunksAlpha = 0;}
-  if(this->beta){
-    Densinfo.NchunksBeta = this->beta->getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+  if(this->dens_b){
+    Densinfo.NchunksBeta = this->beta().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Densinfo.NchunksBeta = 0;}
  
 
   int count=sizeof(Metadata);
   MPI_Send(&Densinfo, count, MPI_BYTE, dest, 0, comm);
 
-  if(this->total)Send_SerialTree(this->total, Densinfo.NchunksTotal, dest, tag, comm);
-  if(this->alpha)Send_SerialTree(this->alpha, Densinfo.NchunksAlpha, dest, tag+10000, comm);
-  if(this->beta)Send_SerialTree(this->beta, Densinfo.NchunksBeta, dest, tag+20000, comm);
+  if(this->dens_t)Send_SerialTree(this->dens_t, Densinfo.NchunksTotal, dest, tag, comm);
+  if(this->dens_a)Send_SerialTree(this->dens_a, Densinfo.NchunksAlpha, dest, tag+10000, comm);
+  if(this->dens_b)Send_SerialTree(this->dens_b, Densinfo.NchunksBeta, dest, tag+20000, comm);
 
 #endif
 }
@@ -128,73 +140,17 @@ void Density::Rcv_Density(int source, int tag){
   assert(this->isSpinDensity() == Densinfo.spin);
 
   if(Densinfo.NchunksTotal>0){
-    if(not this->total){
-      //We must have a tree defined for receiving nodes. Define one:
-      this->total = new FunctionTree<3>(*MRA,MaxAllocNodes);
-    }
-    Rcv_SerialTree(this->total, Densinfo.NchunksTotal, source, tag, comm);}
+    //We must have a tree defined for receiving nodes. Define one:
+    if (not this->hasTotal()) allocTotal();
+    Rcv_SerialTree(this->dens_t, Densinfo.NchunksTotal, source, tag, comm);}
   if(Densinfo.NchunksAlpha>0){
-    if(not this->alpha){
-      //We must have a tree defined for receiving nodes. Define one:
-      this->alpha = new FunctionTree<3>(*MRA,MaxAllocNodes);
-    }
-    Rcv_SerialTree(this->alpha, Densinfo.NchunksAlpha, source, tag, comm);}
+    //We must have a tree defined for receiving nodes. Define one:
+    if (not this->hasAlpha()) allocAlpha();
+    Rcv_SerialTree(this->dens_a, Densinfo.NchunksAlpha, source, tag, comm);}
   if(Densinfo.NchunksBeta>0){
-    if(not this->beta){
-      //We must have a tree defined for receiving nodes. Define one:
-      this->beta = new FunctionTree<3>(*MRA,MaxAllocNodes);
-    }
-    Rcv_SerialTree(this->beta, Densinfo.NchunksBeta, source, tag, comm);}
-  
+    //We must have a tree defined for receiving nodes. Define one:
+    if (not this->hasBeta()) allocBeta();
+    Rcv_SerialTree(this->dens_b, Densinfo.NchunksBeta, source, tag, comm);}
 #endif
-
 }
 
-
-
-//void Density::setup(double prec) {
-//    NOT_IMPLEMENTED_ABORT;
-//    Timer timer;
-
-//    FunctionTreeVector<3> sq_vec;
-//    FunctionTreeVector<3> sum_vec;
-//    this->mult.setPrecision(prec);
-//    for (int i = 0; i < this->orbitals->size(); i++) {
-//        Orbital &phi_i = this->orbitals->getOrbital(i);
-//        double occ = (double) phi_i.getOccupancy();
-//        if (phi_i.hasReal()) {
-//            sq_vec.push_back(phi_i.re());
-//            sq_vec.push_back(phi_i.re());
-//            FunctionTree<3> *real_2 = this->mult(sq_vec);
-//            sq_vec.clear();
-//            sum_vec.push_back(occ, *real_2);
-//        }
-//        if (phi_i.hasImag()) {
-//            sq_vec.push_back(phi_i.im());
-//            sq_vec.push_back(phi_i.im());
-//            FunctionTree<3> *imag_2 = this->mult(sq_vec);
-//            sq_vec.clear();
-//            sum_vec.push_back(occ, *imag_2);
-//        }
-//    }
-//    if (this->total == 0) {
-//        this->add.setPrecision(prec);
-//        this->total = this->add(sum_vec);
-//    } else {
-//        this->add.setPrecision(-1.0);
-//        this->clean.setPrecision(prec);
-//        int nNodes = this->clean(*this->total);
-//        this->add(*this->total, sum_vec);
-//    }
-
-//    for (int i = 0; i < sum_vec.size(); i++) {
-//        delete sum_vec[i];
-//    }
-//    sum_vec.clear();
-
-//    timer.stop();
-//    int n = this->total->getNNodes();
-//    double t = timer.getWallTime();
-//    TelePrompter::printTree(1, "Electron density", n, t);
-//    TelePrompter::printDouble(1, "Charge integral", this->total->integrate());
-//}

@@ -1,9 +1,9 @@
 #ifndef DENSITYPROJECTOR_H
 #define DENSITYPROJECTOR_H
 
-#include "GridGenerator.h"
 #include "MWAdder.h"
 #include "MWMultiplier.h"
+#include "GridGenerator.h"
 
 class OrbitalVector;
 class Orbital;
@@ -11,7 +11,7 @@ class Density;
 
 class DensityProjector {
 public:
-    DensityProjector(double prec = -1.0);
+    DensityProjector(double prec, int max_scale);
     virtual ~DensityProjector() { }
 
     void setPrecision(double prec);
