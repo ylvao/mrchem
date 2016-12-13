@@ -3,8 +3,6 @@
 #include "Orbital.h"
 #include "Timer.h"
 
-extern MultiResolutionAnalysis<3> *MRA;
-
 using namespace std;
 using namespace Eigen;
 
@@ -15,14 +13,13 @@ Calculates the matrix element of the operator between two orbitals:
 
 The operator is applied "to the right" and then the inner product with the bra is taken.
  */
-double QMOperator::operator() (Orbital &orb_i, Orbital &orb_j) {
-    Orbital *operOrb = (*this)(orb_j);
-    complex<double> result = orb_i.dot(*operOrb);
-    delete operOrb;
+double QMOperator::operator() (Orbital &phi_i, Orbital &phi_j) {
+    QMOperator &O = *this;
+    Orbital *Ophi_j = O(phi_j);
+    complex<double> result = phi_i.dot(*Ophi_j);
+    delete Ophi_j;
 
-    if (result.imag() > MachineZero) {
-        MSG_WARN("Hermitian operator should have real expectation value " << result.imag());
-    }
+    if (result.imag() > MachineZero) MSG_WARN("Hermitian operator should have real expectation value " << result.imag());
     return result.real();
 }
 
@@ -33,14 +30,13 @@ Calculates the matrix element of the adjoint operator between two orbitals:
 The operator is applied "to the left" and then the inner product with the ket is taken.
 
  */
-double QMOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
-    Orbital *operOrb = (*this).adjoint(orb_j);
-    complex<double> result = orb_i.dot(*operOrb);
-    delete operOrb;
+double QMOperator::adjoint(Orbital &phi_i, Orbital &phi_j) {
+    QMOperator &O = *this;
+    Orbital *Ophi_j = O.adjoint(phi_j);
+    complex<double> result = phi_i.dot(*Ophi_j);
+    delete Ophi_j;
 
-    if (result.imag() > MachineZero) {
-        MSG_WARN("Hermitian operator should have real expectation value " << result.imag());
-    }
+    if (result.imag() > MachineZero) MSG_WARN("Hermitian operator should have real expectation value " << result.imag());
     return result.real();
 }
 
@@ -56,23 +52,22 @@ Calculates the matrix representation of the operator: \f$O\f$, given two sets of
 MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     TelePrompter::printHeader(1, "Compute Matrix Element");
     Timer timer;
+    QMOperator &O = *this;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXcd result = MatrixXcd::Zero(Ni,Nj);
     for (int j = 0; j < Nj; j++) {
-        Orbital &orb_j = j_orbs.getOrbital(j);
-        Orbital *operOrb = (*this)(orb_j);
+        Orbital &phi_j = j_orbs.getOrbital(j);
+        Orbital *Ophi_j = O(phi_j);
         for (int i = 0; i < Ni; i++) {
-            Orbital &orb_i = i_orbs.getOrbital(i);
-            result(i,j) = orb_i.dot(*operOrb);
+            Orbital &phi_i = i_orbs.getOrbital(i);
+            result(i,j) = phi_i.dot(*Ophi_j);
         }
-        delete operOrb;
+        delete Ophi_j;
     }
     timer.stop();
     TelePrompter::printFooter(1, timer, 2);
-    if (result.imag().norm() > MachineZero) {
-        MSG_WARN("Hermitian operator should have real expectation value " << result.imag().norm());
-    }
+    if (result.imag().norm() > MachineZero) MSG_WARN("Hermitian operator should have real expectation value " << result.imag().norm());
     return result.real();
 }
 
@@ -88,27 +83,27 @@ Calculates the matrix representation of the adjoint operator: \f$O\f$, given two
 MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     Timer timer;
     TelePrompter::printHeader(1, "Compute Matrix Element");
+    QMOperator &O = *this;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXcd result = MatrixXcd::Zero(Ni,Nj);
     for (int i = 0; i < Ni; i++) {
-        Orbital &orb_i = i_orbs.getOrbital(i);
-        Orbital *operOrb = (*this)(orb_i);
+        Orbital &phi_i = i_orbs.getOrbital(i);
+        Orbital *Ophi_i = O(phi_i);
         for (int j = 0; j < Nj; j++) {
-            Orbital &orb_j = j_orbs.getOrbital(j);
-            result(i,j) = operOrb->dot(orb_j);
+            Orbital &phi_j = j_orbs.getOrbital(j);
+            result(i,j) = Ophi_i->dot(phi_j);
         }
-        delete operOrb;
+        delete Ophi_i;
     }
     timer.stop();
     TelePrompter::printFooter(1, timer, 2);
-    if (result.imag().norm() > MachineZero) {
-        MSG_WARN("Hermitian operator should have real expectation value " << result.imag().norm());
-    }
+    if (result.imag().norm() > MachineZero) MSG_WARN("Hermitian operator should have real expectation value " << result.imag().norm());
     return result.real();
 }
 
 /**
+
    Linear response property integrals: \f$ \eta_p \f$ is the occupation number, \f$\phi_p\f$ is the orbital \f$x_p\f$ and \f$y_p\f$ are the corresponding components of the response vectors.
 
    \f$ \eta_p ( \left\langle \phi_p|O^\dagger|x_p\right\rangle +
@@ -118,11 +113,12 @@ MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
 double QMOperator::trace(Orbital &phi_p, Orbital *x_p, Orbital *y_p) {
     if (x_p == 0) x_p = &phi_p;
     if (y_p == 0) y_p = x_p;
+    QMOperator &O = *this;
 
-    double occ = (double) phi_p.getOccupancy();
-    double result_1 = (*this)(phi_p, *x_p);
-    double result_2 = (*this)(*y_p, phi_p);
-    return occ * (result_1 + result_2);
+    double eta_p = (double) phi_p.getOccupancy();
+    double result_1 = O(phi_p, *x_p);
+    double result_2 = O(*y_p, phi_p);
+    return eta_p * (result_1 + result_2);
 }
 
 /**
@@ -138,8 +134,7 @@ double QMOperator::trace(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y)
     if (y == 0) y = x;
 
     double result = 0.0;
-    int nOrbs = phi.size();
-    for (int i = 0; i < nOrbs; i++) {
+    for (int i = 0; i < phi.size(); i++) {
         Orbital &phi_i = phi.getOrbital(i);
         Orbital &x_i = x->getOrbital(i);
         Orbital &y_i = y->getOrbital(i);
@@ -148,17 +143,22 @@ double QMOperator::trace(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y)
     return result;
 }
 
+/**
+
+   Ground state property: \f$ \eta_p \f$ is the occupation number, \f$\phi_p\f$ is the orbital.
+
+   \f$ \sum_p \eta_p ( \left\langle \phi_p|O|\phi_p\right\rangle \f$
+
+ */
 double QMOperator::trace(OrbitalVector &phi) {
+    QMOperator &O = *this;
+
     double result = 0.0;
     for (int i = 0; i < phi.size(); i++) {
         Orbital &phi_i = phi.getOrbital(i);
-        double occ_i = (double) phi_i.getOccupancy();
-        result += occ_i*(*this)(phi_i, phi_i);
+        double eta_i = (double) phi_i.getOccupancy();
+        result += eta_i*O(phi_i, phi_i);
     }
     return result;
 }
 
-int QMOperator::printTreeSizes() const {
-    println(0, " QMOperator        " << setw(15) << 0 << setw(25) << 0);
-    return 0;
-}
