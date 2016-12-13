@@ -5,12 +5,9 @@
 
 #include "constants.h"
 
-#include "TelePrompter.h"
+#include "ComplexFunction.h"
 
-template<int D> class FunctionTree;
-template<int D> class FunctionSerialTree;
-
-class Orbital {
+class Orbital : public ComplexFunction<3> {
 public:
     Orbital(int occ, int s);
     Orbital(const Orbital &orb);
@@ -28,18 +25,6 @@ public:
     void setError(double err) { this->error = err; }
 
     bool isConverged(double prec) const;
-
-    bool hasReal() const { if (this->real == 0) return false; return true; }
-    bool hasImag() const { if (this->imag == 0) return false; return true; }
-
-    void allocReal();
-    void allocImag();
-
-    void setReal(FunctionTree<3> *re) { this->real = re; }
-    void setImag(FunctionTree<3> *im) { this->imag = im; }
-
-    FunctionTree<3> &re() { return *this->real; }
-    FunctionTree<3> &im() { return *this->imag; }
 
     void compare(const Orbital &orb) const;
     int compareSpin(const Orbital &orb) const;
@@ -75,10 +60,7 @@ public:
 protected:
     int spin;
     int occupancy;
-
     double error;
-    FunctionTree<3> *real;
-    FunctionTree<3> *imag;
 };
 
 #endif // ORBITAL_H

@@ -11,7 +11,7 @@ class OrbitalVector;
 
 class OrbitalAdder {
 public:
-    OrbitalAdder(double prec = -1.0);
+    OrbitalAdder(double prec, int max_scale);
     virtual ~OrbitalAdder() { }
 
     void setPrecision(double prec) { this->add.setPrecision(prec); }
@@ -23,7 +23,7 @@ public:
 
     void operator()(Orbital &out,
                     std::vector<std::complex<double> > &coefs,
-                    std::vector<Orbital *> &orbs,
+                    std::vector<Orbital *> &inp,
                     bool union_grid);
 
     void operator()(OrbitalVector &out,

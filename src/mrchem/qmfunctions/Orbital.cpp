@@ -9,80 +9,31 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
-Orbital* workOrb=0;
-
 Orbital::Orbital(int occ, int s)
-        : spin(s),
+        : ComplexFunction<3>(0, 0),
+          spin(s),
           occupancy(occ),
-          error(1.0),
-          real(0),
-          imag(0) {
+          error(1.0) {
 }
 
 Orbital::Orbital(const Orbital &orb)
-        : spin(orb.spin),
+        : ComplexFunction<3>(0, 0),
+          spin(orb.spin),
           occupancy(orb.occupancy),
-          error(1.0),
-          real(0),
-          imag(0) {
+          error(1.0) {
 }
 
 Orbital& Orbital::operator=(const Orbital &orb) {
-    if (this != &orb) {
-        if (this->real != 0) MSG_ERROR("Orbital not empty");
-        if (this->imag != 0) MSG_ERROR("Orbital not empty");
-        this->spin = orb.spin;
-        this->occupancy = orb.occupancy;
-        this->error = orb.error;
-        this->real = orb.real;
-        this->imag = orb.imag;
-    }
+    ComplexFunction<3>::operator=(orb);
+    this->spin = orb.spin;
+    this->occupancy = orb.occupancy;
+    this->error = orb.error;
     return *this;
 }
 
 void Orbital::clear(bool free) {
-    if (this->real != 0 and free) delete this->real;
-    if (this->imag != 0 and free) delete this->imag;
-    this->real = 0;
-    this->imag = 0;
-}
-
-void Orbital::allocReal() {
-    if (this->real != 0) MSG_ERROR("Orbital not empty");
-    this->real = new FunctionTree<3>(*MRA);
-}
-
-void Orbital::allocImag() {
-    if (this->imag != 0) MSG_ERROR("Orbital not empty");
-    this->imag = new FunctionTree<3>(*MRA);
-}
-
-int Orbital::getNNodes(int type) const {
-    int rNodes = 0;
-    int iNodes = 0;
-    if (this->hasReal()) rNodes = this->real->getNNodes();
-    if (this->hasImag()) iNodes = this->imag->getNNodes();
-    if (type == Real) {
-        return rNodes;
-    }
-    if (type == Imag) {
-        return iNodes;
-    }
-    return rNodes + iNodes;
-}
-
-double Orbital::getSquareNorm(int type) const {
-    double rNorm = 0;
-    double iNorm = 0;
-    if (this->hasReal()) rNorm = this->real->getSquareNorm();
-    if (this->hasImag()) iNorm = this->imag->getSquareNorm();
-    if (type == Real) {
-        return rNorm;
-    }
-    if (type == Imag) {
-        return iNorm;
-    }
-    return rNorm + iNorm;
+    clearReal(free);
+    clearImag(free);
 }
 
 void Orbital::compare(const Orbital &orb) const {
@@ -129,29 +80,9 @@ bool Orbital::isConverged(double prec) const {
 
 complex<double> Orbital::dot(Orbital &ket) {
     Orbital &bra = *this;
-    if ((bra.getSpin() == Alpha) and (ket.getSpin() == Beta)) {
-        return 0.0;
-    }
-    if ((bra.getSpin() == Beta) and (ket.getSpin() == Alpha)) {
-        return 0.0;
-    }
-    double re = 0.0;
-    double im = 0.0;
-    if (bra.hasReal() and ket.hasReal()) re += bra.re().dot(ket.re());
-    if (bra.hasImag() and ket.hasImag()) re += bra.im().dot(ket.im());
-    if (bra.hasReal() and ket.hasImag()) im += bra.re().dot(ket.im());
-    if (bra.hasImag() and ket.hasReal()) im -= bra.im().dot(ket.re());
-    return complex<double>(re, im);
-}
-
-void Orbital::normalize() {
-    double norm = sqrt(getSquareNorm());
-    *this *= 1.0/norm;
-}
-
-void Orbital::operator*=(double c) {
-    if (hasReal()) (*this->real) *= c;
-    if (hasImag()) (*this->imag) *= c;
+    if ((bra.getSpin() == Alpha) and (ket.getSpin() == Beta)) return 0.0;
+    if ((bra.getSpin() == Beta) and (ket.getSpin() == Alpha)) return 0.0;
+    return ComplexFunction<3>::dot(ket);
 }
 
 //send an orbital with MPI

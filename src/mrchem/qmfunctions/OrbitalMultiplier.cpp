@@ -4,10 +4,10 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-OrbitalMultiplier::OrbitalMultiplier(double prec)
-    : add(prec, MRA->getMaxScale()),
-      mult(prec, MRA->getMaxScale()),
-      grid(MRA->getMaxScale()) {
+OrbitalMultiplier::OrbitalMultiplier(double prec, int max_scale)
+    : add(prec, max_scale),
+      mult(prec, max_scale),
+      grid(max_scale) {
 }
 
 void OrbitalMultiplier::setPrecision(double prec) {
@@ -37,21 +37,19 @@ void OrbitalMultiplier::adjoint(Orbital &phi_ab, double c, Orbital &phi_a, Orbit
     calcImagPart(phi_ab, c, phi_a, phi_b, true);
 }
 
-void OrbitalMultiplier::calcRealPart(Orbital &Vphi,
-                                     Potential &V,
-                                     Orbital &phi) {
+void OrbitalMultiplier::calcRealPart(Orbital &Vphi, Potential &V, Orbital &phi) {
     if (Vphi.hasReal()) MSG_ERROR("Orbital not empty");
     FunctionTreeVector<3> vec;
     if (V.hasReal() and phi.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.re());
-        this->mult(*tree, 1.0, V.re(), phi.re(), 0);
+        this->grid(*tree, phi.real());
+        this->mult(*tree, 1.0, V.real(), phi.real(), 0);
         vec.push_back(1.0, tree);
     }
     if (V.hasImag() and phi.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.im());
-        this->mult(*tree, 1.0, V.im(), phi.im(), 0);
+        this->grid(*tree, phi.imag());
+        this->mult(*tree, 1.0, V.imag(), phi.imag(), 0);
         vec.push_back(-1.0, tree);
     }
     if (vec.size() == 1) {
@@ -60,8 +58,8 @@ void OrbitalMultiplier::calcRealPart(Orbital &Vphi,
     }
     if (vec.size() == 2) {
         Vphi.allocReal();
-        this->grid(Vphi.re(), vec);
-        this->add(Vphi.re(), vec, 0);
+        this->grid(Vphi.real(), vec);
+        this->add(Vphi.real(), vec, 0);
         vec.clear(true);
     }
 }
@@ -74,14 +72,14 @@ void OrbitalMultiplier::calcImagPart(Orbital &Vphi,
     FunctionTreeVector<3> vec;
     if (V.hasReal() and phi.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.im());
-        this->mult(*tree, 1.0, V.re(), phi.im(), 0);
+        this->grid(*tree, phi.imag());
+        this->mult(*tree, 1.0, V.real(), phi.imag(), 0);
         vec.push_back(1.0, tree);
     }
     if (V.hasImag() and phi.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.re());
-        this->mult(*tree, 1.0, V.im(), phi.re(), 0);
+        this->grid(*tree, phi.real());
+        this->mult(*tree, 1.0, V.imag(), phi.real(), 0);
         if (adjoint) {
             vec.push_back(-1.0, tree);
         } else {
@@ -94,8 +92,8 @@ void OrbitalMultiplier::calcImagPart(Orbital &Vphi,
     }
     if (vec.size() == 2) {
         Vphi.allocImag();
-        this->grid(Vphi.im(), vec);
-        this->add(Vphi.im(), vec, 0);
+        this->grid(Vphi.imag(), vec);
+        this->add(Vphi.imag(), vec, 0);
         vec.clear(true);
     }
 }
@@ -105,19 +103,24 @@ void OrbitalMultiplier::calcRealPart(Orbital &phi_ab,
                                      Orbital &phi_a,
                                      Orbital &phi_b) {
     if (phi_ab.hasReal()) MSG_ERROR("Orbital not empty");
+
+    // sanity check spin
+    if (phi_ab.getSpin() != phi_a.getSpin()) MSG_FATAL("Mixing spins");
+    if (phi_ab.getSpin() != phi_b.getSpin()) MSG_FATAL("Mixing spins");
+
     FunctionTreeVector<3> vec;
     if (phi_a.hasReal() and phi_b.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi_a.re());
-        this->grid(*tree, phi_b.re());
-        this->mult(*tree, c, phi_a.re(), phi_b.re(), 0);
+        this->grid(*tree, phi_a.real());
+        this->grid(*tree, phi_b.real());
+        this->mult(*tree, c, phi_a.real(), phi_b.real(), 0);
         vec.push_back(1.0, tree);
     }
     if (phi_a.hasImag() and phi_b.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi_a.im());
-        this->grid(*tree, phi_b.im());
-        this->mult(*tree, c, phi_a.im(), phi_b.im(), 0);
+        this->grid(*tree, phi_a.imag());
+        this->grid(*tree, phi_b.imag());
+        this->mult(*tree, c, phi_a.imag(), phi_b.imag(), 0);
         vec.push_back(-1.0, tree);
     }
     if (vec.size() == 1) {
@@ -126,8 +129,8 @@ void OrbitalMultiplier::calcRealPart(Orbital &phi_ab,
     }
     if (vec.size() == 2) {
         phi_ab.allocReal();
-        this->grid(phi_ab.re(), vec);
-        this->add(phi_ab.re(), vec, 0);
+        this->grid(phi_ab.real(), vec);
+        this->add(phi_ab.real(), vec, 0);
         vec.clear(true);
     }
 }
@@ -138,19 +141,24 @@ void OrbitalMultiplier::calcImagPart(Orbital &phi_ab,
                                      Orbital &phi_b,
                                      bool adjoint) {
     if (phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
+
+    // sanity check spin
+    if (phi_ab.getSpin() != phi_a.getSpin()) MSG_FATAL("Mixing spins");
+    if (phi_ab.getSpin() != phi_b.getSpin()) MSG_FATAL("Mixing spins");
+
     FunctionTreeVector<3> vec;
     if (phi_a.hasReal() and phi_b.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi_a.re());
-        this->grid(*tree, phi_b.im());
-        this->mult(*tree, c, phi_a.re(), phi_b.im(), 0);
+        this->grid(*tree, phi_a.real());
+        this->grid(*tree, phi_b.imag());
+        this->mult(*tree, c, phi_a.real(), phi_b.imag(), 0);
         vec.push_back(1.0, tree);
     }
     if (phi_a.hasImag() and phi_b.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi_a.im());
-        this->grid(*tree, phi_b.re());
-        this->mult(*tree, c, phi_a.im(), phi_b.re(), 0);
+        this->grid(*tree, phi_a.imag());
+        this->grid(*tree, phi_b.real());
+        this->mult(*tree, c, phi_a.imag(), phi_b.real(), 0);
         if (adjoint) {
             vec.push_back(-1.0, tree);
         } else {
@@ -163,8 +171,8 @@ void OrbitalMultiplier::calcImagPart(Orbital &phi_ab,
     }
     if (vec.size() == 2) {
         phi_ab.allocImag();
-        this->grid(phi_ab.im(), vec);
-        this->add(phi_ab.im(), vec, 0);
+        this->grid(phi_ab.imag(), vec);
+        this->add(phi_ab.imag(), vec, 0);
         vec.clear(true);
     }
 }

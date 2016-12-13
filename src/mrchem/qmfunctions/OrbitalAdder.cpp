@@ -2,14 +2,12 @@
 #include "OrbitalVector.h"
 #include "Orbital.h"
 
-extern MultiResolutionAnalysis<3> *MRA; // Global MRA
-
 using namespace std;
 using namespace Eigen;
 
-OrbitalAdder::OrbitalAdder(double prec)
-    : add(prec, MRA->getMaxScale()),
-      grid(MRA->getMaxScale()) {
+OrbitalAdder::OrbitalAdder(double prec, int max_scale)
+    : add(prec, max_scale),
+      grid(max_scale) {
 }
 
 void OrbitalAdder::operator()(Orbital &phi_ab,
@@ -20,6 +18,10 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
     if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
     if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
 
+    // sanity check spin
+    if (phi_ab.getSpin() != phi_a.getSpin()) MSG_FATAL("Mixing spins");
+    if (phi_ab.getSpin() != phi_b.getSpin()) MSG_FATAL("Mixing spins");
+
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
 
@@ -28,81 +30,87 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
     bool bHasReal = (fabs(b.real()) > MachineZero);
     bool bHasImag = (fabs(b.imag()) > MachineZero);
 
-    if (phi_a.hasReal() and aHasReal) rvec.push_back(a.real(), &phi_a.re());
-    if (phi_b.hasReal() and bHasReal) rvec.push_back(b.real(), &phi_b.re());
-    if (phi_a.hasImag() and aHasImag) rvec.push_back(-a.imag(), &phi_a.im());
-    if (phi_b.hasImag() and bHasImag) rvec.push_back(-b.imag(), &phi_b.im());
+    if (phi_a.hasReal() and aHasReal) rvec.push_back(a.real(), &phi_a.real());
+    if (phi_b.hasReal() and bHasReal) rvec.push_back(b.real(), &phi_b.real());
+    if (phi_a.hasImag() and aHasImag) rvec.push_back(-a.imag(), &phi_a.imag());
+    if (phi_b.hasImag() and bHasImag) rvec.push_back(-b.imag(), &phi_b.imag());
 
-    if (phi_a.hasReal() and aHasImag) ivec.push_back(a.imag(), &phi_a.re());
-    if (phi_b.hasReal() and bHasImag) ivec.push_back(b.imag(), &phi_b.re());
-    if (phi_a.hasImag() and aHasReal) ivec.push_back(a.real(), &phi_a.im());
-    if (phi_b.hasImag() and bHasReal) ivec.push_back(b.real(), &phi_b.im());
+    if (phi_a.hasReal() and aHasImag) ivec.push_back(a.imag(), &phi_a.real());
+    if (phi_b.hasReal() and bHasImag) ivec.push_back(b.imag(), &phi_b.real());
+    if (phi_a.hasImag() and aHasReal) ivec.push_back(a.real(), &phi_a.imag());
+    if (phi_b.hasImag() and bHasReal) ivec.push_back(b.real(), &phi_b.imag());
 
     if (rvec.size() > 0) {
         if (union_grid) {
             phi_ab.allocReal();
-            this->grid(phi_ab.re(), rvec);
-            this->add(phi_ab.re(), rvec, 0);
+            this->grid(phi_ab.real(), rvec);
+            this->add(phi_ab.real(), rvec, 0);
         } else {
             phi_ab.allocReal();
-            this->add(phi_ab.re(), rvec);
+            this->add(phi_ab.real(), rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
             phi_ab.allocImag();
-            this->grid(phi_ab.im(), ivec);
-            this->add(phi_ab.im(), ivec, 0);
+            this->grid(phi_ab.imag(), ivec);
+            this->add(phi_ab.imag(), ivec, 0);
         } else {
             phi_ab.allocImag();
-            this->add(phi_ab.im(), ivec);
+            this->add(phi_ab.imag(), ivec);
         }
     }
 }
 
 void OrbitalAdder::operator()(Orbital &out,
                               std::vector<complex<double> > &coefs,
-                              std::vector<Orbital *> &orbs,
+                              std::vector<Orbital *> &inp,
                               bool union_grid) {
     double prec = this->add.getPrecision();
     if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Orbital not empty");
-    if (coefs.size() != orbs.size()) MSG_ERROR("Invalid arguments");
+    if (coefs.size() != inp.size()) MSG_ERROR("Invalid arguments");
+
+    // sanity check spin
+    for (int i = 0; i < inp.size(); i++) {
+        if (abs(coefs[i]) < MachineZero) continue;
+        if (out.getSpin() != inp[i]->getSpin()) MSG_FATAL("Mixing spins");
+    }
 
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
-    for (int i = 0; i < orbs.size(); i++) {
+    for (int i = 0; i < inp.size(); i++) {
         bool cHasReal = (fabs(coefs[i].real()) > MachineZero);
         bool cHasImag = (fabs(coefs[i].imag()) > MachineZero);
 
-        bool oHasReal = orbs[i]->hasReal();
-        bool oHasImag = orbs[i]->hasImag();
+        bool oHasReal = inp[i]->hasReal();
+        bool oHasImag = inp[i]->hasImag();
 
-        if (cHasReal and oHasReal) rvec.push_back(coefs[i].real(), &orbs[i]->re());
-        if (cHasImag and oHasImag) rvec.push_back(-coefs[i].imag(), &orbs[i]->im());
+        if (cHasReal and oHasReal) rvec.push_back(coefs[i].real(), &inp[i]->real());
+        if (cHasImag and oHasImag) rvec.push_back(-coefs[i].imag(), &inp[i]->imag());
 
-        if (cHasImag and oHasReal) ivec.push_back(coefs[i].imag(), &orbs[i]->re());
-        if (cHasReal and oHasImag) ivec.push_back(coefs[i].real(), &orbs[i]->im());
+        if (cHasImag and oHasReal) ivec.push_back(coefs[i].imag(), &inp[i]->real());
+        if (cHasReal and oHasImag) ivec.push_back(coefs[i].real(), &inp[i]->imag());
     }
 
     if (rvec.size() > 0) {
         if (union_grid) {
             out.allocReal();
-            this->grid(out.re(), rvec);
-            this->add(out.re(), rvec, 0);
+            this->grid(out.real(), rvec);
+            this->add(out.real(), rvec, 0);
         } else {
             out.allocReal();
-            this->add(out.re(), rvec);
+            this->add(out.real(), rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
             out.allocImag();
-            this->grid(out.im(), ivec);
-            this->add(out.im(), ivec, 0);
+            this->grid(out.imag(), ivec);
+            this->add(out.imag(), ivec, 0);
         } else {
             out.allocImag();
-            this->add(out.im(), ivec);
+            this->add(out.imag(), ivec);
         }
     }
 }
@@ -131,34 +139,40 @@ void OrbitalAdder::operator()(Orbital &out,
     if (c.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Output not empty");
 
+    // sanity check spin
+    for (int i = 0; i < inp.size(); i++) {
+        if (fabs(c(i)) < MachineZero) continue;
+        if (out.getSpin() != inp[i]->getSpin()) MSG_FATAL("Mixing spins");
+    }
+
     double thrs = MachineZero;
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
     for (int i = 0; i < inp.size(); i++) {
         double c_i = c(i);
         Orbital &phi_i = inp.getOrbital(i);
-        if (phi_i.hasReal() and fabs(c_i) > thrs) rvec.push_back(c_i, &phi_i.re());
-        if (phi_i.hasImag() and fabs(c_i) > thrs) ivec.push_back(c_i, &phi_i.im());
+        if (phi_i.hasReal() and fabs(c_i) > thrs) rvec.push_back(c_i, &phi_i.real());
+        if (phi_i.hasImag() and fabs(c_i) > thrs) ivec.push_back(c_i, &phi_i.imag());
     }
 
     if (rvec.size() > 0) {
         if (union_grid) {
             out.allocReal();
-            this->grid(out.re(), rvec);
-            this->add(out.re(), rvec, 0);
+            this->grid(out.real(), rvec);
+            this->add(out.real(), rvec, 0);
         } else {
             out.allocReal();
-            this->add(out.re(), rvec);
+            this->add(out.real(), rvec);
         }
     }
     if (ivec.size() > 0) {
         if (union_grid) {
             out.allocImag();
-            this->grid(out.im(), ivec);
-            this->add(out.im(), ivec, 0);
+            this->grid(out.imag(), ivec);
+            this->add(out.imag(), ivec, 0);
         } else {
             out.allocImag();
-            this->add(out.im(), ivec);
+            this->add(out.imag(), ivec);
         }
     }
 }

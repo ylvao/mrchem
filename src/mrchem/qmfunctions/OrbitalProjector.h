@@ -12,8 +12,10 @@ class Nuclei;
 
 class OrbitalProjector {
 public:
-    OrbitalProjector(double prec);
+    OrbitalProjector(double prec, int max_scale);
     virtual ~OrbitalProjector() { }
+
+    void setPrecision(double prec) { this->project.setPrecision(prec); }
 
     OrbitalVector* operator()(const Nuclei &nucs);
 

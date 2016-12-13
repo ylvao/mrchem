@@ -10,8 +10,6 @@
 #include "Timer.h"
 #include "MathUtils.h"
 
-extern MultiResolutionAnalysis<3> *MRA; // Global MRA
-
 using namespace std;
 using namespace Eigen;
 
@@ -35,9 +33,9 @@ using namespace Eigen;
 //    TelePrompter::setPrecision(oldPrec);
 //}
 
-OrbitalProjector::OrbitalProjector(double prec)
-    : project(prec, MRA->getMaxScale()),
-      grid(MRA->getMaxScale()) {
+OrbitalProjector::OrbitalProjector(double prec, int max_scale)
+    : project(prec, max_scale),
+      grid(max_scale) {
 }
 
 OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
@@ -67,7 +65,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                     HydrogenicFunction h_func(n, l, m, Z, R);
 
                     phi_i.allocReal();
-                    this->project(phi_i.re(), h_func);
+                    this->project(phi_i.real(), h_func);
 
                     printout(0, setw(5) << totOrbs);
                     printout(0, setw(5) << phi_i.printSpin());
@@ -99,7 +97,7 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
         GaussExp<3> &gtOrb = moExp->getOrbital(i);
         mwOrb.clear(true);
         mwOrb.allocReal();
-        this->project(mwOrb.re(), gtOrb);
+        this->project(mwOrb.real(), gtOrb);
         printout(0, setw(5) << i);
         printout(0, setw(5) << mwOrb.printSpin());
         printout(0, setw(5) << mwOrb.getOccupancy());
@@ -112,9 +110,9 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
 }
 
 void OrbitalProjector::operator()(OrbitalVector &orbs,
-                                       const string &bf,
-                                       const string &mo_a,
-                                       const string &mo_b) {
+                                  const string &bf,
+                                  const string &mo_a,
+                                  const string &mo_b) {
     NOT_IMPLEMENTED_ABORT;
 //    Timer timer;
 //    int oldPrec = TelePrompter::setPrecision(15);

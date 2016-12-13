@@ -146,7 +146,7 @@ Orbital& OrbitalVector::getOrbital(int i) {
 int OrbitalVector::getNOccupied() const {
     int nOccupied = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -161,7 +161,7 @@ int OrbitalVector::getNOccupied() const {
 int OrbitalVector::getNEmpty() const {
     int nEmpty = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -176,7 +176,7 @@ int OrbitalVector::getNEmpty() const {
 int OrbitalVector::getNSingly() const {
     int nSingly = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -191,7 +191,7 @@ int OrbitalVector::getNSingly() const {
 int OrbitalVector::getNPaired() const {
     int nPaired = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -206,7 +206,7 @@ int OrbitalVector::getNPaired() const {
 int OrbitalVector::getNAlpha() const {
     int nAlpha = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -221,7 +221,7 @@ int OrbitalVector::getNAlpha() const {
 int OrbitalVector::getNBeta() const {
     int nBeta = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -236,7 +236,7 @@ int OrbitalVector::getNBeta() const {
 int OrbitalVector::getNDoubly() const {
     int nDoubly = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -254,7 +254,7 @@ int OrbitalVector::getNDoubly() const {
 int OrbitalVector::getNElectrons(int inpSpin) const {
     int nElectrons = 0;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -283,7 +283,7 @@ int OrbitalVector::getMultiplicity() const {
 bool OrbitalVector::isConverged(double prec) const {
     bool converged = true;
     for (int i = 0; i < this->size(); i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -304,7 +304,7 @@ VectorXd OrbitalVector::getErrors() const {
     int nOrbs = this->size();
     VectorXd errors = VectorXd::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -323,7 +323,7 @@ void OrbitalVector::setErrors(const VectorXd &errors) {
         MSG_ERROR("Size mismatch");
     }
     for (int i = 0; i < nOrbs; i++) {
-        Orbital *orb = getOrbitalPtr(i);
+        Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -337,7 +337,7 @@ VectorXi OrbitalVector::getSpins() const {
     int nOrbs = this->size();
     VectorXi spins = VectorXi::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -356,7 +356,7 @@ void OrbitalVector::setSpins(const VectorXi &spins) {
         MSG_ERROR("Size mismatch");
     }
     for (int i = 0; i < nOrbs; i++) {
-        Orbital *orb = getOrbitalPtr(i);
+        Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -370,7 +370,7 @@ VectorXi OrbitalVector::getOccupancies() const {
     int nOrbs = this->size();
     VectorXi occ = VectorXi::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -389,7 +389,7 @@ void OrbitalVector::setOccupancies(const VectorXi &occ) {
         MSG_ERROR("Size mismatch");
     }
     for (int i = 0; i < nOrbs; i++) {
-        Orbital *orb = getOrbitalPtr(i);
+        Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -403,7 +403,7 @@ VectorXd OrbitalVector::getSquareNorms() const {
     int nOrbs = this->size();
     VectorXd norms = VectorXd::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -418,7 +418,7 @@ VectorXd OrbitalVector::getNorms() const {
     int nOrbs = this->size();
     VectorXd norms = VectorXd::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) {
-        const Orbital *orb = getOrbitalPtr(i);
+        const Orbital *orb = this->orbitals[i];
         if (orb == 0) {
             continue;
         }
@@ -643,6 +643,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P_H(OrbitalVector &ket) {
 #endif
 }
 
+/*
 int OrbitalVector::printTreeSizes() const {
     int nNodes = 0;
     int nTrees = 0;
@@ -655,4 +656,5 @@ int OrbitalVector::printTreeSizes() const {
     println(0, " OrbitalVector     " << setw(15) << nTrees << setw(25) << nNodes);
     return nNodes;
 }
+*/
 
