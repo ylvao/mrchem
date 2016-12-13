@@ -17,8 +17,6 @@ public:
     void initialize(const Eigen::VectorXd &energies);
     void clear();
 
-    int printTreeSizes() const;
-
     void setPrecision(double prec) { this->apply.setPrecision(prec); }
     void setThreshold(double thrs) { this->threshold = thrs; }
     double getThreshold() const { return this->threshold; }

@@ -116,6 +116,7 @@ VectorXd HelmholtzOperatorSet::getLambda() const {
 }
 
 /** Prints the number of trees and nodes kept in the operator set */
+/*
 int HelmholtzOperatorSet::printTreeSizes() const {
     int totNodes = 0;
     int totTrees = 0;
@@ -130,6 +131,7 @@ int HelmholtzOperatorSet::printTreeSizes() const {
     println(0, " HelmholtzOperators" << setw(15) << totTrees << setw(25) << totNodes);
     return totNodes;
 }
+*/
 
 void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
     if (out.hasReal()) MSG_ERROR("Orbital not empty");
@@ -139,10 +141,10 @@ void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
 
     if (inp.hasReal()) {
         out.allocReal();
-        this->apply(out.re(), H_i, inp.re());
+        this->apply(out.real(), H_i, inp.real());
     }
     if (inp.hasImag()) {
         out.allocImag();
-        this->apply(out.im(), H_i, inp.im());
+        this->apply(out.imag(), H_i, inp.imag());
     }
 }
