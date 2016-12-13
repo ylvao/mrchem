@@ -24,7 +24,7 @@
 class Accelerator {
 public:
     Accelerator(int max, int min, bool sep);
-    virtual ~Accelerator();
+    virtual ~Accelerator() { this->clear(); }
     void clear();
 
     void setMaxHistory(int max) { this->maxHistory = max; }
@@ -43,7 +43,6 @@ public:
     void replaceOrbitalUpdates(OrbitalVector &dPhi, int nHistory = 0);
 
     void rotate(const Eigen::MatrixXd &U, bool rotAll = true);
-    int printTreeSizes() const;
 
 protected:
     int minHistory;   ///< Accelerator is activated when history reaches this size

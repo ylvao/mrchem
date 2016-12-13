@@ -8,21 +8,15 @@
 using namespace std;
 using namespace Eigen;
 
-Accelerator::Accelerator(int max, int min, bool sep)
-        : add(-1.0),
-          sepOrbitals(sep),
-          minHistory(min),
-          maxHistory(max) {
-    if (this->minHistory < 0) {
-        this->minHistory = 0;
-    }
-    if (this->maxHistory < this->minHistory) {
-        MSG_ERROR("Invalid argument");
-    }
-}
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-Accelerator::~Accelerator() {
-    this->clear();
+Accelerator::Accelerator(int max, int min, bool sep)
+        : add(-1.0, MRA->getMaxScale()),
+          minHistory(min),
+          maxHistory(max),
+          sepOrbitals(sep) {
+    if (this->minHistory < 0) this->minHistory = 0;
+    if (this->maxHistory < this->minHistory) MSG_ERROR("Invalid argument");
 }
 
 /** Delete all orbitals and Fock matrices in history.
@@ -351,6 +345,7 @@ void Accelerator::sortLinearSystem(vector<MatrixXd *> &A_matrices,
 }
 
 /** Prints the number of trees and nodes kept in the iterative history */
+/*
 int Accelerator::printTreeSizes() const {
     int totNodes = 0;
     int totTrees = 0;
@@ -372,4 +367,5 @@ int Accelerator::printTreeSizes() const {
     println(0, " Accelerator       " << setw(15) << totTrees << setw(25) << totNodes);
     return totNodes;
 }
+*/
 
