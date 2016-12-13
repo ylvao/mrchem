@@ -34,8 +34,6 @@ public:
     ExchangeOperator *getExchangeOperator() { return this->K; }
     XCOperator *getXCOperator() { return this->XC; }
 
-    int printTreeSizes() const;
-
     virtual void rotate(Eigen::MatrixXd &U);
 
     virtual void setup(double prec);
@@ -75,7 +73,6 @@ public:
     Eigen::MatrixXd applyAdjointPerturbations(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
 protected:
-    OrbitalAdder add;
     KineticOperator *T;
     NuclearPotential *V;
     CoulombOperator *J;

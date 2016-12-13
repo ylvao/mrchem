@@ -19,7 +19,6 @@ FockOperator::FockOperator(KineticOperator *t,
                            ExchangeOperator *k,
                            XCOperator *xc)
     : QMOperator(MRA->getMaxScale()),
-      add(-1.0),
       T(t),
       V(v),
       J(j),
@@ -39,7 +38,6 @@ void FockOperator::setup(double prec) {
     Timer timer;
     TelePrompter::printHeader(0, "Setting up Fock operator");
     QMOperator::setup(prec);
-    this->add.setPrecision(prec);
     if (this->T != 0) this->T->setup(prec);
     if (this->V != 0) this->V->setup(prec);
     if (this->J != 0) this->J->setup(prec);
@@ -53,7 +51,6 @@ void FockOperator::setup(double prec) {
 }
 
 void FockOperator::clear() {
-    this->add.setPrecision(-1.0);
     if (this->T != 0) this->T->clear();
     if (this->V != 0) this->V->clear();
     if (this->J != 0) this->J->clear();
@@ -66,17 +63,12 @@ void FockOperator::clear() {
 }
 
 void FockOperator::rotate(MatrixXd &U) {
-    if (this->T != 0) this->T->rotate(U);
-    if (this->V != 0) this->V->rotate(U);
-    if (this->J != 0) this->J->rotate(U);
     if (this->K != 0) this->K->rotate(U);
-    if (this->XC != 0) this->XC->rotate(U);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        getPerturbationOperator(i).rotate(U);
-    }
 }
 
 Orbital* FockOperator::operator() (Orbital &orb_p) {
+    OrbitalAdder add(this->apply_prec, this->max_scale);
+
     vector<Orbital *> orbs;
     if (this->T != 0) orbs.push_back((*this->T)(orb_p));
     if (this->V != 0) orbs.push_back((*this->V)(orb_p));
@@ -92,7 +84,7 @@ Orbital* FockOperator::operator() (Orbital &orb_p) {
     for (int i = 0; i < orbs.size(); i++) coefs.push_back(1.0);
 
     Orbital *result = new Orbital(orb_p);
-    this->add(*result, coefs, orbs, true);
+    add(*result, coefs, orbs, true);
 
     for (int n = 0; n < orbs.size(); n++) {
         if (orbs[n] != 0) delete orbs[n];
@@ -249,6 +241,8 @@ MatrixXd FockOperator::applyAdjointKinetic(OrbitalVector &i_orbs, OrbitalVector 
 }
 
 Orbital* FockOperator::applyPotential(Orbital &orb_p) {
+    OrbitalAdder add(this->apply_prec, this->max_scale);
+
     vector<Orbital *> orbs;
     if (this->V != 0) orbs.push_back((*this->V)(orb_p));
     if (this->J != 0) orbs.push_back((*this->J)(orb_p));
@@ -260,7 +254,7 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
 
     Timer timer;
     Orbital *result = new Orbital(orb_p);
-    this->add(*result, coefs, orbs, false);
+    add(*result, coefs, orbs, false);
     timer.stop();
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
@@ -413,6 +407,7 @@ MatrixXd FockOperator::applyAdjointPerturbations(OrbitalVector &i_orbs, OrbitalV
 }
 
 /** Prints the number of trees and nodes kept in the Fock operator */
+/*
 int FockOperator::printTreeSizes() const {
     int nNodes = 0;
     if (this->V != 0) nNodes += this->V->printTreeSizes();
@@ -426,3 +421,4 @@ int FockOperator::printTreeSizes() const {
     }
     return nNodes;
 }
+*/
