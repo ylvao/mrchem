@@ -7,11 +7,12 @@ template<int D> class FunctionTree;
 
 class Density {
 public:
-    Density(bool s);
+    Density(bool s = false);
     Density(const Density &rho);
     virtual ~Density();
     void clear();
 
+    void setIsSpinDensity(bool s) { this->spin = s; }
     bool isSpinDensity() const { return this->spin; }
     int getNNodes(int type = Paired) const;
 
@@ -37,7 +38,7 @@ public:
     void Rcv_Density(int source, int tag);
 
 protected:
-    const bool spin;
+    bool spin;
     FunctionTree<3> *dens_t;
     FunctionTree<3> *dens_a;
     FunctionTree<3> *dens_b;
