@@ -157,6 +157,14 @@ void OrbitalVector::push_back(Orbital& Orb) {
     this->orbitals.push_back(newOrb);	
 }
 
+/** Remove the last orbital from this set
+ *
+ */
+void OrbitalVector::pop_back(bool free) {
+  this->orbitals[this->size()-1]->clear(free);
+  this->orbitals.pop_back();	
+}
+
 const Orbital& OrbitalVector::getOrbital(int i) const {
     if (this->orbitals[i] == 0) MSG_ERROR("Incomplete set");
     return *this->orbitals[i];

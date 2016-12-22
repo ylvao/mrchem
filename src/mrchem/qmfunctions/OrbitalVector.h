@@ -19,6 +19,7 @@ public:
 
     void push_back(int n_orbs, int occ, int spin);
     void push_back(Orbital& Orb);
+    void pop_back(bool free = true);
     void clear(bool free = true);
     void clearVec(bool free = true);
 

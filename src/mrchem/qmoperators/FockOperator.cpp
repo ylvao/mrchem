@@ -171,17 +171,14 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 
     int Niter = (Ni + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
 
-    //make vector with adresses of own i orbitals
+    //make vector with adresses of own orbitals
     int i = 0;
-    for (int Ix = MPI_rank;  Ix < MPI_size ; Ix += MPI_size) {
-      OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));
+    for (int Ix = MPI_rank; Ix < Ni; Ix += MPI_size) {
+      OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));//i orbitals
       OrbsIx[i++] = Ix;
     }
+    for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
 
-    //make vector with adresses of own j orbitals
-    for (int Ix = MPI_rank;  Ix < MPI_size ; Ix += MPI_size) {
-      OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));
-    }
 
     for (int iter = 0;  iter<Niter ; iter++) {
       //get a new chunk from other processes
@@ -208,7 +205,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
       rcvOrbs.clearVec(false);//reset to zero size orbital vector
     }
 
-    //clear orbitals. NB: only references and metadata must be deleted, not the trees in orbitals
+    //clear orbital vector adresses. NB: only references and metadata must be deleted, not the trees in orbitals
     OrbVecChunk_i.clearVec(false);
     OrbVecChunk_j.clearVec(false);
 

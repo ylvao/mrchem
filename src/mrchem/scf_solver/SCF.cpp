@@ -254,25 +254,6 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 	}
     }
 
-#ifdef HAVE_MPI
-    //broadcast results
-    /*    for (int i = 0; i < phi_n.size(); i++) {
-      Timer timer;
-      Orbital &np1Phi_i = phi_np1.getOrbital(i);
-      
-      if(i%MPI_size==MPI_rank){
-	for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	  if(i_mpi!= MPI_rank)np1Phi_i.send_Orbital(i_mpi, 54);
-	}
-	timer.stop();
-	printout(10, setw(3) << i<<" sendtime " <<setw(18) << timer.getWallTime() << endl);	
-      }else{
-	np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
-	printout(10, MPI_rank<<" "<<setw(3)<<i<<" rcvtime "<<setw(18)<<timer.getWallTime()<<endl);	
-      }
-      }*/
-#endif
-
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
     TelePrompter::setPrecision(oldprec);
