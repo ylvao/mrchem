@@ -2,6 +2,8 @@
 
 #include "OrbitalVector.h"
 #include "Orbital.h"
+#include "FunctionTree.h"
+#include "SerialFunctionTree.h"
 #include "parallel.h"
 #include "Timer.h"
 
@@ -9,6 +11,7 @@ using namespace std;
 using namespace Eigen;
 
 extern Orbital workOrb;
+//NB: workOrbVec is only for temporary orbitals and orbitals stored there can be overwritten, i.e. destroyed
 OrbitalVector workOrbVec(workOrbVecSize);
 
 /** OrbitalVector constructor
@@ -607,6 +610,7 @@ MatrixXcd OrbitalVector::calcOverlapMatrix_P(OrbitalVector &ket) {
     NOT_REACHED_ABORT;
 #endif
 }
+
 /** Calculate overlap matrix between two orbital sets using MPI
  * assumes Hermitian overlap
  */
@@ -693,3 +697,152 @@ int OrbitalVector::printTreeSizes() const {
     return nNodes;
 }
 
+
+struct Metadata{
+  int Norbitals;
+  int spin[workOrbVecSize];
+  int occupancy[workOrbVecSize];
+  int NchunksReal[workOrbVecSize];
+  int NchunksImag[workOrbVecSize];
+  int Ix[workOrbVecSize];
+  double error[workOrbVecSize];
+};
+
+//send an orbitalvector with MPI
+void OrbitalVector::send_OrbVec(int dest, int tag, int* OrbsIx){
+#ifdef HAVE_MPI
+  MPI_Status status;
+  MPI_Comm comm=MPI_COMM_WORLD;
+
+  assert(this->size()<=workOrbVecSize);//TODO: should remove this restriction! (see also exchangeOrbVecChunk)
+
+  Metadata Orbinfo;
+
+  Orbinfo.Norbitals = this->size();
+  
+  Orbital* orb_i;
+  for (int i = 0; i < this->size(); i++) {
+    orb_i = &this->getOrbital(i);
+    Orbinfo.spin[i] = orb_i->getSpin();
+    Orbinfo.occupancy[i] = orb_i->getOccupancy();
+    Orbinfo.error[i] = orb_i->getError();
+    if(orb_i->hasReal()){
+      Orbinfo.NchunksReal[i] = orb_i->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    }else{Orbinfo.NchunksReal[i] = 0;}
+    if(orb_i->hasImag()){
+      Orbinfo.NchunksImag[i] = orb_i->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    }else{Orbinfo.NchunksImag[i] = 0;}
+    Orbinfo.Ix[i] = OrbsIx[i];
+  }
+
+  int count=sizeof(Metadata);
+  MPI_Send(&Orbinfo, count, MPI_BYTE, dest, tag, comm);
+  
+  for (int i = 0; i < this->size(); i++) {
+    orb_i = &this->getOrbital(i);
+    if(orb_i->hasReal())Send_SerialTree(&orb_i->re(), Orbinfo.NchunksReal[i], dest, 2*i+1+tag, comm);
+    if(orb_i->hasImag())Send_SerialTree(&orb_i->im(), Orbinfo.NchunksImag[i], dest, 2*i+2+tag, comm);
+  }
+  
+#endif
+}
+
+
+//receive an orbitalvector with MPI
+void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVecIx){
+#ifdef HAVE_MPI
+  MPI_Status status;
+  MPI_Comm comm=MPI_COMM_WORLD;
+
+  Metadata Orbinfo;
+
+  int count=sizeof(Metadata);
+  MPI_Recv(&Orbinfo, count, MPI_BYTE, source, tag, comm, &status);
+
+  Orbital* orb_i;
+  for (int i = 0; i < Orbinfo.Norbitals; i++) {
+    if(this->size() < workOrbVecIx+1){
+      //make place for the incoming orbital adresses
+      Orbital *orb = new Orbital(Orbinfo.occupancy[i], Orbinfo.spin[i]);
+      this->orbitals.push_back(orb);
+    }
+    //the orbitals are stored in workOrbVec, and only the metadata/adresses is copied into OrbitalVector
+    orb_i = &workOrbVec.getOrbital(workOrbVecIx);
+
+    orb_i->setSpin(Orbinfo.spin[i]);
+    orb_i->setOccupancy(Orbinfo.occupancy[i]);
+    orb_i->setError(Orbinfo.error[i]);
+    
+    if(Orbinfo.NchunksReal[i]>0){
+      if(not orb_i->hasReal()){
+	//We must have a tree defined for receiving nodes. Define one:
+	orb_i->allocReal();
+      }
+      Rcv_SerialTree(&orb_i->re(), Orbinfo.NchunksReal[i], source, 2*i+1+tag, comm);}
+    
+    if(Orbinfo.NchunksImag[i]>0){
+      if(not orb_i->hasImag()){
+	//We must have a tree defined for receiving nodes. Define one:
+	orb_i->allocImag();
+      }
+       Rcv_SerialTree(&orb_i->im(), Orbinfo.NchunksImag[i], source, 2*i+2+tag, comm);
+    }else{
+    //&(this->im())=0;
+    }
+    OrbsIx[workOrbVecIx] = Orbinfo.Ix[i];
+    //the orbitals are stored in workOrbVec, and only the metadata/adresses is copied into OrbitalVector
+    this->getOrbital(workOrbVecIx) = workOrbVec.getOrbital(workOrbVecIx);
+    workOrbVecIx++;
+  }
+  for (int i = workOrbVecIx; i<workOrbVecSize; i++) {
+    OrbsIx[i] = -1-10*i;//can be used as a flag to show that the orbital is not set
+  }
+  
+#endif
+
+}
+
+/** Send and receive a chunk of an OrbitalVector
+ * this : Vector with orbitals locally (owned by this MPI process)
+ * myOrbsIx : indices of myOrbs in the orbital vector
+ * rcvOrbs : Vector with orbitals received by from other processes
+ * rcvOrbsIx : indices of rcvOrbs in the orbital vector
+ * size : total number of Orbitals in OrbitalVector
+ * iter0 : iteration to start with, to know which chunk is to be treated
+ * we assume that the chunk size is <= workOrbVecSize and that myOrbs.size <= workOrbVecSize
+ * NB: it is assumed that the orbitals are evenly distributed among MPI processes (or as evenly as possible)
+ */
+void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int iter0){
+
+  assert(this->size() <= workOrbVecSize);//TODO: should remove this restriction! (see also send_OrbVec)
+  
+  int maxsizeperOrbvec = (size + MPI_size-1)/MPI_size;
+
+  int Niter = workOrbVecSize/maxsizeperOrbvec;//max number of processes to communicate with in this iteration, until the chunk is filled
+
+  int RcvOrbVecIx = 0;
+
+  for (int iter = iter0*Niter;  iter < (iter0+1)*Niter; iter++) {
+    if(iter>=MPI_size) break;
+    int rcv_MPI = (MPI_size+iter-MPI_rank)%MPI_size;//rank of process to communicate with
+    if(MPI_rank > rcv_MPI){
+      //send first, then receive
+      this->send_OrbVec(rcv_MPI, iter, myOrbsIx);
+      rcvOrbs.Rcv_OrbVec(rcv_MPI, iter, rcvOrbsIx, RcvOrbVecIx);
+    }else if(MPI_rank < rcv_MPI){
+      //receive first, then send
+      rcvOrbs.Rcv_OrbVec(rcv_MPI, iter, rcvOrbsIx, RcvOrbVecIx);
+      this->send_OrbVec(rcv_MPI, iter, myOrbsIx);
+    }else{
+      for (int i = 0;  i < this->size(); i++){
+	rcvOrbsIx[RcvOrbVecIx] = myOrbsIx[i];
+	if(rcvOrbs.size()<=RcvOrbVecIx){
+	  rcvOrbs.push_back(this->getOrbital(i));
+	}else{
+	  rcvOrbs.getOrbital(RcvOrbVecIx) = this->getOrbital(i);
+	}
+	RcvOrbVecIx++;
+      }
+    }
+  }
+}

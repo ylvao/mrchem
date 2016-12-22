@@ -155,6 +155,7 @@ double FockOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
     return result;
 }
 
+
 MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
@@ -162,67 +163,58 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 
 #ifdef HAVE_MPI
 
-    int orbVecIx = 0;
-    Orbital* orb_i;
-    OrbitalVector OrbVecChunk_i(0);
-    vector<int> rcv_OrbVec;
+    OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
+    OrbitalVector OrbVecChunk_j(0);//to store adresses of own j_orbs
+    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
+    int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
 
-    for (int i_Orb = MPI_rank; i_Orb < i_orbs.size(); i_Orb+=MPI_size) {
-      for (int iter = 0;  iter<MPI_size ; iter++) {
-	int rcv_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
-	int rcv_Orb = rcv_MPI+MPI_size*(i_Orb/MPI_size);
-	if(MPI_rank > rcv_MPI){
-	  //send first bra, then receive ket
-	  i_orbs.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
-	  workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(rcv_MPI, rcv_Orb);
-	  orb_i=&workOrbVec.getOrbital(orbVecIx++);
-	}else if(MPI_rank < rcv_MPI){
-	  //receive first bra, then send ket
-	  workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(rcv_MPI, rcv_Orb);
-	  i_orbs.getOrbital(i_Orb).send_Orbital(rcv_MPI, i_Orb);
-	  orb_i=&workOrbVec.getOrbital(orbVecIx++);
-	}else{
-	  orb_i=&i_orbs.getOrbital(i_Orb);
-	}
+    int Niter = (Ni + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
 
-	OrbVecChunk_i.push_back(*orb_i);
-	rcv_OrbVec.push_back(rcv_Orb);
-
-	if(OrbVecChunk_i.size()>=workOrbVecSize or (iter >= MPI_size-1 and i_Orb+MPI_size>=i_orbs.size())){
-	  for (int j = MPI_rank; j < j_orbs.size(); j+=MPI_size) {
-	    
-	    Orbital &orb_j = j_orbs.getOrbital(j);
-	    OrbitalVector OrbVecChunk_j(0);
-	    OrbVecChunk_j.push_back(orb_j);
-	    MatrixXd resultChunk = MatrixXd::Zero(OrbVecChunk_i.size(),OrbVecChunk_j.size());
-	    
-	    //Only one process does the computations
-	    OrbVecChunk_j.getOrbital(0).clear(false);
-	    OrbVecChunk_j.getOrbital(0)=orb_j;
-
-	    if (this->T != 0) resultChunk += (*this->T)(OrbVecChunk_i,OrbVecChunk_j);
-	    if (this->V != 0) resultChunk += (*this->V)(OrbVecChunk_i,OrbVecChunk_j);
-	    if (this->J != 0) resultChunk += (*this->J)(OrbVecChunk_i,OrbVecChunk_j);
-	    if (this->K != 0) resultChunk += (*this->K)(OrbVecChunk_i,OrbVecChunk_j);
-	    if (this->XC != 0) resultChunk += (*this->XC)(OrbVecChunk_i,OrbVecChunk_j);
-	    OrbVecChunk_j.clear(false);
-	    //copy results into final matrix
-	    for (int ix = 0;  ix<OrbVecChunk_i.size() ; ix++) {
-	      result(rcv_OrbVec[ix],j) += resultChunk(ix,0);
-	    }
-	  }
-	  OrbVecChunk_i.clearVec(false);
-	  rcv_OrbVec.clear();
-	  orbVecIx=0;
-	}
-      }
+    //make vector with adresses of own i orbitals
+    int i = 0;
+    for (int Ix = MPI_rank;  Ix < MPI_size ; Ix += MPI_size) {
+      OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));
+      OrbsIx[i++] = Ix;
     }
 
+    //make vector with adresses of own j orbitals
+    for (int Ix = MPI_rank;  Ix < MPI_size ; Ix += MPI_size) {
+      OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));
+    }
+
+    for (int iter = 0;  iter<Niter ; iter++) {
+      //get a new chunk from other processes
+      //NB: should not use directly workorbvec as rcvOrbs, because they may 
+      //contain own orbitals, and these can be overwritten
+      OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+      //Only one process does the computations. j orbitals always local
+      MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
+      
+      if (this->T != 0) resultChunk = (*this->T)(rcvOrbs,OrbVecChunk_j);
+      if (this->V != 0) resultChunk += (*this->V)(rcvOrbs,OrbVecChunk_j);
+      if (this->J != 0) resultChunk += (*this->J)(rcvOrbs,OrbVecChunk_j);
+      if (this->K != 0) resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
+      if (this->XC != 0) resultChunk += (*this->XC)(rcvOrbs,OrbVecChunk_j);
+
+      //copy results into final matrix
+      int j = 0;
+      for (int Jx = MPI_rank;  Jx < MPI_size ; Jx += MPI_size) {
+	for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
+	  result(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
+	}
+	j++;
+      }
+      rcvOrbs.clearVec(false);//reset to zero size orbital vector
+    }
+
+    //clear orbitals. NB: only references and metadata must be deleted, not the trees in orbitals
+    OrbVecChunk_i.clearVec(false);
+    OrbVecChunk_j.clearVec(false);
+
+    //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &result(0,0), Ni*Nj,
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-    //V is parallelized at a lower level!
-    //if (this->V != 0) result += (*this->V)(i_orbs, j_orbs);
 
 #else
     
@@ -240,7 +232,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     }
 
     return result;
-}
+    }
 
 MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
   if(MPI_size>1)cout<<"ERROR"<<endl;
