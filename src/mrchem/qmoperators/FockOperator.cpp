@@ -168,8 +168,8 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     int OrbsIx[workOrbVecSize];//to store own orbital indices
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
-
-    int Niter = (Ni + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
+    int maxsizeperOrbvec = (Ni + MPI_size-1)/MPI_size;
+    int Niter = (maxsizeperOrbvec*MPI_size + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
 
     //make vector with adresses of own orbitals
     int i = 0;

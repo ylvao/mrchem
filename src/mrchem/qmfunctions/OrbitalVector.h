@@ -70,7 +70,7 @@ public:
 
     int printTreeSizes() const;
 
-    void send_OrbVec(int dest, int tag, int* OrbsIx);
+    void send_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
     void Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVecIx);
     void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int iter0);
 
