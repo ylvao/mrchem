@@ -227,7 +227,6 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
     Timer timer;
     HelmholtzOperatorSet &H = *this->helmholtz;
     H.setPrecision(getOrbitalPrecision());
-
     phi_np1.clear();
     for (int i = 0; i < phi_n.size(); i++) {
         Timer timer;
@@ -254,6 +253,88 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
 	}
     }
 
+    timer.stop();
+    TelePrompter::printFooter(0, timer, 2);
+    TelePrompter::setPrecision(oldprec);
+}
+
+void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
+                                  MatrixXd &F_n,
+                                  OrbitalVector &phi_n,
+                                  bool adjoint) {
+    TelePrompter::printHeader(0, "Applying Helmholtz Operators");
+    println(0, " Orb    OrbNorm       NormDiff       nNodes         Timing   ");
+    TelePrompter::printSeparator(0, '-');
+    int oldprec = TelePrompter::setPrecision(5);
+
+    Timer timer;
+    HelmholtzOperatorSet &H = *this->helmholtz;
+    H.setPrecision(getOrbitalPrecision());
+
+    phi_np1.clear();
+    vector<Orbital *> arg_i_vec;
+
+    int Ni = phi_n.size();
+      OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
+      int OrbsIx[workOrbVecSize];//to store own orbital indices
+      OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
+      int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
+      
+      //make vector with adresses of own orbitals
+      int i = 0;
+      for (int Ix = MPI_rank; Ix < Ni; Ix += MPI_size) {
+	OrbVecChunk_i.push_back(phi_n.getOrbital(Ix));//i orbitals
+	OrbsIx[i++] = Ix;
+      }
+
+      Orbital *arg_i;
+      bool first_iter = true;
+      for (int iter = 0;  iter >= 0 ; iter++) {
+	//get a new chunk from other processes
+	OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+
+	Orbital *arg_i_1;
+	for (int i = MPI_rank;  i<Ni ; i += MPI_size) {
+	  Orbital &phi_i = phi_n.getOrbital(i);
+	  if(first_iter){	    
+	    arg_i_1 = getHelmholtzArgument_1(phi_i);
+	  }else{
+	    arg_i_1 = arg_i_vec[i/MPI_size];//set to part_1 + chunks so far
+	  }
+	  arg_i = getHelmholtzArgument_2(i, rcvOrbsIx, F_n, rcvOrbs, arg_i_1, phi_i, adjoint);
+	  if(first_iter){
+	    arg_i_vec.push_back(arg_i);
+	  }else{
+	    arg_i_vec[i/MPI_size]=arg_i;
+	  }
+	}
+	first_iter = false;
+	rcvOrbs.clearVec(false);//reset to zero size orbital vector     
+      }
+      OrbVecChunk_i.clearVec(false);
+
+      for (int i = MPI_rank;  i<Ni ; i += MPI_size) {
+	  Timer timer;
+	  Orbital &np1Phi_i = phi_np1.getOrbital(i);
+	  arg_i = arg_i_vec[i/MPI_size];
+	  H(i, np1Phi_i, *arg_i);
+	  delete arg_i;
+	
+	int nNodes = np1Phi_i.getNNodes();
+
+	Orbital &nPhi_i = phi_n.getOrbital(i);	  
+	double norm_n = sqrt(nPhi_i.getSquareNorm());
+	double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
+	double dNorm_n = fabs(norm_np1-norm_n);
+	timer.stop();
+	cout<< setw(3) << i;
+	cout<< " " << setw(13) << norm_np1;
+	cout<< " " << setw(13) << dNorm_n;
+	cout<< " " << setw(8) << nNodes;
+	cout<< setw(18) << timer.getWallTime() << endl;	
+	//}
+      }
+ 
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
     TelePrompter::setPrecision(oldprec);
@@ -297,7 +378,6 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
     Orbital *result = new Orbital(phi_i);//should use workOrb?
 
     Timer timer;
-    if(phi.size()%MPI_size)cout<<"NOT YET IMPLEMENTED"<<endl;
 
     std::vector<double> U_Chunk;
     std::vector<Orbital *> orbChunk;

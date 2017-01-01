@@ -149,15 +149,11 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
     if (U.cols() != phi.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
 
-    if(phi.size()%MPI_size)cout<<"NOT YET IMPLEMENTED"<<endl;
-    
     int Ni = phi.size();
     OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
     int OrbsIx[workOrbVecSize];//to store own orbital indices
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
-    int maxsizeperOrbvec = (Ni + MPI_size-1)/MPI_size;
-    int Niter = (maxsizeperOrbvec*MPI_size + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
     
     //make vector with adresses of own orbitals
     int i = 0;
@@ -167,10 +163,9 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
       OrbsIx[i++] = Ix;
     }
     
-    for (int iter = 0;  iter<Niter ; iter++) {
+     for (int iter = 0;  iter >= 0; iter++) {
       //get a new chunk from other processes
       OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
-     
       //Update only own orbitals	
       int j = 0;
       for (int Jx = MPI_rank;  Jx < Ni; Jx += MPI_size) {

@@ -65,7 +65,6 @@ void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_ma
     TelePrompter::printHeader(0, "Calculating Electronic Energy");
     Timer timer;
     clearElectronic();
-
     NuclearPotential *V = f_oper.getNuclearPotential();
     CoulombOperator *J = f_oper.getCoulombOperator();
     ExchangeOperator *K = f_oper.getExchangeOperator();
@@ -74,6 +73,7 @@ void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_ma
     double E_xc2 = 0.0;
     double tmp[5];
     if (XC != 0) this->E_xc = XC->getEnergy();
+
     for (int i = 0; i < phi.size(); i++) {
       if(i%MPI_size==MPI_rank){
         Orbital &phi_i = phi.getOrbital(i);

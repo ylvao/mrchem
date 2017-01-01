@@ -73,7 +73,11 @@ bool EnergyOptimizer::optimize() {
 
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F_n.diagonal());
-        applyHelmholtzOperators(phi_np1, F_n, phi_n);
+	if(MPI_size>1){
+	  applyHelmholtzOperators_P(phi_np1, F_n, phi_n);
+	}else{
+	  applyHelmholtzOperators(phi_np1, F_n, phi_n);
+	}
         this->add(dPhi_n, 1.0, phi_np1, -1.0, phi_n, true);
         // Compute errors
         VectorXd errors = dPhi_n.getNorms();
@@ -162,23 +166,20 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
       int OrbsIx[workOrbVecSize];//to store own orbital indices
       OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
       int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
-      int maxsizeperOrbvec = (Ni + MPI_size-1)/MPI_size;
-      int Niter = (maxsizeperOrbvec*MPI_size + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
-
       
       //make vector with adresses of own orbitals
       int i = 0;
       for (int Ix = MPI_rank; Ix < Ni; Ix += MPI_size) {
 	OrbVecChunk_i.push_back(phi_np1.getOrbital(Ix));//i orbitals
-	OrbVecChunk_j.push_back(dPhi_n.getOrbital(Ix));//j orbitals
 	OrbsIx[i++] = Ix;
       }
-      for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size) OrbVecChunk_j.push_back(dPhi_n.getOrbital(Ix));//j orbitals
+      for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size)
+	OrbVecChunk_j.push_back(dPhi_n.getOrbital(Ix));//j orbitals
 
-
-      for (int iter = 0;  iter<Niter ; iter++) {
+      for (int iter = 0;  iter >= 0 ; iter++) {
 	//get a new chunk from other processes
 	OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+
 	//Only one process does the computations. j orbitals always local
 	MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
 	

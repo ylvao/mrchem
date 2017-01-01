@@ -85,6 +85,81 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
 
     return arg;
 }
+Orbital* GroundStateSolver::getHelmholtzArgument_1(Orbital &phi_i) {
+    Timer timer;
+    FockOperator &fock = *this->fOper_n;
+
+    Orbital *part_1 = fock.applyPotential(phi_i);
+ 
+    if (part_1 == 0) part_1 = new Orbital(phi_i);
+
+    timer.stop();
+    double time = timer.getWallTime();
+    int nNodes = part_1->getNNodes();
+    TelePrompter::printTree(2, "Argument 1", nNodes, time);
+
+    return part_1;
+}
+Orbital* GroundStateSolver::getHelmholtzArgument_2(int i,
+						 int*  OrbsIx,
+                                                 MatrixXd &F,
+                                                 OrbitalVector &phi,
+						 Orbital*  part_1,
+						   Orbital &phi_i,
+                                                 bool adjoint) {
+    FockOperator &fock = *this->fOper_n;
+
+    MatrixXd L = this->helmholtz->getLambda().asDiagonal();
+    MatrixXd LmF = L - F;
+
+    Orbital *part_2;
+
+   if(MPI_size>1){
+    vector<double> coefs;
+    vector<Orbital *> orbs;
+
+    int nOrbs = phi.size();
+    for (int j = 0; j < nOrbs; j++) {
+      double coef = LmF(i,OrbsIx[j]);
+
+        // Linear scaling screening inserted here
+        if (fabs(coef) > MachineZero) {
+            Orbital &phi_j = phi.getOrbital(j);
+            double norm_j = sqrt(phi_j.getSquareNorm());
+            if (norm_j > 0.01*getOrbitalPrecision()) {
+                coefs.push_back(coef);
+                orbs.push_back(&phi_j);
+            }
+        }
+    }
+
+    Orbital *part_2 = new Orbital(phi_i);
+    if (orbs.size() > 0) {
+        this->add(*part_2, coefs, orbs, false);
+    }
+
+    }else{
+      part_2 = calcMatrixPart(i, LmF, phi);
+    }
+      
+    if (part_2 == 0) part_2 = new Orbital(phi_i);
+
+    Timer timer;
+    Orbital *arg = new Orbital(phi_i);
+    double coef = -1.0/(2.0*pi);
+
+    this->add(*arg, coef, *part_1, coef, *part_2, true);
+
+    timer.stop();
+    double time = timer.getWallTime();
+    int nNodes = arg->getNNodes();
+    TelePrompter::printTree(2, "Added arguments", nNodes, time);
+
+    if (part_1 != 0) delete part_1;
+    if (part_2 != 0) delete part_2;
+
+    return arg;
+}
 
 double GroundStateSolver::calcProperty() {
     MatrixXd &F = *this->fMat_n;

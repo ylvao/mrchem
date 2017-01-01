@@ -71,8 +71,10 @@ public:
     int printTreeSizes() const;
 
     void send_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
+    void Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
     void Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVecIx);
-    void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int iter0);
+    void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0);
+    void getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0);
 
     friend std::ostream& operator<<(std::ostream &o, OrbitalVector &orb_set) {
         int oldPrec = TelePrompter::setPrecision(15);

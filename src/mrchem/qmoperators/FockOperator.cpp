@@ -168,8 +168,6 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     int OrbsIx[workOrbVecSize];//to store own orbital indices
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
-    int maxsizeperOrbvec = (Ni + MPI_size-1)/MPI_size;
-    int Niter = (maxsizeperOrbvec*MPI_size + workOrbVecSize - 1)/workOrbVecSize;//number of chunks to process
 
     //make vector with adresses of own orbitals
     int i = 0;
@@ -179,12 +177,12 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     }
     for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
 
-
-    for (int iter = 0;  iter<Niter ; iter++) {
+    for (int iter = 0;  iter >= 0 ; iter++) {
       //get a new chunk from other processes
       //NB: should not use directly workorbvec as rcvOrbs, because they may 
       //contain own orbitals, and these can be overwritten
       OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+
       //Only one process does the computations. j orbitals always local
       MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
       
@@ -196,7 +194,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 
       //copy results into final matrix
       int j = 0;
-      for (int Jx = MPI_rank;  Jx < MPI_size ; Jx += MPI_size) {
+      for (int Jx = MPI_rank;  Jx < Nj ; Jx += MPI_size) {
 	for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
 	  result(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
 	}
