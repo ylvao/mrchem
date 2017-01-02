@@ -68,7 +68,7 @@ Calculates the matrix representation of the operator: \f$O\f$, given two sets of
 
  */
 MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    TelePrompter::printHeader(1, "Compute Matrix Element");
+    if(MPI_size==1)TelePrompter::printHeader(1, "Compute Matrix Element");
     Timer timer;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
@@ -82,8 +82,8 @@ MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
         }
         delete operOrb;
     }
-    timer.stop();
-    TelePrompter::printFooter(1, timer, 2);
+    if(MPI_size==1)timer.stop();
+    if(MPI_size==1)TelePrompter::printFooter(1, timer, 2);
     if (result.imag().norm() > MachineZero) {
         MSG_ERROR("Hermitian operator should have real expectation value");
     }

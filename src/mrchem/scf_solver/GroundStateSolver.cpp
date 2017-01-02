@@ -105,23 +105,18 @@ Orbital* GroundStateSolver::getHelmholtzArgument_2(int i,
                                                  MatrixXd &F,
                                                  OrbitalVector &phi,
 						 Orbital*  part_1,
-						   Orbital &phi_i,
+						 double coef_part1,
+						 Orbital &phi_i,
                                                  bool adjoint) {
-    FockOperator &fock = *this->fOper_n;
 
     MatrixXd L = this->helmholtz->getLambda().asDiagonal();
     MatrixXd LmF = L - F;
 
-    Orbital *part_2;
-
-   if(MPI_size>1){
     vector<double> coefs;
     vector<Orbital *> orbs;
 
-    int nOrbs = phi.size();
-    for (int j = 0; j < nOrbs; j++) {
+    for (int j = 0; j < phi.size(); j++) {
       double coef = LmF(i,OrbsIx[j]);
-
         // Linear scaling screening inserted here
         if (fabs(coef) > MachineZero) {
             Orbital &phi_j = phi.getOrbital(j);
@@ -134,21 +129,13 @@ Orbital* GroundStateSolver::getHelmholtzArgument_2(int i,
     }
 
     Orbital *part_2 = new Orbital(phi_i);
-    if (orbs.size() > 0) {
-        this->add(*part_2, coefs, orbs, false);
-    }
-
-    }else{
-      part_2 = calcMatrixPart(i, LmF, phi);
-    }
-      
-    if (part_2 == 0) part_2 = new Orbital(phi_i);
-
     Timer timer;
+    if (orbs.size() > 0 ) this->add(*part_2, coefs, orbs, false);
+
     Orbital *arg = new Orbital(phi_i);
     double coef = -1.0/(2.0*pi);
 
-    this->add(*arg, coef, *part_1, coef, *part_2, true);
+    this->add(*arg, coef_part1, *part_1, coef, *part_2, true);
 
     timer.stop();
     double time = timer.getWallTime();

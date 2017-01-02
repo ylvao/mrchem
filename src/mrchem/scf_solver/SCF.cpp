@@ -113,16 +113,12 @@ double SCF::getUpdate(const vector<double> &vec, int i, bool absPrec) const {
 }
 
 void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
+  if(MPI_rank==0){
     TelePrompter::printHeader(0, "Orbitals");
     println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
     TelePrompter::printSeparator(0, '-');
     int oldprec = TelePrompter::setPrecision(5);
-
-#ifdef HAVE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);//temporary!
-#endif
     for (int i = 0; i < phi.size(); i++) {
-      if(MPI_rank==i%MPI_size){
         const Orbital &phi_i = phi.getOrbital(i);
         cout<< setw(3) << i;
         cout<<" " << setw(13) << F(i,i);
@@ -131,7 +127,6 @@ void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
         cout<<setw(5) << phi_i.printSpin();
         cout<<setw(5) << phi_i.getOccupancy();
         cout<<setw(5) << phi_i.isConverged(getOrbitalThreshold()) << endl;
-      }
     }
     
     TelePrompter::printSeparator(0, '-');
@@ -140,9 +135,7 @@ void SCF::printOrbitals(const MatrixXd &F, const OrbitalVector &phi) const {
     printout(0, setw(3) << phi.isConverged(getOrbitalThreshold()) << endl);
     TelePrompter::printSeparator(0, '=', 2);
     TelePrompter::setPrecision(oldprec);
-#ifdef HAVE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);//temporary!
-#endif
+  }
 }
 
 void SCF::printConvergence(bool converged) const {
@@ -288,11 +281,10 @@ void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
       }
 
       Orbital *arg_i;
-      bool first_iter = true;
-      for (int iter = 0;  iter >= 0 ; iter++) {
+      bool first_iter = true;//part_1 is the Helmholtz part + the part2 accumulated in previous iterations
+      for (int iter = 0;  iter >= 0; iter++) {
 	//get a new chunk from other processes
 	OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
-
 	Orbital *arg_i_1;
 	for (int i = MPI_rank;  i<Ni ; i += MPI_size) {
 	  Orbital &phi_i = phi_n.getOrbital(i);
@@ -301,7 +293,9 @@ void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
 	  }else{
 	    arg_i_1 = arg_i_vec[i/MPI_size];//set to part_1 + chunks so far
 	  }
-	  arg_i = getHelmholtzArgument_2(i, rcvOrbsIx, F_n, rcvOrbs, arg_i_1, phi_i, adjoint);
+	  double coef_part1 = 1.0;
+	  if(first_iter)coef_part1= -1.0/(2.0*pi);//only include factor once
+	  arg_i = getHelmholtzArgument_2(i, rcvOrbsIx, F_n, rcvOrbs, arg_i_1, coef_part1, phi_i, adjoint);
 	  if(first_iter){
 	    arg_i_vec.push_back(arg_i);
 	  }else{

@@ -83,6 +83,7 @@ protected:
                                           Eigen::MatrixXd &F,
                                           OrbitalVector &phi,
 					  Orbital* part_1,
+					  double coef_part1,
 					  Orbital &phi_i,
                                           bool adjoint) = 0;
 

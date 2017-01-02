@@ -297,7 +297,7 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
     timer.stop();
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
-    TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
+    if(MPI_size==1)TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
 
     for (int n = 0; n < orbs.size(); n++) {
         delete orbs[n];

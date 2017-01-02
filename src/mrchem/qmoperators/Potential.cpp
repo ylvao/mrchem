@@ -46,7 +46,7 @@ Orbital* Potential::operator() (Orbital &phi_p) {
     timer.stop();
     int n = Vphi_p->getNNodes();
     double t = timer.getWallTime();
-    TelePrompter::printTree(1, "Applied potential", n, t);
+    if(MPI_size==1)TelePrompter::printTree(1, "Applied potential", n, t);
     return Vphi_p;
 }
 

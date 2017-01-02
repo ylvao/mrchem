@@ -100,11 +100,15 @@ bool OrbitalOptimizer::optimize() {
         }
 
         // Compute errors
-        VectorXd errors = dPhi_n.getNorms();
-
+	int Ni = dPhi_n.size();
+        VectorXd errors = VectorXd::Zero(Ni);
+	for (int i = MPI_rank; i < Ni; i += MPI_size){
+	  errors(i) = sqrt(dPhi_n.getOrbital(i).getSquareNorm());
+	}
 #ifdef HAVE_MPI
 	//distribute errors among all orbitals
-	MPI_Allgather(MPI_IN_PLACE, 0,MPI_DOUBLE, &errors(0), 1,MPI_DOUBLE, MPI_COMM_WORLD);
+	//could use reduce or gather also here
+	MPI_Allreduce(MPI_IN_PLACE, &errors(0), Ni, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
