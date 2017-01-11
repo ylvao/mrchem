@@ -85,14 +85,26 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
 }
 
 double GroundStateSolver::calcProperty() {
+    TelePrompter::printHeader(0, "Calculating SCF energy");
+    Timer timer;
+
     MatrixXd &F = *this->fMat_n;
     FockOperator &fock = *this->fOper_n;
     OrbitalVector &phi = *this->orbitals_n;
 
-    SCFEnergy scfEnergy;
-    scfEnergy.compute(fock, phi, F);
-    this->energy.push_back(scfEnergy);
-    return scfEnergy.getElectronicEnergy();
+    SCFEnergy E = fock.trace(phi, F);
+    this->energy.push_back(E);
+
+    timer.stop();
+    int oldPrec = TelePrompter::setPrecision(15);
+    println(0, " Nuclear energy              " << setw(30) << E.getNuclearEnergy());
+    println(0, " Electronic energy           " << setw(30) << E.getElectronicEnergy());
+    TelePrompter::printSeparator(0, '-');
+    println(0, " Total energy                " << setw(30) << E.getTotalEnergy());
+    TelePrompter::printFooter(0, timer, 2);
+    TelePrompter::setPrecision(oldPrec);
+
+    return E.getTotalEnergy();
 }
 
 double GroundStateSolver::calcPropertyError() const {

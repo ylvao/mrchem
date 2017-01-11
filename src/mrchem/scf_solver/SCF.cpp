@@ -140,7 +140,7 @@ void SCF::printConvergence(bool converged) const {
     int iter = this->orbError.size();
     int oldPrec = TelePrompter::getPrecision();
     TelePrompter::printHeader(0, "Convergence rate");
-    println(0,"Iter   Orb Error       Property                     Update  ");
+    println(0,"Iter    OrbError       Property                   Update  ");
     TelePrompter::printSeparator(0, '-');
     for (int i = 0; i < iter; i++) {
         double prop_i = this->property[i];
@@ -151,7 +151,7 @@ void SCF::printConvergence(bool converged) const {
         TelePrompter::setPrecision(15);
         printout(0, setw(26) << prop_i);
         TelePrompter::setPrecision(5);
-        printout(0, setw(16) << propDiff);
+        printout(0, setw(15) << propDiff);
         printout(0, endl);
     }
     TelePrompter::setPrecision(oldPrec);
@@ -176,7 +176,7 @@ void SCF::printTimer(double t) const {
     int oldPrec = TelePrompter::setPrecision(5);
     printout(0, endl << endl);
     printout(0, "################");
-    printout(0, " Elapsed time:  " << t << " ");
+    printout(0, " Wall time: " << t << " sec ");
     printout(0, "################");
     printout(0, endl << endl << endl);
     TelePrompter::setPrecision(oldPrec);

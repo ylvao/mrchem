@@ -6,7 +6,6 @@ include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwoperators)
 include_directories (${CMAKE_SOURCE_DIR}/src/mrcpp/mwbuilders)
 
 add_library(properties STATIC 
-    SCFEnergy.cpp
 )
 
 target_link_libraries(properties
