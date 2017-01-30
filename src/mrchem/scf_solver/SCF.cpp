@@ -56,6 +56,7 @@ void SCF::resetPrecision() {
 }
 
 bool SCF::needLocalization() const {
+	cout << "Need localization? " << this->iterPerRotation << " " << this->nIter << " " << this->nIter%this->iterPerRotation << endl; 
     if (this->iterPerRotation <= 0) {
         return false;
     }
@@ -223,24 +224,24 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         Orbital &nPhi_i = phi_n.getOrbital(i);
         Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
-	if(i%MPI_size==MPI_rank){
-	  //in charge for this orbital
-	  Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
-	  H(i, np1Phi_i, *arg_i);
-	  delete arg_i;
-	  
-	  int nNodes = np1Phi_i.getNNodes();
-	  double norm_n = sqrt(nPhi_i.getSquareNorm());
-	  double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
-	  double dNorm_n = fabs(norm_np1-norm_n);
-	  
-	  timer.stop();
-	  printout(0, setw(3) << i);
-	  printout(0, " " << setw(13) << norm_np1);
-	  printout(0, " " << setw(13) << dNorm_n);
-	  printout(0, " " << setw(9) << nNodes);
-	  printout(0, setw(18) << timer.getWallTime() << endl);	
-	}
+		if(i%MPI_size==MPI_rank){
+			//in charge for this orbital
+			Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
+			H(i, np1Phi_i, *arg_i);
+			delete arg_i;
+			
+			int nNodes = np1Phi_i.getNNodes();
+			double norm_n = sqrt(nPhi_i.getSquareNorm());
+			double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
+			double dNorm_n = fabs(norm_np1-norm_n);
+			
+			timer.stop();
+			printout(0, setw(3) << i);
+			printout(0, " " << setw(13) << norm_np1);
+			printout(0, " " << setw(13) << dNorm_n);
+			printout(0, " " << setw(9) << nNodes);
+			printout(0, setw(18) << timer.getWallTime() << endl);	
+		}
     }
 
 #ifdef HAVE_MPI

@@ -56,6 +56,8 @@ bool OrbitalOptimizer::optimize() {
 	
     fock.setup(getOrbitalPrecision());
     F = fock(phi_n, phi_n);
+	cout << "What does the Fock say outside? " << endl;
+	cout << F << endl;
     bool converged = false;
     while(this->nIter++ < this->maxIter or this->maxIter < 0) {
         // Initialize SCF cycle
@@ -65,9 +67,11 @@ bool OrbitalOptimizer::optimize() {
 		
         // Rotate orbitals
         if (needLocalization()) {
+			cout << "localizing..." << endl;
             localize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
         } else if (needDiagonalization()) {
+			cout << "diagonalizing..." << endl;
 			if(MPI_size>1){
 				diagonalize_P(fock, F, phi_n);
 			} else {
@@ -75,6 +79,9 @@ bool OrbitalOptimizer::optimize() {
 			}
 			if (this->kain != 0) this->kain->clear();
         }
+
+		cout << "What does the Fock say? " << endl;
+		cout << F << endl;
 		
         // Compute electronic energy
         double E = calcProperty();
@@ -82,6 +89,9 @@ bool OrbitalOptimizer::optimize() {
 		
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F.diagonal());
+		cout << "Overlap matrix here" << endl;
+		cout << phi_n.calcOverlapMatrix() << endl;
+
         applyHelmholtzOperators(phi_np1, F, phi_n);
         fock.clear();
 		

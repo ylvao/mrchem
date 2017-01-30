@@ -168,21 +168,46 @@ void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector 
  */
 void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     MatrixXd S_m12 = calcOrthonormalizationMatrix(phi);
+	
+    printout(1, "Orthonorm matrix\n");
+	cout << S_m12 << endl;
+
     F = S_m12.transpose()*F*S_m12;
 
     Timer timer;
-    printout(1, "Calculating diagonalization matrix               ");
-
+	/*
     SelfAdjointEigenSolver<MatrixXd> es(F.cols());
     es.compute(F);
     MatrixXd M = es.eigenvectors();
     MatrixXd U = M.transpose()*S_m12;
+	*/
+
+	cout << "What does the Fock say before diag? " << endl << endl;
+	cout << F << endl << endl;;
+
+	MatrixXd U(F.rows(), F.cols());
+	U.setZero();
+	int np = phi.getNPaired();
+	int na = phi.getNAlpha();
+	int nb = phi.getNBeta();
+
+	if (np > 0) MathUtils::diagonalizeBlock(F, U, 0,       np);
+	if (na > 0) MathUtils::diagonalizeBlock(F, U, np,      na);
+	if (nb > 0) MathUtils::diagonalizeBlock(F, U, np + na, nb);
+    U = U * S_m12;
+
+    printout(0, "Rotation matrix\n");
+	cout << U << endl << endl;
 
     timer.stop();
     println(1, timer.getWallTime());
 
-    F = es.eigenvalues().asDiagonal();
+	//    F = es.eigenvalues().asDiagonal();
     fock.rotate(U);
+
+	cout << "What does the Fock say after diag? " << endl;
+	cout << F << endl;
+
     this->add.rotate(phi, U);
 }
 /** Perform the orbital rotation that diagonalizes the Fock matrix
