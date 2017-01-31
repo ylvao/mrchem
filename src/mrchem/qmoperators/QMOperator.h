@@ -3,7 +3,9 @@
 
 #include <Eigen/Core>
 
-class OrbitalVector;
+#include "TelePrompter.h"
+#include "constants.h"
+
 class Orbital;
 
 /** \brief Quantum mechanical Hermitian operators
@@ -15,23 +17,23 @@ class QMOperator {
 public:
     QMOperator(int ms) : max_scale(ms), apply_prec(-1.0) { }
     QMOperator(const QMOperator &oper) : max_scale(oper.max_scale), apply_prec(oper.apply_prec) { }
+    QMOperator& operator=(const QMOperator &inp) { this->apply_prec = inp.apply_prec; return *this; }
     virtual ~QMOperator() { }
 
-    virtual void setup(double prec) { this->apply_prec = prec; }
+    int getMaxScale() const { return this->max_scale; }
+    double getApplyPrec() const { return this->apply_prec; }
+
+    virtual void setup(double prec) {
+        if (this->apply_prec < 0.0) { 
+            this->apply_prec = prec;
+        } else if (fabs(prec - this->apply_prec) > MachineZero) {
+            MSG_ERROR("Clear operator before setup with different prec!");
+        }
+    }
     virtual void clear() { this->apply_prec = -1.0; }
 
-    virtual Orbital* operator() (Orbital &phi_p) = 0;
-    virtual Orbital* adjoint(Orbital &phi_p) = 0;
-
-    virtual double operator() (Orbital &phi_i, Orbital &phi_j);
-    virtual double adjoint(Orbital &phi_i, Orbital &phi_j);
-
-    virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-    virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-
-    double trace(Orbital &phi_p, Orbital *x_p, Orbital *y_p);
-    double trace(OrbitalVector &phi, OrbitalVector *x, OrbitalVector *y);
-    double trace(OrbitalVector &phi);
+    virtual Orbital* operator() (Orbital &phi) = 0;
+    virtual Orbital* adjoint(Orbital &phi) = 0;
 
 protected:
     const int max_scale;
