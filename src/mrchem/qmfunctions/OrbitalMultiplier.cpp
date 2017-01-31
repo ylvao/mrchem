@@ -1,6 +1,5 @@
 #include "OrbitalMultiplier.h"
 #include "Orbital.h"
-#include "Potential.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
@@ -15,16 +14,6 @@ void OrbitalMultiplier::setPrecision(double prec) {
     this->mult.setPrecision(prec);
 }
 
-void OrbitalMultiplier::operator()(Orbital &Vphi, Potential &V, Orbital &phi) {
-    calcRealPart(Vphi, V, phi);
-    calcImagPart(Vphi, V, phi, false);
-}
-
-void OrbitalMultiplier::adjoint(Orbital &Vphi, Potential &V, Orbital &phi) {
-    calcRealPart(Vphi, V, phi);
-    calcImagPart(Vphi, V, phi, true);
-}
-
 // phi_ab = c * phi_a * phi_b
 void OrbitalMultiplier::operator()(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b) {
     calcRealPart(phi_ab, c, phi_a, phi_b);
@@ -35,67 +24,6 @@ void OrbitalMultiplier::operator()(Orbital &phi_ab, double c, Orbital &phi_a, Or
 void OrbitalMultiplier::adjoint(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b) {
     calcRealPart(phi_ab, c, phi_a, phi_b);
     calcImagPart(phi_ab, c, phi_a, phi_b, true);
-}
-
-void OrbitalMultiplier::calcRealPart(Orbital &Vphi, Potential &V, Orbital &phi) {
-    if (Vphi.hasReal()) MSG_ERROR("Orbital not empty");
-    FunctionTreeVector<3> vec;
-    if (V.hasReal() and phi.hasReal()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.real());
-        this->mult(*tree, 1.0, V.real(), phi.real(), 0);
-        vec.push_back(1.0, tree);
-    }
-    if (V.hasImag() and phi.hasImag()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.imag());
-        this->mult(*tree, 1.0, V.imag(), phi.imag(), 0);
-        vec.push_back(-1.0, tree);
-    }
-    if (vec.size() == 1) {
-        Vphi.setReal(vec[0]);
-        vec.clear(false);
-    }
-    if (vec.size() == 2) {
-        Vphi.allocReal();
-        this->grid(Vphi.real(), vec);
-        this->add(Vphi.real(), vec, 0);
-        vec.clear(true);
-    }
-}
-
-void OrbitalMultiplier::calcImagPart(Orbital &Vphi,
-                                     Potential &V,
-                                     Orbital &phi,
-                                     bool adjoint) {
-    if (Vphi.hasImag()) MSG_ERROR("Orbital not empty");
-    FunctionTreeVector<3> vec;
-    if (V.hasReal() and phi.hasImag()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.imag());
-        this->mult(*tree, 1.0, V.real(), phi.imag(), 0);
-        vec.push_back(1.0, tree);
-    }
-    if (V.hasImag() and phi.hasReal()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
-        this->grid(*tree, phi.real());
-        this->mult(*tree, 1.0, V.imag(), phi.real(), 0);
-        if (adjoint) {
-            vec.push_back(-1.0, tree);
-        } else {
-            vec.push_back(1.0, tree);
-        }
-    }
-    if (vec.size() == 1) {
-        Vphi.setImag(vec[0]);
-        vec.clear(false);
-    }
-    if (vec.size() == 2) {
-        Vphi.allocImag();
-        this->grid(Vphi.imag(), vec);
-        this->add(Vphi.imag(), vec, 0);
-        vec.clear(true);
-    }
 }
 
 void OrbitalMultiplier::calcRealPart(Orbital &phi_ab,
@@ -176,3 +104,4 @@ void OrbitalMultiplier::calcImagPart(Orbital &phi_ab,
         vec.clear(true);
     }
 }
+

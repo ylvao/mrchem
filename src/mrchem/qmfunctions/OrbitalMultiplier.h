@@ -6,7 +6,6 @@
 #include "GridGenerator.h"
 
 class Orbital;
-class Potential;
 
 class OrbitalMultiplier {
 public:
@@ -14,9 +13,6 @@ public:
     virtual ~OrbitalMultiplier() { }
 
     void setPrecision(double prec);
-
-    void operator()(Orbital &Vphi, Potential &V, Orbital &phi);
-    void adjoint(Orbital &Vphi, Potential &V, Orbital &phi);
 
     void operator()(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b);
     void adjoint(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b);
@@ -26,12 +22,8 @@ protected:
     MWMultiplier<3> mult;
     GridGenerator<3> grid;
 
-    void calcRealPart(Orbital &Vphi, Potential &V, Orbital &phi);
-    void calcImagPart(Orbital &Vphi, Potential &V, Orbital &phi, bool adjoint);
-
     void calcRealPart(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b);
     void calcImagPart(Orbital &phi_ab, double c, Orbital &phi_a, Orbital &phi_b, bool adjoint);
 };
-
 
 #endif // ORBITALMULTIPLIER_H
