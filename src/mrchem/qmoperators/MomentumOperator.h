@@ -1,30 +1,40 @@
 #ifndef MOMENTUMOPERATOR_H
 #define MOMENTUMOPERATOR_H
 
-#include "QMOperator.h"
-#include "ABGVOperator.h"
-#include "PHOperator.h"
+#include "QMTensorOperator.h"
+#include "QMDerivative.h"
 
-class MomentumOperator : public QMOperator {
+class MomentumOperator : public RankOneTensorOperator<3> {
 public:
-    MomentumOperator(int dir, double prec = -1.0);
+    MomentumOperator() : d_x(0), d_y(1), d_z(2) {
+        initializeTensorOperator();
+    }
     virtual ~MomentumOperator() { }
 
-    virtual void setup(double prec) { QMOperator::setup(prec); }
-    virtual void clear() { QMOperator::clear(); }
-
-    virtual int printTreeSizes() const;
-
-    virtual Orbital* operator()(Orbital &orb_p);
-    virtual Orbital* adjoint(Orbital &orb_p);
-
-    using QMOperator::operator();
-    using QMOperator::adjoint;
+    virtual void setup(double prec) {
+        this->d_x.setup(prec);
+        this->d_y.setup(prec);
+        this->d_z.setup(prec);
+    }
+    virtual void clear() {
+        this->d_x.clear();
+        this->d_y.clear();
+        this->d_z.clear();
+    }
 
 protected:
-    const int apply_dir;
-    ABGVOperator<3> diff_oper;
-    //PHOperator<3> diff_oper;
+    QMDerivative d_x;
+    QMDerivative d_y;
+    QMDerivative d_z;
+
+    void initializeTensorOperator() {
+        std::complex<double> i(0.0, 1.0);
+
+        RankOneTensorOperator<3> &h = *this;
+        h[0] = i*d_x;
+        h[1] = i*d_y;
+        h[2] = i*d_z;
+    }
 };
 
 #endif // MOMENTUMOPERATOR_H
