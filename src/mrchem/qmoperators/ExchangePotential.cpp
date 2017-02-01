@@ -21,7 +21,7 @@ void ExchangePotential::clear() {
 }
 
 void ExchangePotential::rotate(MatrixXd &U) {
-    // negative prec means precomputed exchange is cleared
+    // negative prec means precomputed exchange is cleared and should therefore not be rotated
     if (this->apply_prec > 0.0) {
         this->add.rotate(exchange_0, U);
     }
