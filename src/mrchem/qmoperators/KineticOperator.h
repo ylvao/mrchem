@@ -1,23 +1,16 @@
 #ifndef KINETICOPERATOR_H
 #define KINETICOPERATOR_H
 
-#include "QMOperator.h"
+#include "QMTensorOperator.h"
 #include "MomentumOperator.h"
 
-class MomentumOperator;
-
-class KineticOperator : public QMOperator {
+class KineticOperator : public RankOneTensorOperator<3> {
 public:
-    KineticOperator(double prec = -1.0);
-    virtual ~KineticOperator();
+    KineticOperator() : p() { initializeTensorOperator(); }
+    virtual ~KineticOperator() { }
 
-    virtual void setup(double prec);
-    virtual void clear();
-
-    virtual int printTreeSizes() const;
-
-    virtual Orbital* operator() (Orbital &orb_p);
-    virtual Orbital* adjoint(Orbital &orb_p);
+    virtual void setup(double prec) { this->p.setup(prec); }
+    virtual void clear() { this->p.clear(); }
 
     virtual double operator() (Orbital &orb_i, Orbital &orb_j);
     virtual double adjoint(Orbital &orb_i, Orbital &orb_j);
@@ -26,9 +19,18 @@ public:
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
 protected:
-    MomentumOperator momentum_x;
-    MomentumOperator momentum_y;
-    MomentumOperator momentum_z;
+    MomentumOperator p;
+
+    void initializeTensorOperator() {
+        RankZeroTensorOperator &p_x = this->p[0];
+        RankZeroTensorOperator &p_y = this->p[1];
+        RankZeroTensorOperator &p_z = this->p[2];
+
+        RankOneTensorOperator<3> &h = *this;
+        h[0] = -0.5*p_x*p_x;
+        h[1] = -0.5*p_y*p_z;
+        h[2] = -0.5*p_y*p_z;
+    }
 };
 
 #endif // KINETICOPERATOR_H

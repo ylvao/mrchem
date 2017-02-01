@@ -8,53 +8,25 @@ using namespace Eigen;
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-KineticOperator::KineticOperator(double prec)
-    : QMOperator(MRA->getMaxScale()),
-      momentum_x(0, prec),
-      momentum_y(1, prec),
-      momentum_z(2, prec) {
-}
-
-KineticOperator::~KineticOperator() {
-}
-
-void KineticOperator::setup(double prec) {
-    QMOperator::setup(prec);
-    this->momentum_x.setup(prec);
-    this->momentum_y.setup(prec);
-    this->momentum_z.setup(prec);
-}
-
-void KineticOperator::clear() {
-    this->momentum_x.clear();
-    this->momentum_y.clear();
-    this->momentum_z.clear();
-    QMOperator::clear();
-}
-
-Orbital* KineticOperator::operator() (Orbital &orb_p) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-Orbital* KineticOperator::adjoint(Orbital &orb_p) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 double KineticOperator::operator() (Orbital &orb_i, Orbital &orb_j) {
-    Orbital *xOrb_j = this->momentum_x(orb_j);
-    Orbital *xOrb_i = this->momentum_x(orb_i);
+    RankZeroTensorOperator &p_x = this->p[0];
+    RankZeroTensorOperator &p_y = this->p[1];
+    RankZeroTensorOperator &p_z = this->p[2];
+
+    Orbital *xOrb_j = p_x(orb_j);
+    Orbital *xOrb_i = p_x(orb_i);
     complex<double> T_x = xOrb_i->dot(*xOrb_j);
     delete xOrb_i;
     delete xOrb_j;
 
-    Orbital *yOrb_j = this->momentum_y(orb_j);
-    Orbital *yOrb_i = this->momentum_y(orb_i);
+    Orbital *yOrb_j = p_y(orb_j);
+    Orbital *yOrb_i = p_y(orb_i);
     complex<double> T_y = yOrb_i->dot(*yOrb_j);
     delete yOrb_i;
     delete yOrb_j;
 
-    Orbital *zOrb_j = this->momentum_z(orb_j);
-    Orbital *zOrb_i = this->momentum_z(orb_i);
+    Orbital *zOrb_j = p_z(orb_j);
+    Orbital *zOrb_i = p_z(orb_i);
     complex<double> T_z = zOrb_i->dot(*zOrb_j);
     delete zOrb_i;
     delete zOrb_j;
@@ -71,6 +43,10 @@ double KineticOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
 }
 
 MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+    RankZeroTensorOperator &p_x = this->p[0];
+    RankZeroTensorOperator &p_y = this->p[1];
+    RankZeroTensorOperator &p_z = this->p[2];
+
     Timer timer;
     TelePrompter::printHeader(1, "Compute Kinetic Matrix Elements");
 
@@ -83,10 +59,10 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
         Timer timer;
         for (int j = 0; j < Nj; j++) {
             Orbital &orb_j = j_orbs.getOrbital(j);
-            Orbital *xOrb_j = this->momentum_x(orb_j);
+            Orbital *xOrb_j = p_x(orb_j);
             for (int i = 0; i < Ni; i++) {
                 Orbital &orb_i = i_orbs.getOrbital(i);
-                Orbital *xOrb_i = this->momentum_x(orb_i);
+                Orbital *xOrb_i = p_x(orb_i);
                 T_x(i,j) = xOrb_i->dot(*xOrb_j);
                 delete xOrb_i;
             }
@@ -100,10 +76,10 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
         Timer timer;
         for (int j = 0; j < Nj; j++) {
             Orbital &orb_j = j_orbs.getOrbital(j);
-            Orbital *yOrb_j = this->momentum_y(orb_j);
+            Orbital *yOrb_j = p_y(orb_j);
             for (int i = 0; i < Ni; i++) {
                 Orbital &orb_i = i_orbs.getOrbital(i);
-                Orbital *yOrb_i = this->momentum_y(orb_i);
+                Orbital *yOrb_i = p_y(orb_i);
                 T_y(i,j) = yOrb_i->dot(*yOrb_j);
                 delete yOrb_i;
             }
@@ -117,10 +93,10 @@ MatrixXd KineticOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_or
         Timer timer;
         for (int j = 0; j < Nj; j++) {
             Orbital &orb_j = j_orbs.getOrbital(j);
-            Orbital *zOrb_j = this->momentum_z(orb_j);
+            Orbital *zOrb_j = p_z(orb_j);
             for (int i = 0; i < Ni; i++) {
                 Orbital &orb_i = i_orbs.getOrbital(i);
-                Orbital *zOrb_i = this->momentum_z(orb_i);
+                Orbital *zOrb_i = p_z(orb_i);
                 T_z(i,j) = zOrb_i->dot(*zOrb_j);
                 delete zOrb_i;
             }
@@ -144,7 +120,3 @@ MatrixXd KineticOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) 
     NOT_IMPLEMENTED_ABORT;
 }
 
-int KineticOperator::printTreeSizes() const {
-    println(0, " KineticOperator   " << setw(15) << 0 << setw(25) << 0);
-    return 0;
-}
