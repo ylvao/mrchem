@@ -41,7 +41,6 @@ FockOperator::~FockOperator() {
 void FockOperator::setup(double prec) {
     Timer timer;
     TelePrompter::printHeader(0, "Setting up Fock operator");
-    RankZeroTensorOperator::setup(prec);
     if (this->T != 0) this->T->setup(prec);
     if (this->V != 0) this->V->setup(prec);
     if (this->J != 0) this->J->setup(prec);
@@ -59,7 +58,6 @@ void FockOperator::clear() {
     if (this->K != 0) this->K->clear();
     if (this->XC != 0) this->XC->clear();
     if (this->H_1 != 0) this->H_1->clear();
-    RankZeroTensorOperator::clear();
 }
 
 void FockOperator::rotate(MatrixXd &U) {
