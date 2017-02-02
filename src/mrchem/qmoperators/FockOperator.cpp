@@ -4,8 +4,11 @@
 #include "CoulombOperator.h"
 #include "ExchangeOperator.h"
 #include "XCOperator.h"
+#include "OrbitalAdder.h"
 #include "OrbitalVector.h"
 #include "Orbital.h"
+#include "SCFEnergy.h"
+#include "MathUtils.h"
 #include "Timer.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
@@ -18,12 +21,12 @@ FockOperator::FockOperator(KineticOperator *t,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
-    : QMOperator(MRA->getMaxScale()),
-      T(t),
+    : T(t),
       V(v),
       J(j),
       K(k),
-      XC(xc) {
+      XC(xc),
+      H_1(0) {
 }
 
 FockOperator::~FockOperator() {
@@ -32,20 +35,19 @@ FockOperator::~FockOperator() {
     this->J = 0;
     this->K = 0;
     this->XC = 0;
+    this->H_1 = 0;
 }
 
 void FockOperator::setup(double prec) {
     Timer timer;
     TelePrompter::printHeader(0, "Setting up Fock operator");
-    QMOperator::setup(prec);
+    RankZeroTensorOperator::setup(prec);
     if (this->T != 0) this->T->setup(prec);
     if (this->V != 0) this->V->setup(prec);
     if (this->J != 0) this->J->setup(prec);
     if (this->K != 0) this->K->setup(prec);
     if (this->XC != 0) this->XC->setup(prec);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        getPerturbationOperator(i).setup(prec);
-    }
+    if (this->H_1 != 0) this->H_1->setup(prec);
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
@@ -56,10 +58,8 @@ void FockOperator::clear() {
     if (this->J != 0) this->J->clear();
     if (this->K != 0) this->K->clear();
     if (this->XC != 0) this->XC->clear();
-    for (int i = 0; i < getNPerturbations(); i++) {
-        getPerturbationOperator(i).clear();
-    }
-    QMOperator::clear();
+    if (this->H_1 != 0) this->H_1->clear();
+    RankZeroTensorOperator::clear();
 }
 
 void FockOperator::rotate(MatrixXd &U) {
@@ -67,7 +67,7 @@ void FockOperator::rotate(MatrixXd &U) {
 }
 
 Orbital* FockOperator::operator() (Orbital &orb_p) {
-    OrbitalAdder add(this->apply_prec, this->max_scale);
+    OrbitalAdder add(1.0, MRA->getMaxScale());
 
     vector<Orbital *> orbs;
     if (this->T != 0) orbs.push_back((*this->T)(orb_p));
@@ -75,10 +75,7 @@ Orbital* FockOperator::operator() (Orbital &orb_p) {
     if (this->J != 0) orbs.push_back((*this->J)(orb_p));
     if (this->K != 0) orbs.push_back((*this->K)(orb_p));
     if (this->XC != 0) orbs.push_back((*this->XC)(orb_p));
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h1 = getPerturbationOperator(i);
-        orbs.push_back(h1(orb_p));
-    }
+    if (this->H_1 != 0) orbs.push_back((*this->H_1)(orb_p));
 
     vector<complex<double> > coefs;
     for (int i = 0; i < orbs.size(); i++) coefs.push_back(1.0);
@@ -125,10 +122,7 @@ double FockOperator::operator() (Orbital &orb_i, Orbital &orb_j) {
     if (this->J != 0) result += (*this->J)(orb_i, orb_j);
     if (this->K != 0) result += (*this->K)(orb_i, orb_j);
     if (this->XC != 0) result += (*this->XC)(orb_i, orb_j);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h1 = getPerturbationOperator(i);
-        result += h1(orb_i, orb_j);
-    }
+    if (this->H_1 != 0) result += (*this->H_1)(orb_i, orb_j);
     return result;
 }
 
@@ -139,10 +133,7 @@ double FockOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
     if (this->J != 0) result += (*this->J).adjoint(orb_i, orb_j);
     if (this->K != 0) result += (*this->K).adjoint(orb_i, orb_j);
     if (this->XC != 0) result += (*this->XC).adjoint(orb_i, orb_j);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h1 = getPerturbationOperator(i);
-        result += h1.adjoint(orb_i, orb_j);
-    }
+    if (this->H_1 != 0) result += (*this->H_1).adjoint(orb_i, orb_j);
     return result;
 }
 
@@ -175,6 +166,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	       if (this->J != 0) result(i,j) += (*this->J)(orb_i, orb_j);
 	       if (this->K != 0) result(i,j) += (*this->K)(orb_i, orb_j);
 	       if (this->XC != 0) result(i,j) += (*this->XC)(orb_i, orb_j);
+	       if (this->H_1 != 0) result(i,j) += (*this->H_1)(orb_i, orb_j);
 	     }
 	 }
       }
@@ -189,14 +181,9 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     if (this->J != 0) result += (*this->J)(i_orbs, j_orbs);
     if (this->K != 0) result += (*this->K)(i_orbs, j_orbs);
     if (this->XC != 0) result += (*this->XC)(i_orbs, j_orbs);
+    if (this->H_1 != 0) result += (*this->H_1)(i_orbs, j_orbs);
 
 #endif
-
-
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h1 = getPerturbationOperator(i);
-        result += h1(i_orbs, j_orbs);
-    }
     return result;
 }
 
@@ -209,10 +196,7 @@ MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     if (this->J != 0) result += (*this->J).adjoint(i_orbs, j_orbs);
     if (this->K != 0) result += (*this->K).adjoint(i_orbs, j_orbs);
     if (this->XC != 0) result += (*this->XC).adjoint(i_orbs, j_orbs);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h1 = getPerturbationOperator(i);
-        result += h1.adjoint(i_orbs, j_orbs);
-    }
+    if (this->H_1 != 0) result += (*this->H_1).adjoint(i_orbs, j_orbs);
     return result;
 }
 
@@ -241,7 +225,7 @@ MatrixXd FockOperator::applyAdjointKinetic(OrbitalVector &i_orbs, OrbitalVector 
 }
 
 Orbital* FockOperator::applyPotential(Orbital &orb_p) {
-    OrbitalAdder add(this->apply_prec, this->max_scale);
+    OrbitalAdder add(1.0, MRA->getMaxScale());
 
     vector<Orbital *> orbs;
     if (this->V != 0) orbs.push_back((*this->V)(orb_p));
@@ -254,7 +238,7 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
 
     Timer timer;
     Orbital *result = new Orbital(orb_p);
-    add(*result, coefs, orbs, false);
+    add(*result, coefs, orbs, true);
     timer.stop();
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
@@ -288,23 +272,6 @@ MatrixXd FockOperator::applyPotential(OrbitalVector &i_orbs, OrbitalVector &j_or
 
 Orbital* FockOperator::applyAdjointPotential(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    vector<FunctionTree<3> *> orbs;
-
-//    if (this->V != 0) orbs.push_back((*this->V).adjoint(orb_p));
-//    if (this->J != 0) orbs.push_back((*this->J).adjoint(orb_p));
-//    if (this->K != 0) orbs.push_back((*this->K).adjoint(orb_p));
-//    if (this->XC != 0) orbs.push_back((*this->XC).adjoint(orb_p));
-
-//    Orbital *result = new Orbital(orb_p);
-//    result->add(orbs, 0);
-//    double time = timer.elapsed();
-//    int nNodes = result->getNNodes();
-//    TelePrompter::printTree(1, "Sum adjoint potential operator", nNodes, time);
-//    for (int n = 0; n < orbs.size(); n++) {
-//        delete orbs[n];
-//        orbs[n] = 0;
-//    }
-//    return result;
 }
 
 double FockOperator::applyAdjointPotential(Orbital &orb_i, Orbital &orb_j) {
@@ -326,99 +293,64 @@ MatrixXd FockOperator::applyAdjointPotential(OrbitalVector &i_orbs, OrbitalVecto
     return result;
 }
 
-Orbital* FockOperator::applyPerturbations(Orbital &orb_p) {
-    NOT_IMPLEMENTED_ABORT;
-//    vector<FunctionTree<3> *> orbs;
+SCFEnergy FockOperator::trace(OrbitalVector &phi, MatrixXd &F) {
+    double E_nuc = 0.0;
+    double E_el = 0.0;
+    double E_orb = 0.0;
+    double E_kin = 0.0;
+    double E_en = 0.0;
+    double E_ee = 0.0;
+    double E_xc = 0.0;
+    double E_x = 0.0;
 
-//    for (int i = 0; i < getNPerturbations(); i++) {
-//        QMOperator &h = getPerturbationOperator(i);
-//        orbs.push_back(h(orb_p));
-//    }
-
-//    Orbital *result = new Orbital(orb_p);
-//    result->add(orbs, 0);
-//    double time = timer.elapsed();
-//    int nNodes = result->getNNodes();
-//    TelePrompter::printTree(1, "Sum perturbation operator", nNodes, time);
-//    for (int n = 0; n < orbs.size(); n++) {
-//        delete orbs[n];
-//        orbs[n] = 0;
-//    }
-//    return result;
-}
-
-double FockOperator::applyPerturbations(Orbital &orb_i, Orbital &orb_j) {
-    double result = 0.0;
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h = getPerturbationOperator(i);
-        result += h(orb_i, orb_j);
+    // Nuclear part
+    if (this->V != 0) {
+        Nuclei &nucs = this->V->getNuclei();
+        int nNucs = nucs.size();
+        for (int i = 0; i < nNucs; i++) {
+            for (int j = i+1; j < nNucs; j++) {
+                const Nucleus &nuc_i = nucs[i];
+                const Nucleus &nuc_j = nucs[j];
+                double Z_i = nuc_i.getCharge();
+                double Z_j = nuc_j.getCharge();
+                const double *R_i = nuc_i.getCoord();
+                const double *R_j = nuc_j.getCoord();
+                double r_ij = MathUtils::calcDistance(3, R_i, R_j);
+                E_nuc += (Z_i*Z_j)/r_ij;
+            }
+        }
     }
-    return result;
-}
 
-MatrixXd FockOperator::applyPerturbations(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    int nOrbs = i_orbs.size();
-    MatrixXd result = MatrixXd::Zero(nOrbs,nOrbs);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h = getPerturbationOperator(i);
-        result += h(i_orbs, j_orbs);
+    // Electronic part
+    double E_xc2 = 0.0;
+    if (this->XC != 0) E_xc = this->XC->getEnergy();
+    for (int i = 0; i < phi.size(); i++) {
+        Orbital &phi_i = phi.getOrbital(i);
+        double occ = (double) phi_i.getOccupancy();
+        double e_i = occ*F(i,i);
+        E_orb += e_i;
+
+        if (this->V != 0) {
+            println(2, "\n<" << i << "|V_nuc|" << i << ">");
+            E_en += occ*(*this->V)(phi_i,phi_i);
+        }
+        if (this->J != 0) {
+            println(2, "\n<" << i << "|J|" << i << ">");
+            E_ee += 0.5*occ*(*this->J)(phi_i,phi_i);
+        }
+        if (this->K != 0) {
+            println(2, "\n<" << i << "|K|" << i << ">");
+            E_x += (*this->K)(phi_i,phi_i);
+        }
+        if (this->XC != 0) {
+            println(2, "\n<" << i << "|V_xc|" << i << ">");
+            E_xc2 += occ*(*this->XC)(phi_i,phi_i);
+        }
     }
-    return result;
+    double E_eex = E_ee + E_x;
+    double E_orbxc2 = E_orb - E_xc2;
+    E_kin = E_orbxc2 - 2.0*E_eex - E_en;
+    E_el = E_orbxc2 - E_eex + E_xc;
+
+    return SCFEnergy(E_nuc, E_el, E_orb, E_kin, E_en, E_ee, E_xc, E_x);
 }
-
-Orbital* FockOperator::applyAdjointPerturbations(Orbital &orb_p) {
-    NOT_IMPLEMENTED_ABORT;
-//    vector<FunctionTree<3> *> orbs;
-
-//    for (int i = 0; i < getNPerturbations(); i++) {
-//        QMOperator &h = getPerturbationOperator(i);
-//        orbs.push_back(h.adjoint(orb_p));
-//    }
-
-//    Orbital *result = new Orbital(orb_p);
-//    result->add(orbs, 0);
-//    double time = timer.elapsed();
-//    int nNodes = result->getNNodes();
-//    TelePrompter::printTree(1, "Sum perturbation operator", nNodes, time);
-//    for (int n = 0; n < orbs.size(); n++) {
-//        delete orbs[n];
-//        orbs[n] = 0;
-//    }
-//    return result;
-}
-
-double FockOperator::applyAdjointPerturbations(Orbital &orb_i, Orbital &orb_j) {
-    double result = 0.0;
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h = getPerturbationOperator(i);
-        result += h(orb_i, orb_j);
-    }
-    return result;
-}
-
-MatrixXd FockOperator::applyAdjointPerturbations(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    int nOrbs = i_orbs.size();
-    MatrixXd result = MatrixXd::Zero(nOrbs,nOrbs);
-    for (int i = 0; i < getNPerturbations(); i++) {
-        QMOperator &h = getPerturbationOperator(i);
-        result += h(i_orbs, j_orbs);
-    }
-    return result;
-}
-
-/** Prints the number of trees and nodes kept in the Fock operator */
-/*
-int FockOperator::printTreeSizes() const {
-    int nNodes = 0;
-    if (this->V != 0) nNodes += this->V->printTreeSizes();
-    if (this->J != 0) nNodes += this->J->printTreeSizes();
-    if (this->K != 0) nNodes += this->K->printTreeSizes();
-    if (this->XC != 0) nNodes += this->XC->printTreeSizes();
-
-    for (int i = 0; i < getNPerturbations(); i++) {
-        const QMOperator &h1 = getPerturbationOperator(i);
-        nNodes += h1.printTreeSizes();
-    }
-    return nNodes;
-}
-*/

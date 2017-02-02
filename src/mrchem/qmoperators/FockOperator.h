@@ -3,18 +3,17 @@
 
 #include <vector>
 
-#include "QMOperator.h"
-#include "OrbitalAdder.h"
+#include "QMTensorOperator.h"
 
-class Molecule;
 class Orbital;
 class NuclearPotential;
 class KineticOperator;
 class CoulombOperator;
 class ExchangeOperator;
 class XCOperator;
+class SCFEnergy;
 
-class FockOperator : public QMOperator {
+class FockOperator : public RankZeroTensorOperator {
 public:
     FockOperator(KineticOperator *t = 0,
                  NuclearPotential *v = 0,
@@ -23,16 +22,14 @@ public:
                  XCOperator *xc = 0);
     virtual ~FockOperator();
 
-    int getNPerturbations() const { return this->H_1.size(); }
-    void addPerturbationOperator(QMOperator &h_1) { this->H_1.push_back(&h_1); }
-    QMOperator& getPerturbationOperator(int i) { return *this->H_1[i]; }
-    const QMOperator& getPerturbationOperator(int i) const { return *this->H_1[i]; }
+    void addPerturbationOperator(QMOperatorExp &h_1) { this->H_1 = &h_1; }
 
     KineticOperator *getKineticOperator() { return this->T; }
     NuclearPotential *getNuclearPotential() { return this->V; }
     CoulombOperator *getCoulombOperator() { return this->J; }
     ExchangeOperator *getExchangeOperator() { return this->K; }
     XCOperator *getXCOperator() { return this->XC; }
+    QMOperatorExp *getPerturbationOperator() { return this->H_1; }
 
     virtual void rotate(Eigen::MatrixXd &U);
 
@@ -47,6 +44,8 @@ public:
 
     virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
+
+    SCFEnergy trace(OrbitalVector &phi, Eigen::MatrixXd &F);
 
     Orbital* applyKinetic(Orbital &orb_p);
     double applyKinetic(Orbital &orb_i, Orbital &orb_j);
@@ -64,21 +63,13 @@ public:
     double applyAdjointPotential(Orbital &orb_i, Orbital &orb_j);
     Eigen::MatrixXd applyAdjointPotential(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
-    Orbital* applyPerturbations(Orbital &orb_p);
-    double applyPerturbations(Orbital &orb_i, Orbital &orb_j);
-    Eigen::MatrixXd applyPerturbations(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-
-    Orbital* applyAdjointPerturbations(Orbital &orb_p);
-    double applyAdjointPerturbations(Orbital &orb_i, Orbital &orb_j);
-    Eigen::MatrixXd applyAdjointPerturbations(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-
 protected:
     KineticOperator *T;
     NuclearPotential *V;
     CoulombOperator *J;
     ExchangeOperator *K;
     XCOperator *XC;
-    std::vector<QMOperator *> H_1;   // First order perturbation operators
+    QMOperatorExp *H_1;   // First order perturbation operators
 };
 
 #endif // FOCKOPERATOR_H
