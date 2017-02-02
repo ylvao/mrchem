@@ -47,6 +47,32 @@ public:
 
     std::complex<double> dot(Orbital &ket);
     double getSquareNorm() const;
+    /*! determines the exchange factor to be used in the calculation of the exact exchange
+     *
+     * \param [in] orb input orbital to which K is applied
+     *
+     * The factor is computed in terms of the occupancy of the two orbitals and in terms of the spin
+     * 0.5 factors are used in order to preserve occupancy of the set of doubly occupied orbitals
+     * this-> is the orbital defining the operator whereas the input orbital (orb) is the one              
+     * the operator is applied to
+     *
+     * Occupancy: Single/Double
+     * Spin: alpha/beta
+     *
+     * K (this->) | orb (input) | factor
+     * alpha      | alpha       | 1.0       
+     * alpha      | beta        | 0.0       
+     * alpha      | double      | 0.5      
+     * -------------------------------
+     * beta       | alpha       | 0.0       
+     * beta       | beta        | 1.0       
+     * beta       | double      | 0.5 
+     * -------------------------------
+     * double     | alpha       | 1.0       
+     * double     | beta        | 1.0       
+     * double     | double      | 1.0       
+     *
+     */
     double getExchangeFactor(const Orbital &orb) const;
 
     void normalize();

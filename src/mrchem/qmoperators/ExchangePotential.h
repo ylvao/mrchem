@@ -55,7 +55,12 @@ public:
     using QMOperator::operator();
     using QMOperator::adjoint;
 protected:
-    OrbitalVector exchange_0;  ///< Set to keep precomputed exchange orbitals
+    /*! Precomputed exchange orbitals from the occupied orbital set
+     *
+     * \f$ \phi_i^{xc} = \sum_j \phi_j \int \frac{\phi_i(r') \phi_j(r')}{|r-r'|} dr \f$ 
+     *
+     */
+    OrbitalVector exchange_0;
 
     /*! computes the exchange potential
      *  \param[in] phi_p input orbital

@@ -15,6 +15,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+#radovan fix for rt library not found
+list(REMOVE_ITEM CMAKE_CXX_IMPLICIT_LINK_LIBRARIES  "rt")
+
 # directories which hold included cmake modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/compiler_flags)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/custom)
@@ -42,3 +45,5 @@ include(mw_filters)
 include(main)
 include(feature_summary)
 include(autocmake_save_flags)
+
+
