@@ -18,8 +18,8 @@ public:
     QMOperatorExp& operator=(const QMOperatorExp &O);
     virtual ~QMOperatorExp() { }
 
-    void setup(double prec);
-    void clear();
+    virtual void setup(double prec);
+    virtual void clear();
 
     void print() {
         println(0, "\nQMOperatorExp:");
@@ -30,8 +30,8 @@ public:
         }
     }
 
-    Orbital* operator() (Orbital &phi_p);
-    Orbital* adjoint(Orbital &phi_p);
+    virtual Orbital* operator() (Orbital &phi_p);
+    virtual Orbital* adjoint(Orbital &phi_p);
 
     virtual double operator() (Orbital &phi_i, Orbital &phi_j);
     virtual double adjoint(Orbital &phi_i, Orbital &phi_j);

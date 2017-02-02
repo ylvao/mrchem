@@ -6,6 +6,7 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
+using namespace Eigen;
 using namespace std;
 
 QMOperatorExp& QMOperatorExp::operator=(QMOperator &O) {
@@ -83,11 +84,28 @@ double QMOperatorExp::adjoint(Orbital &phi_i, Orbital &phi_j) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-Eigen::MatrixXd QMOperatorExp::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    NOT_IMPLEMENTED_ABORT;
+MatrixXd QMOperatorExp::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+    QMOperatorExp &O = *this;
+
+    int Ni = i_orbs.size();
+    int Nj = j_orbs.size();
+    MatrixXcd result = MatrixXcd::Zero(Ni, Nj);
+
+    for (int j = 0; j < Nj; j++) {
+        Orbital &phi_j = j_orbs.getOrbital(j);
+        Orbital *Ophi_j = O(phi_j);
+        for (int i = 0; i <  Ni; i++) {
+            Orbital &phi_i = i_orbs.getOrbital(i);
+            result(i,j) = phi_i.dot(*Ophi_j);
+        }
+        delete Ophi_j;
+    }
+
+    if (result.imag().norm() > MachineZero) MSG_ERROR("Should be real");
+    return result.real();
 }
 
-Eigen::MatrixXd QMOperatorExp::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+MatrixXd QMOperatorExp::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     NOT_IMPLEMENTED_ABORT;
 }
 
