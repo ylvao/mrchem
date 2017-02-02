@@ -5,7 +5,6 @@
 #include <complex>
 
 #include "QMOperator.h"
-#include "TelePrompter.h"
 
 class OrbitalVector;
 
@@ -20,15 +19,6 @@ public:
 
     virtual void setup(double prec);
     virtual void clear();
-
-    void print() {
-        println(0, "\nQMOperatorExp:");
-        println(0, "  number of terms: " << oper_exp.size());
-        for (int i = 0; i < oper_exp.size(); i++) {
-            printout(0, "   term " << i << " has coef " << coefs[i]);
-            printout(0, " and " << oper_exp[i].size() << " parts" << std::endl);
-        }
-    }
 
     virtual Orbital* operator() (Orbital &phi_p);
     virtual Orbital* adjoint(Orbital &phi_p);
