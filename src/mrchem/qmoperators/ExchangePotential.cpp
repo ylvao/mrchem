@@ -204,11 +204,12 @@ int ExchangePotential::calcInternal(int i, int j) {
     Orbital *phi_iij = new Orbital(phi_i);
     // compute phi_iij = phi_i * V_ij
     double fac = -(this->x_factor/phi_i.getSquareNorm());
-        this->mult(*phi_iij, fac, phi_i, *V_ij);
-        this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
+    this->mult(*phi_iij, fac, phi_i, *V_ij);
+    this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
 
+    // compute phi_jij = phi_j * V_ij
     Orbital *phi_jij = new Orbital(phi_i);
-    double fac = -(this->x_factor/phi_j.getSquareNorm());
+    fac = -(this->x_factor/phi_j.getSquareNorm());
     this->mult(*phi_jij, fac, phi_j, *V_ij);
     this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
     if (V_ij != 0) delete V_ij;
