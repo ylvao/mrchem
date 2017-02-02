@@ -4,7 +4,7 @@
 #include "QMTensorOperator.h"
 #include "MomentumOperator.h"
 
-class KineticOperator : public RankOneTensorOperator<3> {
+class KineticOperator : public RankZeroTensorOperator {
 public:
     KineticOperator() : p() { initializeTensorOperator(); }
     virtual ~KineticOperator() { }
@@ -18,6 +18,9 @@ public:
     virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
     virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
+    using RankZeroTensorOperator::operator();
+    using RankZeroTensorOperator::adjoint;
+
 protected:
     MomentumOperator p;
 
@@ -26,10 +29,8 @@ protected:
         RankZeroTensorOperator &p_y = this->p[1];
         RankZeroTensorOperator &p_z = this->p[2];
 
-        RankOneTensorOperator<3> &h = *this;
-        h[0] = -0.5*p_x*p_x;
-        h[1] = -0.5*p_y*p_z;
-        h[2] = -0.5*p_y*p_z;
+        RankZeroTensorOperator &h = *this;
+        h = -0.5*(p_x*p_x + p_y*p_y + p_z*p_z);
     }
 };
 
