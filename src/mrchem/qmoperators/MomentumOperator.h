@@ -6,7 +6,8 @@
 
 class MomentumOperator : public RankOneTensorOperator<3> {
 public:
-    MomentumOperator() : d_x(0), d_y(1), d_z(2) {
+    MomentumOperator(DerivativeOperator<3> &d)
+            : d_x(0, d), d_y(1, d), d_z(2, d) {
         initializeTensorOperator();
     }
     virtual ~MomentumOperator() { }

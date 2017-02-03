@@ -7,7 +7,7 @@
 
 class QMDerivative : public QMOperator {
 public:
-    QMDerivative(int dir);
+    QMDerivative(int dir, DerivativeOperator<3> &d);
     virtual ~QMDerivative() { }
 
     virtual void setup(double prec) { QMOperator::setup(prec); }
@@ -18,8 +18,7 @@ public:
 
 protected:
     const int apply_dir;
-    ABGVOperator<3> diff_oper;
-    //PHOperator<3> diff_oper;
+    DerivativeOperator<3> *diff_oper;
 };
 
 #endif // QMDERIVATIVE_H

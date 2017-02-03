@@ -6,7 +6,9 @@
 
 class KineticOperator : public RankZeroTensorOperator {
 public:
-    KineticOperator() : p() { initializeTensorOperator(); }
+    KineticOperator(DerivativeOperator<3> &d) : p(d) {
+        initializeTensorOperator();
+    }
     virtual ~KineticOperator() { }
 
     virtual void setup(double prec) { this->p.setup(prec); }

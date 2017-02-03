@@ -4,11 +4,12 @@
 #include "QMTensorOperator.h"
 #include "PositionOperator.h"
 #include "MomentumOperator.h"
+#include "DerivativeOperator.h"
 
 class AngularMomentumOperator : public RankOneTensorOperator<3> {
 public:
-    AngularMomentumOperator(const double *o = 0)
-            : r(o), p() {
+    AngularMomentumOperator(DerivativeOperator<3> &d, const double *o = 0)
+            : r(o), p(d) {
         initializeTensorOperator();
     }
     virtual ~AngularMomentumOperator() { }
