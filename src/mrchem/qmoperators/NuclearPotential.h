@@ -13,7 +13,7 @@ public:
         nuc_func.push_back(Z, R, S);
         initializeTensorOperator();
     }
-    NuclearPotential(double prec, const Nuclei &nucs)
+    NuclearPotential(const Nuclei &nucs, double prec)
             : nuclei(nucs), nuc_func(nucs, prec) {
         initializeTensorOperator();
     }
