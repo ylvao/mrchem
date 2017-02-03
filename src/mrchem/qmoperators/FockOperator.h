@@ -5,12 +5,13 @@
 
 #include "QMTensorOperator.h"
 
-class Orbital;
+class QMOperatorExp;
 class NuclearPotential;
 class KineticOperator;
 class CoulombOperator;
 class ExchangeOperator;
 class XCOperator;
+class Orbital;
 class SCFEnergy;
 
 class FockOperator : public RankZeroTensorOperator {
