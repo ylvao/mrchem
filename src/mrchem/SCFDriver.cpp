@@ -125,10 +125,12 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Restricted open-shell not implemented");
         return false;
     }
+    /*
     if (not wf_restricted and wf_method == "HF") {
         MSG_ERROR("Unrestricted HF not implemented");
         return false;
     }
+    */
     return true;
 }
 

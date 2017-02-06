@@ -89,7 +89,7 @@ void SCFEnergy::compute(FockOperator &f_oper, OrbitalVector &phi, MatrixXd &f_ma
         }
         if (K != 0) {
             println(2, "\n<" << i << "|K|" << i << ">");
-            this->E_x += (*K)(phi_i,phi_i);
+            this->E_x += 0.5 * occ * (*K)(phi_i,phi_i);
         }
         if (XC != 0) {
             println(2, "\n<" << i << "|V_xc|" << i << ">");
