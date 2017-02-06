@@ -3,9 +3,9 @@
 
 #include <Eigen/Core>
 
-#include "QMOperator.h"
+#include "TwoElectronOperator.h"
 #include "Density.h"
-#include "Potential.h"
+#include "QMPotential.h"
 
 class XCFunctional;
 class OrbitalVector;
@@ -13,29 +13,22 @@ template<int D> class FunctionTree;
 template<int D> class FunctionTreeVector;
 template<int D> class DerivativeOperator;
 
-class XCOperator : public QMOperator {
+class XCOperator : public TwoElectronOperator {
 public:
     XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D);
     virtual ~XCOperator();
 
     double getEnergy() const { return this->energy; }
 
-    virtual Orbital* operator() (Orbital &orb_p);
-    virtual Orbital* adjoint(Orbital &orb_p);
-
-    using QMOperator::operator();
-    using QMOperator::adjoint;
-
 protected:
     const int order;                    ///< Order of kernel derivative
     XCFunctional *functional;           ///< Pointer to external object
     DerivativeOperator<3> *derivative;  ///< Pointer to external object
-    OrbitalVector *orbitals;            ///< Pointer to external object
 
     double energy;                      ///< XC energy
     Density density;                    ///< Unperturbed density
-    Density **gradient;                 ///< Unperturbed density gradient
-    Potential potential[3];             ///< The actual operator [tot, alpha, beta]
+    Density gradient[3];                ///< Unperturbed density gradient
+    QMPotential potential;              ///< The actual operator [tot, alpha, beta]
 
     FunctionTree<3> **xcInput;          ///< XCFun input
     FunctionTree<3> **xcOutput;         ///< XCFun output
@@ -47,7 +40,7 @@ protected:
     void clearXCOutput();
 
     void calcDensity();
-    Density **calcDensityGradient(Density &rho);
+    void calcDensityGradient(Density *dRho, Density &rho);
 
     virtual void calcPotential() = 0;
     bool cropPotential(double prec);

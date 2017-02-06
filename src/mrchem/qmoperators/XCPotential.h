@@ -5,12 +5,15 @@
 
 class XCPotential : public XCOperator {
 public:
-    XCPotential(double prec, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D = 0)
+    XCPotential(XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D = 0)
         : XCOperator(1, F, phi, D) { }
     virtual ~XCPotential() { } 
 
     virtual void setup(double prec);
     virtual void clear();
+
+    virtual Orbital* operator() (Orbital &phi);
+    virtual Orbital* adjoint(Orbital &phi);
 
 protected:
     void calcPotential();

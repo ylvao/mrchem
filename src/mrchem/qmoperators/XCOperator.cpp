@@ -5,7 +5,7 @@
 #include "Orbital.h"
 #include "DensityProjector.h"
 #include "Density.h"
-#include "Potential.h"
+#include "QMPotential.h"
 #include "MWDerivative.h"
 #include "TelePrompter.h"
 
@@ -15,16 +15,18 @@ using namespace Eigen;
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 XCOperator::XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D)
-        : QMOperator(MRA->getMaxScale()),
+        : TwoElectronOperator(MRA->getMaxScale(), phi),
           order(k),
           functional(&F),
           derivative(D),
-          orbitals(&phi),
           energy(0.0),
-          density(F.isSpinSeparated()),
-          gradient(0),
           xcInput(0),
           xcOutput(0) {
+    bool spin = F.isSpinSeparated();
+    density.setIsSpinDensity(spin);
+    gradient[0].setIsSpinDensity(spin);
+    gradient[1].setIsSpinDensity(spin);
+    gradient[2].setIsSpinDensity(spin);
 }
 
 XCOperator::~XCOperator() {
@@ -32,15 +34,15 @@ XCOperator::~XCOperator() {
     if (this->xcOutput != 0) MSG_ERROR("XC output not deallocated");
     this->functional = 0;
     this->derivative = 0;
-    this->gradient = deletePtrArray<Density>(3, &this->gradient);
 }
 
 void XCOperator::calcDensity() {
     if (this->orbitals == 0) MSG_ERROR("Orbitals not initialized");
-    if (this->gradient != 0) MSG_ERROR("Gradient not empty");
 
-    Density &rho = this->density;
     OrbitalVector &phi = *this->orbitals;
+    Density &rho = this->density;
+    Density *dRho = &this->gradient[0];
+    QMPotential &V = this->potential;
 
     DensityProjector project(this->apply_prec, this->max_scale);
 
@@ -53,39 +55,35 @@ void XCOperator::calcDensity() {
 
     if (this->functional->isGGA()) {
         Timer timer2;
-        this->gradient = calcDensityGradient(rho);
+        calcDensityGradient(dRho, rho);
         timer2.stop();
         double t2 = timer2.getWallTime();
-        int n2 = sumNodes<Density>(this->gradient, 3);
+        int n2 = 0;
+        n2 += dRho[0].getNNodes();
+        n2 += dRho[1].getNNodes();
+        n2 += dRho[2].getNNodes();
         TelePrompter::printTree(0, "XC density gradient", n2, t2);
         printout(1, endl);
     }
 }
 
-Density** XCOperator::calcDensityGradient(Density &rho) {
-    Density **out = allocPtrArray<Density>(3);
-
-    out[0] = new Density(rho);
-    out[1] = new Density(rho);
-    out[2] = new Density(rho);
-
+void XCOperator::calcDensityGradient(Density *dRho, Density &rho) {
     if (rho.isSpinDensity()) {
         FunctionTreeVector<3> grad_a = calcGradient(rho.alpha());
-        out[0]->setDensity(Alpha, grad_a[0]);
-        out[1]->setDensity(Alpha, grad_a[1]);
-        out[2]->setDensity(Alpha, grad_a[2]);
+        dRho[0].setDensity(Alpha, grad_a[0]);
+        dRho[1].setDensity(Alpha, grad_a[1]);
+        dRho[2].setDensity(Alpha, grad_a[2]);
 
         FunctionTreeVector<3> grad_b = calcGradient(rho.beta());
-        out[0]->setDensity(Beta, grad_b[0]);
-        out[1]->setDensity(Beta, grad_b[1]);
-        out[2]->setDensity(Beta, grad_b[2]);
+        dRho[0].setDensity(Beta, grad_b[0]);
+        dRho[1].setDensity(Beta, grad_b[1]);
+        dRho[2].setDensity(Beta, grad_b[2]);
     } else {
-        FunctionTreeVector<3> grad_p = calcGradient(rho.total());
-        out[0]->setDensity(Paired, grad_p[0]);
-        out[1]->setDensity(Paired, grad_p[1]);
-        out[2]->setDensity(Paired, grad_p[2]);
+        FunctionTreeVector<3> grad_t = calcGradient(rho.total());
+        dRho[0].setDensity(Paired, grad_t[0]);
+        dRho[1].setDensity(Paired, grad_t[1]);
+        dRho[2].setDensity(Paired, grad_t[2]);
     }
-    return out;
 }
 
 FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
@@ -142,9 +140,9 @@ void XCOperator::setupXCInput() {
     bool gga = this->functional->isGGA();
 
     Density &rho = this->density;
-    Density &rho_x = *this->gradient[0];
-    Density &rho_y = *this->gradient[1];
-    Density &rho_z = *this->gradient[2];
+    Density &rho_x = this->gradient[0];
+    Density &rho_y = this->gradient[1];
+    Density &rho_z = this->gradient[2];
 
     this->xcInput = allocPtrArray<FunctionTree<3> >(nInp);
 
@@ -331,10 +329,11 @@ FunctionTree<3>* XCOperator::calcDotProduct(FunctionTreeVector<3> &vec_a,
     return out;
 }
 
+/*
 Orbital* XCOperator::operator() (Orbital &orb_p) {
-    Potential &V_p = this->potential[0];
-    Potential &V_a = this->potential[1];
-    Potential &V_b = this->potential[2];
+    QMPotential &V_p = this->potential[0];
+    QMPotential &V_a = this->potential[1];
+    QMPotential &V_b = this->potential[2];
 
     if (orb_p.getSpin() == Paired) return V_p(orb_p);
     if (orb_p.getSpin() == Alpha) return V_a(orb_p);
@@ -343,10 +342,13 @@ Orbital* XCOperator::operator() (Orbital &orb_p) {
     MSG_ERROR("Invalid spin");
     return 0;
 }
+*/
 
+/*
 Orbital* XCOperator::adjoint(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
 }
+*/
 
 /*
 int XCOperator::printTreeSizes() const {
