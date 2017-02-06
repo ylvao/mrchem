@@ -1,29 +1,23 @@
 #ifndef EXCHANGEOPERATOR_H
 #define EXCHANGEOPERATOR_H
 
-#include "QMOperator.h"
+#include "TwoElectronOperator.h"
 #include "OrbitalVector.h"
-#include "MultiResolutionAnalysis.h"
-
-class PoissonOperator;
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-class ExchangeOperator : public QMOperator {
+class ExchangeOperator : public TwoElectronOperator {
 public:
     ExchangeOperator(PoissonOperator &P, OrbitalVector &phi, double x_fac)
-            : QMOperator(MRA->getMaxScale()),
+            : TwoElectronOperator(MRA->getMaxScale(), phi),
               x_factor(x_fac),
               poisson(&P),
-              orbitals(&phi),
               screen(true) {
-        int nOrbs = this->orbitals->size();
+        int nOrbs = phi.size();
         this->tot_norms = Eigen::VectorXd::Zero(nOrbs);
         this->part_norms = Eigen::MatrixXd::Zero(nOrbs, nOrbs);
     }
     virtual ~ExchangeOperator() { }
-
-    virtual void rotate(Eigen::MatrixXd &U) = 0;
 
     void setExchangeFactor(double x_fac) { this->x_factor = x_fac; }
     double getExchangeFactor() const { return this->x_factor; }
@@ -34,7 +28,6 @@ public:
 protected:
     double x_factor;            ///< Exchange factor for hybrid XC functionals
     PoissonOperator *poisson;   ///< Pointer to external object
-    OrbitalVector *orbitals;    ///< Pointer to external object
 
     bool screen;                ///< Apply screening in exchange evaluation
     Eigen::VectorXd tot_norms;  ///< Total norms for use in screening

@@ -2,7 +2,6 @@
 #define EXCHANGEPOTENTIAL_H
 
 #include "ExchangeOperator.h"
-#include "OrbitalVector.h"
 
 class ExchangePotential : public ExchangeOperator {
 public:
@@ -16,9 +15,6 @@ public:
 
     virtual Orbital* operator() (Orbital &phi_p);
     virtual Orbital* adjoint(Orbital &phi_p);
-
-    using QMOperator::operator();
-    using QMOperator::adjoint;
 
 protected:
     OrbitalVector exchange;  ///< Set to keep precomputed exchange orbitals
