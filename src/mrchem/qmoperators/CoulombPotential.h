@@ -9,8 +9,11 @@ public:
         : CoulombOperator(P, phi) { }
     virtual ~CoulombPotential() { }
 
-    void setup(double prec);
-    void clear();
+    virtual void setup(double prec);
+    virtual void clear();
+
+    virtual Orbital* operator() (Orbital &phi);
+    virtual Orbital* adjoint(Orbital &phi);
 };
 
 #endif // COULOMBPOTENTIAL_H

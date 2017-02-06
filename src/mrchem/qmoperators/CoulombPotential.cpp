@@ -7,11 +7,12 @@ using namespace std;
 
 void CoulombPotential::setup(double prec) {
     QMOperator::setup(prec);
+    this->potential.setup(prec);
 
     if (this->orbitals == 0) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &phi = *this->orbitals;
     Density &rho = this->density;
-    Potential &V = this->potential;
+    QMPotential &V = this->potential;
     PoissonOperator &P = *this->poisson;
 
     MWConvolution<3> apply(this->apply_prec, this->max_scale);
@@ -31,11 +32,20 @@ void CoulombPotential::setup(double prec) {
     int n2 = V.getNNodes();
     double t2 = timer2.getWallTime();
     TelePrompter::printTree(0, "Coulomb potential", n2, t2);
-
-    V.setup(this->apply_prec);
 }
 
 void CoulombPotential::clear() {
+    this->density.clear();
     this->potential.clear();
     QMOperator::clear();
+}
+
+Orbital* CoulombPotential::operator() (Orbital &phi) {
+    QMPotential &V = this->potential;
+    return V(phi);
+}
+
+Orbital* CoulombPotential::adjoint(Orbital &phi) {
+    QMPotential &V = this->potential;
+    return V.adjoint(phi);
 }
