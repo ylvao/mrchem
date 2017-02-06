@@ -296,13 +296,8 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
-    PositionOperator r_x(0);
-    PositionOperator r_y(1);
-    PositionOperator r_z(2);
-
-    r_x.setup(prec);
-    r_y.setup(prec);
-    r_z.setup(prec);
+    PositionOperator r;
+    r.setup(prec);
 
     for (int i = 0; i < N; i++) {
         Orbital &phi_i = phi.getOrbital(i);
@@ -313,36 +308,34 @@ RR::RR(double prec, OrbitalVector &phi) {
             if (spin_i != spin_j) {
                 MSG_ERROR("Spins must be separated before localization");
             }
-            r_i_orig(i,j) = r_x(phi_i, phi_j);
-            r_i_orig(i,j+N) = r_y(phi_i, phi_j);
-            r_i_orig(i,j+2*N) = r_z(phi_i, phi_j);
+            r_i_orig(i,j) = r[0](phi_i, phi_j);
+            r_i_orig(i,j+N) = r[1](phi_i, phi_j);
+            r_i_orig(i,j+2*N) = r[2](phi_i, phi_j);
             r_i_orig(j,i) = r_i_orig(i,j);
             r_i_orig(j,i+N) = r_i_orig(i,j+N);
             r_i_orig(j,i+2*N) = r_i_orig(i,j+2*N);
         }
     }
-    r_x.clear();
-    r_y.clear();
-    r_z.clear();
+    r.clear();
 
     //rotate R matrices into orthonormal basis
     MatrixXd S_tilde = phi.calcOverlapMatrix().real();
     MatrixXd S_tilde_m12 = MathUtils::hermitianMatrixPow(S_tilde, -1.0/2.0);
 
     total_U=S_tilde_m12*total_U;
-    MatrixXd r(N, N);
+    MatrixXd R(N, N);
     for(int dim=0; dim<3; dim++){
         for (int j=0; j<N; j++) {
             for (int i=0; i<=j; i++) {
-                r(i,j)=r_i_orig(i,j+dim*N);
-                r(j,i)=r_i_orig(i,j+dim*N);//Enforce symmetry
+                R(i,j)=r_i_orig(i,j+dim*N);
+                R(j,i)=r_i_orig(i,j+dim*N);//Enforce symmetry
             }
         }
-        r=total_U.transpose()*r*total_U;
+        R=total_U.transpose()*R*total_U;
         for (int j=0; j<N; j++) {
             for (int i=0; i<=j; i++) {
-                r_i(i,j+dim*N)=r(i,j);
-                r_i(j,i+dim*N)=r(i,j);//Enforce symmetry
+                r_i(i,j+dim*N)=R(i,j);
+                r_i(j,i+dim*N)=R(i,j);//Enforce symmetry
             }
         }
     }
