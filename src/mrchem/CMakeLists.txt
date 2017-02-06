@@ -22,9 +22,6 @@ add_subdirectory (properties)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 
-add_executable(mrchem.x mrchem.cpp)
-add_dependencies(mrchem.x external-modules)
-
 add_library(mrchem STATIC 
     mrchem.in
     mrchem.cpp
@@ -49,6 +46,9 @@ target_link_libraries(mrchem
 )
 
 add_dependencies(mrchem external-modules)
+
+add_executable(mrchem.x mrchem.cpp)
+add_dependencies(mrchem.x external-modules)
 
 target_link_libraries(mrchem.x 
     mrchem 
