@@ -1,0 +1,57 @@
+#ifndef H_BM_DIA_H
+#define H_BM_DIA_H
+
+#include "QMTensorOperator.h"
+#include "PositionOperator.h"
+#include "NuclearPotential.h"
+
+class H_BM_dia : public RankTwoTensorOperator<3,3> {
+public:
+    H_BM_dia(const double *o = 0, const double *k = 0)
+            : r_O(o), r_K(k), r_m1(1.0, k) {
+        initializeTensorOperator();
+    }
+    virtual ~H_BM_dia() { }
+
+    void setup(double prec) {
+        this->r_O.setup(prec);
+        this->r_K.setup(prec);
+        this->r_m1.setup(prec);
+    }
+    void clear() {
+        this->r_O.clear();
+        this->r_K.clear();
+        this->r_m1.clear();
+    }
+
+protected:
+    PositionOperator r_O;
+    PositionOperator r_K;
+    NuclearPotential r_m1;
+
+    void initializeTensorOperator() {
+        static double alpha = 7.2973525664;
+
+        RankZeroTensorOperator &o_x = r_O[0];
+        RankZeroTensorOperator &o_y = r_O[1];
+        RankZeroTensorOperator &o_z = r_O[2];
+        RankZeroTensorOperator &k_x = r_K[0];
+        RankZeroTensorOperator &k_y = r_K[1];
+        RankZeroTensorOperator &k_z = r_K[2];
+        RankZeroTensorOperator r_m3 = r_m1*r_m1*r_m1;
+
+        RankTwoTensorOperator<3,3> &h = (*this);
+        h[0][0] = -(alpha*alpha/2.0)*r_m3*(o_y*k_y + o_z*k_z);
+        h[0][1] =  (alpha*alpha/2.0)*r_m3*(o_x*k_y);
+        h[0][2] =  (alpha*alpha/2.0)*r_m3*(o_x*k_z);
+        h[1][0] =  (alpha*alpha/2.0)*r_m3*(o_y*k_x);
+        h[1][1] = -(alpha*alpha/2.0)*r_m3*(o_x*k_x + o_z*k_z);
+        h[1][2] =  (alpha*alpha/2.0)*r_m3*(o_y*k_z);
+        h[2][0] =  (alpha*alpha/2.0)*r_m3*(o_z*k_x);
+        h[2][1] =  (alpha*alpha/2.0)*r_m3*(o_z*k_y);
+        h[2][2] = -(alpha*alpha/2.0)*r_m3*(o_x*k_x + o_y*k_y);
+    }
+};
+
+#endif // H_BM_DIA_H
+
