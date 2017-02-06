@@ -1,9 +1,9 @@
 #ifndef FOCKOPERATOR_H
 #define FOCKOPERATOR_H
 
-#include <vector>
+#include <Eigen/Core>
 
-#include "QMTensorOperator.h"
+#include <vector>
 
 class QMOperatorExp;
 class NuclearPotential;
@@ -12,9 +12,10 @@ class CoulombOperator;
 class ExchangeOperator;
 class XCOperator;
 class Orbital;
+class OrbitalVector;
 class SCFEnergy;
 
-class FockOperator : public RankZeroTensorOperator {
+class FockOperator {
 public:
     FockOperator(KineticOperator *t = 0,
                  NuclearPotential *v = 0,
@@ -32,19 +33,19 @@ public:
     XCOperator *getXCOperator() { return this->XC; }
     QMOperatorExp *getPerturbationOperator() { return this->H_1; }
 
-    virtual void rotate(Eigen::MatrixXd &U);
+    void rotate(Eigen::MatrixXd &U);
 
-    virtual void setup(double prec);
-    virtual void clear();
+    void setup(double prec);
+    void clear();
 
-    virtual Orbital* operator() (Orbital &orb_p);
-    virtual Orbital* adjoint(Orbital &orb_p);
+    Orbital* operator() (Orbital &orb_p);
+    Orbital* adjoint(Orbital &orb_p);
 
-    virtual double operator() (Orbital &orb_i, Orbital &orb_j);
-    virtual double adjoint(Orbital &orb_i, Orbital &orb_j);
+    double operator() (Orbital &orb_i, Orbital &orb_j);
+    double adjoint(Orbital &orb_i, Orbital &orb_j);
 
-    virtual Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
-    virtual Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
+    Eigen::MatrixXd operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs);
+    Eigen::MatrixXd adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs);
 
     SCFEnergy trace(OrbitalVector &phi, Eigen::MatrixXd &F);
 
