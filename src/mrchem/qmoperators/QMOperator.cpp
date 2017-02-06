@@ -1,0 +1,57 @@
+#include "QMOperator.h"
+#include "Orbital.h"
+#include "OrbitalVector.h"
+
+using namespace Eigen;
+using namespace std;
+
+void QMOperator::setup(double prec) {
+    if (this->apply_prec < 0.0) { 
+        this->apply_prec = prec;
+    } else if (fabs(prec - this->apply_prec) > MachineZero) {
+        MSG_ERROR("Clear operator before setup with different prec!");
+    }
+}
+
+void QMOperator::clear() {
+    this->apply_prec = -1.0;
+}
+
+double QMOperator::operator() (Orbital &phi_i, Orbital &phi_j) {
+    QMOperator &O = *this;
+    Orbital *Ophi_j = O(phi_j);
+    complex<double> result = phi_i.dot(*Ophi_j);
+    delete Ophi_j;
+    if (result.imag() > MachineZero) MSG_ERROR("Should be real");
+    return result.real();
+}
+
+double QMOperator::adjoint(Orbital &phi_i, Orbital &phi_j) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
+MatrixXd QMOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+    QMOperator &O = *this;
+
+    int Ni = i_orbs.size();
+    int Nj = j_orbs.size();
+    MatrixXcd result = MatrixXcd::Zero(Ni, Nj);
+
+    for (int j = 0; j < Nj; j++) {
+        Orbital &phi_j = j_orbs.getOrbital(j);
+        Orbital *Ophi_j = O(phi_j);
+        for (int i = 0; i <  Ni; i++) {
+            Orbital &phi_i = i_orbs.getOrbital(i);
+            result(i,j) = phi_i.dot(*Ophi_j);
+        }
+        delete Ophi_j;
+    }
+
+    if (result.imag().norm() > MachineZero) MSG_ERROR("Should be real");
+    return result.real();
+}
+
+MatrixXd QMOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+    NOT_IMPLEMENTED_ABORT;
+}
+
