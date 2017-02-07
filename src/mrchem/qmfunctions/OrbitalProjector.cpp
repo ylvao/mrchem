@@ -1,5 +1,6 @@
 #include "OrbitalProjector.h"
 #include "GaussExp.h"
+#include "GaussFunc.h"
 #include "HydrogenicFunction.h"
 #include "Nucleus.h"
 #include "Intgrl.h"
@@ -54,11 +55,13 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
         int minOrbs = ceil(nuc.getElement().getZ()/2.0);
         double Z = nuc.getCharge();
         const double *R = nuc.getCoord();
+        GaussFunc<3> gauss(1.0e4, 1.0, R);
         int n = 1;
         int nOrbs = 0;
-        while (nOrbs < minOrbs) {
+        bool done = false;
+        while (not done) {
             for (int l = 0; l < n; l++) {
-                if (nOrbs >= minOrbs) continue;
+                //if (nOrbs >= minOrbs) continue;
                 int M = 2*l+1;
                 for (int m = 0; m < M; m++) {
                     phi->push_back(1, 0, Paired);
@@ -75,6 +78,10 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                     printout(0, setw(44) << phi_i.getSquareNorm() << endl);
                     totOrbs++;
                     nOrbs++;
+                }
+                if (nOrbs >= minOrbs) {
+                    done = true;
+                    break;
                 }
             }
             n++;
