@@ -8,36 +8,43 @@
 class H_BM_dia : public RankTwoTensorOperator<3,3> {
 public:
     H_BM_dia(const double *o = 0, const double *k = 0)
-            : r_O(o), r_K(k), r_m1(1.0, k) {
+            : o_x(0, o), o_y(1, o), o_z(2, o),
+              k_x(0, k), k_y(1, k), k_z(2, k),
+              r_m1(1.0, k) {
         initializeTensorOperator();
     }
     virtual ~H_BM_dia() { }
 
     void setup(double prec) {
-        this->r_O.setup(prec);
-        this->r_K.setup(prec);
+        this->o_x.setup(prec);
+        this->o_y.setup(prec);
+        this->o_z.setup(prec);
+        this->k_x.setup(prec);
+        this->k_y.setup(prec);
+        this->k_z.setup(prec);
         this->r_m1.setup(prec);
     }
     void clear() {
-        this->r_O.clear();
-        this->r_K.clear();
+        this->o_x.clear();
+        this->o_y.clear();
+        this->o_z.clear();
+        this->k_x.clear();
+        this->k_y.clear();
+        this->k_z.clear();
         this->r_m1.clear();
     }
 
 protected:
-    PositionOperator r_O;
-    PositionOperator r_K;
+    PositionOperator o_x;
+    PositionOperator o_y;
+    PositionOperator o_z;
+    PositionOperator k_x;
+    PositionOperator k_y;
+    PositionOperator k_z;
     NuclearPotential r_m1;
 
     void initializeTensorOperator() {
         static double alpha = 7.2973525664;
-
-        RankZeroTensorOperator &o_x = r_O[0];
-        RankZeroTensorOperator &o_y = r_O[1];
-        RankZeroTensorOperator &o_z = r_O[2];
-        RankZeroTensorOperator &k_x = r_K[0];
-        RankZeroTensorOperator &k_y = r_K[1];
-        RankZeroTensorOperator &k_z = r_K[2];
         RankZeroTensorOperator r_m3 = r_m1*r_m1*r_m1;
 
         RankTwoTensorOperator<3,3> &h = (*this);

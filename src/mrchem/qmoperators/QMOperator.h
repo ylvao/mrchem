@@ -21,11 +21,14 @@ public:
     QMOperator& operator=(const QMOperator &inp) { this->apply_prec = inp.apply_prec; return *this; }
     virtual ~QMOperator() { }
 
-    int getMaxScale() const { return this->max_scale; }
-    double getApplyPrec() const { return this->apply_prec; }
+    void setApplyPrec(double prec);
+    void clearApplyPrec() { this->apply_prec = -1.0; }
 
-    virtual void setup(double prec);
-    virtual void clear();
+    double getApplyPrec() const { return this->apply_prec; }
+    int getMaxScale() const { return this->max_scale; }
+
+    virtual void setup(double prec) = 0;
+    virtual void clear() = 0;
 
     virtual Orbital* operator() (Orbital &phi) = 0;
     virtual Orbital* adjoint(Orbital &phi) = 0;

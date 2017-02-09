@@ -19,22 +19,11 @@ QMPotential::~QMPotential() {
     if (this->hasImag()) MSG_ERROR("Potential not cleared");
 }
 
-void QMPotential::setup(double prec) {
-    QMOperator::setup(prec);
-    if (this->hasReal()) MSG_ERROR("Potential not cleared");
-    if (this->hasImag()) MSG_ERROR("Potential not cleared");
-}
-
-void QMPotential::clear() {
-    clearReal(true);
-    clearImag(true);
-    QMOperator::clear();
-}
-
 Orbital* QMPotential::operator() (Orbital &phi) {
-    Orbital *Vphi = new Orbital(phi);
+    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
     Timer timer;
+    Orbital *Vphi = new Orbital(phi);
     calcRealPart(*Vphi, phi);
     calcImagPart(*Vphi, phi, false);
     timer.stop();
@@ -47,9 +36,10 @@ Orbital* QMPotential::operator() (Orbital &phi) {
 }
 
 Orbital* QMPotential::adjoint(Orbital &phi) {
-    Orbital *Vphi = new Orbital(phi);
+    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
     Timer timer;
+    Orbital *Vphi = new Orbital(phi);
     calcRealPart(*Vphi, phi);
     calcImagPart(*Vphi, phi, true);
     timer.stop();
@@ -62,8 +52,6 @@ Orbital* QMPotential::adjoint(Orbital &phi) {
 }
 
 void QMPotential::calcRealPart(Orbital &Vphi, Orbital &phi) {
-    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-
     MWAdder<3> add(this->apply_prec, this->max_scale);
     MWMultiplier<3> mult(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -97,8 +85,6 @@ void QMPotential::calcRealPart(Orbital &Vphi, Orbital &phi) {
 }
 
 void QMPotential::calcImagPart(Orbital &Vphi, Orbital &phi, bool adjoint) {
-    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-
     MWAdder<3> add(this->apply_prec, this->max_scale);
     MWMultiplier<3> mult(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);

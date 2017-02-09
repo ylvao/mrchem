@@ -1,30 +1,43 @@
 #ifndef NUCLEARPOTENTIAL_H
 #define NUCLEARPOTENTIAL_H
 
-#include "QMTensorOperator.h"
 #include "QMPotential.h"
 #include "Nucleus.h"
 #include "NuclearFunction.h"
 #include "MWProjector.h"
 
-class NuclearPotential : public RankZeroTensorOperator {
+class NuclearPotential : public QMPotential {
 public:
     NuclearPotential(double Z, const double *R = 0, double S = 1.0e-7) {
-        nuc_func.push_back(Z, R, S);
-        initializeTensorOperator();
+        func.push_back(Z, R, S);
     }
     NuclearPotential(const Nuclei &nucs, double prec)
-            : nuclei(nucs), nuc_func(nucs, prec) {
-        initializeTensorOperator();
+        : nuclei(nucs), func(nucs, prec) {
     }
     virtual ~NuclearPotential() { }
 
     virtual void setup(double prec) {
-        this->nuc_pot.setup(prec);
-        projectPotential(this->nuc_pot, this->nuc_func);
+        if (IS_EQUAL(prec, this->apply_prec)) return;
+
+        setApplyPrec(prec);
+        if (this->hasReal()) MSG_ERROR("Potential not properly cleared");
+        if (this->hasImag()) MSG_ERROR("Potential not properly cleared");
+
+        MWProjector<3> project(this->apply_prec, this->max_scale);
+
+        Timer timer;
+        this->allocReal();
+        project(this->real(), this->func);
+        timer.stop();
+
+        int n = this->getNNodes();
+        double t = timer.getWallTime();
+        TelePrompter::printTree(0, "Nuclear potential", n, t);
     }
     virtual void clear() {
-        this->nuc_pot.clear();
+        clearReal(true);
+        clearImag(true);
+        clearApplyPrec();
     }
 
     Nuclei &getNuclei() { return this->nuclei; }
@@ -32,26 +45,7 @@ public:
 
 protected:
     Nuclei nuclei;
-    NuclearFunction nuc_func;
-    QMPotential nuc_pot;
-
-    void initializeTensorOperator() {
-        RankZeroTensorOperator &h = *this;
-        h = nuc_pot;
-    }
-
-    void projectPotential(QMPotential &V, NuclearFunction &f) {
-        V.allocReal();
-
-        Timer timer;
-        MWProjector<3> project(V.getApplyPrec(), V.getMaxScale());
-        project(V.real(), f);
-        timer.stop();
-
-        int n = V.getNNodes();
-        double t = timer.getWallTime();
-        TelePrompter::printTree(0, "Nuclear potential", n, t);
-    }
+    NuclearFunction func;
 };
 
 #endif // NUCLEARPOTENTIAL_H

@@ -6,20 +6,29 @@
 
 class H_BB_dia : public RankTwoTensorOperator<3,3> {
 public:
-    H_BB_dia(const double *o = 0) : r(o) { initializeTensorOperator(); }
+    H_BB_dia(const double *o = 0)
+            : r_x(0, o), r_y(1, o), r_z(2, o) {
+        initializeTensorOperator();
+    }
     virtual ~H_BB_dia() { }
 
-    void setup(double prec) { this->r.setup(prec); }
-    void clear() { this->r.clear(); }
+    void setup(double prec) {
+        this->r_x.setup(prec);
+        this->r_y.setup(prec);
+        this->r_z.setup(prec);
+    }
+    void clear() {
+        this->r_x.clear();
+        this->r_y.clear();
+        this->r_z.clear();
+    }
 
 protected:
-    PositionOperator r;
+    PositionOperator r_x;
+    PositionOperator r_y;
+    PositionOperator r_z;
 
     void initializeTensorOperator() {
-        RankZeroTensorOperator &r_x = this->r[0];
-        RankZeroTensorOperator &r_y = this->r[1];
-        RankZeroTensorOperator &r_z = this->r[2];
-
         RankTwoTensorOperator<3,3> &h = (*this);
         h[0][0] =  1.0/4.0*(r_y*r_y + r_z*r_z);
         h[0][1] = -1.0/4.0*(r_x*r_y);

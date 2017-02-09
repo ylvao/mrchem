@@ -8,34 +8,40 @@
 
 class AngularMomentumOperator : public RankOneTensorOperator<3> {
 public:
-    AngularMomentumOperator(DerivativeOperator<3> &d, const double *o = 0)
-            : r(o), p(d) {
+    AngularMomentumOperator(DerivativeOperator<3> &D, const double *o = 0)
+            : r_x(0, o), r_y(1, o), r_z(2, o),
+              p_x(0, D), p_y(1, D), p_z(2, D) {
         initializeTensorOperator();
     }
     virtual ~AngularMomentumOperator() { }
 
     void setup(double prec) {
-        this->r.setup(prec);
-        this->p.setup(prec);
+        this->r_x.setup(prec);
+        this->r_y.setup(prec);
+        this->r_z.setup(prec);
+        this->p_x.setup(prec);
+        this->p_y.setup(prec);
+        this->p_z.setup(prec);
     }
 
     void clear() {
-        this->r.clear();
-        this->p.clear();
+        this->r_x.clear();
+        this->r_y.clear();
+        this->r_z.clear();
+        this->p_x.clear();
+        this->p_y.clear();
+        this->p_z.clear();
     }
 
 protected:
-    PositionOperator r;
-    MomentumOperator p;
+    PositionOperator r_x;
+    PositionOperator r_y;
+    PositionOperator r_z;
+    MomentumOperator p_x;
+    MomentumOperator p_y;
+    MomentumOperator p_z;
 
     void initializeTensorOperator() {
-        RankZeroTensorOperator &r_x = this->r[0];
-        RankZeroTensorOperator &r_y = this->r[1];
-        RankZeroTensorOperator &r_z = this->r[2];
-        RankZeroTensorOperator &p_x = this->p[0];
-        RankZeroTensorOperator &p_y = this->p[1];
-        RankZeroTensorOperator &p_z = this->p[2];
-
         RankOneTensorOperator<3> &h = (*this);
         h[0] = (r_y*p_z - r_z*p_y);
         h[1] = (r_z*p_x - r_x*p_z);

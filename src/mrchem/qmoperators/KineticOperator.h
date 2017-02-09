@@ -6,13 +6,22 @@
 
 class KineticOperator : public RankZeroTensorOperator {
 public:
-    KineticOperator(DerivativeOperator<3> &d) : p(d) {
+    KineticOperator(DerivativeOperator<3> &D)
+            : p_x(0, D), p_y(1, D), p_z(2, D) {
         initializeTensorOperator();
     }
     virtual ~KineticOperator() { }
 
-    virtual void setup(double prec) { this->p.setup(prec); }
-    virtual void clear() { this->p.clear(); }
+    virtual void setup(double prec) {
+        this->p_x.setup(prec);
+        this->p_y.setup(prec);
+        this->p_z.setup(prec);
+    }
+    virtual void clear() {
+        this->p_x.clear();
+        this->p_y.clear();
+        this->p_z.clear();
+    }
 
     virtual double operator() (Orbital &orb_i, Orbital &orb_j);
     virtual double adjoint(Orbital &orb_i, Orbital &orb_j);
@@ -24,13 +33,11 @@ public:
     using RankZeroTensorOperator::adjoint;
 
 protected:
-    MomentumOperator p;
+    MomentumOperator p_x;
+    MomentumOperator p_y;
+    MomentumOperator p_z;
 
     void initializeTensorOperator() {
-        RankZeroTensorOperator &p_x = this->p[0];
-        RankZeroTensorOperator &p_y = this->p[1];
-        RankZeroTensorOperator &p_z = this->p[2];
-
         RankZeroTensorOperator &h = *this;
         h = -0.5*(p_x*p_x + p_y*p_y + p_z*p_z);
     }

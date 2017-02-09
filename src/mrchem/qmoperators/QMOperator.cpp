@@ -5,16 +5,12 @@
 using namespace Eigen;
 using namespace std;
 
-void QMOperator::setup(double prec) {
+void QMOperator::setApplyPrec(double prec) {
     if (this->apply_prec < 0.0) { 
         this->apply_prec = prec;
-    } else if (fabs(prec - this->apply_prec) > MachineZero) {
+    } else if (not IS_EQUAL(prec, this->apply_prec)) {
         MSG_ERROR("Clear operator before setup with different prec!");
     }
-}
-
-void QMOperator::clear() {
-    this->apply_prec = -1.0;
 }
 
 double QMOperator::operator() (Orbital &phi_i, Orbital &phi_j) {

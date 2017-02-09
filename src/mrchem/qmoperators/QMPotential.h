@@ -9,11 +9,11 @@ public:
     QMPotential();
     virtual ~QMPotential();
 
-    virtual void setup(double prec);
-    virtual void clear();
-
     virtual Orbital* operator() (Orbital &phi);
     virtual Orbital* adjoint(Orbital &phi);
+
+    using QMOperator::operator();
+    using QMOperator::adjoint;
 
 protected:
     void calcRealPart(Orbital &Vphi, Orbital &phi);
