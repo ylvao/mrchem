@@ -9,11 +9,21 @@ public:
         : CoulombOperator(P, phi) { }
     virtual ~CoulombPotential() { }
 
-    virtual void setup(double prec);
-    virtual void clear();
+    virtual void setup(double prec) {
+        setApplyPrec(prec);
+        calcDensity(this->density, *this->orbitals);
+        calcPotential(*this, this->density);
+    }
+    virtual void clear() {
+        clearReal(true);
+        clearImag(true);
+        this->density.clear();
+        clearApplyPrec();
+    }
 
-    virtual Orbital* operator() (Orbital &phi);
-    virtual Orbital* adjoint(Orbital &phi);
+protected:
+    void calcDensity(Density &rho, OrbitalVector &phi);
+    void calcPotential(QMPotential &V, Density &rho);
 };
 
 #endif // COULOMBPOTENTIAL_H

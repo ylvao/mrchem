@@ -171,7 +171,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     println(0,"                                                            ");
     // Do not setup exchange, it must be applied on the fly anyway
     if (j_np1 != 0) j_np1->setup(getOrbitalPrecision());
-    if (k_np1 != 0) k_np1->QMOperator::setup(getOrbitalPrecision());
+    if (k_np1 != 0) k_np1->ExchangeOperator::setup(getOrbitalPrecision());
     if (xc_np1 != 0) xc_np1->setup(getOrbitalPrecision());
     println(0,"                                                            ");
 

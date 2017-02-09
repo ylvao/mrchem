@@ -15,8 +15,7 @@ using namespace std;
 using namespace Eigen;
 
 void XCPotential::setup(double prec) {
-    QMOperator::setup(prec);
-    this->potential.setup(prec);
+    setApplyPrec(prec);
     calcDensity();
     setupXCInput();
     setupXCOutput();
@@ -28,16 +27,20 @@ void XCPotential::setup(double prec) {
 }
 
 void XCPotential::clear() {
+    clearReal(true);
+    clearImag(true);
     this->energy = 0.0;
     this->density.clear();
     this->gradient[0].clear();
     this->gradient[1].clear();
     this->gradient[2].clear();
-    this->potential.clear();
-    QMOperator::clear();
+    clearApplyPrec();
 }
 
 void XCPotential::calcPotential() {
+    if (this->hasReal()) MSG_ERROR("Potential not properly cleared");
+    if (this->hasImag()) MSG_ERROR("Potential not properly cleared");
+
     if (this->xcOutput == 0) MSG_ERROR("XC output not initialized");
 
     bool lda = this->functional->isLDA();
@@ -65,7 +68,7 @@ void XCPotential::calcPotential() {
     timer.stop();
     double t = timer.getWallTime();
     int n = 0;
-    n += this->potential.getNNodes();
+    n += this->getNNodes();
     //n += this->potential[1].getNNodes();
     //n += this->potential[2].getNNodes();
     TelePrompter::printTree(0, "XC potential", n, t);
@@ -74,7 +77,7 @@ void XCPotential::calcPotential() {
 void XCPotential::calcPotentialLDA(int spin) {
     if (spin == Paired) {
         if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
-        this->potential.setReal(this->xcOutput[1]);
+        this->setReal(this->xcOutput[1]);
         this->xcOutput[1] = 0;
     } else if (spin == Alpha) {
         //if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
@@ -112,7 +115,7 @@ void XCPotential::calcPotentialGGA(int spin) {
         dRho_b.push_back(0);
 
         FunctionTree<3> *V = calcPotentialGGA(xc_funcs, dRho_a, dRho_b);
-        this->potential.setReal(V);
+        this->setReal(V);
 
         xc_funcs.clear();
         dRho_a.clear();
@@ -198,12 +201,3 @@ FunctionTree<3>* XCPotential::calcPotentialGGA(FunctionTreeVector<3> &xc_funcs,
     return V;
 }
 
-Orbital* XCPotential::operator() (Orbital &phi) {
-    QMPotential &V = this->potential;
-    return V(phi);
-}
-
-Orbital* XCPotential::adjoint(Orbital &phi) {
-    QMPotential &V = this->potential;
-    return V.adjoint(phi);
-}

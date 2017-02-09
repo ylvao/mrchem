@@ -15,10 +15,10 @@ using namespace Eigen;
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 XCOperator::XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D)
-        : TwoElectronOperator(MRA->getMaxScale(), phi),
-          order(k),
+        : order(k),
           functional(&F),
           derivative(D),
+          orbitals(&phi),
           energy(0.0),
           xcInput(0),
           xcOutput(0) {
@@ -42,7 +42,7 @@ void XCOperator::calcDensity() {
     OrbitalVector &phi = *this->orbitals;
     Density &rho = this->density;
     Density *dRho = &this->gradient[0];
-    QMPotential &V = this->potential;
+    QMPotential &V = *this;
 
     DensityProjector project(this->apply_prec, this->max_scale);
 
@@ -88,13 +88,12 @@ void XCOperator::calcDensityGradient(Density *dRho, Density &rho) {
 
 FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
     if (this->derivative == 0) MSG_ERROR("No derivative operator");
-    DerivativeOperator<3> &D = *this->derivative;
     MWDerivative<3> apply(this->max_scale);
 
     FunctionTreeVector<3> out;
     for (int d = 0; d < 3; d++) {
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        apply(*out_d, D, inp, d);
+        apply(*out_d, *this->derivative, inp, d);
         out.push_back(out_d);
     }
     return out;
@@ -102,7 +101,6 @@ FunctionTreeVector<3> XCOperator::calcGradient(FunctionTree<3> &inp) {
 
 FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
     if (this->derivative == 0) MSG_ERROR("No derivative operator");
-    DerivativeOperator<3> &D = *this->derivative;
     MWAdder<3> add(-1.0, this->max_scale);
     MWDerivative<3> apply(this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -110,7 +108,7 @@ FunctionTree<3>* XCOperator::calcDivergence(FunctionTreeVector<3> &inp) {
     FunctionTreeVector<3> tmp_vec;
     for (int d = 0; d < 3; d++) {
         FunctionTree<3> *out_d = new FunctionTree<3>(*MRA);
-        apply(*out_d, D, *inp[d], d);
+        apply(*out_d, *this->derivative, *inp[d], d);
         tmp_vec.push_back(out_d);
     }
     FunctionTree<3> *out = new FunctionTree<3>(*MRA);

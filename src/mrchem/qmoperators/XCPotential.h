@@ -12,9 +12,6 @@ public:
     virtual void setup(double prec);
     virtual void clear();
 
-    virtual Orbital* operator() (Orbital &phi);
-    virtual Orbital* adjoint(Orbital &phi);
-
 protected:
     void calcPotential();
     void calcPotentialLDA(int spin);

@@ -3,9 +3,8 @@
 
 #include <Eigen/Core>
 
-#include "TwoElectronOperator.h"
-#include "Density.h"
 #include "QMPotential.h"
+#include "Density.h"
 
 class XCFunctional;
 class OrbitalVector;
@@ -13,7 +12,7 @@ template<int D> class FunctionTree;
 template<int D> class FunctionTreeVector;
 template<int D> class DerivativeOperator;
 
-class XCOperator : public TwoElectronOperator {
+class XCOperator : public QMPotential {
 public:
     XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D);
     virtual ~XCOperator();
@@ -24,11 +23,11 @@ protected:
     const int order;                    ///< Order of kernel derivative
     XCFunctional *functional;           ///< Pointer to external object
     DerivativeOperator<3> *derivative;  ///< Pointer to external object
+    OrbitalVector *orbitals;            ///< Pointer to external object
 
     double energy;                      ///< XC energy
     Density density;                    ///< Unperturbed density
     Density gradient[3];                ///< Unperturbed density gradient
-    QMPotential potential;              ///< The actual operator [tot, alpha, beta]
 
     FunctionTree<3> **xcInput;          ///< XCFun input
     FunctionTree<3> **xcOutput;         ///< XCFun output

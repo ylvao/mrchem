@@ -15,13 +15,13 @@ ExchangePotential::ExchangePotential(PoissonOperator &P,
 }
 
 void ExchangePotential::setup(double prec) {
-    QMOperator::setup(prec);
+    setApplyPrec(prec);
     calcInternalExchange();
 }
 
 void ExchangePotential::clear() {
     this->exchange.clear();
-    QMOperator::clear();
+    clearApplyPrec();
 }
 
 void ExchangePotential::rotate(MatrixXd &U) {
