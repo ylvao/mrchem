@@ -296,8 +296,12 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
-    PositionOperator r;
-    r.setup(prec);
+    PositionOperator r_x(0);
+    PositionOperator r_y(1);
+    PositionOperator r_z(2);
+    r_x.setup(prec);
+    r_y.setup(prec);
+    r_z.setup(prec);
 
     for (int i = 0; i < N; i++) {
         Orbital &phi_i = phi.getOrbital(i);
@@ -308,15 +312,17 @@ RR::RR(double prec, OrbitalVector &phi) {
             if (spin_i != spin_j) {
                 MSG_ERROR("Spins must be separated before localization");
             }
-            r_i_orig(i,j) = r[0](phi_i, phi_j);
-            r_i_orig(i,j+N) = r[1](phi_i, phi_j);
-            r_i_orig(i,j+2*N) = r[2](phi_i, phi_j);
+            r_i_orig(i,j) = r_x(phi_i, phi_j);
+            r_i_orig(i,j+N) = r_y(phi_i, phi_j);
+            r_i_orig(i,j+2*N) = r_z(phi_i, phi_j);
             r_i_orig(j,i) = r_i_orig(i,j);
             r_i_orig(j,i+N) = r_i_orig(i,j+N);
             r_i_orig(j,i+2*N) = r_i_orig(i,j+2*N);
         }
     }
-    r.clear();
+    r_x.clear();
+    r_y.clear();
+    r_z.clear();
 
     //rotate R matrices into orthonormal basis
     MatrixXd S_tilde = phi.calcOverlapMatrix().real();
