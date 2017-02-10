@@ -13,8 +13,8 @@ public:
     virtual ~QMTensorOperator() { }
 
     void setOperator(int i, T &oper) { this->oper[i] = oper; }
-    virtual void setup(double prec) { NOT_REACHED_ABORT; }
-    virtual void clear() { NOT_REACHED_ABORT; }
+    void setup(double prec) { for (int i = 0; i < I; i++) this->oper[i].setup(prec); }
+    void clear() { for (int i = 0; i < I; i++) this->oper[i].clear(); }
 
     T& operator[](int i) { return this->oper[i]; }
     const T& operator[](int i) const { return this->oper[i]; }

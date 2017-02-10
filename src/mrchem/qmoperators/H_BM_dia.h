@@ -15,25 +15,6 @@ public:
     }
     virtual ~H_BM_dia() { }
 
-    void setup(double prec) {
-        this->o_x.setup(prec);
-        this->o_y.setup(prec);
-        this->o_z.setup(prec);
-        this->k_x.setup(prec);
-        this->k_y.setup(prec);
-        this->k_z.setup(prec);
-        this->r_m1.setup(prec);
-    }
-    void clear() {
-        this->o_x.clear();
-        this->o_y.clear();
-        this->o_z.clear();
-        this->k_x.clear();
-        this->k_y.clear();
-        this->k_z.clear();
-        this->r_m1.clear();
-    }
-
 protected:
     PositionOperator o_x;
     PositionOperator o_y;

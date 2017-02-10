@@ -11,18 +11,6 @@ public:
     }
     virtual ~H_E_dip() { }
 
-    virtual void setup(double prec) {
-        this->r_x.setup(prec);
-        this->r_y.setup(prec);
-        this->r_z.setup(prec);
-    }
-
-    virtual void clear() {
-        this->r_x.clear();
-        this->r_y.clear();
-        this->r_z.clear();
-    }
-
     Eigen::VectorXd trace(const Nuclei &nucs) {
         Eigen::VectorXd result = Eigen::VectorXd::Zero(3);
         for (int k = 0; k < nucs.size(); k++) {

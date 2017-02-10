@@ -12,17 +12,6 @@ public:
     }
     virtual ~KineticOperator() { }
 
-    virtual void setup(double prec) {
-        this->p_x.setup(prec);
-        this->p_y.setup(prec);
-        this->p_z.setup(prec);
-    }
-    virtual void clear() {
-        this->p_x.clear();
-        this->p_y.clear();
-        this->p_z.clear();
-    }
-
     virtual double operator() (Orbital &orb_i, Orbital &orb_j);
     virtual double adjoint(Orbital &orb_i, Orbital &orb_j);
 

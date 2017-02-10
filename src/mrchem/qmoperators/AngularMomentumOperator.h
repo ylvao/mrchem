@@ -15,24 +15,6 @@ public:
     }
     virtual ~AngularMomentumOperator() { }
 
-    void setup(double prec) {
-        this->r_x.setup(prec);
-        this->r_y.setup(prec);
-        this->r_z.setup(prec);
-        this->p_x.setup(prec);
-        this->p_y.setup(prec);
-        this->p_z.setup(prec);
-    }
-
-    void clear() {
-        this->r_x.clear();
-        this->r_y.clear();
-        this->r_z.clear();
-        this->p_x.clear();
-        this->p_y.clear();
-        this->p_z.clear();
-    }
-
 protected:
     PositionOperator r_x;
     PositionOperator r_y;

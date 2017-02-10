@@ -12,15 +12,6 @@ public:
     }
     virtual ~H_M_pso() { }
 
-    void setup(double prec) {
-        this->l.setup(prec);
-        this->r_m1.setup(prec);
-    }
-    void clear() {
-        this->l.clear();
-        this->r_m1.clear();
-    }
-
 protected:
     NuclearPotential r_m1;
     AngularMomentumOperator l;

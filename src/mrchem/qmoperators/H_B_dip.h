@@ -11,9 +11,6 @@ public:
     }
     virtual ~H_B_dip() { }
 
-    void setup(double prec) { this->l.setup(prec); }
-    void clear() { this->l.clear(); }
-
 protected:
     AngularMomentumOperator l;
 

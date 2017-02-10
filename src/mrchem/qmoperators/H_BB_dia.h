@@ -12,17 +12,6 @@ public:
     }
     virtual ~H_BB_dia() { }
 
-    void setup(double prec) {
-        this->r_x.setup(prec);
-        this->r_y.setup(prec);
-        this->r_z.setup(prec);
-    }
-    void clear() {
-        this->r_x.clear();
-        this->r_y.clear();
-        this->r_z.clear();
-    }
-
 protected:
     PositionOperator r_x;
     PositionOperator r_y;
