@@ -21,7 +21,8 @@ FockOperator::FockOperator(KineticOperator *t,
                            CoulombOperator *j,
                            ExchangeOperator *k,
                            XCOperator *xc)
-    : T(t),
+    : QMOperator(MRA->getMaxScale()),
+      T(t),
       V(v),
       J(j),
       K(k),
@@ -65,7 +66,7 @@ void FockOperator::rotate(MatrixXd &U) {
 }
 
 Orbital* FockOperator::operator() (Orbital &orb_p) {
-    OrbitalAdder add(1.0, MRA->getMaxScale());
+    OrbitalAdder add(1.0, this->max_scale);
 
     vector<Orbital *> orbs;
     if (this->T != 0) orbs.push_back((*this->T)(orb_p));
@@ -90,27 +91,6 @@ Orbital* FockOperator::operator() (Orbital &orb_p) {
 
 Orbital* FockOperator::adjoint(Orbital &orb_p) {
     NOT_IMPLEMENTED_ABORT;
-//    vector<FunctionTree<3> *> orbs;
-//    if (this->T != 0) orbs.push_back((*this->T).adjoint(orb_p));
-//    if (this->V != 0) orbs.push_back((*this->V).adjoint(orb_p));
-//    if (this->J != 0) orbs.push_back((*this->J).adjoint(orb_p));
-//    if (this->K != 0) orbs.push_back((*this->K).adjoint(orb_p));
-//    if (this->XC != 0) orbs.push_back((*this->XC).adjoint(orb_p));
-//    for (int i = 0; i < getNPerturbations(); i++) {
-//        QMOperator &h1 = getPerturbationOperator(i);
-//        orbs.push_back(h1.adjoint(orb_p));
-//    }
-
-//    Orbital *result = new Orbital(orb_p);
-//    result->add(orbs, 0);
-//    double time = timer.elapsed();
-//    int nNodes = result->getNNodes();
-//    TelePrompter::printTree(1, "Sum Fock operator", nNodes, time);
-//    for (int n = 0; n < orbs.size(); n++) {
-//        delete orbs[n];
-//        orbs[n] = 0;
-//    }
-//    return result;
 }
 
 double FockOperator::operator() (Orbital &orb_i, Orbital &orb_j) {
@@ -125,14 +105,7 @@ double FockOperator::operator() (Orbital &orb_i, Orbital &orb_j) {
 }
 
 double FockOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
-    double result = 0.0;
-    if (this->T != 0) result += (*this->T).adjoint(orb_i, orb_j);
-    if (this->V != 0) result += (*this->V).adjoint(orb_i, orb_j);
-    if (this->J != 0) result += (*this->J).adjoint(orb_i, orb_j);
-    if (this->K != 0) result += (*this->K).adjoint(orb_i, orb_j);
-    if (this->XC != 0) result += (*this->XC).adjoint(orb_i, orb_j);
-    if (this->H_1 != 0) result += (*this->H_1).adjoint(orb_i, orb_j);
-    return result;
+    NOT_IMPLEMENTED_ABORT;
 }
 
 MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
@@ -198,32 +171,8 @@ MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     return result;
 }
 
-Orbital* FockOperator::applyKinetic(Orbital &orb_p) {
-    return (*this->T)(orb_p);
-}
-
-double FockOperator::applyKinetic(Orbital &orb_i, Orbital &orb_j) {
-    return (*this->T)(orb_i,orb_j);
-}
-
-MatrixXd FockOperator::applyKinetic(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    return (*this->T)(i_orbs,j_orbs);
-}
-
-Orbital* FockOperator::applyAdjointKinetic(Orbital &orb_p) {
-    return (*this->T).adjoint(orb_p);
-}
-
-double FockOperator::applyAdjointKinetic(Orbital &orb_i, Orbital &orb_j) {
-    return (*this->T).adjoint(orb_i,orb_j);
-}
-
-MatrixXd FockOperator::applyAdjointKinetic(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    return (*this->T).adjoint(i_orbs,j_orbs);
-}
-
 Orbital* FockOperator::applyPotential(Orbital &orb_p) {
-    OrbitalAdder add(1.0, MRA->getMaxScale());
+    OrbitalAdder add(1.0, this->max_scale);
 
     vector<Orbital *> orbs;
     if (this->V != 0) orbs.push_back((*this->V)(orb_p));
@@ -273,22 +222,11 @@ Orbital* FockOperator::applyAdjointPotential(Orbital &orb_p) {
 }
 
 double FockOperator::applyAdjointPotential(Orbital &orb_i, Orbital &orb_j) {
-    double result = 0.0;
-    if (this->V != 0) result += (*this->V).adjoint(orb_i, orb_j);
-    if (this->J != 0) result += (*this->J).adjoint(orb_i, orb_j);
-    if (this->K != 0) result += (*this->K).adjoint(orb_i, orb_j);
-    if (this->XC != 0) result += (*this->XC).adjoint(orb_i, orb_j);
-    return result;
+    NOT_IMPLEMENTED_ABORT;
 }
 
 MatrixXd FockOperator::applyAdjointPotential(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-    int nOrbs = i_orbs.size();
-    MatrixXd result = MatrixXd::Zero(nOrbs,nOrbs);
-    if (this->V != 0) result += (*this->V).adjoint(i_orbs, j_orbs);
-    if (this->J != 0) result += (*this->J).adjoint(i_orbs, j_orbs);
-    if (this->K != 0) result += (*this->K).adjoint(i_orbs, j_orbs);
-    if (this->XC != 0) result += (*this->XC).adjoint(i_orbs, j_orbs);
-    return result;
+    NOT_IMPLEMENTED_ABORT;
 }
 
 SCFEnergy FockOperator::trace(OrbitalVector &phi, MatrixXd &F) {
