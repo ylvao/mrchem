@@ -23,7 +23,6 @@ target_link_libraries(scf_solver
     initial_guess
     qmfunctions
     qmoperators
-    properties
     mrcpp
     mwanalytic
     mwcore

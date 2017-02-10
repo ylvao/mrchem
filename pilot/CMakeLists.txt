@@ -29,7 +29,6 @@ if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
         qmfunctions
         qmoperators
         scf_solver
-        properties
         mrcpp 
         mwanalytic 
         mwcore

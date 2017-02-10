@@ -18,7 +18,6 @@ add_subdirectory (initial_guess)
 add_subdirectory (qmfunctions)
 add_subdirectory (qmoperators)
 add_subdirectory (scf_solver)
-add_subdirectory (properties)
 
 link_directories (${CMAKE_INSTALL_PREFIX}/lib)
 
@@ -38,7 +37,6 @@ target_link_libraries(mrchem
     qmfunctions
     qmoperators
     scf_solver
-    properties
     mrcpp 
     mwanalytic
     mwtrees
@@ -57,7 +55,6 @@ target_link_libraries(mrchem.x
     qmfunctions
     qmoperators
     scf_solver
-    properties
     mrcpp 
     mwanalytic
     mwtrees
