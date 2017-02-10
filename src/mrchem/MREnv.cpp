@@ -49,6 +49,12 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     println(0,endl);
     println(0,"Print level  : " <<  printlevel << endl);
 
+#ifdef HAVE_BLAS
+    println(0, "BLAS was found!" << endl);
+#else
+    println(0, "BLAS was NOT found, Eigen will be used instead!" << endl);
+#endif
+
     if (MPI_size > 1 or nThreads > 1) {
         println(0,"+++ Parallel execution: ");
         println(0,"  MPI hosts available     : " << MPI_size);
