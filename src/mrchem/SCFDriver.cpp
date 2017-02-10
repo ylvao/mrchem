@@ -20,7 +20,7 @@
 #include "HelmholtzOperatorSet.h"
 #include "OrbitalOptimizer.h"
 #include "EnergyOptimizer.h"
-//#include "LinearResponseSolver.h"
+#include "LinearResponseSolver.h"
 #include "KAIN.h"
 
 #include "Molecule.h"
@@ -33,10 +33,15 @@
 #include "NMRShielding.h"
 #include "SpinSpinCoupling.h"
 
-#include "DipoleOperator.h"
-#include "DMOperator.h"
-#include "DSOperator.h"
-#include "DSOOperator.h"
+#include "PoissonOperator.h"
+#include "ABGVOperator.h"
+#include "PHOperator.h"
+
+#include "H_E_dip.h"
+#include "H_B_dip.h"
+#include "H_BB_dia.h"
+#include "H_BM_dia.h"
+#include "H_M_pso.h"
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -47,7 +52,10 @@
 using namespace std;
 using namespace Eigen;
 
+extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+
 SCFDriver::SCFDriver(Getkw &input) {
+    max_scale = MRA->getMaxScale();
     rel_prec = input.get<double>("rel_prec");
 
     gauge = input.getDblVec("World.gauge_origin");
@@ -128,8 +136,15 @@ SCFDriver::SCFDriver(Getkw &input) {
 
     helmholtz = 0;
     scf_kain = 0;
+    rsp_kain_x = 0;
+    rsp_kain_y = 0;
+
+    P = 0;
+    PH = 0;
+    ABGV = 0;
 
     molecule = 0;
+    nuclei = 0;
     phi = 0;
 
     T = 0;
@@ -139,17 +154,20 @@ SCFDriver::SCFDriver(Getkw &input) {
     XC = 0;
     fock = 0;
 
+    phi_np1 = 0;
     J_np1 = 0;
     K_np1 = 0;
     XC_np1 = 0;
     fock_np1 = 0;
 
-    xcfun = 0;
-
+    phi_x = 0;
+    phi_y = 0;
     dJ = 0;
     dK = 0;
     dXC = 0;
     d_fock = 0;
+
+    xcfun = 0;
 
     h_E = 0;
     h_B = 0;
@@ -189,12 +207,6 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Optical rotation not implemented");
         return false;
     }
-    if (calc_magnetizability) {
-        MSG_ERROR("Only diamagnetic magnetizability atm");
-    }
-    if (calc_nmr_shielding) {
-        MSG_ERROR("Only diamagnetic NMR shielding atm");
-    }
     if (calc_spin_spin_coupling) {
         MSG_ERROR("Only diamagnetic spin-spin coupling atm");
     }
@@ -202,7 +214,6 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Hyperfine coupling not implemented");
         return false;
     }
-
     return true;
 }
 
@@ -227,28 +238,43 @@ void SCFDriver::setup() {
         r_O[2] = gauge[2];
     }
 
+    // Setting up MW operators
+    P = new PoissonOperator(*MRA, rel_prec);
+    PH = new PHOperator<3>(*MRA, 1);
+    ABGV = new ABGVOperator<3>(*MRA, 0.0, 0.0);
+
+    // Setting up perturbation operators
+    int nNucs = molecule->getNNuclei();
+    h_E = new H_E_dip(r_O);
+    h_B = new H_B_dip(*ABGV, r_O);
+    h_M = new H_M_pso*[nNucs];
+    for (int k = 0; k < nNucs; k++) {
+        const double *r_K = molecule->getNucleus(k).getCoord();
+        h_M[k] = new H_M_pso(*ABGV, r_K);
+    }
+
     // Setting up properties
     if (nmr_nucleus_k[0] < 0) {
         nmr_nucleus_k.clear();
-        for (int k = 0; k < molecule->getNNuclei(); k++) {
+        for (int k = 0; k < nNucs; k++) {
             nmr_nucleus_k.push_back(k);
         }
     }
     if (sscc_nucleus_k[0] < 0) {
         sscc_nucleus_k.clear();
-        for (int k = 0; k < molecule->getNNuclei(); k++) {
+        for (int k = 0; k < nNucs; k++) {
             sscc_nucleus_k.push_back(k);
         }
     }
     if (sscc_nucleus_l[0] < 0) {
         sscc_nucleus_l.clear();
-        for (int l = 0; l < molecule->getNNuclei(); l++) {
+        for (int l = 0; l < nNucs; l++) {
             sscc_nucleus_l.push_back(l);
         }
     }
     if (hfcc_nucleus_k[0] < 0) {
         hfcc_nucleus_k.clear();
-        for (int k = 0; k < molecule->getNNuclei(); k++) {
+        for (int k = 0; k < nNucs; k++) {
             hfcc_nucleus_k.push_back(k);
         }
     }
@@ -258,29 +284,26 @@ void SCFDriver::setup() {
     if (calc_quadrupole_moment) molecule->initQuadrupoleMoment();
     if (calc_magnetizability) {
         molecule->initMagnetizability();
-        //for (int d = 0; d < 3; d++) {
-        //    if (rsp_directions[d] == 0) continue;
-        //    if (h_B[d] == 0) h_B[d] = new AngularMomentumOperator(d, r_O);
-        //    rsp_calculations.push_back(h_B[d], 0.0, true, d);
-        //}
+        for (int d = 0; d < 3; d++) {
+            if (rsp_directions[d] == 0) continue;
+            rsp_calculations.push_back(h_B, 0.0, true, d);
+        }
     }
     if (calc_nmr_shielding) {
         for (int k = 0; k < nmr_nucleus_k.size(); k++) {
             int K = nmr_nucleus_k[k];
             molecule->initNMRShielding(K);
             if (nmr_perturbation == "B") {
-                //for (int d = 0; d < 3; d++) {
-                //    if (rsp_directions[d] == 0) continue;
-                //    if (h_B[d] == 0) h_B[d] = new AngularMomentumOperator(d, r_O);
-                //    rsp_calculations.addPerturbation(h_B[d], 0.0, true, d);
-                //}
+                for (int d = 0; d < 3; d++) {
+                    if (rsp_directions[d] == 0) continue;
+                    rsp_calculations.push_back(h_B, 0.0, true, d);
+                }
             } else {
-                //const double *r_K = molecule->getNucleus(K).getCoord();
-                //for (int d = 0; d < 3; d++) {
-                //    if (rsp_directions[d] == 0) continue;
-                //    if (h_M[K][d] == 0) h_M[K][d] = new PSOOperator(d, r_K);
-                //    rsp_calculations.addPerturbation(h_M[K][d], 0.0, true, d);
-                //}
+                const double *r_K = molecule->getNucleus(K).getCoord();
+                for (int d = 0; d < 3; d++) {
+                    if (rsp_directions[d] == 0) continue;
+                    rsp_calculations.push_back(h_M[K], 0.0, true, d);
+                }
             }
         }
     }
@@ -303,68 +326,80 @@ void SCFDriver::setup() {
         for (int i = 0; i < pol_frequency.size(); i++) {
             double omega = pol_frequency[i];
             molecule->initPolarizability(omega);
-            //for (int d = 0; d < 3; d++) {
-            //    if (rsp_directions[d] == 0) continue;
-            //    if (h_E[d] == 0) h_E[d] = new DipoleOperator(d, r_O);
-            //    rsp_calculations.push_back(h_E[d], omega, false, d);
-            //}
+            NOT_IMPLEMENTED_ABORT;
         }
     }
     if (calc_optical_rotation) {
         for (int i = 0; i < optrot_frequency.size(); i++) {
-            molecule->initOpticalRotation(optrot_frequency[i]);
+            double omega = optrot_frequency[i];
+            molecule->initOpticalRotation(omega);
+            NOT_IMPLEMENTED_ABORT;
         }
     }
 
     // Setting up SCF
     helmholtz = new HelmholtzOperatorSet(rel_prec, scf_lambda_thrs);
     if (scf_history > 0) scf_kain = new KAIN(scf_history);
+    if (rsp_history > 0) rsp_kain_x = new KAIN(rsp_history);
+    if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
 
     // Setting up Fock operator
-    T = new KineticOperator(rel_prec);
-    V = new NuclearPotential(rel_prec, *nuclei);
+    T = new KineticOperator(*ABGV);
+    V = new NuclearPotential(*nuclei, rel_prec);
 
     if (wf_method == "Core") {
         fock = new CoreHamiltonian(*T, *V);
     } else if (wf_method == "Hartree") {
-        J = new CoulombPotential(rel_prec, *phi);
+        J = new CoulombPotential(*P, *phi);
         fock = new Hartree(*T, *V, *J);
     } else if (wf_method == "HF") {
-        J = new CoulombPotential(rel_prec, *phi);
-        K = new ExchangePotential(rel_prec, *phi);
+        J = new CoulombPotential(*P, *phi);
+        K = new ExchangePotential(*P, *phi);
         fock = new HartreeFock(*T, *V, *J, *K);
     } else if (wf_method == "DFT") {
-        J = new CoulombPotential(rel_prec, *phi);
+        J = new CoulombPotential(*P, *phi);
         xcfun = new XCFunctional(dft_spin, dft_cutoff);
         for (int i = 0; i < dft_func_names.size(); i++) {
             xcfun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
         }
-        XC = new XCPotential(rel_prec, *xcfun, *phi);
+        XC = new XCPotential(*xcfun, *phi, ABGV);
         if (dft_x_fac > MachineZero) {
-            K = new ExchangePotential(rel_prec, *phi, dft_x_fac);
+            K = new ExchangePotential(*P, *phi, dft_x_fac);
         }
-        fock = new DFT(*T, *V, *J, *XC, 0);
+        fock = new DFT(*T, *V, *J, *XC, K);
     } else {
         MSG_ERROR("Invalid method");
     }
 }
 
 void SCFDriver::clear() {
-    if (molecule != 0) delete molecule;
-    if (phi != 0) delete phi;
+    for (int k = 0; k < molecule->getNNuclei(); k++) {
+        if (h_M[k] != 0) delete h_M[k];
+    }
+    if (h_M != 0) delete[] h_M;
+    if (h_B != 0) delete h_B;
+    if (h_E != 0) delete h_E;
 
-    if (helmholtz != 0) delete helmholtz;
-    if (scf_kain != 0) delete scf_kain;
-
-    if (T != 0) delete T;
-    if (V != 0) delete V;
-    if (J != 0) delete J;
-    if (K != 0) delete K;
-    if (XC != 0) delete XC;
-    if (fock != 0) delete fock;
     if (xcfun != 0) delete xcfun;
 
-    if (h_E != 0) delete[] h_E;
+    if (fock != 0) delete fock;
+    if (XC != 0) delete XC;
+    if (K != 0) delete K;
+    if (J != 0) delete J;
+    if (V != 0) delete V;
+    if (T != 0) delete T;
+
+    if (phi != 0) delete phi;
+    if (molecule != 0) delete molecule;
+
+    if (ABGV != 0) delete ABGV;
+    if (PH != 0) delete PH;
+    if (P != 0) delete P;
+
+    if (scf_kain != 0) delete scf_kain;
+    if (rsp_kain_x != 0) delete rsp_kain_x;
+    if (rsp_kain_y != 0) delete rsp_kain_y;
+    if (helmholtz != 0) delete helmholtz;
 }
 
 /** Setup n+1 Fock operator for energy optimization */
@@ -373,15 +408,15 @@ void SCFDriver::setup_np1() {
 
     if (wf_method == "Core") {
     } else if (wf_method == "Hartree") {
-        J_np1 = new CoulombPotential(rel_prec, *phi_np1);
+        J_np1 = new CoulombPotential(*P, *phi_np1);
     } else if (wf_method == "HF") {
-        J_np1 = new CoulombPotential(rel_prec, *phi_np1);
-        K_np1 = new ExchangePotential(rel_prec, *phi_np1);
+        J_np1 = new CoulombPotential(*P, *phi_np1);
+        K_np1 = new ExchangePotential(*P, *phi_np1);
     } else if (wf_method == "DFT") {
-        J_np1 = new CoulombPotential(rel_prec, *phi_np1);
-        XC_np1 = new XCPotential(rel_prec, *xcfun, *phi_np1);
+        J_np1 = new CoulombPotential(*P, *phi_np1);
+        XC_np1 = new XCPotential(*xcfun, *phi_np1, ABGV);
         if (dft_x_fac > MachineZero) {
-            K_np1 = new ExchangePotential(rel_prec, *phi_np1, dft_x_fac);
+            K_np1 = new ExchangePotential(*P, *phi_np1, dft_x_fac);
         }
     } else {
         MSG_ERROR("Invalid method");
@@ -391,18 +426,18 @@ void SCFDriver::setup_np1() {
 }
 
 void SCFDriver::clear_np1() {
-    if (phi_np1 != 0) delete phi_np1;
-    if (J_np1 != 0) delete J_np1;
-    if (K_np1 != 0) delete K_np1;
-    if (XC_np1 != 0) delete XC_np1;
     if (fock_np1 != 0) delete fock_np1;
+    if (XC_np1 != 0) delete XC_np1;
+    if (K_np1 != 0) delete K_np1;
+    if (J_np1 != 0) delete J_np1;
+    if (phi_np1 != 0) delete phi_np1;
 }
 
 void SCFDriver::setupInitialGroundState() {
     // Reading initial guess
     if (scf_start == "none") {
         // Project minimal basis set of hydrogen orbitals
-        OrbitalProjector OP(rel_prec);
+        OrbitalProjector OP(rel_prec, max_scale);
         OrbitalVector *tmp = OP(*nuclei);
 
         // Compute orthonormalization matrix
@@ -420,11 +455,11 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd U = M.transpose()*S_m12;
 
         // Rotate n lowest energy orbitals of U*tmp into phi
-        OrbitalAdder add(rel_prec);
+        OrbitalAdder add(rel_prec, max_scale);
         add.rotate(*phi, U, *tmp);
         delete tmp;
     } else if (scf_start == "gto") {
-        OrbitalProjector OP(rel_prec);
+        OrbitalProjector OP(rel_prec, max_scale);
         if (wf_restricted) {
             OP(*phi, file_basis_set, file_mo_mat_a);
         } else {
@@ -470,16 +505,14 @@ LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
 
     LinearResponseSolver *lrs = 0;
     if (dynamic) {
-        NOT_IMPLEMENTED_ABORT;
-        //lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x, rsp_kain_y);
+        lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x, rsp_kain_y);
     } else {
-        NOT_IMPLEMENTED_ABORT;
-        //lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x);
+        lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x);
     }
-    //lrs->setMaxIterations(rsp_max_iter);
-    //lrs->setThreshold(rsp_orbital_thrs, rsp_property_thrs);
-    //lrs->setOrbitalPrec(rsp_orbital_prec[0], rsp_orbital_prec[1]);
-    //lrs->setupUnperturbedSystem(*f_oper, *f_mat, *orbitals);
+    lrs->setMaxIterations(rsp_max_iter);
+    lrs->setThreshold(rsp_orbital_thrs, rsp_property_thrs);
+    lrs->setOrbitalPrec(rsp_orbital_prec[0], rsp_orbital_prec[1]);
+    lrs->setupUnperturbed(rsp_orbital_prec[1], *fock, *phi, F);
 
     return lrs;
 }
@@ -496,10 +529,9 @@ void SCFDriver::setupPerturbedOrbitals(bool dynamic) {
 }
 
 void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
+    if (not dynamic) phi_y = 0;
     if (phi_x != 0) delete phi_x;
-    if (dynamic) {
-        if (phi_y != 0) delete phi_y;
-    }
+    if (phi_y != 0) delete phi_y;
     phi_x = 0;
     phi_y = 0;
 }
@@ -520,7 +552,8 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
         //dK = new ExchangeHessian(*P, *orbitals, x_orbs, y_orbs, xFac);
     }
 
-    QMOperator &dH = *rsp_calc.pert;
+    int d = rsp_calc.dir;
+    RankOneTensorOperator<3> &dH = *rsp_calc.pert;
     if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) {
         NOT_IMPLEMENTED_ABORT;
         //dJ = new CoulombHessian(*P, *orbitals, x_orbs, y_orbs);
@@ -536,36 +569,26 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     }
 
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
-    d_fock->addPerturbationOperator(dH);
+    d_fock->setPerturbationOperator(dH[d]);
 }
 
 void SCFDriver::clearPerturbedOperators() {
-    if (dJ != 0) delete dJ;
-    if (dK != 0) delete dK;
-    if (dXC != 0) delete dXC;
     if (d_fock != 0) delete d_fock;
+    if (dXC != 0) delete dXC;
+    if (dK != 0) delete dK;
+    if (dJ != 0) delete dJ;
 
-    dJ = 0;
-    dK = 0;
-    dXC = 0;
     d_fock = 0;
+    dXC = 0;
+    dK = 0;
+    dJ = 0;
 }
 
 
 void SCFDriver::run() {
-    bool converged = true;
-    if (not sanityCheck()) {
-        return;
-    }
-    if (scf_run) {
-        converged = runGroundState();
-    } else {
-        setupInitialGroundState();
-        fock->setup(rel_prec);
-        F = (*fock)(*phi, *phi);
-        fock->clear();
-        calcGroundStateProperties();
-    }
+    if (not sanityCheck()) return;
+
+    bool converged = runGroundState();
     if (converged) {
         for (int i = 0; i < rsp_calculations.size(); i++) {
             runLinearResponse(rsp_calculations[i]);
@@ -580,13 +603,13 @@ void SCFDriver::run() {
 bool SCFDriver::runGroundState() {
     if (phi == 0) MSG_ERROR("Orbitals not initialized");
     if (fock == 0) MSG_ERROR("Fock operator not initialized");
-    bool converged = false;
+    bool converged = true;
 
     // Setup initial guess
     setupInitialGroundState();
 
     // Optimize orbitals
-    if (scf_orbital_thrs > 0.0) {
+    if (scf_run and scf_orbital_thrs > 0.0) {
         OrbitalOptimizer *solver = setupOrbitalOptimizer();
         solver->setup(*fock, *phi, F);
         converged = solver->optimize();
@@ -599,7 +622,7 @@ bool SCFDriver::runGroundState() {
     }
 
     // Optimize energy
-    if (scf_property_thrs > 0.0) {
+    if (scf_run and scf_property_thrs > 0.0) {
         setup_np1();
 
         EnergyOptimizer *solver = setupEnergyOptimizer();
@@ -621,90 +644,154 @@ bool SCFDriver::runGroundState() {
 
 void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     double omega = rsp_calc.freq;
-    setupPerturbedOrbitals(omega);
+    bool dynamic = false;
+    if (fabs(omega) > MachineZero) dynamic = true;
+    setupPerturbedOrbitals(dynamic);
     setupPerturbedOperators(rsp_calc);
 
-    LinearResponseSolver *solver = setupLinearResponseSolver(omega);
-    //solver->setup(omega, *df_oper, *phi_x, *phi_y);
-    //bool converged = solver->optimize();
-    //solver->clear();
-    //delete solver;
+    bool converged = true;
+    if (rsp_run) {
+        LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);
+        solver->setup(*d_fock, *phi_x);
+        converged = solver->optimize();
+        solver->clear();
+        delete solver;
+    }
 
     if (rsp_write_orbitals) NOT_IMPLEMENTED_ABORT;
 
     // Compute requested properties
-    //if (converged) calcLinearResponseProperties(rsp_calc);
+    if (converged) calcLinearResponseProperties(rsp_calc);
 
     clearPerturbedOperators();
-    clearPerturbedOrbitals(omega);
+    clearPerturbedOrbitals(dynamic);
 }
 
 void SCFDriver::calcGroundStateProperties() {
     if (calc_scf_energy) {
-        SCFEnergy &energy = molecule->getSCFEnergy();
         fock->setup(rel_prec);
-        energy.compute(*nuclei);
-        energy.compute(*fock, *phi, F);
+        TelePrompter::printHeader(0, "Calculating SCF energy");
+        Timer timer;
+        SCFEnergy &energy = molecule->getSCFEnergy();
+        energy = fock->trace(*phi, F);
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
         fock->clear();
     }
     if (calc_dipole_moment) {
-        Vector3d &nuc = molecule->getDipoleMoment().getNuclear();
-        Vector3d &el = molecule->getDipoleMoment().getElectronic();
-        for (int i = 0; i < 3; i++) {
-            DipoleOperator mu_i(i, r_O);
-            mu_i.setup(rel_prec);
-            nuc(i) = mu_i.trace(*nuclei);
-            el(i) = mu_i.trace(*phi);
-            mu_i.clear();
-        }
+        TelePrompter::printHeader(0, "Calculating dipole moment");
+        Timer timer;
+        VectorXd &nuc = molecule->getDipoleMoment().getNuclear();
+        VectorXd &el = molecule->getDipoleMoment().getElectronic();
+        H_E_dip mu(r_O);
+        mu.setup(rel_prec);
+        nuc = mu.trace(*nuclei);
+        el = mu.trace(*phi);
+        mu.clear();
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
     }
     if (calc_magnetizability) {
-        Matrix3d &dia = molecule->getMagnetizability().getDiamagnetic();
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                DMOperator h_BB(i, j, r_O);
-                h_BB.setup(rel_prec);
-                dia(i,j) = h_BB.trace(*phi);
-                h_BB.clear();
-            }
-        }
+        TelePrompter::printHeader(0, "Calculating diamagnetic magnetizability");
+        Timer timer;
+        MatrixXd &dia = molecule->getMagnetizability().getDiamagnetic();
+        H_BB_dia h(r_O);
+        h.setup(rel_prec);
+        dia = -h.trace(*phi);
+        h.clear();
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
     }
     if (calc_nmr_shielding) {
+        TelePrompter::printHeader(0, "Calculating diamagnetic NMR shielding");
+        Timer timer;
         for (int k = 0; k < nmr_nucleus_k.size(); k++) {
             int K = nmr_nucleus_k[k];
             NMRShielding &nmr = molecule->getNMRShielding(K);
-            Matrix3d &dia = nmr.getDiamagnetic();
+            MatrixXd &dia = nmr.getDiamagnetic();
             const double *r_K = nmr.getNucleus().getCoord();
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    DSOperator h_BM(i, j, r_O, r_K);
-                    h_BM.setup(rel_prec);
-                    dia(i,j) = h_BM.trace(*phi);
-                    h_BM.clear();
-                }
-            }
+            H_BM_dia h(r_O, r_K);
+            h.setup(rel_prec);
+            dia = h.trace(*phi);
+            h.clear();
         }
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
     }
     if (calc_spin_spin_coupling) {
+        TelePrompter::printHeader(0, "Calculating diamagnetic spin-spin coupling");
+        Timer timer;
         for (int k = 0; k < sscc_nucleus_k.size(); k++) {
             int K = sscc_nucleus_k[k];
             for (int l = 0; l < sscc_nucleus_l.size(); l++) {
                 int L = sscc_nucleus_l[l];
                 if (K == L) continue;
                 SpinSpinCoupling &sscc = molecule->getSpinSpinCoupling(K, L);
-                Matrix3d &dia = sscc.getDiamagnetic();
+                MatrixXd &dia = sscc.getDiamagnetic();
                 const double *r_K = sscc.getNucleusK().getCoord();
                 const double *r_L = sscc.getNucleusL().getCoord();
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
-                        DSOOperator h_MM(i, j, r_K, r_L);
-                        h_MM.setup(rel_prec);
-                        dia(i,j) = h_MM.trace(*phi);
-                        h_MM.clear();
-                    }
+                //H_DSO h_dso(r_K, r_L);
+                //h_dso.setup(rel_prec);
+                //dia = h_dso.trace(*phi);
+                //h_dso.clear();
+            }
+        }
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
+    }
+}
+
+void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc) {
+    int j = rsp_calc.dir;
+
+    if (calc_magnetizability and rsp_calc.pert == h_B) {
+        TelePrompter::printHeader(0, "Calculating paramagnetic magnetizability");
+        Timer timer;
+        MatrixXd &para = molecule->getMagnetizability().getParamagnetic();
+        h_B->setup(rel_prec);
+        para.row(j) = -h_B->trace(*phi, *phi_x, *phi_y);
+        h_B->clear();
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
+    }
+    if (calc_nmr_shielding) {
+        if (nmr_perturbation == "B" and rsp_calc.pert == h_B) {
+            Timer timer;
+            TelePrompter::printHeader(0, "Calculating paramagnetic NMR shielding ");
+            for (int k = 0; k < nmr_nucleus_k.size(); k++) {
+                int K = nmr_nucleus_k[k];
+                MatrixXd &para = molecule->getNMRShielding(K).getParamagnetic();
+                h_M[K]->setup(rel_prec);
+                para.row(j) = -h_M[K]->trace(*phi, *phi_x, *phi_y);
+                h_M[K]->clear();
+            }
+            timer.stop();
+            TelePrompter::printFooter(0, timer, 2);
+        }
+        if (nmr_perturbation == "M") {
+            for (int k = 0; k < nmr_nucleus_k.size(); k++) {
+                int K = nmr_nucleus_k[k];
+                if (rsp_calc.pert == h_M[K]) {
+                    Timer timer;
+                    TelePrompter::printHeader(0, "Calculating paramagnetic NMR shielding");
+
+                    MatrixXd &para = molecule->getNMRShielding(K).getParamagnetic();
+                    h_B->setup(rel_prec);
+                    para.col(j) = -h_B->trace(*phi, *phi_x, *phi_y);
+                    h_B->clear();
+
+                    timer.stop();
+                    TelePrompter::printFooter(0, timer, 2);
                 }
             }
         }
+    }
+    if (calc_spin_spin_coupling) {
+        TelePrompter::printHeader(0, "Calculating paramagnetic spin-spin coupling");
+        Timer timer;
+        NOT_IMPLEMENTED_ABORT;
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
     }
 }
 

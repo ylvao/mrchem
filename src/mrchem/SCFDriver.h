@@ -5,6 +5,8 @@
 #include <string>
 #include <Eigen/Core>
 
+#include "QMTensorOperator.h"
+
 class Getkw;
 
 class Nuclei;
@@ -17,9 +19,13 @@ class LinearResponseSolver;
 class HelmholtzOperatorSet;
 class KAIN;
 
-class PSOOperator;
-class DipoleOperator;
-class AngularMomentumOperator;
+class PoissonOperator;
+template<int D> class PHOperator;
+template<int D> class ABGVOperator;
+
+class H_E_dip;
+class H_B_dip;
+class H_M_pso;
 
 class QMOperator;
 class FockOperator;
@@ -33,13 +39,13 @@ class XCFunctional;
 
 class ResponseCalculation {
 public:
-    ResponseCalculation(QMOperator *h, double w, bool im, int d)
+    ResponseCalculation(RankOneTensorOperator<3> *h, double w, bool im, int d)
         : pert(h), freq(w), imag(im), dir(d) { }
 
     bool isDynamic() const { if (fabs(this->freq) > MachineZero) return true; return false; }
     bool isImaginary() const { return this->imag; }
 
-    QMOperator *pert;
+    RankOneTensorOperator<3> *pert;
     double freq;
     bool imag;
     int dir;
@@ -47,14 +53,14 @@ public:
 
 class ResponseCalculations {
 public:
-    void push_back(QMOperator *h, double w, bool im, int d) {
+    void push_back(RankOneTensorOperator<3> *h, double w, bool im, int d) {
         ResponseCalculation rsp_calc(h, w, im, d);
-        bool unique = false;
+        bool unique = true;
         for (int i = 0; i < this->calculations.size(); i++) {
             const ResponseCalculation &i_calc = calculations[i];
-            if (i_calc.pert != rsp_calc.pert) unique = true;
-            if (fabs(i_calc.freq - rsp_calc.freq) > MachineZero) unique = true;
-            if (i_calc.dir != rsp_calc.dir) unique = true;
+            if ((i_calc.pert == rsp_calc.pert) and
+                (fabs(i_calc.freq - rsp_calc.freq) < MachineZero) and
+                (i_calc.dir == rsp_calc.dir)) unique = false;
         }
         if (unique) {
             this->calculations.push_back(rsp_calc);
@@ -81,6 +87,7 @@ public:
 
 protected:
     // Top level input
+    int max_scale;
     double rel_prec;
 
     // World input
@@ -168,6 +175,13 @@ protected:
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;
     KAIN *scf_kain;
+    KAIN *rsp_kain_x;
+    KAIN *rsp_kain_y;
+
+    // MRA operators
+    PoissonOperator *P;
+    PHOperator<3> *PH;
+    ABGVOperator<3> *ABGV;
 
     // Unperturbed quantities
     Molecule *molecule;
@@ -200,9 +214,9 @@ protected:
     XCFunctional *xcfun;
 
     // Perturbation operators
-    DipoleOperator **h_E;           // dH/dE   [x,y,z]
-    AngularMomentumOperator **h_B;  // dH/dB   [x,y,z]
-    PSOOperator ***h_M;             // dH/dM_K [x,y,z]
+    H_E_dip  *h_E; // dH/dE
+    H_B_dip  *h_B; // dH/dB
+    H_M_pso **h_M; // dH/dM[K]
 
     bool sanityCheck() const;
 
@@ -210,7 +224,7 @@ protected:
     void runLinearResponse(const ResponseCalculation &rsp_calc);
 
     void calcGroundStateProperties();
-    void calcLinearResponseProperties();
+    void calcLinearResponseProperties(const ResponseCalculation &rsp_calc);
 
     void setupInitialGroundState();
     void setupPerturbedOperators(const ResponseCalculation &rsp_calc);
