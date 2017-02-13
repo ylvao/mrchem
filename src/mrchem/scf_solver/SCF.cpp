@@ -58,7 +58,6 @@ void SCF::resetPrecision() {
 }
 
 bool SCF::needLocalization() const {
-	cout << "Need localization? " << this->iterPerRotation << " " << this->nIter << " " << this->nIter%this->iterPerRotation << endl; 
     if (this->iterPerRotation <= 0) {
         return false;
     }

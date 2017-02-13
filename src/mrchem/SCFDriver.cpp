@@ -175,12 +175,8 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
-    if (dft_spin) {
+    if (wf_method == "DFT" and dft_spin) {
         MSG_ERROR("Spin DFT not implemented");
-        return false;
-    }
-    if (wf_restricted and wf_method == "DFT" and dft_spin) {
-        MSG_ERROR("Restricted spin DFT not implemented");
         return false;
     }
     if (wf_restricted and mol_multiplicity != 1) {
@@ -825,20 +821,15 @@ void SCFDriver::extendRotationMatrix(const OrbitalVector &orbs, MatrixXd &O) {
     int nPaired = orbs.getNPaired();
     int nAlpha  = orbs.getNAlpha();
     int nBeta   = orbs.getNBeta();
-	int nCols = O.cols(); 
+    int nCols   = O.cols(); 
 
-	if (nPaired + nAlpha != nCols) {
-		MSG_ERROR("Alpha and paired orbitals not consistent with number of columns");
-	}
-	if (nBeta > nAlpha) {
-		MSG_ERROR("Inconsistent orbital set: too many beta orbitals");
-	}
-	
-	cout << nAlpha << " " << nBeta << " " << nPaired << " " << nCols << endl;
+    if (nPaired + nAlpha != nCols) {
+	MSG_ERROR("Alpha and paired orbitals not consistent with number of columns");
+    }
+    if (nBeta > nAlpha) {
+	MSG_ERROR("Inconsistent orbital set: too many beta orbitals");
+    }
 
-	O.conservativeResize(nPaired + nAlpha + nBeta, NoChange);
-	O.block(nPaired + nAlpha, 0, nBeta, nCols) = O.block(nPaired, 0, nBeta, nCols);
-
-	return;
-
+    O.conservativeResize(nPaired + nAlpha + nBeta, NoChange);
+    O.block(nPaired + nAlpha, 0, nBeta, nCols) = O.block(nPaired, 0, nBeta, nCols);
 }
