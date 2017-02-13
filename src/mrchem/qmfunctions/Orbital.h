@@ -30,7 +30,6 @@ public:
     int compareOccupancy(const Orbital &orb) const;
 
     std::complex<double> dot(Orbital &ket);
-    double getSquareNorm() const;
     /*! determines the exchange factor to be used in the calculation of the exact exchange
      *
      * \param [in] orb input orbital to which K is applied
