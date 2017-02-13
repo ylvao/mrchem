@@ -86,14 +86,14 @@ protected:
      *
      * The diagonal term X_ii is computed. 
      */
-    int calcInternal(int i);
+    void calcInternal(int i);
     /*! computes the off-diagonal part of the exchange potential
      *  \param[in] i first orbital index
      *  \param[in] j second orbital index
      *
      * The off-diagonal term X_ij is computed. 
      */
-    int calcInternal(int i, int j);
+    void calcInternal(int i, int j);
 };
 
 #endif // EXCHANGEPOTENTIAL_H

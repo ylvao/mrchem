@@ -67,11 +67,11 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
         Orbital *V_ip = new Orbital(phi_p);
         if (phi_ip->hasReal()) {
             V_ip->allocReal();
-            apply(V_ip->re(), P, phi_ip->re());
+            apply(V_ip->real(), P, phi_ip->real());
         }
         if (phi_ip->hasImag()) {
             V_ip->allocImag();
-            apply(V_ip->im(), P, phi_ip->im());
+            apply(V_ip->imag(), P, phi_ip->imag());
         }
         delete phi_ip;
 
@@ -144,11 +144,11 @@ void ExchangePotential::calcInternal(int i) {
     Orbital *V_ii = new Orbital(phi_i);
     if (phi_ii->hasReal()) {
         V_ii->allocReal();
-        apply(V_ii->re(), P, phi_ii->re());
+        apply(V_ii->real(), P, phi_ii->real());
     }
     if (phi_ii->hasImag()) {
         V_ii->allocImag();
-        apply(V_ii->im(), P, phi_ii->im());
+        apply(V_ii->imag(), P, phi_ii->imag());
     }
     if (phi_ii != 0) delete phi_ii;
 
@@ -179,11 +179,11 @@ void ExchangePotential::calcInternal(int i, int j) {
     double j_factor = phi_j.getExchangeFactor(phi_i);
     if (i_factor < MachineZero or j_factor < MachineZero) {
         this->part_norms(i,j) = 0.0;
-        return 0;
+        return;
     }
 
     double prec = getScaledPrecision(i, j);
-    if (prec > 1.0e00) return 0;
+    if (prec > 1.0e00) return;
     prec = min(prec, 1.0e-1);
 
     mult.setPrecision(prec);
@@ -197,11 +197,11 @@ void ExchangePotential::calcInternal(int i, int j) {
     Orbital *V_ij = new Orbital(phi_i);
     if (phi_ij->hasReal()) {
         V_ij->allocReal();
-        apply(V_ij->re(), P, phi_ij->re());
+        apply(V_ij->real(), P, phi_ij->real());
     }
     if (phi_ij->hasImag()) {
         V_ij->allocImag();
-        apply(V_ij->im(), P, phi_ij->im());
+        apply(V_ij->imag(), P, phi_ij->imag());
     }
     if (phi_ij != 0) delete phi_ij;
 
