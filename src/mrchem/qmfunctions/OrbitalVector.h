@@ -84,6 +84,7 @@ public:
     }
 protected:
     //Data
+    //LUCA: ... or maybe just have two sets here?
     std::vector<Orbital *> orbitals;
 };
 

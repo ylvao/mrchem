@@ -58,6 +58,7 @@ void SCF::resetPrecision() {
 }
 
 bool SCF::needLocalization() const {
+	cout << "Need localization? " << this->iterPerRotation << " " << this->nIter << " " << this->nIter%this->iterPerRotation << endl; 
     if (this->iterPerRotation <= 0) {
         return false;
     }
@@ -225,49 +226,50 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         Orbital &nPhi_i = phi_n.getOrbital(i);
         Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
-	if(i%MPI_size==MPI_rank){
-	  //in charge for this orbital
-	  Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
-	  H(i, np1Phi_i, *arg_i);
-	  delete arg_i;
-	  
-	  int rNodes = np1Phi_i.getNNodes(Real);
-	  int iNodes = np1Phi_i.getNNodes(Imag);
-	  double norm_n = sqrt(nPhi_i.getSquareNorm());
-	  double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
-	  double dNorm_n = fabs(norm_np1-norm_n);
-          double real_norm = sqrt(np1Phi_i.getSquareNorm(Real));
-          double imag_norm = sqrt(np1Phi_i.getSquareNorm(Imag));
-	  
-	  timer.stop();
-          TelePrompter::setPrecision(5);
-	  printout(0, setw(3) << i);
-	  printout(0, " " << setw(12) << real_norm);
-	  printout(0, " " << setw(12) << imag_norm);
-          TelePrompter::setPrecision(1);
-	  printout(0, " " << setw(5) << rNodes);
-	  printout(0, " " << setw(5) << iNodes);
-	  printout(0, " " << setw(8) << dNorm_n);
-	  printout(0, setw(9) << timer.getWallTime() << endl);	
+	if (i%MPI_size == MPI_rank) {
+	    //in charge for this orbital
+	    Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
+	    H(i, np1Phi_i, *arg_i);
+	    delete arg_i;
+
+	    int rNodes = np1Phi_i.getNNodes(Real);
+	    int iNodes = np1Phi_i.getNNodes(Imag);
+	    double norm_n = sqrt(nPhi_i.getSquareNorm());
+	    double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
+	    double dNorm_n = fabs(norm_np1-norm_n);
+            double real_norm = sqrt(np1Phi_i.getSquareNorm(Real));
+            double imag_norm = sqrt(np1Phi_i.getSquareNorm(Imag));
+
+	    timer.stop();
+            TelePrompter::setPrecision(5);
+	    printout(0, setw(3) << i);
+	    printout(0, " " << setw(12) << real_norm);
+	    printout(0, " " << setw(12) << imag_norm);
+            TelePrompter::setPrecision(1);
+	    printout(0, " " << setw(5) << rNodes);
+	    printout(0, " " << setw(5) << iNodes);
+	    printout(0, " " << setw(8) << dNorm_n);
+	    printout(0, setw(9) << timer.getWallTime() << endl);	
 	}
     }
 
 #ifdef HAVE_MPI
     //broadcast results
     for (int i = 0; i < phi_n.size(); i++) {
-      Timer timer;
-      Orbital &np1Phi_i = phi_np1.getOrbital(i);
-      
-      if(i%MPI_size==MPI_rank){
-	for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	  if(i_mpi!= MPI_rank)np1Phi_i.send_Orbital(i_mpi, 54);
-	}
-	timer.stop();
-	printout(10, setw(3) << i<<" sendtime " <<setw(18) << timer.getWallTime() << endl);	
-      }else{
-	np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
-	printout(10, MPI_rank<<" "<<setw(3)<<i<<" rcvtime "<<setw(18)<<timer.getWallTime()<<endl);	
-      }
+        Orbital &np1Phi_i = phi_np1.getOrbital(i);
+        if (i%MPI_size == MPI_rank) {
+            Timer timer;
+	    for (int i_mpi = 0; i_mpi < MPI_size; i_mpi++) {
+	        if (i_mpi != MPI_rank) np1Phi_i.send_Orbital(i_mpi, 54);
+	    }
+	    timer.stop();
+	    printout(10, setw(3) << i << " sendtime " << setw(18) << timer.getWallTime() << endl);
+        } else {
+            Timer timer;
+	    np1Phi_i.Rcv_Orbital(i%MPI_size, 54);
+	    timer.stop();
+	    printout(10, MPI_rank << " " << setw(3) << i << " rcvtime " << setw(18) << timer.getWallTime() << endl);
+        }
     }
 #endif
 

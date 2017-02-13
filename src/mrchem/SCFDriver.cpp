@@ -175,8 +175,8 @@ SCFDriver::SCFDriver(Getkw &input) {
 }
 
 bool SCFDriver::sanityCheck() const {
-    if (not wf_restricted) {
-        MSG_ERROR("Unrestricted SCF not implemented");
+    if (dft_spin) {
+        MSG_ERROR("Spin DFT not implemented");
         return false;
     }
     if (wf_restricted and wf_method == "DFT" and dft_spin) {
@@ -185,10 +185,6 @@ bool SCFDriver::sanityCheck() const {
     }
     if (wf_restricted and mol_multiplicity != 1) {
         MSG_ERROR("Restricted open-shell not implemented");
-        return false;
-    }
-    if (not wf_restricted and wf_method == "HF") {
-        MSG_ERROR("Unrestricted HF not implemented");
         return false;
     }
     if (calc_quadrupole_moment) {
@@ -454,10 +450,13 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
         MatrixXd U = M.transpose()*S_m12;
 
+		extendRotationMatrix(*phi, U);
+
         // Rotate n lowest energy orbitals of U*tmp into phi
         OrbitalAdder add(rel_prec, max_scale);
         add.rotate(*phi, U, *tmp);
         delete tmp;
+
     } else if (scf_start == "gto") {
         OrbitalProjector OP(rel_prec, max_scale);
         if (wf_restricted) {
@@ -795,6 +794,8 @@ void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc
     }
 }
 
+
+
 void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     int oldprec = TelePrompter::setPrecision(5);
     TelePrompter::printHeader(0, "Fock matrix");
@@ -818,4 +819,26 @@ void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     }
     TelePrompter::printSeparator(0, '=', 2);
     TelePrompter::setPrecision(oldprec);
+}
+
+void SCFDriver::extendRotationMatrix(const OrbitalVector &orbs, MatrixXd &O) {
+    int nPaired = orbs.getNPaired();
+    int nAlpha  = orbs.getNAlpha();
+    int nBeta   = orbs.getNBeta();
+	int nCols = O.cols(); 
+
+	if (nPaired + nAlpha != nCols) {
+		MSG_ERROR("Alpha and paired orbitals not consistent with number of columns");
+	}
+	if (nBeta > nAlpha) {
+		MSG_ERROR("Inconsistent orbital set: too many beta orbitals");
+	}
+	
+	cout << nAlpha << " " << nBeta << " " << nPaired << " " << nCols << endl;
+
+	O.conservativeResize(nPaired + nAlpha + nBeta, NoChange);
+	O.block(nPaired + nAlpha, 0, nBeta, nCols) = O.block(nPaired, 0, nBeta, nCols);
+
+	return;
+
 }

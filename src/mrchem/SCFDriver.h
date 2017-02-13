@@ -242,6 +242,8 @@ protected:
     void clear_np1();
 
     void printEigenvalues(OrbitalVector &orbs, Eigen::MatrixXd &f_mat);
+
+    void extendRotationMatrix(const OrbitalVector &orbs, Eigen::MatrixXd &O);
 };
 
 #endif

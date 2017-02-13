@@ -276,7 +276,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &phi, MatrixXd &F) {
         }
         if (this->K != 0) {
             println(2, "\n<" << i << "|K|" << i << ">");
-            E_x += (*this->K)(phi_i,phi_i);
+            E_x += 0.5*occ*(*this->K)(phi_i,phi_i);
         }
         if (this->XC != 0) {
             println(2, "\n<" << i << "|V_xc|" << i << ">");

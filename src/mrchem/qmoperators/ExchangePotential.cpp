@@ -25,10 +25,10 @@ void ExchangePotential::clear() {
 }
 
 void ExchangePotential::rotate(MatrixXd &U) {
-    // negative prec means precomputed exchange is cleared
+    // negative prec means precomputed exchange is cleared and should therefore not be rotated
     if (this->apply_prec > 0.0) {
         OrbitalAdder add(this->apply_prec, this->max_scale);
-        add.rotate(exchange, U);
+        add.rotate(this->exchange, U);
     }
 }
 
@@ -54,54 +54,32 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
     MWConvolution<3> apply(this->apply_prec, this->max_scale);
     PoissonOperator &P = *this->poisson;
 
-    int maxNodes = 0;
     vector<complex<double> > coef_vec;
     vector<Orbital *> orb_vec;
+
     int nOrbs = this->orbitals->size();
     for (int i = 0; i < nOrbs; i++) {
         Orbital &phi_i = this->orbitals->getOrbital(i);
 
         Orbital *phi_ip = new Orbital(phi_p);
-        { // compute phi_ip = phi_i^dag * phi_p
-            Timer timer;
-            mult.adjoint(*phi_ip, 1.0, phi_i, phi_p);
-            timer.stop();
-            int nNodes = phi_ip->getNNodes();
-            double time = timer.getWallTime();
-            maxNodes = max(maxNodes, nNodes);
-            TelePrompter::printTree(2, "Multiply", nNodes, time);
-        }
+        mult.adjoint(*phi_ip, 1.0, phi_i, phi_p);
 
         Orbital *V_ip = new Orbital(phi_p);
-        { // compute V_ip = P[phi_ip]
-            Timer timer;
-            if (phi_ip->hasReal()) {
-                V_ip->allocReal();
-                apply(V_ip->real(), P, phi_ip->real());
-            }
-            if (phi_ip->hasImag()) {
-                V_ip->allocImag();
-                apply(V_ip->imag(), P, phi_ip->imag());
-            }
-            timer.stop();
-            int nNodes = V_ip->getNNodes();
-            double time = timer.getWallTime();
-            maxNodes = max(maxNodes, nNodes);
-            TelePrompter::printTree(2, "Applying Poisson", nNodes, time);
+        if (phi_ip->hasReal()) {
+            V_ip->allocReal();
+            apply(V_ip->re(), P, phi_ip->re());
+        }
+        if (phi_ip->hasImag()) {
+            V_ip->allocImag();
+            apply(V_ip->im(), P, phi_ip->im());
         }
         delete phi_ip;
 
+        double spinFactor = phi_i.getExchangeFactor(phi_p);
+        double fac = - spinFactor * (this->x_factor / phi_i.getSquareNorm());
+
         Orbital *phi_iip = new Orbital(phi_p);
-        { // compute phi_iij = phi_i * V_ip
-            Timer timer;
-            double fac = -(this->x_factor/phi_i.getSquareNorm());
-            mult(*phi_iip, fac, phi_i, *V_ip);
-            timer.stop();
-            int nNodes = phi_iip->getNNodes();
-            double time = timer.getWallTime();
-            maxNodes = max(maxNodes, nNodes);
-            TelePrompter::printTree(2, "Multiply", nNodes, time);
-        }
+        mult(*phi_iip, fac, phi_i, *V_ip);
         delete V_ip;
 
         coef_vec.push_back(1.0);
@@ -114,40 +92,37 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
     orb_vec.clear();
 
     timer.stop();
-    double nNodes = ex_p->getNNodes();
-    double time = timer.getWallTime();
-    TelePrompter::printTree(1, "Applied exchange", nNodes, time);
+    double n = ex_p->getNNodes();
+    double t = timer.getWallTime();
+    TelePrompter::printTree(1, "Applied exchange", n, t);
+
     return ex_p;
 }
 
 /** Precompute the internal exchange */
 void ExchangePotential::calcInternalExchange() {
     Timer timer;
-
-    int nNodes = 0;
-    int maxNodes = 0;
-
     int nOrbs = this->orbitals->size();
     for (int i = 0; i < nOrbs; i++) {
-        nNodes = calcInternal(i);
-        maxNodes = max(maxNodes, nNodes);
+        calcInternal(i);
         for (int j = 0; j < i; j++) {
-            nNodes = calcInternal(i,j);
-            maxNodes = max(maxNodes, nNodes);
+            calcInternal(i,j);
         }
     }
 
+    int n = 0;
     for (int i = 0; i < nOrbs; i++) {
         Orbital &ex_i = this->exchange.getOrbital(i);
         this->tot_norms(i) = sqrt(ex_i.getSquareNorm());
+        n = max(n, ex_i.getNNodes());
     }
 
     timer.stop();
-    double time = timer.getWallTime();
-    TelePrompter::printTree(0, "Hartree-Fock exchange", maxNodes, time);
+    double t = timer.getWallTime();
+    TelePrompter::printTree(0, "Hartree-Fock exchange", n, t);
 }
 
-int ExchangePotential::calcInternal(int i) {
+void ExchangePotential::calcInternal(int i) {
     OrbitalAdder add(-1.0, this->max_scale);
     OrbitalMultiplier mult(-1.0, this->max_scale);
     MWConvolution<3> apply(-1.0, this->max_scale);
@@ -155,81 +130,51 @@ int ExchangePotential::calcInternal(int i) {
     PoissonOperator &P = *this->poisson;
     Orbital &phi_i = this->orbitals->getOrbital(i);
 
-    int maxNodes = 0;
     double prec = getScaledPrecision(i, i);
     prec = min(prec, 1.0e-1);
-    println(2, "\n [" << i << "," << i << "]");
 
+    mult.setPrecision(prec);
+    apply.setPrecision(prec);
+
+    // compute phi_ii = phi_i^dag * phi_i
     Orbital *phi_ii = new Orbital(phi_i);
-    { // compute phi_ii = phi_i^dag * phi_i
-        Timer timer;
-        mult.setPrecision(prec);
-        mult.adjoint(*phi_ii, 1.0, phi_i, phi_i);
-        timer.stop();
-        int nNodes = phi_ii->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Multiply", nNodes, time);
-    }
+    mult.adjoint(*phi_ii, 1.0, phi_i, phi_i);
 
+    // compute V_ii = P[phi_ii]
     Orbital *V_ii = new Orbital(phi_i);
-    { // compute V_ii = P[phi_ii]
-        Timer timer;
-        apply.setPrecision(prec);
-        if (phi_ii->hasReal()) {
-            V_ii->allocReal();
-            apply(V_ii->real(), P, phi_ii->real());
-        }
-        if (phi_ii->hasImag()) {
-            V_ii->allocImag();
-            apply(V_ii->imag(), P, phi_ii->imag());
-        }
-        timer.stop();
-        int nNodes = V_ii->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Applying Poisson", nNodes, time);
+    if (phi_ii->hasReal()) {
+        V_ii->allocReal();
+        apply(V_ii->re(), P, phi_ii->re());
+    }
+    if (phi_ii->hasImag()) {
+        V_ii->allocImag();
+        apply(V_ii->im(), P, phi_ii->im());
     }
     if (phi_ii != 0) delete phi_ii;
 
+    double fac_iii = -(this->x_factor/phi_i.getSquareNorm());
+
+    // compute phi_iii = phi_i * V_ii
     Orbital *phi_iii = new Orbital(phi_i);
-    { // compute phi_iii = phi_i * V_ii
-        Timer timer;
-        double fac = -(this->x_factor/phi_i.getSquareNorm());
-        mult(*phi_iii, fac, phi_i, *V_ii);
-        this->part_norms(i,i) = sqrt(phi_iii->getSquareNorm());
-        timer.stop();
-        int nNodes = phi_iii->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Multiply", nNodes, time);
-    }
+    mult(*phi_iii, fac_iii, phi_i, *V_ii);
+    this->part_norms(i,i) = sqrt(phi_iii->getSquareNorm());
     if (V_ii != 0) delete V_ii;
 
-    { // compute x_i += phi_iii
-        Timer timer;
-        Orbital &ex_i = this->exchange.getOrbital(i);
-        add.inPlace(ex_i, 1.0, *phi_iii);
-        timer.stop();
-        int nNodes = ex_i.getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Adding exchange", nNodes, time);
-    }
+    // compute x_i += phi_iii
+    Orbital &ex_i = this->exchange.getOrbital(i);
+    add.inPlace(ex_i, 1.0, *phi_iii);
     if (phi_iii != 0) delete phi_iii;
-    return maxNodes;
 }
 
-int ExchangePotential::calcInternal(int i, int j) {
-    OrbitalAdder add(this->apply_prec, this->max_scale);
-    OrbitalMultiplier mult(this->apply_prec, this->max_scale);
+void ExchangePotential::calcInternal(int i, int j) {
+    OrbitalAdder add(-1.0, this->max_scale);
+    OrbitalMultiplier mult(-1.0, this->max_scale);
     MWConvolution<3> apply(-1.0, this->max_scale);
 
     PoissonOperator &P = *this->poisson;
     Orbital &phi_i = this->orbitals->getOrbital(i);
     Orbital &phi_j = this->orbitals->getOrbital(j);
 
-    int maxNodes = 0;
     double i_factor = phi_i.getExchangeFactor(phi_j);
     double j_factor = phi_j.getExchangeFactor(phi_i);
     if (i_factor < MachineZero or j_factor < MachineZero) {
@@ -237,99 +182,57 @@ int ExchangePotential::calcInternal(int i, int j) {
         return 0;
     }
 
-    printout(2, "\n [" << i << "," << j << "]");
-    printout(2, "   [" << j << "," << i << "]" << endl);
     double prec = getScaledPrecision(i, j);
     if (prec > 1.0e00) return 0;
+    prec = min(prec, 1.0e-1);
 
+    mult.setPrecision(prec);
+    apply.setPrecision(prec);
+
+    // compute phi_ij = phi_i^dag * phi_j
     Orbital *phi_ij = new Orbital(phi_i);
-    { // compute phi_ij = phi_i^dag * phi_j
-        Timer timer;
-        if (phi_i.hasImag()) NOT_IMPLEMENTED_ABORT;
-        mult.adjoint(*phi_ij, 1.0, phi_i, phi_j);
-        timer.stop();
-        int nNodes = phi_ij->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Multiply", nNodes, time);
-    }
+    mult.adjoint(*phi_ij, 1.0, phi_i, phi_j);
 
+    // compute V_ij = P[phi_ij]
     Orbital *V_ij = new Orbital(phi_i);
-    { // compute V_ij = P[phi_ij]
-        Timer timer;
-        prec = min(prec, 1.0e-1);
-        apply.setPrecision(prec);
-        if (phi_ij->hasReal()) {
-            V_ij->allocReal();
-            apply(V_ij->real(), P, phi_ij->real());
-        }
-        if (phi_ij->hasImag()) {
-            V_ij->allocImag();
-            apply(V_ij->imag(), P, phi_ij->imag());
-        }
-        timer.stop();
-        int nNodes = V_ij->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Applying Poisson", nNodes, time);
+    if (phi_ij->hasReal()) {
+        V_ij->allocReal();
+        apply(V_ij->re(), P, phi_ij->re());
+    }
+    if (phi_ij->hasImag()) {
+        V_ij->allocImag();
+        apply(V_ij->im(), P, phi_ij->im());
     }
     if (phi_ij != 0) delete phi_ij;
 
-    Orbital *phi_iij = new Orbital(phi_i);
-    { // compute phi_iij = phi_i * V_ij
-        Timer timer;
-        double fac = -(this->x_factor/phi_i.getSquareNorm());
-        mult(*phi_iij, fac, phi_i, *V_ij);
-        this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
-        timer.stop();
-        int nNodes = phi_iij->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Multiply", nNodes, time);
-    }
-
+    // compute phi_jij = phi_j * V_ij
+    double fac_jij = -(this->x_factor/phi_j.getSquareNorm());
     Orbital *phi_jij = new Orbital(phi_i);
-    { // compute phi_jij = phi_j * V_ij
-        Timer timer;
-        double fac = -(this->x_factor/phi_j.getSquareNorm());
-        mult(*phi_jij, fac, phi_j, *V_ij);
-        this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
-        timer.stop();
-        int nNodes = phi_jij->getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Multiply", nNodes, time);
-    }
+    mult(*phi_jij, fac_jij, phi_j, *V_ij);
+    this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
+
+    // compute phi_iij = phi_i * V_ij
+    double fac_iij = -(this->x_factor/phi_i.getSquareNorm());
+    Orbital *phi_iij = new Orbital(phi_i);
+    mult(*phi_iij, fac_iij, phi_i, *V_ij);
+    this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
+
     if (V_ij != 0) delete V_ij;
 
-    { // compute x_i += phi_jij
-        Timer timer;
-        Orbital &ex_i = this->exchange.getOrbital(i);
-        add.inPlace(ex_i, i_factor, *phi_jij);
-        timer.stop();
-        int nNodes = ex_i.getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Adding exchange", nNodes, time);
-    }
+    // compute x_i += phi_jij
+    Orbital &ex_i = this->exchange.getOrbital(i);
+    add.inPlace(ex_i, i_factor, *phi_jij);
     if (phi_jij != 0) delete phi_jij;
 
-    { // compute x_j += phi_iij
-        Timer timer;
-        Orbital &ex_j = this->exchange.getOrbital(j);
-        add.inPlace(ex_j, j_factor, *phi_iij);
-        timer.stop();
-        int nNodes = ex_j.getNNodes();
-        double time = timer.getWallTime();
-        maxNodes = max(maxNodes, nNodes);
-        TelePrompter::printTree(2, "Adding exchange", nNodes, time);
-    }
+    // compute x_j += phi_iij
+    Orbital &ex_j = this->exchange.getOrbital(j);
+    add.inPlace(ex_j, j_factor, *phi_iij);
     if (phi_iij != 0) delete phi_iij;
-    return maxNodes;
 }
 
 Orbital* ExchangePotential::testPreComputed(Orbital &phi_p) {
-    for (int i = 0; i < this->orbitals->size(); i++) {
+    int nOrbs = this->orbitals->size();
+    for (int i = 0; i < nOrbs; i++) {
         Orbital &phi_i  = this->orbitals->getOrbital(i);
         Orbital *ex_i = this->exchange[i];
         if (&phi_i == &phi_p and ex_i != 0) {
