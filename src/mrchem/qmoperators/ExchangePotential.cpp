@@ -61,6 +61,9 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
     for (int i = 0; i < nOrbs; i++) {
         Orbital &phi_i = this->orbitals->getOrbital(i);
 
+        double spinFactor = phi_i.getExchangeFactor(phi_p);
+        if (IS_EQUAL(spinFactor, 0.0)) continue;
+
         Orbital *phi_ip = new Orbital(phi_p);
         mult.adjoint(*phi_ip, 1.0, phi_i, phi_p);
 
@@ -75,11 +78,9 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
         }
         delete phi_ip;
 
-        double spinFactor = phi_i.getExchangeFactor(phi_p);
-        double fac = - spinFactor * (this->x_factor / phi_i.getSquareNorm());
-
+        double multFac = - spinFactor * (this->x_factor / phi_i.getSquareNorm());
         Orbital *phi_iip = new Orbital(phi_p);
-        mult(*phi_iip, fac, phi_i, *V_ip);
+        mult(*phi_iip, multFac, phi_i, *V_ip);
         delete V_ip;
 
         coef_vec.push_back(1.0);
@@ -177,7 +178,7 @@ void ExchangePotential::calcInternal(int i, int j) {
 
     double i_factor = phi_i.getExchangeFactor(phi_j);
     double j_factor = phi_j.getExchangeFactor(phi_i);
-    if (i_factor < MachineZero or j_factor < MachineZero) {
+    if (IS_EQUAL(i_factor, 0.0) or IS_EQUAL(j_factor, 0.0)) {
         this->part_norms(i,j) = 0.0;
         return;
     }
