@@ -74,6 +74,7 @@ void OrbitalAdder::operator()(Orbital &out,
     // sanity check spin
     for (int i = 0; i < inp.size(); i++) {
         if (abs(coefs[i]) < MachineZero) continue;
+        if (inp[i]->getOccupancy() == 0) continue;
         if (out.getSpin() != inp[i]->getSpin()) MSG_FATAL("Mixing spins");
     }
 
@@ -142,6 +143,7 @@ void OrbitalAdder::operator()(Orbital &out,
     // sanity check spin
     for (int i = 0; i < inp.size(); i++) {
         if (fabs(c(i)) < MachineZero) continue;
+        if (inp[i]->getOccupancy() == 0) continue;
         if (out.getSpin() != inp[i]->getSpin()) MSG_FATAL("Mixing spins");
     }
 

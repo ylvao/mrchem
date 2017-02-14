@@ -446,7 +446,7 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
         MatrixXd U = M.transpose()*S_m12;
 
-		extendRotationMatrix(*phi, U);
+	extendRotationMatrix(*phi, U);
 
         // Rotate n lowest energy orbitals of U*tmp into phi
         OrbitalAdder add(rel_prec, max_scale);
@@ -823,9 +823,6 @@ void SCFDriver::extendRotationMatrix(const OrbitalVector &orbs, MatrixXd &O) {
     int nBeta   = orbs.getNBeta();
     int nCols   = O.cols(); 
 
-    if (nPaired + nAlpha != nCols) {
-	MSG_ERROR("Alpha and paired orbitals not consistent with number of columns");
-    }
     if (nBeta > nAlpha) {
 	MSG_ERROR("Inconsistent orbital set: too many beta orbitals");
     }

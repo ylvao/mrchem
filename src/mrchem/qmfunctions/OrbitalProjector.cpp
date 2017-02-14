@@ -40,7 +40,7 @@ OrbitalProjector::OrbitalProjector(double prec, int max_scale)
 }
 
 OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
-    TelePrompter::printHeader(0, "xSetting up occupied orbitals");
+    TelePrompter::printHeader(0, "Setting up occupied orbitals");
     println(0, "    n  Spin  Occ                           SquareNorm");
     TelePrompter::printSeparator(0, '-');
 
