@@ -13,8 +13,9 @@ ExternalProject_Add(submodule-libgetkw
     DOWNLOAD_DIR ${CMAKE_SOURCE_DIR}
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libgetkw
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libgetkw
-    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/external -DCMAKE_BUILD_TYPE=Release
+    INSTALL_DIR ${PROJECT_BINARY_DIR}/external
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/external
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     )
 add_dependencies(submodule-libgetkw git-submodule-init)
 add_dependencies(external-modules submodule-libgetkw)
