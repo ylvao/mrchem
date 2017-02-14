@@ -93,7 +93,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
 void OrbitalProjector::operator()(OrbitalVector &orbs,
                                   const string &bf,
                                   const string &mo) {
-    TelePrompter::printHeader(0, "ySetting up occupied orbitals");
+    TelePrompter::printHeader(0, "Setting up occupied orbitals (closed-shell)");
     println(0, "    n  Spin  Occ                           SquareNorm");
     TelePrompter::printSeparator(0, '-');
 
@@ -120,44 +120,36 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
                                   const string &bf,
                                   const string &mo_a,
                                   const string &mo_b) {
-    NOT_IMPLEMENTED_ABORT;
-//    Timer timer;
-//    int oldPrec = TelePrompter::setPrecision(15);
-//    printout(0, "\n\n================ Setting up starting guess ");
-//    printout(0, "=================\n\n");
+    TelePrompter::printHeader(0, "Setting up occupied orbitals (open-shell)");
 
-//    int n_a = 0;
-//    int n_b = 0;
-//    OrbitalExp *moExp_a = readOrbitalExpansion(bf, mo_a);
-//    OrbitalExp *moExp_b = readOrbitalExpansion(bf, mo_b);
-//    for (int i = 0; i < this->size(); i++) {
-//        Orbital *mwOrb = this->getOrbitalPtr(i);
-//        if (mwOrb == 0) MSG_ERROR("Orbital not initialized");
-//        GaussExp<3> *gtOrb = 0;
-//        if (mwOrb->getSpin() == Orbital::Alpha) {
-//            gtOrb = &moExp_a->getOrbital(n_a);
-//            n_a++;
-//        }
-//        if (mwOrb->getSpin() == Orbital::Beta) {
-//            gtOrb = &moExp_b->getOrbital(n_b);
-//            n_b++;
-//        }
-//        if (mwOrb->getSpin() == Orbital::Paired) {
-//            NOT_IMPLEMENTED_ABORT;
-//        }
-//        //mwOrb.setRelPrec(1.0e-3);
-//        mwOrb->projectFunction(*gtOrb);
-//        printout(0, "Orbital " << setw(3) << i);
-//        println(0, " squareNorm: " << setw(36) << mwOrb->getSquareNorm());
-//        //mwOrb.normalize();
-//    }
-//    delete moExp_a;
-//    delete moExp_b;
+    Timer timer;
+    OrbitalExp *moExp_a = readOrbitalExpansion(bf, mo_a);
+    OrbitalExp *moExp_b = readOrbitalExpansion(bf, mo_b);
 
-//    TelePrompter::setPrecision(5);
-//    printout(0, "\n================ Elapsed time: ");
-//    println(0, timer.elapsed() << " =================\n");
-//    TelePrompter::setPrecision(oldPrec);
+    int n_a = 0;
+    int n_b = 0;
+    for (int i = 0; i < orbs.size(); i++) {
+        Orbital &mwOrb = orbs.getOrbital(i);
+        mwOrb.clear(true); // delete existing real/imag FunctionTrees
+
+        GaussExp<3> *gtOrb = 0;
+        if (mwOrb.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
+        if (mwOrb.getSpin() == Alpha) gtOrb = &moExp_a->getOrbital(n_a++);
+        if (mwOrb.getSpin() == Beta) gtOrb = &moExp_b->getOrbital(n_b++);
+
+        mwOrb.allocReal();
+        this->project(mwOrb.real(), *gtOrb);
+
+        printout(0, setw(5) << i);
+        printout(0, setw(5) << mwOrb.printSpin());
+        printout(0, setw(5) << mwOrb.getOccupancy());
+        printout(0, setw(44) << mwOrb.getSquareNorm() << endl);
+    }
+    delete moExp_a;
+    delete moExp_b;
+
+    timer.stop();
+    TelePrompter::printFooter(0, timer, 2);
 }
 
 //void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
