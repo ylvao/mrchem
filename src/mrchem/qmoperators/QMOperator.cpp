@@ -1,6 +1,7 @@
 #include "QMOperator.h"
 #include "Orbital.h"
 #include "OrbitalVector.h"
+#include "Timer.h"
 
 using namespace Eigen;
 using namespace std;

@@ -112,11 +112,11 @@ Orbital* GroundStateSolver::getHelmholtzArgument_2(int i,
     MatrixXd L = this->helmholtz->getLambda().asDiagonal();
     MatrixXd LmF = L - F;
 
-    vector<double> coefs;
+    vector<complex<double> > coefs;
     vector<Orbital *> orbs;
 
     for (int j = 0; j < phi.size(); j++) {
-      double coef = LmF(i,OrbsIx[j]);
+        double coef = LmF(i, OrbsIx[j]);
         // Linear scaling screening inserted here
         if (fabs(coef) > MachineZero) {
             Orbital &phi_j = phi.getOrbital(j);

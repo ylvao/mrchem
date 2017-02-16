@@ -107,17 +107,17 @@ void Orbital::send_Orbital(int dest, int tag){
   Orbinfo.occupancy=this->getOccupancy();
   Orbinfo.error=this->getError();
   if(this->hasReal()){
-    Orbinfo.NchunksReal = this->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    Orbinfo.NchunksReal = this->real().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Orbinfo.NchunksReal = 0;}
   if(this->hasImag()){
-    Orbinfo.NchunksImag = this->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    Orbinfo.NchunksImag = this->imag().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Orbinfo.NchunksImag = 0;}
   
   int count=sizeof(Metadata);
   MPI_Send(&Orbinfo, count, MPI_BYTE, dest, 0, comm);
   
-  if(this->hasReal())Send_SerialTree(&this->re(), Orbinfo.NchunksReal, dest, tag, comm);
-  if(this->hasImag())Send_SerialTree(&this->im(), Orbinfo.NchunksImag, dest, tag*10000, comm);
+  if(this->hasReal())Send_SerialTree(&this->real(), Orbinfo.NchunksReal, dest, tag, comm);
+  if(this->hasImag())Send_SerialTree(&this->imag(), Orbinfo.NchunksImag, dest, tag*10000, comm);
   
 #endif
 }
@@ -142,18 +142,18 @@ void Orbital::Isend_Orbital(int dest, int tag){
   Orbinfo.occupancy=this->getOccupancy();
   Orbinfo.error=this->getError();
   if(this->hasReal()){
-    Orbinfo.NchunksReal = this->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    Orbinfo.NchunksReal = this->real().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Orbinfo.NchunksReal = 0;}
   if(this->hasImag()){
-    Orbinfo.NchunksImag = this->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+    Orbinfo.NchunksImag = this->imag().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
   }else{Orbinfo.NchunksImag = 0;}
   
   MPI_Request request;
   int count=sizeof(Metadata);
   MPI_Isend(&Orbinfo, count, MPI_BYTE, dest, 0, comm, &request);
   
-  if(this->hasReal())ISend_SerialTree(&this->re(), Orbinfo.NchunksReal, dest, tag, comm);
-  if(this->hasImag())ISend_SerialTree(&this->im(), Orbinfo.NchunksImag, dest, tag*10000, comm);
+  if(this->hasReal())ISend_SerialTree(&this->real(), Orbinfo.NchunksReal, dest, tag, comm);
+  if(this->hasImag())ISend_SerialTree(&this->imag(), Orbinfo.NchunksImag, dest, tag*10000, comm);
   
 #endif
 }
@@ -184,16 +184,16 @@ void Orbital::Rcv_Orbital(int source, int tag){
       //We must have a tree defined for receiving nodes. Define one:
       this->allocReal();
     }
-    Rcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, tag, comm);}
+    Rcv_SerialTree(&this->real(), Orbinfo.NchunksReal, source, tag, comm);}
 
   if(Orbinfo.NchunksImag>0){
     if(not this->hasImag()){
       //We must have a tree defined for receiving nodes. Define one:
       this->allocImag();
     }
-    Rcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, tag*10000, comm);
+    Rcv_SerialTree(&this->imag(), Orbinfo.NchunksImag, source, tag*10000, comm);
   }else{
-    //&(this->im())=0;
+    //&(this->imag())=0;
   }
   
 #endif
@@ -229,16 +229,16 @@ void Orbital::IRcv_Orbital(int source, int tag){
       //We must have a tree defined for receiving nodes. Define one:
       this->allocReal();
     }
-    IRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, tag, comm);}
+    IRcv_SerialTree(&this->real(), Orbinfo.NchunksReal, source, tag, comm);}
 
   if(Orbinfo.NchunksImag>0){
     if(not this->hasImag()){
       //We must have a tree defined for receiving nodes. Define one:
       this->allocImag();
     }
-    IRcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, tag*10000, comm);
+    IRcv_SerialTree(&this->imag(), Orbinfo.NchunksImag, source, tag*10000, comm);
   }else{
-    //&(this->im())=0;
+    //&(this->imag())=0;
   }
   
 #endif

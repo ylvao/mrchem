@@ -53,6 +53,15 @@ protected:
                                           Eigen::MatrixXd &F,
                                           OrbitalVector &x,
                                           bool adjoint);
+    virtual Orbital* getHelmholtzArgument_1(Orbital &phi_i) { NOT_IMPLEMENTED_ABORT; }
+    virtual Orbital* getHelmholtzArgument_2(int i,
+					  int* OrbsIx,
+                                          Eigen::MatrixXd &F,
+                                          OrbitalVector &phi,
+					  Orbital* part_1,
+					  double coef_part1,
+					  Orbital &phi_i,
+                                          bool adjoint) { NOT_IMPLEMENTED_ABORT; }
 
     void printProperty() const;
 

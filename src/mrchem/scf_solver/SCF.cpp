@@ -216,7 +216,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
     TelePrompter::printHeader(0, "Applying Helmholtz Operators");
     println(0, " Orb  RealNorm     ImagNorm      nNodes     Error   Timing   ");
     TelePrompter::printSeparator(0, '-');
-    int oldprec = TelePrompter::getPrecision();
+    int oldprec = TelePrompter::setPrecision(5);
 
     Timer timer;
     HelmholtzOperatorSet &H = *this->helmholtz;
@@ -228,22 +228,29 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
 	if (i%MPI_size == MPI_rank) {
-	  //in charge for this orbital
-	  Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
-	  H(i, np1Phi_i, *arg_i);
-	  delete arg_i;
+	    //in charge for this orbital
+	    Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
+	    H(i, np1Phi_i, *arg_i);
+	    delete arg_i;
 	  
-	  int nNodes = np1Phi_i.getNNodes();
-	  double norm_n = sqrt(nPhi_i.getSquareNorm());
-	  double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
-	  double dNorm_n = fabs(norm_np1-norm_n);
-	  
-	  timer.stop();
-	  cout<< setw(3) << i;
-	  cout<< " " << setw(13) << norm_np1;
-	  cout<< " " << setw(13) << dNorm_n;
-	  cout<< " " << setw(8) << nNodes;
-	  cout<< setw(18) << timer.getWallTime() << endl;	
+	    int rNodes = np1Phi_i.getNNodes(Real);
+	    int iNodes = np1Phi_i.getNNodes(Imag);
+	    double norm_n = sqrt(nPhi_i.getSquareNorm());
+	    double norm_np1 = sqrt(np1Phi_i.getSquareNorm());
+	    double dNorm_n = fabs(norm_np1-norm_n);
+            double real_norm = sqrt(np1Phi_i.getSquareNorm(Real));
+            double imag_norm = sqrt(np1Phi_i.getSquareNorm(Imag));
+
+	    timer.stop();
+            TelePrompter::setPrecision(5);
+	    printout(0, setw(3) << i);
+	    printout(0, " " << setw(12) << real_norm);
+	    printout(0, " " << setw(12) << imag_norm);
+            TelePrompter::setPrecision(1);
+	    printout(0, " " << setw(5) << rNodes);
+	    printout(0, " " << setw(5) << iNodes);
+	    printout(0, " " << setw(8) << dNorm_n);
+	    printout(0, setw(9) << timer.getWallTime() << endl);	
 	}
     }
 
@@ -374,7 +381,7 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
 
     Timer timer;
 
-    std::vector<double> U_Chunk;
+    std::vector<complex<double> > U_Chunk;
     std::vector<Orbital *> orbChunk;
     int orbVecIx = 0;
 

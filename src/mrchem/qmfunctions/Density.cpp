@@ -1,5 +1,6 @@
 #include "Density.h"
 #include "FunctionTree.h"
+#include "SerialFunctionTree.h"
 #include "TelePrompter.h"
 #include "parallel.h"
 
@@ -112,9 +113,9 @@ void Density::send_Density(int dest, int tag){
   int count=sizeof(Metadata);
   MPI_Send(&Densinfo, count, MPI_BYTE, dest, tag, comm);
  
-  if(this->total)Send_SerialTree(this->total, Densinfo.NchunksTotal, dest, tag+10000, comm);
-  if(this->alpha)Send_SerialTree(this->alpha, Densinfo.NchunksAlpha, dest, tag+20000, comm);
-  if(this->beta)Send_SerialTree(this->beta, Densinfo.NchunksBeta, dest, tag+30000, comm);
+  if(this->hasTotal())Send_SerialTree(this->dens_t, Densinfo.NchunksTotal, dest, tag+10000, comm);
+  if(this->hasAlpha())Send_SerialTree(this->dens_a, Densinfo.NchunksAlpha, dest, tag+20000, comm);
+  if(this->hasBeta())Send_SerialTree(this->dens_b, Densinfo.NchunksBeta, dest, tag+30000, comm);
 
 #endif
 }
@@ -140,23 +141,23 @@ void Density::Rcv_Density(int source, int tag){
   assert(this->isSpinDensity() == Densinfo.spin);
 
   if(Densinfo.NchunksTotal>0){
-    if(not this->total){
+    if(not this->hasTotal()){
       //We must have a tree defined for receiving nodes. Define one:
-      this->total = new FunctionTree<3>(*MRA,MaxAllocNodes);
+      this->dens_t = new FunctionTree<3>(*MRA,MaxAllocNodes);
     }
-    Rcv_SerialTree(this->total, Densinfo.NchunksTotal, source, tag+10000, comm);}
+    Rcv_SerialTree(this->dens_t, Densinfo.NchunksTotal, source, tag+10000, comm);}
   if(Densinfo.NchunksAlpha>0){
-    if(not this->alpha){
+    if(not this->hasAlpha()){
       //We must have a tree defined for receiving nodes. Define one:
-      this->alpha = new FunctionTree<3>(*MRA,MaxAllocNodes);
+      this->dens_a = new FunctionTree<3>(*MRA,MaxAllocNodes);
     }
-    Rcv_SerialTree(this->alpha, Densinfo.NchunksAlpha, source, tag+20000, comm);}
+    Rcv_SerialTree(this->dens_a, Densinfo.NchunksAlpha, source, tag+20000, comm);}
   if(Densinfo.NchunksBeta>0){
-    if(not this->beta){
+    if(not this->hasBeta()){
       //We must have a tree defined for receiving nodes. Define one:
-      this->beta = new FunctionTree<3>(*MRA,MaxAllocNodes);
+      this->dens_b = new FunctionTree<3>(*MRA,MaxAllocNodes);
     }
-    Rcv_SerialTree(this->beta, Densinfo.NchunksBeta, source, tag+30000, comm);}
+    Rcv_SerialTree(this->dens_b, Densinfo.NchunksBeta, source, tag+30000, comm);}
   
 #endif
 }

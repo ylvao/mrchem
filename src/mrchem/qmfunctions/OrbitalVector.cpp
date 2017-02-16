@@ -666,10 +666,10 @@ void OrbitalVector::send_OrbVec(int dest, int tag, int* OrbsIx, int start, int m
     Orbinfo.occupancy[i_out] = orb_i->getOccupancy();
     Orbinfo.error[i_out] = orb_i->getError();
     if(orb_i->hasReal()){
-      Orbinfo.NchunksReal[i_out] = orb_i->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+      Orbinfo.NchunksReal[i_out] = orb_i->real().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
     }else{Orbinfo.NchunksReal[i_out] = 0;}
     if(orb_i->hasImag()){
-      Orbinfo.NchunksImag[i_out] = orb_i->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+      Orbinfo.NchunksImag[i_out] = orb_i->imag().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
     }else{Orbinfo.NchunksImag[i_out] = 0;}
     Orbinfo.Ix[i_out] = OrbsIx[i];
   }
@@ -680,8 +680,8 @@ void OrbitalVector::send_OrbVec(int dest, int tag, int* OrbsIx, int start, int m
   for (int i = start; i <  this->size() && (i-start<maxcount); i++) {
     int i_out=i-start;
     orb_i = &this->getOrbital(i);
-    if(orb_i->hasReal())Send_SerialTree(&orb_i->re(), Orbinfo.NchunksReal[i_out], dest, 2*i_out+1+tag, comm);
-    if(orb_i->hasImag())Send_SerialTree(&orb_i->im(), Orbinfo.NchunksImag[i_out], dest, 2*i_out+2+tag, comm);
+    if(orb_i->hasReal())Send_SerialTree(&orb_i->real(), Orbinfo.NchunksReal[i_out], dest, 2*i_out+1+tag, comm);
+    if(orb_i->hasImag())Send_SerialTree(&orb_i->imag(), Orbinfo.NchunksImag[i_out], dest, 2*i_out+2+tag, comm);
   }
   
 #endif
@@ -706,10 +706,10 @@ void OrbitalVector::Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int 
     Orbinfo.occupancy[i_out] = orb_i->getOccupancy();
     Orbinfo.error[i_out] = orb_i->getError();
     if(orb_i->hasReal()){
-      Orbinfo.NchunksReal[i_out] = orb_i->re().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+      Orbinfo.NchunksReal[i_out] = orb_i->real().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
     }else{Orbinfo.NchunksReal[i_out] = 0;}
     if(orb_i->hasImag()){
-      Orbinfo.NchunksImag[i_out] = orb_i->im().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
+      Orbinfo.NchunksImag[i_out] = orb_i->imag().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
     }else{Orbinfo.NchunksImag[i_out] = 0;}
     Orbinfo.Ix[i_out] = OrbsIx[i];
   }
@@ -721,8 +721,8 @@ void OrbitalVector::Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int 
   for (int i = start; i <  this->size() && (i-start<maxcount); i++) {
     int i_out=i-start;
     orb_i = &this->getOrbital(i);
-    if(orb_i->hasReal())ISend_SerialTree(&orb_i->re(), Orbinfo.NchunksReal[i_out], dest, 2*i_out+1+tag, comm);
-    if(orb_i->hasImag())ISend_SerialTree(&orb_i->im(), Orbinfo.NchunksImag[i_out], dest, 2*i_out+2+tag, comm);
+    if(orb_i->hasReal())ISend_SerialTree(&orb_i->real(), Orbinfo.NchunksReal[i_out], dest, 2*i_out+1+tag, comm);
+    if(orb_i->hasImag())ISend_SerialTree(&orb_i->imag(), Orbinfo.NchunksImag[i_out], dest, 2*i_out+2+tag, comm);
   }
   
 #endif
@@ -759,16 +759,16 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVec
 	//We must have a tree defined for receiving nodes. Define one:
 	orb_i->allocReal();
       }
-      Rcv_SerialTree(&orb_i->re(), Orbinfo.NchunksReal[i], source, 2*i+1+tag, comm);}
+      Rcv_SerialTree(&orb_i->real(), Orbinfo.NchunksReal[i], source, 2*i+1+tag, comm);}
     
     if(Orbinfo.NchunksImag[i]>0){
       if(not orb_i->hasImag()){
 	//We must have a tree defined for receiving nodes. Define one:
 	orb_i->allocImag();
       }
-       Rcv_SerialTree(&orb_i->im(), Orbinfo.NchunksImag[i], source, 2*i+2+tag, comm);
+       Rcv_SerialTree(&orb_i->imag(), Orbinfo.NchunksImag[i], source, 2*i+2+tag, comm);
     }else{
-    //&(this->im())=0;
+    //&(this->imag())=0;
     }
     OrbsIx[workOrbVecIx] = Orbinfo.Ix[i];
     //the orbitals are stored in workOrbVec, and only the metadata/adresses is copied into OrbitalVector
