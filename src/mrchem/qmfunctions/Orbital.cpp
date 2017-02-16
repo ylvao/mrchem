@@ -9,6 +9,8 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
+Orbital workOrb(2, Paired);
+
 Orbital::Orbital(int occ, int s)
         : ComplexFunction<3>(0, 0),
           spin(s),
@@ -180,11 +182,15 @@ void Orbital::Rcv_Orbital(int source, int tag){
   if(Orbinfo.NchunksReal>0){
     if(not this->hasReal()){
       //We must have a tree defined for receiving nodes. Define one:
-      this->real = new FunctionTree<3>(*MRA,MaxAllocNodes);
+      this->allocReal();
     }
     Rcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, tag, comm);}
 
   if(Orbinfo.NchunksImag>0){
+    if(not this->hasImag()){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->allocImag();
+    }
     Rcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, tag*10000, comm);
   }else{
     //&(this->im())=0;
@@ -221,11 +227,15 @@ void Orbital::IRcv_Orbital(int source, int tag){
   if(Orbinfo.NchunksReal>0){
     if(not this->hasReal()){
       //We must have a tree defined for receiving nodes. Define one:
-      this->real = new FunctionTree<3>(*MRA,MaxAllocNodes);
+      this->allocReal();
     }
     IRcv_SerialTree(&this->re(), Orbinfo.NchunksReal, source, tag, comm);}
 
   if(Orbinfo.NchunksImag>0){
+    if(not this->hasImag()){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->allocImag();
+    }
     IRcv_SerialTree(&this->im(), Orbinfo.NchunksImag, source, tag*10000, comm);
   }else{
     //&(this->im())=0;

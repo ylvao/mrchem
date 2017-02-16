@@ -23,6 +23,7 @@ void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
     this->lambda.clear();
     for (int i = 0; i < energies.size(); i++) {
         double energy = energies(i);
+ 
         if (energy > 0.0) {
             energy = -0.5;
         }

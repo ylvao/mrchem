@@ -16,13 +16,10 @@
 #include "PositionOperator.h"
 #include "MathUtils.h"
 #include "eigen_disable_warnings.h"
-#include "parallel.h"
-#include "SerialFunctionTree.h"
 
 using namespace std;
 using namespace Eigen;
 
-extern OrbitalVector* workOrbVec;
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
@@ -64,7 +61,12 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
     MatrixXd LmF = L - F;
 
     Orbital *part_1 = fock.applyPotential(phi_i);
-    Orbital *part_2 = calcMatrixPart(i, LmF, phi);
+    Orbital *part_2;
+    if(MPI_size>1){
+      part_2 = calcMatrixPart_P(i, LmF, phi);
+    }else{
+      part_2 = calcMatrixPart(i, LmF, phi);
+    }
 
     if (part_1 == 0) part_1 = new Orbital(phi_i);
     if (part_2 == 0) part_2 = new Orbital(phi_i);
@@ -72,6 +74,68 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
     Timer timer;
     Orbital *arg = new Orbital(phi_i);
     this->add(*arg, coef, *part_1, coef, *part_2, true);
+
+    timer.stop();
+    double time = timer.getWallTime();
+    int nNodes = arg->getNNodes();
+    TelePrompter::printTree(2, "Added arguments", nNodes, time);
+
+    if (part_1 != 0) delete part_1;
+    if (part_2 != 0) delete part_2;
+
+    return arg;
+}
+Orbital* GroundStateSolver::getHelmholtzArgument_1(Orbital &phi_i) {
+    Timer timer;
+    FockOperator &fock = *this->fOper_n;
+
+    Orbital *part_1 = fock.applyPotential(phi_i);
+ 
+    if (part_1 == 0) part_1 = new Orbital(phi_i);
+
+    timer.stop();
+    double time = timer.getWallTime();
+    int nNodes = part_1->getNNodes();
+    TelePrompter::printTree(2, "Argument 1", nNodes, time);
+
+    return part_1;
+}
+Orbital* GroundStateSolver::getHelmholtzArgument_2(int i,
+						 int*  OrbsIx,
+                                                 MatrixXd &F,
+                                                 OrbitalVector &phi,
+						 Orbital*  part_1,
+						 double coef_part1,
+						 Orbital &phi_i,
+                                                 bool adjoint) {
+
+    MatrixXd L = this->helmholtz->getLambda().asDiagonal();
+    MatrixXd LmF = L - F;
+
+    vector<double> coefs;
+    vector<Orbital *> orbs;
+
+    for (int j = 0; j < phi.size(); j++) {
+      double coef = LmF(i,OrbsIx[j]);
+        // Linear scaling screening inserted here
+        if (fabs(coef) > MachineZero) {
+            Orbital &phi_j = phi.getOrbital(j);
+            double norm_j = sqrt(phi_j.getSquareNorm());
+            if (norm_j > 0.01*getOrbitalPrecision()) {
+                coefs.push_back(coef);
+                orbs.push_back(&phi_j);
+            }
+        }
+    }
+
+    Orbital *part_2 = new Orbital(phi_i);
+    Timer timer;
+    if (orbs.size() > 0 ) this->add(*part_2, coefs, orbs, false);
+
+    Orbital *arg = new Orbital(phi_i);
+    double coef = -1.0/(2.0*pi);
+
+    this->add(*arg, coef_part1, *part_1, coef, *part_2, true);
 
     timer.stop();
     double time = timer.getWallTime();
@@ -209,30 +273,6 @@ void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVect
     this->add.rotate(phi, U);
 }
 
-/** Perform the orbital rotation that diagonalizes the Fock matrix
- *
- * This operation includes the orthonormalization using the overlap matrix.
- */
-void GroundStateSolver::diagonalize_P(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
-    MatrixXd S_m12 = calcOrthonormalizationMatrix_P(phi);
-    F = S_m12.transpose()*F*S_m12;
-
-    Timer timer;
-    printout(1, "Calculating diagonalization matrix               ");
-
-    SelfAdjointEigenSolver<MatrixXd> es(F.cols());
-    es.compute(F);
-    MatrixXd M = es.eigenvectors();
-    MatrixXd U = M.transpose()*S_m12;
-
-    timer.stop();
-    println(1, timer.getWallTime());
-
-    F = es.eigenvalues().asDiagonal();
-    fock.rotate(U);
-    this->add.rotate_P(phi, U);
-}
-
 void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
     MatrixXd U = calcOrthonormalizationMatrix(phi);
     F = U*F*U.transpose();
@@ -240,46 +280,16 @@ void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalV
     this->add.rotate(phi, U);
 }
 
-void GroundStateSolver::orthonormalize_P(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
-#ifdef HAVE_MPI
-    MatrixXd U = calcOrthonormalizationMatrix_P(phi);
-    F = U*F*U.transpose();
-    fock.rotate(U);
-    Timer timer;
-    
-    this->add.rotate_P(phi, U);
-
-    timer.stop();
-#else
-    NOT_REACHED_ABORT;
-#endif
-}
-
 MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     Timer timer;
     printout(1, "Calculating orthonormalization matrix            ");
 
-    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
-    SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
-    es.compute(S_tilde);
-
-    MatrixXd A = es.eigenvalues().asDiagonal();
-    for (int i = 0; i < A.cols(); i++) {
-        A(i,i) = pow(A(i,i), -1.0/2.0);
+    MatrixXd S_tilde;
+    if(MPI_size>1){
+      S_tilde = phi.calcOverlapMatrix_P_H(phi).real();
+    }else{
+      S_tilde = phi.calcOverlapMatrix().real();
     }
-    MatrixXd B = es.eigenvectors();
-    MatrixXd U = B*A*B.transpose();
-
-    timer.stop();
-    println(1, timer.getWallTime());
-    return U;
-}
-
-MatrixXd GroundStateSolver::calcOrthonormalizationMatrix_P(OrbitalVector &phi) {
-    Timer timer;
-    printout(1, "Calculating orthonormalization matrix            ");
-
-    MatrixXd S_tilde = phi.calcOverlapMatrix_P_H(phi).real();
     SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
     es.compute(S_tilde);
 

@@ -179,92 +179,64 @@ void OrbitalAdder::operator()(Orbital &out,
     }
 }
 
-/** In place rotation of orbital vector */
-void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U) {
-    OrbitalVector tmp(out);
-    rotate_P(tmp, U, out);
-    out.clear(true);    // Delete pointers
-    out = tmp;          // Copy pointers
-    tmp.clear(false);   // Clear pointers
-}
-
 void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector &phi) {
     if (U.cols() != phi.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
 
-    if(phi.size()%MPI_size)cout<<"NOT YET IMPLEMENTED"<<endl;
-
-    int maxOrb =10;//to put into constants.h , or set dynamically?
-    std::vector<complex<double> > U_Chunk;
-    std::vector<Orbital *> orbChunk;
-    for (int i = 0; i <phi.size(); i++) {
-      out.getOrbital(i).clear(true);//
+    int Ni = phi.size();
+    OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
+    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
+    int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
+    
+    //make vector with adresses of own orbitals
+    int i = 0;
+    for (int Ix = MPI_rank;  Ix < Ni; Ix += MPI_size) {
+      OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
+      out.getOrbital(Ix).clear(true);
+      OrbsIx[i++] = Ix;
     }
-
-    for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
-      for (int iter = 0;  iter<MPI_size ; iter++) {
-	int j_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
-	for (int j_Orb = j_MPI;  j_Orb < phi.size(); j_Orb+=MPI_size) {
-	  
-	  if(MPI_rank > j_MPI){
-	    //send first bra, then receive ket
-	    phi.getOrbital(i_Orb).send_Orbital(j_MPI, i_Orb);
-	    out.getOrbital(j_Orb).Rcv_Orbital(j_MPI, j_Orb);
-	  }else if(MPI_rank < j_MPI){
-	    //receive first bra, then send ket
-	    out.getOrbital(j_Orb).Rcv_Orbital(j_MPI, j_Orb);
-	    phi.getOrbital(i_Orb).send_Orbital(j_MPI, i_Orb);
-	  }else if(MPI_rank == j_MPI){//use phi directly
-	  }
-	  
-	  //push orbital in vector (chunk)
-	  if(MPI_rank == j_MPI){
-	    orbChunk.push_back(&phi.getOrbital(j_Orb));
-	  }else{
-	    orbChunk.push_back(&out.getOrbital(j_Orb));
-	  }
-	  U_Chunk.push_back(U(i_Orb,j_Orb));	
-
-	  if(orbChunk.size()>=maxOrb or iter >= MPI_size-1){
-	    //Do the work for the chunk	  	  
-	    this->inPlace(out.getOrbital(i_Orb),U_Chunk, orbChunk, false);//can start with empty orbital
-	    U_Chunk.clear();
-	    orbChunk.clear();
-	  }
-	}
+    
+     for (int iter = 0;  iter >= 0; iter++) {
+      //get a new chunk from other processes
+      OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+      //Update only own orbitals	
+      int j = 0;
+      for (int Jx = MPI_rank;  Jx < Ni; Jx += MPI_size) {
+	VectorXd U_Chunk(rcvOrbs.size());
+	for (int ix = 0; ix<rcvOrbs.size(); ix++)U_Chunk(ix)=U(Jx,rcvOrbsIx[ix]);
+	this->inPlace(out.getOrbital(Jx),U_Chunk, rcvOrbs, false);//can start with empty orbital
       }
+      rcvOrbs.clearVec(false);//reset to zero size orbital vector
     }
-    //TEMPORARY
-    //broadcast results
-    /*    for (int i = 0; i < phi.size(); i++) {      
-      if(i%MPI_size==MPI_rank){
-	for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	  if(i_mpi != MPI_rank){
-	    out.getOrbital(i).send_Orbital(i_mpi, 54);
-	  }
-	}
-      }else{
-	out.getOrbital(i).Rcv_Orbital(i%MPI_size, 54);
-      }
-      }*/
-
+    
+    //clear orbital adresses, not the orbitals
+    OrbVecChunk_i.clearVec(false);
+ 
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
     if (U.cols() != inp.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
-
-    for (int i = 0; i < out.size(); i++) {
+    if(MPI_size>1){
+      rotate_P(out, U, inp);
+    }else{
+      for (int i = 0; i < out.size(); i++) {
         const VectorXd &c = U.row(i);
         Orbital &out_i = out.getOrbital(i);
         (*this)(out_i, c, inp, false); // Adaptive grids
+      }
     }
 }
 
 /** In place rotation of orbital vector */
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     OrbitalVector tmp(out);
-    rotate(tmp, U, out);
+    if(MPI_size>1){
+      rotate_P(tmp, U, out);
+    }else{
+      rotate(tmp, U, out);
+    }
     out.clear(true);    // Delete pointers
     out = tmp;          // Copy pointers
     tmp.clear(false);   // Clear pointers
@@ -291,6 +263,23 @@ void OrbitalAdder::inPlace(Orbital &out,
     tmp.clear(false);   // Clear pointers
     inp.pop_back();     // Restore vector
     c.pop_back();       // Restore vector
+   
+}
+
+
+void OrbitalAdder::inPlace(Orbital &out, const VectorXd &c, OrbitalVector &inp,
+                              bool union_grid) {
+
+    VectorXd c_extended(c.size()+1);
+    for (int i = 0; i < c.size(); i++)c_extended(i)=c(i);
+    c_extended(c.size())=1.0;
+    Orbital tmp(out);//shallow copy
+    inp.push_back(out);
+    (*this)(tmp, c_extended, inp, union_grid);
+    out.clear(true);    // Delete pointers
+    out = tmp;          // Copy pointers
+    tmp.clear(false);   // Clear pointers
+    inp.pop_back(false);//restore vector
    
 }
 

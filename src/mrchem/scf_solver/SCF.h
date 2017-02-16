@@ -68,12 +68,29 @@ protected:
                                  OrbitalVector &phi_n,
                                  bool adjoint = false);
 
+    void applyHelmholtzOperators_P(OrbitalVector &phi_np1,
+                                 Eigen::MatrixXd &F_n,
+                                 OrbitalVector &phi_n,
+                                 bool adjoint = false);
+
     virtual Orbital* getHelmholtzArgument(int i,
                                           Eigen::MatrixXd &F,
                                           OrbitalVector &phi,
                                           bool adjoint) = 0;
+    virtual Orbital* getHelmholtzArgument_1(Orbital &phi_i) = 0;
+    virtual Orbital* getHelmholtzArgument_2(int i,
+					  int* OrbsIx,
+                                          Eigen::MatrixXd &F,
+                                          OrbitalVector &phi,
+					  Orbital* part_1,
+					  double coef_part1,
+					  Orbital &phi_i,
+                                          bool adjoint) = 0;
 
     Orbital* calcMatrixPart(int i,
+                            Eigen::MatrixXd &M,
+                            OrbitalVector &phi);
+    Orbital* calcMatrixPart_P(int i,
                             Eigen::MatrixXd &M,
                             OrbitalVector &phi);
 };

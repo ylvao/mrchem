@@ -12,6 +12,7 @@
 #include "Timer.h"
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+extern OrbitalVector workOrbVec;
 
 using namespace std;
 using namespace Eigen;
@@ -108,57 +109,75 @@ double FockOperator::adjoint(Orbital &orb_i, Orbital &orb_j) {
     NOT_IMPLEMENTED_ABORT;
 }
 
+
 MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
 
 #ifdef HAVE_MPI
-    for(int i = 0; i<i_orbs.size();i++){
-         Orbital& orb_i = i_orbs.getOrbital(i);
+    OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
+    OrbitalVector OrbVecChunk_j(0);//to store adresses of own j_orbs
+    OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
+    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
 
-	 if(i%MPI_size==MPI_rank){
-	   //responsible for this orbital, send it to everybody else. Could use Bcast, but will go another way
-	   for(int i_mpi = 0; i_mpi<MPI_size;i_mpi++){
-	     if(i_mpi!= MPI_rank)orb_i.send_Orbital(i_mpi, 55);
-	   }
-	 }else{
-	   //get orbital 
-	   orb_i.Rcv_Orbital(i%MPI_size, 55);
-	 }
+    //make vector with adresses of own orbitals
+    int i = 0;
+    for (int Ix = MPI_rank; Ix < Ni; Ix += MPI_size) {
+      OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));//i orbitals
+      OrbsIx[i++] = Ix;
+    }
+    for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
 
-	 for(int j = 0; j<j_orbs.size();j++){
-	     Orbital &orb_j = j_orbs.getOrbital(j);
+    for (int iter = 0;  iter >= 0 ; iter++) {
+      //get a new chunk from other processes
+      //NB: should not use directly workorbvec as rcvOrbs, because they may 
+      //contain own orbitals, and these can be overwritten
+      OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
 
-	     if(j%MPI_size==MPI_rank){
-	       //Only one process does the computations
-	       if (this->T != 0) result(i,j) += (*this->T)(orb_i, orb_j);
-	       if (this->V != 0) result(i,j) += (*this->V)(orb_i, orb_j);
-	       if (this->J != 0) result(i,j) += (*this->J)(orb_i, orb_j);
-	       if (this->K != 0) result(i,j) += (*this->K)(orb_i, orb_j);
-	       if (this->XC != 0) result(i,j) += (*this->XC)(orb_i, orb_j);
-	       if (this->H_1 != 0) result(i,j) += (*this->H_1)(orb_i, orb_j);
-	     }
-	 }
+      //Only one process does the computations. j orbitals always local
+      MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
+      
+      if (this->T != 0) resultChunk = (*this->T)(rcvOrbs,OrbVecChunk_j);
+      if (this->V != 0) resultChunk += (*this->V)(rcvOrbs,OrbVecChunk_j);
+      if (this->J != 0) resultChunk += (*this->J)(rcvOrbs,OrbVecChunk_j);
+      if (this->K != 0) resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
+      if (this->XC != 0) resultChunk += (*this->XC)(rcvOrbs,OrbVecChunk_j);
+
+      //copy results into final matrix
+      int j = 0;
+      for (int Jx = MPI_rank;  Jx < Nj ; Jx += MPI_size) {
+	for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
+	  result(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
+	}
+	j++;
       }
+      rcvOrbs.clearVec(false);//reset to zero size orbital vector
+    }
 
+    //clear orbital vector adresses. NB: only references and metadata must be deleted, not the trees in orbitals
+    OrbVecChunk_i.clearVec(false);
+    OrbVecChunk_j.clearVec(false);
+
+    //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &result(0,0), Ni*Nj,
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 #else
-    
     if (this->T != 0) result += (*this->T)(i_orbs, j_orbs);
     if (this->V != 0) result += (*this->V)(i_orbs, j_orbs);
     if (this->J != 0) result += (*this->J)(i_orbs, j_orbs);
     if (this->K != 0) result += (*this->K)(i_orbs, j_orbs);
     if (this->XC != 0) result += (*this->XC)(i_orbs, j_orbs);
     if (this->H_1 != 0) result += (*this->H_1)(i_orbs, j_orbs);
-
 #endif
+
     return result;
-}
+    }
 
 MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
+  if(MPI_size>1)cout<<"ERROR"<<endl;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
@@ -189,7 +208,7 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
     timer.stop();
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
-    TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
+    if(MPI_size==1)TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
 
     for (int n = 0; n < orbs.size(); n++) {
         delete orbs[n];
@@ -261,28 +280,46 @@ SCFEnergy FockOperator::trace(OrbitalVector &phi, MatrixXd &F) {
     double E_xc2 = 0.0;
     if (this->XC != 0) E_xc = this->XC->getEnergy();
     for (int i = 0; i < phi.size(); i++) {
-        Orbital &phi_i = phi.getOrbital(i);
-        double occ = (double) phi_i.getOccupancy();
-        double e_i = occ*F(i,i);
-        E_orb += e_i;
+        if (i%MPI_size == MPI_rank) {
+            Orbital &phi_i = phi.getOrbital(i);
+            double occ = (double) phi_i.getOccupancy();
+            double e_i = occ*F(i,i);
+            E_orb += e_i;
 
-        if (this->V != 0) {
-            println(2, "\n<" << i << "|V_nuc|" << i << ">");
-            E_en += occ*(*this->V)(phi_i,phi_i);
-        }
-        if (this->J != 0) {
-            println(2, "\n<" << i << "|J|" << i << ">");
-            E_ee += 0.5*occ*(*this->J)(phi_i,phi_i);
-        }
-        if (this->K != 0) {
-            println(2, "\n<" << i << "|K|" << i << ">");
-            E_x += 0.5*occ*(*this->K)(phi_i,phi_i);
-        }
-        if (this->XC != 0) {
-            println(2, "\n<" << i << "|V_xc|" << i << ">");
-            E_xc2 += occ*(*this->XC)(phi_i,phi_i);
+            if (this->V != 0) {
+                println(2, "\n<" << i << "|V_nuc|" << i << ">");
+                E_en += occ*(*this->V)(phi_i,phi_i);
+            }
+            if (this->J != 0) {
+                println(2, "\n<" << i << "|J|" << i << ">");
+                E_ee += 0.5*occ*(*this->J)(phi_i,phi_i);
+            }
+            if (this->K != 0) {
+                println(2, "\n<" << i << "|K|" << i << ">");
+                E_x += 0.5*occ*(*this->K)(phi_i,phi_i);
+            }
+            if (this->XC != 0) {
+                println(2, "\n<" << i << "|V_xc|" << i << ">");
+                E_xc2 += occ*(*this->XC)(phi_i,phi_i);
+            }
         }
     }
+
+#ifdef HAVE_MPI
+    double tmp[5];
+    tmp[0] = E_orb;
+    tmp[1] = E_en;
+    tmp[2] = E_ee;
+    tmp[3] = E_x;
+    tmp[4] = E_xc2;
+    MPI_Allreduce(MPI_IN_PLACE,tmp, 5, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    E_orb = tmp[0];
+    E_en  = tmp[1];
+    E_ee  = tmp[2];
+    E_x   = tmp[3];
+    E_xc2 = tmp[4];
+#endif
+
     double E_eex = E_ee + E_x;
     double E_orbxc2 = E_orb - E_xc2;
     E_kin = E_orbxc2 - 2.0*E_eex - E_en;

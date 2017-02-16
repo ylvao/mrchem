@@ -16,7 +16,10 @@ public:
     virtual ~OrbitalVector();
 
     void push_back(int n_orbs, int occ, int spin);
+    void push_back(Orbital& Orb);
+    void pop_back(bool free = true);
     void clear(bool free = true);
+    void clearVec(bool free = true);
 
     void normalize();
 
@@ -56,6 +59,14 @@ public:
     Orbital &getOrbital(int i);
 
     void replaceOrbital(int i, Orbital **orb);
+
+    int printTreeSizes() const;
+
+    void send_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
+    void Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
+    void Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVecIx);
+    void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0);
+    void getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0);
 
     friend std::ostream& operator<<(std::ostream &o, OrbitalVector &orb_set) {
         int oldPrec = TelePrompter::setPrecision(15);

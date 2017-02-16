@@ -26,6 +26,17 @@ protected:
                                           OrbitalVector &phi,
                                           bool adjoint);
 
+    virtual Orbital* getHelmholtzArgument_1(Orbital &phi_i);
+
+    virtual Orbital* getHelmholtzArgument_2(int i,
+					  int* OrbsIx,
+                                          Eigen::MatrixXd &F,
+                                          OrbitalVector &phi,
+					  Orbital* part_1,
+					  double coef_part1,
+					  Orbital &phi_i,
+                                          bool adjoint);
+
     void printProperty() const;
     double calcProperty();
     double calcPropertyError() const;
@@ -34,8 +45,6 @@ protected:
     void diagonalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     void orthonormalize(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     Eigen::MatrixXd calcOrthonormalizationMatrix(OrbitalVector &phi);
-    void diagonalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
-    void orthonormalize_P(FockOperator &fock, Eigen::MatrixXd &F, OrbitalVector &phi);
     Eigen::MatrixXd calcOrthonormalizationMatrix_P(OrbitalVector &phi);
 };
 

@@ -110,11 +110,11 @@ void Density::send_Density(int dest, int tag){
  
 
   int count=sizeof(Metadata);
-  MPI_Send(&Densinfo, count, MPI_BYTE, dest, 0, comm);
-
-  if(this->dens_t)Send_SerialTree(this->dens_t, Densinfo.NchunksTotal, dest, tag, comm);
-  if(this->dens_a)Send_SerialTree(this->dens_a, Densinfo.NchunksAlpha, dest, tag+10000, comm);
-  if(this->dens_b)Send_SerialTree(this->dens_b, Densinfo.NchunksBeta, dest, tag+20000, comm);
+  MPI_Send(&Densinfo, count, MPI_BYTE, dest, tag, comm);
+ 
+  if(this->total)Send_SerialTree(this->total, Densinfo.NchunksTotal, dest, tag+10000, comm);
+  if(this->alpha)Send_SerialTree(this->alpha, Densinfo.NchunksAlpha, dest, tag+20000, comm);
+  if(this->beta)Send_SerialTree(this->beta, Densinfo.NchunksBeta, dest, tag+30000, comm);
 
 #endif
 }
@@ -135,22 +135,29 @@ void Density::Rcv_Density(int source, int tag){
   Metadata Densinfo;
 
   int count=sizeof(Metadata);
-  MPI_Recv(&Densinfo, count, MPI_BYTE, source, 0, comm, &status);
- 
+  MPI_Recv(&Densinfo, count, MPI_BYTE, source, tag, comm, &status);
+
   assert(this->isSpinDensity() == Densinfo.spin);
 
   if(Densinfo.NchunksTotal>0){
-    //We must have a tree defined for receiving nodes. Define one:
-    if (not this->hasTotal()) allocTotal();
-    Rcv_SerialTree(this->dens_t, Densinfo.NchunksTotal, source, tag, comm);}
+    if(not this->total){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->total = new FunctionTree<3>(*MRA,MaxAllocNodes);
+    }
+    Rcv_SerialTree(this->total, Densinfo.NchunksTotal, source, tag+10000, comm);}
   if(Densinfo.NchunksAlpha>0){
-    //We must have a tree defined for receiving nodes. Define one:
-    if (not this->hasAlpha()) allocAlpha();
-    Rcv_SerialTree(this->dens_a, Densinfo.NchunksAlpha, source, tag, comm);}
+    if(not this->alpha){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->alpha = new FunctionTree<3>(*MRA,MaxAllocNodes);
+    }
+    Rcv_SerialTree(this->alpha, Densinfo.NchunksAlpha, source, tag+20000, comm);}
   if(Densinfo.NchunksBeta>0){
-    //We must have a tree defined for receiving nodes. Define one:
-    if (not this->hasBeta()) allocBeta();
-    Rcv_SerialTree(this->dens_b, Densinfo.NchunksBeta, source, tag, comm);}
+    if(not this->beta){
+      //We must have a tree defined for receiving nodes. Define one:
+      this->beta = new FunctionTree<3>(*MRA,MaxAllocNodes);
+    }
+    Rcv_SerialTree(this->beta, Densinfo.NchunksBeta, source, tag+30000, comm);}
+  
 #endif
 }
 

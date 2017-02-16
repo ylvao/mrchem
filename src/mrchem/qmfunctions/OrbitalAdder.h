@@ -39,11 +39,11 @@ public:
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
     void rotate_P(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U);
-    void rotate_P(OrbitalVector &out, const Eigen::MatrixXd &U);
 
-    void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
-    void inPlace(Orbital &out, std::vector<std::complex<double> > &coefs, std::vector<Orbital *> &inp, bool union_grid);
     void inPlace(Orbital &out, std::complex<double> c, Orbital &inp);
+    void inPlace(Orbital &out, std::vector<std::complex<double> > &coefs, std::vector<Orbital *> &inp, bool union_grid);
+    void inPlace(Orbital &out, const Eigen::VectorXd &c, OrbitalVector &inp, bool union_grid);
+    void inPlace(OrbitalVector &out, double c, OrbitalVector &inp);
 
     void orthogonalize(OrbitalVector &out);
     void orthogonalize(Orbital &out, Orbital &inp);

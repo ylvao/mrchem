@@ -1,6 +1,7 @@
 #include "DensityProjector.h"
 #include "OrbitalVector.h"
 #include "Density.h"
+#include "SerialFunctionTree.h"
 
 extern MultiResolutionAnalysis<3> *MRA;
 
@@ -95,51 +96,120 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 
     FunctionTreeVector<3> total_vec, alpha_vec, beta_vec;
     vector<Density *> dens_vec;
-    
-    if (MPI_size > 1) {
-        for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
-	    Density *rho_i = new Density(rho);
-	    if (i_Orb < phi.size()) {
-	        Orbital &phi_i = phi.getOrbital(i_Orb);
-	        (*this)(*rho_i, phi_i);
-	        dens_vec.push_back(rho_i);
-	        if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
-	        if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
-	        if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
+    vector<int> rho_i_Ix;
+    if(MPI_size>1){
+      Density *rho_i;	
+      for (int iter = 0;  iter<MPI_size ; iter++) {
+	int j_MPI = (MPI_size+iter-MPI_rank)%MPI_size;
+	if(MPI_rank > j_MPI){
+	  //send first all own bras, then receive all kets from j_MPI
+	    int i_Ix = 0;
+	  for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
+	    if(iter==0){
+	      rho_i = new Density(rho);	
+	      Orbital &phi_i = phi.getOrbital(i_Orb);
+	      (*this)(*rho_i, phi_i);
+	      dens_vec.push_back(rho_i);
+	      rho_i_Ix.push_back(dens_vec.size()-1);
+	      if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	      if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
+	      if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
+	    }else{
+	      rho_i = dens_vec[rho_i_Ix[i_Ix]];
 	    }
-	    for (int iter = 0;  iter<MPI_size ; iter++) {
-	        int j_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
-	        int j_Orb = j_MPI;
-	        Density *rho_j = new Density(rho);
-	        if(MPI_rank > j_MPI){
-	            //send first bra, then receive ket
-	            rho_i->send_Density(j_MPI, i_Orb);
-	            rho_j->Rcv_Density(j_MPI, j_Orb);
-	        }else if (MPI_rank < j_MPI) {
-	            //receive first bra, then send ket
-	            rho_j->Rcv_Density(j_MPI, j_Orb);
-	            rho_i->send_Density(j_MPI, i_Orb);
-	        }
-	        if (j_MPI%MPI_size != MPI_rank) {
-	            dens_vec.push_back(rho_j);
-	            if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
-	            if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
-	            if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
-	        }
+	    i_Ix++;
+	    rho_i->send_Density(j_MPI, i_Orb);
+	  }
+	  //receive
+	  for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb+=MPI_size) {
+	    Density *rho_j = new Density(rho);
+	    rho_j->Rcv_Density(j_MPI, j_Orb);
+	    dens_vec.push_back(rho_j);
+	    if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
+	    if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
+	    if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
+	  }
+	  
+	}else{
+	  //receive first all kets from j_MPI then send all own bras
+	  if(j_MPI != MPI_rank){
+	    for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb+=MPI_size) {
+	      Density *rho_j = new Density(rho);
+	      rho_j->Rcv_Density(j_MPI, j_Orb);
+	      if(j_MPI != MPI_rank){
+		dens_vec.push_back(rho_j);
+	        if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
+	        if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
+	        if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
+	      }
 	    }
-        }
-    } else {
-        //Serial processing
-        for (int i = 0; i < phi.size(); i++) {
-	    Orbital &phi_i = phi.getOrbital(i);
-	    Density *rho_i = new Density(rho);
-	    (*this)(*rho_i, phi_i);
-	    dens_vec.push_back(rho_i);
-	    if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
-	    if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
-	    if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
-        }
-    }
+	  }
+	  //send 
+	  int i_Ix = 0;
+	  for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
+	    if(iter==0){
+	      rho_i = new Density(rho);	
+	      Orbital &phi_i = phi.getOrbital(i_Orb);
+	      (*this)(*rho_i, phi_i);
+	      dens_vec.push_back(rho_i);
+	      rho_i_Ix.push_back(dens_vec.size()-1);
+	      if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	      if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
+	      if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
+	    }else{
+	      rho_i = dens_vec[rho_i_Ix[i_Ix]];
+	    }
+	    i_Ix++;
+	    if(j_MPI != MPI_rank)rho_i->send_Density(j_MPI, i_Orb);
+	  }
+	}
+      }
+
+	/*      for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
+	Density *rho_i = new Density(rho);	
+	if(i_Orb<phi.size()){
+	  Orbital &phi_i = phi.getOrbital(i_Orb);
+	  (*this)(*rho_i, phi_i);
+	  dens_vec.push_back(rho_i);
+	  if (rho_i->total != 0){ total_vec.push_back(rho_i->total);
+		  cout<<MPI_rank<<" push  sze "<<rho_i->total->getSerialFunctionTree()->nodeChunks.size()<<endl;}
+	  if (rho_i->alpha != 0) alpha_vec.push_back(rho_i->alpha);
+	  if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
+	}
+	for (int iter = 0;  iter<MPI_size ; iter++) {
+	  int j_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
+	  int j_Orb = j_MPI;
+	  Density *rho_j = new Density(rho);
+	  if(MPI_rank > j_MPI){
+	    //send first bra, then receive ket
+	    rho_i->send_Density(j_MPI, i_Orb);
+	    rho_j->Rcv_Density(j_MPI, j_Orb);
+	  }else if(MPI_rank < j_MPI){
+	    //receive first bra, then send ket
+	    rho_j->Rcv_Density(j_MPI, j_Orb);
+	    rho_i->send_Density(j_MPI, i_Orb);
+	  }
+	  if(j_MPI%MPI_size!=MPI_rank){
+	    dens_vec.push_back(rho_j);
+	    if (rho_j->total != 0) total_vec.push_back(rho_j->total);
+	    if (rho_j->alpha != 0) alpha_vec.push_back(rho_j->alpha);
+	    if (rho_j->beta != 0) beta_vec.push_back(rho_j->beta);
+	  }
+	}
+	}*/
+      }else{
+      
+      //Serial processing
+      for (int i = 0; i < phi.size(); i++) {
+	Orbital &phi_i = phi.getOrbital(i);
+	Density *rho_i = new Density(rho);
+	(*this)(*rho_i, phi_i);
+	dens_vec.push_back(rho_i);
+	if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
+	if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
+      }
+    } 
 
     if (not rho.isSpinDensity()) {
         rho.allocTotal();
