@@ -3,14 +3,14 @@
 
 #include "QMTensorOperator.h"
 #include "PositionOperator.h"
-#include "NuclearPotential.h"
+#include "CubicPotential.h"
 
 class H_BM_dia : public RankTwoTensorOperator<3,3> {
 public:
     H_BM_dia(const double *o = 0, const double *k = 0)
             : o_x(0, o), o_y(1, o), o_z(2, o),
               k_x(0, k), k_y(1, k), k_z(2, k),
-              r_m1(1.0, k) {
+              r_m3(1.0, k) {
         initializeTensorOperator();
     }
     virtual ~H_BM_dia() { }
@@ -22,11 +22,10 @@ protected:
     PositionOperator k_x;
     PositionOperator k_y;
     PositionOperator k_z;
-    NuclearPotential r_m1;
+    CubicPotential r_m3;
 
     void initializeTensorOperator() {
         static double alpha = 7.2973525664;
-        RankZeroTensorOperator r_m3 = r_m1*r_m1*r_m1;
 
         RankTwoTensorOperator<3,3> &h = (*this);
         h[0][0] = -(alpha*alpha/2.0)*r_m3*(o_y*k_y + o_z*k_z);

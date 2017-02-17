@@ -3,17 +3,17 @@
 
 #include "QMTensorOperator.h"
 #include "AngularMomentumOperator.h"
-#include "NuclearPotential.h"
+#include "CubicPotential.h"
 
 class H_M_pso : public RankOneTensorOperator<3> {
 public:
-    H_M_pso(DerivativeOperator<3> &d, const double *k = 0) : l(d, k), r_m1(1.0, k) {
+    H_M_pso(DerivativeOperator<3> &d, const double *k = 0) : l(d, k), r_m3(1.0, k) {
         initializeTensorOperator();
     }
     virtual ~H_M_pso() { }
 
 protected:
-    NuclearPotential r_m1;
+    CubicPotential r_m3;
     AngularMomentumOperator l;
 
     void initializeTensorOperator() {
@@ -21,7 +21,6 @@ protected:
         RankZeroTensorOperator &l_x = this->l[0];
         RankZeroTensorOperator &l_y = this->l[1];
         RankZeroTensorOperator &l_z = this->l[2];
-        RankZeroTensorOperator r_m3 = r_m1*r_m1*r_m1;
 
         RankOneTensorOperator<3> &h = (*this);
         h[0] = (alpha*alpha)*r_m3*l_x;
