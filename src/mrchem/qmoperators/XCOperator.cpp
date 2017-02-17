@@ -15,7 +15,8 @@ using namespace Eigen;
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 XCOperator::XCOperator(int k, XCFunctional &F, OrbitalVector &phi, DerivativeOperator<3> *D)
-        : order(k),
+        : QMPotential(0),
+          order(k),
           functional(&F),
           derivative(D),
           orbitals(&phi),

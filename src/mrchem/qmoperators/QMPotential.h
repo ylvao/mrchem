@@ -6,7 +6,7 @@
 
 class QMPotential : public ComplexFunction<3>, public QMOperator {
 public:
-    QMPotential();
+    QMPotential(int ab = 1);
     virtual ~QMPotential();
 
     virtual Orbital* operator() (Orbital &phi);
@@ -16,6 +16,7 @@ public:
     using QMOperator::adjoint;
 
 protected:
+    int adap_build;
     void calcRealPart(Orbital &Vphi, Orbital &phi);
     void calcImagPart(Orbital &Vphi, Orbital &phi, bool adjoint);
 };

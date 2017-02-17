@@ -9,9 +9,10 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
-QMPotential::QMPotential()
+QMPotential::QMPotential(int ab)
     : ComplexFunction<3>(0, 0),
-      QMOperator(MRA->getMaxScale()) {
+      QMOperator(MRA->getMaxScale()),
+      adap_build(ab) {
 }
 
 QMPotential::~QMPotential() {
@@ -63,13 +64,13 @@ void QMPotential::calcRealPart(Orbital &Vphi, Orbital &phi) {
     if (V.hasReal() and phi.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         grid(*tree, phi.real());
-        mult(*tree, 1.0, V.real(), phi.real(), 0);
+        mult(*tree, 1.0, V.real(), phi.real(), this->adap_build);
         vec.push_back(1.0, tree);
     }
     if (V.hasImag() and phi.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         grid(*tree, phi.imag());
-        mult(*tree, 1.0, V.imag(), phi.imag(), 0);
+        mult(*tree, 1.0, V.imag(), phi.imag(), this->adap_build);
         vec.push_back(-1.0, tree);
     }
     if (vec.size() == 1) {
@@ -96,13 +97,13 @@ void QMPotential::calcImagPart(Orbital &Vphi, Orbital &phi, bool adjoint) {
     if (V.hasReal() and phi.hasImag()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         grid(*tree, phi.imag());
-        mult(*tree, 1.0, V.real(), phi.imag(), 0);
+        mult(*tree, 1.0, V.real(), phi.imag(), this->adap_build);
         vec.push_back(1.0, tree);
     }
     if (V.hasImag() and phi.hasReal()) {
         FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
         grid(*tree, phi.real());
-        mult(*tree, 1.0, V.imag(), phi.real(), 0);
+        mult(*tree, 1.0, V.imag(), phi.real(), this->adap_build);
         if (adjoint) {
             vec.push_back(-1.0, tree);
         } else {
