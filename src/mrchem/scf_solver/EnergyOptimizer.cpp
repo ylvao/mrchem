@@ -118,7 +118,7 @@ bool EnergyOptimizer::optimize() {
         phi_np1.clear();
 
         timer.stop();
-        printOrbitals(F_n.diagonal(), phi_n);
+        printOrbitals(F_n.diagonal(), phi_n, 0);
         printProperty();
         printTimer(timer.getWallTime());
 

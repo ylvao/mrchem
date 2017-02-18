@@ -113,10 +113,11 @@ double SCF::getUpdate(const vector<double> &vec, int i, bool absPrec) const {
     return E_diff;
 }
 
-void SCF::printOrbitals(const VectorXd &epsilon, const OrbitalVector &phi) const {
+void SCF::printOrbitals(const VectorXd &epsilon, const OrbitalVector &phi, int flag) const {
   if (MPI_rank == 0) {
     TelePrompter::printHeader(0, "Orbitals");
-    println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
+    if (flag == 0) println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
+    if (flag == 1) println(0, " Orb    Norm          Error         nNodes  Spin  Occ  Done ");
     TelePrompter::printSeparator(0, '-');
     int oldprec = TelePrompter::setPrecision(5);
     for (int i = 0; i < phi.size(); i++) {

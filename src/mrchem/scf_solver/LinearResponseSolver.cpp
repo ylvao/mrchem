@@ -195,8 +195,8 @@ bool LinearResponseSolver::optimize() {
         if (dPhi_x != 0) dPhi_x->clear();
         if (dPhi_y != 0) dPhi_y->clear();
 
-	if (phi_x != 0) printOrbitals(phi_x->getErrors(), *phi_x);
-	if (phi_y != 0) printOrbitals(phi_y->getErrors(), *phi_y);
+	if (phi_x != 0) printOrbitals(phi_x->getNorms(), *phi_x, 1);
+	if (phi_y != 0) printOrbitals(phi_y->getNorms(), *phi_y, 1);
 
         // Finalize SCF cycle
         timer.stop();
