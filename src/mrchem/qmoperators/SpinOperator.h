@@ -6,14 +6,21 @@
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-class QMSpinX : public QMOperator {
+class QMSpin : public QMOperator {
 public:
-    QMSpinX() : QMOperator(MRA->getMaxScale()) { }
+    QMSpin() : QMOperator(MRA->getMaxScale()) { }
+    virtual ~QMSpin() { }
+
+    virtual void setup(double prec) { setApplyPrec(prec); }
+    virtual void clear() { clearApplyPrec(); }
+};
+
+
+class QMSpinX : public QMSpin {
+public:
+    QMSpinX() : QMSpin() { }
     virtual ~QMSpinX() { }
 
-    virtual void setup(double prec) { setApplyPrec(prec); }
-    virtual void clear() { clearApplyPrec(); }
-
     virtual Orbital* operator()(Orbital &phi);
     virtual Orbital* adjoint(Orbital &phi);
 
@@ -21,14 +28,11 @@ public:
     using QMOperator::adjoint;
 };
 
-class QMSpinY : public QMOperator {
+class QMSpinY : public QMSpin {
 public:
-    QMSpinY() : QMOperator(MRA->getMaxScale()) { }
+    QMSpinY() : QMSpin() { }
     virtual ~QMSpinY() { }
 
-    virtual void setup(double prec) { setApplyPrec(prec); }
-    virtual void clear() { clearApplyPrec(); }
-
     virtual Orbital* operator()(Orbital &phi);
     virtual Orbital* adjoint(Orbital &phi);
 
@@ -36,13 +40,10 @@ public:
     using QMOperator::adjoint;
 };
 
-class QMSpinZ : public QMOperator {
+class QMSpinZ : public QMSpin {
 public:
-    QMSpinZ() : QMOperator(MRA->getMaxScale()) { }
+    QMSpinZ() : QMSpin() { }
     virtual ~QMSpinZ() { }
-
-    virtual void setup(double prec) { setApplyPrec(prec); }
-    virtual void clear() { clearApplyPrec(); }
 
     virtual Orbital* operator()(Orbital &phi);
     virtual Orbital* adjoint(Orbital &phi);
@@ -53,7 +54,9 @@ public:
 
 class SpinOperator : public RankOneTensorOperator<3> {
 public:
-    SpinOperator() { initializeTensorOperator(); }
+    SpinOperator() : s_x(), s_y(), s_z(){
+        initializeTensorOperator();
+    }
     virtual ~SpinOperator() { }
 
 protected:
