@@ -18,6 +18,9 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
     if (not union_grid and prec < 0.0) MSG_ERROR("Negative adaptive prec");
     if (phi_ab.hasReal() or phi_ab.hasImag()) MSG_ERROR("Orbital not empty");
 
+    // set output spin
+    phi_ab.setSpin(phi_a.getSpin());
+
     // sanity check spin
     if (phi_ab.getSpin() != phi_a.getSpin()) MSG_FATAL("Mixing spins");
     if (phi_ab.getSpin() != phi_b.getSpin()) MSG_FATAL("Mixing spins");
@@ -71,6 +74,13 @@ void OrbitalAdder::operator()(Orbital &out,
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Orbital not empty");
     if (coefs.size() != inp.size()) MSG_ERROR("Invalid arguments");
 
+    // set output spin
+    for (int i = 0; i < inp.size(); i++) {
+        if (fabs(coefs[i]) < MachineZero) continue;
+        if (inp[i]->getOccupancy() == 0) continue;
+        out.setSpin(inp[i]->getSpin());
+        break;
+    }
     // sanity check spin
     for (int i = 0; i < inp.size(); i++) {
         if (abs(coefs[i]) < MachineZero) continue;
@@ -140,6 +150,13 @@ void OrbitalAdder::operator()(Orbital &out,
     if (c.size() != inp.size()) MSG_ERROR("Invalid arguments");
     if (out.hasReal() or out.hasImag()) MSG_ERROR("Output not empty");
 
+    // set output spin
+    for (int i = 0; i < inp.size(); i++) {
+        if (fabs(c(i)) < MachineZero) continue;
+        if (inp[i]->getOccupancy() == 0) continue;
+        out.setSpin(inp[i]->getSpin());
+        break;
+    }
     // sanity check spin
     for (int i = 0; i < inp.size(); i++) {
         if (fabs(c(i)) < MachineZero) continue;
