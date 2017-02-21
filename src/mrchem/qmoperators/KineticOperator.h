@@ -7,7 +7,7 @@
 class KineticOperator : public RankZeroTensorOperator {
 public:
     KineticOperator(DerivativeOperator<3> &D)
-            : p_x(0, D), p_y(1, D), p_z(2, D) {
+            : p(D) {
         initializeTensorOperator();
     }
     virtual ~KineticOperator() { }
@@ -22,11 +22,13 @@ public:
     using RankZeroTensorOperator::adjoint;
 
 protected:
-    MomentumOperator p_x;
-    MomentumOperator p_y;
-    MomentumOperator p_z;
+    MomentumOperator p;
 
     void initializeTensorOperator() {
+        RankZeroTensorOperator &p_x = this->p[0];
+        RankZeroTensorOperator &p_y = this->p[1];
+        RankZeroTensorOperator &p_z = this->p[2];
+
         RankZeroTensorOperator &h = *this;
         h = -0.5*(p_x*p_x + p_y*p_y + p_z*p_z);
     }

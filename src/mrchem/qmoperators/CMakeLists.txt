@@ -10,6 +10,7 @@ add_library(qmoperators STATIC
     ExchangePotential.cpp
     FockOperator.cpp
     KineticOperator.cpp
+    PositionOperator.cpp
     QMOperator.cpp
     QMPotential.cpp
     QMDerivative.cpp

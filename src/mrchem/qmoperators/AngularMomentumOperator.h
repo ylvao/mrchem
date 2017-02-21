@@ -4,26 +4,27 @@
 #include "QMTensorOperator.h"
 #include "PositionOperator.h"
 #include "MomentumOperator.h"
-#include "DerivativeOperator.h"
 
 class AngularMomentumOperator : public RankOneTensorOperator<3> {
 public:
     AngularMomentumOperator(DerivativeOperator<3> &D, const double *o = 0)
-            : r_x(0, o), r_y(1, o), r_z(2, o),
-              p_x(0, D), p_y(1, D), p_z(2, D) {
+            : r(o), p(D) {
         initializeTensorOperator();
     }
     virtual ~AngularMomentumOperator() { }
 
 protected:
-    PositionOperator r_x;
-    PositionOperator r_y;
-    PositionOperator r_z;
-    MomentumOperator p_x;
-    MomentumOperator p_y;
-    MomentumOperator p_z;
+    PositionOperator r;
+    MomentumOperator p;
 
     void initializeTensorOperator() {
+        RankZeroTensorOperator &r_x = this->r[0];
+        RankZeroTensorOperator &r_y = this->r[1];
+        RankZeroTensorOperator &r_z = this->r[2];
+        RankZeroTensorOperator &p_x = this->p[0];
+        RankZeroTensorOperator &p_y = this->p[1];
+        RankZeroTensorOperator &p_z = this->p[2];
+
         RankOneTensorOperator<3> &h = (*this);
         h[0] = (r_y*p_z - r_z*p_y);
         h[1] = (r_z*p_x - r_x*p_z);

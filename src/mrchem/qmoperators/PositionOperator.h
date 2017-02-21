@@ -2,61 +2,64 @@
 #define POSITIONOPERATOR_H
 
 #include "QMPotential.h"
-#include "MWProjector.h"
+#include "QMTensorOperator.h"
 
-class PositionOperator : public QMPotential {
+
+class QMPosition : public QMPotential {
 public:
-    PositionOperator(int dir, const double *o = 0) {
-        setCoord(this->r_O, o);
-        initializeFunction(dir, this->r_O);
+    QMPosition(int d, const double *o = 0) {
+        setPosition(this->r_O, o);
+        setFunction(d, this->r_O);
+    }
+    virtual ~QMPosition() { }
+
+    virtual void setup(double prec);
+    virtual void clear();
+
+protected:
+    double r_O[3];
+    std::function<double (const double *r)> func;
+
+    void setPosition(double *out, const double *inp);
+    void setFunction(int d, const double *o);
+};
+
+class QMPositionX : public QMPosition {
+public:
+    QMPositionX(const double *o = 0) : QMPosition(0, o) { }
+    virtual ~QMPositionX() { }
+};
+
+class QMPositionY : public QMPosition {
+public:
+    QMPositionY(const double *o = 0) : QMPosition(1, o) { }
+    virtual ~QMPositionY() { }
+};
+
+class QMPositionZ : public QMPosition {
+public:
+    QMPositionZ(const double *o = 0) : QMPosition(2, o) { }
+    virtual ~QMPositionZ() { }
+};
+
+class PositionOperator : public RankOneTensorOperator<3> {
+public:
+    PositionOperator(const double *o = 0) : r_x(o), r_y(o), r_z(o) {
+        initializeTensorOperator();
     }
     virtual ~PositionOperator() { }
 
-    virtual void setup(double prec) {
-        if (IS_EQUAL(prec, this->apply_prec)) return;
-
-        setApplyPrec(prec);
-        if (this->hasReal()) MSG_ERROR("Potential not properly cleared");
-        if (this->hasImag()) MSG_ERROR("Potential not properly cleared");
-
-        MWProjector<3> project(this->apply_prec, this->max_scale);
-
-        Timer timer;
-        this->allocReal();
-        project(this->real(), this->func);
-        timer.stop();
-
-        int n = this->getNNodes();
-        double t = timer.getWallTime();
-        TelePrompter::printTree(1, "Position operator", n, t);
-    }
-
-    virtual void clear() {
-        clearReal(true);
-        clearImag(true);
-        clearApplyPrec();
-    }
-
-    double r_O[3];
-    std::function<double (const double *r)> func;
 protected:
+    QMPositionX r_x;
+    QMPositionY r_y;
+    QMPositionZ r_z;
 
-    void setCoord(double *out, const double *inp) {
-        if (inp != 0) {
-            out[0] = inp[0];
-            out[1] = inp[1];
-            out[2] = inp[2];
-        } else {
-            out[0] = 0.0;
-            out[1] = 0.0;
-            out[2] = 0.0;
-        }
-    }
-
-    void initializeFunction(int d, const double *o) {
-        this->func = [d, o] (const double *r) -> double { return r[d]-o[d]; };
+    void initializeTensorOperator() {
+        RankOneTensorOperator<3> &h = (*this);
+        h[0] = r_x;
+        h[1] = r_y;
+        h[2] = r_z;
     }
 };
 
 #endif // POSITIONOPERATOR_H
-

@@ -318,12 +318,12 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
-    PositionOperator r_x(0);
-    PositionOperator r_y(1);
-    PositionOperator r_z(2);
-    r_x.setup(prec);
-    r_y.setup(prec);
-    r_z.setup(prec);
+    PositionOperator r;
+    r.setup(prec);
+
+    RankZeroTensorOperator &r_x = r[0];
+    RankZeroTensorOperator &r_y = r[1];
+    RankZeroTensorOperator &r_z = r[2];
 
     for (int i = 0; i < N; i++) {
         Orbital &phi_i = phi.getOrbital(i);
