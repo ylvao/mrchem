@@ -5,6 +5,7 @@
 
 Orbital* QMSpinX::operator()(Orbital &phi) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
+    if (phi.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
 
     MWAdder<3> add(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -12,25 +13,27 @@ Orbital* QMSpinX::operator()(Orbital &phi) {
     Timer timer;
     Orbital *Ophi = new Orbital(phi);
 
-    int spin = phi.getSpin();
-    if (spin == Paired) NOT_IMPLEMENTED_ABORT;
-    if (spin == Alpha) Ophi->setSpin(Beta);
-    if (spin == Beta) Ophi->setSpin(Alpha);
+    double coef = 0.0;
+    if (phi.getSpin() == Alpha) coef = 1.0/2.0;
+    if (phi.getSpin() == Beta) coef = 1.0/2.0;
 
     if (phi.hasReal()) {
         FunctionTreeVector<3> trees;
-        trees.push_back(0.5, &phi.real());
+        trees.push_back(coef, &phi.real());
         Ophi->allocReal();
         grid(Ophi->real(), trees);
         add(Ophi->real(), trees, 0);
     }
     if (phi.hasImag()) {
         FunctionTreeVector<3> trees;
-        trees.push_back(0.5, &phi.imag());
+        trees.push_back(coef, &phi.imag());
         Ophi->allocImag();
         grid(Ophi->imag(), trees);
         add(Ophi->imag(), trees, 0);
     }
+
+    if (phi.getSpin() == Alpha) Ophi->setSpin(Beta);
+    if (phi.getSpin() == Beta) Ophi->setSpin(Alpha);
 
     timer.stop();
     int n = Ophi->getNNodes();
@@ -46,6 +49,7 @@ Orbital* QMSpinX::adjoint(Orbital &phi) {
 
 Orbital* QMSpinY::operator()(Orbital &phi) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
+    if (phi.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
 
     MWAdder<3> add(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -53,25 +57,27 @@ Orbital* QMSpinY::operator()(Orbital &phi) {
     Timer timer;
     Orbital *Ophi = new Orbital(phi);
 
-    int spin = phi.getSpin();
-    if (spin == Paired) NOT_IMPLEMENTED_ABORT;
-    if (spin == Alpha) Ophi->setSpin(Beta);
-    if (spin == Beta) Ophi->setSpin(Alpha);
+    double coef = 0.0;
+    if (phi.getSpin() == Alpha) coef = 1.0/2.0;
+    if (phi.getSpin() == Beta) coef = -1.0/2.0;
 
     if (phi.hasReal()) {
         FunctionTreeVector<3> trees;
-        trees.push_back(0.5, &phi.real());
+        trees.push_back(coef, &phi.real());
         Ophi->allocImag();
         grid(Ophi->imag(), trees);
         add(Ophi->imag(), trees, 0);
     }
     if (phi.hasImag()) {
         FunctionTreeVector<3> trees;
-        trees.push_back(-0.5, &phi.imag());
+        trees.push_back(-coef, &phi.imag());
         Ophi->allocReal();
         grid(Ophi->real(), trees);
         add(Ophi->real(), trees, 0);
     }
+
+    if (phi.getSpin() == Alpha) Ophi->setSpin(Beta);
+    if (phi.getSpin() == Beta) Ophi->setSpin(Alpha);
 
     timer.stop();
     int n = Ophi->getNNodes();
@@ -87,6 +93,7 @@ Orbital* QMSpinY::adjoint(Orbital &phi) {
 
 Orbital* QMSpinZ::operator()(Orbital &phi) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
+    if (phi.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
 
     MWAdder<3> add(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -94,21 +101,20 @@ Orbital* QMSpinZ::operator()(Orbital &phi) {
     Timer timer;
     Orbital *Ophi = new Orbital(phi);
 
-    int spin = phi.getSpin();
-    if (spin == Paired) NOT_IMPLEMENTED_ABORT;
-    if (spin == Alpha) Ophi->setSpin(Alpha);
-    if (spin == Beta) Ophi->setSpin(Beta);
+    double coef = 0.0;
+    if (phi.getSpin() == Alpha) coef = 1.0/2.0;
+    if (phi.getSpin() == Beta) coef = -1.0/2.0;
 
     if (phi.hasReal()) {
         FunctionTreeVector<3> trees;
-        trees.push_back(0.5, &phi.real());
+        trees.push_back(coef, &phi.real());
         Ophi->allocReal();
         grid(Ophi->real(), trees);
         add(Ophi->real(), trees, 0);
     }
     if (phi.hasImag()) {
         FunctionTreeVector<3> trees;
-        trees.push_back(0.5, &phi.imag());
+        trees.push_back(coef, &phi.imag());
         Ophi->allocImag();
         grid(Ophi->imag(), trees);
         add(Ophi->imag(), trees, 0);
