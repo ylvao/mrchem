@@ -59,7 +59,7 @@ protected:
     std::deque<Eigen::MatrixXd> fock;	 ///< Fock history
     std::deque<Eigen::MatrixXd> dFock;  ///< Fock update history
 
-    bool verifyOverlap();
+    bool verifyOverlap(OrbitalVector &phi);
 
     void push_back(OrbitalVector &phi,
                    OrbitalVector &dPhi,

@@ -124,38 +124,37 @@ void Accelerator::push_back(OrbitalVector &phi,
         }
     }
 
+    if (this->orbitals.size() > this->maxHistory - 1) {
+        delete this->orbitals[0];
+        this->orbitals.pop_front();
+    }
+    if (this->dOrbitals.size() > this->maxHistory - 1) {
+        delete this->dOrbitals[0];
+        this->dOrbitals.pop_front();
+    }
+    if (this->fock.size() > this->maxHistory - 1) {
+        this->fock.pop_front();
+    }
+    if (this->dFock.size() > this->maxHistory - 1) {
+        this->dFock.pop_front();
+    }
+    if (not verifyOverlap(phi)) {
+        println(0, " Clearing accelerator");
+        this->clear();
+    }
+
     OrbitalVector *new_phi = new OrbitalVector(phi);
     OrbitalVector *new_dPhi = new OrbitalVector(dPhi);
-
     *new_phi = phi;
     *new_dPhi = dPhi;
+    phi.clear(false);
+    dPhi.clear(false);
 
     this->orbitals.push_back(new_phi);
     this->dOrbitals.push_back(new_dPhi);
     if (F != 0) this->fock.push_back(*F);
     if (dF != 0) this->dFock.push_back(*dF);
 
-    if (this->orbitals.size() > this->maxHistory) {
-        delete this->orbitals[0];
-        this->orbitals.pop_front();
-    }
-    if (this->dOrbitals.size() > this->maxHistory) {
-        delete this->dOrbitals[0];
-        this->dOrbitals.pop_front();
-    }
-    if (this->fock.size() > this->maxHistory) {
-        this->fock.pop_front();
-    }
-    if (this->dFock.size() > this->maxHistory) {
-        this->dFock.pop_front();
-    }
-    if (verifyOverlap()) {
-        phi.clear(false);
-        dPhi.clear(false);
-    } else {
-        println(0, " Clearing accelerator");
-        this->clear();
-    }
     timer.stop();
     double t = timer.getWallTime();
     TelePrompter::printDouble(0, "Push back orbitals", t);
@@ -168,16 +167,15 @@ void Accelerator::push_back(OrbitalVector &phi,
   * orbitals in the entire history is required (unless the history
   * is cleared).
   */
-bool Accelerator::verifyOverlap() {
+bool Accelerator::verifyOverlap(OrbitalVector &phi) {
     bool verified = true;
     int nHistory = this->orbitals.size() - 1;
     if (nHistory > 0) {
-        int nOrbs = this->orbitals[0]->size();
-        for (int i = 0; i < nOrbs; i++) {
-            Orbital &last = this->orbitals[nHistory]->getOrbital(i);
-            Orbital &secondLast = this->orbitals[nHistory-1]->getOrbital(i);
-            double sqNorm = last.getSquareNorm();
-            complex<double> overlap = last.dot(secondLast);
+        for (int i = 0; i < phi.size(); i++) {
+            Orbital &phi_i = phi.getOrbital(i);
+            Orbital &last_i = this->orbitals[nHistory]->getOrbital(i);
+            double sqNorm = phi_i.getSquareNorm();
+            complex<double> overlap = phi_i.dot(last_i);
             if (overlap.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
             if (overlap.real() < 0.5*sqNorm) {
                 TelePrompter::printDouble(0, "Overlap not verified ", overlap.real());
