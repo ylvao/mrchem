@@ -78,6 +78,8 @@ public:
         return o;
     }
 
+    enum Spin { Paired, Alpha, Beta };
+
 protected:
     int spin;
     int occupancy;

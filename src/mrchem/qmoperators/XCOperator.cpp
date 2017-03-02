@@ -71,19 +71,19 @@ void XCOperator::calcDensity() {
 void XCOperator::calcDensityGradient(Density *dRho, Density &rho) {
     if (rho.isSpinDensity()) {
         FunctionTreeVector<3> grad_a = calcGradient(rho.alpha());
-        dRho[0].setDensity(Alpha, grad_a[0]);
-        dRho[1].setDensity(Alpha, grad_a[1]);
-        dRho[2].setDensity(Alpha, grad_a[2]);
+        dRho[0].setDensity(Density::Alpha, grad_a[0]);
+        dRho[1].setDensity(Density::Alpha, grad_a[1]);
+        dRho[2].setDensity(Density::Alpha, grad_a[2]);
 
         FunctionTreeVector<3> grad_b = calcGradient(rho.beta());
-        dRho[0].setDensity(Beta, grad_b[0]);
-        dRho[1].setDensity(Beta, grad_b[1]);
-        dRho[2].setDensity(Beta, grad_b[2]);
+        dRho[0].setDensity(Density::Beta, grad_b[0]);
+        dRho[1].setDensity(Density::Beta, grad_b[1]);
+        dRho[2].setDensity(Density::Beta, grad_b[2]);
     } else {
         FunctionTreeVector<3> grad_t = calcGradient(rho.total());
-        dRho[0].setDensity(Paired, grad_t[0]);
-        dRho[1].setDensity(Paired, grad_t[1]);
-        dRho[2].setDensity(Paired, grad_t[2]);
+        dRho[0].setDensity(Density::Total, grad_t[0]);
+        dRho[1].setDensity(Density::Total, grad_t[1]);
+        dRho[2].setDensity(Density::Total, grad_t[2]);
     }
 }
 
@@ -334,9 +334,9 @@ Orbital* XCOperator::operator() (Orbital &orb_p) {
     QMPotential &V_a = this->potential[1];
     QMPotential &V_b = this->potential[2];
 
-    if (orb_p.getSpin() == Paired) return V_p(orb_p);
-    if (orb_p.getSpin() == Alpha) return V_a(orb_p);
-    if (orb_p.getSpin() == Beta) return V_b(orb_p);
+    if (orb_p.getSpin() == Density::Total) return V_p(orb_p);
+    if (orb_p.getSpin() == Density::Alpha) return V_a(orb_p);
+    if (orb_p.getSpin() == Density::Beta) return V_b(orb_p);
 
     MSG_ERROR("Invalid spin");
     return 0;

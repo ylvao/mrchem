@@ -22,7 +22,7 @@ OrbitalVector workOrbVec(workOrbVecSize);
  * All orbital functions are uninitialized.
  */
 OrbitalVector::OrbitalVector(int n_orbs) {
-    push_back(n_orbs, 2, Paired);
+    push_back(n_orbs, 2, Orbital::Paired);
 }
 
 /** OrbitalVector constructor
@@ -33,8 +33,8 @@ OrbitalVector::OrbitalVector(int n_orbs) {
  * All orbital functions are uninitialized.
  */
 OrbitalVector::OrbitalVector(int n_alpha, int n_beta) {
-    push_back(n_alpha, 1, Alpha);
-    push_back(n_beta, 1, Beta);
+    push_back(n_alpha, 1, Orbital::Alpha);
+    push_back(n_beta, 1, Orbital::Beta);
 }
 
 /** OrbitalVector constructor
@@ -60,9 +60,9 @@ OrbitalVector::OrbitalVector(int ne, int mult, bool rest) {
         nd = 0;
     }
 
-    push_back(nd, 2, Paired);
-    push_back(na, 1, Alpha);
-    push_back(nb, 1, Beta);
+    push_back(nd, 2, Orbital::Paired);
+    push_back(na, 1, Orbital::Alpha);
+    push_back(nb, 1, Orbital::Beta);
 }
 
 /** Copy constructor
@@ -228,7 +228,7 @@ int OrbitalVector::getNPaired() const {
         if (orb == 0) {
             continue;
         }
-        if (orb->getSpin() == Paired) {
+        if (orb->getSpin() == Orbital::Paired) {
             nPaired++;
         }
     }
@@ -243,7 +243,7 @@ int OrbitalVector::getNAlpha() const {
         if (orb == 0) {
             continue;
         }
-        if (orb->getSpin() == Alpha) {
+        if (orb->getSpin() == Orbital::Alpha) {
             nAlpha++;
         }
     }
@@ -258,7 +258,7 @@ int OrbitalVector::getNBeta() const {
         if (orb == 0) {
             continue;
         }
-        if (orb->getSpin() == Beta) {
+        if (orb->getSpin() == Orbital::Beta) {
             nBeta++;
         }
     }
@@ -292,14 +292,14 @@ int OrbitalVector::getNElectrons(int inpSpin) const {
             continue;
         }
         int thisSpin = orb->getSpin();
-        if (inpSpin == Paired) {
+        if (inpSpin == Orbital::Paired) {
             nElectrons += orb->getOccupancy();
-        } else if (inpSpin == Alpha) {
-            if (thisSpin == Paired or thisSpin == Alpha) {
+        } else if (inpSpin == Orbital::Alpha) {
+            if (thisSpin == Orbital::Paired or thisSpin == Orbital::Alpha) {
                 nElectrons += 1;
             }
-        } else if (inpSpin == Beta) {
-            if (thisSpin == Paired or thisSpin == Beta) {
+        } else if (inpSpin == Orbital::Beta) {
+            if (thisSpin == Orbital::Paired or thisSpin == Orbital::Beta) {
                 nElectrons += 1;
             }
         } else {

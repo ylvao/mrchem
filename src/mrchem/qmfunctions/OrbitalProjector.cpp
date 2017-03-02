@@ -62,7 +62,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
                 //if (nOrbs >= minOrbs) continue;
                 int M = 2*l+1;
                 for (int m = 0; m < M; m++) {
-                    phi->push_back(1, 0, Paired);
+                    phi->push_back(1, 0, Orbital::Paired);
                     Orbital &phi_i = phi->getOrbital(totOrbs);
 
                     HydrogenicFunction h_func(n, l, m, Z, R);
@@ -135,9 +135,9 @@ void OrbitalProjector::operator()(OrbitalVector &orbs,
         mwOrb.clear(true); // delete existing real/imag FunctionTrees
 
         GaussExp<3> *gtOrb = 0;
-        if (mwOrb.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
-        if (mwOrb.getSpin() == Alpha) gtOrb = &moExp_a->getOrbital(n_a++);
-        if (mwOrb.getSpin() == Beta) gtOrb = &moExp_b->getOrbital(n_b++);
+        if (mwOrb.getSpin() == Orbital::Paired) NOT_IMPLEMENTED_ABORT;
+        if (mwOrb.getSpin() == Orbital::Alpha) gtOrb = &moExp_a->getOrbital(n_a++);
+        if (mwOrb.getSpin() == Orbital::Beta) gtOrb = &moExp_b->getOrbital(n_b++);
 
         mwOrb.allocReal();
         this->project(mwOrb.real(), *gtOrb);

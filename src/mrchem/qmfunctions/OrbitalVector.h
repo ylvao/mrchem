@@ -36,7 +36,7 @@ public:
     int getNPaired() const;
     int getNAlpha() const;
     int getNBeta() const;
-    int getNElectrons(int spin = Paired) const;
+    int getNElectrons(int spin = Orbital::Paired) const;
     int getMultiplicity() const;
 
     void setSpins(const Eigen::VectorXi &spins);

@@ -9,7 +9,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
-Orbital workOrb(2, Paired);
+Orbital workOrb(2, Orbital::Paired);
 
 Orbital::Orbital(int occ, int s)
         : ComplexFunction<3>(0, 0),
@@ -62,9 +62,9 @@ int Orbital::compareSpin(const Orbital &orb) const {
 }
 
 double Orbital::getExchangeFactor(const Orbital &orb) const {
-    if (orb.getSpin() == Paired) {
+    if (orb.getSpin() == Orbital::Paired) {
         return 1.0;
-    } else if (this->getSpin() == Paired) {
+    } else if (this->getSpin() == Orbital::Paired) {
         return 0.5;
     } else if (this->getSpin() == orb.getSpin()) {
         return 1.0;
@@ -82,8 +82,8 @@ bool Orbital::isConverged(double prec) const {
 
 complex<double> Orbital::dot(Orbital &ket) {
     Orbital &bra = *this;
-    if ((bra.getSpin() == Alpha) and (ket.getSpin() == Beta)) return 0.0;
-    if ((bra.getSpin() == Beta) and (ket.getSpin() == Alpha)) return 0.0;
+    if ((bra.getSpin() == Orbital::Alpha) and (ket.getSpin() == Orbital::Beta)) return 0.0;
+    if ((bra.getSpin() == Orbital::Beta) and (ket.getSpin() == Orbital::Alpha)) return 0.0;
     return ComplexFunction<3>::dot(ket);
 }
 

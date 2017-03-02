@@ -5,7 +5,7 @@
 
 Orbital* QMSpinX::operator()(Orbital &phi) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (phi.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
+    if (phi.getSpin() == Orbital::Paired) NOT_IMPLEMENTED_ABORT;
 
     MWAdder<3> add(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -14,8 +14,8 @@ Orbital* QMSpinX::operator()(Orbital &phi) {
     Orbital *Ophi = new Orbital(phi);
 
     double coef = 0.0;
-    if (phi.getSpin() == Alpha) coef = 1.0/2.0;
-    if (phi.getSpin() == Beta) coef = 1.0/2.0;
+    if (phi.getSpin() == Orbital::Alpha) coef = 1.0/2.0;
+    if (phi.getSpin() == Orbital::Beta) coef = 1.0/2.0;
 
     if (phi.hasReal()) {
         FunctionTreeVector<3> trees;
@@ -32,8 +32,8 @@ Orbital* QMSpinX::operator()(Orbital &phi) {
         add(Ophi->imag(), trees, 0);
     }
 
-    if (phi.getSpin() == Alpha) Ophi->setSpin(Beta);
-    if (phi.getSpin() == Beta) Ophi->setSpin(Alpha);
+    if (phi.getSpin() == Orbital::Alpha) Ophi->setSpin(Orbital::Beta);
+    if (phi.getSpin() == Orbital::Beta) Ophi->setSpin(Orbital::Alpha);
 
     timer.stop();
     int n = Ophi->getNNodes();
@@ -49,7 +49,7 @@ Orbital* QMSpinX::adjoint(Orbital &phi) {
 
 Orbital* QMSpinY::operator()(Orbital &phi) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (phi.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
+    if (phi.getSpin() == Orbital::Paired) NOT_IMPLEMENTED_ABORT;
 
     MWAdder<3> add(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -58,8 +58,8 @@ Orbital* QMSpinY::operator()(Orbital &phi) {
     Orbital *Ophi = new Orbital(phi);
 
     double coef = 0.0;
-    if (phi.getSpin() == Alpha) coef = 1.0/2.0;
-    if (phi.getSpin() == Beta) coef = -1.0/2.0;
+    if (phi.getSpin() == Orbital::Alpha) coef = 1.0/2.0;
+    if (phi.getSpin() == Orbital::Beta) coef = -1.0/2.0;
 
     if (phi.hasReal()) {
         FunctionTreeVector<3> trees;
@@ -76,8 +76,8 @@ Orbital* QMSpinY::operator()(Orbital &phi) {
         add(Ophi->real(), trees, 0);
     }
 
-    if (phi.getSpin() == Alpha) Ophi->setSpin(Beta);
-    if (phi.getSpin() == Beta) Ophi->setSpin(Alpha);
+    if (phi.getSpin() == Orbital::Alpha) Ophi->setSpin(Orbital::Beta);
+    if (phi.getSpin() == Orbital::Beta) Ophi->setSpin(Orbital::Alpha);
 
     timer.stop();
     int n = Ophi->getNNodes();
@@ -93,7 +93,7 @@ Orbital* QMSpinY::adjoint(Orbital &phi) {
 
 Orbital* QMSpinZ::operator()(Orbital &phi) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (phi.getSpin() == Paired) NOT_IMPLEMENTED_ABORT;
+    if (phi.getSpin() == Orbital::Paired) NOT_IMPLEMENTED_ABORT;
 
     MWAdder<3> add(this->apply_prec, this->max_scale);
     GridGenerator<3> grid(this->max_scale);
@@ -102,8 +102,8 @@ Orbital* QMSpinZ::operator()(Orbital &phi) {
     Orbital *Ophi = new Orbital(phi);
 
     double coef = 0.0;
-    if (phi.getSpin() == Alpha) coef = 1.0/2.0;
-    if (phi.getSpin() == Beta) coef = -1.0/2.0;
+    if (phi.getSpin() == Orbital::Alpha) coef = 1.0/2.0;
+    if (phi.getSpin() == Orbital::Beta) coef = -1.0/2.0;
 
     if (phi.hasReal()) {
         FunctionTreeVector<3> trees;

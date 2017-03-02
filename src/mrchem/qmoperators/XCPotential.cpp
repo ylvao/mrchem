@@ -50,17 +50,17 @@ void XCPotential::calcPotential() {
     Timer timer;
     if (lda) {
         if (not spin) {
-            calcPotentialLDA(Paired);
+            calcPotentialLDA(Density::Total);
         } else {
-            calcPotentialLDA(Alpha);
-            calcPotentialLDA(Beta);
+            calcPotentialLDA(Density::Alpha);
+            calcPotentialLDA(Density::Beta);
         }
     } else if (gga) {
         if (not spin) {
-            calcPotentialGGA(Paired);
+            calcPotentialGGA(Density::Total);
         } else {
-            calcPotentialGGA(Alpha);
-            calcPotentialGGA(Beta);
+            calcPotentialGGA(Density::Alpha);
+            calcPotentialGGA(Density::Beta);
         }
     } else {
         MSG_FATAL("Invalid functional type");
@@ -75,15 +75,15 @@ void XCPotential::calcPotential() {
 }
 
 void XCPotential::calcPotentialLDA(int spin) {
-    if (spin == Paired) {
+    if (spin == Density::Total) {
         if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
         this->setReal(this->xcOutput[1]);
         this->xcOutput[1] = 0;
-    } else if (spin == Alpha) {
+    } else if (spin == Density::Alpha) {
         //if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
         //this->potential[1].setReal(this->xcOutput[1]);
         //this->xcOutput[1] = 0;
-    } else if (spin == Beta) {
+    } else if (spin == Density::Beta) {
         //if (this->xcOutput[2] == 0) MSG_ERROR("Invalid XC output");
         //this->potential[2].setReal(this->xcOutput[2]);
         //this->xcOutput[2] = 0;
@@ -101,7 +101,7 @@ void XCPotential::calcPotentialGGA(int spin) {
     Density &rho_y = this->gradient[1];
     Density &rho_z = this->gradient[2];
 
-    if (spin == Paired) {
+    if (spin == Density::Total) {
         if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
         if (this->xcOutput[2] == 0) MSG_ERROR("Invalid XC output");
         xc_funcs.push_back(this->xcOutput[1]);
@@ -121,7 +121,7 @@ void XCPotential::calcPotentialGGA(int spin) {
         dRho_a.clear();
         dRho_b.clear();
     }
-    if (spin == Alpha) {
+    if (spin == Density::Alpha) {
         NOT_IMPLEMENTED_ABORT;
         //if (this->xcOutput[1] == 0) MSG_ERROR("Invalid XC output");
         //if (this->xcOutput[3] == 0) MSG_ERROR("Invalid XC output");
@@ -143,7 +143,7 @@ void XCPotential::calcPotentialGGA(int spin) {
         //dRho_a.clear();
         //dRho_b.clear();
     }
-    if (spin == Beta) {
+    if (spin == Density::Beta) {
         NOT_IMPLEMENTED_ABORT;
         //if (this->xcOutput[2] == 0) MSG_ERROR("Invalid XC output");
         //if (this->xcOutput[4] == 0) MSG_ERROR("Invalid XC output");
