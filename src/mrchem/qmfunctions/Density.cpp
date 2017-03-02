@@ -9,56 +9,70 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace std;
 
 Density::Density(bool s)
-    : spin(s),
+    : is_spin(s),
       dens_t(0),
+      dens_s(0),
       dens_a(0),
       dens_b(0) {
 }
 
 Density::Density(const Density &rho)
-    : spin(rho.spin),
+    : is_spin(rho.is_spin),
       dens_t(0),
+      dens_s(0),
       dens_a(0),
       dens_b(0) {
 }
 
 Density::~Density() {
     if (this->hasTotal()) MSG_ERROR("Density not properly deallocated");
+    if (this->hasSpin()) MSG_ERROR("Density not properly deallocated");
     if (this->hasAlpha()) MSG_ERROR("Density not properly deallocated");
     if (this->hasBeta()) MSG_ERROR("Density not properly deallocated");
 }
 
 void Density::clear() {
     if (this->hasTotal()) delete this->dens_t;
+    if (this->hasSpin()) delete this->dens_s;
     if (this->hasAlpha()) delete this->dens_a;
     if (this->hasBeta()) delete this->dens_b;
     this->dens_t = 0;
+    this->dens_s = 0;
     this->dens_a = 0;
     this->dens_b = 0;
 }
 
 int Density::getNNodes(int type) const {
     int tNodes = 0;
+    int sNodes = 0;
     int aNodes = 0;
     int bNodes = 0;
     if (this->hasTotal()) tNodes = this->total().getNNodes();
+    if (this->hasSpin()) sNodes = this->spin().getNNodes();
     if (this->hasAlpha()) aNodes = this->alpha().getNNodes();
     if (this->hasBeta()) bNodes = this->beta().getNNodes();
-    if (type == Paired) return tNodes;
-    if (type == Alpha) return aNodes;
-    if (type == Beta) return bNodes;
-    return tNodes + aNodes + bNodes;
+    if (type == Density::Total) return tNodes;
+    if (type == Density::Spin) return sNodes;
+    if (type == Density::Alpha) return aNodes;
+    if (type == Density::Beta) return bNodes;
+    return tNodes + sNodes + aNodes + bNodes;
 }
 
 void Density::setDensity(int s, FunctionTree<3> *rho) {
-    if (s == Paired) this->dens_t = rho;
-    if (s == Alpha) this->dens_a = rho;
-    if (s == Beta) this->dens_b = rho;
+    if (s == Density::Total) this->dens_t = rho;
+    if (s == Density::Spin) this->dens_s = rho;
+    if (s == Density::Alpha) this->dens_a = rho;
+    if (s == Density::Beta) this->dens_b = rho;
 }
 
 void Density::allocTotal() {
     if (this->hasTotal()) MSG_ERROR("Density not empty");
     this->dens_t = new FunctionTree<3>(*MRA);
+}
+
+void Density::allocSpin() {
+    if (this->hasSpin()) MSG_ERROR("Density not empty");
+    this->dens_s = new FunctionTree<3>(*MRA);
 }
 
 void Density::allocAlpha() {

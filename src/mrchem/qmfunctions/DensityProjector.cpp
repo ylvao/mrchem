@@ -20,6 +20,7 @@ void DensityProjector::setPrecision(double prec) {
 
 void DensityProjector::operator()(Density &rho, Orbital &phi) {
     if (rho.hasTotal()) MSG_ERROR("Density not empty");
+    if (rho.hasSpin()) MSG_ERROR("Density not empty");
     if (rho.hasAlpha()) MSG_ERROR("Density not empty");
     if (rho.hasBeta()) MSG_ERROR("Density not empty");
 
@@ -44,7 +45,7 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
     }
 
     if (rho.isSpinDensity()) {
-        if (phi.getSpin() == Paired) {
+        if (phi.getSpin() == Orbital::Paired) {
             rho.allocAlpha();
             rho.allocBeta();
             this->grid(rho.alpha(), sum_vec);
@@ -52,7 +53,7 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
             this->add(rho.alpha(), sum_vec, 0);
             this->add(rho.beta(), sum_vec, 0);
         }
-        if (phi.getSpin() == Alpha) {
+        if (phi.getSpin() == Orbital::Alpha) {
             rho.allocAlpha();
             this->grid(rho.alpha(), sum_vec);
             this->add(rho.alpha(), sum_vec, 0);
@@ -61,7 +62,7 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
             this->grid(rho.beta(), sum_vec);
             rho.beta().setZero();
         }
-        if (phi.getSpin() == Beta) {
+        if (phi.getSpin() == Orbital::Beta) {
             rho.allocBeta();
             this->grid(rho.beta(), sum_vec);
             this->add(rho.beta(), sum_vec, 0);
@@ -76,6 +77,13 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
         rho.allocTotal();
         this->grid(rho.total(), tot_vec);
         this->add(rho.total(), tot_vec, 0);
+
+        FunctionTreeVector<3> spin_vec;
+        spin_vec.push_back( 1.0, &rho.alpha());
+        spin_vec.push_back(-1.0, &rho.beta());
+        rho.allocSpin();
+        this->grid(rho.spin(), spin_vec);
+        this->add(rho.spin(), spin_vec, 0);
     } else {
         rho.allocTotal();
         this->grid(rho.total(), sum_vec);
@@ -94,7 +102,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     if (prec < 0.0) MSG_ERROR("Adaptive addition with negative prec");
     add.setPrecision(prec/nOrbs);
 
-    FunctionTreeVector<3> total_vec, alpha_vec, beta_vec;
+    FunctionTreeVector<3> total_vec, spin_vec, alpha_vec, beta_vec;
     vector<Density *> dens_vec;
     vector<int> rho_i_Ix;
     if(MPI_size>1){
@@ -112,6 +120,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	      dens_vec.push_back(rho_i);
 	      rho_i_Ix.push_back(dens_vec.size()-1);
 	      if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	      if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
 	      if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
 	      if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
 	    }else{
@@ -126,6 +135,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	    rho_j->Rcv_Density(j_MPI, j_Orb);
 	    dens_vec.push_back(rho_j);
 	    if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
+	    if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
 	    if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
 	    if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
 	  }
@@ -139,6 +149,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	      if(j_MPI != MPI_rank){
 		dens_vec.push_back(rho_j);
 	        if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
+	        if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
 	        if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
 	        if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
 	      }
@@ -154,6 +165,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	      dens_vec.push_back(rho_i);
 	      rho_i_Ix.push_back(dens_vec.size()-1);
 	      if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	      if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
 	      if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
 	      if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
 	    }else{
@@ -206,21 +218,43 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	(*this)(*rho_i, phi_i);
 	dens_vec.push_back(rho_i);
 	if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
 	if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
 	if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
       }
     } 
 
-    if (not rho.isSpinDensity()) {
+    if (total_vec.size() > 5) {
         rho.allocTotal();
-        if (total_vec.size() > 5) {
-            this->add(rho.total(), total_vec);
-        } else if (total_vec.size() > 0) {
-            this->grid(rho.total(), total_vec);
-            this->add(rho.total(), total_vec, 0);
-        }
-    } else {
-        NOT_IMPLEMENTED_ABORT;
+        this->add(rho.total(), total_vec);
+    } else if (total_vec.size() > 0) {
+        rho.allocTotal();
+        this->grid(rho.total(), total_vec);
+        this->add(rho.total(), total_vec, 0);
+    }
+    if (spin_vec.size() > 5) {
+        rho.allocSpin();
+        this->add(rho.spin(), spin_vec);
+    } else if (spin_vec.size() > 0) {
+        rho.allocSpin();
+        this->grid(rho.spin(), spin_vec);
+        this->add(rho.spin(), spin_vec, 0);
+    }
+    if (alpha_vec.size() > 5) {
+        rho.allocAlpha();
+        this->add(rho.alpha(), alpha_vec);
+    } else if (alpha_vec.size() > 0) {
+        rho.allocAlpha();
+        this->grid(rho.alpha(), alpha_vec);
+        this->add(rho.alpha(), alpha_vec, 0);
+    }
+    if (beta_vec.size() > 5) {
+        rho.allocBeta();
+        this->add(rho.beta(), beta_vec);
+    } else if (beta_vec.size() > 0) {
+        rho.allocBeta();
+        this->grid(rho.beta(), beta_vec);
+        this->add(rho.beta(), beta_vec, 0);
     }
 
     for (int i = 0; i < dens_vec.size(); i++) {
