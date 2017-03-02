@@ -39,6 +39,8 @@ public:
     void normalize();
     void operator*=(double c);
 
+    enum NumType { Total, Real, Imag };
+
 protected:
     FunctionTree<D> *re;
     FunctionTree<D> *im;
