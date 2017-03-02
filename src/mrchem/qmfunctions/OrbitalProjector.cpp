@@ -53,7 +53,7 @@ OrbitalVector* OrbitalProjector::operator()(const Nuclei &nucs) {
         int minOrbs = ceil(nuc.getElement().getZ()/2.0);
         double Z = nuc.getCharge();
         const double *R = nuc.getCoord();
-        GaussFunc<3> gauss(1.0e4, 1.0, R);
+
         int n = 1;
         int nOrbs = 0;
         bool done = false;
