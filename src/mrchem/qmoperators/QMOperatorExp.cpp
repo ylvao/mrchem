@@ -9,11 +9,32 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 using namespace Eigen;
 using namespace std;
 
-QMOperatorExp& QMOperatorExp::operator=(QMOperator &O) {
+QMOperatorExp& QMOperatorExp::operator+=(QMOperator &O) {
     this->coefs.push_back(1.0);
     vector<QMOperator *> tmp;
     tmp.push_back(&O);
     this->oper_exp.push_back(tmp);
+    return *this;
+}
+
+QMOperatorExp& QMOperatorExp::operator=(QMOperator &O) {
+    this->clear();
+    this->coefs.push_back(1.0);
+    vector<QMOperator *> tmp;
+    tmp.push_back(&O);
+    this->oper_exp.push_back(tmp);
+    return *this;
+}
+
+QMOperatorExp& QMOperatorExp::operator+=(const QMOperatorExp &O) {
+    if (this != &O) {
+        for (int i = 0; i < O.coefs.size(); i++) {
+            this->coefs.push_back(O.coefs[i]);
+        }
+        for (int i = 0; i < O.oper_exp.size(); i++) {
+            this->oper_exp.push_back(O.oper_exp[i]);
+        }
+    }
     return *this;
 }
 

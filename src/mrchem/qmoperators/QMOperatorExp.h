@@ -15,6 +15,8 @@ public:
     QMOperatorExp(const QMOperatorExp &O) { *this = O; }
     QMOperatorExp& operator=(QMOperator &O);
     QMOperatorExp& operator=(const QMOperatorExp &O);
+    QMOperatorExp& operator+=(QMOperator &O);
+    QMOperatorExp& operator+=(const QMOperatorExp &O);
     virtual ~QMOperatorExp() { }
 
     virtual void setup(double prec);
