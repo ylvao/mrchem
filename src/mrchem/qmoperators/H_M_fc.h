@@ -7,7 +7,7 @@
 
 class H_M_fc : public RankOneTensorOperator<3> {
 public:
-    H_M_fc(const double *o = 0) : delta(o) {
+    H_M_fc(const double *o = 0) : delta(o, 1.0e6) {
         initializeTensorOperator();
     }
     virtual ~H_M_fc() { }
