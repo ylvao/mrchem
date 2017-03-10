@@ -21,7 +21,7 @@ class DipoleMoment;
 class QuadrupoleMoment;
 class Magnetizability;
 class NMRShielding;
-class HyperfineCoupling;
+class HyperFineCoupling;
 class SpinSpinCoupling;
 class Polarizability;
 class OpticalRotation;
@@ -51,7 +51,7 @@ public:
     void initMagnetizability();
     void initQuadrupoleMoment();
     void initNMRShielding(int k);
-    void initHyperfineCoupling(int k);
+    void initHyperFineCoupling(int k);
     void initSpinSpinCoupling(int k, int l);
     void initPolarizability(double omega);
     void initOpticalRotation(double omega);
@@ -61,7 +61,7 @@ public:
     QuadrupoleMoment& getQuadrupoleMoment();
     Magnetizability& getMagnetizability();
     NMRShielding& getNMRShielding(int k);
-    HyperfineCoupling& getHyperfineCoupling(int k);
+    HyperFineCoupling& getHyperFineCoupling(int k);
     SpinSpinCoupling& getSpinSpinCoupling(int k, int l);
     Polarizability& getPolarizability(double omega);
     OpticalRotation& getOpticalRotation(double omega);
@@ -77,7 +77,7 @@ protected:
     QuadrupoleMoment *quadrupole;
     Magnetizability *magnetizability;
     NMRShielding **nmr;
-    HyperfineCoupling **hfcc;
+    HyperFineCoupling **hfcc;
     SpinSpinCoupling ***sscc;
     std::vector<Polarizability *> polarizability;
     std::vector<OpticalRotation *> optical_rotation;
@@ -92,7 +92,7 @@ protected:
     void clearQuadrupoleMoment();
     void clearMagnetizability();
     void clearNMRShielding(int k);
-    void clearHyperfineCoupling(int k);
+    void clearHyperFineCoupling(int k);
     void clearSpinSpinCoupling(int k, int l);
     void clearPolarizability();
     void clearOpticalRotation();

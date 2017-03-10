@@ -5,6 +5,7 @@
 #include "DipoleMoment.h"
 #include "Magnetizability.h"
 #include "NMRShielding.h"
+#include "HyperFineCoupling.h"
 #include "SpinSpinCoupling.h"
 
 using namespace std;
@@ -55,11 +56,11 @@ Molecule::Molecule(const vector<string> &coord_str, int c)
 void Molecule::allocNuclearProperties() {
     int nNucs = this->nuclei.size();
     this->nmr = new NMRShielding*[nNucs];
-    //this->hfcc = new HyperfineCoupling*[nNucs];
+    this->hfcc = new HyperFineCoupling*[nNucs];
     this->sscc = new SpinSpinCoupling**[nNucs];
     for (int k = 0; k < nNucs; k++) {
         this->nmr[k] = 0;
-        //this->hfcc[k] = 0;
+        this->hfcc[k] = 0;
         this->sscc[k] = new SpinSpinCoupling*[nNucs];
         for (int l = 0; l < nNucs; l++) {
             this->sscc[k][l] = 0;
@@ -82,7 +83,7 @@ void Molecule::freeNuclearProperties() {
     int nNucs = this->nuclei.size();
     for (int k = 0; k < nNucs; k++) {
         clearNMRShielding(k);
-        //clearHyperfineCoupling(k);
+        clearHyperFineCoupling(k);
         for (int l = 0; l < nNucs; l++) {
             clearSpinSpinCoupling(k, l);
         }
@@ -136,15 +137,12 @@ void Molecule::clearNMRShielding(int k) {
     }
 }
 
-void Molecule::clearHyperfineCoupling(int k) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
+void Molecule::clearHyperFineCoupling(int k) {
     if (this->hfcc == 0) MSG_ERROR("Properties not allocated");
     if (this->hfcc[k] != 0) {
         delete this->hfcc[k];
         this->hfcc[k] = 0;
     }
-    */
 }
 
 void Molecule::clearSpinSpinCoupling(int k, int l) {
@@ -217,15 +215,12 @@ void Molecule::initNMRShielding(int k) {
     this->nmr[k] = new NMRShielding(nuc_K);
 }
 
-void Molecule::initHyperfineCoupling(int k) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
+void Molecule::initHyperFineCoupling(int k) {
     if (this->hfcc == 0) MSG_ERROR("Properties not allocated");
-    if (this->hfcc[k] != 0) MSG_ERROR("Hyperfine coupling tensor already initialized");
+    if (this->hfcc[k] != 0) MSG_ERROR("HyperFine coupling tensor already initialized");
 
     const Nucleus &nuc_K = getNucleus(k);
-    this->hfcc[k] = new HyperfineCoupling(nuc_K);
-    */
+    this->hfcc[k] = new HyperFineCoupling(nuc_K);
 }
 
 void Molecule::initSpinSpinCoupling(int k, int l) {
@@ -299,13 +294,10 @@ NMRShielding& Molecule::getNMRShielding(int k) {
     return *this->nmr[k];
 }
 
-HyperfineCoupling& Molecule::getHyperfineCoupling(int k) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
+HyperFineCoupling& Molecule::getHyperFineCoupling(int k) {
     if (this->hfcc == 0) MSG_ERROR("Properties not allocated");
     if (this->hfcc[k] == 0) MSG_ERROR("Uninitialized hyperfine coupling tensor " << k);
     return *this->hfcc[k];
-    */
 }
 
 SpinSpinCoupling& Molecule::getSpinSpinCoupling(int k, int l) {
@@ -446,6 +438,11 @@ void Molecule::printProperties() const {
     if (this->nmr != 0) {
         for (int k = 0; k < this->nuclei.size(); k++) {
             if (this->nmr[k] != 0) println(0, *this->nmr[k]);
+        }
+    }
+    if (this->hfcc != 0) {
+        for (int k = 0; k < this->nuclei.size(); k++) {
+            if (this->hfcc[k] != 0) println(0, *this->hfcc[k]);
         }
     }
     if (this->sscc != 0) {
