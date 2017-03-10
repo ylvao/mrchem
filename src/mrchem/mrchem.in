@@ -125,6 +125,7 @@ def setup_keywords():
     top.set_status(True)
     top.add_kw('order',                 'INT', -1)
     top.add_kw('rel_prec',              'DBL', -1.0)
+    top.add_kw('nuc_prec',              'DBL', -1.0)
     top.add_kw('max_depth',             'INT', 20)
     top.add_kw('wavelet',               'STR', 'Interpolating')
     top.add_kw('energy_unit',           'STR', 'au')
@@ -291,6 +292,10 @@ def verify_top(top):
         #print "   est_norm  ", top['est_norm'][0]
         #print "   abs_prec  ", top['abs_prec'][0]
         #print "   rel_prec  ", top['rel_prec'][0]
+
+    if not top.get('nuc_prec').is_set():
+        top['nuc_prec'][0] = top['rel_prec'][0]
+
     if not top.get('order').is_set():
         top['order'][0] = int(math.ceil(-1.5*math.log10(top['rel_prec'][0])));
         #print "\nPolynomial order is set by rel_prec ", top['order'][0]
