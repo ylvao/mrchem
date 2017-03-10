@@ -1,21 +1,27 @@
 #ifndef DELTAOPERATOR_H
 #define DELTAOPERATOR_H
 
-#include "QMOperator.h"
+#include "QMPotential.h"
+#include "GaussFunc.h"
 
-class DeltaOperator : public QMOperator {
+class DeltaOperator : public QMPotential {
 public:
-    DeltaOperator(const double *o) { }
-    virtual ~SpinOperator() { }
+    DeltaOperator(const double *o, double expo)
+            : QMPotential(1) {
+        setPosition(this->r_O, o);
+        setFunction(expo, this->r_O);
+    };
+    virtual ~DeltaOperator() { }
 
-    virtual void setup(double prec) { NOT_IMPLEMENTED_ABORT; }
-    virtual void clear() { NOT_IMPLEMENTED_ABORT; }
+    virtual void setup(double prec);
+    virtual void clear();
 
-    virtual Orbital* operator()(Orbital &orb_p) { NOT_IMPLEMENTED_ABORT; }
-    virtual Orbital* adjoint(Orbital &orb_p) { NOT_IMPLEMENTED_ABORT; }
+protected:
+    double r_O[3];
+    GaussFunc<3> func;
 
-    using QMOperator::operator();
-    using QMOperator::adjoint;
+    void setPosition(double *out, const double *inp);
+    void setFunction(double beta, const double *pos);
 };
 
 #endif // DELTAOPERATOR_H
