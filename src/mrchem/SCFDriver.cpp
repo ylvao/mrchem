@@ -26,22 +26,27 @@
 #include "Molecule.h"
 #include "OrbitalVector.h"
 #include "OrbitalProjector.h"
+#include "DensityProjector.h"
 
 #include "SCFEnergy.h"
 #include "DipoleMoment.h"
 #include "Magnetizability.h"
 #include "NMRShielding.h"
 #include "SpinSpinCoupling.h"
+#include "HyperFineCoupling.h"
 
 #include "PoissonOperator.h"
 #include "ABGVOperator.h"
 #include "PHOperator.h"
 
+#include "HSFOperator.h"
 #include "H_E_dip.h"
 #include "H_B_dip.h"
 #include "H_BB_dia.h"
 #include "H_BM_dia.h"
 #include "H_M_pso.h"
+#include "H_M_fc.h"
+#include "SpinOperator.h"
 #include "KineticOperator.h"
 #include "NuclearPotential.h"
 #include "CoulombPotential.h"
@@ -202,10 +207,10 @@ bool SCFDriver::sanityCheck() const {
     if (calc_spin_spin_coupling) {
         MSG_ERROR("Only diamagnetic spin-spin coupling atm");
     }
-    if (calc_hyperfine_coupling) {
-        MSG_ERROR("Hyperfine coupling not implemented");
-        return false;
-    }
+    //if (calc_hyperfine_coupling) {
+        //MSG_ERROR("Hyperfine coupling not implemented");
+        //return false;
+    //}
     return true;
 }
 
@@ -302,7 +307,7 @@ void SCFDriver::setup() {
     if (calc_hyperfine_coupling) {
         for (int k = 0; k < hfcc_nucleus_k.size(); k++) {
             int K = hfcc_nucleus_k[k];
-            molecule->initHyperfineCoupling(K);
+            molecule->initHyperFineCoupling(K);
         }
     }
     if (calc_spin_spin_coupling) {
@@ -734,6 +739,49 @@ void SCFDriver::calcGroundStateProperties() {
         timer.stop();
         TelePrompter::printFooter(0, timer, 2);
     }
+    if (calc_hyperfine_coupling) {
+        TelePrompter::printHeader(0, "Calculating HyperFine Coupling Constant");
+        Timer timer;
+
+        for (int k = 0; k < hfcc_nucleus_k.size(); k++) {
+            int K = hfcc_nucleus_k[k];
+            HyperFineCoupling &hfc = molecule->getHyperFineCoupling(K);
+            const Nuclei &nucs = molecule->getNuclei();
+            const Nucleus &nuc = nucs[K];
+            const double *r_K = nuc.getCoord();
+
+            Density rho(true);
+            DensityProjector project(rel_prec, MRA->getMaxScale());
+            project(rho, *phi);
+            double t_delta = rho.total().evalf(r_K);
+            double s_delta = rho.spin().evalf(r_K);
+            double a_delta = rho.alpha().evalf(r_K);
+            double b_delta = rho.beta().evalf(r_K);
+            rho.clear();
+
+            println(0, endl);
+            println(0, "t_delta                        " << setw(30) << t_delta);
+            println(0, "s_delta                        " << setw(30) << s_delta);
+            println(0, "a_delta                        " << setw(30) << a_delta);
+            println(0, "b_delta                        " << setw(30) << b_delta << endl);
+
+            MatrixXd &FC = hfc.getFermiContactTerm();
+            FC(0,0) = s_delta;
+
+            //H_M_fc h(r_K);
+            //h.setup(rel_prec);
+            //FC(0,0) = h[2].trace(*phi);
+            //h.clear();
+
+            MatrixXd &Sz = hfc.getSpinTerm();
+            SpinOperator s;
+            s.setup(rel_prec);
+            Sz(0,0) = s[2].trace(*phi);
+            s.clear();
+        }
+        timer.stop();
+        TelePrompter::printFooter(0, timer, 2);
+    }
 }
 
 void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc) {
@@ -789,8 +837,6 @@ void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc
         TelePrompter::printFooter(0, timer, 2);
     }
 }
-
-
 
 void SCFDriver::printEigenvalues(OrbitalVector &orbs, MatrixXd &f_mat) {
     int oldprec = TelePrompter::setPrecision(5);
