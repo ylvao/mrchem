@@ -62,6 +62,7 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 SCFDriver::SCFDriver(Getkw &input) {
     max_scale = MRA->getMaxScale();
     rel_prec = input.get<double>("rel_prec");
+    nuc_prec = input.get<double>("nuc_prec");
 
     gauge = input.getDblVec("World.gauge_origin");
     center_of_mass = input.get<bool>("World.center_of_mass");
@@ -342,7 +343,7 @@ void SCFDriver::setup() {
 
     // Setting up Fock operator
     T = new KineticOperator(*ABGV);
-    V = new NuclearPotential(*nuclei, rel_prec);
+    V = new NuclearPotential(*nuclei, nuc_prec);
 
     if (wf_method == "Core") {
         fock = new CoreHamiltonian(*T, *V);
