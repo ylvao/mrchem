@@ -91,7 +91,7 @@ void Molecule::freeNuclearProperties() {
         this->sscc[k] = 0; 
     }
     delete[] this->nmr;
-    //delete[] this->hfcc;
+    delete[] this->hfcc;
     delete[] this->sscc;
     this->nmr = 0; 
     this->hfcc = 0; 
