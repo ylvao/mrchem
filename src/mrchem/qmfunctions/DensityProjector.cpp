@@ -34,13 +34,13 @@ void DensityProjector::operator()(Density &rho, Orbital &phi) {
     if (phi.hasReal()) {
         FunctionTree<3> *real_2 = new FunctionTree<3>(*MRA);
         this->grid(*real_2, phi.real());
-        this->mult(*real_2, occ, phi.real(), phi.real(), 0);
+        this->mult(*real_2, occ, phi.real(), phi.real(), 1);
         sum_vec.push_back(real_2);
     }
     if (phi.hasImag()) {
         FunctionTree<3> *imag_2 = new FunctionTree<3>(*MRA);
         this->grid(*imag_2, phi.imag());
-        this->mult(*imag_2, occ, phi.imag(), phi.imag(), 0);
+        this->mult(*imag_2, occ, phi.imag(), phi.imag(), 1);
         sum_vec.push_back(imag_2);
     }
 
