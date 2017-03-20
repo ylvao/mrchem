@@ -221,7 +221,7 @@ void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector 
     timer.stop();
 
     MatrixXd U;
-    if (nIter > 0) {
+    if (n_it > 0) {
         U = rr.getTotalU().transpose();
     } else {
         timer.resume();
