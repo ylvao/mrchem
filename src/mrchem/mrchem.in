@@ -208,7 +208,7 @@ def setup_keywords():
     scf.add_kw('max_iter',              'INT', -1)
     scf.add_kw('history',               'INT', 0)
     scf.add_kw('rotation',              'INT', 0)
-    scf.add_kw('localize',              'BOOL', False)
+    scf.add_kw('canonical',             'BOOL', True)
     scf.add_kw('orbital_thrs',          'DBL', 1.0)
     scf.add_kw('property_thrs',         'DBL', 1.0)
     scf.add_kw('lambda_thrs',           'DBL', 1.0e-4)
@@ -221,7 +221,7 @@ def setup_keywords():
     response.add_kw('run',              'BOOL', True)
     response.add_kw('max_iter',         'INT', -1)
     response.add_kw('history',          'INT', 0)
-    response.add_kw('localize',         'BOOL', False)
+    response.add_kw('canonical',        'BOOL', True)
     response.add_kw('orbital_thrs',     'DBL', 1.0)
     response.add_kw('property_thrs',    'DBL', 1.0)
     response.add_kw('directions',       'INT_ARRAY', [1,1,1])
@@ -320,9 +320,9 @@ def verify_molecule(mol):
     mol.get('angstrom').set(False)
 
 def verify_response(rsp):
-    if not rsp.get('localize').is_set():
+    if not rsp.get('canonical').is_set():
         scf = topsect.fetch_sect('SCF')
-        rsp['localize'][0] = scf['localize'][0]
+        rsp['canonical'][0] = scf['canonical'][0]
     if rsp['orbital_prec'][1] < 0:
         rsp['orbital_prec'][1] = topsect['rel_prec'][0]
     if rsp['orbital_prec'][0] < 0:
@@ -383,10 +383,6 @@ def verify_dft(dft):
         n += 1
 
 def verify_scf(scf):
-    if scf['localize'][0]:
-        scf['rotation'][0] = abs(scf['rotation'][0])
-    else:
-        scf['rotation'][0] = -abs(scf['rotation'][0])
     if scf['orbital_prec'][1] < 0:
         scf['orbital_prec'][1] = topsect['rel_prec'][0]
     if scf['orbital_prec'][0] < 0:

@@ -38,7 +38,7 @@ int NonlinearMaximizer::maximize(){
     double norm,old_norm,new_norm,gradient_norm,value_functional,expected_change,relative_change ;
     double value_functional_old,step_norm2,first_order,second_order;
 
-    int print=2;//0: print nothing, 1: print only one line, 2: print one line per iteration; >50 print entire matrices
+    int print=0;//0: print nothing, 1: print only one line, 2: print one line per iteration; >50 print entire matrices
     int MaxIter=150; //max number of iterations
     bool converged=false;
     double threshold=1.0e-12;//convergence when norm of gradient is small than threshold

@@ -34,7 +34,6 @@ void EnergyOptimizer::setup(FockOperator &fock, OrbitalVector &phi, MatrixXd &F,
 }
 
 void EnergyOptimizer::clear() {
-    this->nIter = 0;
     this->fMat_n = 0;
     this->fOper_n = 0;
     this->fOper_np1 = 0;
@@ -59,11 +58,19 @@ bool EnergyOptimizer::optimize() {
     double err_t = 1.0;
     double err_p = 1.0;
 
+    this->add.setPrecision(this->orbPrec[2]/10.0);
+    if (this->canonical) {
+        diagonalize(fock, F_n, phi_n);
+    } else {
+        localize(fock, F_n, phi_n);
+    }
+
+    int nIter = 0;
     bool converged = false;
-    while(this->nIter++ < this->maxIter or this->maxIter < 0) {
+    while(nIter++ < this->maxIter or this->maxIter < 0) {
         // Initialize SCF cycle
         Timer timer;
-        printCycle();
+        printCycle(nIter);
         adjustPrecision(err_o);
 
         double orb_prec = getOrbitalPrecision();
@@ -102,18 +109,12 @@ bool EnergyOptimizer::optimize() {
         fock.clear();
 
         // Rotate orbitals
-        if (needLocalization()) {
-            localize(fock, F_np1, phi_np1);
-        } else if (needDiagonalization()) {
-            diagonalize(fock, F_np1, phi_np1);
-        } else {
-            orthonormalize(fock, F_np1, phi_np1);
-        }
+        orthonormalize(fock, F_np1, phi_np1);
 
         // Update orbitals and Fock matrix
         int nOrbs = phi_np1.size();
         MatrixXd U = MatrixXd::Identity(nOrbs, nOrbs);
-        F_n = U.transpose()*F_np1*U;
+        F_n = F_np1;
         this->add.rotate(phi_n, U, phi_np1);
         phi_np1.clear();
 
@@ -127,6 +128,13 @@ bool EnergyOptimizer::optimize() {
             break;
         }
     }
+    this->add.setPrecision(this->orbPrec[2]/10.0);
+    if (this->canonical) {
+        diagonalize(fock, F_n, phi_n);
+    } else {
+        localize(fock, F_n, phi_n);
+    }
+
     printConvergence(converged);
     return converged;
 }

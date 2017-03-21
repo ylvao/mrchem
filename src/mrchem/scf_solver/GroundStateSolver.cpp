@@ -215,27 +215,43 @@ void GroundStateSolver::printProperty() const {
  * For details see the tex documentation in doc directory
  */
 void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
+    TelePrompter::printHeader(0, "Localizing orbitals");
     Timer timer;
-    RR rr(this->orbPrec[0], phi);
-    int n_it = rr.maximize();//compute total U, rotation matrix
-    timer.stop();
 
     MatrixXd U;
-    if (n_it > 0) {
-        U = rr.getTotalU().transpose();
+    int n_it = 0;
+    if (phi.size() > 1) {
+        Timer rr_t;
+        RR rr(this->orbPrec[0], phi);
+        n_it = rr.maximize();//compute total U, rotation matrix
+        rr_t.stop();
+        TelePrompter::printDouble(0, "Computing Foster-Boys matrix", rr_t.getWallTime());
+        if (n_it > 0) {
+            println(0, " Converged after iteration   " << setw(30) << n_it);
+            U = rr.getTotalU().transpose();
+        } else {
+            println(0, " Foster-Boys localization did not converge!");
+        }
     } else {
-        timer.resume();
-        U = calcOrthonormalizationMatrix(phi);
-        timer.stop();
+        println(0, " Cannot localize less than two orbitals");
     }
 
-    double t = timer.getWallTime();
-    TelePrompter::printTree(0, "Calculating localization matrix", n_it, t);
-    printout(0, endl);
+    if (n_it <= 0) {
+        Timer orth_t;
+        U = calcOrthonormalizationMatrix(phi);
+        orth_t.stop();
+        TelePrompter::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime());
+    }
 
+    Timer rot_t;
     F = U*F*U.transpose();
     fock.rotate(U);
     this->add.rotate(phi, U);
+    rot_t.stop();
+    TelePrompter::printDouble(0, "Rotating orbitals", rot_t.getWallTime());
+
+    timer.stop();
+    TelePrompter::printFooter(0, timer, 2);
 }
 
 /** Perform the orbital rotation that diagonalizes the Fock matrix
@@ -243,34 +259,35 @@ void GroundStateSolver::localize(FockOperator &fock, MatrixXd &F, OrbitalVector 
  * This operation includes the orthonormalization using the overlap matrix.
  */
 void GroundStateSolver::diagonalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {
+    TelePrompter::printHeader(0, "Digonalizing Fock matrix");
+    Timer timer;
+
+    Timer orth_t;
     MatrixXd S_m12 = calcOrthonormalizationMatrix(phi);
     F = S_m12.transpose()*F*S_m12;
+    orth_t.stop();
+    TelePrompter::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime());
 
-	/*
-    SelfAdjointEigenSolver<MatrixXd> es(F.cols());
-    es.compute(F);
-    MatrixXd M = es.eigenvectors();
-    MatrixXd U = M.transpose()*S_m12;
-	*/
-
-    Timer timer;
+    Timer diag_t;
     MatrixXd U = MatrixXd::Zero(F.rows(), F.cols());
     int np = phi.getNPaired();
     int na = phi.getNAlpha();
     int nb = phi.getNBeta();
-
     if (np > 0) MathUtils::diagonalizeBlock(F, U, 0,       np);
     if (na > 0) MathUtils::diagonalizeBlock(F, U, np,      na);
     if (nb > 0) MathUtils::diagonalizeBlock(F, U, np + na, nb);
     U = U * S_m12;
+    diag_t.stop();
+    TelePrompter::printDouble(0, "Diagonalizing matrix", diag_t.getWallTime());
+
+    Timer rot_t;
+    fock.rotate(U);
+    this->add.rotate(phi, U);
+    rot_t.stop();
+    TelePrompter::printDouble(0, "Rotating orbitals", rot_t.getWallTime());
 
     timer.stop();
-    println(1, timer.getWallTime());
-
-    //    F = es.eigenvalues().asDiagonal();
-    fock.rotate(U);
-
-    this->add.rotate(phi, U);
+    TelePrompter::printFooter(0, timer, 2);
 }
 
 void GroundStateSolver::orthonormalize(FockOperator &fock, MatrixXd &F, OrbitalVector &phi) {

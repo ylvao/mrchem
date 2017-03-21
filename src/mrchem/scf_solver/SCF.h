@@ -28,15 +28,13 @@ public:
     void setOrbitalPrec(double init, double final);
     void setMaxIterations(int m_iter) { this->maxIter = m_iter; }
 
-    void setRotation(int iter) { this->iterPerRotation = iter; }
-    void setOrthogonalize() { this->iterPerRotation = 0; }
-    void setDiagonalize(int iter) { this->iterPerRotation = -abs(iter); }
-    void setLocalize(int iter) { this->iterPerRotation = abs(iter); }
+    void setRotation(int iter) { this->rotation = iter; }
+    void setCanonical(bool can) { this->canonical = can; }
 
 protected:
-    int nIter;
     int maxIter;
-    int iterPerRotation; ///< Positive localization, negative diagonalization, zero S_m12
+    int rotation;    ///< number of iterations between localization/diagonalization
+    bool canonical;  ///< use localized or canonical orbitals
     double orbThrs;  ///< Convergence threshold orbital update norm
     double propThrs; ///< Convergence threshold property
     double orbPrec[3];
@@ -47,8 +45,8 @@ protected:
     OrbitalAdder add;
     HelmholtzOperatorSet *helmholtz;// Pointer to external object, do not delete!
 
-    bool needLocalization() const;
-    bool needDiagonalization() const;
+    bool needLocalization(int nIter) const;
+    bool needDiagonalization(int nIter) const;
 
     void adjustPrecision(double error);
     void resetPrecision();
@@ -58,7 +56,7 @@ protected:
 
     void printOrbitals(const Eigen::VectorXd &epsilon, const OrbitalVector &phi, int flag) const;
     void printConvergence(bool converged) const;
-    void printCycle() const;
+    void printCycle(int nIter) const;
     void printTimer(double t) const;
     void printMatrix(int level, const Eigen::MatrixXd &M,
                      const char &name, int pr = 5) const;

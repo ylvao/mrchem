@@ -125,7 +125,6 @@ void LinearResponseSolver::clear() {
     if (this->fMat_y != 0) delete this->fMat_y;
     //this->fOper_1->clearUnperturbed();
 
-    this->nIter = 0;
     this->orbitals_x = 0;
     this->orbitals_y = 0;
     this->dOrbitals_x = 0;
@@ -157,11 +156,12 @@ bool LinearResponseSolver::optimize() {
     double err_o = 1.0;
     double err_p = 1.0;
 
+    int nIter = 0;
     bool converged = false;
-    while(this->nIter++ < this->maxIter or this->maxIter < 0) {
+    while(nIter++ < this->maxIter or this->maxIter < 0) {
         // Initialize SCF cycle
         Timer timer;
-        printCycle();
+        printCycle(nIter);
         adjustPrecision(err_o);
 
         double orb_prec = getOrbitalPrecision();
@@ -176,7 +176,7 @@ bool LinearResponseSolver::optimize() {
 	calcHelmholtzUpdates(phi_y, dPhi_y, fMat_y, true);
 	this->fOper_1->clear();
 
-        if (this->nIter > 2) {
+        if (nIter > 2) {
             if (this->kain_x != 0) this->kain_x->accelerate(orb_prec, *phi_x, *dPhi_x);
             if (this->kain_y != 0) this->kain_y->accelerate(orb_prec, *phi_y, *dPhi_y);
         }

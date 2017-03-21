@@ -12,9 +12,9 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 extern OrbitalVector workOrbVec;
 
 SCF::SCF(HelmholtzOperatorSet &h)
-    : nIter(0),
-      maxIter(-1),
-      iterPerRotation(0),
+    : maxIter(-1),
+      rotation(0),
+      canonical(true),
       orbThrs(-1.0),
       propThrs(-1.0),
       helmholtz(&h),
@@ -44,7 +44,7 @@ void SCF::adjustPrecision(double error) {
     this->orbPrec[0] = min(10.0*error*error, this->orbPrec[0]);
     this->orbPrec[0] = max(this->orbPrec[0], this->orbPrec[2]);
 
-    this->add.setPrecision(this->orbPrec[0]);
+    this->add.setPrecision(this->orbPrec[0]/10.0);
 
     TelePrompter::printSeparator(0, '=');
     TelePrompter::printDouble(0, "Current precision", this->orbPrec[0]);
@@ -58,30 +58,32 @@ void SCF::resetPrecision() {
     this->orbPrec[0] = this->orbPrec[1];
 }
 
-bool SCF::needLocalization() const {
-    if (this->iterPerRotation <= 0) {
-        return false;
+bool SCF::needLocalization(int nIter) const {
+    bool loc = false;
+    if (this->canonical) {
+        loc = false;
+    } else if (nIter <= 2) {
+        loc = true;
+    } else if (this->rotation == 0) {
+        loc = false;
+    } else if (nIter%this->rotation == 0) {
+        loc = true;
     }
-    if (this->nIter <= 2) {
-        return true;
-    }
-    if (this->nIter%this->iterPerRotation == 0) {
-        return true;
-    }
-    return false;
+    return loc;
 }
 
-bool SCF::needDiagonalization() const {
-    if (this->iterPerRotation >= 0) {
-        return false;
+bool SCF::needDiagonalization(int nIter) const {
+    bool diag = false;
+    if (not this->canonical) {
+        diag = false;
+    } else if (nIter <= 2) {
+        diag = true;
+    } else if (this->rotation == 0) {
+        diag = false;
+    } else if (nIter%this->rotation == 0) {
+        diag = true;
     }
-    if (this->nIter <= 2) {
-        return true;
-    }
-    if (this->nIter%this->iterPerRotation == 0) {
-        return true;
-    }
-    return false;
+    return diag;
 }
 
 void SCF::printUpdate(const string &name, double P, double dP) const {
@@ -168,10 +170,10 @@ void SCF::printConvergence(bool converged) const {
     TelePrompter::printSeparator(0, '=', 2);
 }
 
-void SCF::printCycle() const {
+void SCF::printCycle(int nIter) const {
     printout(0, endl << endl);
     printout(0, "#######################");
-    printout(0, " SCF cycle " << setw(2) << this->nIter << " ");
+    printout(0, " SCF cycle " << setw(2) << nIter << " ");
     printout(0, "#######################");
     printout(0, endl << endl << endl);
 }

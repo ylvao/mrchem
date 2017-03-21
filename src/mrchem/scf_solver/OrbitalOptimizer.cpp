@@ -29,7 +29,6 @@ void OrbitalOptimizer::setup(FockOperator &fock,
 }
 
 void OrbitalOptimizer::clear() {
-    this->nIter = 0;
     this->fMat_n = 0;
     this->fOper_n = 0;
 
@@ -55,23 +54,24 @@ bool OrbitalOptimizer::optimize() {
     double err_t = 1.0;
 	
     fock.setup(getOrbitalPrecision());
-
     F = fock(phi_n, phi_n);
+
+    int nIter = 0;
     bool converged = false;
-    while(this->nIter++ < this->maxIter or this->maxIter < 0) {
+    while(nIter++ < this->maxIter or this->maxIter < 0) {
         // Initialize SCF cycle
         Timer timer;
-        printCycle();
+        printCycle(nIter);
         adjustPrecision(err_o);
 
         double orb_prec = getOrbitalPrecision();
         double orb_thrs = getOrbitalThreshold();
 
         // Rotate orbitals
-        if (needLocalization()) {
+        if (needLocalization(nIter)) {
             localize(fock, F, phi_n);
             if (this->kain != 0) this->kain->clear();
-        } else if (needDiagonalization()) {
+        } else if (needDiagonalization(nIter)) {
 	    diagonalize(fock, F, phi_n);
 	    if (this->kain != 0) this->kain->clear();
         }

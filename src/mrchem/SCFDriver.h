@@ -141,7 +141,7 @@ protected:
     int scf_max_iter;
     int scf_rotation;
     bool scf_run;
-    bool scf_localize;
+    bool scf_canonical;
     bool scf_write_orbitals;
     double scf_orbital_thrs;
     double scf_property_thrs;
@@ -153,7 +153,7 @@ protected:
     int rsp_history;
     int rsp_max_iter;
     bool rsp_run;
-    bool rsp_localize;
+    bool rsp_canonical;
     bool rsp_write_orbitals;
     double rsp_orbital_thrs;
     double rsp_property_thrs;

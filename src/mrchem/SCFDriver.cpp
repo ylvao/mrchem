@@ -1,5 +1,3 @@
-#include <iostream>
-#include <iomanip>
 #include <fstream>
 #include <Eigen/Eigenvalues>
 
@@ -109,7 +107,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     scf_history = input.get<int>("SCF.history");
     scf_max_iter = input.get<int>("SCF.max_iter");
     scf_rotation = input.get<int>("SCF.rotation");
-    scf_localize = input.get<bool>("SCF.localize");
+    scf_canonical = input.get<bool>("SCF.canonical");
     scf_write_orbitals = input.get<bool>("SCF.write_orbitals");
     scf_orbital_thrs = input.get<double>("SCF.orbital_thrs");
     scf_property_thrs = input.get<double>("SCF.property_thrs");
@@ -120,7 +118,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     rsp_start = input.get<string>("Response.initial_guess");
     rsp_history = input.get<int>("Response.history");
     rsp_max_iter = input.get<int>("Response.max_iter");
-    rsp_localize = input.get<bool>("Response.localize");
+    rsp_canonical = input.get<bool>("Response.canonical");
     rsp_write_orbitals = input.get<bool>("Response.write_orbitals");
     rsp_orbital_thrs = input.get<double>("Response.orbital_thrs");
     rsp_property_thrs = input.get<double>("Response.property_thrs");
@@ -479,6 +477,7 @@ OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
     OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, scf_kain);
     optimizer->setMaxIterations(scf_max_iter);
     optimizer->setRotation(scf_rotation);
+    optimizer->setCanonical(scf_canonical);
     optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
     optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
 
@@ -490,11 +489,7 @@ EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
 
     EnergyOptimizer *optimizer = new EnergyOptimizer(*helmholtz);
     optimizer->setMaxIterations(scf_max_iter);
-    if (scf_localize) {
-        optimizer->setRotation(1);
-    } else {
-        optimizer->setRotation(-1);
-    }
+    optimizer->setCanonical(scf_canonical);
     optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
     optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
 
