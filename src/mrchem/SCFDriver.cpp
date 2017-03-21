@@ -769,11 +769,11 @@ void SCFDriver::calcGroundStateProperties() {
             //FC(0,0) = h[2].trace(*phi);
             //h.clear();
 
-            MatrixXd &Sz = hfc.getSpinTerm();
-            SpinOperator s;
-            s.setup(rel_prec);
-            Sz(0,0) = s[2].trace(*phi);
-            s.clear();
+            //MatrixXd &Sz = hfc.getSpinTerm();
+            //SpinOperator s;
+            //s.setup(rel_prec);
+            //Sz(0,0) = s[2].trace(*phi);
+            //s.clear();
         }
         timer.stop();
         TelePrompter::printFooter(0, timer, 2);
