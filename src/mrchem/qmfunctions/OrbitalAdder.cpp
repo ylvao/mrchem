@@ -28,10 +28,11 @@ void OrbitalAdder::operator()(Orbital &phi_ab,
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
 
-    bool aHasReal = (fabs(a.real()) > MachineZero);
-    bool aHasImag = (fabs(a.imag()) > MachineZero);
-    bool bHasReal = (fabs(b.real()) > MachineZero);
-    bool bHasImag = (fabs(b.imag()) > MachineZero);
+    double thrs = MachineZero;
+    bool aHasReal = (fabs(a.real()) > thrs);
+    bool aHasImag = (fabs(a.imag()) > thrs);
+    bool bHasReal = (fabs(b.real()) > thrs);
+    bool bHasImag = (fabs(b.imag()) > thrs);
 
     if (phi_a.hasReal() and aHasReal) rvec.push_back(a.real(), &phi_a.real());
     if (phi_b.hasReal() and bHasReal) rvec.push_back(b.real(), &phi_b.real());
@@ -83,7 +84,7 @@ void OrbitalAdder::operator()(Orbital &out,
     }
     // sanity check spin
     for (int i = 0; i < inp.size(); i++) {
-        if (abs(coefs[i]) < MachineZero) continue;
+        if (fabs(coefs[i]) < MachineZero) continue;
         if (inp[i]->getOccupancy() == 0) continue;
         if (out.getSpin() != inp[i]->getSpin()) MSG_FATAL("Mixing spins");
     }
@@ -91,8 +92,9 @@ void OrbitalAdder::operator()(Orbital &out,
     FunctionTreeVector<3> rvec;
     FunctionTreeVector<3> ivec;
     for (int i = 0; i < inp.size(); i++) {
-        bool cHasReal = (fabs(coefs[i].real()) > MachineZero);
-        bool cHasImag = (fabs(coefs[i].imag()) > MachineZero);
+        double thrs = MachineZero;
+        bool cHasReal = (fabs(coefs[i].real()) > thrs);
+        bool cHasImag = (fabs(coefs[i].imag()) > thrs);
 
         bool oHasReal = inp[i]->hasReal();
         bool oHasImag = inp[i]->hasImag();
