@@ -43,6 +43,8 @@ FockOperator::~FockOperator() {
 void FockOperator::setup(double prec) {
     Timer timer;
     TelePrompter::printHeader(0, "Setting up Fock operator");
+    TelePrompter::printDouble(0, "Precision", prec);
+    TelePrompter::printSeparator(0, '-');
     if (this->T != 0) this->T->setup(prec);
     if (this->V != 0) this->V->setup(prec);
     if (this->J != 0) this->J->setup(prec);
