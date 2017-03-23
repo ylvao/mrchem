@@ -2,8 +2,8 @@
 
 rel_prec = 1.0e-4                 # Overall relative precision
 
-World {
-  scale = -5                      # Root scale defines world size 2^{-scale}
+MRA {
+  min_scale = -5                  # Root scale defines world size 2^{-scale}
   corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
   boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
 }
@@ -15,7 +15,7 @@ $end
 }
 
 WaveFunction {
-  method = Hartree                    # Wave function method (HF or DFT)
+  method = DFT                    # Wave function method (HF or DFT)
 }
 
 DFT {
@@ -26,16 +26,16 @@ $end
 }
 
 Properties {
-  total_energy = true             # Compute ground state energy
+  scf_energy = true               # Compute ground state energy
 }
 
 SCF {
   orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
-  property_thrs = 1.0e-5          # Convergence threshold in total energy
-  initial_guess = none            # Type of initial guess: none, mw, gto
-  history = 3                     # Length of KAIN iterative history
+  kain = 3                        # Length of KAIN iterative history
 }
 
-Pilot {
-  run_scf = true
+KineticFree {
+  run = true
+  property_thrs = 1.0e-5          # Convergence threshold in total energy
 }
+
