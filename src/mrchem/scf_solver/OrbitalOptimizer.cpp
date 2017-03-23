@@ -137,6 +137,14 @@ bool OrbitalOptimizer::optimize() {
     }
     if (this->kain != 0) this->kain->clear();
     fock.clear();
+
+    this->add.setPrecision(this->orbPrec[2]/10.0);
+    if (this->canonical) {
+        diagonalize(fock, F, phi_n);
+    } else {
+        localize(fock, F, phi_n);
+    }
+
     printConvergence(converged);
     return converged;
 }
