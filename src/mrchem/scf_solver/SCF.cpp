@@ -94,9 +94,9 @@ void SCF::printUpdate(const string &name, double P, double dP) const {
     }
     bool done = fabs(dP/p) < getPropertyThreshold();
     printout(0, name);
-    printout(0, setw(25) << P);
+    printout(0, setw(24) << P);
     TelePrompter::setPrecision(5);
-    printout(0, setw(17) << dP);
+    printout(0, setw(16) << dP);
     println(0, setw(5) << done);
     TelePrompter::setPrecision(oldPrec);
 }

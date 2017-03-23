@@ -194,15 +194,20 @@ void GroundStateSolver::printProperty() const {
     double XC_1 = scf_1.getExchangeCorrelationEnergy();
     double E_0 = scf_0.getElectronicEnergy();
     double E_1 = scf_1.getElectronicEnergy();
+    double N_0 = scf_0.getNuclearEnergy();
+    double N_1 = scf_1.getNuclearEnergy();
 
     TelePrompter::printHeader(0, "                    Energy                 Update      Done ");
-    printUpdate(" Kinetic  ",  T_1,  T_1 -  T_0);
-    printUpdate(" N-E      ",  V_1,  V_1 -  V_0);
-    printUpdate(" Coulomb  ",  J_1,  J_1 -  J_0);
-    printUpdate(" Exchange ",  K_1,  K_1 -  K_0);
-    printUpdate(" X-C      ", XC_1, XC_1 - XC_0);
+    printUpdate(" Kinetic    ",  T_1,  T_1 -  T_0);
+    printUpdate(" N-E        ",  V_1,  V_1 -  V_0);
+    printUpdate(" Coulomb    ",  J_1,  J_1 -  J_0);
+    printUpdate(" Exchange   ",  K_1,  K_1 -  K_0);
+    printUpdate(" X-C        ", XC_1, XC_1 - XC_0);
     TelePrompter::printSeparator(0, '-');
-    printUpdate(" Total    ",  E_1,  E_1 -  E_0);
+    printUpdate(" Electronic ",  E_1,  E_1 -  E_0);
+    printUpdate(" Nuclear    ",  N_1,  N_1 -  N_0);
+    TelePrompter::printSeparator(0, '-');
+    printUpdate(" Total      ",  E_1 + N_1, (E_1+N_1) - (E_0+N_0));
     TelePrompter::printSeparator(0, '=');
 }
 
