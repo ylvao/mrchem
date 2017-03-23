@@ -209,13 +209,22 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Optical rotation not implemented");
         return false;
     }
-    if (calc_spin_spin_coupling) {
-        MSG_ERROR("Only diamagnetic spin-spin coupling atm");
+    if (calc_magnetizability) {
+        MSG_ERROR("Magnetizability not implemented");
+        return false;
     }
-    //if (calc_hyperfine_coupling) {
-        //MSG_ERROR("Hyperfine coupling not implemented");
-        //return false;
-    //}
+    if (calc_nmr_shielding) {
+        MSG_ERROR("NMR shielding not implemented");
+        return false;
+    }
+    if (calc_spin_spin_coupling) {
+        MSG_ERROR("Spin-spin coupling not implemented");
+        return false;
+    }
+    if (calc_hyperfine_coupling) {
+        MSG_ERROR("Hyperfine coupling not implemented");
+        return false;
+    }
     return true;
 }
 
