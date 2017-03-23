@@ -37,7 +37,6 @@
 #include "ABGVOperator.h"
 #include "PHOperator.h"
 
-#include "HSFOperator.h"
 #include "H_E_dip.h"
 #include "H_B_dip.h"
 #include "H_BB_dia.h"
@@ -475,6 +474,7 @@ void SCFDriver::setupInitialGroundState() {
         MatrixXd M = MathUtils::diagonalizeHermitianMatrix(f_mat);
         MatrixXd U = M.transpose()*S_m12;
 
+        // Duplicate orbitals if unrestricted
 	extendRotationMatrix(*phi, U);
 
         // Rotate n lowest energy orbitals of U*tmp into phi
@@ -570,23 +570,12 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     }
     if (xFac > MachineZero) {
         NOT_IMPLEMENTED_ABORT;
-        //dK = new ExchangeHessian(*P, *orbitals, x_orbs, y_orbs, xFac);
     }
 
     int d = rsp_calc.dir;
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
     if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) {
         NOT_IMPLEMENTED_ABORT;
-        //dJ = new CoulombHessian(*P, *orbitals, x_orbs, y_orbs);
-        //if (wf_method == "DFT") {
-        //    xcfun_2 = new XCFunctional(dft_spin, 2);
-        //    xcfun_2->setDensityCutoff(dft_cutoff[1]);
-        //    for (int i = 0; i < dft_func_names.size(); i++) {
-        //        xcfun_2->setFunctional(dft_func_names[i], dft_func_coefs[i]);
-        //    }
-        //    if (xcfun_2 == 0) MSG_ERROR("xcfun not initialized");
-        //    dXC = new XCHessian(*xcfun_2, *orbitals, x_orbs, y_orbs);
-        //}
     }
 
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
@@ -751,10 +740,7 @@ void SCFDriver::calcGroundStateProperties() {
                 MatrixXd &dia = sscc.getDiamagnetic();
                 const double *r_K = sscc.getNucleusK().getCoord();
                 const double *r_L = sscc.getNucleusL().getCoord();
-                //H_DSO h_dso(r_K, r_L);
-                //h_dso.setup(rel_prec);
-                //dia = h_dso.trace(*phi);
-                //h_dso.clear();
+                NOT_IMPLEMENTED_ABORT;
             }
         }
         timer.stop();
@@ -770,35 +756,7 @@ void SCFDriver::calcGroundStateProperties() {
             const Nuclei &nucs = molecule->getNuclei();
             const Nucleus &nuc = nucs[K];
             const double *r_K = nuc.getCoord();
-
-            Density rho(true);
-            DensityProjector project(rel_prec, MRA->getMaxScale());
-            project(rho, *phi);
-            double t_delta = rho.total().evalf(r_K);
-            double s_delta = rho.spin().evalf(r_K);
-            double a_delta = rho.alpha().evalf(r_K);
-            double b_delta = rho.beta().evalf(r_K);
-            rho.clear();
-
-            println(0, endl);
-            println(0, "t_delta                        " << setw(30) << t_delta);
-            println(0, "s_delta                        " << setw(30) << s_delta);
-            println(0, "a_delta                        " << setw(30) << a_delta);
-            println(0, "b_delta                        " << setw(30) << b_delta << endl);
-
-            MatrixXd &FC = hfc.getFermiContactTerm();
-            FC(0,0) = s_delta;
-
-            //H_M_fc h(r_K);
-            //h.setup(rel_prec);
-            //FC(0,0) = h[2].trace(*phi);
-            //h.clear();
-
-            //MatrixXd &Sz = hfc.getSpinTerm();
-            //SpinOperator s;
-            //s.setup(rel_prec);
-            //Sz(0,0) = s[2].trace(*phi);
-            //s.clear();
+            NOT_IMPLEMENTED_ABORT;
         }
         timer.stop();
         TelePrompter::printFooter(0, timer, 2);
