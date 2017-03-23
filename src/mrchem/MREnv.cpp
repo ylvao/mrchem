@@ -93,25 +93,31 @@ void MREnv::finalizeMRCPP(const Timer t) {
 
 void MREnv::initializeMRA() {
     // Constructing world box
-    int depth = Input.get<int>("max_depth");
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<3> idx(scale, corner.data());
+    int min_scale = Input.get<int>("MRA.min_scale");
+    int max_scale = Input.get<int>("MRA.max_scale");
+    vector<int> corner = Input.getIntVec("MRA.corner");
+    vector<int> boxes = Input.getIntVec("MRA.boxes");
+    NodeIndex<3> idx(min_scale, corner.data());
     BoundingBox<3> world(idx, boxes.data());
 
     // Constructing scaling basis
-    int order = Input.get<int>("order");
-    string wtype = Input.get<string>("wavelet");
+    int order = Input.get<int>("MRA.order");
+    string wtype = Input.get<string>("MRA.wavelet");
+
+    int max_depth = max_scale - min_scale;
+    if (min_scale < MinScale) MSG_FATAL("Root scale too large");
+    if (max_scale > MaxScale) MSG_FATAL("Max scale too large");
+    if (max_depth > MaxDepth) MSG_FATAL("Max depth too large");
 
     // Initializing MRA
     if (wtype == "I") {
         InterpolatingBasis basis(order);
-        MRA = new MultiResolutionAnalysis<3>(world, basis, depth);
+        MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else if (wtype == "L") {
         LegendreBasis basis(order);
-        MRA = new MultiResolutionAnalysis<3>(world, basis, depth);
+        MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else {
         MSG_FATAL("Invalid wavelet type!");
     }
+    MRA->print();
 }

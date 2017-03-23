@@ -61,8 +61,8 @@ SCFDriver::SCFDriver(Getkw &input) {
     rel_prec = input.get<double>("rel_prec");
     nuc_prec = input.get<double>("nuc_prec");
 
-    gauge = input.getDblVec("World.gauge_origin");
-    center_of_mass = input.get<bool>("World.center_of_mass");
+    gauge = input.getDblVec("MRA.gauge_origin");
+    center_of_mass = input.get<bool>("MRA.center_of_mass");
 
     diff_kin = input.get<string>("Derivatives.kinetic");
     diff_orb = input.get<string>("Derivatives.h_orb");
