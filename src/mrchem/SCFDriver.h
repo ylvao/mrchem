@@ -140,7 +140,7 @@ protected:
     std::vector<double> dft_func_coefs;
     std::vector<std::string> dft_func_names;
 
-    // Ground state input
+    // Ground state SCF input
     std::string scf_start;
     int scf_kain;
     int scf_max_iter;
@@ -152,6 +152,13 @@ protected:
     double scf_property_thrs;
     double scf_lambda_thrs;
     std::vector<double> scf_orbital_prec;
+
+    // Kinetic free SCF input
+    int kin_free_max_iter;
+    bool kin_free_run;
+    bool kin_free_canonical;
+    double kin_free_orb_thrs;
+    double kin_free_prop_thrs;
 
     // Linear response input
     std::string rsp_start;

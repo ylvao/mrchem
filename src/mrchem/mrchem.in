@@ -215,13 +215,21 @@ def setup_keywords():
     scf.add_kw('kain',                  'INT', 0)
     scf.add_kw('rotation',              'INT', 0)
     scf.add_kw('canonical',             'BOOL', True)
-    scf.add_kw('orbital_thrs',          'DBL', 1.0)
-    scf.add_kw('property_thrs',         'DBL', 1.0)
+    scf.add_kw('orbital_thrs',          'DBL', -1.0)
+    scf.add_kw('property_thrs',         'DBL', -1.0)
     scf.add_kw('lambda_thrs',           'DBL', 1.0e-4)
     scf.add_kw('orbital_prec',          'DBL_ARRAY', [1.0e-4,-1.0])
     scf.add_kw('initial_guess',         'STR', 'none')
     scf.add_kw('write_orbitals',        'BOOL', False)
     top.add_sect(scf)
+
+    kinetic_free=getkw.Section('KineticFree', callback=verify_kinetic_free)
+    kinetic_free.add_kw('run',                   'BOOL', False)
+    kinetic_free.add_kw('max_iter',              'INT', -1)
+    kinetic_free.add_kw('canonical',             'BOOL', True)
+    kinetic_free.add_kw('orbital_thrs',          'DBL', -1.0)
+    kinetic_free.add_kw('property_thrs',         'DBL', -1.0)
+    top.add_sect(kinetic_free)
 
     response=getkw.Section('Response', callback=verify_response)
     response.add_kw('run',              'BOOL', True)
@@ -391,12 +399,14 @@ def verify_scf(scf):
         scf['orbital_prec'][1] = topsect['rel_prec'][0]
     if scf['orbital_prec'][0] < 0:
         scf['orbital_prec'][0] = scf['orbital_prec'][1]
-    if not scf['property_thrs'].is_set():
+    if not scf['orbital_thrs'].is_set() and not scf['property_thrs'].is_set():
         scf['property_thrs'][0] = topsect['rel_prec'][0]/10
-        #print "   property_thrs  ", scf['property_thrs'][0]
-    if not scf['orbital_thrs'].is_set():
         scf['orbital_thrs'][0] = math.sqrt(scf['property_thrs'][0])
-        #print "   orbital_thrs  ", scf['orbital_thrs'][0]
+
+def verify_kinetic_free(kinetic_free):
+    if not kinetic_free['orbital_thrs'].is_set() and not kinetic_free['property_thrs'].is_set():
+        kinetic_free['property_thrs'][0] = topsect['rel_prec'][0]/10
+        kinetic_free['orbital_thrs'][0] = math.sqrt(kinetic_free['property_thrs'][0])
 
 
 if __name__ == '__main__':

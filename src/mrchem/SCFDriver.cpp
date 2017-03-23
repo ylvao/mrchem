@@ -117,6 +117,12 @@ SCFDriver::SCFDriver(Getkw &input) {
     scf_lambda_thrs = input.get<double>("SCF.lambda_thrs");
     scf_orbital_prec = input.getDblVec("SCF.orbital_prec");
 
+    kin_free_run = input.get<bool>("KineticFree.run");
+    kin_free_max_iter = input.get<int>("KineticFree.max_iter");
+    kin_free_canonical = input.get<bool>("KineticFree.canonical");
+    kin_free_orb_thrs = input.get<double>("KineticFree.orbital_thrs");
+    kin_free_prop_thrs = input.get<double>("KineticFree.property_thrs");
+
     rsp_run = input.get<bool>("Response.run");
     rsp_start = input.get<string>("Response.initial_guess");
     rsp_kain = input.get<int>("Response.kain");
@@ -513,10 +519,10 @@ EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
     EnergyOptimizer *optimizer = new EnergyOptimizer(*helmholtz);
-    optimizer->setMaxIterations(scf_max_iter);
-    optimizer->setCanonical(scf_canonical);
-    optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
-    optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
+    optimizer->setMaxIterations(kin_free_max_iter);
+    optimizer->setCanonical(kin_free_canonical);
+    optimizer->setThreshold(kin_free_orb_thrs, kin_free_prop_thrs);
+    optimizer->setOrbitalPrec(rel_prec, rel_prec);
 
     return optimizer;
 }
@@ -619,7 +625,7 @@ bool SCFDriver::runGroundState() {
     setupInitialGroundState();
 
     // Optimize orbitals
-    if (scf_run and scf_orbital_thrs > 0.0) {
+    if (scf_run) {
         OrbitalOptimizer *solver = setupOrbitalOptimizer();
         solver->setup(*fock, *phi, F);
         converged = solver->optimize();
@@ -632,7 +638,7 @@ bool SCFDriver::runGroundState() {
     }
 
     // Optimize energy
-    if (scf_run and scf_property_thrs > 0.0) {
+    if (kin_free_run) {
         setup_np1();
 
         EnergyOptimizer *solver = setupEnergyOptimizer();
