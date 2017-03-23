@@ -73,11 +73,10 @@ double Orbital::getExchangeFactor(const Orbital &orb) const {
 }
 
 bool Orbital::isConverged(double prec) const {
-    if (getError() > prec) {
-        return false;
-    } else {
-        return true;
-    }
+    bool converged = false;
+    if (prec < 0.0) converged = true;
+    if (getError() < prec) converged = true;
+    return converged;
 }
 
 complex<double> Orbital::dot(Orbital &ket) {
