@@ -142,7 +142,7 @@ protected:
 
     // Ground state input
     std::string scf_start;
-    int scf_history;
+    int scf_kain;
     int scf_max_iter;
     int scf_rotation;
     bool scf_run;
@@ -155,7 +155,7 @@ protected:
 
     // Linear response input
     std::string rsp_start;
-    int rsp_history;
+    int rsp_kain;
     int rsp_max_iter;
     bool rsp_run;
     bool rsp_canonical;
@@ -180,9 +180,9 @@ protected:
 
     // SCF machinery
     HelmholtzOperatorSet *helmholtz;
-    KAIN *scf_kain;
-    KAIN *rsp_kain_x;
-    KAIN *rsp_kain_y;
+    KAIN *kain;
+    KAIN *kain_x;
+    KAIN *kain_y;
 
     // MRA operators
     PoissonOperator *P;
