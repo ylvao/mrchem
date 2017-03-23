@@ -95,6 +95,11 @@ protected:
     bool center_of_mass;
     std::vector<double> gauge;
 
+    // Derivative operators
+    string diff_kin;
+    string diff_orb;
+    string diff_pso;
+
     // Run parameters
     bool calc_scf_energy;
     bool calc_dipole_moment;
@@ -181,8 +186,10 @@ protected:
 
     // MRA operators
     PoissonOperator *P;
-    PHOperator<3> *PH;
-    ABGVOperator<3> *ABGV;
+    PHOperator<3> *PH_1;
+    PHOperator<3> *PH_2;
+    ABGVOperator<3> *ABGV_00;
+    ABGVOperator<3> *ABGV_55;
 
     // Unperturbed quantities
     Molecule *molecule;

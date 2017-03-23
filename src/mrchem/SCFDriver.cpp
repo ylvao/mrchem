@@ -65,6 +65,10 @@ SCFDriver::SCFDriver(Getkw &input) {
     gauge = input.getDblVec("World.gauge_origin");
     center_of_mass = input.get<bool>("World.center_of_mass");
 
+    diff_kin = input.get<string>("Derivatives.kinetic");
+    diff_orb = input.get<string>("Derivatives.h_orb");
+    diff_pso = input.get<string>("Derivatives.h_pso");
+
     calc_scf_energy = input.get<bool>("Properties.scf_energy");
     calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
     calc_quadrupole_moment = input.get<bool>("Properties.quadrupole_moment");
@@ -144,8 +148,10 @@ SCFDriver::SCFDriver(Getkw &input) {
     rsp_kain_y = 0;
 
     P = 0;
-    PH = 0;
-    ABGV = 0;
+    PH_1 = 0;
+    PH_2 = 0;
+    ABGV_00 = 0;
+    ABGV_55 = 0;
 
     molecule = 0;
     nuclei = 0;
@@ -236,17 +242,23 @@ void SCFDriver::setup() {
 
     // Setting up MW operators
     P = new PoissonOperator(*MRA, rel_prec);
-    PH = new PHOperator<3>(*MRA, 1);
-    ABGV = new ABGVOperator<3>(*MRA, 0.0, 0.0);
+    PH_1 = new PHOperator<3>(*MRA, 1); // first derivative
+    PH_2 = new PHOperator<3>(*MRA, 2); // second derivative
+    ABGV_00 = new ABGVOperator<3>(*MRA, 0.0, 0.0);
+    ABGV_55 = new ABGVOperator<3>(*MRA, 0.5, 0.5);
 
     // Setting up perturbation operators
     int nNucs = molecule->getNNuclei();
     h_E = new H_E_dip(r_O);
-    h_B = new H_B_dip(*ABGV, r_O);
+    if (diff_orb == "PH")      h_B = new H_B_dip(*PH_1, r_O);
+    if (diff_orb == "ABGV_00") h_B = new H_B_dip(*ABGV_00, r_O);
+    if (diff_orb == "ABGV_55") h_B = new H_B_dip(*ABGV_55, r_O);
     h_M = new H_M_pso*[nNucs];
     for (int k = 0; k < nNucs; k++) {
         const double *r_K = molecule->getNucleus(k).getCoord();
-        h_M[k] = new H_M_pso(*ABGV, r_K);
+        if (diff_pso == "PH")      h_M[k] = new H_M_pso(*PH_1, r_K);
+        if (diff_pso == "ABGV_00") h_M[k] = new H_M_pso(*ABGV_00, r_K);
+        if (diff_pso == "ABGV_55") h_M[k] = new H_M_pso(*ABGV_55, r_K);
     }
 
     // Setting up properties
@@ -340,7 +352,9 @@ void SCFDriver::setup() {
     if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
 
     // Setting up Fock operator
-    T = new KineticOperator(*ABGV);
+    if (diff_kin == "PH")      T = new KineticOperator(*PH_1);
+    if (diff_kin == "ABGV_00") T = new KineticOperator(*ABGV_00);
+    if (diff_kin == "ABGV_55") T = new KineticOperator(*ABGV_55);
     V = new NuclearPotential(*nuclei, nuc_prec);
 
     if (wf_method == "Core") {
@@ -358,7 +372,7 @@ void SCFDriver::setup() {
         for (int i = 0; i < dft_func_names.size(); i++) {
             xcfun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
         }
-        XC = new XCPotential(*xcfun, *phi, ABGV);
+        XC = new XCPotential(*xcfun, *phi, ABGV_00);
         if (dft_x_fac > MachineZero) {
             K = new ExchangePotential(*P, *phi, dft_x_fac);
         }
@@ -388,8 +402,10 @@ void SCFDriver::clear() {
     if (phi != 0) delete phi;
     if (molecule != 0) delete molecule;
 
-    if (ABGV != 0) delete ABGV;
-    if (PH != 0) delete PH;
+    if (ABGV_55 != 0) delete ABGV_55;
+    if (ABGV_00 != 0) delete ABGV_00;
+    if (PH_2 != 0) delete PH_2;
+    if (PH_1 != 0) delete PH_1;
     if (P != 0) delete P;
 
     if (scf_kain != 0) delete scf_kain;
@@ -410,7 +426,7 @@ void SCFDriver::setup_np1() {
         K_np1 = new ExchangePotential(*P, *phi_np1);
     } else if (wf_method == "DFT") {
         J_np1 = new CoulombPotential(*P, *phi_np1);
-        XC_np1 = new XCPotential(*xcfun, *phi_np1, ABGV);
+        XC_np1 = new XCPotential(*xcfun, *phi_np1, ABGV_00);
         if (dft_x_fac > MachineZero) {
             K_np1 = new ExchangePotential(*P, *phi_np1, dft_x_fac);
         }

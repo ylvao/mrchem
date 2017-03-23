@@ -142,6 +142,12 @@ def setup_keywords():
     world.add_kw('gauge_origin',        'DBL_ARRAY', [0.0, 0.0, 0.0])
     top.add_sect(world)
 
+    derivatives=getkw.Section('Derivatives')
+    derivatives.add_kw('kinetic',       'STR', 'ABGV_00')
+    derivatives.add_kw('h_orb',         'STR', 'ABGV_00')
+    derivatives.add_kw('h_pso',         'STR', 'ABGV_00')
+    top.add_sect(derivatives)
+
     molecule=getkw.Section('Molecule', callback = verify_molecule)
     molecule.add_kw('charge',           'INT', 0)
     molecule.add_kw('multiplicity',     'INT', 1)
