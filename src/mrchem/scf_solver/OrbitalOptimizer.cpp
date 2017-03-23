@@ -52,6 +52,7 @@ bool OrbitalOptimizer::optimize() {
 
     double err_o = phi_n.getErrors().maxCoeff();
     double err_t = 1.0;
+    double err_p = 1.0;
 	
     fock.setup(getOrbitalPrecision());
     F = fock(phi_n, phi_n);
@@ -65,7 +66,6 @@ bool OrbitalOptimizer::optimize() {
         adjustPrecision(err_o);
 
         double orb_prec = getOrbitalPrecision();
-        double orb_thrs = getOrbitalThreshold();
 
         // Rotate orbitals
         if (needLocalization(nIter)) {
@@ -101,7 +101,7 @@ bool OrbitalOptimizer::optimize() {
 	int Ni = dPhi_n.size();
         VectorXd errors = VectorXd::Zero(Ni);
 	for (int i = MPI_rank; i < Ni; i += MPI_size){
-	  errors(i) = sqrt(dPhi_n.getOrbital(i).getSquareNorm());
+	    errors(i) = sqrt(dPhi_n.getOrbital(i).getSquareNorm());
 	}
 #ifdef HAVE_MPI
 	//distribute errors among all orbitals
@@ -110,7 +110,9 @@ bool OrbitalOptimizer::optimize() {
 #endif
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));
+        err_p = calcPropertyError();
         this->orbError.push_back(err_t);
+        converged = checkConvergence(err_o, err_p);
 		
         // Update orbitals
         this->add.inPlace(phi_n, 1.0, dPhi_n);
@@ -130,10 +132,7 @@ bool OrbitalOptimizer::optimize() {
         printProperty();
         printTimer(timer.getWallTime());
 
-        if (err_o < orb_thrs) {
-            converged = true;
-            break;
-        }
+        if (converged) break;
     }
     if (this->kain != 0) this->kain->clear();
     fock.clear();

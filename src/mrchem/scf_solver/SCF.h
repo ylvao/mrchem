@@ -45,6 +45,7 @@ protected:
     OrbitalAdder add;
     HelmholtzOperatorSet *helmholtz;// Pointer to external object, do not delete!
 
+    bool checkConvergence(double err_o, double err_p) const;
     bool needLocalization(int nIter) const;
     bool needDiagonalization(int nIter) const;
 

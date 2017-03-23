@@ -74,7 +74,6 @@ bool EnergyOptimizer::optimize() {
         adjustPrecision(err_o);
 
         double orb_prec = getOrbitalPrecision();
-        double prop_thrs = getPropertyThreshold();
 
         // Compute electronic energy
         fock.setup(orb_prec);
@@ -101,6 +100,7 @@ bool EnergyOptimizer::optimize() {
         err_t = sqrt(errors.dot(errors));
         err_p = calcPropertyError();
         this->orbError.push_back(err_t);
+        converged = checkConvergence(err_o, err_p);
 
         // Compute Fock matrix
         MatrixXd F_np1 = F_n + calcFockMatrixUpdate();
@@ -123,10 +123,7 @@ bool EnergyOptimizer::optimize() {
         printProperty();
         printTimer(timer.getWallTime());
 
-        if (err_p < prop_thrs) {
-            converged = true;
-            break;
-        }
+        if (converged) break;
     }
     this->add.setPrecision(this->orbPrec[2]/10.0);
     if (this->canonical) {
