@@ -58,6 +58,17 @@ void SCF::resetPrecision() {
     this->orbPrec[0] = this->orbPrec[1];
 }
 
+bool SCF::checkConvergence(double err_o, double err_p) const {
+    double thrs_o = getOrbitalThreshold();
+    double thrs_p = getPropertyThreshold();
+
+    bool conv_o = false;
+    bool conv_p = false;
+    if (err_o < thrs_o or thrs_o < 0.0) conv_o = true;
+    if (err_p < thrs_p or thrs_p < 0.0) conv_p = true;
+    return (conv_o and conv_p);
+}
+
 bool SCF::needLocalization(int nIter) const {
     bool loc = false;
     if (this->canonical) {
@@ -92,7 +103,8 @@ void SCF::printUpdate(const string &name, double P, double dP) const {
     if (fabs(P) > MachineZero) {
         p = P;
     }
-    bool done = fabs(dP/p) < getPropertyThreshold();
+    double thrs = getPropertyThreshold();
+    bool done = (fabs(dP/p) < thrs) or thrs < 0.0;
     printout(0, name);
     printout(0, setw(24) << P);
     TelePrompter::setPrecision(5);
