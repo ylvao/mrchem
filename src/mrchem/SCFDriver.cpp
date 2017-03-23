@@ -107,7 +107,7 @@ SCFDriver::SCFDriver(Getkw &input) {
 
     scf_run = input.get<bool>("SCF.run");
     scf_start = input.get<string>("SCF.initial_guess");
-    scf_history = input.get<int>("SCF.history");
+    scf_kain = input.get<int>("SCF.kain");
     scf_max_iter = input.get<int>("SCF.max_iter");
     scf_rotation = input.get<int>("SCF.rotation");
     scf_canonical = input.get<bool>("SCF.canonical");
@@ -119,7 +119,7 @@ SCFDriver::SCFDriver(Getkw &input) {
 
     rsp_run = input.get<bool>("Response.run");
     rsp_start = input.get<string>("Response.initial_guess");
-    rsp_history = input.get<int>("Response.history");
+    rsp_kain = input.get<int>("Response.kain");
     rsp_max_iter = input.get<int>("Response.max_iter");
     rsp_canonical = input.get<bool>("Response.canonical");
     rsp_write_orbitals = input.get<bool>("Response.write_orbitals");
@@ -142,9 +142,9 @@ SCFDriver::SCFDriver(Getkw &input) {
     r_O[2] = 0.0;
 
     helmholtz = 0;
-    scf_kain = 0;
-    rsp_kain_x = 0;
-    rsp_kain_y = 0;
+    kain = 0;
+    kain_x = 0;
+    kain_y = 0;
 
     P = 0;
     PH_1 = 0;
@@ -355,9 +355,9 @@ void SCFDriver::setup() {
 
     // Setting up SCF
     helmholtz = new HelmholtzOperatorSet(rel_prec, scf_lambda_thrs);
-    if (scf_history > 0) scf_kain = new KAIN(scf_history);
-    if (rsp_history > 0) rsp_kain_x = new KAIN(rsp_history);
-    if (rsp_history > 0) rsp_kain_y = new KAIN(rsp_history);
+    if (scf_kain > 0) kain = new KAIN(scf_kain);
+    if (rsp_kain > 0) kain_x = new KAIN(rsp_kain);
+    if (rsp_kain > 0) kain_y = new KAIN(rsp_kain);
 
     // Setting up Fock operator
     if (diff_kin == "PH")      T = new KineticOperator(*PH_1);
@@ -416,9 +416,9 @@ void SCFDriver::clear() {
     if (PH_1 != 0) delete PH_1;
     if (P != 0) delete P;
 
-    if (scf_kain != 0) delete scf_kain;
-    if (rsp_kain_x != 0) delete rsp_kain_x;
-    if (rsp_kain_y != 0) delete rsp_kain_y;
+    if (kain != 0) delete kain;
+    if (kain_x != 0) delete kain_x;
+    if (kain_y != 0) delete kain_y;
     if (helmholtz != 0) delete helmholtz;
 }
 
@@ -499,7 +499,7 @@ void SCFDriver::setupInitialGroundState() {
 OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, scf_kain);
+    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, kain);
     optimizer->setMaxIterations(scf_max_iter);
     optimizer->setRotation(scf_rotation);
     optimizer->setCanonical(scf_canonical);
@@ -526,9 +526,9 @@ LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
 
     LinearResponseSolver *lrs = 0;
     if (dynamic) {
-        lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x, rsp_kain_y);
+        lrs = new LinearResponseSolver(*helmholtz, kain_x, kain_y);
     } else {
-        lrs = new LinearResponseSolver(*helmholtz, rsp_kain_x);
+        lrs = new LinearResponseSolver(*helmholtz, kain_x);
     }
     lrs->setMaxIterations(rsp_max_iter);
     lrs->setThreshold(rsp_orbital_thrs, rsp_property_thrs);
