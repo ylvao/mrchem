@@ -1,11 +1,13 @@
 # vim:syntax=sh:
 
-order = 7                         # Polynomial order of the MW basis
 rel_prec = 1.0e-4                 # Overall relative precision
 printlevel = 0
 
-World {
-  scale = -4                      # Root scale defines world size 2^{-scale}
+MRA {
+  order = 7                       # Polynomial order of the MW basis
+  wavelet = Legendre              # Polynomial type (Legendre or Interpolating)
+  min_scale = -4                  # Root scale defines world size 2^{-n}
+  max_scale = 25                  # Maximum refinement 2^{-n}
   corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
   boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
 }
@@ -18,24 +20,17 @@ $end
 }
 
 WaveFunction {
-  method = DFT                     # Wave function method (HF or DFT)
-}
-
-DFT {
-$functionals
-PBEX
-PBEC
-$end
+  method = HF                     # Wave function method (HF or DFT)
 }
 
 Properties {
-  total_energy = true             # Compute ground state energy
+  scf_energy = true               # Compute ground state energy
 }
 
 SCF {
   orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
   property_thrs = 1.0e-6          # Convergence threshold in total energy
   initial_guess = gto             # Type of initial guess: none, mw, gto
-  history = 3                     # Length of KAIN iterative history
+  kain = 3                        # Length of KAIN iterative history
 }
 
