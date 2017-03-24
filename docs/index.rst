@@ -62,7 +62,8 @@ Upcoming features:
     + Hyperfine coupling constant
     + Magnetically induced currents
 * Parallel implementation:
-    + Distributed memory (MPI) and hybrid (MPI + OpenMP)
+    + Distributed memory (MPI)
+    + Hybrid scheme (MPI + OpenMP)
 
 
 .. toctree::
