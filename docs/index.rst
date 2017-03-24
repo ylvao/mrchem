@@ -28,21 +28,41 @@ available, and the latest version (with limited functionality) can be found on
 `GitHub <https://github.com/MRChemSoft/mrchem>`_. This is **not** a stable
 version, expect major changes in the future.
 
-Features as of July 2016:
+Features as of March 2017:
+--------------------------
 
-* Spin restricted (closed-shell) Kohn-Sham DFT (LDA and GGA)
-* Ground state energy and dipole moment
-* Localized orbitals
-* Shared memory parallelization (OpenMP)
-* Size limitation: ~50 orbitals
-* Accuracy limitation: ~nanoHartree
+* Wave functions:
+    + Spin-unpolarized Kohn-Sham DFT (LDA, GGA and hybrid)
+    + Restricted Hartree-Fock (closed-shell only)
+    + Unrestricted Hartree-Fock
+* Properties:
+    + Ground state energy
+    + Dipole moment
+* Parallel implementation:
+    + Shared memory (OpenMP): ~20 cores
+* Current limitations on a single medium-memory compute node (128GB):
+    + nano-Hartree accuracy: ~10 orbitals
+    + micro-Hartree accuracy: ~50 orbitals
+    + milli-Hartree accuracy: ~100 orbitals
 
 Upcoming features:
+------------------
 
-* Hartree-Fock exchange
-* Spin unrestricted (open-shell) HF and DFT
-* Linear response properties (electric, magnetic)
-* Distributed memory parallelization (MPI + OpenMP)
+* Wave functions:
+    + Spin-polarized Kohn-Sham DFT
+    + Meta-GGAs
+* Properties:
+    + Quadrupole moment
+    + Polarizability
+    + Hyperpolarizability
+    + Optical rotation
+    + Magnetizability
+    + NMR shielding constant
+    + Spin-spin coupling constant
+    + Hyperfine coupling constant
+    + Magnetically induced currents
+* Parallel implementation:
+    + Distributed memory (MPI) and hybrid (MPI + OpenMP)
 
 
 .. toctree::
