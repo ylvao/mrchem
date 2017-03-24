@@ -364,7 +364,7 @@ The following input will compute the B3LYP energy (six digits) and dipole moment
 
     Properties {
         scf_energy = true                   # Compute total energy
-        dipole_moment = false               # Compute dipole moment
+        dipole_moment = true                # Compute dipole moment
     }
 
     SCF {
