@@ -133,7 +133,7 @@ def setup_keywords():
 
     mra=getkw.Section('MRA', callback = verify_mra)
     mra.add_kw('order',                 'INT', -1)
-    mra.add_kw('wavelet',               'STR', 'Interpolating')
+    mra.add_kw('basis_type',            'STR', 'Interpolating')
     mra.add_kw('min_scale',             'INT', 0)
     mra.add_kw('max_scale',             'INT', 25)
     mra.add_kw('boxes',                 'INT_ARRAY', [1, 1, 1])
@@ -302,14 +302,14 @@ def verify_top(top):
         top['nuc_prec'][0] = top['rel_prec'][0]
 
 def verify_mra(mra):
-    wavelet=mra.get('wavelet')
-    wlet=wavelet.get()
+    basis_type=mra.get('basis_type')
+    wlet=basis_type.get()
     if re.match('legen.*', wlet, re.I):
-        wavelet.set("L")
+        basis_type.set("L")
     elif re.match('inter.*', wlet, re.I):
-        wavelet.set("I")
+        basis_type.set("I")
     else:
-        print "Invalid wavelet type: ", wavelet
+        print "Invalid basis type: ", basis_type
         sys.exit(1)
     if not mra.get('order').is_set():
         mra.get('order')[0] = int(math.ceil(-1.5*math.log10(topsect['rel_prec'][0])));

@@ -5,7 +5,7 @@ printlevel = 0
 
 MRA {
   order = 7                       # Polynomial order of the MW basis
-  wavelet = Legendre              # Polynomial type (Legendre or Interpolating)
+  basis_type = Legendre           # Polynomial type (Legendre or Interpolating)
   min_scale = -4                  # Root scale defines world size 2^{-n}
   max_scale = 25                  # Maximum refinement 2^{-n}
   corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]

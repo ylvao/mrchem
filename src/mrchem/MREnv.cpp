@@ -102,7 +102,7 @@ void MREnv::initializeMRA() {
 
     // Constructing scaling basis
     int order = Input.get<int>("MRA.order");
-    string wtype = Input.get<string>("MRA.wavelet");
+    string btype = Input.get<string>("MRA.basis_type");
 
     int max_depth = max_scale - min_scale;
     if (min_scale < MinScale) MSG_FATAL("Root scale too large");
@@ -110,14 +110,14 @@ void MREnv::initializeMRA() {
     if (max_depth > MaxDepth) MSG_FATAL("Max depth too large");
 
     // Initializing MRA
-    if (wtype == "I") {
+    if (btype == "I") {
         InterpolatingBasis basis(order);
         MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
-    } else if (wtype == "L") {
+    } else if (btype == "L") {
         LegendreBasis basis(order);
         MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else {
-        MSG_FATAL("Invalid wavelet type!");
+        MSG_FATAL("Invalid basis type!");
     }
     MRA->print();
 }
