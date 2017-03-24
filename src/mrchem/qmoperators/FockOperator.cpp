@@ -167,16 +167,50 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
                   MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
 #else
-    if (this->T != 0) result += (*this->T)(i_orbs, j_orbs);
-    if (this->V != 0) result += (*this->V)(i_orbs, j_orbs);
-    if (this->J != 0) result += (*this->J)(i_orbs, j_orbs);
-    if (this->K != 0) result += (*this->K)(i_orbs, j_orbs);
-    if (this->XC != 0) result += (*this->XC)(i_orbs, j_orbs);
-    if (this->H_1 != 0) result += (*this->H_1)(i_orbs, j_orbs);
+    Timer tot_t;
+    TelePrompter::printHeader(0, "Calculating Fock matrix");
+    if (this->T != 0) {
+        Timer timer;
+        result += (*this->T)(i_orbs, j_orbs);
+        timer.stop();
+        TelePrompter::printDouble(0, "Kinetic matrix", timer.getWallTime());
+    }
+    if (this->V != 0) {
+        Timer timer;
+        result += (*this->V)(i_orbs, j_orbs);
+        timer.stop();
+        TelePrompter::printDouble(0, "Nuclear potential matrix", timer.getWallTime());
+    }
+    if (this->J != 0) {
+        Timer timer;
+        result += (*this->J)(i_orbs, j_orbs);
+        timer.stop();
+        TelePrompter::printDouble(0, "Coulomb matrix", timer.getWallTime());
+    }
+    if (this->K != 0) {
+        Timer timer;
+        result += (*this->K)(i_orbs, j_orbs);
+        timer.stop();
+        TelePrompter::printDouble(0, "Exchange matrix", timer.getWallTime());
+    }
+    if (this->XC != 0) {
+        Timer timer;
+        result += (*this->XC)(i_orbs, j_orbs);
+        timer.stop();
+        TelePrompter::printDouble(0, "Exchange-Correlation matrix", timer.getWallTime());
+    }
+    if (this->H_1 != 0) {
+        Timer timer;
+        result += (*this->H_1)(i_orbs, j_orbs);
+        timer.stop();
+        TelePrompter::printDouble(0, "Perturbation matrix", timer.getWallTime());
+    }
+    tot_t.stop();
+    TelePrompter::printFooter(0, tot_t, 2);
 #endif
 
     return result;
-    }
+}
 
 MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
   if(MPI_size>1)cout<<"ERROR"<<endl;
