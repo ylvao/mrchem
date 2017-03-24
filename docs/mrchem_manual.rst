@@ -22,7 +22,7 @@ type
 Top section
 -----------
 
-The main input section basically contain the single most important keyword:
+The main input section contain the single most important keyword:
 the relative precision :math:`\epsilon_{rel}` that will be guaranteed in the
 calculation. The top section is not specified by name, just write the keywords
 directly, e.g
@@ -56,7 +56,7 @@ within a kcal/mol
     abs_prec    = 1.0
     energy_unit = kcal
 
-Note that ``rel_prec`` is the fundamental input parameters that is finally
+Note that ``rel_prec`` is the fundamental input parameter that is finally
 passed to the program, so if this is set explicitly in the input file, it will
 always have precedence.
 
@@ -85,7 +85,7 @@ for ``order``, see below)
 
     MRA {
         order          = 7                  # Polynomial order of MW basis
-        wavelet        = Interpolating      # Legendre or Interpolating
+        scaling_basis  = Interpolating      # Legendre or Interpolating
         min_scale      = 0                  # Size of each root box 2^{-n}
         max_scale      = 20                 # Maximum level of refinement 2^{-n}
         boxes          = [ 1, 1, 1 ]        # Number of root boxes
@@ -95,27 +95,27 @@ for ``order``, see below)
     }
 
 The MW basis is defined by the polynomial order :math:`k`, and the type of
-scaling functions (Legendre or Interpolating polynomials). Note that increased
-precision requires higher polynomial order (use e.g :math:`k = 5` for
-:math:`\epsilon_{rel} = 10^{-3}`, and :math:`k = 13` for
+scaling functions (Legendre or Interpolating polynomials). Note that
+increased precision requires higher polynomial order (use e.g :math:`k = 5`
+for :math:`\epsilon_{rel} = 10^{-3}`, and :math:`k = 13` for
 :math:`\epsilon_{rel} = 10^{-9}`, and interpolate in between). If the ``order``
 keyword is left out it will be set automatically according to
 
 .. math:: k=-1.5*log_{10}(\epsilon_{rel})
 
 The scale and translation of the root boxes are absolute, which means that the
-only way to get a symmetric world around the origin is to use two root boxes in
-each direction and set corner at -1 (if this does not fit well with your
+only way to get a symmetric world around the origin is to use two root ``boxes``
+in each direction and set ``corner`` at -1 (if this does not fit well with your
 molecular geometry, use a larger box or translate your molecular coordinates).
 The computational world should be large enough so that the electron density
 vanishes at the boundaries. The ``gauge_origin`` can also be specified (relevant
-for molecular properties), or set to the molecular center of mass. The default
-computational domain displayed above corresponds to the unit cube (in bohr).
-The maximum refinement level should preferably be as small as possible for
-computational efficiency, but if this level is actually encountered in the
-calculation, the accuracy might get affected. Note that the total span of
-length scales (:math:`n_{max} - n_{min}`) cannot exceed 32 (integer precision
-is :math:`2^{32}`).
+for molecular properties), or set to the molecular ``center_of_mass``. The
+default computational domain displayed above corresponds to the unit cube (in
+bohr). The maximum refinement level ``max_scale`` should preferably be as small
+as possible for computational efficiency, but if this level is actually
+encountered in the calculation, the accuracy might be affected. Note that
+the total span of length scales (``max_scale`` - ``min_scale``) cannot exceed
+32 (integer precision is :math:`2^{32}`).
 
 Molecule
 --------
@@ -153,7 +153,7 @@ must be specified, otherwise defaults are shown)
 
 There are currently four methods available: Core Hamiltonian, Hartree,
 Hartree-Fock (HF) and Density Functional Theory (DFT). When running DFT the
-functional(s) must be specified in a separate DFT section (see below)
+functional(s) must be specified in a separate DFT section (see below).
 
 DFT
 ---
@@ -175,12 +175,12 @@ This section specifies the exchange-correlation functional used in DFT
 
 You can specify as many functionals as you want, and they will be added on top
 of each other with the given coefficient. Both exchange and correlation
-functinals must be set explicitly e.g. ``SLATERX`` and ``VWN5C`` for the
+functionals must be set explicitly, e.g. ``SLATERX`` and ``VWN5C`` for the
 standard LDA functional. For hybrid functionals you must
 specify the amount of exact Hartree-Fock exchange that should be used (0.2 for
-B3LYP and 0.25 for PBE0 etc.). Option to use spin-polarized functionals (for
-open-shell systems). XC functionals are provided by the `XCFun 
-<https://github.com/dftlibs/xcfun>`_ library.
+B3LYP and 0.25 for PBE0 etc.). Option to use spin-polarized functionals.
+XC functionals are provided by the `XCFun <https://github.com/dftlibs/xcfun>`_
+library.
 
 Properties
 ----------
@@ -191,7 +191,7 @@ Specify which properties to compute. Currently the following are available
 .. code-block:: bash
 
     Properties {
-        scf_energy    = false               # Compute total energy
+        scf_energy    = false               # Compute total SCF energy
         dipole_moment = false               # Compute dipole moment
     }
 
@@ -225,7 +225,7 @@ value of -1.0 means that the threshold will not be considered in the
 optimization. The property (total SCF energy) should converge quadratically in
 the orbital errors, however, it will still be limited by the overall precision
 ``rel_prec`` in the calculation. For instance, the following will converge the
-energy within nine digits, but only five of those are guaranteed to be correct
+energy within nine digits, but only five of them are guaranteed to be correct
 
 .. code-block:: bash
 
@@ -237,10 +237,9 @@ energy within nine digits, but only five of those are guaranteed to be correct
 
 When computing other properties than total energy, the important threshold is
 that for the orbitals, which translates approximately to the relative accuracy
-that you can expect for other properties. The following input should give six
-digits for the total energy and five digits for the dipole moment (always keep
-a factor of 10 between ``rel_prec`` and ``orbital_thrs`` to avoid numerical
-instabilities)
+that you can expect for other properties. The following input should give five
+digits for the dipole moment (always keep a factor of 10 between ``rel_prec``
+and ``orbital_thrs`` to avoid numerical instabilities)
 
 .. code-block:: bash
 
@@ -290,12 +289,11 @@ using a small GTO basis set (basis and MO matrix input files must be provided)
 and "mw" means starting from a previous MRChem calculation (compatible orbitals
 must have been written to disk using the ``write_orbitals`` keyword).
 
-EXAMPLE
--------
+Example 1
+---------
 
-The following input will compute the Hartree-Fock energy of the water molecule
-to micro-Hartree precision
-
+The following input will compute the Hartree-Fock energy of water to
+micro-Hartree precision
 
 .. code-block:: bash
 
@@ -325,4 +323,52 @@ to micro-Hartree precision
 
     SCF {
         kain = 3                            # Length of KAIN iterative subspace
+    }
+
+
+Example 2
+---------
+
+The following input will compute the B3LYP energy (six digits) and dipole moment
+(four digits) of carbon monoxide 
+
+.. code-block:: bash
+
+    rel_prec = 1.0e-6
+
+    MRA {
+        min_scale = -5                      # Size of each root box 2^{-n}
+        boxes     = [ 2, 2, 2]              # Number of root boxes
+        corner    = [-1,-1,-1]              # Translation of first root box
+    }
+
+    Molecule {
+        angstrom = true
+        $coords
+        C   0.0000     0.0000    -0.56415
+        O   0.0000     0.0000     0.56415
+        $end
+    }
+
+    WaveFunction {
+        method = DFT                        # Core, Hartree, HF or DFT
+    }
+
+    DFT {
+        exact_exchange = 0.20               # Amount of exact HF exchange
+        $functionals
+        BECKEX      0.80                    # Functional name and coefficient
+        LYPC        1.00
+        $end
+    }
+
+    Properties {
+        scf_energy = true                   # Compute total energy
+        dipole_moment = false               # Compute dipole moment
+    }
+
+    SCF {
+        kain          = 3                   # Length of KAIN iterative subspace
+        orbital_thrs  = 1.0e-4              # Convergence threshold orbitals
+        property_thrs = 1.0e-7              # Convergence threshold energy
     }

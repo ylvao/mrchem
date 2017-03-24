@@ -30,17 +30,19 @@ version, expect major changes in the future.
 
 Features as of March 2017:
 
-* Restricted (closed-shell) Hartree-Fock and Kohn-Sham DFT (LDA, GGA and hybrid)
-* Unrestricted Hartree-Fock (no spin-DFT)
+* Wave functions:
+    + Restricted Kohn-Sham DFT (LDA, GGA and hybrid)
+    + Restricted Hartree-Fock (closed-shell only)
+    + Unrestricted Hartree-Fock
 * Properties:
     + Ground state energy
     + Dipole moment
-* Localized orbitals
-* Shared memory parallelization (OpenMP)
 * Current limitations on a single medium-memory compute node (128GB):
     + nano-Hartree accuracy: ~10 orbitals
     + micro-Hartree accuracy: ~50 orbitals
     + milli-Hartree accuracy: ~100 orbitals
+* Parallel implementation:
+    + Shared memory (OpenMP): ~20 cores
 
 Upcoming features:
 
