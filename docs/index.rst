@@ -40,7 +40,7 @@ Features as of March 2017:
     + Dipole moment
 * Parallel implementation:
     + Shared memory (OpenMP): ~20 cores
-* Current limitations on a single medium-memory compute node (128GB):
+* Current limitations on a single high-memory compute node (768GB):
     + nano-Hartree accuracy: ~10 orbitals
     + micro-Hartree accuracy: ~50 orbitals
     + milli-Hartree accuracy: ~100 orbitals
