@@ -85,7 +85,7 @@ for ``order``, see below)
 
     MRA {
         order          = 7                  # Polynomial order of MW basis
-        scaling_basis  = Interpolating      # Legendre or Interpolating
+        basis_type     = Interpolating      # Legendre or Interpolating
         min_scale      = 0                  # Size of each root box 2^{-n}
         max_scale      = 20                 # Maximum level of refinement 2^{-n}
         boxes          = [ 1, 1, 1 ]        # Number of root boxes
