@@ -8,22 +8,44 @@ Build prerequisites
 -------------------
 
 On Stallo the supplied setup script should be able to configure things
-correctly, provided all the necessary modules have been loaded::
+correctly, provided all the necessary modules have been loaded. Using the Intel
+tool chain::
 
-    $ module load eigen cmake python
+    $ module load intel/2016b
+    $ module load CMake/3.6.1-intel-2016b
+    $ module load Eigen/3.2.9-intel-2016b
+    $ module load Boost
+    $ export EIGEN3_ROOT=/global/hds/software/cpu/eb3/Eigen/3.2.9-intel-2016b
 
+Using the GNU tool chain (produces alot of compiler warnings, but should work
+fine)::
+
+    $ module load CMake/3.6.1-foss-2016b
+    $ module load Eigen/3.2.9-foss-2016b
+    $ module load Boost
+    $ export EIGEN3_ROOT=/global/hds/software/cpu/eb2/Eigen/3.2.9-foss-2016b
 
 -------------------------------
 Obtaining and building the code
 -------------------------------
 
-An experimental version of MRChem is available on GitHub::
+The public version of MRChem (currently with limited features) is available on
+GitHub::
 
     $ git clone git@github.com:MRChemSoft/mrchem.git
+
+To build the code using OpenMP parallelization (there is a ``--mpi`` analogue,
+but this is highly experimental at the moment) with the GNU tool chain::
+
     $ cd mrchem
-    $ ./setup [--cc=icc --cxx=icpc]
+    $ ./setup --omp --prefix=.
     $ cd build
     $ make
+    $ make install
+
+With the Intel tool chain you need to specify the compilers in the setup::
+
+    $ ./setup --cc=icc --cxx=icpc --omp --prefix=.
 
 The official MRChem main program is located in ``src/mrchem/mrchem.cpp``, whose
 executable will be built in ``build/bin/mrchem.x``. Please do not change this
@@ -38,15 +60,17 @@ run the setup script::
     $ cd mrchem/pilot
     $ cp mrchem.cpp.sample mrchem.cpp
     $ cd ..
-    $ ./setup [--cc=icc --cxx=icpc]
+    $ ./setup --cc=icc --cxx=icpc --omp --prefix=.
     $ cd build
     $ make
+    $ make install
 
 The pilot executable will now be built in ``build/pilot/mrchem-pilot.x``.
 Feel free to do whatever you like with your pilot code, but it is your own
 personal playground so don't add this file to git.
 
-A test suite is provided to make sure that everything compiled properly::
+A test suite is provided (with the ``--enable-tests`` flag to setup) to make
+sure that everything compiled properly::
 
     $ cd build/tests
     $ ./unit-tests
@@ -72,7 +96,7 @@ but can be redirected to an output file::
     $ ./mrchem mrchem.inp > mrchem.out &
 
 A sample input file is provided for the pilot code. For the official program,
-please refer to the MRChem manual or the ``example`` directory.
+please refer to the MRChem manual or the examples directory.
 
 By following the instructions above the code will be compiled in OpenMP
 parallel. To run the program in parallel use the environment variable
@@ -81,3 +105,20 @@ available, otherwise use ``export OMP_NUM_THREADS N``)::
 
     $ export OMP_NUM_THREADS 16
     $ ./mrchem
+
+
+--------
+Examples
+--------
+
+There are a few examples (input ``mrchem.inp`` and expected output
+``mrchem.out``) located in the ``examples`` directory. More details regarding
+the input file can be found in the MRChem manual. To run e.g. the H2 molecule
+(on Stallo, please **don't** do this on the login nodes)::
+
+    $ cd examples/h2
+    $ unset OMP_NUM_THREADS
+    $ ../../build/bin/mrchem mrchem.inp
+
+This will print the output from the calculation to the terminal, which you can
+compare to the reference ``mrchem.out``.
