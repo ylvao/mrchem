@@ -37,9 +37,13 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
 
     println(0,endl << endl);
     println(0,"************************************************************");
+    println(0,"***     __  __ ____   ____ _                             ***");
+    println(0,"***    |  \\/  |  _ \\ / ___| |__   ___ _ __ ___           ***");
+    println(0,"***    | |\\/| | |_) | |   | '_ \\ / _ \\ '_ ` _ \\          ***");
+    println(0,"***    | |  | |  _ <| |___| | | |  __/ | | | | |         ***");
+    println(0,"***    |_|  |_|_| \\_\\\\____|_| |_|\\___|_| |_| |_|         ***");
     println(0,"***                                                      ***");
-    println(0,"***    MRChem " << PROGRAM_VERSION << " (rev. " <<
-            GIT_REVISION << ")                       ***");
+    println(0,"***    VERSION " << PROGRAM_VERSION << " (rev. " << GIT_REVISION << ")                      ***");
     println(0,"***                                                      ***");
     println(0,"***    Stig Rune Jensen <stig.r.jensen@uit.no>           ***");
     println(0,"***    Jonas Juselius   <jonas.juselius@uit.no>          ***");
