@@ -20,33 +20,19 @@
 #include "MathUtils.h"
 #include "Plot.h"
 
-#include "AnalyticFunction.h"
-#include "BoundingBox.h"
-#include "NodeIndex.h"
-#include "MultiResolutionAnalysis.h"
-#include "InterpolatingBasis.h"
-#include "LegendreBasis.h"
 #include "FunctionTree.h"
-#include "DerivativeOperator.h"
+#include "ABGVOperator.h"
 #include "PoissonOperator.h"
 #include "HelmholtzOperator.h"
 #include "MWProjector.h"
 #include "MWAdder.h"
 #include "MWMultiplier.h"
+#include "MWDerivative.h"
+#include "MWConvolution.h"
 #include "GridGenerator.h"
-#include "GridCleaner.h"
-#include "CopyAdaptor.h"
-#include "WaveletAdaptor.h"
-#include "OperatorApplier.h"
-
-#include "PeriodicTable.h"
-#include "Molecule.h"
-#include "Nucleus.h"
-#include "MolPlot.h"
+//#include "GridCleaner.h"
 
 #include "GaussFunc.h"
-#include "HydrogenicFunction.h"
-#include "NuclearFunction.h"
 
 
 using namespace std;
@@ -58,7 +44,7 @@ void testMultiplication();
 void testDerivative();
 void testPoisson();
 void testSCF();
-void testTreeCleaner();
+//void testTreeCleaner();
 
 Getkw Input;
 
@@ -92,14 +78,14 @@ int main(int argc, char **argv) {
 template<int D>
 MultiResolutionAnalysis<D>* initializeMRA() {
     // Constructing world box
-    int scale = Input.get<int>("World.scale");
-    vector<int> corner = Input.getIntVec("World.corner");
-    vector<int> boxes = Input.getIntVec("World.boxes");
-    NodeIndex<D> idx(scale, corner.data());
+    int min_scale = Input.get<int>("MRA.min_scale");
+    vector<int> corner = Input.getIntVec("MRA.corner");
+    vector<int> boxes = Input.getIntVec("MRA.boxes");
+    NodeIndex<D> idx(min_scale, corner.data());
     BoundingBox<D> world(idx, boxes.data());
 
     // Constructing scaling basis
-    int order = Input.get<int>("order");
+    int order = Input.get<int>("MRA.order");
     InterpolatingBasis basis(order);
 
     // Initializing MRA
@@ -126,7 +112,7 @@ void testProjection() {
 
     int max_scale = MRA->getMaxScale();
     double prec = Input.get<double>("rel_prec");
-    MWProjector<3> Q(prec, max_scale);
+    MWProjector<3> project(prec, max_scale);
 
     auto f = [] (const double *r) -> double {
         const double beta = 100.0;
@@ -137,7 +123,7 @@ void testProjection() {
     };
 
     FunctionTree<3> f_tree(*MRA);
-    Q(f_tree, f);
+    project(f_tree, f);
 
     double integral = f_tree.integrate();
     double sq_norm = f_tree.getSquareNorm();
@@ -155,8 +141,7 @@ void testAddition() {
 
     int max_scale = MRA->getMaxScale();
     double prec = Input.get<double>("rel_prec");
-    GridGenerator<3> G(max_scale);
-    MWProjector<3> Q(prec, max_scale);
+    MWProjector<3> project(prec, max_scale);
     MWAdder<3> add(prec, max_scale);
 
     double f_pos[3] = {0.0, 0.0,  0.1};
@@ -167,8 +152,8 @@ void testAddition() {
     FunctionTree<3> f_tree(*MRA);
     FunctionTree<3> g_tree(*MRA);
     FunctionTree<3> h_tree(*MRA);
-    Q(f_tree, *f_func);
-    Q(g_tree, *g_func);
+    project(f_tree, *f_func);
+    project(g_tree, *g_func);
     add(h_tree, 1.0, f_tree, -2.0, g_tree);
 
     double integral = h_tree.integrate();
@@ -179,6 +164,7 @@ void testAddition() {
 
     delete f_func;
     delete g_func;
+
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
@@ -189,7 +175,7 @@ void testMultiplication() {
 
     int max_scale = MRA->getMaxScale();
     double prec = Input.get<double>("rel_prec");
-    MWProjector<3> Q(prec, max_scale);
+    MWProjector<3> project(prec, max_scale);
     MWMultiplier<3> mult(prec, max_scale);
 
     double f_pos[3] = {0.0, 0.0,  0.1};
@@ -200,8 +186,8 @@ void testMultiplication() {
     FunctionTree<3> f_tree(*MRA);
     FunctionTree<3> g_tree(*MRA);
     FunctionTree<3> h_tree(*MRA);
-    Q(f_tree, *f_func);
-    Q(g_tree, *g_func);
+    project(f_tree, *f_func);
+    project(g_tree, *g_func);
     mult(h_tree, 1.0, f_tree, g_tree);
 
     double integral = h_tree.integrate();
@@ -212,6 +198,9 @@ void testMultiplication() {
 
     delete f_func;
     delete g_func;
+
+    timer.stop();
+    TelePrompter::printFooter(0, timer, 2);
 }
 
 void testDerivative() {
@@ -224,14 +213,12 @@ void testDerivative() {
     int max_scale = MRA_1->getMaxScale();
     double prec = Input.get<double>("rel_prec");
     double proj_prec = prec/10.0;
-    double apply_prec = prec;
 
-    DerivativeOperator<1> D(*MRA_1, 0.0, 0.0);
-    OperatorApplier<1> apply(apply_prec, max_scale);
+    ABGVOperator<1> D(*MRA_1, 0.0, 0.0);
+    MWDerivative<1> apply(max_scale);
 
     MWAdder<1> add(-1.0, max_scale);
-    MWProjector<1> Q(proj_prec, max_scale);
-    GridGenerator<1> G(max_scale);
+    MWProjector<1> project(proj_prec, max_scale);
 
     auto f = [] (const double *r) -> double {
         const double alpha = 3.0;
@@ -250,20 +237,19 @@ void testDerivative() {
 
     Timer proj_t1;
     FunctionTree<1> f_tree(*MRA_1);
-    Q(f_tree, f);
+    project(f_tree, f);
     proj_t1.stop();
     println(0, " Projecting f      " << proj_t1);
 
     Timer proj_t2;
     FunctionTree<1> df_tree(*MRA_1);
-    Q(df_tree, df);
+    project(df_tree, df);
     proj_t2.stop();
     println(0, " Projecting df     " << proj_t2);
 
     Timer apply_t;
     FunctionTree<1> dg_tree(*MRA_1);
-    G(dg_tree, f_tree);       // Copy grid from f_tree
-    apply(dg_tree, D, f_tree, 0, 0);  // Does not refine grid further
+    apply(dg_tree, D, f_tree, 0); // Does not refine grid further
     apply_t.stop();
     println(0, " Applying D        " << apply_t);
 
@@ -307,8 +293,8 @@ void testPoisson() {
     double build_prec = prec/10.0;
     double apply_prec = prec;
 
-    GridGenerator<3> G(max_scale);
-    MWProjector<3> Q(proj_prec, max_scale);
+    GridGenerator<3> grid(max_scale);
+    MWProjector<3> project(proj_prec, max_scale);
 
     double beta = 100.0;
     double alpha = pow(beta/pi, 3.0/2.0);
@@ -324,8 +310,8 @@ void testPoisson() {
     TelePrompter::printHeader(0, "Projecting function");
     Timer proj_t;
     FunctionTree<3> f_tree(*MRA);
-    G(f_tree, f_func);
-    Q(f_tree, f_func);
+    grid(f_tree, f_func);
+    project(f_tree, f_func);
     proj_t.stop();
     TelePrompter::printFooter(0, proj_t, 2);
 
@@ -337,7 +323,7 @@ void testPoisson() {
 
     TelePrompter::printHeader(0, "Applying Poisson operator");
     Timer apply_t;
-    OperatorApplier<3> apply(apply_prec, MRA->getMaxScale());
+    MWConvolution<3> apply(apply_prec, MRA->getMaxScale());
     FunctionTree<3> g_tree(*MRA);
     apply(g_tree, P, f_tree);
     apply_t.stop();
@@ -370,8 +356,8 @@ void testSCF() {
     double prec = Input.get<double>("rel_prec");
 
     // Initializing projector
-    GridGenerator<3> G(max_scale);
-    MWProjector<3> Q(prec, max_scale);
+    GridGenerator<3> grid(max_scale);
+    MWProjector<3> project(prec, max_scale);
 
     // Nuclear parameters
     double Z = 1.0;                     // Nuclear charge
@@ -398,7 +384,7 @@ void testSCF() {
             return -1.0*Z*u(x/c)/c;
         };
 
-        Q(V, f);
+        project(V, f);
         timer.stop();
         TelePrompter::printFooter(0, timer, 2);
         TelePrompter::setPrintLevel(oldlevel);
@@ -417,7 +403,7 @@ void testSCF() {
             return 1.0*exp(-1.0*x*x);
         };
 
-        Q(*phi_n, f);
+        project(*phi_n, f);
         phi_n->normalize();
         timer.stop();
         TelePrompter::printFooter(0, timer, 2);
@@ -451,11 +437,11 @@ void testSCF() {
         // Initialize arithmetic operators
         MWAdder<3> add(scf_prec, max_scale);
         MWMultiplier<3> mult(scf_prec, max_scale);
-        OperatorApplier<3> apply(scf_prec, max_scale);
+        MWConvolution<3> apply(scf_prec, max_scale);
 
         // Compute Helmholtz argument V*phi
         FunctionTree<3> Vphi(*MRA);
-        G(Vphi, *phi_n);  // Copy grid from orbital
+        grid(Vphi, *phi_n);  // Copy grid from orbital
         mult(Vphi, 1.0, V, *phi_n, 1);    // Relax grid max one level
 
         // Apply Helmholtz operator phi^n+1 = H[V*phi^n]
@@ -465,7 +451,7 @@ void testSCF() {
 
         // Compute orbital residual
         FunctionTree<3> d_phi_n(*MRA);
-        G(d_phi_n, *phi_np1);                      // Copy grid from phi_np1
+        grid(d_phi_n, *phi_np1);                      // Copy grid from phi_np1
         add(d_phi_n, 1.0, *phi_np1, -1.0, *phi_n); // No grid relaxation
         error = sqrt(d_phi_n.getSquareNorm());
 
@@ -513,6 +499,7 @@ void testSCF() {
     delete phi_n;
 }
 
+/*
 void testTreeCleaner() {
     Timer timer;
     TelePrompter::printHeader(0, "Testing TreeCleaner");
@@ -520,18 +507,17 @@ void testTreeCleaner() {
     GaussFunc<3> *f_func = initializeGauss<3>();
 
     double prec = Input.get<double>("rel_prec");
-    GridCleaner<3> C(prec, MRA->getMaxScale());
-    MWProjector<3> Q(-1.0, MRA->getMaxScale());
-    GridGenerator<3> G(MRA->getMaxScale());
+    GridCleaner<3> clean(prec, MRA->getMaxScale());
+    MWProjector<3> project(-1.0, MRA->getMaxScale());
 
     FunctionTree<3> f_tree(*MRA);
 
     int n_nodes = 1;
     while (n_nodes > 0) {
-        Q(f_tree, *f_func);
-        n_nodes = C(f_tree);
+        project(f_tree, *f_func);
+        n_nodes = clean(f_tree);
     }
-    Q(f_tree, *f_func);
+    project(f_tree, *f_func);
 
     double integral = f_tree.integrate();
     double sq_norm = f_tree.getSquareNorm();
@@ -543,4 +529,5 @@ void testTreeCleaner() {
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }
+*/
 

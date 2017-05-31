@@ -1,11 +1,12 @@
 # vim:syntax=sh:
 
-order = 7                         # Polynomial order
 rel_prec = 1.0e-5                 # Overall relative precision
 printlevel = 0
 
-World {
-  scale = -3                      # Root scale defines world size 2^{-scale}
+MRA {
+  order = 7                       # Polynomial order
+  min_scale = -3                  # Root scale defines world size 2^{-scale}
+  max_scale = 20                  # Maximum refinement
   corner = [-1, -1, -1 ]          # Translation of corner root box [x,y,z]
   boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
 }
