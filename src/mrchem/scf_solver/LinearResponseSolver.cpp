@@ -335,7 +335,7 @@ double LinearResponseSolver::calcPropertyError() const {
 }
 
 void LinearResponseSolver::printProperty() const {
-    double prop_0, prop_1;
+    double prop_0 = 0.0, prop_1 = 0.0;
     int iter = this->property.size();
     if (iter > 1) prop_0 = this->property[iter - 2];
     if (iter > 0) prop_1 = this->property[iter - 1];
