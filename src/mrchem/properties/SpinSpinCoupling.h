@@ -1,6 +1,7 @@
 #ifndef SPINSPINCOUPLING_H
 #define SPINSPINCOUPLING_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "Nucleus.h"

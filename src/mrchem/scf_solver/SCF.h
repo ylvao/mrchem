@@ -1,8 +1,10 @@
 #ifndef SCF_H
 #define SCF_H
 
-#include <vector>
+#pragma GCC system_header
 #include <Eigen/Core>
+
+#include <vector>
 
 #include "OrbitalAdder.h"
 #include "TelePrompter.h"

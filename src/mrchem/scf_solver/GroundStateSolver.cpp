@@ -1,5 +1,3 @@
-#include <Eigen/Eigenvalues>
-
 #include "GroundStateSolver.h"
 #include "HelmholtzOperatorSet.h"
 #include "FockOperator.h"

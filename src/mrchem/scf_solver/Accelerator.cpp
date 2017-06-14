@@ -1,5 +1,3 @@
-#include <Eigen/Dense>
-
 #include "Accelerator.h"
 #include "Orbital.h"
 #include "OrbitalVector.h"

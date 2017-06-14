@@ -1,6 +1,7 @@
 #ifndef XCOPERATOR_H
 #define XCOPERATOR_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "QMPotential.h"

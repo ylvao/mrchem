@@ -1,6 +1,7 @@
 #ifndef SCFENERGY_H
 #define SCFENERGY_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "TelePrompter.h"

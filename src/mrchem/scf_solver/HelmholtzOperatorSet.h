@@ -1,6 +1,7 @@
 #ifndef HELMHOLTZOPERATORSET_H
 #define HELMHOLTZOPERATORSET_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 #include <vector>
 

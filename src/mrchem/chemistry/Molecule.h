@@ -10,9 +10,11 @@
 #ifndef MOLECULE_H
 #define MOLECULE_H
 
+#pragma GCC system_header
+#include <Eigen/Core>
+
 #include <vector>
 #include <string>
-#include <Eigen/Core>
 
 #include "SCFEnergy.h"
 #include "Nucleus.h"

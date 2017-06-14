@@ -9,6 +9,11 @@
 #ifndef NONLINEARMAXIMIZER_H
 #define NONLINEARMAXIMIZER_H
 
+#pragma GCC system_header
+#include <Eigen/Eigenvalues>
+#pragma GCC system_header
+#include <Eigen/Dense>
+
 class NonlinearMaximizer {
 public:
     NonlinearMaximizer() : N2h(0) { }

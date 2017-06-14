@@ -1,6 +1,7 @@
 #ifndef ORBITALADDER_H
 #define ORBITALADDER_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "MWAdder.h"

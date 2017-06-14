@@ -1,6 +1,7 @@
 #ifndef HYPERFINECOUPLING_H
 #define HYPERFINECOUPLING_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "Nucleus.h"

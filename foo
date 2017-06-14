@@ -1,0 +1,13 @@
+pilot/mrchem.cpp.sample:#include <Eigen/Core>
+src/mrchem/SCFDriver.cpp:#include <Eigen/Eigenvalues>
+src/mrchem/qmfunctions/OrbitalVector.cpp:#include <Eigen/Eigenvalues>
+src/mrchem/scf_solver/Accelerator.cpp:#include <Eigen/Dense>
+src/mrchem/scf_solver/GroundStateSolver.cpp:#include <Eigen/Eigenvalues>
+src/mrchem/scf_solver/NonlinearMaximizer.cpp:#include <Eigen/Eigenvalues>
+src/mrchem/scf_solver/NonlinearMaximizer.cpp:#include <Eigen/Dense>
+src/mrcpp/MathUtils.cpp:#include <Eigen/Eigenvalues>
+src/mrcpp/mwanalytic/GaussFunc.cpp:#include <Eigen/Core>
+src/mrcpp/mwbuilders/ProjectionCalculator.cpp:#include <Eigen/Core>
+src/mrcpp/mwcore/LegendreBasis.cpp:#include <Eigen/Dense>
+src/mrcpp/mwtrees/FunctionNode.cpp:#include <Eigen/Core>
+src/mrcpp/mwtrees/SerialTree.cpp:#include <Eigen/Core>

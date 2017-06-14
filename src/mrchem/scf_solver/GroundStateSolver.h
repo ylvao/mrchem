@@ -1,7 +1,12 @@
 #ifndef GROUNDSTATESOLVER_H
 #define GROUNDSTATESOLVER_H
 
+
+#pragma GCC system_header
 #include <Eigen/Core>
+#pragma GCC system_header
+#include <Eigen/Eigenvalues>
+
 
 #include "SCF.h"
 #include "SCFEnergy.h"

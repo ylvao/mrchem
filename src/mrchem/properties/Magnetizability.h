@@ -1,6 +1,7 @@
 #ifndef MAGNETIZABILITY_H
 #define MAGNETIZABILITY_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 class Magnetizability {

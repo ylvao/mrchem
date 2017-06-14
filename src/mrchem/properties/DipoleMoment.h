@@ -1,6 +1,7 @@
 #ifndef DIPOLEMOMENT_H
 #define DIPOLEMOMENT_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "TelePrompter.h"

@@ -1,9 +1,13 @@
 #ifndef SCFDRIVER_H
 #define SCFDRIVER_H
 
+#pragma GCC system_header
+#include <Eigen/Core>
+#pragma GCC system_header
+#include <Eigen/Eigenvalues>
+
 #include <vector>
 #include <string>
-#include <Eigen/Core>
 
 #include "QMTensorOperator.h"
 

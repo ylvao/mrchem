@@ -6,8 +6,7 @@
  *
  * \breif Maximization of nonlinear functional.
  */
-#include <Eigen/Eigenvalues>
-#include <Eigen/Dense>
+
 #include "MathUtils.h"
 #include "NonlinearMaximizer.h"
 #include "parallel.h"

@@ -1,4 +1,3 @@
-#include <Eigen/Eigenvalues>
 
 #include "OrbitalVector.h"
 #include "Orbital.h"

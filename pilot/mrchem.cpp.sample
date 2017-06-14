@@ -9,6 +9,7 @@
  *
  */
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "mrchem.h"

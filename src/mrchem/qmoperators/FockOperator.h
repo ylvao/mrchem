@@ -1,6 +1,7 @@
 #ifndef FOCKOPERATOR_H
 #define FOCKOPERATOR_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 #include <vector>
 
