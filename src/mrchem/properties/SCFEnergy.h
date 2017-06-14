@@ -12,7 +12,7 @@ public:
               double en = 0.0,  double ee = 0.0,
               double xc = 0.0,  double x = 0.0) :
         E_nuc(nuc), E_el(el), E_orb(orb), E_kin(kin),
-        E_en(en), E_ee(ee), E_xc(xc), E_x(x){ }
+        E_en(en), E_ee(ee), E_x(x), E_xc(xc){ }
     virtual ~SCFEnergy() { }
 
     double getTotalEnergy() const { return this->E_nuc + this->E_el; }
