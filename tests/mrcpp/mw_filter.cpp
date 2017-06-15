@@ -24,8 +24,8 @@ TEST_CASE("Interpolating filters", "[mw_filter]") {
                         REQUIRE( (sc == Approx(1.0)) );
                         REQUIRE( (sr == Approx(1.0)) );
                     } else {
-                        off_diag_col += abs(sc);
-                        off_diag_row += abs(sr);
+                        off_diag_col += fabs(sc);
+                        off_diag_row += fabs(sr);
                     }
                 }
             }
