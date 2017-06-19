@@ -1,6 +1,7 @@
 #ifndef MRENV_H
 #define MRENV_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "parallel.h"

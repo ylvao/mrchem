@@ -1,6 +1,7 @@
 #ifndef QMOPERATOR_H
 #define QMOPERATOR_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "TelePrompter.h"

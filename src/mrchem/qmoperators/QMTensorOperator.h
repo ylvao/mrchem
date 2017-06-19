@@ -1,6 +1,7 @@
 #ifndef QMTENSOROPERATOR_H
 #define QMTENSOROPERATOR_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "QMOperatorExp.h"

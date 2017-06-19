@@ -1,5 +1,4 @@
 #include <fstream>
-#include <Eigen/Eigenvalues>
 
 #include "eigen_disable_warnings.h"
 #include "mrchem.h"

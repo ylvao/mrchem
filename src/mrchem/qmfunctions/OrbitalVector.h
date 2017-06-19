@@ -1,7 +1,11 @@
 #ifndef ORBITALVECTOR_H
 #define ORBITALVECTOR_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
+#pragma GCC system_header
+#include <Eigen/Eigenvalues>
+
 #include <vector>
 
 #include "Orbital.h"

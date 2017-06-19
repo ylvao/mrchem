@@ -1,6 +1,7 @@
 #ifndef OPERATORSTATISTICS_H
 #define OPERATORSTATISTICS_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "TelePrompter.h"
@@ -31,8 +32,8 @@ protected:
     int totFCount;
     int totGCount;
     int totGenCount;
-    int *gCount;
     int *fCount;
+    int *gCount;
     int *genCount;
     Eigen::Matrix<int, 8, 8> *totCompCount;
     Eigen::Matrix<int, 8, 8> **compCount;

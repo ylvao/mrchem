@@ -1,5 +1,3 @@
-#include <Eigen/Dense>
-
 #include "Accelerator.h"
 #include "Orbital.h"
 #include "OrbitalVector.h"
@@ -11,10 +9,10 @@ using namespace Eigen;
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 Accelerator::Accelerator(int max, int min, bool sep)
-        : add(-1.0, MRA->getMaxScale()),
-          minHistory(min),
+        : minHistory(min),
           maxHistory(max),
-          sepOrbitals(sep) {
+          sepOrbitals(sep),
+          add(-1.0, MRA->getMaxScale()) {
     if (this->minHistory < 0) this->minHistory = 0;
     if (this->maxHistory < this->minHistory) MSG_ERROR("Invalid argument");
 }

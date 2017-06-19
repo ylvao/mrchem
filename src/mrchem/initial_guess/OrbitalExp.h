@@ -1,6 +1,7 @@
 #ifndef ORBITALEXP_H
 #define ORBITALEXP_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 #include <vector>
 

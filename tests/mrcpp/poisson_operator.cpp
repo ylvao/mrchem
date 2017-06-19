@@ -27,11 +27,11 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
 
     SECTION("Initialize Poisson's kernel") {
         PoissonKernel poisson(exp_prec, r_min, r_max);
-        REQUIRE( poisson.size() == 26 );
+        REQUIRE( (poisson.size() == 26) );
 
         double x = r_min;
         while (x < r_max) {
-            REQUIRE( poisson.evalf(&x) == Approx(1.0/x).epsilon(exp_prec) );
+            REQUIRE( (poisson.evalf(&x) == Approx(1.0/x).epsilon(exp_prec)) );
             x *= 1.5;
         }
         SECTION("Project Poisson's kernel") {
@@ -88,15 +88,15 @@ TEST_CASE("Initialize Poisson operator", "[init_poisson], [poisson_operator], [m
                     oper_tree->clearBandWidth();
 
                     for (int i = 0; i < oper_tree->getDepth(); i++) {
-                        REQUIRE( bw_1.getMaxWidth(i) <= bw_2.getMaxWidth(i) );
-                        REQUIRE( bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i) );
+                        REQUIRE( (bw_1.getMaxWidth(i) <= bw_2.getMaxWidth(i)) );
+                        REQUIRE( (bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i)) );
                     }
                 }
                 O.calcBandWidths(band_prec);
-                REQUIRE( O.getMaxBandWidth(3) == 3 );
-                REQUIRE( O.getMaxBandWidth(7) == 5 );
-                REQUIRE( O.getMaxBandWidth(13) == 9 );
-                REQUIRE( O.getMaxBandWidth(15) == -1 );
+                REQUIRE( (O.getMaxBandWidth(3) == 3) );
+                REQUIRE( (O.getMaxBandWidth(7) == 5) );
+                REQUIRE( (O.getMaxBandWidth(13) == 9) );
+                REQUIRE( (O.getMaxBandWidth(15) == -1) );
 
                 O.clear(true);
             }
@@ -132,7 +132,7 @@ TEST_CASE("Apply Poisson's operator", "[apply_poisson], [poisson_operator], [mw_
     double E_num = gTree.dot(fTree);
     double E_ana = fFunc->calcCoulombEnergy(*fFunc);
 
-    REQUIRE( E_num == Approx(E_ana).epsilon(apply_prec) );
+    REQUIRE( (E_num == Approx(E_ana).epsilon(apply_prec)) );
 
     finalize(&fFunc);
     finalize(&mra);

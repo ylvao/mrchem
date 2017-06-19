@@ -1,6 +1,7 @@
 #ifndef NMRSHIELDING_H
 #define NMRSHIELDING_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "Nucleus.h"

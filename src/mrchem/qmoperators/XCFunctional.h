@@ -1,6 +1,7 @@
 #ifndef XCFUNCTIONAL_H
 #define XCFUNCTIONAL_H
 
+#pragma GCC system_header
 #include <Eigen/Core>
 
 #include "xcfun.h"

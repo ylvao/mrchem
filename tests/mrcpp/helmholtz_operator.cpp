@@ -31,12 +31,12 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
 
     SECTION("Initialize Helmholtz' kernel") {
         HelmholtzKernel helmholtz(mu, exp_prec, r_min, r_max);
-        REQUIRE( helmholtz.size() == 24 );
+        REQUIRE( (helmholtz.size() == 24) );
 
         int foo = 0;
         double x = r_min;
         while (x < r_max) {
-            REQUIRE( helmholtz.evalf(&x) == Approx(exp(-mu*x)/x).epsilon(exp_prec) );
+            REQUIRE( (helmholtz.evalf(&x) == Approx(exp(-mu*x)/x).epsilon(exp_prec)) );
             x *= 1.5;
         }
         SECTION("Project Helmholtz' kernel") {
@@ -93,15 +93,15 @@ TEST_CASE("Helmholtz' kernel", "[init_helmholtz], [helmholtz_operator], [mw_oper
                     oper_tree->clearBandWidth();
 
                     for (int i = 0; i < oper_tree->getDepth(); i++) {
-                        REQUIRE( bw_1.getMaxWidth(i) <= bw_2.getMaxWidth(i) );
-                        REQUIRE( bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i) );
+                        REQUIRE( (bw_1.getMaxWidth(i) <= bw_2.getMaxWidth(i)) );
+                        REQUIRE( (bw_2.getMaxWidth(i) <= bw_3.getMaxWidth(i)) );
                     }
                 }
                 O.calcBandWidths(band_prec);
-                REQUIRE( O.getMaxBandWidth(3) == 3 );
-                REQUIRE( O.getMaxBandWidth(7) == 5 );
-                REQUIRE( O.getMaxBandWidth(13) == 9 );
-                REQUIRE( O.getMaxBandWidth(20) == -1 );
+                REQUIRE( (O.getMaxBandWidth(3) == 3) );
+                REQUIRE( (O.getMaxBandWidth(7) == 5) );
+                REQUIRE( (O.getMaxBandWidth(13) == 9) );
+                REQUIRE( (O.getMaxBandWidth(20) == -1) );
 
                 O.clear(true);
             }
@@ -164,14 +164,14 @@ TEST_CASE("Apply Helmholtz' operator", "[apply_helmholtz], [helmholtz_operator],
     psi_np1 *= -1.0/(2.0*pi);
 
     double norm = sqrt(psi_np1.getSquareNorm());
-    REQUIRE( norm == Approx(1.0).epsilon(apply_prec) );
+    REQUIRE( (norm == Approx(1.0).epsilon(apply_prec)) );
 
     FunctionTree<3> d_psi(MRA);
     G(d_psi, psi_np1);
     add(d_psi, 1.0, psi_np1, -1.0, psi_n);
 
     double error = sqrt(d_psi.getSquareNorm());
-    REQUIRE( error < apply_prec );
+    REQUIRE( (error < apply_prec) );
 }
 
 } // namespace

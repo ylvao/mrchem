@@ -32,12 +32,12 @@ template<int D> void testInitial(const NodeIndex<D> *idx) {
     if (idx == 0) MSG_FATAL("Invalid argument");
 
     const int scale = 1;
-    REQUIRE( scale == idx->getScale() );
+    REQUIRE( (scale == idx->getScale()) );
 
     for (int d = 0; d < D; d++) {
         const int l = d-1;
-        REQUIRE( l == idx->getTranslation(d) );
-        REQUIRE( l == idx->getTranslation()[d] );
+        REQUIRE( (l == idx->getTranslation(d)) );
+        REQUIRE( (l == idx->getTranslation()[d]) );
     }
 }
 
@@ -62,23 +62,23 @@ template<int D> void testInitial(const BoundingBox<D> *box) {
     const NodeIndex<D> &cIdx = box->getCornerIndex();
     testInitial<D>(&cIdx);
 
-    REQUIRE( box->getUnitLength() > 0.0 );
+    REQUIRE( (box->getUnitLength() > 0.0) );
 
     for (int d = 0; d < D; d++) {
-        REQUIRE( box->getBoxLength(d) > 0.0 );
-        REQUIRE( box->getBoxLengths()[d] > 0.0 );
+        REQUIRE( (box->getBoxLength(d) > 0.0) );
+        REQUIRE( (box->getBoxLengths()[d] > 0.0) );
 
-        REQUIRE( box->getLowerBound(d) < box->getUpperBound(d) );
-        REQUIRE( box->getLowerBounds()[d] < box->getUpperBounds()[d] );
+        REQUIRE( (box->getLowerBound(d) < box->getUpperBound(d)) );
+        REQUIRE( (box->getLowerBounds()[d] < box->getUpperBounds()[d]) );
     }
 
     int tot_boxes = 1;
     for (int d = 0; d < D; d++) {
         const int nb = d + 1;
-        REQUIRE( box->size(d) == nb );
+        REQUIRE( (box->size(d) == nb) );
         tot_boxes *= box->size(d);
     }
-    REQUIRE( box->size() == tot_boxes );
+    REQUIRE( (box->size() == tot_boxes) );
 }
 
 template<int D> void initialize(MultiResolutionAnalysis<D> **mra) {

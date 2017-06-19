@@ -1,9 +1,13 @@
 #ifndef ACCELERATOR_H
 #define ACCELERATOR_H
 
+#pragma GCC system_header
+#include <Eigen/Core>
+#pragma GCC system_header
+#include <Eigen/Dense>
+
 #include <deque>
 #include <vector>
-#include <Eigen/Core>
 
 #include "OrbitalAdder.h"
 

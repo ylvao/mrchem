@@ -21,17 +21,17 @@ TEST_CASE("Interpolating filters", "[mw_filter]") {
                     double sc = F.col(i).dot(F.col(j));
                     double sr = F.row(i).dot(F.row(j));
                     if (i == j) {
-                        REQUIRE( sc == Approx(1.0) );
-                        REQUIRE( sr == Approx(1.0) );
+                        REQUIRE( (sc == Approx(1.0)) );
+                        REQUIRE( (sr == Approx(1.0)) );
                     } else {
-                        off_diag_col += abs(sc);
-                        off_diag_row += abs(sr);
+                        off_diag_col += fabs(sc);
+                        off_diag_row += fabs(sr);
                     }
                 }
             }
         }
-        REQUIRE( off_diag_col == Approx(0.0) );
-        REQUIRE( off_diag_row == Approx(0.0) );
+        REQUIRE( (off_diag_col == Approx(0.0)) );
+        REQUIRE( (off_diag_row == Approx(0.0)) );
     }
 }
 

@@ -7,7 +7,7 @@
 
 class H_M_pso : public RankOneTensorOperator<3> {
 public:
-    H_M_pso(DerivativeOperator<3> &d, const double *k = 0) : l(d, k), r_m3(1.0, k) {
+    H_M_pso(DerivativeOperator<3> &d, const double *k = 0) : r_m3(1.0, k), l(d, k) {
         initializeTensorOperator();
     }
     virtual ~H_M_pso() { }
