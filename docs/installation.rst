@@ -9,21 +9,19 @@ Build prerequisites
 
 On Stallo the supplied setup script should be able to configure things
 correctly, provided all the necessary modules have been loaded. Using the Intel
-tool chain::
+tool chain (2016b does not work)::
 
-    $ module load intel/2016b
-    $ module load CMake/3.6.1-intel-2016b
-    $ module load Eigen/3.2.9-intel-2016b
-    $ module load Boost
-    $ export EIGEN3_ROOT=/global/hds/software/cpu/eb3/Eigen/3.2.9-intel-2016b
+    $ module load intel/2015b
+    $ module load CMake/3.3.2-intel-2015b
+    $ module load Boost/1.59.0-intel-2015b-Python-2.7.10
+    $ module load Eigen/3.1.1
 
-Using the GNU tool chain (produces alot of compiler warnings, but should work
-fine)::
+Using the GNU tool chain::
 
-    $ module load CMake/3.6.1-foss-2016b
-    $ module load Eigen/3.2.9-foss-2016b
-    $ module load Boost
-    $ export EIGEN3_ROOT=/global/hds/software/cpu/eb2/Eigen/3.2.9-foss-2016b
+    $ module load foss/2016b
+    $ module load CMake/3.6.2-foss-2016b
+    $ module load Boost/1.61.0-foss-2016b
+    $ module load Eigen/3.1.1
 
 -------------------------------
 Obtaining and building the code
