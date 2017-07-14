@@ -334,7 +334,7 @@ RR::RR(double prec, OrbitalVector &phi) {
     N2h = N*(N-1)/2;
     gradient = VectorXd(N2h);
     hessian = MatrixXd(N2h, N2h);
-    r_i_orig = MatrixXd(N,3*N);
+    r_i_orig = MatrixXd::Zero(N,3*N);
     r_i = MatrixXd(N,3*N);
 
     //Make R matrix
@@ -344,6 +344,49 @@ RR::RR(double prec, OrbitalVector &phi) {
     RankZeroTensorOperator &r_x = r[0];
     RankZeroTensorOperator &r_y = r[1];
     RankZeroTensorOperator &r_z = r[2];
+
+#ifdef HAVE_MPI
+
+    OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
+    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
+    int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
+
+    //make vector with adresses of own orbitals
+    int i = 0;
+    for (int Ix = MPI_rank;  Ix < N; Ix += MPI_size) {
+      OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
+      OrbsIx[i++] = Ix;
+    }
+
+    for (int iter = 0;  iter >= 0; iter++) {
+      //get a new chunk from other processes
+      OrbVecChunk_i.getOrbVecChunk_sym(OrbsIx, rcvOrbs, rcvOrbsIx, N, iter);
+      for (int i = 0; i<OrbVecChunk_i.size(); i++){
+        Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
+        int spin_i = phi_i.getSpin();
+	for (int j = 0; j < rcvOrbs.size(); j++) {
+            Orbital &phi_j = rcvOrbs.getOrbital(j);
+            int spin_j = phi_j.getSpin();
+            if (spin_i != spin_j) {
+	      MSG_ERROR("Spins must be separated before localization");
+            }
+            r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
+            r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
+            r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
+            r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]);
+            r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
+            r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
+        }
+      }
+      rcvOrbs.clearVec(false);
+    }
+    OrbVecChunk_i.clearVec(false);
+    //combine results from all processes
+    MPI_Allreduce(MPI_IN_PLACE, &r_i_orig(0,0), N*3*N,
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+#else
 
     for (int i = 0; i < N; i++) {
         Orbital &phi_i = phi.getOrbital(i);
@@ -362,6 +405,7 @@ RR::RR(double prec, OrbitalVector &phi) {
             r_i_orig(j,i+2*N) = r_i_orig(i,j+2*N);
         }
     }
+#endif
     r_x.clear();
     r_y.clear();
     r_z.clear();
