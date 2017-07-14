@@ -12,6 +12,7 @@ using namespace Eigen;
 extern Orbital workOrb;
 //NB: workOrbVec is only for temporary orbitals and orbitals stored there can be overwritten, i.e. destroyed
 OrbitalVector workOrbVec(workOrbVecSize);
+OrbitalVector workOrbVec2(workOrbVecSize);
 
 /** OrbitalVector constructor
  *
@@ -484,7 +485,6 @@ MatrixXcd OrbitalVector::calcOverlapMatrix() {
     OrbitalVector &bra = *this;
     OrbitalVector &ket = *this;
 
-    //    bra.calcOverlapMatrix_P(ket);//testing
     if(MPI_size>1){
       return bra.calcOverlapMatrix_P_H(ket);
     }else{
@@ -733,6 +733,18 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVec
 #ifdef HAVE_MPI
   MPI_Status status;
   MPI_Comm comm=MPI_COMM_WORLD;
+  OrbitalVector* workOrbVec_p;//pointer to the workOrbVec to use
+  
+  if(workOrbVec2.inUse){
+    workOrbVec_p = &workOrbVec2;//use workOrbVec2
+  }else{
+    if(workOrbVec.inUse){
+      workOrbVec_p = &workOrbVec;//use workOrbVec2 (workOrbVec may be in use already)
+    }else{
+      MSG_ERROR("Error did not find which WorkOrbVec to use");
+    }
+  }
+
 
   Metadata Orbinfo;
 
@@ -747,7 +759,7 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVec
       this->orbitals.push_back(orb);
     }
     //the orbitals are stored in workOrbVec, and only the metadata/adresses is copied into OrbitalVector
-    orb_i = &workOrbVec.getOrbital(workOrbVecIx);
+    orb_i = &workOrbVec_p->getOrbital(workOrbVecIx);
 
     orb_i->setSpin(Orbinfo.spin[i]);
     orb_i->setOccupancy(Orbinfo.occupancy[i]);
@@ -771,7 +783,7 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVec
     }
     OrbsIx[workOrbVecIx] = Orbinfo.Ix[i];
     //the orbitals are stored in workOrbVec, and only the metadata/adresses is copied into OrbitalVector
-    this->getOrbital(workOrbVecIx) = workOrbVec.getOrbital(workOrbVecIx);
+    this->getOrbital(workOrbVecIx) = workOrbVec_p->getOrbital(workOrbVecIx);
     workOrbVecIx++;
   }
   for (int i = workOrbVecIx; i<workOrbVecSize; i++) {
@@ -806,14 +818,46 @@ void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* r
    * Chunk iteration. max = (maxsizeperOrbvec*MPI_size + workOrbVecSize-1)/workOrbVecSize
    * For accounting, we assume that all MPI are filled with maxsizeperOrbvec;
    * this is in order to know where to restart 
+   * Last iteration is for cleanups: clear send and receive vectors and set workOrbVec flag as available.
    */
 
   int MPI_iter0 = (iter0*workOrbVecSize)/maxsizeperOrbvec;//which MPI_iter to start with
   int start = (iter0*workOrbVecSize)%maxsizeperOrbvec;//where to start in the first iteration
 
+  rcvOrbs.clearVec(false);//we restart from beginning of vector
+  if(iter0==0){//reserve workOrbVec to use
+    if(not workOrbVec.inUse){
+      workOrbVec.inUse = true;
+    }else{
+      if(not workOrbVec2.inUse){
+	workOrbVec2.inUse = true;
+     }else{
+	MSG_ERROR("Error all WorkOrbVec already in use");
+      }
+    }
+  }
+
+  if(MPI_iter0>=MPI_size){ //only cleanups
+    this->clearVec(false);//to force a shallow delete
+    //free the workOrbVec in use
+    if(workOrbVec2.inUse){
+      workOrbVec2.inUse = false;
+    }else{
+      if(workOrbVec.inUse){
+	workOrbVec.inUse = false;
+      }else{
+	MSG_ERROR("Error in WorkOrbVec accounting");
+      }
+    }
+    iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
+    return;
+  }
+
   for (int MPI_iter = MPI_iter0;  true; MPI_iter++) {
     if(MPI_iter>=MPI_size){
-      iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
+      //we are done with sending and receiving. 
+      //We do an extra iteration just to clean up rcvOrbs and "this", and free the workorbvec
+      iter0=maxsizeperOrbvec*MPI_size;//to indicate that next iteration is only cleanups
       break;
     }
     int maxcount = workOrbVecSize-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
@@ -844,7 +888,7 @@ void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* r
 
 /** Send and receive a chunk of an OrbitalVector
  * Assumes that a symmetric operator is calculated, so that only 
- * half of the orbitals need to be sent.
+ * half of the orbitals need to be sent. i.e exactly one of (i,j)or(j,i) is sent.
  * The orbitals are sent and received from different processors.
  * this : Vector with orbitals locally (owned by this MPI process)
  * myOrbsIx : indices of myOrbs in the orbital vector
@@ -873,11 +917,38 @@ void OrbitalVector::getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, in
 
   int MPI_iter0 = (iter0*workOrbVecSize)/maxsizeperOrbvec;//which MPI_iter to start with
   int start = (iter0*workOrbVecSize)%maxsizeperOrbvec;//where to start in the first iteration
+  //rcvOrbs.clearVec(false);//we restart from beginning of vector
+  if(iter0==0){//reserve workOrbVec to use
+    if(not workOrbVec.inUse){
+      workOrbVec.inUse = true;
+    }else{
+      if(not workOrbVec2.inUse){
+	workOrbVec2.inUse = true;
+      }else{
+	MSG_ERROR("Error all WorkOrbVec already in use");
+      }
+    }
+  }
 
-  if(MPI_iter0>= (MPI_size/2 + 1) )iter0=-2;
+  if(MPI_iter0>= (MPI_size/2 + 1)){
+    //this->clearVec(false);//to force a shallow delete
+    //free the workOrbVec in use
+    if(workOrbVec2.inUse){
+      workOrbVec2.inUse = false;
+    }else{
+      if(workOrbVec.inUse){
+	workOrbVec.inUse = false;
+      }else{
+	MSG_ERROR("Error in WorkOrbVec accounting");
+      }
+    }
+    iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
+    return;
+  }
+
   for (int MPI_iter = MPI_iter0;  MPI_iter < MPI_size; MPI_iter++) {
     if(MPI_iter >= (MPI_size/2 + 1) ){
-      iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals
+      iter0=maxsizeperOrbvec*MPI_size;//to indicate that next iteration is only cleanups
       break;
     }
     int maxcount = workOrbVecSize-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
