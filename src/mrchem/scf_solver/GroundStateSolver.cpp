@@ -371,12 +371,26 @@ RR::RR(double prec, OrbitalVector &phi) {
             if (spin_i != spin_j) {
 	      MSG_ERROR("Spins must be separated before localization");
             }
-            r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
-            r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
-            r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
-            r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]);
-            r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
-            r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
+	    //NOTE: the "if" should not be necessary, but since outside the required precision
+	    //r_x(phi_i, phi_j) != r_x(phi_j, phi_i), we prefer to have consistent results for
+	    //different MPI_size
+	    if(rcvOrbsIx[j]<=OrbsIx[i]){
+	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
+	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
+	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
+	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]);
+	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
+	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
+	    }else{
+	      if(rcvOrbsIx[j]%MPI_size != MPI_rank){ //need only compute j<=i in own block
+		r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_x(phi_j, phi_i);
+		r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_y(phi_j, phi_i);
+		r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_z(phi_j, phi_i);
+		r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]);
+		r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) ;
+		r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N);
+	      }
+	    }
         }
       }
       rcvOrbs.clearVec(false);
