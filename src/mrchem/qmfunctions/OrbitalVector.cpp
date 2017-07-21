@@ -3,7 +3,6 @@
 #include "Orbital.h"
 #include "FunctionTree.h"
 #include "SerialFunctionTree.h"
-#include "parallel.h"
 #include "Timer.h"
 
 using namespace std;
@@ -687,9 +686,9 @@ void OrbitalVector::send_OrbVec(int dest, int tag, int* OrbsIx, int start, int m
 }
 
 
-//non-blocking send an orbitalvector with MPI
-void OrbitalVector::Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount){
 #ifdef HAVE_MPI
+//non-blocking send an orbitalvector with MPI
+void OrbitalVector::Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount, MPI_Request &request){
   MPI_Status status;
   MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -713,19 +712,18 @@ void OrbitalVector::Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int 
     Orbinfo.Ix[i_out] = OrbsIx[i];
   }
 
-  MPI_Request request;
   int count=sizeof(Metadata);
+
   MPI_Isend(&Orbinfo, count, MPI_BYTE, dest, tag, comm, &request);
   
   for (int i = start; i <  this->size() && (i-start<maxcount); i++) {
     int i_out=i-start;
     orb_i = &this->getOrbital(i);
-    if(orb_i->hasReal())ISend_SerialTree(&orb_i->real(), Orbinfo.NchunksReal[i_out], dest, 2*i_out+1+tag, comm);
-    if(orb_i->hasImag())ISend_SerialTree(&orb_i->imag(), Orbinfo.NchunksImag[i_out], dest, 2*i_out+2+tag, comm);
+    if(orb_i->hasReal())ISend_SerialTree(&orb_i->real(), Orbinfo.NchunksReal[i_out], dest, 2*i_out+1+tag, comm, request);
+    if(orb_i->hasImag())ISend_SerialTree(&orb_i->imag(), Orbinfo.NchunksImag[i_out], dest, 2*i_out+2+tag, comm, request);
   }
-  
-#endif
 }
+#endif
 
 
 //receive an orbitalvector with MPI
@@ -799,15 +797,16 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVec
  * myOrbsIx : indices of myOrbs in the orbital vector
  * rcvOrbs : Vector with orbitals received by from other processes
  * rcvOrbsIx : indices of rcvOrbs in the orbital vector
- * size : total number of Orbitals in OrbitalVector
+ * size : total number of Orbitals in OrbitalVector (all MPI. this->size is for only one MPI)
  * iter0 : iteration to start with, to know which chunk is to be treated
  * NB: it is assumed that the orbitals are evenly distributed among MPI processes (or as evenly as possible)
  */
-void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0){
+void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int maxOrbs_in, int workIx){
+
+  int maxOrbs = workOrbVecSize;//max number of orbital to send or receive per iteration
+  if(maxOrbs_in>0)maxOrbs = maxOrbs_in;
 
   int maxsizeperOrbvec = (size + MPI_size-1)/MPI_size;
-
-  int Niter = workOrbVecSize/maxsizeperOrbvec;//max number of processes to communicate with in this iteration, until the chunk is filled
 
   int RcvOrbVecIx = 0;
 
@@ -815,53 +814,36 @@ void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* r
    * Orbital vector index. max = size
    * MPI_iter index. The iteration count through all MPI processes. max = MPI_size
    * Index of local orbital (owned by the local MPI process). max = maxsizeperOrbvec
-   * Chunk iteration. max = (maxsizeperOrbvec*MPI_size + workOrbVecSize-1)/workOrbVecSize
+   * Chunk iteration. max = (maxsizeperOrbvec*MPI_size +  maxOrbs-1)/maxOrbs
    * For accounting, we assume that all MPI are filled with maxsizeperOrbvec;
    * this is in order to know where to restart 
    * Last iteration is for cleanups: clear send and receive vectors and set workOrbVec flag as available.
    */
 
-  int MPI_iter0 = (iter0*workOrbVecSize)/maxsizeperOrbvec;//which MPI_iter to start with
-  int start = (iter0*workOrbVecSize)%maxsizeperOrbvec;//where to start in the first iteration
+  int MPI_iter0 = (iter0*maxOrbs)/maxsizeperOrbvec;//which MPI_iter to start with
+  int start = (iter0*maxOrbs)%maxsizeperOrbvec;//where to start in the first iteration
 
   rcvOrbs.clearVec(false);//we restart from beginning of vector
-  if(iter0==0){//reserve workOrbVec to use
-    if(not workOrbVec.inUse){
-      workOrbVec.inUse = true;
-    }else{
-      if(not workOrbVec2.inUse){
-	workOrbVec2.inUse = true;
-     }else{
-	MSG_ERROR("Error all WorkOrbVec already in use");
-      }
-    }
+
+  workOrbVec.inUse = true;
+  if(workIx!=0){
+    workOrbVec2.inUse = true;
+  }else{
+    workOrbVec2.inUse = false;      
   }
 
-  if(MPI_iter0>=MPI_size){ //only cleanups
-    this->clearVec(false);//to force a shallow delete
-    //free the workOrbVec in use
-    if(workOrbVec2.inUse){
-      workOrbVec2.inUse = false;
-    }else{
-      if(workOrbVec.inUse){
-	workOrbVec.inUse = false;
-      }else{
-	MSG_ERROR("Error in WorkOrbVec accounting");
-      }
-    }
+  if(MPI_iter0>=MPI_size){
     iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
-    return;
   }
+
 
   for (int MPI_iter = MPI_iter0;  true; MPI_iter++) {
+    int maxcount = maxOrbs-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
+    if(maxcount<=0) break;
     if(MPI_iter>=MPI_size){
-      //we are done with sending and receiving. 
-      //We do an extra iteration just to clean up rcvOrbs and "this", and free the workorbvec
-      iter0=maxsizeperOrbvec*MPI_size;//to indicate that next iteration is only cleanups
+      iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
       break;
     }
-    int maxcount = workOrbVecSize-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
-    if(maxcount<=0) break;
     int rcv_MPI = (MPI_size+MPI_iter-MPI_rank)%MPI_size;//rank of process to communicate with
     if(MPI_rank > rcv_MPI){
       //send first, then receive
@@ -891,70 +873,63 @@ void OrbitalVector::getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* r
  * half of the orbitals need to be sent. i.e exactly one of (i,j)or(j,i) is sent.
  * The orbitals are sent and received from different processors.
  * this : Vector with orbitals locally (owned by this MPI process)
- * myOrbsIx : indices of myOrbs in the orbital vector
- * rcvOrbs : Vector with orbitals received by from other processes
- * rcvOrbsIx : indices of rcvOrbs in the orbital vector
- * size : total number of Orbitals in OrbitalVector
- * iter0 : iteration to start with, to know which chunk is to be treated
+ * myOrbsIx : indices of myOrbs in the orbital vector (in)
+ * rcvOrbs : Vector with orbitals received by from other processes (out)
+ * rcvOrbsIx : indices of rcvOrbs in the orbital vector (out)
+ * size : total number of Orbitals in OrbitalVector (in)
+ * iter0 : iteration to start with, to know which chunk is to be treated (inout)
+ * sndtoMPI : rank of MPI where the orbitals have been sent (optional out)
+ * sndOrbIx : index of orbitals that have been sent (optional out)
+ * workIx : set if need to use another workOrbVec (optional in)
  * NB: it is assumed that the orbitals are evenly distributed among MPI processes (or as evenly as possible)
  */
-void OrbitalVector::getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0){
+void OrbitalVector::getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int* sndtoMPI, int* sndOrbIx, int maxOrbs_in, int workIx){
+
+  int maxOrbs = workOrbVecSize;//max number of orbital to send or receive per iteration
+  if(maxOrbs_in>0)maxOrbs = maxOrbs_in;
 
   int maxsizeperOrbvec = (size + MPI_size-1)/MPI_size;
 
-  int Niter = workOrbVecSize/maxsizeperOrbvec;//max number of processes to communicate with in this iteration, until the chunk is filled
-
   int RcvOrbVecIx = 0;
+#ifdef HAVE_MPI
 
+  MPI_Request request=MPI_REQUEST_NULL;
+  MPI_Status status;
   /* many index scales:
    * Orbital vector index. max = size
    * MPI_iter index. The iteration count through all MPI processes. max = MPI_size
    * Index of local orbital (owned by the local MPI process). max = maxsizeperOrbvec
-   * Chunk iteration. max = (maxsizeperOrbvec*MPI_size + workOrbVecSize-1)/workOrbVecSize
+   * Chunk iteration. max = (maxsizeperOrbvec*MPI_size + maxOrbs-1)/maxOrbs
    * For accounting, we assume that all MPI are filled with maxsizeperOrbvec;
    * this is in order to know where to restart 
    */
 
-  int MPI_iter0 = (iter0*workOrbVecSize)/maxsizeperOrbvec;//which MPI_iter to start with
-  int start = (iter0*workOrbVecSize)%maxsizeperOrbvec;//where to start in the first iteration
-  //rcvOrbs.clearVec(false);//we restart from beginning of vector
-  if(iter0==0){//reserve workOrbVec to use
-    if(not workOrbVec.inUse){
-      workOrbVec.inUse = true;
-    }else{
-      if(not workOrbVec2.inUse){
-	workOrbVec2.inUse = true;
-      }else{
-	MSG_ERROR("Error all WorkOrbVec already in use");
-      }
-    }
+  int MPI_iter0 = (iter0*maxOrbs)/maxsizeperOrbvec;//which MPI_iter to start with
+  int start = (iter0*maxOrbs)%maxsizeperOrbvec;//where to start in the first iteration
+  rcvOrbs.clearVec(false);//we restart from beginning of vector
+
+  workOrbVec.inUse = true;
+  if(workIx!=0){
+    workOrbVec2.inUse = true;
+  }else{
+    workOrbVec2.inUse = false;      
+  }
+ 
+  if(MPI_iter0 >= (MPI_size/2 + 1) ){
+      iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
   }
 
-  if(MPI_iter0>= (MPI_size/2 + 1)){
-    //this->clearVec(false);//to force a shallow delete
-    //free the workOrbVec in use
-    if(workOrbVec2.inUse){
-      workOrbVec2.inUse = false;
-    }else{
-      if(workOrbVec.inUse){
-	workOrbVec.inUse = false;
-      }else{
-	MSG_ERROR("Error in WorkOrbVec accounting");
-      }
-    }
-    iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
-    return;
-  }
-
+  int isnd=0;
   for (int MPI_iter = MPI_iter0;  MPI_iter < MPI_size; MPI_iter++) {
+    int maxcount = maxOrbs-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
+    if(maxcount <= 0)  break;//chunk is full
     if(MPI_iter >= (MPI_size/2 + 1) ){
-      iter0=maxsizeperOrbvec*MPI_size;//to indicate that next iteration is only cleanups
+      iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
       break;
     }
-    int maxcount = workOrbVecSize-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
-    if(maxcount <= 0)  break;//chunk is full
     int rcv_MPI = abs((MPI_size-MPI_iter+MPI_rank)%MPI_size);//rank of process to receive from
     int snd_MPI = (MPI_size+MPI_iter+MPI_rank)%MPI_size;//rank of process to send to
+
     if(rcv_MPI == snd_MPI){
       //only one of them do need to do the job: the one with lowest rank (of course!)
       if(MPI_rank>rcv_MPI)rcv_MPI = -1;//to indicate receive nothing
@@ -962,8 +937,17 @@ void OrbitalVector::getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, in
     }
     if(MPI_rank != rcv_MPI){
       //non-blocking send first, then receive
-      if(snd_MPI>=0)this->Isend_OrbVec(snd_MPI, MPI_iter, myOrbsIx, start, maxcount);
-      if(rcv_MPI>=0)rcvOrbs.Rcv_OrbVec(rcv_MPI, MPI_iter, rcvOrbsIx, RcvOrbVecIx);
+      if(snd_MPI>=0){
+	for (int i = start;  i < this->size() && (i-start<maxcount) && sndOrbIx!=0 && sndOrbIx!=0; i++){
+	    sndtoMPI[isnd]=snd_MPI;
+	    sndOrbIx[isnd]=myOrbsIx[i];
+	    isnd++;
+	  }
+	this->Isend_OrbVec(snd_MPI, MPI_iter, myOrbsIx, start, maxcount, request);
+      }
+      if(rcv_MPI>=0){
+	rcvOrbs.Rcv_OrbVec(rcv_MPI, MPI_iter, rcvOrbsIx, RcvOrbVecIx);
+      }
     }else{
       //own orbitals
       for (int i = start;  i < this->size() && (i-start<maxcount) ; i++){	
@@ -978,5 +962,6 @@ void OrbitalVector::getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, in
     }
     start = 0;//always start at 0 after first iteration
   }
-  //    cout<<MPI_rank<<" finish "<<endl;
+  MPI_Wait(&request, &status);//wait only for last request
+#endif
 }
