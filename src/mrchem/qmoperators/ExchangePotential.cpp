@@ -209,8 +209,6 @@ void ExchangePotential::calcInternalExchange() {
       OrbitalAdder add(-1.0, this->max_scale);
       for (int i = 0; i<workOrbVecSize; i++)sndtoMPI[i]=-1;//init
       int mpiiter = 0;
-      Orbital *phi_iij = 0;
-      Orbital *phi_jji_rcv = 0;	      
       for (int iter = 0;  iter >= 0; iter++) {
 	mpiiter++;
 	//get a new chunk from other processes
@@ -227,10 +225,10 @@ void ExchangePotential::calcInternalExchange() {
 	  if(ii>=OrbVecChunk_i.size())i=0;//so that phi_i is defined, but will not be used
 	  
 	  Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
-	  if(phi_iij==0) phi_iij = new Orbital(phi_i);
+	  Orbital *phi_iij = new Orbital(phi_i);
 	  int i_rcv = sndOrbIx[j];
 	  Orbital &phi_i_rcv = this->orbitals->getOrbital(i_rcv);
-	  if(phi_jji_rcv==0) phi_jji_rcv = new Orbital(phi_i_rcv);
+	  Orbital *phi_jji_rcv = new Orbital(phi_i_rcv);	      
 	  if(rcvOrbs.size()>0 and ii<OrbVecChunk_i.size()){
 	    if(OrbsIx[i]==rcvOrbsIx[j]){
 	      //orbital should be own and i and j point to same orbital
@@ -275,14 +273,15 @@ void ExchangePotential::calcInternalExchange() {
 	      double i_factor_rcv = phi_i_rcv.getExchangeFactor(phi_j_rcv);
 	      add.inPlace(ex_i_rcv, i_factor_rcv, *phi_jji_rcv);
 	    }
-	  }	  
+	  }
+	  
+	  if (phi_jji_rcv != 0) delete phi_jji_rcv;
+	  if (phi_iij != 0) delete phi_iij;
+	  }
+	  rcvOrbs.clearVec(false);//reset to zero size orbital vector     	
 	}
-	rcvOrbs.clearVec(false);//reset to zero size orbital vector     	
-      }
-      if (phi_jji_rcv != 0) delete phi_jji_rcv;
-      if (phi_iij != 0) delete phi_iij;
-      OrbVecChunk_i.clearVec(false);
-      
+	OrbVecChunk_i.clearVec(false);
+
       for (int i = 0; i < nOrbs; i++) {
 	if(i%MPI_size==MPI_rank){
 	  Orbital &ex_i = this->exchange.getOrbital(i);
