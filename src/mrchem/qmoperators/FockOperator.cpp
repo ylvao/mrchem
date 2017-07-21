@@ -131,6 +131,8 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
       OrbsIx[i++] = Ix;
     }
     for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
+    //need to pad OrbVecChunk_j so that all have same size
+    if(OrbVecChunk_j.size()<(Nj+MPI_size-1)/MPI_size)OrbVecChunk_j.push_back(j_orbs.getOrbital(0));
 
     for (int iter = 0;  iter >= 0 ; iter++) {
       //get a new chunk from other processes
@@ -144,7 +146,15 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
       if (this->T != 0) resultChunk = (*this->T)(rcvOrbs,OrbVecChunk_j);
       if (this->V != 0) resultChunk += (*this->V)(rcvOrbs,OrbVecChunk_j);
       if (this->J != 0) resultChunk += (*this->J)(rcvOrbs,OrbVecChunk_j);
-      if (this->K != 0) resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
+      if (this->K != 0){
+	resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
+	if(rcvOrbs.size()==0 and iter>=0 ){
+	  //we must still go through operator to send own orbitals to others. Just make a fake operation!
+	  rcvOrbs.push_back(i_orbs.getOrbital(MPI_rank));//i orbitals
+	  MatrixXd resultChunk_notused = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
+	  resultChunk_notused = (*this->K)(rcvOrbs,OrbVecChunk_j);	  
+	}
+      }
       if (this->XC != 0) resultChunk += (*this->XC)(rcvOrbs,OrbVecChunk_j);
 
       //copy results into final matrix
