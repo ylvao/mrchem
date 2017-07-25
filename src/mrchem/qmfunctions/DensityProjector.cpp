@@ -105,111 +105,27 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     FunctionTreeVector<3> total_vec, spin_vec, alpha_vec, beta_vec;
     vector<Density *> dens_vec;
     vector<int> rho_i_Ix;
+    Density* rho_i;	
     if(MPI_size>1){
-      Density *rho_i;	
-      for (int iter = 0;  iter<MPI_size ; iter++) {
-	int j_MPI = (MPI_size+iter-MPI_rank)%MPI_size;
-	if(MPI_rank > j_MPI){
-	  //send first all own bras, then receive all kets from j_MPI
-	    int i_Ix = 0;
-	  for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
-	    if(iter==0){
-	      rho_i = new Density(rho);	
-	      Orbital &phi_i = phi.getOrbital(i_Orb);
-	      (*this)(*rho_i, phi_i);
-	      dens_vec.push_back(rho_i);
-	      rho_i_Ix.push_back(dens_vec.size()-1);
-	      if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
-	      if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
-	      if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
-	      if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
-	    }else{
-	      rho_i = dens_vec[rho_i_Ix[i_Ix]];
-	    }
-	    i_Ix++;
-	    rho_i->send_Density(j_MPI, i_Orb);
-	  }
-	  //receive
-	  for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb+=MPI_size) {
-	    Density *rho_j = new Density(rho);
-	    rho_j->Rcv_Density(j_MPI, j_Orb);
-	    dens_vec.push_back(rho_j);
-	    if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
-	    if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
-	    if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
-	    if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
-	  }
-	  
-	}else{
-	  //receive first all kets from j_MPI then send all own bras
-	  if(j_MPI != MPI_rank){
-	    for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb+=MPI_size) {
-	      Density *rho_j = new Density(rho);
-	      rho_j->Rcv_Density(j_MPI, j_Orb);
-	      if(j_MPI != MPI_rank){
-		dens_vec.push_back(rho_j);
-	        if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
-	        if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
-	        if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
-	        if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
-	      }
-	    }
-	  }
-	  //send 
-	  int i_Ix = 0;
-	  for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
-	    if(iter==0){
-	      rho_i = new Density(rho);	
-	      Orbital &phi_i = phi.getOrbital(i_Orb);
-	      (*this)(*rho_i, phi_i);
-	      dens_vec.push_back(rho_i);
-	      rho_i_Ix.push_back(dens_vec.size()-1);
-	      if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
-	      if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
-	      if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
-	      if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
-	    }else{
-	      rho_i = dens_vec[rho_i_Ix[i_Ix]];
-	    }
-	    i_Ix++;
-	    if(j_MPI != MPI_rank)rho_i->send_Density(j_MPI, i_Orb);
-	  }
+      for (int i_Orb = 0; i_Orb < phi.size(); i_Orb++) {
+	if(i_Orb%MPI_size==MPI_rank){
+	  rho_i = new Density(rho);	
+	  Orbital &phi_i = phi.getOrbital(i_Orb);
+	  (*this)(*rho_i, phi_i);
+	  if(MPI_rank!=0)rho_i->send_Density(0, i_Orb);
+	}
+	if(MPI_rank==0){
+	  if(i_Orb%MPI_size!=MPI_rank)rho_i = new Density(rho);
+	  if(i_Orb%MPI_size!=MPI_rank)rho_i->Rcv_Density(i_Orb%MPI_size, i_Orb);
+	  dens_vec.push_back(rho_i);
+	  if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
+	  if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
+	  if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
+	  if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
 	}
       }
 
-	/*      for (int i_Orb = MPI_rank; i_Orb < phi.size(); i_Orb+=MPI_size) {
-	Density *rho_i = new Density(rho);	
-	if(i_Orb<phi.size()){
-	  Orbital &phi_i = phi.getOrbital(i_Orb);
-	  (*this)(*rho_i, phi_i);
-	  dens_vec.push_back(rho_i);
-	  if (rho_i->total != 0){ total_vec.push_back(rho_i->total);
-		  cout<<MPI_rank<<" push  sze "<<rho_i->total->getSerialFunctionTree()->nodeChunks.size()<<endl;}
-	  if (rho_i->alpha != 0) alpha_vec.push_back(rho_i->alpha);
-	  if (rho_i->beta != 0) beta_vec.push_back(rho_i->beta);
-	}
-	for (int iter = 0;  iter<MPI_size ; iter++) {
-	  int j_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
-	  int j_Orb = j_MPI;
-	  Density *rho_j = new Density(rho);
-	  if(MPI_rank > j_MPI){
-	    //send first bra, then receive ket
-	    rho_i->send_Density(j_MPI, i_Orb);
-	    rho_j->Rcv_Density(j_MPI, j_Orb);
-	  }else if(MPI_rank < j_MPI){
-	    //receive first bra, then send ket
-	    rho_j->Rcv_Density(j_MPI, j_Orb);
-	    rho_i->send_Density(j_MPI, i_Orb);
-	  }
-	  if(j_MPI%MPI_size!=MPI_rank){
-	    dens_vec.push_back(rho_j);
-	    if (rho_j->total != 0) total_vec.push_back(rho_j->total);
-	    if (rho_j->alpha != 0) alpha_vec.push_back(rho_j->alpha);
-	    if (rho_j->beta != 0) beta_vec.push_back(rho_j->beta);
-	  }
-	}
-	}*/
-      }else{
+    }else{
       
       //Serial processing
       for (int i = 0; i < phi.size(); i++) {
@@ -224,42 +140,57 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
       }
     } 
 
-    if (total_vec.size() > 5) {
+    if(MPI_rank==0){
+      if (total_vec.size() > 5) {
         rho.allocTotal();
         this->add(rho.total(), total_vec);
-    } else if (total_vec.size() > 0) {
+      } else if (total_vec.size() > 0) {
         rho.allocTotal();
         this->grid(rho.total(), total_vec);
         this->add(rho.total(), total_vec, 0);
-    }
-    if (spin_vec.size() > 5) {
+      }
+      if (spin_vec.size() > 5) {
         rho.allocSpin();
         this->add(rho.spin(), spin_vec);
-    } else if (spin_vec.size() > 0) {
+      } else if (spin_vec.size() > 0) {
         rho.allocSpin();
         this->grid(rho.spin(), spin_vec);
         this->add(rho.spin(), spin_vec, 0);
-    }
-    if (alpha_vec.size() > 5) {
+      }
+      if (alpha_vec.size() > 5) {
         rho.allocAlpha();
         this->add(rho.alpha(), alpha_vec);
-    } else if (alpha_vec.size() > 0) {
+      } else if (alpha_vec.size() > 0) {
         rho.allocAlpha();
         this->grid(rho.alpha(), alpha_vec);
         this->add(rho.alpha(), alpha_vec, 0);
-    }
-    if (beta_vec.size() > 5) {
+      }
+      if (beta_vec.size() > 5) {
         rho.allocBeta();
         this->add(rho.beta(), beta_vec);
-    } else if (beta_vec.size() > 0) {
+      } else if (beta_vec.size() > 0) {
         rho.allocBeta();
         this->grid(rho.beta(), beta_vec);
         this->add(rho.beta(), beta_vec, 0);
+      }
+
+      for (int i = 0; i < dens_vec.size(); i++) {
+	dens_vec[i]->clear();
+	delete dens_vec[i];
+	dens_vec[i] = 0;
+      }
     }
 
-    for (int i = 0; i < dens_vec.size(); i++) {
-        dens_vec[i]->clear();
-        delete dens_vec[i];
-        dens_vec[i] = 0;
+    if(MPI_size>1){
+      //we always broadcast density, to ensure identical numerical values 
+      if(MPI_rank==0){
+	for (int i_MPI = 1; i_MPI<MPI_size; i_MPI++) {
+	  rho.send_Density(i_MPI, 54);
+	}
+      }else{
+	//do nothing, only receive Density
+	rho.Rcv_Density(0, 54);
+      }
     }
+
 }

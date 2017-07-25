@@ -1,6 +1,7 @@
 #include "Density.h"
 #include "FunctionTree.h"
 #include "SerialFunctionTree.h"
+#include "ProjectedNode.h"
 #include "TelePrompter.h"
 #include "parallel.h"
 
@@ -8,8 +9,18 @@ extern MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 using namespace std;
 
+Density::Density(bool spin, bool shared)
+    : is_spin(spin),
+      is_shared(shared),
+      dens_t(0),
+      dens_s(0),
+      dens_a(0),
+      dens_b(0) {
+  if(this->is_shared)Allocate_Shared_Density(1000);//1000-> 1000MB
+}
 Density::Density(bool s)
     : is_spin(s),
+      is_shared(false),
       dens_t(0),
       dens_s(0),
       dens_a(0),
@@ -18,6 +29,7 @@ Density::Density(bool s)
 
 Density::Density(const Density &rho)
     : is_spin(rho.is_spin),
+      is_shared(rho.is_shared),
       dens_t(0),
       dens_s(0),
       dens_a(0),
@@ -175,4 +187,154 @@ void Density::Rcv_Density(int source, int tag){
   
 #endif
 }
+//Allocate an empty Density where the coefficients are shared between processes within a compute-node
+void Density::Allocate_Shared_Density(int shared_size){
+#ifdef HAVE_MPI
+  MPI_Comm ncomm=MPI_COMM_WORLD;
+  MPI_Comm ncomm_sh;
+  double * shared_mem_ptr;
+  //allocate a big chunk of shared memory
+  Share_memory(ncomm, ncomm_sh, shared_size, shared_mem_ptr);
+  int shrank;
+  MPI_Comm_rank(ncomm_sh, &shrank);
+  bool master = (shrank==0);//rank 0 is master
+
+  if(this->hasTotal()){
+    SerialFunctionTree<3>* serialTree_p = (SerialFunctionTree<3>*) this->dens_t->getSerialTree();
+    if(serialTree_p->nodeCoeffChunks.size()!=1)MSG_ERROR("shared density must start from empty density");
+    
+    //repoint the root coeff
+    MWNode<3> **roots = this->dens_t->getRootBox().getNodes();
+    int nRoots = this->dens_t->getRootBox().size();
+    double * d_ptr = shared_mem_ptr;
+    for (int rIdx = 0; rIdx < nRoots; rIdx++) {
+      roots[rIdx]->coefs =  d_ptr; //repoint adress of root nodecoeff
+    d_ptr += serialTree_p->sizeNodeCoeff; 
+    }
+    //deallocate the old coefficients
+    delete[] serialTree_p->nodeCoeffChunks[0];//deallocate old chunk
+    
+    //preallocate all chunks
+    int size_NodeCoeffChunk = serialTree_p->sizeNodeCoeff*serialTree_p->maxNodesPerChunk;//in units of doubles
+    int size_NodeChunk = sizeof(ProjectedNode<3>)*serialTree_p->maxNodesPerChunk;//in Bytes
+    d_ptr = shared_mem_ptr;
+    serialTree_p->nodeCoeffChunks[0]= shared_mem_ptr;//reset adress of first chunk
+    
+    long int nextsize = 2*size_NodeCoeffChunk;//already set one, and need space for next.
+    long int availsize = shared_size;
+    availsize *= 1024*1024;
+    int maxNChunks = serialTree_p->maxNodes / serialTree_p->maxNodesPerChunk -1;
+    for (int i = 0; nextsize < availsize and i  <maxNChunks; i++) {
+      d_ptr += size_NodeCoeffChunk;
+      nextsize += size_NodeCoeffChunk;
+      serialTree_p->nodeCoeffChunks.push_back(d_ptr);
+      serialTree_p->sNodes = (ProjectedNode<3>*) new char[size_NodeChunk];//NB: nodes (without coeff) are allocated individually, not shared
+      serialTree_p->nodeChunks.push_back(serialTree_p->sNodes);
+    }
+  }
+  if(this->hasSpin()){
+    SerialFunctionTree<3>* serialTree_p = (SerialFunctionTree<3>*) this->dens_s->getSerialTree();
+    if(serialTree_p->nodeCoeffChunks.size()!=1)MSG_ERROR("shared density must start from empty density");
+    
+    //repoint the root coeff
+    MWNode<3> **roots = this->dens_s->getRootBox().getNodes();
+    int nRoots = this->dens_s->getRootBox().size();
+    double * d_ptr = shared_mem_ptr;
+    for (int rIdx = 0; rIdx < nRoots; rIdx++) {
+      roots[rIdx]->coefs =  d_ptr; //repoint adress of root nodecoeff
+      d_ptr += serialTree_p->sizeNodeCoeff; 
+    }
+    //deallocate the old coefficients
+    delete[] serialTree_p->nodeCoeffChunks[0];//deallocate old chunk
+    
+    //preallocate all chunks
+    int size_NodeCoeffChunk = serialTree_p->sizeNodeCoeff*serialTree_p->maxNodesPerChunk;//in units of doubles
+    int size_NodeChunk = sizeof(ProjectedNode<3>)*serialTree_p->maxNodesPerChunk;//in Bytes
+    d_ptr = shared_mem_ptr;
+    serialTree_p->nodeCoeffChunks[0]= shared_mem_ptr;//reset adress of first chunk
+    
+    long int nextsize = 2*size_NodeCoeffChunk;//already set one, and need space for next.
+    long int availsize = shared_size;
+    availsize *= 1024*1024;
+    int maxNChunks = serialTree_p->maxNodes / serialTree_p->maxNodesPerChunk -1;
+    for (int i = 0; nextsize < availsize and i  <maxNChunks; i++) {
+      d_ptr += size_NodeCoeffChunk;
+      nextsize += size_NodeCoeffChunk;
+      serialTree_p->nodeCoeffChunks.push_back(d_ptr);
+      serialTree_p->sNodes = (ProjectedNode<3>*) new char[size_NodeChunk];//NB: nodes (without coeff) are allocated individually, not shared
+      serialTree_p->nodeChunks.push_back(serialTree_p->sNodes);
+    }
+  }
+
+  if(this->hasAlpha()){
+    SerialFunctionTree<3>* serialTree_p = (SerialFunctionTree<3>*) this->dens_a->getSerialTree();
+    if(serialTree_p->nodeCoeffChunks.size()!=1)MSG_ERROR("shared density must start from empty density");
+    
+    //repoint the root coeff
+    MWNode<3> **roots = this->dens_a->getRootBox().getNodes();
+    int nRoots = this->dens_a->getRootBox().size();
+    double * d_ptr = shared_mem_ptr;
+    for (int rIdx = 0; rIdx < nRoots; rIdx++) {
+      roots[rIdx]->coefs =  d_ptr; //repoint adress of root nodecoeff
+      d_ptr += serialTree_p->sizeNodeCoeff; 
+    }
+    //deallocate the old coefficients
+    delete[] serialTree_p->nodeCoeffChunks[0];//deallocate old chunk
+    
+    //preallocate all chunks
+    int size_NodeCoeffChunk = serialTree_p->sizeNodeCoeff*serialTree_p->maxNodesPerChunk;//in units of doubles
+    int size_NodeChunk = sizeof(ProjectedNode<3>)*serialTree_p->maxNodesPerChunk;//in Bytes
+    d_ptr = shared_mem_ptr;
+    serialTree_p->nodeCoeffChunks[0]= shared_mem_ptr;//reset adress of first chunk
+    
+    long int nextsize = 2*size_NodeCoeffChunk;//already set one, and need space for next.
+    long int availsize = shared_size;
+    availsize *= 1024*1024;
+    int maxNChunks = serialTree_p->maxNodes / serialTree_p->maxNodesPerChunk -1;
+    for (int i = 0; nextsize < availsize and i  <maxNChunks; i++) {
+      d_ptr += size_NodeCoeffChunk;
+      nextsize += size_NodeCoeffChunk;
+      serialTree_p->nodeCoeffChunks.push_back(d_ptr);
+      serialTree_p->sNodes = (ProjectedNode<3>*) new char[size_NodeChunk];//NB: nodes (without coeff) are allocated individually, not shared
+      serialTree_p->nodeChunks.push_back(serialTree_p->sNodes);
+    }
+  }
+  if(this->hasBeta()){
+    SerialFunctionTree<3>* serialTree_p = (SerialFunctionTree<3>*) this->dens_b->getSerialTree();
+    if(serialTree_p->nodeCoeffChunks.size()!=1)MSG_ERROR("shared density must start from empty density");
+    
+    //repoint the root coeff
+    MWNode<3> **roots = this->dens_b->getRootBox().getNodes();
+    int nRoots = this->dens_b->getRootBox().size();
+    double * d_ptr = shared_mem_ptr;
+    for (int rIdx = 0; rIdx < nRoots; rIdx++) {
+      roots[rIdx]->coefs =  d_ptr; //repoint adress of root nodecoeff
+      d_ptr += serialTree_p->sizeNodeCoeff; 
+    }
+    //deallocate the old coefficients
+    delete[] serialTree_p->nodeCoeffChunks[0];//deallocate old chunk
+    
+    //preallocate all chunks
+    int size_NodeCoeffChunk = serialTree_p->sizeNodeCoeff*serialTree_p->maxNodesPerChunk;//in units of doubles
+    int size_NodeChunk = sizeof(ProjectedNode<3>)*serialTree_p->maxNodesPerChunk;//in Bytes
+    d_ptr = shared_mem_ptr;
+    serialTree_p->nodeCoeffChunks[0]= shared_mem_ptr;//reset adress of first chunk
+    
+    long int nextsize = 2*size_NodeCoeffChunk;//already set one, and need space for next.
+    long int availsize = shared_size;
+    availsize *= 1024*1024;
+    int maxNChunks = serialTree_p->maxNodes / serialTree_p->maxNodesPerChunk -1;
+    for (int i = 0; nextsize < availsize and i  <maxNChunks; i++) {
+      d_ptr += size_NodeCoeffChunk;
+      nextsize += size_NodeCoeffChunk;
+      serialTree_p->nodeCoeffChunks.push_back(d_ptr);
+      serialTree_p->sNodes = (ProjectedNode<3>*) new char[size_NodeChunk];//NB: nodes (without coeff) are allocated individually, not shared
+      serialTree_p->nodeChunks.push_back(serialTree_p->sNodes);
+    }
+  }
+#else
+  MSG_ERROR("Cannot allocate shared memory for serial runs");
+#endif
+}
+
 
