@@ -548,7 +548,8 @@ Orbital* ExchangePotential::testPreComputed(Orbital &phi_p) {
     for (int i = 0; i < nOrbs; i++) {
         Orbital &phi_i  = this->orbitals->getOrbital(i);
         Orbital *ex_i = this->exchange[i];
-        if (&phi_i == &phi_p and ex_i->getNNodes() != 0) {
+	//if (&phi_i == &phi_p and ex_i->getNNodes() != 0) { //cannot be used with MPI, because phi_p is moved
+        if (&phi_i.real() == &phi_p.real() and &phi_i.imag() == &phi_p.imag() and ex_i->getNNodes() != 0) {
             Orbital *result = new Orbital(phi_p);
             // Deep copy of orbital
             OrbitalAdder add(this->apply_prec, this->max_scale);
