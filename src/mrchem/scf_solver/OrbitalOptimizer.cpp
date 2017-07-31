@@ -82,7 +82,7 @@ bool OrbitalOptimizer::optimize() {
 		
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F.diagonal());
-	if (MPI_size > 1) {
+	if (MPI_Orb_size > 1) {
 	    applyHelmholtzOperators_P(phi_np1, F, phi_n);
 	}else{
 	    applyHelmholtzOperators(phi_np1, F, phi_n);
@@ -100,13 +100,13 @@ bool OrbitalOptimizer::optimize() {
         // Compute errors
 	int Ni = dPhi_n.size();
         VectorXd errors = VectorXd::Zero(Ni);
-	for (int i = MPI_rank; i < Ni; i += MPI_size){
+	for (int i = MPI_Orb_rank; i < Ni; i += MPI_Orb_size){
 	    errors(i) = sqrt(dPhi_n.getOrbital(i).getSquareNorm());
 	}
 #ifdef HAVE_MPI
 	//distribute errors among all orbitals
 	//could use reduce or gather also here
-	MPI_Allreduce(MPI_IN_PLACE, &errors(0), Ni, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	MPI_Allreduce(MPI_IN_PLACE, &errors(0), Ni, MPI_DOUBLE, MPI_SUM, MPI_Comm_Orb);
 #endif
         err_o = errors.maxCoeff();
         err_t = sqrt(errors.dot(errors));

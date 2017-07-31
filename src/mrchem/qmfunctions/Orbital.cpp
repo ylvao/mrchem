@@ -90,7 +90,7 @@ complex<double> Orbital::dot(Orbital &ket) {
 void Orbital::send_Orbital(int dest, int tag){
 #ifdef HAVE_MPI
   MPI_Status status;
-  MPI_Comm comm=MPI_COMM_WORLD;
+  MPI_Comm comm=MPI_Comm_Orb;
 
   struct Metadata{
     int spin;
@@ -125,7 +125,7 @@ void Orbital::send_Orbital(int dest, int tag){
 //send an orbital with MPI
 void Orbital::Isend_Orbital(int dest, int tag, MPI_Request& request){
   MPI_Status status;
-  MPI_Comm comm=MPI_COMM_WORLD;
+  MPI_Comm comm=MPI_Comm_Orb;
 
   struct Metadata{
     int spin;
@@ -159,7 +159,7 @@ void Orbital::Isend_Orbital(int dest, int tag, MPI_Request& request){
 void Orbital::Rcv_Orbital(int source, int tag){
 #ifdef HAVE_MPI
   MPI_Status status;
-  MPI_Comm comm=MPI_COMM_WORLD;
+  MPI_Comm comm=MPI_Comm_Orb;
 
   struct Metadata{
     int spin;
@@ -202,7 +202,7 @@ void Orbital::Rcv_Orbital(int source, int tag){
 //receive an orbital with MPI
 void Orbital::IRcv_Orbital(int source, int tag){
   MPI_Status status;
-  MPI_Comm comm=MPI_COMM_WORLD;
+  MPI_Comm comm=MPI_Comm_Orb;
 
   struct Metadata{
     int spin;

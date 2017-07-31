@@ -74,7 +74,7 @@ Orbital* ExchangePotential::calcExchange(Orbital &phi_p) {
 
     //make vector with adresses of own orbitals
     int i = 0;
-    for (int Ix = MPI_rank;  Ix < nOrbs; Ix += MPI_size) {
+    for (int Ix = MPI_Orb_rank;  Ix < nOrbs; Ix += MPI_Orb_size) {
       OrbVecChunk_i.push_back(this->orbitals->getOrbital(Ix));//i orbitals
       OrbsIx[i++] = Ix;
     }
@@ -169,7 +169,7 @@ void ExchangePotential::calcInternalExchange() {
     int nOrbs = this->orbitals->size();
     int n = 0;
 
-    if(MPI_size==1){
+    if(MPI_Orb_size==1){
       for (int i = 0; i < nOrbs; i++) {
         calcInternal(i);
 	for (int j = 0; j < i; j++) {
@@ -201,7 +201,7 @@ void ExchangePotential::calcInternalExchange() {
       
       //make vector with adresses of own orbitals
       int i = 0;
-      for (int Ix = MPI_rank;  Ix < nOrbs; Ix += MPI_size) {
+      for (int Ix = MPI_Orb_rank;  Ix < nOrbs; Ix += MPI_Orb_size) {
 	OrbVecChunk_i.push_back(this->orbitals->getOrbital(Ix));//i orbitals
 	OrbsIx[i++] = Ix;
       }
@@ -217,7 +217,7 @@ void ExchangePotential::calcInternalExchange() {
 	OrbVecChunk_i.getOrbVecChunk_sym(OrbsIx, rcvOrbs, rcvOrbsIx, nOrbs, iter, sndtoMPI, sndOrbIx,1,2);
 	
 	int rcv_left=1;//normally we get one phi_jji per ii, maybe none
-	if(sndtoMPI[0]<0 or sndtoMPI[0]==MPI_rank)rcv_left=0;//we haven't sent anything, will not receive anything back	    
+	if(sndtoMPI[0]<0 or sndtoMPI[0]==MPI_Orb_rank)rcv_left=0;//we haven't sent anything, will not receive anything back	    
 	//convention: all indices with "i" are owned locally
 	for (int ii = 0; ii<OrbVecChunk_i.size()+1 ; ii++){ //we may have to do one extra iteration to fetch all data
 	  int j=0;//because we limited the size in getOrbVecChunk_sym to 1
@@ -235,13 +235,13 @@ void ExchangePotential::calcInternalExchange() {
 	      calcInternal(OrbsIx[i]);
 	    }else{	    
 	      Orbital &phi_j = rcvOrbs.getOrbital(j);	    
-	      if(rcvOrbsIx[j]%MPI_size != MPI_rank){
+	      if(rcvOrbsIx[j]%MPI_Orb_size != MPI_Orb_rank){
 		calcInternal(OrbsIx[i], rcvOrbsIx[j], phi_i, phi_j, phi_iij);
 		//we send back the locally computed result to where j came from 
 		phi_iij->setOccupancy(OrbsIx[i]);//We temporarily use Occupancy to send Orbital rank 
 		phi_iij->setSpin(OrbVecChunk_i.size()-i-1);//We temporarily use Spin to send info about number of transfers left
 		phi_iij->setError( this->part_norms(rcvOrbsIx[j],OrbsIx[i]));//We temporarily use Error to send part_norm
-		phi_iij->Isend_Orbital(rcvOrbsIx[j]%MPI_size, mpiiter%10, request);
+		phi_iij->Isend_Orbital(rcvOrbsIx[j]%MPI_Orb_size, mpiiter%10, request);
 	      }else{
 		//only compute j < i in own block 
 		if(rcvOrbsIx[j]<OrbsIx[i])calcInternal(OrbsIx[i], rcvOrbsIx[j], phi_i, phi_j, phi_iij);
@@ -252,7 +252,7 @@ void ExchangePotential::calcInternalExchange() {
 	    //we expect to receive data 
 	    phi_jji_rcv->Rcv_Orbital(sndtoMPI[j], mpiiter%10);//we get back phi_jji from where we sent i
 	  }
-	  if(rcvOrbsIx[j]%MPI_size != MPI_rank and rcvOrbs.size()>0 and ii<OrbVecChunk_i.size()){
+	  if(rcvOrbsIx[j]%MPI_Orb_size != MPI_Orb_rank and rcvOrbs.size()>0 and ii<OrbVecChunk_i.size()){
 	    MPI_Wait(&request, &status);//do not continue before isend is finished	      
 	  }
 	  if(rcv_left >0){
@@ -283,7 +283,7 @@ void ExchangePotential::calcInternalExchange() {
 	OrbVecChunk_i.clearVec(false);
 
       for (int i = 0; i < nOrbs; i++) {
-	if(i%MPI_size==MPI_rank){
+	if(i%MPI_Orb_size==MPI_Orb_rank){
 	  Orbital &ex_i = this->exchange.getOrbital(i);
 	  this->tot_norms(i) = sqrt(ex_i.getSquareNorm());
 	  n = max(n, ex_i.getNNodes());
@@ -292,7 +292,7 @@ void ExchangePotential::calcInternalExchange() {
 	}
       }
       //tot_norms are used for screening. Since we use symmetri, we might need factors from others
-      MPI_Allreduce(MPI_IN_PLACE, &this->tot_norms(0), nOrbs, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      MPI_Allreduce(MPI_IN_PLACE, &this->tot_norms(0), nOrbs, MPI_DOUBLE, MPI_SUM, MPI_Comm_Orb);
 
 #endif
     }
@@ -362,8 +362,7 @@ void ExchangePotential::calcInternal(int i, int j) {
         return;
     }
 
-    //    double prec = getScaledPrecision(i, j);
-    double prec = std::max(getScaledPrecision(i, j), getScaledPrecision(j, i));
+    double prec = std::min(getScaledPrecision(i, j), getScaledPrecision(j, i));
 
     if (prec > 1.0e00) return;
     prec = min(prec, 1.0e-1);
@@ -390,13 +389,13 @@ void ExchangePotential::calcInternal(int i, int j) {
     // compute phi_jij = phi_j * V_ij
     double fac_jij = -(this->x_factor/phi_j.getSquareNorm());
     Orbital *phi_jij = new Orbital(phi_i);
-    mult(*phi_jij, fac_jij, phi_j, *V_ij);
+    mult(*phi_jij, fac_jij, *V_ij, phi_j);
     this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
 
     // compute phi_iij = phi_i * V_ij
     double fac_iij = -(this->x_factor/phi_i.getSquareNorm());
     Orbital *phi_iij = new Orbital(phi_i);
-    mult(*phi_iij, fac_iij, phi_i, *V_ij);
+    mult.adjoint(*phi_iij, fac_iij, *V_ij, phi_i);
     this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
 
     if (V_ij != 0) delete V_ij;
@@ -428,8 +427,7 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
         return;
     }
 
-    //    double prec = getScaledPrecision(i, j);
-    double prec = std::max(getScaledPrecision(i, j), getScaledPrecision(j, i));
+    double prec = std::min(getScaledPrecision(i, j), getScaledPrecision(j, i));
 
     if (prec > 1.0e00) return;
     prec = min(prec, 1.0e-1);
@@ -456,14 +454,14 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
     // compute phi_jij = phi_j * V_ij
     double fac_jij = -(this->x_factor/phi_j.getSquareNorm());
     Orbital *phi_jij = new Orbital(phi_i);
-    mult(*phi_jij, fac_jij, phi_j, *V_ij);
+    mult(*phi_jij, fac_jij, *V_ij, phi_j);
     this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
 
     //part_norms(i,j) MUST be computed to use for symmetric screening
     // compute phi_iij = phi_i * V_ij
     Orbital *phi_iij = new Orbital(phi_i);
     double fac_iij = -(this->x_factor/phi_i.getSquareNorm());
-    mult(*phi_iij, fac_iij, phi_i, *V_ij);
+    mult.adjoint(*phi_iij, fac_iij, *V_ij, phi_i);
     this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
     if (phi_iij != 0) delete phi_iij;
 
@@ -493,8 +491,7 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
         return;
     }
 
-    //    double prec = getScaledPrecision(i, j);
-    double prec = std::max(getScaledPrecision(i, j), getScaledPrecision(j, i));
+    double prec = std::min(getScaledPrecision(i, j), getScaledPrecision(j, i));
     if (prec > 1.0e00) return;
     prec = min(prec, 1.0e-1);
 
@@ -520,7 +517,7 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
     // compute phi_jij = phi_j * V_ij
     double fac_jij = -(this->x_factor/phi_j.getSquareNorm());
     Orbital *phi_jij = new Orbital(phi_i);
-    mult(*phi_jij, fac_jij, phi_j, *V_ij);
+    mult(*phi_jij, fac_jij, *V_ij, phi_j);
     this->part_norms(j,i) = sqrt(phi_jij->getSquareNorm());
 
     // compute x_i += phi_jij
@@ -532,13 +529,13 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
     //part_norms(i,j) MUST be computed to use for symmetric screening
     // compute phi_iij = phi_i * V_ij
     double fac_iij = -(this->x_factor/phi_i.getSquareNorm());
-    mult(*phi_iij, fac_iij, phi_i, *V_ij);
+    mult.adjoint(*phi_iij, fac_iij, *V_ij, phi_i);
     this->part_norms(i,j) = sqrt(phi_iij->getSquareNorm());
 
     if (V_ij != 0) delete V_ij;
 
     //This part (phi_iij) is sent to owner of j orbital if it is on another MPI
-    if(j%MPI_size==MPI_rank){
+    if(j%MPI_Orb_size==MPI_Orb_rank){
        // compute x_j += phi_iij
         Orbital &ex_j = this->exchange.getOrbital(j);
         add.inPlace(ex_j, j_factor, *phi_iij);

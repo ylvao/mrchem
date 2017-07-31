@@ -210,7 +210,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
     
     //make vector with adresses of own orbitals
     int i = 0;
-    for (int Ix = MPI_rank;  Ix < Ni; Ix += MPI_size) {
+    for (int Ix = MPI_Orb_rank;  Ix < Ni; Ix += MPI_Orb_size) {
       OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
       out.getOrbital(Ix).clear(true);
       OrbsIx[i++] = Ix;
@@ -221,7 +221,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
       OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
       //Update only own orbitals	
       int j = 0;
-      for (int Jx = MPI_rank;  Jx < Ni; Jx += MPI_size) {
+      for (int Jx = MPI_Orb_rank;  Jx < Ni; Jx += MPI_Orb_size) {
 	VectorXd U_Chunk(rcvOrbs.size());
 	for (int ix = 0; ix<rcvOrbs.size(); ix++)U_Chunk(ix)=U(Jx,rcvOrbsIx[ix]);
 	this->inPlace(out.getOrbital(Jx),U_Chunk, rcvOrbs, false);//can start with empty orbital
@@ -237,7 +237,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
     if (U.cols() != inp.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
-    if(MPI_size>1){
+    if(MPI_Orb_size>1){
       rotate_P(out, U, inp);
     }else{
       for (int i = 0; i < out.size(); i++) {
@@ -251,7 +251,7 @@ void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &
 /** In place rotation of orbital vector */
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     OrbitalVector tmp(out);
-    if(MPI_size>1){
+    if(MPI_Orb_size>1){
       rotate_P(tmp, U, out);
     }else{
       rotate(tmp, U, out);

@@ -2,6 +2,7 @@
 #define DENSITY_H
 
 #include "constants.h"
+#include "parallel.h"
 
 template<int D> class FunctionTree;
 
@@ -46,7 +47,9 @@ public:
     void send_Density(int dest, int tag);
     void Rcv_Density(int source, int tag);
     void Allocate_Shared_Density(int shared_size);
-
+#ifdef HAVE_MPI
+    MPI_Win MPI_win = MPI_WIN_NULL;
+#endif
     enum Spin { Total, Spin, Alpha, Beta };
 
 protected:
