@@ -33,6 +33,7 @@ public:
     bool hasBeta() const { if (this->dens_b == 0) return false; return true; }
 
     bool IsShared() const { if (this->is_shared == 0) return false; return true; }
+    SharedMemory* shMem;
 
     FunctionTree<3> &total() { return *this->dens_t; }
     FunctionTree<3> &spin() { return *this->dens_s; }
@@ -46,7 +47,6 @@ public:
 
     void send_Density(int dest, int tag);
     void Rcv_Density(int source, int tag);
-    void Allocate_Shared_Density(int shared_size);
 #ifdef HAVE_MPI
     MPI_Win MPI_win = MPI_WIN_NULL;
 #endif

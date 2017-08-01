@@ -113,7 +113,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	if (rho.isShared()) {
 	    //only master does the summation
 	    if (not rho.hasTotal()) rho.allocTotal();
-	    rho.Allocate_Shared_Density(500);//500-> 500MB //TODO: put somewhere else
+	    //rho.Allocate_Shared_Density(500);//500-> 500MB //TODO: put somewhere else
 	    for (int i_Orb = 0; i_Orb < phi.size(); i_Orb++) {
 		rho_i = new Density(rho);	
 		if (i_Orb%MPI_Orb_size == MPI_Orb_rank) {
