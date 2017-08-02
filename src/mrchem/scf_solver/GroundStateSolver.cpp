@@ -60,7 +60,7 @@ Orbital* GroundStateSolver::getHelmholtzArgument(int i,
 
     Orbital *part_1 = fock.applyPotential(phi_i);
     Orbital *part_2;
-    if(MPI_Orb_size>1){
+    if(mpiOrbSize>1){
       part_2 = calcMatrixPart_P(i, LmF, phi);
     }else{
       part_2 = calcMatrixPart(i, LmF, phi);
@@ -305,7 +305,7 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     printout(1, "Calculating orthonormalization matrix            ");
 
     MatrixXd S_tilde;
-    if(MPI_Orb_size>1){
+    if(mpiOrbSize>1){
       S_tilde = phi.calcOverlapMatrix_P_H(phi).real();
     }else{
       S_tilde = phi.calcOverlapMatrix().real();
@@ -354,7 +354,7 @@ RR::RR(double prec, OrbitalVector &phi) {
 
     //make vector with adresses of own orbitals
     int i = 0;
-    for (int Ix = MPI_Orb_rank;  Ix < N; Ix += MPI_Orb_size) {
+    for (int Ix = mpiOrbRank;  Ix < N; Ix += mpiOrbSize) {
       OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
       OrbsIx[i++] = Ix;
     }
@@ -373,7 +373,7 @@ RR::RR(double prec, OrbitalVector &phi) {
             }
 	    //NOTE: the "if" should not be necessary, but since outside the required precision
 	    //r_x(phi_i, phi_j) != r_x(phi_j, phi_i), we prefer to have consistent results for
-	    //different MPI_Orb_size
+	    //different mpiOrbSize
 	    if(rcvOrbsIx[j]<=OrbsIx[i]){
 	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
 	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
@@ -382,7 +382,7 @@ RR::RR(double prec, OrbitalVector &phi) {
 	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
 	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
 	    }else{
-	      if(rcvOrbsIx[j]%MPI_Orb_size != MPI_Orb_rank){ //need only compute j<=i in own block
+	      if(rcvOrbsIx[j]%mpiOrbSize != mpiOrbRank){ //need only compute j<=i in own block
 		r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_x(phi_j, phi_i);
 		r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_y(phi_j, phi_i);
 		r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_z(phi_j, phi_i);
@@ -398,7 +398,7 @@ RR::RR(double prec, OrbitalVector &phi) {
     OrbVecChunk_i.clearVec(false);
     //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &r_i_orig(0,0), N*3*N,
-                  MPI_DOUBLE, MPI_SUM, MPI_Comm_Orb);
+                  MPI_DOUBLE, MPI_SUM, mpiCommOrb);
 
 #else
 

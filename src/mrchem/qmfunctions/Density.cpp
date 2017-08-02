@@ -16,7 +16,7 @@ Density::Density(bool spin, bool shared)
       dens_s(0),
       dens_a(0),
       dens_b(0) {
-    if(this->is_shared and MPI_SH_size>1){
+    if(this->is_shared and mpiShSize>1){
 	this->shMem = new SharedMemory(500);//initiate up to 500MB shared memory
     }else{
 	this->setIsShared(false);//at least 2 processes for sharing
@@ -138,7 +138,7 @@ void Density::allocBeta() {
 void Density::send_Density(int dest, int tag){
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Comm comm=MPI_Comm_Orb;
+    MPI_Comm comm=mpiCommOrb;
 
     struct Metadata{
 	bool spin;
@@ -179,7 +179,7 @@ void Density::send_Density(int dest, int tag){
 void Density::Rcv_Density(int source, int tag){
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Comm comm=MPI_Comm_Orb;
+    MPI_Comm comm=mpiCommOrb;
 
     struct Metadata{
 	bool spin;

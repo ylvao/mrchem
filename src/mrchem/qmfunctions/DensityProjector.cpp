@@ -109,30 +109,28 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     Density* rho_tmp2;
     Density* rho_tmp;
     Density* rho_i;	
-    if (MPI_Orb_size>1) {
+    if (mpiOrbSize>1) {
 	if (rho.isShared()) {
 	    //only master does the summation
-	    if (not rho.hasTotal()) rho.allocTotal();
-	    //rho.Allocate_Shared_Density(500);//500-> 500MB //TODO: put somewhere else
 	    for (int i_Orb = 0; i_Orb < phi.size(); i_Orb++) {
 		rho_i = new Density(rho);	
-		if (i_Orb%MPI_Orb_size == MPI_Orb_rank) {
+		if (i_Orb%mpiOrbSize == mpiOrbRank) {
 		    Orbital &phi_i = phi.getOrbital(i_Orb);
-		    //		    cout<<"size orbital "<< i_Orb<< " in MB "<<int((phi_i.real().getNNodes()* phi_i.real().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
+		    //cout<<mpiOrbRank<<" size orbital "<< i_Orb<< " in MB "<<int((phi_i.real().getNNodes()* phi_i.real().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
 		    (*this)(*rho_i, phi_i);
-		    if (MPI_Orb_rank != 0) rho_i->send_Density(0, i_Orb);
+		    if (mpiOrbRank != 0) rho_i->send_Density(0, i_Orb);
 		}
 		//add on the fly
-		if (MPI_Orb_rank == 0 and i_Orb == 0){
+		if (mpiOrbRank == 0 and i_Orb == 0){
 		    //first iteration does not sum only receive in tmp1
-		    if (i_Orb%MPI_Orb_size != MPI_Orb_rank) {
-			rho_tmp1->Rcv_Density(i_Orb%MPI_Orb_size, i_Orb);
+		    if (i_Orb%mpiOrbSize != mpiOrbRank) {
+			rho_tmp1->Rcv_Density(i_Orb%mpiOrbSize, i_Orb);
 		    }else{
 			rho_tmp1 = rho_i;
 			rho_i = rho_tmp2;
 		    }
-		}else if (MPI_Orb_rank == 0) {
-		    if (i_Orb%MPI_Orb_size != MPI_Orb_rank) rho_i->Rcv_Density(i_Orb%MPI_Orb_size, i_Orb);
+		}else if (mpiOrbRank == 0) {
+		    if (i_Orb%mpiOrbSize != mpiOrbRank) rho_i->Rcv_Density(i_Orb%mpiOrbSize, i_Orb);
 		    //exchange pointers. old result is in tmp1: tmp1 = rho_i+tmp2
 		    rho_tmp2 = rho_tmp1;
 		    rho_tmp1 = new Density(rho);
@@ -179,12 +177,12 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	  
 	    }
 	}else{
-	    for (int iter = 0;  iter < MPI_Orb_size ; iter++) {
-		int j_MPI = (MPI_Orb_size+iter-MPI_Orb_rank)%MPI_Orb_size;
-		if (MPI_Orb_rank > j_MPI) {
+	    for (int iter = 0;  iter < mpiOrbSize ; iter++) {
+		int j_MPI = (mpiOrbSize+iter-mpiOrbRank)%mpiOrbSize;
+		if (mpiOrbRank > j_MPI) {
 		    //send first all own bras, then receive all kets from j_MPI
 		    int i_Ix = 0;
-		    for (int i_Orb = MPI_Orb_rank; i_Orb < phi.size(); i_Orb+=MPI_Orb_size) {
+		    for (int i_Orb = mpiOrbRank; i_Orb < phi.size(); i_Orb+=mpiOrbSize) {
 			if (iter == 0) {
 			    rho_i = new Density(rho);	
 			    Orbital &phi_i = phi.getOrbital(i_Orb);
@@ -202,7 +200,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 			rho_i->send_Density(j_MPI, i_Orb);
 		    }
 		    //receive
-		    for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb += MPI_Orb_size) {
+		    for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb += mpiOrbSize) {
 			Density *rho_j = new Density(rho);
 			rho_j->Rcv_Density(j_MPI, j_Orb);
 			dens_vec.push_back(rho_j);
@@ -214,11 +212,11 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	  
 		}else{
 		    //receive first all kets from j_MPI then send all own bras
-		    if (j_MPI != MPI_Orb_rank) {
-			for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb += MPI_Orb_size) {
+		    if (j_MPI != mpiOrbRank) {
+			for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb += mpiOrbSize) {
 			    Density *rho_j = new Density(rho);
 			    rho_j->Rcv_Density(j_MPI, j_Orb);
-			    if(j_MPI != MPI_Orb_rank){
+			    if(j_MPI != mpiOrbRank){
 				dens_vec.push_back(rho_j);
 				if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
 				if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
@@ -229,7 +227,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 		    }
 		    //send 
 		    int i_Ix = 0;
-		    for (int i_Orb = MPI_Orb_rank; i_Orb < phi.size(); i_Orb += MPI_Orb_size) {
+		    for (int i_Orb = mpiOrbRank; i_Orb < phi.size(); i_Orb += mpiOrbSize) {
 			if (iter == 0) {
 			    rho_i = new Density(rho);	
 			    Orbital &phi_i = phi.getOrbital(i_Orb);
@@ -244,7 +242,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 			    rho_i = dens_vec[rho_i_Ix[i_Ix]];
 			}
 			i_Ix++;
-			if (j_MPI != MPI_Orb_rank )rho_i->send_Density(j_MPI, i_Orb);
+			if (j_MPI != mpiOrbRank )rho_i->send_Density(j_MPI, i_Orb);
 		    }
 		}
 	    }
@@ -265,7 +263,7 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
 	}
     } 
 
-    if (MPI_Orb_rank == 0 and not rho.isShared()) {
+    if (mpiOrbRank == 0 and not rho.isShared()) {
 	if (total_vec.size() > 5) {
 	    rho.allocTotal();
 	    this->add(rho.total(), total_vec);
@@ -307,12 +305,12 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     }
 
 
-    //    if(MPI_Orb_rank==0)cout<<"size density MB "<<int((rho.getNNodes()* rho.total().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
-    if (MPI_Orb_size > 1) {
+    //    if(mpiOrbRank==0)cout<<"size density MB "<<int((rho.getNNodes()* rho.total().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
+    if (mpiOrbSize > 1) {
 	//we always broadcast density
 	//If the density is shared, only metdata will be sent/received
-	if (MPI_Orb_rank == 0) {
-	    for (int i_MPI = 1; i_MPI < MPI_Orb_size; i_MPI++) {
+	if (mpiOrbRank == 0) {
+	    for (int i_MPI = 1; i_MPI < mpiOrbSize; i_MPI++) {
 		rho.send_Density(i_MPI, 54);
 	    }
 	}else{

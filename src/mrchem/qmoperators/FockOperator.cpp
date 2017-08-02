@@ -126,13 +126,13 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 
     //make vector with adresses of own orbitals
     int i = 0;
-    for (int Ix = MPI_Orb_rank; Ix < Ni; Ix += MPI_Orb_size) {
+    for (int Ix = mpiOrbRank; Ix < Ni; Ix += mpiOrbSize) {
       OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));//i orbitals
       OrbsIx[i++] = Ix;
     }
-    for (int Ix = MPI_Orb_rank; Ix < Nj; Ix += MPI_Orb_size) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
+    for (int Ix = mpiOrbRank; Ix < Nj; Ix += mpiOrbSize) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
     //need to pad OrbVecChunk_j so that all have same size
-    if(OrbVecChunk_j.size()<(Nj+MPI_Orb_size-1)/MPI_Orb_size)OrbVecChunk_j.push_back(j_orbs.getOrbital(0));
+    if(OrbVecChunk_j.size()<(Nj+mpiOrbSize-1)/mpiOrbSize)OrbVecChunk_j.push_back(j_orbs.getOrbital(0));
 
     for (int iter = 0;  iter >= 0 ; iter++) {
       //get a new chunk from other processes
@@ -150,7 +150,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
 	if(rcvOrbs.size()==0 and iter>=0 ){
 	  //we must still go through operator to send own orbitals to others. Just make a fake operation!
-	  rcvOrbs.push_back(i_orbs.getOrbital(MPI_Orb_rank));//i orbitals
+	  rcvOrbs.push_back(i_orbs.getOrbital(mpiOrbRank));//i orbitals
 	  MatrixXd resultChunk_notused = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
 	  resultChunk_notused = (*this->K)(rcvOrbs,OrbVecChunk_j);	  
 	}
@@ -159,7 +159,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 
       //copy results into final matrix
       int j = 0;
-      for (int Jx = MPI_Orb_rank;  Jx < Nj ; Jx += MPI_Orb_size) {
+      for (int Jx = mpiOrbRank;  Jx < Nj ; Jx += mpiOrbSize) {
 	for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
 	  result(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
 	}
@@ -174,7 +174,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 
     //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &result(0,0), Ni*Nj,
-                  MPI_DOUBLE, MPI_SUM, MPI_Comm_Orb);
+                  MPI_DOUBLE, MPI_SUM, mpiCommOrb);
 
 #else
     Timer tot_t;
@@ -223,7 +223,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 }
 
 MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-  if(MPI_Orb_size>1)cout<<"ERROR"<<endl;
+  if(mpiOrbSize>1)cout<<"ERROR"<<endl;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
@@ -254,7 +254,7 @@ Orbital* FockOperator::applyPotential(Orbital &orb_p) {
     timer.stop();
     double time = timer.getWallTime();
     int nNodes = result->getNNodes();
-    if(MPI_Orb_size==1)TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
+    if(mpiOrbSize==1)TelePrompter::printTree(1, "Sum potential operator", nNodes, time);
 
     for (int n = 0; n < orbs.size(); n++) {
         delete orbs[n];
@@ -326,7 +326,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &phi, MatrixXd &F) {
     double E_xc2 = 0.0;
     if (this->XC != 0) E_xc = this->XC->getEnergy();
     for (int i = 0; i < phi.size(); i++) {
-        if (i%MPI_Orb_size == MPI_Orb_rank) {
+        if (i%mpiOrbSize == mpiOrbRank) {
             Orbital &phi_i = phi.getOrbital(i);
             double occ = (double) phi_i.getOccupancy();
             double e_i = occ*F(i,i);
@@ -358,7 +358,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &phi, MatrixXd &F) {
     tmp[2] = E_ee;
     tmp[3] = E_x;
     tmp[4] = E_xc2;
-    MPI_Allreduce(MPI_IN_PLACE,tmp, 5, MPI_DOUBLE, MPI_SUM, MPI_Comm_Orb);
+    MPI_Allreduce(MPI_IN_PLACE,tmp, 5, MPI_DOUBLE, MPI_SUM, mpiCommOrb);
     E_orb = tmp[0];
     E_en  = tmp[1];
     E_ee  = tmp[2];

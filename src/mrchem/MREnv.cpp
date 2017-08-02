@@ -58,11 +58,11 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     println(0, "BLAS was NOT found, Eigen will be used instead!" << endl);
 #endif
 
-    if (MPI_Orb_size > 1 or nThreads > 1) {
+    if (mpiOrbSize > 1 or nThreads > 1) {
         println(0,"+++ Parallel execution: ");
-        println(0,"  MPI hosts available     : " << MPI_Orb_size);
+        println(0,"  MPI hosts available     : " << mpiOrbSize);
         println(0,"  Threads/host            : " << nThreads);
-        println(0,"  Total used CPUs         : " << MPI_Orb_size*nThreads);
+        println(0,"  Total used CPUs         : " << mpiOrbSize*nThreads);
         println(0,"");
     } else {
         println(0,"+++ Serial execution" << endl);
