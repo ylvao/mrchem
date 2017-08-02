@@ -13,9 +13,7 @@ void MREnv::initializeMRCPP(int argc, char **argv) {
     MPI_Initializations();
 #endif
     int nThreads = omp_get_max_threads();
-
     omp_set_dynamic(0);
-    Eigen::setNbThreads(1);
 
     const char *infile = 0;
     if (argc == 1) {
