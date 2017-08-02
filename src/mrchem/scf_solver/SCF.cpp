@@ -128,7 +128,7 @@ double SCF::getUpdate(const vector<double> &vec, int i, bool absPrec) const {
 }
 
 void SCF::printOrbitals(const VectorXd &epsilon, const OrbitalVector &phi, int flag) const {
-  if (MPI_rank == 0) {
+  if (mpiOrbRank == 0) {
     TelePrompter::printHeader(0, "Orbitals");
     if (flag == 0) println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
     if (flag == 1) println(0, " Orb    Norm          Error         nNodes  Spin  Occ  Done ");
@@ -242,7 +242,7 @@ void SCF::applyHelmholtzOperators(OrbitalVector &phi_np1,
         Orbital &nPhi_i = phi_n.getOrbital(i);
         Orbital &np1Phi_i = phi_np1.getOrbital(i);
 
-	if (i%MPI_size == MPI_rank) {
+	if (i%mpiOrbSize == mpiOrbRank) {
 	    //in charge for this orbital
 	    Orbital *arg_i = getHelmholtzArgument(i, F_n, phi_n, adjoint);
 	    H(i, np1Phi_i, *arg_i);
@@ -298,7 +298,7 @@ void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
       
       //make vector with adresses of own orbitals
       int i = 0;
-      for (int Ix = MPI_rank; Ix < Ni; Ix += MPI_size) {
+      for (int Ix = mpiOrbRank; Ix < Ni; Ix += mpiOrbSize) {
 	OrbVecChunk_i.push_back(phi_n.getOrbital(Ix));//i orbitals
 	OrbsIx[i++] = Ix;
       }
@@ -309,12 +309,12 @@ void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
 	//get a new chunk from other processes
 	OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
 	Orbital *arg_i_1;
-	for (int i = MPI_rank;  i<Ni ; i += MPI_size) {
+	for (int i = mpiOrbRank;  i<Ni ; i += mpiOrbSize) {
 	  Orbital &phi_i = phi_n.getOrbital(i);
 	  if(first_iter){	    
 	    arg_i_1 = getHelmholtzArgument_1(phi_i);
 	  }else{
-	    arg_i_1 = arg_i_vec[i/MPI_size];//set to part_1 + chunks so far
+	    arg_i_1 = arg_i_vec[i/mpiOrbSize];//set to part_1 + chunks so far
 	  }
 	  double coef_part1 = 1.0;
 	  if(first_iter)coef_part1= -1.0/(2.0*pi);//only include factor once
@@ -322,7 +322,7 @@ void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
 	  if(first_iter){
 	    arg_i_vec.push_back(arg_i);
 	  }else{
-	    arg_i_vec[i/MPI_size]=arg_i;
+	    arg_i_vec[i/mpiOrbSize]=arg_i;
 	  }
 	}
 	first_iter = false;
@@ -330,10 +330,10 @@ void SCF::applyHelmholtzOperators_P(OrbitalVector &phi_np1,
       }
       OrbVecChunk_i.clearVec(false);
 
-      for (int i = MPI_rank;  i<Ni ; i += MPI_size) {
+      for (int i = mpiOrbRank;  i<Ni ; i += mpiOrbSize) {
 	  Timer timer;
 	  Orbital &np1Phi_i = phi_np1.getOrbital(i);
-	  arg_i = arg_i_vec[i/MPI_size];
+	  arg_i = arg_i_vec[i/mpiOrbSize];
 	  H(i, np1Phi_i, *arg_i);
 	  delete arg_i;
 	
@@ -401,26 +401,26 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
     int orbVecIx = 0;
 
     int nOrbs = phi.size();
-    for (int iter = 0;  iter<MPI_size ; iter++) {
-      int j_MPI=(MPI_size+iter-MPI_rank)%MPI_size;
-      for (int j_Orb = j_MPI;  j_Orb < phi.size(); j_Orb+=MPI_size) {
+    for (int iter = 0;  iter<mpiOrbSize ; iter++) {
+      int j_MPI=(mpiOrbSize+iter-mpiOrbRank)%mpiOrbSize;
+      for (int j_Orb = j_MPI;  j_Orb < phi.size(); j_Orb+=mpiOrbSize) {
 	
 	//    for (int j = 0; j < nOrbs; j++) {
-	if(MPI_rank > j_MPI){
+	if(mpiOrbRank > j_MPI){
 	  //send first bra, then receive ket
 	  if (fabs(M(j_Orb,i_Orb)) > MachineZero)phi.getOrbital(i_Orb).send_Orbital(j_MPI, i_Orb);
 	  if (fabs(M(i_Orb,j_Orb)) > MachineZero)workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(j_MPI, j_Orb);
-	}else if(MPI_rank < j_MPI){
+	}else if(mpiOrbRank < j_MPI){
 	  if (fabs(M(i_Orb,j_Orb)) > MachineZero)workOrbVec.getOrbital(orbVecIx).Rcv_Orbital(j_MPI, j_Orb);
 	  if (fabs(M(j_Orb,i_Orb)) > MachineZero)phi.getOrbital(i_Orb).send_Orbital(j_MPI, i_Orb);
-	}else if(MPI_rank == j_MPI){//use phi directly
+	}else if(mpiOrbRank == j_MPI){//use phi directly
 	}
 	double coef = M(i_Orb,j_Orb);
 	// Linear scaling screening inserted here
 	if (fabs(coef) > MachineZero) {
 	  //Orbital &phi_j = out.getOrbital(j_Orb);
 	  double norm_j;
-	  if(MPI_rank == j_MPI){
+	  if(mpiOrbRank == j_MPI){
 	    norm_j = sqrt(phi.getOrbital(j_Orb).getSquareNorm());
 	  }else{
 	    norm_j = sqrt(workOrbVec.getOrbital(orbVecIx).getSquareNorm());
@@ -430,14 +430,14 @@ Orbital* SCF::calcMatrixPart_P(int i_Orb, MatrixXd &M, OrbitalVector &phi) {
 	    //orbs.push_back(&workOrbVec.getOrbital(j_Orb));
 	    
 	    //push orbital in vector (chunk)
-	    if(MPI_rank == j_MPI){
+	    if(mpiOrbRank == j_MPI){
 	      orbChunk.push_back(&phi.getOrbital(j_Orb));
 	    }else{
 	      orbChunk.push_back(&workOrbVec.getOrbital(orbVecIx++));
 	    }
 	    U_Chunk.push_back(coef);	
 	  }
-	  if(orbChunk.size()>=workOrbVecSize or iter >= MPI_size-1){
+	  if(orbChunk.size()>=workOrbVecSize or iter >= mpiOrbSize-1){
 	    //Do the work for the chunk	  	  
 	    this->add.inPlace(*result,U_Chunk, orbChunk, false);//can start with empty orbital
 	    U_Chunk.clear();

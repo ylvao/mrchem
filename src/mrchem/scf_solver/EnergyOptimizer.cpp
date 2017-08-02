@@ -82,7 +82,7 @@ bool EnergyOptimizer::optimize() {
 
         // Iterate Helmholtz operators
         this->helmholtz->initialize(F_n.diagonal());
-	if(MPI_size>1){
+	if(mpiOrbSize>1){
 	  applyHelmholtzOperators_P(phi_np1, F_n, phi_n);
 	}else{
 	  applyHelmholtzOperators(phi_np1, F_n, phi_n);
@@ -92,7 +92,7 @@ bool EnergyOptimizer::optimize() {
         VectorXd errors = dPhi_n.getNorms();
 #ifdef HAVE_MPI
 	//distribute errors among all orbitals
-	MPI_Allgather(MPI_IN_PLACE, 0, MPI_DOUBLE, &errors(0), 1, MPI_DOUBLE, MPI_COMM_WORLD);
+	MPI_Allgather(MPI_IN_PLACE, 0, MPI_DOUBLE, &errors(0), 1, MPI_DOUBLE, mpiCommOrb);
 #endif
 	
         phi_n.setErrors(errors);
@@ -148,7 +148,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     Timer timer;
     MatrixXd dS_1;
     MatrixXd dS_2;
-    if(MPI_size>1){
+    if(mpiOrbSize>1){
       dS_1 = dPhi_n.calcOverlapMatrix_P(phi_n).real();
       dS_2 = phi_np1.calcOverlapMatrix_P(dPhi_n).real();
     }else{
@@ -177,11 +177,11 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
       
       //make vector with adresses of own orbitals
       int i = 0;
-      for (int Ix = MPI_rank; Ix < Ni; Ix += MPI_size) {
+      for (int Ix = mpiOrbRank; Ix < Ni; Ix += mpiOrbSize) {
 	OrbVecChunk_i.push_back(phi_np1.getOrbital(Ix));//i orbitals
 	OrbsIx[i++] = Ix;
       }
-      for (int Ix = MPI_rank; Ix < Nj; Ix += MPI_size)
+      for (int Ix = mpiOrbRank; Ix < Nj; Ix += mpiOrbSize)
 	OrbVecChunk_j.push_back(dPhi_n.getOrbital(Ix));//j orbitals
 
       for (int iter = 0;  iter >= 0 ; iter++) {
@@ -195,7 +195,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
 
 	//copy results into final matrix
 	int j = 0;
-	for (int Jx = MPI_rank;  Jx < Nj; Jx += MPI_size) {
+	for (int Jx = mpiOrbRank;  Jx < Nj; Jx += mpiOrbSize) {
 	  for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
 	    dV_n(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
 	  }
@@ -209,7 +209,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
       OrbVecChunk_j.clearVec(false);
       
       MPI_Allreduce(MPI_IN_PLACE, &dV_n(0,0), Ni*Nj,
-		    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		    MPI_DOUBLE, MPI_SUM, mpiCommOrb);
 
 #else
       dV_n = (*v_n)(phi_np1, dPhi_n);

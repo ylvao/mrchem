@@ -70,10 +70,14 @@ public:
     int printTreeSizes() const;
 
     void send_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
-    void Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
+#ifdef HAVE_MPI
+    void Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount, MPI_Request& request);
+#endif
     void Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVecIx);
-    void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0);
-    void getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0);
+    void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int maxOrbs_in=-1, int workIx=0);
+    void getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int* sndtoMPI=0, int* sndOrbIx=0, int maxOrbs_in=-1, int workIx=0);
+
+    bool inUse=false;
 
     friend std::ostream& operator<<(std::ostream &o, OrbitalVector &orb_set) {
         int oldPrec = TelePrompter::setPrecision(15);

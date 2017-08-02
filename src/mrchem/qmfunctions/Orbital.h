@@ -67,8 +67,10 @@ public:
 
     void send_Orbital(int dest, int tag);
     void Rcv_Orbital(int source, int tag);
-    void Isend_Orbital(int dest, int tag);
+#ifdef HAVE_MPI
+    void Isend_Orbital(int dest, int tag, MPI_Request& request);
     void IRcv_Orbital(int source, int tag);
+#endif
 
     friend std::ostream& operator<<(std::ostream &o, Orbital &orb) {
         o << std::setw(25) << orb.getSquareNorm();
