@@ -161,9 +161,9 @@ void OrbitalVector::push_back(int n_orbs, int occ, int spin) {
 /** Append an orbital to this set
  *
  */
-void OrbitalVector::push_back(Orbital& Orb) {
-    Orbital *newOrb = new Orbital(Orb);
-    *newOrb = Orb;
+void OrbitalVector::push_back(Orbital &orb) {
+    Orbital *newOrb = new Orbital(orb);
+    newOrb->shallowCopy(orb);
     this->orbitals.push_back(newOrb);	
 }
 
@@ -172,6 +172,7 @@ void OrbitalVector::push_back(Orbital& Orb) {
  */
 void OrbitalVector::pop_back(bool free) {
   this->orbitals[this->size()-1]->clear(free);
+  delete this->orbitals[this->size()-1];
   this->orbitals.pop_back();	
 }
 
@@ -792,7 +793,7 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVec
     }
     OrbsIx[workOrbVecIx] = Orbinfo.Ix[i];
     //the orbitals are stored in workOrbVec, and only the metadata/adresses is copied into OrbitalVector
-    this->getOrbital(workOrbVecIx) = workOrbVec_p->getOrbital(workOrbVecIx);
+    this->getOrbital(workOrbVecIx).shallowCopy(workOrbVec_p->getOrbital(workOrbVecIx));
     workOrbVecIx++;
   }
   for (int i = workOrbVecIx; i<workOrbVecSize; i++) {
