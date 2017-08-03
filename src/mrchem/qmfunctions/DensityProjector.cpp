@@ -105,10 +105,10 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     FunctionTreeVector<3> total_vec, spin_vec, alpha_vec, beta_vec;
     vector<Density *> dens_vec;
     vector<int> rho_i_Ix;
-    Density* rho_tmp1;
-    Density* rho_tmp2;
-    Density* rho_tmp;
-    Density* rho_i;	
+    Density* rho_tmp1 = 0;
+    Density* rho_tmp2 = 0;
+    Density* rho_tmp = 0;
+    Density* rho_i = 0;
     if (mpiOrbSize>1) {
 	if (rho.isShared()) {
 	    //only master does the summation
