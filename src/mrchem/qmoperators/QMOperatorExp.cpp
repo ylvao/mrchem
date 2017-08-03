@@ -158,9 +158,14 @@ double QMOperatorExp::trace(OrbitalVector &phi) {
 
     double result = 0.0;
     for (int i = 0; i < phi.size(); i++) {
-        Orbital &phi_i = phi.getOrbital(i);
-        double eta_i = (double) phi_i.getOccupancy();
-        result += eta_i*O(phi_i, phi_i);
+	if (i%mpiOrbSize == mpiOrbRank) {
+	    Orbital &phi_i = phi.getOrbital(i);
+	    double eta_i = (double) phi_i.getOccupancy();
+	    result += eta_i*O(phi_i, phi_i);
+        }
     }
+#ifdef HAVE_MPI
+    MPI_Allreduce(MPI_IN_PLACE, &result, 1, MPI_DOUBLE, MPI_SUM, mpiCommOrb);
+#endif
     return result;
 }
