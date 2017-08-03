@@ -127,45 +127,45 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     //make vector with adresses of own orbitals
     int i = 0;
     for (int Ix = mpiOrbRank; Ix < Ni; Ix += mpiOrbSize) {
-      OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));//i orbitals
-      OrbsIx[i++] = Ix;
+	OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));//i orbitals
+	OrbsIx[i++] = Ix;
     }
     for (int Ix = mpiOrbRank; Ix < Nj; Ix += mpiOrbSize) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
     //need to pad OrbVecChunk_j so that all have same size
-    if(OrbVecChunk_j.size()<(Nj+mpiOrbSize-1)/mpiOrbSize)OrbVecChunk_j.push_back(j_orbs.getOrbital(0));
+    if (OrbVecChunk_j.size() < (Nj+mpiOrbSize-1)/mpiOrbSize ) OrbVecChunk_j.push_back(j_orbs.getOrbital(mpiOrbRank));
 
     for (int iter = 0;  iter >= 0 ; iter++) {
-      //get a new chunk from other processes
-      //NB: should not use directly workorbvec as rcvOrbs, because they may 
-      //contain own orbitals, and these can be overwritten
-      OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+	//get a new chunk from other processes
+	//NB: should not use directly workorbvec as rcvOrbs, because they may 
+	//contain own orbitals, and these can be overwritten
+	OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
 
-      //Only one process does the computations. j orbitals always local
-      MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
+	//Only one process does the computations. j orbitals always local
+	MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
       
-      if (this->T != 0) resultChunk = (*this->T)(rcvOrbs,OrbVecChunk_j);
-      if (this->V != 0) resultChunk += (*this->V)(rcvOrbs,OrbVecChunk_j);
-      if (this->J != 0) resultChunk += (*this->J)(rcvOrbs,OrbVecChunk_j);
-      if (this->K != 0){
-	resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
-	if(rcvOrbs.size()==0 and iter>=0 ){
-	  //we must still go through operator to send own orbitals to others. Just make a fake operation!
-	  rcvOrbs.push_back(i_orbs.getOrbital(mpiOrbRank));//i orbitals
-	  MatrixXd resultChunk_notused = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
-	  resultChunk_notused = (*this->K)(rcvOrbs,OrbVecChunk_j);	  
+	if (this->T != 0) resultChunk = (*this->T)(rcvOrbs,OrbVecChunk_j);
+	if (this->V != 0) resultChunk += (*this->V)(rcvOrbs,OrbVecChunk_j);
+	if (this->J != 0) resultChunk += (*this->J)(rcvOrbs,OrbVecChunk_j);
+	if (this->K != 0){
+	    resultChunk += (*this->K)(rcvOrbs,OrbVecChunk_j);
+	    if(rcvOrbs.size()==0 and iter>=0 ){
+		//we must still go through operator to send own orbitals to others. Just make a fake operation!
+		rcvOrbs.push_back(i_orbs.getOrbital(mpiOrbRank));//i orbitals
+		MatrixXd resultChunk_notused = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());
+		resultChunk_notused = (*this->K)(rcvOrbs,OrbVecChunk_j);	  
+	    }
 	}
-      }
-      if (this->XC != 0) resultChunk += (*this->XC)(rcvOrbs,OrbVecChunk_j);
+	if (this->XC != 0) resultChunk += (*this->XC)(rcvOrbs,OrbVecChunk_j);
 
-      //copy results into final matrix
-      int j = 0;
-      for (int Jx = mpiOrbRank;  Jx < Nj ; Jx += mpiOrbSize) {
-	for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
-	  result(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
+	//copy results into final matrix
+	int j = 0;
+	for (int Jx = mpiOrbRank;  Jx < Nj ; Jx += mpiOrbSize) {
+	    for (int ix = 0;  ix<rcvOrbs.size() ; ix++) {
+		result(rcvOrbsIx[ix],Jx) += resultChunk(ix,j);
+	    }
+	    j++;
 	}
-	j++;
-      }
-      rcvOrbs.clearVec(false);//reset to zero size orbital vector
+	rcvOrbs.clearVec(false);//reset to zero size orbital vector
     }
 
     //clear orbital vector adresses. NB: only references and metadata must be deleted, not the trees in orbitals
@@ -223,7 +223,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 }
 
 MatrixXd FockOperator::adjoint(OrbitalVector &i_orbs, OrbitalVector &j_orbs) {
-  if(mpiOrbSize>1)cout<<"ERROR"<<endl;
+    if(mpiOrbSize>1)cout<<"ERROR"<<endl;
     int Ni = i_orbs.size();
     int Nj = j_orbs.size();
     MatrixXd result = MatrixXd::Zero(Ni,Nj);
