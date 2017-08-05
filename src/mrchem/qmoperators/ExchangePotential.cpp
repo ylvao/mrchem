@@ -207,22 +207,21 @@ void ExchangePotential::calcInternalExchange() {
       }
       
       OrbitalAdder add(-1.0, this->max_scale);
-      for (int i = 0; i<workOrbVecSize; i++)sndtoMPI[i]=-1;//init
+      for (int i = 0; i < workOrbVecSize; i++) sndtoMPI[i]=-1;//init
       int mpiiter = 0;
       for (int iter = 0;  iter >= 0; iter++) {
 	mpiiter++;
 	//get a new chunk from other processes
-	sndOrbIx[0]=0;//init
-	sndtoMPI[0]=-1;//init
+	sndOrbIx[0] = 0;//init
+	sndtoMPI[0] = -1;//init
 	OrbVecChunk_i.getOrbVecChunk_sym(OrbsIx, rcvOrbs, rcvOrbsIx, nOrbs, iter, sndtoMPI, sndOrbIx,1,2);
-	
-	int rcv_left=1;//normally we get one phi_jji per ii, maybe none
-	if(sndtoMPI[0]<0 or sndtoMPI[0]==mpiOrbRank)rcv_left=0;//we haven't sent anything, will not receive anything back	    
+	int rcv_left = 1;//normally we get one phi_jji per ii, maybe none
+	if (sndtoMPI[0] < 0 or sndtoMPI[0] == mpiOrbRank) rcv_left = 0;//we haven't sent anything, will not receive anything back	    
 	//convention: all indices with "i" are owned locally
-	for (int ii = 0; ii<OrbVecChunk_i.size()+1 ; ii++){ //we may have to do one extra iteration to fetch all data
-	  int j=0;//because we limited the size in getOrbVecChunk_sym to 1
-	  int i=ii;
-	  if(ii>=OrbVecChunk_i.size())i=0;//so that phi_i is defined, but will not be used
+	for (int ii = 0; ii < OrbVecChunk_i.size()+1 ; ii++){ //we may have to do one extra iteration to fetch all data
+	  int j = 0;//because we limited the size in getOrbVecChunk_sym to 1
+	  int i = ii;
+	  if(ii >= OrbVecChunk_i.size()) i = 0;//so that phi_i is defined, but will not be used
 	  
 	  Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
 	  Orbital *phi_iij = new Orbital(phi_i);
@@ -230,7 +229,7 @@ void ExchangePotential::calcInternalExchange() {
 	  Orbital &phi_i_rcv = this->orbitals->getOrbital(i_rcv);
 	  Orbital *phi_jji_rcv = new Orbital(phi_i_rcv);	      
 	  if(rcvOrbs.size()>0 and ii<OrbVecChunk_i.size()){
-	    if(OrbsIx[i]==rcvOrbsIx[j]){
+	    if(OrbsIx[i] == rcvOrbsIx[j]) {
 	      //orbital should be own and i and j point to same orbital
 	      calcInternal(OrbsIx[i]);
 	    }else{	    
@@ -244,18 +243,18 @@ void ExchangePotential::calcInternalExchange() {
 		phi_iij->Isend_Orbital(rcvOrbsIx[j]%mpiOrbSize, mpiiter%10, request);
 	      }else{
 		//only compute j < i in own block 
-		if(rcvOrbsIx[j]<OrbsIx[i])calcInternal(OrbsIx[i], rcvOrbsIx[j], phi_i, phi_j, phi_iij);
+		if(rcvOrbsIx[j] < OrbsIx[i]) calcInternal(OrbsIx[i], rcvOrbsIx[j], phi_i, phi_j, phi_iij);
 	      }
 	    }
 	  }
-	  if(rcv_left>0){
+	  if (rcv_left > 0) {
 	    //we expect to receive data 
 	    phi_jji_rcv->Rcv_Orbital(sndtoMPI[j], mpiiter%10);//we get back phi_jji from where we sent i
 	  }
-	  if(rcvOrbsIx[j]%mpiOrbSize != mpiOrbRank and rcvOrbs.size()>0 and ii<OrbVecChunk_i.size()){
+	  if (rcvOrbsIx[j]%mpiOrbSize != mpiOrbRank and rcvOrbs.size() > 0 and ii < OrbVecChunk_i.size()){
 	    MPI_Wait(&request, &status);//do not continue before isend is finished	      
 	  }
-	  if(rcv_left >0){
+	  if (rcv_left > 0) {
 	    // phi_jji_rcv is ready
 	    int i_rcv = sndOrbIx[j];
 	    int j_rcv = phi_jji_rcv->getOccupancy();//occupancy was used to send rank!
@@ -283,7 +282,7 @@ void ExchangePotential::calcInternalExchange() {
 	OrbVecChunk_i.clearVec(false);
 
       for (int i = 0; i < nOrbs; i++) {
-	if(i%mpiOrbSize==mpiOrbRank){
+	if (i%mpiOrbSize == mpiOrbRank) {
 	  Orbital &ex_i = this->exchange.getOrbital(i);
 	  this->tot_norms(i) = sqrt(ex_i.getSquareNorm());
 	  n = max(n, ex_i.getNNodes());
