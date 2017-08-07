@@ -184,8 +184,10 @@ bool Accelerator::verifyOverlap(OrbitalVector &phi) {
 	}	
     }
 #ifdef HAVE_MPI
-    MPI_Allreduce(MPI_IN_PLACE, &verified, 1,
+    int iverified = verified;
+    MPI_Allreduce(MPI_IN_PLACE, &iverified, 1,
 		  MPI_INT, MPI_LAND, mpiCommOrb);
+    verified = iverified;
 #endif
    
     return verified;
