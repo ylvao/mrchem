@@ -12,6 +12,7 @@
 #include "OrbitalVector.h"
 #include "Orbital.h"
 #include "PositionOperator.h"
+#include "IdentityOperator.h"
 #include "MathUtils.h"
 #include "eigen_disable_warnings.h"
 
@@ -304,12 +305,11 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     Timer timer;
     printout(1, "Calculating orthonormalization matrix            ");
 
-    MatrixXd S_tilde;
-    if(mpiOrbSize>1){
-      S_tilde = phi.calcOverlapMatrix_P_H(phi).real();
-    }else{
-      S_tilde = phi.calcOverlapMatrix().real();
-    }
+    IdentityOperator I;
+    I.setup(getOrbitalPrecision());
+    MatrixXd S_tilde = I(phi, phi);
+    I.clear();
+
     SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
     es.compute(S_tilde);
 
@@ -425,8 +425,11 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_z.clear();
 
     //rotate R matrices into orthonormal basis
-    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+    IdentityOperator I;
+    I.setup(prec);
+    MatrixXd S_tilde = I(phi, phi);
     MatrixXd S_tilde_m12 = MathUtils::hermitianMatrixPow(S_tilde, -1.0/2.0);
+    I.clear();
 
     total_U=S_tilde_m12*total_U;
     MatrixXd R(N, N);

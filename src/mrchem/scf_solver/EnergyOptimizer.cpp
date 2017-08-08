@@ -6,6 +6,7 @@
 #include "ExchangeOperator.h"
 #include "XCOperator.h"
 #include "HelmholtzOperatorSet.h"
+#include "IdentityOperator.h"
 #include "eigen_disable_warnings.h"
 
 using namespace std;
@@ -146,15 +147,11 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
     TelePrompter::printHeader(0,"Computing Fock matrix update");
 
     Timer timer;
-    MatrixXd dS_1;
-    MatrixXd dS_2;
-    if(mpiOrbSize>1){
-      dS_1 = dPhi_n.calcOverlapMatrix_P(phi_n).real();
-      dS_2 = phi_np1.calcOverlapMatrix_P(dPhi_n).real();
-    }else{
-      dS_1 = dPhi_n.calcOverlapMatrix(phi_n).real();
-      dS_2 = phi_np1.calcOverlapMatrix(dPhi_n).real();
-    }
+    IdentityOperator I;
+    I.setup(getOrbitalPrecision());
+    MatrixXd dS_1 = I(dPhi_n, phi_n);
+    MatrixXd dS_2 = I(phi_np1, dPhi_n);
+    I.clear();
 
     NuclearPotential *v_n = this->fOper_n->getNuclearPotential();
     CoulombOperator *j_n = this->fOper_n->getCoulombOperator();
