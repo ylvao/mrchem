@@ -170,17 +170,26 @@ bool Accelerator::verifyOverlap(OrbitalVector &phi) {
     int nHistory = this->orbitals.size() - 1;
     if (nHistory > 0) {
         for (int i = 0; i < phi.size(); i++) {
-            Orbital &phi_i = phi.getOrbital(i);
-            Orbital &last_i = this->orbitals[nHistory]->getOrbital(i);
-            double sqNorm = phi_i.getSquareNorm();
-            complex<double> overlap = phi_i.dot(last_i);
-            if (overlap.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
-            if (overlap.real() < 0.5*sqNorm) {
-                TelePrompter::printDouble(0, "Overlap not verified ", overlap.real());
-                verified = false;
-            }
-        }
+	    if (mpiOrbRank == i%mpiOrbSize) {
+		Orbital &phi_i = phi.getOrbital(i);
+		Orbital &last_i = this->orbitals[nHistory]->getOrbital(i);
+		double sqNorm = phi_i.getSquareNorm();
+		complex<double> overlap = phi_i.dot(last_i);
+		if (overlap.imag() > MachineZero) NOT_IMPLEMENTED_ABORT;
+		if (overlap.real() < 0.5*sqNorm) {
+		    TelePrompter::printDouble(0, "Overlap not verified ", overlap.real());
+		    verified = false;
+		}
+	    }
+	}	
     }
+#ifdef HAVE_MPI
+    int iverified = verified;
+    MPI_Allreduce(MPI_IN_PLACE, &iverified, 1,
+		  MPI_INT, MPI_LAND, mpiCommOrb);
+    verified = iverified;
+#endif
+   
     return verified;
 }
 
