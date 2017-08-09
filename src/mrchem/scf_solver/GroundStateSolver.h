@@ -26,22 +26,10 @@ protected:
     OrbitalVector *orbitals_np1;
     OrbitalVector *dOrbitals_n;
 
-    virtual Orbital* getHelmholtzArgument(int i,
-                                          Eigen::MatrixXd &F,
-                                          OrbitalVector &phi,
-                                          bool adjoint);
-
-    virtual Orbital* getHelmholtzArgument_1(Orbital &phi_i);
-
-    virtual Orbital* getHelmholtzArgument_2(int i,
-					  int* OrbsIx,
-                                          Eigen::MatrixXd &F,
-                                          OrbitalVector &phi,
-					  Orbital* part_1,
-					  double coef_part1,
-					  Orbital &phi_i,
-                                          bool adjoint);
-
+    OrbitalVector *setupHelmholtzArguments(FockOperator &fock,
+                                           const Eigen::MatrixXd &M,
+                                           OrbitalVector &phi,
+                                           bool adjoint = false);
     void printProperty() const;
     double calcProperty();
     double calcPropertyError() const;

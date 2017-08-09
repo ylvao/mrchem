@@ -12,21 +12,20 @@
 #include "OrbitalVector.h"
 #include "Orbital.h"
 #include "PositionOperator.h"
+#include "IdentityOperator.h"
 #include "MathUtils.h"
 #include "eigen_disable_warnings.h"
 
 using namespace std;
 using namespace Eigen;
 
-extern MultiResolutionAnalysis<3> *MRA; // Global MRA
-
 GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
-        : SCF(h),
-          fOper_n(0),
-          fMat_n(0),
-          orbitals_n(0),
-          orbitals_np1(0),
-          dOrbitals_n(0) {
+    : SCF(h),
+      fOper_n(0),
+      fMat_n(0),
+      orbitals_n(0),
+      orbitals_np1(0),
+      dOrbitals_n(0) {
 }
 
 GroundStateSolver::~GroundStateSolver() {
@@ -37,113 +36,99 @@ GroundStateSolver::~GroundStateSolver() {
     if (this->dOrbitals_n != 0) MSG_ERROR("Solver not properly cleared");
 }
 
-/** Computes the Helmholtz argument for the i-th orbital.
+/** Computes the Helmholtz argument for the all orbitals.
  *
  * Argument contains the potential operator acting on orbital i, and the sum
  * of all orbitals weighted by the Fock matrix. The effect of using inexact
- * Helmholtz operators are included in Lambda, wich is a diagonal matrix
- * with the actual lambda parameters used in the Helmholtz operators.
+ * Helmholtz operators are included in Lambda, which is a diagonal matrix
+ * with the actual lambda parameters used in the Helmholtz operators
+ * (input matrix M is assumed to be L-F).
  *
  * greenArg = \hat{V}orb_i + \sum_j (\Lambda_{ij}-F_{ij})orb_j
  */
-Orbital* GroundStateSolver::getHelmholtzArgument(int i,
-                                                 MatrixXd &F,
-                                                 OrbitalVector &phi,
-                                                 bool adjoint) {
-    FockOperator &fock = *this->fOper_n;
+OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
+                                                          const Eigen::MatrixXd &M,
+                                                          OrbitalVector &phi,
+                                                          bool adjoint) {
+    Timer timer_tot;
+    TelePrompter::printHeader(0, "Setting up Helmholtz arguments");
+    int oldprec = TelePrompter::setPrecision(5);
 
     double coef = -1.0/(2.0*pi);
-    Orbital &phi_i = phi.getOrbital(i);
 
-    MatrixXd L = this->helmholtz->getLambda().asDiagonal();
-    MatrixXd LmF = L - F;
-
-    Orbital *part_1 = fock.applyPotential(phi_i);
-    Orbital *part_2;
-    if(mpiOrbSize>1){
-      part_2 = calcMatrixPart_P(i, LmF, phi);
-    }else{
-      part_2 = calcMatrixPart(i, LmF, phi);
-    }
-
-    if (part_1 == 0) part_1 = new Orbital(phi_i);
-    if (part_2 == 0) part_2 = new Orbital(phi_i);
-
-    Timer timer;
-    Orbital *arg = new Orbital(phi_i);
-    this->add(*arg, coef, *part_1, coef, *part_2, true);
-
-    timer.stop();
-    double time = timer.getWallTime();
-    int nNodes = arg->getNNodes();
-    TelePrompter::printTree(2, "Added arguments", nNodes, time);
-
-    if (part_1 != 0) delete part_1;
-    if (part_2 != 0) delete part_2;
-
-    return arg;
-}
-Orbital* GroundStateSolver::getHelmholtzArgument_1(Orbital &phi_i) {
-    Timer timer;
-    FockOperator &fock = *this->fOper_n;
-
-    Orbital *part_1 = fock.applyPotential(phi_i);
- 
-    if (part_1 == 0) part_1 = new Orbital(phi_i);
-
-    timer.stop();
-    double time = timer.getWallTime();
-    int nNodes = part_1->getNNodes();
-    TelePrompter::printTree(2, "Argument 1", nNodes, time);
-
-    return part_1;
-}
-Orbital* GroundStateSolver::getHelmholtzArgument_2(int i,
-						 int*  OrbsIx,
-                                                 MatrixXd &F,
-                                                 OrbitalVector &phi,
-						 Orbital*  part_1,
-						 double coef_part1,
-						 Orbital &phi_i,
-                                                 bool adjoint) {
-
-    MatrixXd L = this->helmholtz->getLambda().asDiagonal();
-    MatrixXd LmF = L - F;
-
-    vector<complex<double> > coefs;
-    vector<Orbital *> orbs;
-
-    for (int j = 0; j < phi.size(); j++) {
-        double coef = LmF(i, OrbsIx[j]);
-        // Linear scaling screening inserted here
-        if (fabs(coef) > MachineZero) {
-            Orbital &phi_j = phi.getOrbital(j);
-            double norm_j = sqrt(phi_j.getSquareNorm());
-            if (norm_j > 0.01*getOrbitalPrecision()) {
-                coefs.push_back(coef);
-                orbs.push_back(&phi_j);
-            }
+    Timer timer_1;
+    OrbitalVector *args = new OrbitalVector(0);
+    for (int i = 0; i < phi.size(); i++) {
+        Orbital &phi_i = phi.getOrbital(i);
+        Orbital *Vphi_i = 0;
+        if (i%mpiOrbSize == mpiOrbRank) {
+            Vphi_i = fock.applyPotential(phi_i);
+            (*Vphi_i) *= coef;
         }
+        if (Vphi_i == 0) {
+            Vphi_i = new Orbital(phi_i);
+        }
+        args->push_back(*Vphi_i);
+    }
+    timer_1.stop();
+    TelePrompter::printDouble(0, "Potential part", timer_1.getWallTime());
+
+    Timer timer_2;
+    OrbitalVector orbVecChunk_i(0); //to store adresses of own i_orbs
+    OrbitalVector rcvOrbs(0);       //to store adresses of received orbitals
+    int orbsIx[workOrbVecSize];     //to store own orbital indices
+    int rcvOrbsIx[workOrbVecSize];  //to store received orbital indices
+
+    //make vector with adresses of own orbitals
+    int i = 0;
+    int Ni = phi.size();
+    for (int ix = mpiOrbRank; ix < Ni; ix += mpiOrbSize) {
+        orbVecChunk_i.push_back(phi.getOrbital(ix));//i orbitals
+        orbsIx[i++] = ix;
     }
 
-    Orbital *part_2 = new Orbital(phi_i);
-    Timer timer;
-    if (orbs.size() > 0 ) this->add(*part_2, coefs, orbs, false);
+    for (int iter = 0; iter >= 0; iter++) {
+        //get a new chunk from other processes
+        orbVecChunk_i.getOrbVecChunk(orbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+        for (int i = mpiOrbRank; i < Ni; i += mpiOrbSize) {
+            Orbital &phi_i = phi.getOrbital(i);
 
-    Orbital *arg = new Orbital(phi_i);
-    double coef = -1.0/(2.0*pi);
+            vector<complex<double> > coefs;
+            vector<Orbital *> orbs;
 
-    this->add(*arg, coef_part1, *part_1, coef, *part_2, true);
+            int ix = i;
+            for (int j = 0; j < rcvOrbs.size(); j++) {
+                int jx = rcvOrbsIx[j];
+                double coef = M(ix,jx);
+                // Linear scaling screening inserted here
+                if (fabs(coef) > MachineZero) {
+                    Orbital &phi_j = rcvOrbs.getOrbital(j);
+                    double norm_j = sqrt(phi_j.getSquareNorm());
+                    if (norm_j > 0.01*getOrbitalPrecision()) {
+                        coefs.push_back(coef);
+                        orbs.push_back(&phi_j);
+                    }
+                }
+            }
 
-    timer.stop();
-    double time = timer.getWallTime();
-    int nNodes = arg->getNNodes();
-    TelePrompter::printTree(2, "Added arguments", nNodes, time);
+            Orbital *tmp_i = new Orbital(phi_i);
+            if (orbs.size() > 0) this->add(*tmp_i, coefs, orbs, false);
 
-    if (part_1 != 0) delete part_1;
-    if (part_2 != 0) delete part_2;
+            Orbital &arg_i = args->getOrbital(i);
+            this->add.inPlace(arg_i, coef, *tmp_i);
+            delete tmp_i;
+        }
+        rcvOrbs.clearVec(false);//reset to zero size orbital vector
+    }
+    orbVecChunk_i.clearVec(false);
+    timer_2.stop();
+    TelePrompter::printDouble(0, "Matrix part", timer_2.getWallTime());
 
-    return arg;
+    timer_tot.stop();
+    TelePrompter::printFooter(0, timer_tot, 2);
+    TelePrompter::setPrecision(oldprec);
+
+    return args;
 }
 
 double GroundStateSolver::calcProperty() {
@@ -304,12 +289,11 @@ MatrixXd GroundStateSolver::calcOrthonormalizationMatrix(OrbitalVector &phi) {
     Timer timer;
     printout(1, "Calculating orthonormalization matrix            ");
 
-    MatrixXd S_tilde;
-    if(mpiOrbSize>1){
-      S_tilde = phi.calcOverlapMatrix_P_H(phi).real();
-    }else{
-      S_tilde = phi.calcOverlapMatrix().real();
-    }
+    IdentityOperator I;
+    I.setup(getOrbitalPrecision());
+    MatrixXd S_tilde = I(phi, phi);
+    I.clear();
+
     SelfAdjointEigenSolver<MatrixXd> es(S_tilde.cols());
     es.compute(S_tilde);
 
@@ -355,45 +339,45 @@ RR::RR(double prec, OrbitalVector &phi) {
     //make vector with adresses of own orbitals
     int i = 0;
     for (int Ix = mpiOrbRank;  Ix < N; Ix += mpiOrbSize) {
-      OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
-      OrbsIx[i++] = Ix;
+        OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
+        OrbsIx[i++] = Ix;
     }
 
     for (int iter = 0;  iter >= 0; iter++) {
-      //get a new chunk from other processes
-      OrbVecChunk_i.getOrbVecChunk_sym(OrbsIx, rcvOrbs, rcvOrbsIx, N, iter);
-      for (int i = 0; i<OrbVecChunk_i.size(); i++){
-        Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
-        int spin_i = phi_i.getSpin();
-	for (int j = 0; j < rcvOrbs.size(); j++) {
-            Orbital &phi_j = rcvOrbs.getOrbital(j);
-            int spin_j = phi_j.getSpin();
-            if (spin_i != spin_j) {
-	      MSG_ERROR("Spins must be separated before localization");
+        //get a new chunk from other processes
+        OrbVecChunk_i.getOrbVecChunk_sym(OrbsIx, rcvOrbs, rcvOrbsIx, N, iter);
+        for (int i = 0; i<OrbVecChunk_i.size(); i++){
+            Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
+            int spin_i = phi_i.getSpin();
+            for (int j = 0; j < rcvOrbs.size(); j++) {
+                Orbital &phi_j = rcvOrbs.getOrbital(j);
+                int spin_j = phi_j.getSpin();
+                if (spin_i != spin_j) {
+                    MSG_ERROR("Spins must be separated before localization");
+                }
+                //NOTE: the "if" should not be necessary, but since outside the required precision
+                //r_x(phi_i, phi_j) != r_x(phi_j, phi_i), we prefer to have consistent results for
+                //different mpiOrbSize
+                if(rcvOrbsIx[j]<=OrbsIx[i]){
+                    r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
+                    r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
+                    r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
+                    r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]);
+                    r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
+                    r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
+                }else{
+                    if(rcvOrbsIx[j]%mpiOrbSize != mpiOrbRank){ //need only compute j<=i in own block
+                        r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_x(phi_j, phi_i);
+                        r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_y(phi_j, phi_i);
+                        r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_z(phi_j, phi_i);
+                        r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]);
+                        r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) ;
+                        r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N);
+                    }
+                }
             }
-	    //NOTE: the "if" should not be necessary, but since outside the required precision
-	    //r_x(phi_i, phi_j) != r_x(phi_j, phi_i), we prefer to have consistent results for
-	    //different mpiOrbSize
-	    if(rcvOrbsIx[j]<=OrbsIx[i]){
-	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
-	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
-	      r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
-	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]);
-	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
-	      r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
-	    }else{
-	      if(rcvOrbsIx[j]%mpiOrbSize != mpiOrbRank){ //need only compute j<=i in own block
-		r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_x(phi_j, phi_i);
-		r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_y(phi_j, phi_i);
-		r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_z(phi_j, phi_i);
-		r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]);
-		r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) ;
-		r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N);
-	      }
-	    }
         }
-      }
-      rcvOrbs.clearVec(false);
+        rcvOrbs.clearVec(false);
     }
     OrbVecChunk_i.clearVec(false);
     //combine results from all processes
@@ -425,8 +409,11 @@ RR::RR(double prec, OrbitalVector &phi) {
     r_z.clear();
 
     //rotate R matrices into orthonormal basis
-    MatrixXd S_tilde = phi.calcOverlapMatrix().real();
+    IdentityOperator I;
+    I.setup(prec);
+    MatrixXd S_tilde = I(phi, phi);
     MatrixXd S_tilde_m12 = MathUtils::hermitianMatrixPow(S_tilde, -1.0/2.0);
+    I.clear();
 
     total_U=S_tilde_m12*total_U;
     MatrixXd R(N, N);
@@ -451,7 +438,7 @@ RR::RR(double prec, OrbitalVector &phi) {
  * f$  \sum_{i=1,N}\langle i| {\bf R}| i \rangle^2\f$
  */
 double RR::functional() {
-//    //s1 is what should be maximized (i.e. the sum of <i R i>^2)
+    //    //s1 is what should be maximized (i.e. the sum of <i R i>^2)
     double s1=0.0;
     for (int dim=0; dim<3; dim++) {
         for (int j=0; j<N; j++) {
