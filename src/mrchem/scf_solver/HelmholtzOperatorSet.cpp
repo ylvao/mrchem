@@ -15,8 +15,9 @@ HelmholtzOperatorSet::HelmholtzOperatorSet(double build, double thrs)
       apply(-1.0, MRA->getMaxScale(), true) {
 }
 
-void HelmholtzOperatorSet::initialize(const VectorXd &energies) {
-    TelePrompter::printHeader(0, "Initializing Helmholtz Operators");
+void HelmholtzOperatorSet::setup(double prec, const VectorXd &energies) {
+    TelePrompter::printHeader(0, "Setting up Helmholtz operators");
+    this->apply.setPrecision(prec);
 
     Timer timer;
     this->operIdx.clear();
@@ -148,4 +149,48 @@ void HelmholtzOperatorSet::operator()(int i, Orbital &out, Orbital &inp) {
         out.allocImag();
         this->apply(out.imag(), H_i, inp.imag());
     }
+}
+
+void HelmholtzOperatorSet::operator()(OrbitalVector &out, OrbitalVector &inp) {
+    TelePrompter::printHeader(0, "Applying Helmholtz operators");
+    println(0, " Orb  RealNorm     ImagNorm      nNodes     Error   Timing   ");
+    TelePrompter::printSeparator(0, '-');
+    int oldprec = TelePrompter::setPrecision(5);
+
+    HelmholtzOperatorSet &H = *this;
+
+    Timer tottimer;
+    for (int i = mpiOrbRank; i < inp.size(); i += mpiOrbSize) {
+        Timer timer;
+        Orbital &out_i = out.getOrbital(i);
+        Orbital &inp_i = inp.getOrbital(i);
+        H(i, out_i, inp_i);
+
+        int rNodes = out_i.getNNodes(QMFunction::Real);
+        int iNodes = out_i.getNNodes(QMFunction::Imag);
+        double norm = sqrt(out_i.getSquareNorm());
+        double dNorm = fabs(norm-1.0);
+        double real_norm = sqrt(out_i.getSquareNorm(QMFunction::Real));
+        double imag_norm = sqrt(out_i.getSquareNorm(QMFunction::Imag));
+
+        timer.stop();
+        TelePrompter::setPrecision(5);
+        cout << setw(3) << i;
+        cout << " " << setw(12) << real_norm;
+        cout << " " << setw(12) << imag_norm;
+        TelePrompter::setPrecision(1);
+        cout << " " << setw(5) << rNodes;
+        cout << " " << setw(5) << iNodes;
+        cout << " " << setw(8) << dNorm;
+        cout << setw(9) << timer.getWallTime() << endl;
+    }
+
+#ifdef HAVE_MPI
+    // barrier to align printing
+    MPI_Barrier(mpiCommOrb);
+#endif
+
+    tottimer.stop();
+    TelePrompter::printFooter(0, tottimer, 2);
+    TelePrompter::setPrecision(oldprec);
 }
