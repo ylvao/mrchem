@@ -16,8 +16,8 @@ Density::Density(bool spin, bool shared)
       dens_s(0),
       dens_a(0),
       dens_b(0) {
-    if(this->is_shared and mpiShSize>1){
-	this->shMem = new SharedMemory(500);//initiate up to 500MB shared memory
+    if(this->is_shared){
+	if(mpiShSize>1)this->shMem = new SharedMemory(500);//initiate up to 500MB shared memory
     }else{
 	this->setIsShared(false);//at least 2 processes for sharing
     }

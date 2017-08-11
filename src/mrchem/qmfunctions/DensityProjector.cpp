@@ -110,146 +110,68 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     Density* rho_tmp = 0;
     Density* rho_i = 0;
     if (mpiOrbSize>1) {
-	if (rho.isShared()) {
-	    //only master does the summation
-	    for (int i_Orb = 0; i_Orb < phi.size(); i_Orb++) {
-		rho_i = new Density(rho);	
-		if (i_Orb%mpiOrbSize == mpiOrbRank) {
-		    Orbital &phi_i = phi.getOrbital(i_Orb);
-		    //cout<<mpiOrbRank<<" size orbital "<< i_Orb<< " in MB "<<int((phi_i.real().getNNodes()* phi_i.real().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
-		    (*this)(*rho_i, phi_i);
-		    if (mpiOrbRank != 0) rho_i->send_Density(0, i_Orb);
-		}
-		//add on the fly
-		if (mpiOrbRank == 0 and i_Orb == 0){
-		    //first iteration does not sum only receive in tmp1
-		    if (i_Orb%mpiOrbSize != mpiOrbRank) {
-			rho_tmp1->Rcv_Density(i_Orb%mpiOrbSize, i_Orb);
-		    }else{
-			rho_tmp1 = rho_i;
-			rho_i = rho_tmp2;
-		    }
-		}else if (mpiOrbRank == 0) {
-		    if (i_Orb%mpiOrbSize != mpiOrbRank) rho_i->Rcv_Density(i_Orb%mpiOrbSize, i_Orb);
-		    //exchange pointers. old result is in tmp1: tmp1 = rho_i+tmp2
-		    rho_tmp2 = rho_tmp1;
-		    rho_tmp1 = new Density(rho);
-		    if (i_Orb == phi.size()-1) {
-			//last iteration, put result into rho
-			rho_tmp1=&rho;
-		    }		
-		    if (rho_i->hasTotal()) {
-			if(not rho_tmp1->hasTotal())rho_tmp1->allocTotal();
-			total_vec.push_back(&rho_tmp2->total());
-			total_vec.push_back(&rho_i->total());
-			this->grid(rho_tmp1->total(), total_vec);// kopierer grid fra funksjonene i total_vec
-			this->add(rho_tmp1->total(), total_vec,0);
-			total_vec.clear(true);
-		    }
-		    if (rho_i->hasSpin()) {
-			MSG_ERROR("Spin for shared memory not implemented");
-			if(not rho_tmp1->hasSpin())rho_tmp1->allocSpin();
-			spin_vec.push_back(&rho_tmp2->spin());
-			spin_vec.push_back(&rho_i->spin());
-			this->grid(rho_tmp1->spin(), spin_vec);
-			this->add(rho_tmp1->spin(), spin_vec,0);
-			spin_vec.clear(true);
-		    }
-		    if (rho_i->hasAlpha()) {
-			MSG_ERROR("Spin for shared memory not implemented");
-			if(not rho_tmp1->hasAlpha())rho_tmp1->allocAlpha();
-			alpha_vec.push_back(&rho_tmp2->alpha());
-			alpha_vec.push_back(&rho_i->alpha());
-			this->grid(rho_tmp1->alpha(), alpha_vec);
-			this->add(rho_tmp1->alpha(), alpha_vec,0);
-			alpha_vec.clear(true);
-		    }
-		    if (rho_i->hasBeta()) {
-			MSG_ERROR("Spin for shared memory not implemented");
-			if(not rho_tmp1->hasBeta())rho_tmp1->allocBeta();
-			beta_vec.push_back(&rho_tmp2->beta());
-			beta_vec.push_back(&rho_i->beta());
-			this->grid(rho_tmp1->beta(), beta_vec);
-			this->add(rho_tmp1->beta(), beta_vec,0);
-			beta_vec.clear(true);
-		    }
-		}
-	  
+	//only master does the summation
+	for (int i_Orb = 0; i_Orb < phi.size(); i_Orb++) {
+	    rho_i = new Density(rho);	
+	    if (i_Orb%mpiOrbSize == mpiOrbRank) {
+		Orbital &phi_i = phi.getOrbital(i_Orb);
+		//cout<<mpiOrbRank<<" size orbital "<< i_Orb<< " in MB "<<int((phi_i.real().getNNodes()* phi_i.real().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
+		(*this)(*rho_i, phi_i);
+		if (mpiOrbRank != 0) rho_i->send_Density(0, i_Orb);
 	    }
-	}else{
-	    for (int iter = 0;  iter < mpiOrbSize ; iter++) {
-		int j_MPI = (mpiOrbSize+iter-mpiOrbRank)%mpiOrbSize;
-		if (mpiOrbRank > j_MPI) {
-		    //send first all own bras, then receive all kets from j_MPI
-		    int i_Ix = 0;
-		    for (int i_Orb = mpiOrbRank; i_Orb < phi.size(); i_Orb+=mpiOrbSize) {
-			if (iter == 0) {
-			    rho_i = new Density(rho);	
-			    Orbital &phi_i = phi.getOrbital(i_Orb);
-			    (*this)(*rho_i, phi_i);
-			    dens_vec.push_back(rho_i);
-			    rho_i_Ix.push_back(dens_vec.size()-1);
-			    if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
-			    if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
-			    if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
-			    if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
-			}else{
-			    rho_i = dens_vec[rho_i_Ix[i_Ix]];
-			}
-			i_Ix++;
-			rho_i->send_Density(j_MPI, i_Orb);
-		    }
-		    //receive
-		    for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb += mpiOrbSize) {
-			Density *rho_j = new Density(rho);
-			rho_j->Rcv_Density(j_MPI, j_Orb);
-			dens_vec.push_back(rho_j);
-			if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
-			if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
-			if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
-			if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
-		    }
-	  
+	    //add on the fly
+	    if (mpiOrbRank == 0 and i_Orb == 0){
+		//first iteration does not sum only receive in tmp1
+		if (i_Orb%mpiOrbSize != mpiOrbRank) {
+		    rho_tmp1->Rcv_Density(i_Orb%mpiOrbSize, i_Orb);
 		}else{
-		    //receive first all kets from j_MPI then send all own bras
-		    if (j_MPI != mpiOrbRank) {
-			for (int j_Orb = j_MPI; j_Orb < phi.size(); j_Orb += mpiOrbSize) {
-			    Density *rho_j = new Density(rho);
-			    rho_j->Rcv_Density(j_MPI, j_Orb);
-			    if(j_MPI != mpiOrbRank){
-				dens_vec.push_back(rho_j);
-				if (rho_j->hasTotal()) total_vec.push_back(&rho_j->total());
-				if (rho_j->hasSpin()) spin_vec.push_back(&rho_j->spin());
-				if (rho_j->hasAlpha()) alpha_vec.push_back(&rho_j->alpha());
-				if (rho_j->hasBeta()) beta_vec.push_back(&rho_j->beta());
-			    }
-			}
-		    }
-		    //send 
-		    int i_Ix = 0;
-		    for (int i_Orb = mpiOrbRank; i_Orb < phi.size(); i_Orb += mpiOrbSize) {
-			if (iter == 0) {
-			    rho_i = new Density(rho);	
-			    Orbital &phi_i = phi.getOrbital(i_Orb);
-			    (*this)(*rho_i, phi_i);
-			    dens_vec.push_back(rho_i);
-			    rho_i_Ix.push_back(dens_vec.size()-1);
-			    if (rho_i->hasTotal()) total_vec.push_back(&rho_i->total());
-			    if (rho_i->hasSpin()) spin_vec.push_back(&rho_i->spin());
-			    if (rho_i->hasAlpha()) alpha_vec.push_back(&rho_i->alpha());
-			    if (rho_i->hasBeta()) beta_vec.push_back(&rho_i->beta());
-			}else{
-			    rho_i = dens_vec[rho_i_Ix[i_Ix]];
-			}
-			i_Ix++;
-			if (j_MPI != mpiOrbRank )rho_i->send_Density(j_MPI, i_Orb);
-		    }
+		    rho_tmp1 = rho_i;
+		    rho_i = rho_tmp2;
+		}
+	    }else if (mpiOrbRank == 0) {
+		if (i_Orb%mpiOrbSize != mpiOrbRank) rho_i->Rcv_Density(i_Orb%mpiOrbSize, i_Orb);
+		//exchange pointers. old result is in tmp1: tmp1 = rho_i+tmp2
+		rho_tmp2 = rho_tmp1;
+		rho_tmp1 = new Density(rho);
+		if (i_Orb == phi.size()-1) {
+		    //last iteration, put result into rho
+		    rho_tmp1=&rho;
+		}		
+		if (rho_i->hasTotal()) {
+		    if(not rho_tmp1->hasTotal())rho_tmp1->allocTotal();
+		    total_vec.push_back(&rho_tmp2->total());
+		    total_vec.push_back(&rho_i->total());
+		    this->grid(rho_tmp1->total(), total_vec);// kopierer grid fra funksjonene i total_vec
+		    this->add(rho_tmp1->total(), total_vec,0);
+		    total_vec.clear(true);
+		}
+		if (rho_i->hasSpin()) {
+		    if(not rho_tmp1->hasSpin())rho_tmp1->allocSpin();
+		    spin_vec.push_back(&rho_tmp2->spin());
+		    spin_vec.push_back(&rho_i->spin());
+		    this->grid(rho_tmp1->spin(), spin_vec);
+		    this->add(rho_tmp1->spin(), spin_vec,0);
+		    spin_vec.clear(true);
+		}
+		if (rho_i->hasAlpha()) {
+		    if(not rho_tmp1->hasAlpha())rho_tmp1->allocAlpha();
+		    alpha_vec.push_back(&rho_tmp2->alpha());
+		    alpha_vec.push_back(&rho_i->alpha());
+		    this->grid(rho_tmp1->alpha(), alpha_vec);
+		    this->add(rho_tmp1->alpha(), alpha_vec,0);
+		    alpha_vec.clear(true);
+		}
+		if (rho_i->hasBeta()) {
+		    if(not rho_tmp1->hasBeta())rho_tmp1->allocBeta();
+		    beta_vec.push_back(&rho_tmp2->beta());
+		    beta_vec.push_back(&rho_i->beta());
+		    this->grid(rho_tmp1->beta(), beta_vec);
+		    this->add(rho_tmp1->beta(), beta_vec,0);
+		    beta_vec.clear(true);
 		}
 	    }
 	}
-
-    }else{
-      
+    }else{      
 	//Serial processing
 	for (int i = 0; i < phi.size(); i++) {
 	    Orbital &phi_i = phi.getOrbital(i);
@@ -305,10 +227,10 @@ void DensityProjector::operator()(Density &rho, OrbitalVector &phi) {
     }
 
 
-    //    if(mpiOrbRank==0)cout<<"size density MB "<<int((rho.getNNodes()* rho.total().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
+    //if(mpiOrbRank==0)cout<<"size density MB "<<int((rho.getNNodes()* rho.total().getKp1_d()*8.0*8.0)/1024/1024)<<endl;
     if (mpiOrbSize > 1) {
 	//we always broadcast density
-	//If the density is shared, only metdata will be sent/received
+	//If the density is shared, only metadata will be sent/received
 	if (mpiOrbRank == 0) {
 	    for (int i_MPI = 1; i_MPI < mpiOrbSize; i_MPI++) {
 		rho.send_Density(i_MPI, 54);
