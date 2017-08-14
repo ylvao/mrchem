@@ -7,6 +7,7 @@
 #include <Eigen/Eigenvalues>
 
 #include <vector>
+using std::vector;
 
 #include "Orbital.h"
 
@@ -64,13 +65,13 @@ public:
 
     int printTreeSizes() const;
 
-    void send_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount);
+    void send_OrbVec(int dest, int tag, vector<int> &orbsIx, int start, int maxcount);
 #ifdef HAVE_MPI
-    void Isend_OrbVec(int dest, int tag, int* OrbsIx, int start, int maxcount, MPI_Request& request);
+    void Isend_OrbVec(int dest, int tag, vector<int> &orbsIx, int start, int maxcount, MPI_Request& request);
 #endif
-    void Rcv_OrbVec(int source, int tag, int* OrbsIx, int& workOrbVecIx);
-    void getOrbVecChunk(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int maxOrbs_in=-1, int workIx=0);
-    void getOrbVecChunk_sym(int* myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int* sndtoMPI=0, int* sndOrbIx=0, int maxOrbs_in=-1, int workIx=0);
+    void Rcv_OrbVec(int source, int tag, int *orbsIx, int& workOrbVecIx);
+    void getOrbVecChunk(vector<int> &myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int maxOrbs_in=-1, int workIx=0);
+    void getOrbVecChunk_sym(vector<int> &myOrbsIx, OrbitalVector &rcvOrbs, int* rcvOrbsIx, int size, int& iter0, int* sndtoMPI=0, int* sndOrbIx=0, int maxOrbs_in=-1, int workIx=0);
 
     bool inUse=false;
 

@@ -86,14 +86,13 @@ MatrixXcd IdentityOperator::calcOverlapMatrix_P(OrbitalVector &bra, OrbitalVecto
     OrbitalVector orbVecChunk_j(0);	//to store adresses of own j_orbs
     OrbitalVector rcvOrbs(0);		//to store adresses of received orbitals
 
-    int orbsIx[workOrbVecSize];		//to store own orbital indices
+    vector<int> orbsIx;                 //to store own orbital indices
     int rcvOrbsIx[workOrbVecSize];	//to store received orbital indices
 
     //make vector with adresses of own orbitals
-    int i = 0;
     for (int ix = mpiOrbRank; ix < Ni; ix += mpiOrbSize) {
         orbVecChunk_i.push_back(bra.getOrbital(ix));//i orbitals
-        orbsIx[i++] = ix;
+        orbsIx.push_back(ix);
     }
     for (int jx = mpiOrbRank; jx < Nj; jx += mpiOrbSize) {
         orbVecChunk_j.push_back(ket.getOrbital(jx));//j orbitals
@@ -141,14 +140,13 @@ MatrixXcd IdentityOperator::calcOverlapMatrix_P_H(OrbitalVector &bra, OrbitalVec
     OrbitalVector orbVecChunk_j(0);	//to store adresses of own j_orbs
     OrbitalVector rcvOrbs(0);		//to store adresses of received orbitals
 
-    int orbsIx[workOrbVecSize];		//to store own orbital indices
+    vector<int> orbsIx;                 //to store own orbital indices
     int rcvOrbsIx[workOrbVecSize];	//to store received orbital indices
 
     //make vector with adresses of own orbitals
-    int i = 0;
     for (int ix = mpiOrbRank; ix < Ni; ix += mpiOrbSize) {
         orbVecChunk_i.push_back(bra.getOrbital(ix));//i orbitals
-        orbsIx[i++] = ix;
+        orbsIx.push_back(ix);
     }
     for (int jx = mpiOrbRank; jx < Nj; jx += mpiOrbSize) {
         orbVecChunk_j.push_back(ket.getOrbital(jx));//j orbitals

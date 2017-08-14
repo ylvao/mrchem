@@ -204,21 +204,20 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
 
     int Ni = phi.size();
     OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
-    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    vector<int> orbsIx;     //to store own orbital indices
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
     
     //make vector with adresses of own orbitals
-    int i = 0;
     for (int Ix = mpiOrbRank;  Ix < Ni; Ix += mpiOrbSize) {
       OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
       out.getOrbital(Ix).clear(true);
-      OrbsIx[i++] = Ix;
+      orbsIx.push_back(Ix);
     }
     
      for (int iter = 0;  iter >= 0; iter++) {
       //get a new chunk from other processes
-      OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+      OrbVecChunk_i.getOrbVecChunk(orbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
       //Update only own orbitals	
       int j = 0;
       for (int Jx = mpiOrbRank;  Jx < Ni; Jx += mpiOrbSize) {
