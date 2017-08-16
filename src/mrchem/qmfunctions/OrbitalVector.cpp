@@ -690,6 +690,7 @@ void OrbitalVector::getOrbVecChunk(vector<int> &myOrbsIx, OrbitalVector &rcvOrbs
 
     int MPI_iter0 = (iter0*maxOrbs)/maxsizeperOrbvec;//which MPI_iter to start with
     int start = (iter0*maxOrbs)%maxsizeperOrbvec;//where to start in the first iteration
+    int start0 = start;//save
 
     rcvOrbs.clearVec(false);//we restart from beginning of vector
 
@@ -704,9 +705,9 @@ void OrbitalVector::getOrbVecChunk(vector<int> &myOrbsIx, OrbitalVector &rcvOrbs
 	iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
     }
 
-
     for (int MPI_iter = MPI_iter0;  true; MPI_iter++) {
-	int maxcount = maxOrbs-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
+	int maxcount = maxOrbs;//place left first iteration
+	if (MPI_iter > MPI_iter0) maxcount = maxOrbs+start0-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left after first iteration
 	if(maxcount<=0) break;
 	if(MPI_iter>=mpiOrbSize){
 	    iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
@@ -774,6 +775,7 @@ void OrbitalVector::getOrbVecChunk_sym(vector<int> &myOrbsIx, OrbitalVector &rcv
 
     int MPI_iter0 = (iter0*maxOrbs)/maxsizeperOrbvec;//which MPI_iter to start with
     int start = (iter0*maxOrbs)%maxsizeperOrbvec;//where to start in the first iteration
+    int start0 = start;//save
     rcvOrbs.clearVec(false);//we restart from beginning of vector
 
     workOrbVec.inUse = true;
@@ -789,7 +791,8 @@ void OrbitalVector::getOrbVecChunk_sym(vector<int> &myOrbsIx, OrbitalVector &rcv
 
     int isnd=0;
     for (int MPI_iter = MPI_iter0;  MPI_iter < mpiOrbSize; MPI_iter++) {
-	int maxcount = maxOrbs-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
+	int maxcount = maxOrbs;//place left
+	if (MPI_iter > MPI_iter0) maxcount = maxOrbs+start0-(MPI_iter-MPI_iter0)*maxsizeperOrbvec;//place left
 	if(maxcount <= 0)  break;//chunk is full
 	if(MPI_iter >= (mpiOrbSize/2 + 1) ){
 	    iter0=-2;//to indicate that we are finished with receiving AND sending all orbitals  
