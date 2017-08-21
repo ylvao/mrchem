@@ -8,7 +8,7 @@ using namespace Eigen;
 OrbitalAdder::OrbitalAdder(double prec, int max_scale)
     : add(prec, max_scale),
       grid(max_scale) {
-}
+      }
 
 void OrbitalAdder::operator()(Orbital &phi_ab,
                               complex<double> a, Orbital &phi_a,
@@ -204,29 +204,27 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
 
     int Ni = phi.size();
     OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
-    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    vector<int> orbsIx;     //to store own orbital indices
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
     
     //make vector with adresses of own orbitals
-    int i = 0;
     for (int Ix = mpiOrbRank;  Ix < Ni; Ix += mpiOrbSize) {
-      OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
-      out.getOrbital(Ix).clear(true);
-      OrbsIx[i++] = Ix;
+	OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
+	out.getOrbital(Ix).clear(true);
+	orbsIx.push_back(Ix);
     }
     
-     for (int iter = 0;  iter >= 0; iter++) {
-      //get a new chunk from other processes
-      OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
-      //Update only own orbitals	
-      int j = 0;
-      for (int Jx = mpiOrbRank;  Jx < Ni; Jx += mpiOrbSize) {
-	VectorXd U_Chunk(rcvOrbs.size());
-	for (int ix = 0; ix<rcvOrbs.size(); ix++)U_Chunk(ix)=U(Jx,rcvOrbsIx[ix]);
-	this->inPlace(out.getOrbital(Jx),U_Chunk, rcvOrbs, false);//can start with empty orbital
-      }
-      rcvOrbs.clearVec(false);//reset to zero size orbital vector
+    for (int iter = 0;  iter >= 0; iter++) {
+	//get a new chunk from other processes
+	OrbVecChunk_i.getOrbVecChunk(orbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+	//Update only own orbitals	
+	for (int Jx = mpiOrbRank;  Jx < Ni; Jx += mpiOrbSize) {
+	    VectorXd U_Chunk(rcvOrbs.size());
+	    for (int ix = 0; ix<rcvOrbs.size(); ix++)U_Chunk(ix)=U(Jx,rcvOrbsIx[ix]);
+	    this->inPlace(out.getOrbital(Jx),U_Chunk, rcvOrbs, false);//can start with empty orbital
+	}
+	rcvOrbs.clearVec(false);//reset to zero size orbital vector
     }
     
     //clear orbital adresses, not the orbitals
@@ -237,24 +235,24 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {
     if (U.cols() != inp.size()) MSG_ERROR("Invalid arguments");
     if (U.rows() < out.size()) MSG_ERROR("Invalid arguments");
-    if(mpiOrbSize>1){
-      rotate_P(out, U, inp);
+    if( mpiOrbSize > 1) {
+	rotate_P(out, U, inp);
     }else{
-      for (int i = 0; i < out.size(); i++) {
-        const VectorXd &c = U.row(i);
-        Orbital &out_i = out.getOrbital(i);
-        (*this)(out_i, c, inp, false); // Adaptive grids
-      }
+	for (int i = 0; i < out.size(); i++) {
+	    const VectorXd &c = U.row(i);
+	    Orbital &out_i = out.getOrbital(i);
+	    (*this)(out_i, c, inp, false); // Adaptive grids
+	}
     }
 }
 
 /** In place rotation of orbital vector */
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U) {
     OrbitalVector tmp(out);
-    if(mpiOrbSize>1){
-      rotate_P(tmp, U, out);
+    if( mpiOrbSize > 1) {
+	rotate_P(tmp, U, out);
     }else{
-      rotate(tmp, U, out);
+	rotate(tmp, U, out);
     }
     out.clear(true);      // Delete pointers
     out.shallowCopy(tmp); // Copy pointers
@@ -286,7 +284,7 @@ void OrbitalAdder::inPlace(Orbital &out,
 }
 
 void OrbitalAdder::inPlace(Orbital &out, const VectorXd &c, OrbitalVector &inp,
-                              bool union_grid) {
+			   bool union_grid) {
 
     VectorXd c_extended(c.size()+1);
     for (int i = 0; i < c.size(); i++)c_extended(i)=c(i);

@@ -121,14 +121,13 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
     OrbitalVector OrbVecChunk_j(0);//to store adresses of own j_orbs
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
-    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    vector<int> orbsIx;           //to store own orbital indices  
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
 
     //make vector with adresses of own orbitals
-    int i = 0;
     for (int Ix = mpiOrbRank; Ix < Ni; Ix += mpiOrbSize) {
 	OrbVecChunk_i.push_back(i_orbs.getOrbital(Ix));//i orbitals
-	OrbsIx[i++] = Ix;
+	orbsIx.push_back(Ix);
     }
     for (int Ix = mpiOrbRank; Ix < Nj; Ix += mpiOrbSize) OrbVecChunk_j.push_back(j_orbs.getOrbital(Ix));//j orbitals
     //need to pad OrbVecChunk_j so that all have same size
@@ -138,7 +137,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
 	//get a new chunk from other processes
 	//NB: should not use directly workorbvec as rcvOrbs, because they may 
 	//contain own orbitals, and these can be overwritten
-	OrbVecChunk_i.getOrbVecChunk(OrbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+	OrbVecChunk_i.getOrbVecChunk(orbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
 
 	//Only one process does the computations. j orbitals always local
 	MatrixXd resultChunk = MatrixXd::Zero(rcvOrbs.size(),OrbVecChunk_j.size());

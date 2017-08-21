@@ -76,15 +76,15 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
     Timer timer_2;
     OrbitalVector orbVecChunk_i(0); //to store adresses of own i_orbs
     OrbitalVector rcvOrbs(0);       //to store adresses of received orbitals
-    int orbsIx[workOrbVecSize];     //to store own orbital indices
+    vector<int> orbsIx;     //to store own orbital indices
     int rcvOrbsIx[workOrbVecSize];  //to store received orbital indices
 
     //make vector with adresses of own orbitals
-    int i = 0;
     int Ni = phi.size();
+    int maxOrbPerMpi = Ni/mpiOrbSize + 1;//upper bound
     for (int ix = mpiOrbRank; ix < Ni; ix += mpiOrbSize) {
         orbVecChunk_i.push_back(phi.getOrbital(ix));//i orbitals
-        orbsIx[i++] = ix;
+        orbsIx.push_back(ix);
     }
 
     for (int iter = 0; iter >= 0; iter++) {
@@ -332,20 +332,19 @@ RR::RR(double prec, OrbitalVector &phi) {
 #ifdef HAVE_MPI
 
     OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
-    int OrbsIx[workOrbVecSize];//to store own orbital indices
+    vector<int> orbsIx;//to store own orbital indices
     OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
     int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
 
     //make vector with adresses of own orbitals
-    int i = 0;
     for (int Ix = mpiOrbRank;  Ix < N; Ix += mpiOrbSize) {
         OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
-        OrbsIx[i++] = Ix;
+        orbsIx.push_back(Ix);
     }
 
     for (int iter = 0;  iter >= 0; iter++) {
         //get a new chunk from other processes
-        OrbVecChunk_i.getOrbVecChunk_sym(OrbsIx, rcvOrbs, rcvOrbsIx, N, iter);
+        OrbVecChunk_i.getOrbVecChunk_sym(orbsIx, rcvOrbs, rcvOrbsIx, N, iter);
         for (int i = 0; i<OrbVecChunk_i.size(); i++){
             Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
             int spin_i = phi_i.getSpin();
@@ -358,21 +357,21 @@ RR::RR(double prec, OrbitalVector &phi) {
                 //NOTE: the "if" should not be necessary, but since outside the required precision
                 //r_x(phi_i, phi_j) != r_x(phi_j, phi_i), we prefer to have consistent results for
                 //different mpiOrbSize
-                if(rcvOrbsIx[j]<=OrbsIx[i]){
-                    r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
-                    r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
-                    r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
-                    r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]);
-                    r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N);
-                    r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N);
+                if(rcvOrbsIx[j]<=orbsIx[i]){
+                    r_i_orig(orbsIx[i],rcvOrbsIx[j]) = r_x(phi_i, phi_j);
+                    r_i_orig(orbsIx[i],rcvOrbsIx[j]+N) = r_y(phi_i, phi_j);
+                    r_i_orig(orbsIx[i],rcvOrbsIx[j]+2*N) = r_z(phi_i, phi_j);
+                    r_i_orig(rcvOrbsIx[j],orbsIx[i]) = r_i_orig(orbsIx[i],rcvOrbsIx[j]);
+                    r_i_orig(rcvOrbsIx[j],orbsIx[i]+N) =  r_i_orig(orbsIx[i],rcvOrbsIx[j]+N);
+                    r_i_orig(rcvOrbsIx[j],orbsIx[i]+2*N) = r_i_orig(orbsIx[i],rcvOrbsIx[j]+2*N);
                 }else{
                     if(rcvOrbsIx[j]%mpiOrbSize != mpiOrbRank){ //need only compute j<=i in own block
-                        r_i_orig(rcvOrbsIx[j],OrbsIx[i]) = r_x(phi_j, phi_i);
-                        r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) =  r_y(phi_j, phi_i);
-                        r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N) = r_z(phi_j, phi_i);
-                        r_i_orig(OrbsIx[i],rcvOrbsIx[j]) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]);
-                        r_i_orig(OrbsIx[i],rcvOrbsIx[j]+N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+N) ;
-                        r_i_orig(OrbsIx[i],rcvOrbsIx[j]+2*N) = r_i_orig(rcvOrbsIx[j],OrbsIx[i]+2*N);
+                        r_i_orig(rcvOrbsIx[j],orbsIx[i]) = r_x(phi_j, phi_i);
+                        r_i_orig(rcvOrbsIx[j],orbsIx[i]+N) =  r_y(phi_j, phi_i);
+                        r_i_orig(rcvOrbsIx[j],orbsIx[i]+2*N) = r_z(phi_j, phi_i);
+                        r_i_orig(orbsIx[i],rcvOrbsIx[j]) = r_i_orig(rcvOrbsIx[j],orbsIx[i]);
+                        r_i_orig(orbsIx[i],rcvOrbsIx[j]+N) = r_i_orig(rcvOrbsIx[j],orbsIx[i]+N) ;
+                        r_i_orig(orbsIx[i],rcvOrbsIx[j]+2*N) = r_i_orig(rcvOrbsIx[j],orbsIx[i]+2*N);
                     }
                 }
             }
