@@ -1,5 +1,4 @@
-#ifndef EXCHANGEOPERATOR_H
-#define EXCHANGEOPERATOR_H
+#pragma once
 
 #include "QMOperator.h"
 #include "OrbitalVector.h"
@@ -51,4 +50,3 @@ protected:
     }
 };
 
-#endif // EXCHANGEOPERATOR_H

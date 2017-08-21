@@ -1,5 +1,4 @@
-#ifndef COULOMBOPERATOR_H
-#define COULOMBOPERATOR_H
+#pragma once
 
 #include "QMPotential.h"
 #include "Density.h"
@@ -23,4 +22,3 @@ protected:
     Density density;            // Density that defines the potential
 };
 
-#endif // COULOMBOPERATOR_H

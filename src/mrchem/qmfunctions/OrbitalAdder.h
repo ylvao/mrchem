@@ -1,5 +1,4 @@
-#ifndef ORBITALADDER_H
-#define ORBITALADDER_H
+#pragma once
 
 #pragma GCC system_header
 #include <Eigen/Core>
@@ -57,4 +56,3 @@ protected:
     GridGenerator<3> grid;
 };
 
-#endif // ORBITALADDER_H

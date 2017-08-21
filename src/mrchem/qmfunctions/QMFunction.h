@@ -1,5 +1,4 @@
-#ifndef QMFUNCTION_H
-#define QMFUNCTION_H
+#pragma once
 
 #include <complex>
 
@@ -48,4 +47,3 @@ protected:
     FunctionTree<3> *im;
 };
 
-#endif // QMFUNCTION_H

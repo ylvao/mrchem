@@ -1,5 +1,4 @@
-#ifndef POSITIONOPERATOR_H
-#define POSITIONOPERATOR_H
+#pragma once
 
 #include "QMTensorOperator.h"
 #include "AnalyticPotential.h"
@@ -35,4 +34,3 @@ protected:
     }
 };
 
-#endif // POSITIONOPERATOR_H

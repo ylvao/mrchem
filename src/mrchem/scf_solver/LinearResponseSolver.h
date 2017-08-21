@@ -1,5 +1,4 @@
-#ifndef LINEARRESPONSESOLVER_H
-#define LINEARRESPONSESOLVER_H
+#pragma once
 
 #include "SCF.h"
 
@@ -63,4 +62,3 @@ protected:
     double calcPropertyError() const;
 };
 
-#endif // LINEARSTATESOLVER_H

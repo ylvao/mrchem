@@ -1,5 +1,4 @@
-#ifndef GROUNDSTATESOLVER_H
-#define GROUNDSTATESOLVER_H
+#pragma once
 
 
 #pragma GCC system_header
@@ -68,5 +67,4 @@ protected:
     void do_step(Eigen::VectorXd step);
 };
 
-#endif // GROUNDSTATESOLVER_H
 

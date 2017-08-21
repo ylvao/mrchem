@@ -1,5 +1,4 @@
-#ifndef XCOPERATOR_H
-#define XCOPERATOR_H
+#pragma once
 
 #pragma GCC system_header
 #include <Eigen/Core>
@@ -105,5 +104,4 @@ protected:
     }
 };
 
-#endif // XCOPERATOR_H
 

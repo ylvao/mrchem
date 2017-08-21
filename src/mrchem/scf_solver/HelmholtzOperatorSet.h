@@ -1,5 +1,4 @@
-#ifndef HELMHOLTZOPERATORSET_H
-#define HELMHOLTZOPERATORSET_H
+#pragma once
 
 #pragma GCC system_header
 #include <Eigen/Core>
@@ -43,4 +42,3 @@ private:
 };
 
 
-#endif // ORBITALSET_H

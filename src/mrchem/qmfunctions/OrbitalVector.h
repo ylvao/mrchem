@@ -1,5 +1,4 @@
-#ifndef ORBITALVECTOR_H
-#define ORBITALVECTOR_H
+#pragma once
 
 #pragma GCC system_header
 #include <Eigen/Core>
@@ -106,4 +105,3 @@ protected:
     std::vector<Orbital *> orbitals;
 };
 
-#endif // ORBITALVECTOR_H
