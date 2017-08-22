@@ -1,5 +1,4 @@
-#ifndef DENSITY_H
-#define DENSITY_H
+#pragma once
 
 #include "constants.h"
 #include "parallel.h"
@@ -61,5 +60,4 @@ protected:
     FunctionTree<3> *dens_b;
 };
 
-#endif // DENSITY_H
 

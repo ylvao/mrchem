@@ -1,5 +1,4 @@
-#ifndef ORBITAL_H
-#define ORBITAL_H
+#pragma once
 
 #include <complex>
 
@@ -88,4 +87,3 @@ protected:
     double error;
 };
 
-#endif // ORBITAL_H

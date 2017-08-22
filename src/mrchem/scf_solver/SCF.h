@@ -1,5 +1,4 @@
-#ifndef SCF_H
-#define SCF_H
+#pragma once
 
 #pragma GCC system_header
 #include <Eigen/Core>
@@ -69,5 +68,4 @@ protected:
                                                    bool adjoint = false) = 0;
 };
 
-#endif // SCF_H
 

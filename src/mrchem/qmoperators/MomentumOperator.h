@@ -1,5 +1,4 @@
-#ifndef MOMENTUMOPERATOR_H
-#define MOMENTUMOPERATOR_H
+#pragma once
 
 #include "QMDerivative.h"
 #include "QMTensorOperator.h"
@@ -37,5 +36,4 @@ protected:
     }
 };
 
-#endif // MOMENTUMOPERATOR_H
 

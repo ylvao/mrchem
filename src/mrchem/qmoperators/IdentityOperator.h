@@ -1,5 +1,4 @@
-#ifndef IDENTITYOPERATOR_H
-#define IDENTITYOPERATOR_H
+#pragma once
 
 #pragma GCC system_header
 #include <Eigen/Core>
@@ -29,4 +28,3 @@ protected:
     Eigen::MatrixXcd calcOverlapMatrix_P_H(OrbitalVector &bra, OrbitalVector &ket);
 };
 
-#endif // IDENTITYOPERATOR_H

@@ -1,5 +1,4 @@
-#ifndef EXCHANGEPOTENTIAL_H
-#define EXCHANGEPOTENTIAL_H
+#pragma once
 
 #include "ExchangeOperator.h"
 
@@ -112,4 +111,3 @@ protected:
     void calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_j, Orbital *V_ij );
 };
 
-#endif // EXCHANGEPOTENTIAL_H

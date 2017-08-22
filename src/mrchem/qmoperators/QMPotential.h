@@ -1,5 +1,4 @@
-#ifndef QMPOTENTIAL_H
-#define QMPOTENTIAL_H
+#pragma once
 
 #include "QMOperator.h"
 #include "QMFunction.h"
@@ -21,4 +20,3 @@ protected:
     void calcImagPart(Orbital &Vphi, Orbital &phi, bool adjoint);
 };
 
-#endif // POTENTIAL_H

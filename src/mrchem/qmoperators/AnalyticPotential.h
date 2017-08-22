@@ -1,5 +1,4 @@
-#ifndef ANALYTICPOTENTIAL_H
-#define ANALYTICPOTENTIAL_H
+#pragma once
 
 #include "QMPotential.h"
 #include "MWProjector.h"
@@ -61,4 +60,3 @@ protected:
     AnalyticFunction<3> *imag_func;
 };
 
-#endif // ANALYTICPOTENTIAL_H

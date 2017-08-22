@@ -1,5 +1,4 @@
-#ifndef NABLAOPERATOR_H
-#define NABLAOPERATOR_H
+#pragma once
 
 #include "QMDerivative.h"
 #include "QMTensorOperator.h"
@@ -37,5 +36,4 @@ protected:
     }
 };
 
-#endif // NABLAOPERATOR_H
 

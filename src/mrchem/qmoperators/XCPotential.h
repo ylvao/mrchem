@@ -1,5 +1,4 @@
-#ifndef XCPOTENTIAL_H
-#define XCPOTENTIAL_H
+#pragma once
 
 #include "XCOperator.h"
 
@@ -21,4 +20,3 @@ protected:
                                       FunctionTreeVector<3> &dRho_b);
 };
 
-#endif // XCPOTENTIAL_H
