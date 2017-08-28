@@ -237,7 +237,8 @@ void LinearResponseSolver::calcHelmholtzUpdates(OrbitalVector *phi_n,
 OrbitalVector* LinearResponseSolver::setupHelmholtzArguments(FockOperator &fock,
                                                              const Eigen::MatrixXd &M,
                                                              OrbitalVector &phi,
-                                                             bool adjoint) {
+                                                             bool adjoint,
+							     bool clearFock) {
     NOT_IMPLEMENTED_ABORT;
 }
 

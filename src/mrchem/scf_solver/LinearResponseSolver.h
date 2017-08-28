@@ -52,7 +52,8 @@ protected:
     OrbitalVector *setupHelmholtzArguments(FockOperator &fock,
                                            const Eigen::MatrixXd &M,
                                            OrbitalVector &phi,
-                                           bool adjoint = false);
+                                           bool adjoint = false,
+                                           bool clearFock = false);
 
     void printProperty() const;
 

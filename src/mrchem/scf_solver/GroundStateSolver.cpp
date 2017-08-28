@@ -49,13 +49,13 @@ GroundStateSolver::~GroundStateSolver() {
 OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
                                                           const Eigen::MatrixXd &M,
                                                           OrbitalVector &phi,
-                                                          bool adjoint) {
+                                                          bool adjoint,
+							  bool clearFock) {
     Timer timer_tot;
     TelePrompter::printHeader(0, "Setting up Helmholtz arguments");
     int oldprec = TelePrompter::setPrecision(5);
-
+    
     double coef = -1.0/(2.0*pi);
-
     Timer timer_1;
     OrbitalVector *args = new OrbitalVector(0);
     for (int i = 0; i < phi.size(); i++) {
@@ -72,6 +72,8 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
     }
     timer_1.stop();
     TelePrompter::printDouble(0, "Potential part", timer_1.getWallTime());
+
+    if (clearFock) fock.clear();
 
     Timer timer_2;
     OrbitalVector orbVecChunk_i(0); //to store adresses of own i_orbs
@@ -101,14 +103,14 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
                 int jx = rcvOrbsIx[j];
                 double coef = M(ix,jx);
                 // Linear scaling screening inserted here
-                if (fabs(coef) > MachineZero) {
+               // if (fabs(coef) > MachineZero) {
                     Orbital &phi_j = rcvOrbs.getOrbital(j);
                     double norm_j = sqrt(phi_j.getSquareNorm());
                     if (norm_j > 0.01*getOrbitalPrecision()) {
                         coefs.push_back(coef);
                         orbs.push_back(&phi_j);
                     }
-                }
+                //}
             }
 
             Orbital *tmp_i = new Orbital(phi_i);

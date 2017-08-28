@@ -84,13 +84,17 @@ bool OrbitalOptimizer::optimize() {
         // Setup Helmholtz operators and argument
         H.setup(orb_prec, F.diagonal());
         MatrixXd L = H.getLambda().asDiagonal();
-        OrbitalVector *args_n = setupHelmholtzArguments(fock, L-F, phi_n);
+	bool adjoint = false;
+	bool clearFock = false;
+	if(mpiOrbSize>1)clearFock = true;
+        OrbitalVector *args_n = setupHelmholtzArguments(fock, L-F, phi_n, adjoint, clearFock);
 
         // Apply Helmholtz operators
         H(phi_np1, *args_n);
         delete args_n;
+	if(mpiOrbSize>1)H.clear();
 
-        fock.clear();
+        if(not clearFock) fock.clear();
         orthonormalize(fock, F, phi_np1);
 
         // Compute orbital updates
