@@ -206,6 +206,7 @@ MatrixXd EnergyOptimizer::calcFockMatrixUpdate() {
         //clear orbital adresses, not the orbitals
         orbVecChunk_i.clearVec(false);
         orbVecChunk_j.clearVec(false);
+	workOrbVec.clear();
 
         MPI_Allreduce(MPI_IN_PLACE, &dV_n(0,0), Ni*Nj,
                       MPI_DOUBLE, MPI_SUM, mpiCommOrb);

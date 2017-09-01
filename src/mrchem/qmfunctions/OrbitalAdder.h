@@ -5,13 +5,14 @@
 
 #include "MWAdder.h"
 #include "GridGenerator.h"
+#include "constants.h"
 
 class Orbital;
 class OrbitalVector;
 
 class OrbitalAdder {
 public:
-    OrbitalAdder(double prec, int max_scale);
+    OrbitalAdder(double prec, int max_scale, int workVecMax = workOrbVecSize);
     virtual ~OrbitalAdder() { }
 
     void setPrecision(double prec) { this->add.setPrecision(prec); }
@@ -38,6 +39,7 @@ public:
 
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
     void rotate_P(OrbitalVector &out, const Eigen::MatrixXd &U, OrbitalVector &inp);
+    int workVecMax;//max number of orbitals to store temporarily while sending
     void rotate(OrbitalVector &out, const Eigen::MatrixXd &U);
 
     void inPlace(Orbital &out, std::complex<double> c, Orbital &inp);

@@ -2,12 +2,15 @@
 #include "OrbitalVector.h"
 #include "Orbital.h"
 
+extern OrbitalVector workOrbVec;
+
 using namespace std;
 using namespace Eigen;
 
-OrbitalAdder::OrbitalAdder(double prec, int max_scale)
+OrbitalAdder::OrbitalAdder(double prec, int max_scale, int workVecMax)
     : add(prec, max_scale),
-      grid(max_scale) {
+      grid(max_scale) ,
+      workVecMax(workVecMax) {
       }
 
 void OrbitalAdder::operator()(Orbital &phi_ab,
@@ -217,7 +220,7 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
     
     for (int iter = 0;  iter >= 0; iter++) {
 	//get a new chunk from other processes
-	OrbVecChunk_i.getOrbVecChunk(orbsIx, rcvOrbs, rcvOrbsIx, Ni, iter);
+	OrbVecChunk_i.getOrbVecChunk(orbsIx, rcvOrbs, rcvOrbsIx, Ni, iter, this->workVecMax, 0);
 	//Update only own orbitals	
 	for (int Jx = mpiOrbRank;  Jx < Ni; Jx += mpiOrbSize) {
 	    VectorXd U_Chunk(rcvOrbs.size());
@@ -229,7 +232,8 @@ void OrbitalAdder::rotate_P(OrbitalVector &out, const MatrixXd &U, OrbitalVector
     
     //clear orbital adresses, not the orbitals
     OrbVecChunk_i.clearVec(false);
- 
+    workOrbVec.clear();
+
 }
 
 void OrbitalAdder::rotate(OrbitalVector &out, const MatrixXd &U, OrbitalVector &inp) {

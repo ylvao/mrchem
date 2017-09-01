@@ -19,6 +19,8 @@
 using namespace std;
 using namespace Eigen;
 
+extern OrbitalVector workOrbVec;
+
 GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
     : SCF(h),
       fOper_n(0),
@@ -123,6 +125,7 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
         rcvOrbs.clearVec(false);//reset to zero size orbital vector
     }
     orbVecChunk_i.clearVec(false);
+    workOrbVec.clear();
     timer_2.stop();
     TelePrompter::printDouble(0, "Matrix part", timer_2.getWallTime());
 
@@ -381,6 +384,7 @@ RR::RR(double prec, OrbitalVector &phi) {
         rcvOrbs.clearVec(false);
     }
     OrbVecChunk_i.clearVec(false);
+    workOrbVec.clear();
     //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &r_i_orig(0,0), N*3*N,
                   MPI_DOUBLE, MPI_SUM, mpiCommOrb);

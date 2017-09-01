@@ -170,6 +170,7 @@ MatrixXd FockOperator::operator() (OrbitalVector &i_orbs, OrbitalVector &j_orbs)
     //clear orbital vector adresses. NB: only references and metadata must be deleted, not the trees in orbitals
     OrbVecChunk_i.clearVec(false);
     OrbVecChunk_j.clearVec(false);
+    workOrbVec.clear();
 
     //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &result(0,0), Ni*Nj,
