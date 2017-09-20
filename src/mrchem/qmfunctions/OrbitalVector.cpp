@@ -602,7 +602,7 @@ void OrbitalVector::Rcv_OrbVec(int source, int tag, int *orbsIx, int& workOrbVec
 #ifdef HAVE_MPI
     MPI_Status status;
     MPI_Comm comm=mpiCommOrb;
-    OrbitalVector* workOrbVec_p;//pointer to the workOrbVec to use
+    OrbitalVector* workOrbVec_p = 0;//pointer to the workOrbVec to use
   
     if(workOrbVec2.inUse){
 	workOrbVec_p = &workOrbVec2;//use workOrbVec2

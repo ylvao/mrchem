@@ -8,9 +8,9 @@ using namespace std;
 using namespace Eigen;
 
 OrbitalAdder::OrbitalAdder(double prec, int max_scale, int work_vec_max)
-    : add(prec, max_scale),
-      grid(max_scale) ,
-      workVecMax(work_vec_max) {
+    : workVecMax(work_vec_max),
+      add(prec, max_scale),
+      grid(max_scale){
 }
 
 void OrbitalAdder::operator()(Orbital &phi_ab,
