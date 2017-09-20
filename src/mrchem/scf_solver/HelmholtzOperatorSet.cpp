@@ -25,9 +25,7 @@ void HelmholtzOperatorSet::setup(double prec, const VectorXd &energies) {
     if (mpiOrbSize > 1) this->clear();
     for (int i = 0; i < energies.size(); i++) {
         double energy = energies(i);
-        if (energy > 0.0 ) {
-            energy = -0.5;
-        }
+        if (energy > 0.0 ) energy = -0.5;
         int idx = initHelmholtzOperator(energy, i);
 	
         this->operIdx.push_back(idx);
@@ -35,9 +33,10 @@ void HelmholtzOperatorSet::setup(double prec, const VectorXd &energies) {
 	    double mu = getOperator(i).getMu();
 	    this->lambda.push_back(-0.5*mu*mu);
 	} else { 
-	    this->lambda.push_back(energy); }
+	    this->lambda.push_back(energy);
+        }
     }
-    if (mpiOrbSize == 1)clearUnused();
+    if (mpiOrbSize == 1) clearUnused();
     timer.stop();
     TelePrompter::printFooter(0, timer, 2);
 }

@@ -66,7 +66,7 @@ protected:
                                                    const Eigen::MatrixXd &M,
                                                    OrbitalVector &phi,
                                                    bool adjoint = false,
-						   bool clearFock = false) = 0;
+                                                   bool clearFock = false) = 0;
 };
 
 
