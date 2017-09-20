@@ -5,13 +5,14 @@
 
 #include "MWAdder.h"
 #include "GridGenerator.h"
+#include "constants.h"
 
 class Orbital;
 class OrbitalVector;
 
 class OrbitalAdder {
 public:
-    OrbitalAdder(double prec, int max_scale);
+    OrbitalAdder(double prec, int max_scale, int work_vec_max = workOrbVecSize);
     virtual ~OrbitalAdder() { }
 
     void setPrecision(double prec) { this->add.setPrecision(prec); }
@@ -52,6 +53,7 @@ public:
     void orthogonalize(OrbitalVector &out, OrbitalVector &inp);
 
 protected:
+    int workVecMax; //max number of orbitals to store temporarily while sending
     MWAdder<3> add;
     GridGenerator<3> grid;
 };

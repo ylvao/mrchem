@@ -65,7 +65,8 @@ protected:
     virtual OrbitalVector* setupHelmholtzArguments(FockOperator &fock,
                                                    const Eigen::MatrixXd &M,
                                                    OrbitalVector &phi,
-                                                   bool adjoint = false) = 0;
+                                                   bool adjoint = false,
+                                                   bool clearFock = false) = 0;
 };
 
 

@@ -5,6 +5,7 @@
 using namespace Eigen;
 
 extern MultiResolutionAnalysis<3> *MRA; // Global MRA
+extern OrbitalVector workOrbVec;
 
 IdentityOperator::IdentityOperator() : QMOperator(MRA->getMaxScale()) {
 }
@@ -117,6 +118,7 @@ MatrixXcd IdentityOperator::calcOverlapMatrix_P(OrbitalVector &bra, OrbitalVecto
     //clear orbital adresses (not the orbitals)
     orbVecChunk_i.clearVec(false);
     orbVecChunk_j.clearVec(false);
+    workOrbVec.clear();
 
     MPI_Allreduce(MPI_IN_PLACE, &S(0,0), Ni*Nj,
                   MPI_DOUBLE_COMPLEX, MPI_SUM, mpiCommOrb);
@@ -177,6 +179,7 @@ MatrixXcd IdentityOperator::calcOverlapMatrix_P_H(OrbitalVector &bra, OrbitalVec
     //clear orbital adresses (not the orbitals)
     orbVecChunk_i.clearVec(false);
     orbVecChunk_j.clearVec(false);
+    workOrbVec.clear();
 
     MPI_Allreduce(MPI_IN_PLACE, &S(0,0), Ni*Nj,
                   MPI_DOUBLE_COMPLEX, MPI_SUM, mpiCommOrb);

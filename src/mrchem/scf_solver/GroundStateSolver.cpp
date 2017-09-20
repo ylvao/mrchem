@@ -19,6 +19,8 @@
 using namespace std;
 using namespace Eigen;
 
+extern OrbitalVector workOrbVec;
+
 GroundStateSolver::GroundStateSolver(HelmholtzOperatorSet &h)
     : SCF(h),
       fOper_n(0),
@@ -49,13 +51,13 @@ GroundStateSolver::~GroundStateSolver() {
 OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
                                                           const Eigen::MatrixXd &M,
                                                           OrbitalVector &phi,
-                                                          bool adjoint) {
+                                                          bool adjoint,
+                                                          bool clearFock) {
     Timer timer_tot;
     TelePrompter::printHeader(0, "Setting up Helmholtz arguments");
     int oldprec = TelePrompter::setPrecision(5);
-
+    
     double coef = -1.0/(2.0*pi);
-
     Timer timer_1;
     OrbitalVector *args = new OrbitalVector(0);
     for (int i = 0; i < phi.size(); i++) {
@@ -73,10 +75,12 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
     timer_1.stop();
     TelePrompter::printDouble(0, "Potential part", timer_1.getWallTime());
 
+    if (clearFock) fock.clear();
+
     Timer timer_2;
     OrbitalVector orbVecChunk_i(0); //to store adresses of own i_orbs
     OrbitalVector rcvOrbs(0);       //to store adresses of received orbitals
-    vector<int> orbsIx;     //to store own orbital indices
+    vector<int> orbsIx;             //to store own orbital indices
     int rcvOrbsIx[workOrbVecSize];  //to store received orbital indices
 
     //make vector with adresses of own orbitals
@@ -101,14 +105,14 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
                 int jx = rcvOrbsIx[j];
                 double coef = M(ix,jx);
                 // Linear scaling screening inserted here
-                if (fabs(coef) > MachineZero) {
+                // if (fabs(coef) > MachineZero) {
                     Orbital &phi_j = rcvOrbs.getOrbital(j);
                     double norm_j = sqrt(phi_j.getSquareNorm());
                     if (norm_j > 0.01*getOrbitalPrecision()) {
                         coefs.push_back(coef);
                         orbs.push_back(&phi_j);
                     }
-                }
+                //}
             }
 
             Orbital *tmp_i = new Orbital(phi_i);
@@ -121,6 +125,7 @@ OrbitalVector* GroundStateSolver::setupHelmholtzArguments(FockOperator &fock,
         rcvOrbs.clearVec(false);//reset to zero size orbital vector
     }
     orbVecChunk_i.clearVec(false);
+    workOrbVec.clear();
     timer_2.stop();
     TelePrompter::printDouble(0, "Matrix part", timer_2.getWallTime());
 
@@ -331,22 +336,22 @@ RR::RR(double prec, OrbitalVector &phi) {
 
 #ifdef HAVE_MPI
 
-    OrbitalVector OrbVecChunk_i(0);//to store adresses of own i_orbs
-    vector<int> orbsIx;//to store own orbital indices
-    OrbitalVector rcvOrbs(0);//to store adresses of received orbitals
-    int rcvOrbsIx[workOrbVecSize];//to store received orbital indices
+    OrbitalVector orbVecChunk_i(0); //to store adresses of own i_orbs
+    OrbitalVector rcvOrbs(0);       //to store adresses of received orbitals
+    vector<int> orbsIx;             //to store own orbital indices
+    int rcvOrbsIx[workOrbVecSize];  //to store received orbital indices
 
     //make vector with adresses of own orbitals
-    for (int Ix = mpiOrbRank;  Ix < N; Ix += mpiOrbSize) {
-        OrbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
+    for (int Ix = mpiOrbRank; Ix < N; Ix += mpiOrbSize) {
+        orbVecChunk_i.push_back(phi.getOrbital(Ix));//i orbitals
         orbsIx.push_back(Ix);
     }
 
-    for (int iter = 0;  iter >= 0; iter++) {
+    for (int iter = 0; iter >= 0; iter++) {
         //get a new chunk from other processes
-        OrbVecChunk_i.getOrbVecChunk_sym(orbsIx, rcvOrbs, rcvOrbsIx, N, iter);
-        for (int i = 0; i<OrbVecChunk_i.size(); i++){
-            Orbital &phi_i = OrbVecChunk_i.getOrbital(i);
+        orbVecChunk_i.getOrbVecChunk_sym(orbsIx, rcvOrbs, rcvOrbsIx, N, iter);
+        for (int i = 0; i<orbVecChunk_i.size(); i++){
+            Orbital &phi_i = orbVecChunk_i.getOrbital(i);
             int spin_i = phi_i.getSpin();
             for (int j = 0; j < rcvOrbs.size(); j++) {
                 Orbital &phi_j = rcvOrbs.getOrbital(j);
@@ -378,7 +383,8 @@ RR::RR(double prec, OrbitalVector &phi) {
         }
         rcvOrbs.clearVec(false);
     }
-    OrbVecChunk_i.clearVec(false);
+    orbVecChunk_i.clearVec(false);
+    workOrbVec.clear();
     //combine results from all processes
     MPI_Allreduce(MPI_IN_PLACE, &r_i_orig(0,0), N*3*N,
                   MPI_DOUBLE, MPI_SUM, mpiCommOrb);
