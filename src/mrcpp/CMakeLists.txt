@@ -28,7 +28,6 @@ target_link_libraries(mrcpp
     mwtrees
     mwoperators
     mwbuilders
-    rt
 )
 
 install(TARGETS mrcpp
