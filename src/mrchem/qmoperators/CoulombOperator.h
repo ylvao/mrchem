@@ -9,7 +9,8 @@ public:
         : poisson(&P),
           orbitals(&phi),
 #ifdef HAVE_MPI
-          density(false, true){//Use shared memory. 
+	density(false, true){//Use shared memory.
+	//          density(false, false){//do not Use shared memory.
 #else
           density(false) {
 #endif
