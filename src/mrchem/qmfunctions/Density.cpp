@@ -17,7 +17,7 @@ Density::Density(bool spin, bool shared)
       dens_a(0),
       dens_b(0) {
     if(shared and mpiShSize>1){
-	this->shMem = new SharedMemory(500);//initiate up to 500MB shared memory
+	this->shMem = new SharedMemory(2000);//initiate up to 2000MB shared memory
     }else{
 	this->setIsShared(false);//at least 2 processes for sharing
     }
@@ -163,7 +163,7 @@ void Density::send_Density(int dest, int tag){
     if(this->dens_b){
 	Densinfo.NchunksBeta = this->beta().getSerialFunctionTree()->nodeChunks.size();//should reduce to actual number of chunks
     }else{Densinfo.NchunksBeta = 0;}
- 
+
 
     int count=sizeof(Metadata);
     MPI_Send(&Densinfo, count, MPI_BYTE, dest, tag, comm);
@@ -206,7 +206,7 @@ void Density::Rcv_Density(int source, int tag){
     if(Densinfo.NchunksBeta>0){
 	if (not this->hasBeta()) this->allocBeta();
 	Rcv_SerialTree(this->dens_b, Densinfo.NchunksBeta, source, tag+30000, comm);}
-  
+
 #endif
 }
 

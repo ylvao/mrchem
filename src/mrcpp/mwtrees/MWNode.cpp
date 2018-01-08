@@ -540,7 +540,7 @@ void MWNode<D>::deleteChildren() {
 
 template<int D>
 void MWNode<D>::deleteGenerated() {
-    if (this->isBranchNode()) {      
+    if (this->isBranchNode()) {
         if (this->isEndNode()) {
             this->deleteChildren();
         } else {
@@ -802,14 +802,17 @@ MWNode<D> *MWNode<D>::retrieveNode(const double *r, int depth) {
         return this;
     }
     assert(hasCoord(r));
-    // If we have reached an endNode, lock if necessary, and start generating
-    // NB! retrieveNode() for GenNodes behave a bit differently.
-    SET_NODE_LOCK();
+    //we add this "if" for performance only. Avoids having to set/unset locks and queue unnecessarily
     if (this->isLeafNode()) {
-        genChildren();
-        giveChildrenCoefs();
-   }
-    UNSET_NODE_LOCK();
+	// If we have reached an endNode, lock if necessary, and start generating
+	// NB! retrieveNode() for GenNodes behave a bit differently.
+	SET_NODE_LOCK();
+	if (this->isLeafNode()) {
+	    genChildren();
+	    giveChildrenCoefs();
+	}
+	UNSET_NODE_LOCK();
+    }
     int cIdx = getChildIndex(r);
     assert(this->children[cIdx] != 0);
     return this->children[cIdx]->retrieveNode(r, depth);
