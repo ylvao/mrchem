@@ -15,17 +15,6 @@
 #include "HilbertPath.h"
 #include "SerialTree.h"
 
-#ifdef HAVE_OPENMP
-#define SET_NODE_LOCK() omp_set_lock(&this->node_lock)
-#define UNSET_NODE_LOCK() omp_unset_lock(&this->node_lock)
-#define TEST_NODE_LOCK() omp_test_lock(&this->node_lock)
-
-#else
-#define SET_NODE_LOCK()
-#define UNSET_NODE_LOCK()
-#define TEST_NODE_LOCK() false
-#endif
-
 template<int D> class SerialFunctionTree;
 
 template<int D>
@@ -146,9 +135,10 @@ protected:
     double squareNorm;
     double componentNorms[1<<D]; ///< 2^D components
 
-    int n_coefs;
     double *coefs;
+    int n_coefs;
 
+    int lockX;          //Manual lock tag (avoiding omp set/unset)
     int serialIx;       //index in serial Tree
     int parentSerialIx; //index of parent in serial Tree, or -1 for roots
     int childSerialIx;  //index of first child in serial Tree, or -1 for leafnodes/endnodes
@@ -197,9 +187,6 @@ protected:
     static const unsigned char FlagEndNode    = B8(00010000);
     static const unsigned char FlagRootNode   = B8(00100000);
     static const unsigned char FlagLooseNode  = B8(01000000);
-#ifdef HAVE_OPENMP
-    omp_lock_t node_lock;
-#endif
 
 private:
     unsigned char status;
