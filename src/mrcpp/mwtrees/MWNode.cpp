@@ -793,6 +793,7 @@ MWNode<D> *MWNode<D>::retrieveNode(const double *r, int depth) {
         return this;
     }
     assert(hasCoord(r));
+
     // If we have reached an endNode, lock if necessary, and start generating
     // NB! retrieveNode() for GenNodes behave a bit differently.
 
