@@ -8,12 +8,12 @@ int NOtrees=0;
 
 /** SerialTree class constructor.
   * Allocate the root FunctionNodes and fill in the empty slots of rootBox.
-  * Initializes rootNodes to represent the zero function and allocate their nodes. 
+  * Initializes rootNodes to represent the zero function and allocate their nodes.
   * NOTES:
   * Serial trees are made of projected nodes, and include gennodes and loose nodes separately.
-  * All created (using class creator) Projected nodes or GenNodes are loose nodes. 
-  * Loose nodes have their coeff in serial Tree, but not the node part. 
-  * Projected nodes and GenNodes that are created by their creator, are detroyed by destructor ~ProjectedNode and ~GenNode. 
+  * All created (using class creator) Projected nodes or GenNodes are loose nodes.
+  * Loose nodes have their coeff in serial Tree, but not the node part.
+  * Projected nodes and GenNodes that are created by their creator, are detroyed by destructor ~ProjectedNode and ~GenNode.
   * Serial tree nodes are not using the destructors, but explicitely call to deallocNodes or deallocGenNodes
   * Gen nodes and loose nodes are not counted with MWTree->[in/de]crementNodeCount()
 */
@@ -29,7 +29,7 @@ SerialOperatorTree::SerialOperatorTree(OperatorTree *tree)
 
     this->maxNodesPerChunk = 64;
     int sizePerChunk = this->maxNodesPerChunk*this->sizeNodeCoeff;
-   
+
     if(mpiOrbRank==0 and NOtrees%100==1)println(10, "nodes per chunk = " << this->maxNodesPerChunk<<" sizePerChunk "<<sizePerChunk<<" N Op trees: "<<NOtrees);
 
     this->lastNode = (OperatorNode*) this->sNodes;//position of last allocated node
@@ -84,6 +84,7 @@ void SerialOperatorTree::allocRoots(MWTree<2> &tree) {
         root_p->n_coefs = this->sizeNodeCoeff;
         root_p->coefs = coefs_p;
 
+	root_p->lockX = 0;
         root_p->serialIx = sIx;
         root_p->parentSerialIx = -1;//to indicate rootnode
         root_p->childSerialIx = -1;
@@ -98,10 +99,6 @@ void SerialOperatorTree::allocRoots(MWTree<2> &tree) {
         root_p->setIsRootNode();
 
         tree.incrementNodeCount(root_p->getScale());
-
-#ifdef HAVE_OPENMP
-        omp_init_lock(&(root_p->node_lock));
-#endif
 
         sIx++;
         root_p++;
@@ -136,6 +133,7 @@ void SerialOperatorTree::allocChildren(MWNode<2> &parent) {
         child_p->n_coefs = this->sizeNodeCoeff;
         child_p->coefs = coefs_p;
 
+	child_p->lockX = 0;
         child_p->serialIx = sIx;
         child_p->parentSerialIx = parent.serialIx;
         child_p->childSerialIx = -1;
@@ -149,10 +147,6 @@ void SerialOperatorTree::allocChildren(MWNode<2> &parent) {
         child_p->setIsEndNode();
 
         child_p->tree->incrementNodeCount(child_p->getScale());
-
-#ifdef HAVE_OPENMP
-        omp_init_lock(&child_p->node_lock);
-#endif
 
         sIx++;
         child_p++;
@@ -189,7 +183,7 @@ OperatorNode* SerialOperatorTree::allocNodes(int nAlloc, int *serialIx, double *
 	    int newsize = oldsize + this->maxNodesPerChunk;
 	    for (int i = oldsize; i < newsize; i++) this->nodeStackStatus.push_back(0);
 	    this->maxNodes = newsize;
-	    
+
         }
         this->lastNode = this->nodeChunks[chunk] + this->nNodes%(this->maxNodesPerChunk);
         *serialIx = this->nNodes;
@@ -202,7 +196,7 @@ OperatorNode* SerialOperatorTree::allocNodes(int nAlloc, int *serialIx, double *
 
     int chunk = this->nNodes/this->maxNodesPerChunk;//find the right chunk
     *coefs_p = this->nodeCoeffChunks[chunk] + chunkIx*this->sizeNodeCoeff;
- 
+
     for (int i = 0; i < nAlloc; i++) {
         if (this->nodeStackStatus[*serialIx+i] != 0)
 	    println(0, *serialIx+i<<" NodeStackStatus: not available " << this->nodeStackStatus[*serialIx+i]);

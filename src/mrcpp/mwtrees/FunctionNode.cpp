@@ -17,12 +17,137 @@ using namespace Eigen;
 template<int D>
 double FunctionNode<D>::evalf(const double *r) {
     if (not this->hasCoefs()) MSG_ERROR("Evaluating node without coefs");
-    SET_NODE_LOCK();
-    if (this->isLeafNode()) {
-        this->genChildren();
-        this->giveChildrenCoefs();
+
+    //we make many copies of the genChildren calls
+    //the chance that 2 different nodes are treated in the same copy is small and therefore
+    //the different critical sections will not interfer too much
+    if (this->isLeafNode() or this->lockX!=0) {
+      this->lockX=1;
+
+      int Ncritical=16;
+      switch (this->serialIx%Ncritical) {
+      case 0:
+#pragma omp critical(g0)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 1:
+#pragma omp critical(g1)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 2:
+#pragma omp critical(g2)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 3:
+#pragma omp critical(g3)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 4:
+#pragma omp critical(g4)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 5:
+#pragma omp critical(g5)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 6:
+#pragma omp critical(g6)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 7:
+#pragma omp critical(g7)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 8:
+#pragma omp critical(g8)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 9:
+#pragma omp critical(g9)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 10:
+#pragma omp critical(g10)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 11:
+#pragma omp critical(g11)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 12:
+#pragma omp critical(g12)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 13:
+#pragma omp critical(g13)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 14:
+#pragma omp critical(g14)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      case 15:
+#pragma omp critical(g15)
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+        break;
+      default:
+#pragma omp critical
+        if(this->isLeafNode()){
+          this->genChildren();
+          this->giveChildrenCoefs();
+        }
+      }
+      this->lockX=0;
     }
-    UNSET_NODE_LOCK();
+
     int cIdx = this->getChildIndex(r);
     assert(this->children[cIdx] != 0);
     return getFuncChild(cIdx).evalScaling(r);
