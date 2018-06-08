@@ -7,8 +7,9 @@
 #include "MRCPP/Timer"
 #include "Getkw.h"
 
-#include "core_guess.h"
-#include "gto_guess.h"
+#include "initial_guess/core.h"
+#include "initial_guess/gto.h"
+#include "initial_guess/sad.h"
 
 #include "SCFDriver.h"
 #include "Molecule.h"
@@ -122,7 +123,8 @@ SCFDriver::SCFDriver(Getkw &input) {
     file_start_orbitals = input.get<string>("Files.start_orbitals");
     file_final_orbitals = input.get<string>("Files.final_orbitals");
     file_basis_set = input.get<string>("Files.basis_set");
-    file_dens_mat = input.get<string>("Files.dens_mat");
+    file_dens_mat_a = input.get<string>("Files.dens_mat_a");
+    file_dens_mat_b = input.get<string>("Files.dens_mat_b");
     file_fock_mat = input.get<string>("Files.fock_mat");
     file_energy_vec = input.get<string>("Files.energy_vec");
     file_mo_mat_a = input.get<string>("Files.mo_mat_a");
@@ -452,26 +454,19 @@ void SCFDriver::clear_np1() {
 }
 
 void SCFDriver::setupInitialGroundState() {
-    // Reading initial guess
-    if (scf_start == "MW" or scf_start == "mw") {
-        *phi = orbital::load_orbitals(file_start_orbitals);
-    } else if (scf_start == "GTO" or scf_start == "gto") {
-        if (wf_restricted) {
-            *phi = gto_guess::initial_guess(rel_prec, *molecule, file_basis_set, file_mo_mat_a);
-        } else {
-            *phi = gto_guess::initial_guess(rel_prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
-        }
-    } else {
-        // Setting up hydrogen initial guess
-        int ig_zeta = 0;
-             if (scf_start == "SZ") { ig_zeta = 1; }
-        else if (scf_start == "DZ") { ig_zeta = 2; }
-        else if (scf_start == "TZ") { ig_zeta = 3; }
-        else if (scf_start == "QZ") { ig_zeta = 4; }
-        else { MSG_FATAL("Invalid initial guess"); }
-
-        *phi = core_guess::initial_guess(rel_prec, *molecule, wf_restricted, ig_zeta);
-    }
+    if (scf_start == "GTO")
+        if (wf_restricted)          *phi = initial_guess::gto::setup(rel_prec, *molecule, file_basis_set, file_mo_mat_a);
+        else                        *phi = initial_guess::gto::setup(rel_prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
+    else if (scf_start == "CORE_SZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "CORE_DZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "CORE_TZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "CORE_QZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "SAD_SZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "SAD_DZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 2);
+    else if (scf_start == "SAD_TZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 3);
+    else if (scf_start == "SAD_QZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 4);
+    else if (scf_start == "MW")     *phi = orbital::load_orbitals(file_start_orbitals);
+    else MSG_FATAL("Invalid initial guess");
     orbital::print(*phi);
 }
 

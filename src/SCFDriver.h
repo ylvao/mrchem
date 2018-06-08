@@ -172,7 +172,8 @@ protected:
     std::string file_start_orbitals;
     std::string file_final_orbitals;
     std::string file_basis_set;
-    std::string file_dens_mat;
+    std::string file_dens_mat_a;
+    std::string file_dens_mat_b;
     std::string file_fock_mat;
     std::string file_energy_vec;
     std::string file_mo_mat_a;
