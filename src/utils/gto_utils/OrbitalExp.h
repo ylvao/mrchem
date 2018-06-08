@@ -19,7 +19,9 @@ public:
     int size() const { return this->orbitals.size(); }
     int getAngularMomentum(int n) const;
 
-    mrcpp::GaussExp<3> &operator[](int n) { return *this->orbitals[n]; }
+    mrcpp::GaussExp<3> getAO(int i) const { return *this->orbitals[i]; }
+    mrcpp::GaussExp<3> getMO(int i, const DoubleMatrix &M) const;
+    mrcpp::GaussExp<3> getDens(const DoubleMatrix &D) const;
 
     void rotate(const DoubleMatrix &U);
 
