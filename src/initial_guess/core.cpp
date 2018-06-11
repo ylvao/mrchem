@@ -174,7 +174,7 @@ OrbitalVector initial_guess::core::project_ao(double prec,
                                               const Nuclei &nucs,
                                               int spin,
                                               int zeta) {
-    Printer::printHeader(0, "Setting up occupied orbitals");
+    Printer::printHeader(0, "Projecting Hydrogen AOs");
     println(0, "    N    Atom   Label                     SquareNorm");
     Printer::printSeparator(0, '-');
 
