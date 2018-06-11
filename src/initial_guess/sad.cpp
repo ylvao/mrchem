@@ -170,6 +170,8 @@ void initial_guess::sad::project_atomic_densities(double prec,
     println(0, " Nr  Element                                 Rho_i");
     Printer::printSeparator(0, '-');
 
+    std::string sad_path = SAD_BASIS_DIR;
+
     int oldprec = Printer::setPrecision(15);
     const Nuclei &nucs = mol.getNuclei();
     for (int k = 0; k < nucs.size(); k++) {
@@ -177,8 +179,8 @@ void initial_guess::sad::project_atomic_densities(double prec,
 
         std::stringstream bas;
         std::stringstream dens;
-        bas << "initial_guess/" << sym << ".bas";
-        dens << "initial_guess/" << sym << ".dens";
+        bas << sad_path << sym << ".bas";
+        dens << sad_path << sym << ".dens";
 
         Density *rho = initial_guess::gto::project_density(prec, nucs[k], bas.str(), dens.str());
         printout(0, std::setw(3) << k);

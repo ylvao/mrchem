@@ -28,10 +28,10 @@ modules:
     - 'custom/catch.cmake'
 - custom:
   - source:
+    - 'custom/sad_basis.cmake'
     - 'custom/python.cmake'
     - 'custom/git.cmake'
     - 'custom/main.cmake'
-    - 'custom/sad_basis.cmake'
     - 'custom/feature_summary.cmake'
 - tests:
   - source:
