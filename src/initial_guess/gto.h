@@ -8,9 +8,9 @@
  *
  * @brief Module for generating initial guess of GTO molecular orbitals
  *
- * The initial_guess::gto namespace provides a single function in the public interface,
- * used to set up an initial guess of GTO molecular orbitals. The initial guess
- * requires external input to provide basis set information and MO coefficients.
+ * The initial_guess::gto namespace provides functionality to setup an
+ * initial guess of GTO molecular orbitals. The initial guess requires
+ * external input to provide basis set information and MO coefficients.
  */
 
 namespace mrchem {

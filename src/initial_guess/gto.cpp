@@ -44,11 +44,10 @@ OrbitalVector initial_guess::gto::setup(double prec,
     int Ne = mol.getNElectrons();       //total electrons
     int Nd = Ne - (mult - 1);           //doubly occupied electrons
     if (Nd%2 != 0) MSG_FATAL("Invalid multiplicity");
+    int Np = Nd/2;                      //paired orbitals
 
     // Project GTO expansion
-    OrbitalVector Phi = initial_guess::gto::project_mo(prec, bas_file, mo_file, SPIN::Paired, Nd/2);
-
-    return Phi;
+    return initial_guess::gto::project_mo(prec, bas_file, mo_file, SPIN::Paired, Np);
 }
 
 /** @brief Produce an initial guess of orbitals
@@ -73,25 +72,17 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const std::string &bas_file,
                                         const std::string &moa_file,
                                         const std::string &mob_file) {
-    Printer::printHeader(0, "Setting up occupied orbitals (open-shell)");
-    println(0, "    n  Spin  Occ                           SquareNorm");
-    Printer::printSeparator(0, '-');
-    Timer timer;
-
     // Figure out number of occupied orbitals
     int mult = mol.getMultiplicity();   //multiplicity
     int Ne = mol.getNElectrons();       //total electrons
     int Nd = Ne - (mult - 1);           //paired electrons
     if (Nd%2 != 0) MSG_FATAL("Invalid multiplicity");
-    int Na = Nd/2 + (mult - 1);         //alpha electrons
-    int Nb = Nd/2;                      //beta electrons
+    int Na = Nd/2 + (mult - 1);         //alpha orbitals
+    int Nb = Nd/2;                      //beta orbitals
 
     // Project orbitals
     OrbitalVector Phi_a = initial_guess::gto::project_mo(prec, bas_file, moa_file, SPIN::Alpha, Na);
     OrbitalVector Phi_b = initial_guess::gto::project_mo(prec, bas_file, mob_file, SPIN::Beta, Nb);
-
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
 
     // Collect orbitals into one vector
     return orbital::adjoin(Phi_a, Phi_b);

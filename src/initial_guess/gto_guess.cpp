@@ -51,8 +51,7 @@ int main(int argc, char **argv) {
     std::string moa_file = Input.get<string>("Files.mo_mat_a");
     std::string mob_file = Input.get<string>("Files.mo_mat_b");
 
-    if (not (scf_guess == "GTO" or scf_guess == "gto" or scf_guess == "none"))
-        MSG_FATAL("Invalid initial guess");
+    if (scf_guess != "GTO") MSG_FATAL("Invalid initial guess");
 
     // Setting up molecule
     Molecule mol(mol_coords, mol_charge, mol_multiplicity);
