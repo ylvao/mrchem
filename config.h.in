@@ -4,6 +4,8 @@
 
 #define BLAS_H "@BLAS_H@"
 
+#define SAD_BASIS_DIR "@SAD_BASIS_DIR@"
+
 #cmakedefine HAVE_MPI
 
 #cmakedefine HAVE_OPENMP

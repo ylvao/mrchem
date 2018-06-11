@@ -30,8 +30,8 @@ modules:
   - source:
     - 'custom/python.cmake'
     - 'custom/git.cmake'
-    - 'custom/initial_guess.cmake'
     - 'custom/main.cmake'
+    - 'custom/sad_basis.cmake'
     - 'custom/feature_summary.cmake'
 - tests:
   - source:
