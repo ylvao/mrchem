@@ -43,9 +43,6 @@ int PT[29][2] = {
    {9,0},{6,4},{7,3},{8,2},{9,1}
 };
 
-// Forward declare helper functions
-void populate(OrbitalVector &Phi, int N, int spin);
-
 } //namespace core
 } //namespace initial_guess
 
@@ -70,64 +67,86 @@ OrbitalVector initial_guess::core::setup(double prec,
     int Ne = mol.getNElectrons();       //total electrons
     int Nd = Ne - (mult - 1);           //doubly occupied
     if (Nd%2 != 0) MSG_FATAL("Invalid multiplicity");
-    if (not restricted) NOT_IMPLEMENTED_ABORT;
+
+    // Make Fock operator contributions
+    mrcpp::ABGVOperator<3> D(*MRA, 0.5, 0.5);
+    KineticOperator T(D);
+    NuclearOperator V(mol.getNuclei(), prec);
 
     // Project AO basis of hydrogen functions
     OrbitalVector Phi = initial_guess::core::project_ao(prec, mol.getNuclei(), SPIN::Paired, zeta);
-
-    // Compute orthonormalization matrix S^(-1/2)
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
 
-    // Compute core Hamiltonian matrix
-    mrcpp::ABGVOperator<3> D(*MRA, 0.5, 0.5);
-    KineticOperator T(D);
-    NuclearOperator V_nuc(mol.getNuclei(), prec);
+    // Compute Hamiltonian matrix
+    Timer t_diag;
+    Printer::printHeader(0, "Diagonalize Core-Hamiltonian matrix");
+    Timer t1;
     T.setup(prec);
-    V_nuc.setup(prec);
+    V.setup(prec);
     ComplexMatrix t = T(Phi, Phi);
-    ComplexMatrix v = V_nuc(Phi, Phi);
-    V_nuc.clear();
-    T.clear();
-
+    ComplexMatrix v = V(Phi, Phi);
     ComplexMatrix F = S_m12.transpose()*(t + v)*S_m12;
+    V.clear();
+    T.clear();
+    t1.stop();
+    Printer::printDouble(0, "Compute Fock matrix", t1.getWallTime(), 5);
 
     // Diagonalize Hamiltonian matrix
+    Timer t2;
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F.cols());
     es.compute(F);
     ComplexMatrix ei_vec = es.eigenvectors();
     ComplexMatrix U = ei_vec.transpose() * S_m12;
+    t2.stop();
+    Printer::printDouble(0, "Diagonalize Fock matrix", t2.getWallTime(), 5);
 
     // Rotate orbitals and fill electrons by Aufbau
+    Timer t3;
     OrbitalVector Psi;
-    for (int i = 0; i < Nd/2; i++) {
-        ComplexVector v_i = U.row(i);
-        Orbital psi_i = orbital::multiply(v_i, Phi, prec);
-        Psi.push_back(psi_i);
-    }
-    orbital::free(Phi);
-
     if (restricted) {
         if (mult != 1) MSG_FATAL("Restricted open-shell not available");
 
-        //set spin and occupation number
-        initial_guess::core::populate(Psi, Nd, SPIN::Paired);
+        int Np = Nd/2;                  //paired orbitals
+        for (int i = 0; i < Np; i++) {
+            ComplexVector v_i = U.row(i);
+            Orbital psi_i = orbital::multiply(v_i, Phi, prec);
+            psi_i.setOcc(2);
+            psi_i.setSpin(SPIN::Paired);
+            Psi.push_back(psi_i);
+        }
     } else {
-        NOT_IMPLEMENTED_ABORT;
-        /*
-        OrbitalVector Phi_a = Phi;
-        OrbitalVector Phi_b = orbital::deep_copy(Phi);
+        int Na = Nd/2 + (mult - 1);     //alpha orbitals
+        int Nb = Nd/2;                  //beta orbitals
 
-        int Na = Nd/2 + (mult - 1);     //alpha electrons
-        int Nb = Nd/2;                  //beta electrons
+        OrbitalVector Psi_a;
+        for (int i = 0; i < Na; i++) {
+            ComplexVector v_i = U.row(i);
+            Orbital psi_i = orbital::multiply(v_i, Phi, prec);
+            psi_i.setOcc(1);
+            psi_i.setSpin(SPIN::Alpha);
+            Psi_a.push_back(psi_i);
+        }
 
-        //set spin and occupation number
-        initial_guess::core::populate(Phi_a, Na, SPIN::Alpha);
-        initial_guess::core::populate(Phi_b, Nb, SPIN::Beta);
+        OrbitalVector Psi_b;
+        for (int i = 0; i < Nb; i++) {
+            ComplexVector v_i = U.row(i);
+            Orbital psi_i = orbital::multiply(v_i, Phi, prec);
+            psi_i.setOcc(1);
+            psi_i.setSpin(SPIN::Beta);
+            Psi_b.push_back(psi_i);
+        }
 
-        Phi.clear();
-        Phi = orbital::adjoin(Phi_a, Phi_b);
-        */
+        Psi = orbital::adjoin(Psi_a, Psi_b);
     }
+    orbital::free(Phi);
+    t3.stop();
+    Printer::printDouble(0, "Rotate orbitals", t3.getWallTime(), 5);
+
+    t_diag.stop();
+    Printer::printFooter(0, t_diag, 1);
+
+    math_utils::print_matrix(0, es.eigenvalues(), "Eigenvalues", 10);
+
     return Psi;
 }
 
@@ -203,32 +222,6 @@ OrbitalVector initial_guess::core::project_ao(double prec,
     timer.stop();
     Printer::printFooter(0, timer, 2);
     return Phi;
-}
-
-/** @brief Populate orbital vector with electrons
- *
- * @param Phi: orbital vector to populate
- * @param N: number of orbitals to populate
- * @param spin: spin of populated orbitals
- *
- * This populates the N first orbtials in the vector with electrons of
- * the given spin. Occupancy is deduced from the spin parameter. Trailing
- * orbitals in the vector will remain unoccupied.
- *
- */
-void initial_guess::core::populate(OrbitalVector &Phi, int N, int spin) {
-    int occ = 0;
-    if (spin == SPIN::Paired) occ = 2;
-    if (spin == SPIN::Alpha) occ = 1;
-    if (spin == SPIN::Beta) occ = 1;
-    for (int i = 0; i < Phi.size(); i++) {
-        Phi[i].setSpin(spin);
-        if (i < N) {
-            Phi[i].setOcc(occ);
-        } else {
-            Phi[i].setOcc(0);
-        }
-    }
 }
 
 } //namespace mrchem

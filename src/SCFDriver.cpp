@@ -454,17 +454,18 @@ void SCFDriver::clear_np1() {
 }
 
 void SCFDriver::setupInitialGroundState() {
+    double prec = scf_orbital_prec[0];
     if (scf_start == "GTO")
-        if (wf_restricted)          *phi = initial_guess::gto::setup(rel_prec, *molecule, file_basis_set, file_mo_mat_a);
-        else                        *phi = initial_guess::gto::setup(rel_prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
-    else if (scf_start == "CORE_SZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "CORE_DZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "CORE_TZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "CORE_QZ")*phi = initial_guess::core::setup(rel_prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "SAD_SZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "SAD_DZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 2);
-    else if (scf_start == "SAD_TZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 3);
-    else if (scf_start == "SAD_QZ") *phi = initial_guess::sad::setup(rel_prec, *molecule, wf_restricted, 4);
+        if (wf_restricted)          *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a);
+        else                        *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
+    else if (scf_start == "CORE_SZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "CORE_DZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 2);
+    else if (scf_start == "CORE_TZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 3);
+    else if (scf_start == "CORE_QZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 4);
+    else if (scf_start == "SAD_SZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "SAD_DZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 2);
+    else if (scf_start == "SAD_TZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 3);
+    else if (scf_start == "SAD_QZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 4);
     else if (scf_start == "MW")     *phi = orbital::load_orbitals(file_start_orbitals);
     else MSG_FATAL("Invalid initial guess");
     orbital::print(*phi);

@@ -6,9 +6,8 @@
  *
  * @brief Module for generating initial guess of hydrogen functions
  *
- * The initial_guess::core namespace provides a single function in the public
- * interface, used to set up an initial guess of hydrogen eigenfunctions.
- * The initial guess requires no external input, but is not very accurate.
+ * The initial_guess::core namespace provides functionality to setup an
+ * initial guess of hydrogen eigenfunctions.
  */
 
 namespace mrchem {
