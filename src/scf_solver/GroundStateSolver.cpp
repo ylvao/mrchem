@@ -176,6 +176,8 @@ void GroundStateSolver::printProperty() const {
     if (iter > 1) scf_0 = this->energy[iter - 2];
     if (iter > 0) scf_1 = this->energy[iter - 1];
 
+    double phi_0 = scf_0.getOrbitalEnergy();
+    double phi_1 = scf_1.getOrbitalEnergy();
     double T_0 = scf_0.getKineticEnergy();
     double T_1 = scf_1.getKineticEnergy();
     double V_0 = scf_0.getElectronNuclearEnergy();
@@ -192,11 +194,12 @@ void GroundStateSolver::printProperty() const {
     double N_1 = scf_1.getNuclearEnergy();
 
     Printer::printHeader(0, "                    Energy                 Update      Done ");
-    printUpdate(" Kinetic    ",  T_1,  T_1 -  T_0);
-    printUpdate(" N-E        ",  V_1,  V_1 -  V_0);
-    printUpdate(" Coulomb    ",  J_1,  J_1 -  J_0);
-    printUpdate(" Exchange   ",  K_1,  K_1 -  K_0);
-    printUpdate(" X-C        ", XC_1, XC_1 - XC_0);
+    printUpdate(" Orbital    ", phi_1, phi_1 - phi_0);
+    printUpdate(" Kinetic    ",   T_1,   T_1 -   T_0);
+    printUpdate(" N-E        ",   V_1,   V_1 -   V_0);
+    printUpdate(" Coulomb    ",   J_1,   J_1 -   J_0);
+    printUpdate(" Exchange   ",   K_1,   K_1 -   K_0);
+    printUpdate(" X-C        ",  XC_1,  XC_1 -  XC_0);
     Printer::printSeparator(0, '-');
     printUpdate(" Electronic ",  E_1,  E_1 -  E_0);
     printUpdate(" Nuclear    ",  N_1,  N_1 -  N_0);
