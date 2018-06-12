@@ -44,7 +44,7 @@ Properties {
 SCF {
   orbital_thrs = 1.0e-3           # Convergence threshold orbitals
   property_thrs = 1.0e-5          # Convergence threshold energy
-  initial_guess = gto             # Type of initial guess: none, mw, gto
+  initial_guess = SAD_DZ          # Type of initial guess: none, mw, gto
   kain = 3                        # Length of KAIN iterative history
   canonical = false               # Use canonical or localized orbitals
 }

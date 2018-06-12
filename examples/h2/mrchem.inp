@@ -30,7 +30,7 @@ Properties {
 SCF {
   orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
   property_thrs = 1.0e-6          # Convergence threshold in total energy
-  initial_guess = gto             # Type of initial guess: none, mw, gto
+  initial_guess = GTO             # Type of initial guess: none, mw, gto
   kain = 3                        # Length of KAIN iterative history
 }
 
