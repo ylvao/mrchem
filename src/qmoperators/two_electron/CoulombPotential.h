@@ -29,11 +29,12 @@ public:
     friend class CoulombOperator;
 
 protected:
-    Density *density;                 ///< Electron density defining the potential
+    Density density;                  ///< Electron density defining the potential
     OrbitalVector *orbitals;          ///< Orbitals defining the electron density
     mrcpp::PoissonOperator *poisson;  ///< Operator used to compute the potential
 
-    Density &getDensity();
+    Density &getDensity() { return this->density; }
+    bool hasDensity() const { return (this->density.getSquareNorm() < 0.0) ? false : true; }
 
     void setup(double prec);
     void clear();

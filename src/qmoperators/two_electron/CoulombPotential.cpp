@@ -24,14 +24,9 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  */
 CoulombPotential::CoulombPotential(PoissonOperator *P, OrbitalVector *Phi)
         : QMPotential(1),
-          density(nullptr),
+          density(*MRA),
           orbitals(Phi),
           poisson(P) {
-}
-
-FunctionTree<3>& CoulombPotential::getDensity() {
-    if (this->density == nullptr) this->density = new Density(*MRA);
-    return *this->density;
 }
 
 /** @brief prepare operator for application
@@ -57,8 +52,7 @@ void CoulombPotential::setup(double prec) {
 void CoulombPotential::clear() {
     QMFunction::free(); // delete FunctionTree pointers
     clearApplyPrec();   // apply_prec = -1
-    if (this->density != nullptr) delete this->density;
-    this->density = nullptr;
+    mrcpp::clear_grid(this->density); // clear MW coefs but keep the grid
 }
 
 /** @brief compute electron density
@@ -68,12 +62,11 @@ void CoulombPotential::clear() {
  * This will compute the electron density as the sum of squares of the orbitals.
  */
 void CoulombPotential::setupDensity(double prec) {
-    if (this->density != nullptr) return;
+    if (hasDensity()) return;
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
-    this->density = new Density(*MRA);
 
     OrbitalVector &Phi = *this->orbitals;
-    Density &rho = *this->density;
+    Density &rho = this->density;
 
     Timer timer;
     density::compute(prec, rho, Phi, DENSITY::Total);
@@ -91,14 +84,16 @@ void CoulombPotential::setupDensity(double prec) {
  * to the precomputed electron density.
  */
 void CoulombPotential::setupPotential(double prec) {
-    if (this->density == nullptr) MSG_ERROR("Coulomb density not initialized");
     if (this->poisson == nullptr) MSG_ERROR("Poisson operator not initialized");
     if (hasReal()) MSG_ERROR("Potential not properly cleared");
     if (hasImag()) MSG_ERROR("Potential not properly cleared");
 
     PoissonOperator &P = *this->poisson;
     QMPotential &V = *this;
-    Density &rho = *this->density;
+    Density &rho = this->density;
+
+    int nPoints = rho.getTDim()*rho.getKp1_d();
+    int inpNodes = rho.getNNodes();
 
     Timer timer;
     V.alloc(NUMBER::Real);
@@ -107,6 +102,16 @@ void CoulombPotential::setupPotential(double prec) {
     int n = V.getNNodes();
     double t = timer.getWallTime();
     Printer::printTree(0, "Coulomb potential", n, t);
+
+    // Prepare density grid for next iteration
+    double abs_prec = prec/rho.integrate();
+    rho.crop(abs_prec, 1.0, false);
+    mrcpp::refine_grid(rho, abs_prec);
+
+    int newNodes = rho.getNNodes() - inpNodes;
+
+    println(0, " Coulomb grid size   " << std::setw(21) << inpNodes << std::setw(17) << nPoints*inpNodes);
+    println(0, " Coulomb grid change " << std::setw(21) << newNodes << std::setw(17) << nPoints*newNodes);
 }
 
 } //namespace mrchem
