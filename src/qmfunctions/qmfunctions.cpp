@@ -795,7 +795,7 @@ void print(const OrbitalVector &vec) {
     for (int i = 0; i < vec.size(); i++) {
         println(0, std::setw(4) << i << vec[i]);
     }
-    printout(0, "============================================================\n\n");
+    printout(0, "============================================================\n\n\n");
 }
 
 } //namespace orbital

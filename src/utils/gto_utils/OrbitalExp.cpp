@@ -28,32 +28,72 @@ OrbitalExp::~OrbitalExp() {
     }
 }
 
-void OrbitalExp::rotate(const Eigen::MatrixXd &U) {
+GaussExp<3> OrbitalExp::getMO(int i, const DoubleMatrix &M) const {
+    if (M.cols() != size()) MSG_ERROR("Size mismatch");
+    GaussExp<3> mo_i;
+    int n = 0;
+    for (int j = 0; j < size(); j++) {
+        GaussExp<3> ao_j = getAO(j);
+        //ao_i.normalize();
+        if (std::abs(M(i,j)) > mrcpp::MachineZero) {
+            ao_j *= M(i,j);
+            mo_i.append(ao_j);
+            n++;
+        }
+    }
+    if (n == 0) {
+        MSG_WARN("No contributing orbital");
+        GaussFunc<3> zeroFunc(0.0, 0.0);
+        GaussExp<3> zeroExp;
+        zeroExp.append(zeroFunc);
+        mo_i.append(zeroExp);
+    }
+    //mo_i->normalize();
+    return mo_i;
+}
+
+GaussExp<3> OrbitalExp::getDens(const DoubleMatrix &D) const {
+    if (D.rows() != size()) MSG_ERROR("Size mismatch");
+    if (D.cols() != size()) MSG_ERROR("Size mismatch");
+
+    GaussExp<3> d_exp;
+    for (int i = 0; i < size(); i++) {
+        for (int j = 0; j < size(); j++) {
+            GaussExp<3> ao_i = getAO(i);
+            GaussExp<3> ao_j = getAO(j);
+            GaussExp<3> d_ij = ao_i * ao_j;
+            d_ij *= D(i,j);
+            d_exp.append(d_ij);
+        }
+    }
+    return d_exp;
+}
+
+void OrbitalExp::rotate(const DoubleMatrix &U) {
     std::vector<GaussExp<3> *> tmp;
-    int nOrbs = this->orbitals.size();
-    for (int i = 0; i < nOrbs; i++) {
-        GaussExp<3> *mo = new GaussExp<3>;
+    for (int i = 0; i < size(); i++) {
+        GaussExp<3> *mo_i = new GaussExp<3>;
         int n = 0;
-        for (int j = 0; j < nOrbs; j++) {
-            GaussExp<3> tmpExp = *this->orbitals[j];
-            //tmpExp.normalize();
-            if (fabs(U(i,j)) > mrcpp::MachineZero) {
-                tmpExp *= U(i,j);
-                mo->append(tmpExp);
+        for (int j = 0; j < size(); j++) {
+            GaussExp<3> ao_j = getAO(j);
+            //ao_j.normalize();
+            if (std::abs(U(i,j)) > mrcpp::MachineZero) {
+                ao_j *= U(i,j);
+                mo_i->append(ao_j);
                 n++;
             }
         }
         if (n == 0) {
             MSG_WARN("No contributing orbital");
             GaussFunc<3> zeroFunc(0.0, 0.0);
-            GaussExp<3> zeroExp;
-            zeroExp.append(zeroFunc);
-            mo->append(zeroExp);
+            GaussExp<3> ao_j;
+            ao_j.append(zeroFunc);
+            mo_i->append(ao_j);
         }
-        //mo->normalize();
-        tmp.push_back(mo);
+        //mo_i->normalize();
+        tmp.push_back(mo_i);
     }
-    for (int i = 0; i < nOrbs; i++) {
+    for (int i = 0; i < size(); i++) {
         delete orbitals[i];
         orbitals[i] = tmp[i];
         tmp[i] = 0;

@@ -5,10 +5,10 @@
 #include "mrenv.h"
 #include "mrchem.h"
 #include "parallel.h"
+#include "initial_guess/sad.h"
 
 #include "Molecule.h"
 #include "Orbital.h"
-#include "initial_guess/core.h"
 
 Getkw mrchem::Input;
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
@@ -16,16 +16,12 @@ mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 using namespace mrcpp;
 using namespace mrchem;
 
-/** @file core_guess.cpp
+/** @file sad_guess.cpp
  *
- * Standalone executable (core-guess) for setting up an initial guess
- * from hydrogen orbitals and writing the resulting MW orbitals to disk.
+ * Standalone executable (sad-guess) for reading a GTO initial guess and
+ * writing the resulting MW orbitals to disk.
  *
- * Sets up an AO basis of hydrogen functions with the given zeta quality
- * (SZ, DZ, TZ, QZ), computes and diagonalizes the core Hamiltonian matrix,
- * and fills the resulting orbitals by the Aufbau principle.
- *
- * Requires the following input files:
+ * Requires the following input files (file names can be changed in input):
  * @mrchem.inp: regular input file, parsed through getkw (./mrchem -D)
  *
  * Produces the following output files (file names can be changed in input):
@@ -50,10 +46,10 @@ int main(int argc, char **argv) {
     std::string orb_file = Input.get<string>("Files.start_orbitals");
 
     int ig_zeta = 0;
-         if (scf_guess == "CORE_SZ") { ig_zeta = 1; }
-    else if (scf_guess == "CORE_DZ") { ig_zeta = 2; }
-    else if (scf_guess == "CORE_TZ") { ig_zeta = 3; }
-    else if (scf_guess == "CORE_QZ") { ig_zeta = 4; }
+         if (scf_guess == "SAD_SZ") { ig_zeta = 1; }
+    else if (scf_guess == "SAD_DZ") { ig_zeta = 2; }
+    else if (scf_guess == "SAD_TZ") { ig_zeta = 3; }
+    else if (scf_guess == "SAD_QZ") { ig_zeta = 4; }
     else { MSG_FATAL("Invalid initial guess"); }
 
     // Setting up molecule
@@ -61,7 +57,7 @@ int main(int argc, char **argv) {
     mol.printGeometry();
 
     // Setting up orbitals
-    OrbitalVector Phi = initial_guess::core::setup(prec, mol, wf_restricted, ig_zeta);
+    OrbitalVector Phi = initial_guess::sad::setup(prec, mol, wf_restricted, ig_zeta);
     orbital::save_orbitals(Phi, orb_file);
     orbital::free(Phi);
 
@@ -71,4 +67,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-

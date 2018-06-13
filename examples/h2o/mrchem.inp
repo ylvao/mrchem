@@ -36,7 +36,7 @@ Properties {
 
 SCF {
   orbital_thrs = 1.0e-2           # Convergence threshold in orbital residual
-  initial_guess = gto             # Type of initial guess: none, mw, gto
+  initial_guess = GTO             # Type of initial guess: none, mw, gto
   kain = 3                        # Length of KAIN iterative history
   rotation = 5                    # Diagonalize Fock matrix every n'th iteration
   canonical = false               # Use canonical of localized orbitals

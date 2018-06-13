@@ -27,5 +27,5 @@ Properties {
 SCF {
   kain = 3                        # Length of KAIN iterative history
   rotation = 5                    # Number of iterations between diag/loc
-  initial_guess = gto             # Type of initial guess (none, gto, mw)
+  initial_guess = GTO             # Type of initial guess (none, gto, mw)
 }

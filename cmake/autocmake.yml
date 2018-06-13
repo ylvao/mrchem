@@ -28,9 +28,9 @@ modules:
     - 'custom/catch.cmake'
 - custom:
   - source:
+    - 'custom/sad_basis.cmake'
     - 'custom/python.cmake'
     - 'custom/git.cmake'
-    - 'custom/initial_guess.cmake'
     - 'custom/main.cmake'
     - 'custom/feature_summary.cmake'
 - tests:
