@@ -84,10 +84,6 @@ void XCHessian::setupDensity() {
 }
 
 /** @brief Compute XC Hessian component(s)
- *
- * @param prec Precision used in refinement of density grid
- *
- * This will invoke a sequence of steps in the XCFunctional to compute the final
  * XC hessian(s) that define this operator. Assuming the density has alredy been
  * computed:
  *
