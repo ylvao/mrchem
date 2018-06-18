@@ -15,8 +15,11 @@ namespace mrchem {
 
 class CoulombOperator final : public RankZeroTensorOperator {
 public:
-    CoulombOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi = nullptr)
-            : potential(P, Phi) {
+ CoulombOperator(mrcpp::PoissonOperator *P,
+                 OrbitalVector *Phi = nullptr,
+                 OrbitalVector *Phi_1= nullptr,
+                 int order = 1)
+     : potential(P, Phi, Phi_1, order) {
         RankZeroTensorOperator &J = (*this);
         J = this->potential;
     }

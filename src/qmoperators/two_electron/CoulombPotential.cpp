@@ -25,16 +25,10 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  * the vector can change throughout the calculation. The density and (*this)
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
-CoulombPotential::CoulombPotential(PoissonOperator *P, OrbitalVector *Phi)
-        : QMPotential(1),
-          density(), //LUCA: check constructor
-          orbitals(Phi),
-          poisson(P) {
-    density.alloc(NUMBER::Real);
-}
-
-CoulombPotential::~CoulombPotential() {
-    this->density.free();
+CoulombPotential::CoulombPotential(PoissonOperator *P, OrbitalVector *Phi,
+                                   OrbitalVector *Phi_1, int order)
+        : QMPotential(1), density(*MRA), density_1(*MRA), orbitals(Phi),
+          orbitals_1(Phi), poisson(P) {
 }
 
 /** @brief prepare operator for application
@@ -44,12 +38,22 @@ CoulombPotential::~CoulombPotential() {
  * This will compute the Coulomb potential by application of the Poisson
  * operator to the density. If the density is not available it is computed
  * from the current orbitals (assuming that the orbitals are available).
+ * For first-order perturbations the first order density and the Hessian will be
+ * computed. In order to make the Hessian available to CoulombOperator, it is stored in the 
+ * potential function instead of the zeroth-order potential.
+ *
  */
 void CoulombPotential::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
     setupDensity(prec);
-    setupPotential(prec);
+    if(this->order =  1) {
+        setupPotential(prec);
+    }
+    else if (this->order = 2) {
+        setupDensity_1(prec);
+        setupHessian(prec);
+    }
 }
 
 /** @brief clear operator after application
@@ -65,7 +69,7 @@ void CoulombPotential::clear() {
 
 /** @brief compute electron density
  *
- * @param prec: apply precision
+ * @param[in] prec: apply precision
  *
  * This will compute the electron density as the sum of squares of the orbitals.
  */
@@ -75,6 +79,31 @@ void CoulombPotential::setupDensity(double prec) {
 
     OrbitalVector &Phi = *this->orbitals;
     Density &rho = this->density;
+
+    Timer timer;
+    density::compute(prec, rho, Phi, DENSITY::Total);
+    timer.stop();
+    double t = timer.getWallTime();
+    int n = rho.getNNodes();
+    Printer::printTree(0, "Coulomb density", n, t);
+}
+
+/** @brief compute first-order electron density
+ *
+ * @param[in] prec: apply precision
+ *
+ * This will compute the first-order perturbed electron density.
+ */
+void CoulombPotential::setupDensity(double prec) {
+    if (hasDensity_1()) return;
+    if (not hasDensity()) MSG_ERROR("Ground-state density not initialized");
+    if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (this->orbitals_1 == nullptr) MSG_ERROR("Perturbed orbitals not initialized");
+
+    OrbitalVector &Phi = *this->orbitals;
+    OrbitalVector &Phi_1 = *this->orbitals;
+    Density &rho = this->density;
+    Density &rho_1 = this->density_1;
 
     Timer timer;
     density::compute(prec, rho, Phi, DENSITY::Total);
