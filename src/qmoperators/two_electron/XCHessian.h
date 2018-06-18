@@ -3,7 +3,7 @@
 #include "QMPotential.h"
 #include "mrdft/XCFunctional.h"
 
-/** @class XCPotential
+/** @class XCHessian
  *
  * @brief Exchange-Correlation potential defined by a particular (spin) density
  *
@@ -26,9 +26,9 @@
 
 namespace mrchem {
 
-class XCPotential final : public QMPotential {
+class XCHessian final : public QMPotential {
 public:
-    XCPotential(mrdft::XCFunctional *F, OrbitalVector *Phi = nullptr);
+    XCHessian(mrdft::XCFunctional *F, OrbitalVector *Phi = nullptr);
 
     friend class XCOperator;
 
@@ -36,18 +36,16 @@ protected:
     OrbitalVector *orbitals;                   ///< External set of orbitals used to build the density
     mrdft::XCFunctional *functional;           ///< External XC functional to be used
 
-    double energy;                             ///< XC energy
-    mrcpp::FunctionTreeVector<3> potentials;   ///< XC Potential functions collected in a vector
+    mrcpp::FunctionTreeVector<3> hessians ;   ///< XC Hessian components collected in a vector
 
-    double getEnergy() const { return this->energy; }
     Density &getDensity(int spin);
-    mrcpp::FunctionTree<3> &getPotential(int spin);
+    mrcpp::FunctionTree<3> &getHessianComponent(int spin_den, int spin_orb);
 
     void setup(double prec);
     void clear();
 
     void setupDensity();
-    void setupPotential(double prec);
+    void setupHessian(double prec);
 
     Orbital apply(Orbital phi);
 };

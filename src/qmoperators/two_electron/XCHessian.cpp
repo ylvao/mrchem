@@ -47,7 +47,7 @@ void XCHessian::setup(double prec) {
 /** @brief Clears all data in the XCHessian object */
 void XCHessian::clear() {
     this->energy = 0.0;
-    mrcpp::clear(this->potentials, true);
+    mrcpp::clear(this->hessians, true);
     clearApplyPrec();
 }
 
@@ -83,12 +83,12 @@ void XCHessian::setupDensity() {
     }
 }
 
-/** @brief Compute XC potential(s)
+/** @brief Compute XC Hessian component(s)
  *
  * @param prec Precision used in refinement of density grid
  *
  * This will invoke a sequence of steps in the XCFunctional to compute the final
- * XC potential(s) that define this operator. Assuming the density has alredy been
+ * XC hessian(s) that define this operator. Assuming the density has alredy been
  * computed:
  *
  * 1) Setup xcfun input functions (gradients etc.)
