@@ -4,6 +4,7 @@
 #include "mrdft/XCFunctional.h"
 
 /** @class XCHessian
+
  */
 
 namespace mrchem {
