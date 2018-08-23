@@ -94,19 +94,19 @@ void CoulombPotential::setupDensity(double prec) {
  *
  * This will compute the first-order perturbed electron density.
  */
-void CoulombPotential::setupDensity(double prec) {
+void CoulombPotential::setupPertDensity(double prec) {
     if (hasDensity_1()) return;
     if (not hasDensity()) MSG_ERROR("Ground-state density not initialized");
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     if (this->orbitals_1 == nullptr) MSG_ERROR("Perturbed orbitals not initialized");
 
     OrbitalVector &Phi = *this->orbitals;
-    OrbitalVector &Phi_1 = *this->orbitals;
+    OrbitalVector &Phi_1 = *this->orbitals_1;
     Density &rho = this->density;
     Density &rho_1 = this->density_1;
 
     Timer timer;
-    density::compute(prec, rho, Phi, DENSITY::Total);
+    density::compute(prec, rho_1, Phi, Phi_1, DENSITY::Total);
     timer.stop();
     double t = timer.getWallTime();
     int n = rho.getNNodes();
