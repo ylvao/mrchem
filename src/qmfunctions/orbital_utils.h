@@ -1,12 +1,8 @@
 #pragma once
 
-#include "mrchem.h"
+#include "qmfunctions.h"
 
 namespace mrchem {
-
-class Orbital;
-typedef std::vector<Orbital> OrbitalVector;
-typedef std::vector<std::tuple<int, Orbital> > OrbitalChunk;
 
 namespace orbital {
 

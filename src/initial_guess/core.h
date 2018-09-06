@@ -1,6 +1,7 @@
 #pragma once
 
-#include "qmfunction_utils.h"
+#include "qmfunctions.h"
+#include "chemistry.h"
 
 /** @file core.h
  *
@@ -11,9 +12,6 @@
  */
 
 namespace mrchem {
-class Molecule;
-class Nuclei;
-
 namespace initial_guess {
 namespace core {
 

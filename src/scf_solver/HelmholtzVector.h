@@ -1,7 +1,6 @@
 #pragma once
 
-#include "qmoperators.h"
-#include "qmfunction_utils.h"
+#include "qmfunctions.h"
 
 /** @class HelmholtzVector
  *

@@ -3,14 +3,11 @@
 #include "MRCPP/Gaussians"
 
 #include "parallel.h"
-#include "utils/math_utils.h"
-#include "utils/RRMaximizer.h"
 
 #include "Density.h"
-#include "Orbital.h"
-#include "qmfunction_utils.h"
-#include "orbital_utils.h"
 #include "density_utils.h"
+#include "Orbital.h"
+#include "orbital_utils.h"
 
 using mrcpp::Timer;
 using mrcpp::Printer;
@@ -66,7 +63,7 @@ void density::compute(double prec, Density &rho, OrbitalVector &Phi, int spin) {
     FunctionTreeVector<3> dens_vec;
     for (int i = 0; i < Phi.size(); i++) {
         if (mpi::my_orb(Phi[i])) {
-            Density *rho_i = new Density(); //LUCA: Is it the right creator here (it was Density(*MRA);
+            Density *rho_i = new Density();
             rho_i->setReal(new mrcpp::FunctionTree<3>(*MRA));
             mrcpp::copy_grid(rho_i->real(), rho.real());
             density::compute(mult_prec, *rho_i, Phi[i], spin);
@@ -86,8 +83,8 @@ void density::compute(double prec, Density &rho, OrbitalVector &Phi, int spin) {
     mpi::broadcast_density(rho, mpi::comm_orb);
 }
 
-void density::project(double prec, Density &rho, mrcpp::GaussExp<3> &dens_exp, int spin) {
-    rho.allocReal();
+void density::compute(double prec, Density &rho, mrcpp::GaussExp<3> &dens_exp, int spin) {
+    rho.alloc(NUMBER::Real);
     rho.setSpin(spin);
     mrcpp::project(prec, rho.real(), dens_exp);
 }

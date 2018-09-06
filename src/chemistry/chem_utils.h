@@ -1,9 +1,6 @@
 #pragma once
 
-#include "mrchem.h"
-
-class Molecule;
-class Nuclei;
+#include "chemistry.h"
 
 namespace mrchem {
 

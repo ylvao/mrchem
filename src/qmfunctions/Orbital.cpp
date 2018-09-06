@@ -3,9 +3,9 @@
 #include "MRCPP/Printer"
 
 #include "Orbital.h"
+#include "orbital_utils.h"
 
 namespace mrchem {
-extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 /** @brief Default constructor
  *

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "QMFunction.h"
-#include "density_utils.h"
 
 /** @class Density
  *
@@ -48,9 +47,6 @@ public:
     void setRankId(int rank) { this->meta.rank_id = rank; }
     void setSpin(int spin) { this->meta.spin = spin; }
 
-    void allocReal();
-    void allocImag();
-    
     DensityMeta &getMetaData();
     int spin() const { return this->meta.spin; }
     int rankID() const { return this->meta.rank_id; }

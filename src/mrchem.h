@@ -37,17 +37,19 @@ namespace MATHCONST {
     const double sqrt_pi =    1.7724538509055160273;
 }
 
-typedef std::complex<double> ComplexDouble;
-typedef std::function<double (const double *r)> DoubleFunction;
-typedef std::function<ComplexDouble (const double *r)> ComplexFunction;
+using ComplexInt = std::complex<int>;
+using ComplexDouble = std::complex<double>;
 
-typedef Eigen::VectorXi  IntVector;
-typedef Eigen::VectorXd  DoubleVector;
-typedef Eigen::VectorXcd ComplexVector;
+using DoubleFunction = std::function<double (const double *r)>;
+using ComplexFunction = std::function<ComplexDouble (const double *r)>;
 
-typedef Eigen::MatrixXi  IntMatrix;
-typedef Eigen::MatrixXd  DoubleMatrix;
-typedef Eigen::MatrixXcd ComplexMatrix;
+using IntVector = Eigen::VectorXi;
+using DoubleVector = Eigen::VectorXd;
+using ComplexVector = Eigen::VectorXcd;
+
+using IntMatrix = Eigen::MatrixXi;
+using DoubleMatrix = Eigen::MatrixXd;
+using ComplexMatrix = Eigen::MatrixXcd;
 
 extern Getkw Input;
 extern mrcpp::MultiResolutionAnalysis<3> *MRA;  //< Global MRA
