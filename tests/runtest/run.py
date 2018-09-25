@@ -22,6 +22,9 @@ def run(options, configure, input_files, extra_args=None, filters=None, accepted
 
     launcher, command, output_prefix, relative_reference_path = configure(options, input_files, extra_args)
 
+    if options.launch_agent is not None:
+        command = '{0} {1}'.format(options.launch_agent, command)
+
     launch_script_path = os.path.normpath(os.path.join(options.binary_dir, launcher))
 
     if not options.skip_run and not os.path.exists(launch_script_path):
@@ -51,10 +54,18 @@ def run(options, configure, input_files, extra_args=None, filters=None, accepted
         else:
             _output_prefix = os.path.join(options.work_dir, output_prefix) + '.'
         with open('{0}{1}'.format(_output_prefix, 'stdout'), 'w') as f:
-            f.write(stdout)
+            try:
+                _s = stdout.decode('UTF-8')
+            except AttributeError:
+                _s = stdout
+            f.write(_s)
 
         with open('{0}{1}'.format(_output_prefix, 'stderr'), 'w') as f:
-            f.write(stderr)
+            try:
+                _s = stderr.decode('UTF-8')
+            except AttributeError:
+                _s = stderr
+            f.write(_s)
 
         if process.returncode != 0:
             sys.stdout.write('ERROR: crash during {0}\n{1}'.format(command, stderr))
