@@ -1,5 +1,5 @@
 macro(add_integration_test)
-  set(oneValueArgs NAME COST)
+  set(oneValueArgs NAME COST LAUNCH_AGENT)
   set(multiValueArgs LABELS DEPENDS REFERENCE_FILES)
   cmake_parse_arguments(_integration_test
     "${options}"
@@ -15,6 +15,7 @@ macro(add_integration_test)
       ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/test
       --binary=$<TARGET_FILE_DIR:mrchem.x>
       --work-dir=${CMAKE_CURRENT_BINARY_DIR}
+      --launch-agent ${_integration_test_LAUNCH_AGENT}
       --verbose
       # The input file
     WORKING_DIRECTORY

@@ -11,6 +11,7 @@ Profiling*
 build*
 debug*
 release*
+install*
 intel*
 pilot
 mrcpp.config

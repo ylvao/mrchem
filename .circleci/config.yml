@@ -110,6 +110,7 @@ jobs:
       - *report
       - *configure-mpi
       - *build
+      - *tests
 
 workflows:
   version: 2

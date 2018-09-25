@@ -2,6 +2,7 @@
 #include "catch.hpp"
 
 #include "mrchem.h"
+#include "parallel.h"
 
 #include "MRCPP/MWFunctions"
 
@@ -12,6 +13,7 @@ void finalize_mra();
 
 int main(int argc, char *argv[]) {
     // global setup
+    mrchem::mpi::initialize(argc, argv);
     initialize_mra();
 
     // run tests
@@ -19,7 +21,7 @@ int main(int argc, char *argv[]) {
 
     // global cleanup
     finalize_mra();
-
+    mrchem::mpi::finalize();
     return (result < 0xff ? result : 0xff);
 }
 
@@ -29,8 +31,8 @@ void initialize_mra() {
     int max_depth = 25;
 
     // Constructing world box
-    int corner[3] = {-1,-1,-1};
-    int boxes[3]  = { 2, 2, 2};
+    int corner[3] = {-1, -1, -1};
+    int boxes[3] = {2, 2, 2};
     mrcpp::BoundingBox<3> world(min_scale, corner, boxes);
 
     // Constructing basis
@@ -45,4 +47,3 @@ void finalize_mra() {
     if (mrchem::MRA != 0) delete mrchem::MRA;
     mrchem::MRA = 0;
 }
-
