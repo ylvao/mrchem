@@ -14,12 +14,8 @@ recommonmark = "*"
 Sphinx = "*"
 sphinx_rtd_theme = "*"
 sphinxcontrib-bibtex = "*"
+runtest = "*"
 
 
 [dev-packages]
 
-
-
-[requires]
-
-python_version = "3.6"
