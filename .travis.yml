@@ -17,7 +17,8 @@ matrix:
             - gcc
             - lcov
             - libboost-all-dev
-            - python3.5
+            - libpython3.5-dev
+            - python3.5-dev
       env:
         - BUILD_TYPE='release'
         - CXX_COMPILER='g++'
