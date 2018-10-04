@@ -525,11 +525,8 @@ void Molecule::calcCenterOfCharge() {
  *
  */
 void Molecule::readCoordinateFile(const std::string &coord_file) {
-    std::fstream ifs;
-    ifs.open(coord_file.c_str());
-    if (not ifs) {
-        MSG_FATAL("Failed to open basis set file: " << coord_file);
-    }
+    std::ifstream ifs(coord_file.c_str());
+    if (not ifs) MSG_FATAL("Failed to open coordinate file: " << coord_file);
 
     int nNuclei;
     std::string sym;

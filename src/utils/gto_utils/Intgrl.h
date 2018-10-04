@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <string>
-#include <iostream>
+#include <fstream>
 
 namespace mrchem {
 class Nucleus;
@@ -34,10 +34,10 @@ protected:
     std::vector<Nucleus *> nuclei;
     std::vector<AOBasis *> basis;
 
-    void readIntgrlFile(std::iostream &ifs);
-    void readContractionBlock(std::iostream &ifs, AOBasis &basis, int l);
-    void readAtomBlock(std::iostream &ifs);
-    void readAtomData(std::iostream &ifs, int n_atoms, double z);
+    void readIntgrlFile(std::ifstream &ifs);
+    void readContractionBlock(std::ifstream &ifs, AOBasis &basis, int l);
+    void readAtomBlock(std::ifstream &ifs);
+    void readAtomData(std::ifstream &ifs, int n_atoms, double z);
 };
 
 } //namespace gto_utils

@@ -68,8 +68,7 @@ void print_matrix(int level, const DoubleMatrix &M, const std::string &name, int
  */
 DoubleMatrix read_matrix_file(const std::string &file) {
     int nTerms;
-    std::fstream ifs;
-    ifs.open(file.c_str());
+    std::ifstream ifs(file.c_str());
     if (not ifs) MSG_ERROR("Failed to open file: " << file);
 
     std::string line;
