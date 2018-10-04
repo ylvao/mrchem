@@ -35,6 +35,7 @@ public:
     ~RadialFunction() { }
 
     double evalf(const double *r) const;
+    double evalf(const std::array<double, 1> &r) const { return evalf(r.data()); }
 
 protected:
     const int N;
@@ -53,6 +54,7 @@ public:
     ~AngularFunction() { }
 
     double evalf(const double *r) const;
+    double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
 
 protected:
     const int L;
@@ -69,6 +71,7 @@ public:
     ~HydrogenFunction() { }
 
     double evalf(const double *p) const;
+    double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
 
 protected:
     double origin[3];
