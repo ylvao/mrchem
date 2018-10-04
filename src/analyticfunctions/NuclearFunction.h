@@ -39,6 +39,7 @@ public:
     ~NuclearFunction() { }
 
     double evalf(const double *r) const;
+    double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
 
     void push_back(const Nucleus &nuc, double S);
 

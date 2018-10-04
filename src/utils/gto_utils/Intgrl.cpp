@@ -1,5 +1,3 @@
-#include <fstream>
-
 #include "MRCPP/Printer"
 
 #include "chemistry/Nucleus.h"
@@ -16,11 +14,8 @@ namespace mrchem {
 namespace gto_utils {
 
 Intgrl::Intgrl(const std::string &file) {
-    std::fstream ifs;
-    ifs.open(file.c_str());
-    if (not ifs) {
-        MSG_FATAL("Failed to open basis set file: " << file);
-    }
+    std::ifstream ifs(file.c_str());
+    if (not ifs) MSG_FATAL("Failed to open basis set file: " << file);
     readIntgrlFile(ifs);
     ifs.close();
 }
@@ -38,7 +33,7 @@ Intgrl::~Intgrl() {
     }
 }
 
-void Intgrl::readIntgrlFile(std::iostream &ifs) {
+void Intgrl::readIntgrlFile(std::ifstream &ifs) {
     int nTypes;
     std::string line;
     GETLINE(ifs, line); //First line is a comment
@@ -50,7 +45,7 @@ void Intgrl::readIntgrlFile(std::iostream &ifs) {
     }
 }
 
-void Intgrl::readAtomBlock(std::iostream &ifs) {
+void Intgrl::readAtomBlock(std::ifstream &ifs) {
     double z;
     int nAtoms;
     int nShell;
@@ -77,7 +72,7 @@ void Intgrl::readAtomBlock(std::iostream &ifs) {
     }
 }
 
-void Intgrl::readAtomData(std::iostream &ifs, int n_atoms, double z) {
+void Intgrl::readAtomData(std::ifstream &ifs, int n_atoms, double z) {
     double coord[3];
     std::string sym;
     for (int j = 0; j < n_atoms; j++) {
@@ -97,7 +92,7 @@ void Intgrl::readAtomData(std::iostream &ifs, int n_atoms, double z) {
     }
 }
 
-void Intgrl::readContractionBlock(std::iostream &ifs, AOBasis &bas, int l) {
+void Intgrl::readContractionBlock(std::ifstream &ifs, AOBasis &bas, int l) {
     if (l > 2) MSG_FATAL("Only s, p and d orbitals are currently supported");
     int nprim, nctr;
     ifs >> nprim;

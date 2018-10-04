@@ -73,6 +73,7 @@ public:
     ~HarmonicOscillatorFunction() { }
 
     double evalf(const double *r) const { return fx(r[0])*fy(r[1])*fz(r[2]); }
+    double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
 
 protected:
     const HarmonicOscillator1D fx;
