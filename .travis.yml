@@ -7,6 +7,7 @@ notifications:
     secure: PSksBCDscyT65LOQbb5rk/ArV+QD5RJ0WANZYX2j3ONwcbNWv5LfbosnpORcXeD/OSQQi62jk2geOtGI+FGZbSy80nEwl3xk4JB7y0y+wLzYz4453l+OGWxndGpMUea2HNJu6DJsUVimin1y+4KHRakL3gvWkrbnwWFiWE+awnQw5I4zlxCC+IZ/7xhmA74tLIFq+PbqjvscrPv8hUwcpU6j3Cu0jvs4mpIi4/fgUCoMBJ0Cu+5ZZeraYHCjcB25zGpJlcZPUJP3qMQxCclXPIBTNEMNuYYU2Q6C5I8PiU/w+3Jwi7MDYTWlQ9UIdKz7xUzBQV6PDPm5Z46YNJKO2TJuVWOOdZ7BRivfnfX2gFA+oKCJ/ViBNK0WyK9guzcW6k7b0AHu/8Mgu7+QqRdap85XT4hNBYNlMJwx8lKMoMXIy7WL1ijCI9q0SvL7bb1jrEGPeFlSBYW3cVlhvPQc1duy6XqlzxHl55ZRbC7vKbPbfOTFG5uKg7u7YdCxxaKJ050EK4p94Vvocg0wO5aeMZOmH3cioK3yJZOKlGAJoGsAHWlU3aHzhH6NSO+2+T7ro+pXrZy7ZQ3SILGIXzPsTMsi1lR78Be4x2F7qjl0CWMeilfornGbI5VC/7iKYOKZ2JyP7fhjeX+BQb8DuDXzyW9wb3/w4zwb0BDfxQJMmYw=
 
 matrix:
+  fast_finish: true
   include:
     - os: linux
       addons: &1
@@ -16,12 +17,12 @@ matrix:
             - gcc
             - lcov
             - libboost-all-dev
-            - python-pyparsing
+            - libpython3.5-dev
+            - python3.5-dev
       env:
         - BUILD_TYPE='release'
         - CXX_COMPILER='g++'
         - C_COMPILER='gcc'
-        - PYTHON_VER='2.7'
     - os: linux
       addons: *1
       env:
@@ -29,7 +30,6 @@ matrix:
         - CXX_COMPILER='g++'
         - C_COMPILER='gcc'
         - OPENMP='--omp'
-        - PYTHON_VER='2.7'
     - os: linux
       addons: *1
       env:
@@ -37,7 +37,6 @@ matrix:
         - CXX_COMPILER='g++'
         - C_COMPILER='gcc'
         - COVERAGE='--coverage'
-        - PYTHON_VER='2.7'
 
 env:
   global:
@@ -47,6 +46,8 @@ env:
     - PYTHONIOENCODING=UTF-8
     - OMP_NUM_THREADS=2
     - CMAKE_VERSION="3.6.3"
+    # Invalidate PYENV_ROOT
+    - PYENV_ROOT=$HOME/fuffa
 
 cache:
   timeout: 1000
@@ -63,11 +64,14 @@ install:
   - ./.ci/cmake.sh
   - export PATH=$HOME/Deps/cmake/$CMAKE_VERSION/bin${PATH:+:$PATH}
   - ./.ci/eigen.sh
+  - pip install --user pipenv --upgrade
+  - pipenv install --python="/usr/bin/python3.5"
 
 before_script:
   - test -n $CC && unset CC
   - test -n $CXX && unset CXX
   - test -n $FC && unset FC
+  - source $(pipenv --venv)/bin/activate
 
 script:
   - ./.ci/report_versions.sh
@@ -78,7 +82,7 @@ script:
            --cxx=${CXX_COMPILER} \
            ${COVERAGE} \
            ${OPENMP} \
-           --cmake-options="-DEigen3_DIR=${HOME}/Deps/eigen/share/eigen3/cmake -DCMAKE_C_COMPILER=${C_COMPILER}"
+           --cmake-options="-DEigen3_DIR=${HOME}/Deps/eigen/share/eigen3/cmake -DCMAKE_C_COMPILER=${C_COMPILER} -DPYTHON_EXECUTABLE=$(type -P python)"
   - cmake --build build --target install -- VERBOSE=1
   - cd build
   - |
