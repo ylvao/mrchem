@@ -25,26 +25,32 @@ namespace mrchem {
 
 class CoulombPotential final : public QMPotential {
 public:
-    CoulombPotential(mrcpp::PoissonOperator *P, OrbitalVector *Phi = nullptr, OrbitalVector *Phi_1= nullptr, int order = 1);
+    CoulombPotential(mrcpp::PoissonOperator *P,
+                     OrbitalVector *Phi   = nullptr,
+                     OrbitalVector *X = nullptr,
+                     OrbitalVector *Y = nullptr,
+                     int order = 1);
 
     friend class CoulombOperator;
 
 protected:
     Density density;                  ///< Ground-state electron density
-    Density density_1;                ///< Perturbed electron density defining the potential
+    Density perturbedDensity;         ///< Perturbed electron density defining the potential
     OrbitalVector *orbitals;          ///< Unperturbed orbitals defining the ground-state electron density
-    OrbitalVector *orbitals_1;        ///< Perturbed Orbitals defining the first order-electron density
-    int order;                        ///< Order otf the potential (1=potential, 2=hessian, ....)
+    OrbitalVector *pertX;             ///< Perturbed Orbitals defining the first order-electron density (both for static and dynamic pert)
+    OrbitalVector *pertY;             ///< Perturbed Orbitals defining the first order-electron density (only for dynamic pert)
+    int order;                        ///< Order of the potential (1=potential, 2=hessian, ....)
     mrcpp::PoissonOperator *poisson;  ///< Operator used to compute the potential
 
     Density &getDensity() { return this->density; }
-    bool hasDensity() const { return (this->density.getSquareNorm() < 0.0) ? false : true; }
-    bool hasDensity_1() const { return (this->density_1.getSquareNorm() < 0.0) ? false : true; }
+    bool hasDensity() const { return (this->density.squaredNorm() < 0.0) ? false : true; }
+    bool hasPerturbedDensity() const { return (this->perturbedDensity.squaredNorm() < 0.0) ? false : true; }
 
     void setup(double prec);
     void clear();
 
     void setupDensity(double prec);
+    void setupPerturbedDensity(double prec);
     void setupPotential(double prec);
     void setupHessian(double prec);
 };

@@ -17,9 +17,10 @@ class CoulombOperator final : public RankZeroTensorOperator {
 public:
  CoulombOperator(mrcpp::PoissonOperator *P,
                  OrbitalVector *Phi = nullptr,
-                 OrbitalVector *Phi_1= nullptr,
+                 OrbitalVector *Phi_x= nullptr,
+                 OrbitalVector *Phi_y= nullptr,
                  int order = 1)
-     : potential(P, Phi, Phi_1, order) {
+     : potential(P, Phi, Phi_x, Phi_y, order) {
         RankZeroTensorOperator &J = (*this);
         J = this->potential;
     }

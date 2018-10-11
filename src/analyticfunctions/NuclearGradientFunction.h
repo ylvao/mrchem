@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include <array>
 #include "MRCPP/MWFunctions"
 
 #include "chemistry/Nucleus.h"

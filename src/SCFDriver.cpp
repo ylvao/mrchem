@@ -606,12 +606,13 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
         NOT_IMPLEMENTED_ABORT;
     }
 
+    dJ = new CoulombOperator(P, phi, phi_x, phi_y, 2);
+    
     int d = rsp_calc.dir;
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
-    if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) {
+    if (rsp_calc.isDynamic()) {
         NOT_IMPLEMENTED_ABORT;
     }
-
     
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];

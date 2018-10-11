@@ -97,6 +97,7 @@ public:
     void evaluate();
     double calcEnergy();
     mrcpp::FunctionTreeVector<3> calcPotential();
+    mrcpp::FunctionTreeVector<3> calcHessian();
 
  protected:
     const bool spin_separated;                  ///< Spin polarization
@@ -133,6 +134,8 @@ public:
 
     void calcPotentialLDA(mrcpp::FunctionTreeVector<3> &potentials);
     void calcPotentialGGA(mrcpp::FunctionTreeVector<3> &potentials);
+    void calcHessianLDA(mrcpp::FunctionTreeVector<3> &potentials);
+    //    void calcPotentialGGA(mrcpp::FunctionTreeVector<3> &potentials);
 
     mrcpp::FunctionTree<3> * calcPotentialGGA(mrcpp::FunctionTree<3> & df_drho,
                                               mrcpp::FunctionTreeVector<3> & df_dgr);
