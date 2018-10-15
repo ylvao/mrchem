@@ -35,6 +35,7 @@
 #include "properties/NMRShielding.h"
 #include "properties/HyperFineCoupling.h"
 #include "properties/SpinSpinCoupling.h"
+#include "properties/Polarizability.h"
 
 using mrcpp::Printer;
 
@@ -145,7 +146,7 @@ Molecule::~Molecule() {
     clearGeometryDerivatives();
     //clearQuadrupoleMoment();
     clearMagnetizability();
-    //clearPolarizability();
+    clearPolarizability();
     //clearOpticalRotation();
     freeNuclearProperties();
     this->nuclei.clear();
@@ -248,8 +249,6 @@ void Molecule::clearSpinSpinCoupling(int k, int l) {
 
 /** @brief Delete property Polarizability */
 void Molecule::clearPolarizability() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     int nPol = this->polarizability.size();
     for (int i = 0; i < nPol; i++) {
         if (this->polarizability[i] != 0) {
@@ -258,7 +257,6 @@ void Molecule::clearPolarizability() {
         }
     }
     this->polarizability.clear();
-    */
 }
 
 /** @brief Delete property OpticalRotation */
@@ -342,19 +340,16 @@ void Molecule::initSpinSpinCoupling(int k, int l) {
 
 /** @brief Initialize property Polarizability */
 void Molecule::initPolarizability(double omega) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     for (int i = 0; i < this->polarizability.size(); i++) {
         Polarizability &pol_i = *this->polarizability[i];
         double omega_i = pol_i.getFrequency();
-        if (fabs(omega_i - omega) < MachineZero) {
+        if (fabs(omega_i - omega) < mrcpp::MachineZero) {
             MSG_ERROR("Polarizability already initialized");
             return;
         }
     }
     Polarizability *pol = new Polarizability(omega);
     this->polarizability.push_back(pol);
-    */
 }
 
 /** @brief Initialize property OpticalRotation */
@@ -431,19 +426,16 @@ SpinSpinCoupling& Molecule::getSpinSpinCoupling(int k, int l) {
 
 /** @brief Return property Polarizability */
 Polarizability& Molecule::getPolarizability(double omega) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
     Polarizability *pol_w = 0;
     for (int i = 0; i < this->polarizability.size(); i++) {
         double omega_i = this->polarizability[i]->getFrequency();
-        if (fabs(omega_i - omega) < MachineZero) {
+        if (fabs(omega_i - omega) < mrcpp::MachineZero) {
             pol_w = this->polarizability[i];
             break;
         }
     }
     if (pol_w == 0) MSG_ERROR("Uninitialized polarizability");
     return *pol_w;
-    */
 }
 
 /** @brief Return property OpticalRotation */
