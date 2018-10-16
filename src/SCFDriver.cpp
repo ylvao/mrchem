@@ -224,10 +224,6 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Quadrupole moment not implemented");
         return false;
     }
-    if (calc_polarizability) {
-        MSG_ERROR("Polarizability not implemented");
-        return false;
-    }
     if (calc_hyperpolarizability) {
         MSG_ERROR("Hyperpolarizability not implemented");
         return false;
@@ -257,6 +253,7 @@ void SCFDriver::setup() {
     molecule->printGeometry();
     nuclei = &molecule->getNuclei();
 
+    
     // Setting up empty orbitals
     phi = new OrbitalVector;
 
@@ -368,7 +365,6 @@ void SCFDriver::setup() {
         for (int i = 0; i < pol_frequency.size(); i++) {
             double omega = pol_frequency[i];
             molecule->initPolarizability(omega);
-            NOT_IMPLEMENTED_ABORT;
         }
     }
     if (calc_optical_rotation) {
