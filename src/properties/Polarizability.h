@@ -44,7 +44,7 @@ public:
     double getFrequency() const { return this->frequency; }
     bool getVelocityGauge() const { return this->velocity; }
     const double* getGaugeOrigin() const { return this->origin; }
-    DoubleMatrix get() const { return this->tensor; }
+    DoubleMatrix &get() { return this->tensor; }
 
     friend std::ostream& operator<<(std::ostream &o, const Polarizability &pol) {
         DoubleMatrix tens = pol.tensor;

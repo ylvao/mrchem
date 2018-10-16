@@ -42,6 +42,7 @@
 #include "properties/DipoleMoment.h"
 #include "properties/GeometryDerivatives.h"
 #include "properties/Magnetizability.h"
+#include "properties/Polarizability.h"
 
 #include "qmoperators/one_electron/H_BB_dia.h"
 #include "qmoperators/one_electron/H_B_dip.h"
@@ -864,6 +865,7 @@ void SCFDriver::calcGroundStateProperties() {
 
 void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc) {
     int j = rsp_calc.dir;
+    double freq = rsp_calc.freq;
 
     if (calc_magnetizability and rsp_calc.pert == h_B) {
         Printer::printHeader(0, "Calculating paramagnetic magnetizability");
@@ -872,6 +874,17 @@ void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc
         h_B->setup(rel_prec);
         para.row(j) = -h_B->trace(*phi, *phi_x, *phi_y).real();
         h_B->clear();
+        timer.stop();
+        Printer::printFooter(0, timer, 2);
+    }
+
+    if (calc_polarizability and rsp_calc.pert == h_E) {
+        Printer::printHeader(0, "Calculating polarizability");
+        Timer timer;
+        DoubleMatrix &tensor = molecule->getPolarizability(freq).get();
+        h_E->setup(rel_prec);
+        tensor.row(j) = -h_E->trace(*phi, *phi_x, *phi_y).real();
+        h_E->clear();
         timer.stop();
         Printer::printFooter(0, timer, 2);
     }

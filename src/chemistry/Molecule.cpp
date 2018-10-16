@@ -593,6 +593,9 @@ void Molecule::printProperties() const {
     if (this->energy != 0) println(0, *this->energy);
     if (this->dipole != 0) println(0, *this->dipole);
     if (this->geomderiv != 0) println(0, *this->geomderiv);
+    for (int i = 0; i < polarizability.size(); i++) {
+        if (this->polarizability[i] != 0) println(0, *this->polarizability[i]);
+    }
     if (this->magnetizability != 0) println(0, *this->magnetizability);
     if (this->nmr != 0) {
         for (int k = 0; k < this->nuclei.size(); k++) {
