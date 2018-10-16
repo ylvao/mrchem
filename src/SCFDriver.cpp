@@ -365,6 +365,10 @@ void SCFDriver::setup() {
         for (int i = 0; i < pol_frequency.size(); i++) {
             double omega = pol_frequency[i];
             molecule->initPolarizability(omega);
+            for (int d = 0; d < 3; d++) {
+                if (rsp_directions[d] == 0) continue;
+                rsp_calculations.push_back(h_E, omega, false, d);
+            }
         }
     }
     if (calc_optical_rotation) {
