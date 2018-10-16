@@ -26,12 +26,36 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
 CoulombPotential::CoulombPotential(PoissonOperator *P,
+                                   OrbitalVector *Phi)
+        : QMPotential(1), density(), perturbedDensity(), orbitals(Phi),
+          poisson(P) {
+    this->pertX = nullptr;
+    this->pertY = nullptr;
+    this->order = 1;
+    this->density.alloc(NUMBER::Real);
+}
+
+CoulombPotential::CoulombPotential(PoissonOperator *P,
+                                   OrbitalVector *Phi,
+                                   OrbitalVector *X)
+        : QMPotential(1), density(), perturbedDensity(), orbitals(Phi),
+          poisson(P) {
+    this->pertX = X;
+    this->pertY = nullptr;
+    this->order = 2;
+    this->perturbedDensity.alloc(NUMBER::Real);
+}
+
+CoulombPotential::CoulombPotential(PoissonOperator *P,
                                    OrbitalVector *Phi,
                                    OrbitalVector *X,
-                                   OrbitalVector *Y,
-                                   int order)
+                                   OrbitalVector *Y)
         : QMPotential(1), density(), perturbedDensity(), orbitals(Phi),
-          pertX(X), pertY(Y), poisson(P) {
+          poisson(P) {
+    this->pertX = X;
+    this->pertY = Y;
+    this->order = 2;
+    this->perturbedDensity.alloc(NUMBER::Real);
 }
 
 /** @brief prepare operator for application
