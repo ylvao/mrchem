@@ -28,12 +28,12 @@ public:
     CoulombPotential(mrcpp::PoissonOperator *P,
                      OrbitalVector *Phi   = nullptr);
     CoulombPotential(mrcpp::PoissonOperator *P,
-                     OrbitalVector *Phi   = nullptr,
-                     OrbitalVector *X = nullptr);
+                     OrbitalVector *Phi,
+                     OrbitalVector *X);
     CoulombPotential(mrcpp::PoissonOperator *P,
-                     OrbitalVector *Phi   = nullptr,
-                     OrbitalVector *X = nullptr,
-                     OrbitalVector *Y = nullptr);
+                     OrbitalVector *Phi,
+                     OrbitalVector *X,
+                     OrbitalVector *Y);
     
     friend class CoulombOperator;
 
