@@ -106,6 +106,14 @@ OrbitalVector initial_guess::sad::setup(double prec,
         mrcpp::FunctionTree<3> &rho_b = XC.getDensity(DENSITY::Beta);
         mrcpp::add(prec, rho_a, 1.0, rho_j, -1.0*Nb/Ne, rho_j);
         mrcpp::add(prec, rho_b, 1.0, rho_j, -1.0*Na/Ne, rho_j);
+
+        // Extend to union grid
+        int nNodes = 1;
+        while (nNodes > 0) {
+            int nAlpha = mrcpp::refine_grid(rho_a, rho_b);
+            int nBeta = mrcpp::refine_grid(rho_b, rho_a);
+            nNodes = nAlpha + nBeta;
+        }
     }
 
     // Project AO basis of hydrogen functions

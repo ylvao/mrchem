@@ -80,6 +80,14 @@ void XCPotential::setupDensity() {
         density::compute(-1.0, rho_b, Phi, DENSITY::Beta);
         time_b.stop();
         Printer::printTree(0, "XC beta density", rho_b.getNNodes(), time_b.getWallTime());
+
+        // Extend to union grid
+        int nNodes = 1;
+        while (nNodes > 0) {
+            int nAlpha = mrcpp::refine_grid(rho_a.real(), rho_b.real());
+            int nBeta = mrcpp::refine_grid(rho_b.real(), rho_a.real());
+            nNodes = nAlpha + nBeta;
+        }
     } else {
         Timer time_t;
         FunctionTree<3> &tmp_t = this->functional->getDensity(mrdft::DensityType::Total);
@@ -120,7 +128,7 @@ void XCPotential::setupPotential(double prec) {
     this->functional->evaluate();
     this->energy = this->functional->calcEnergy();
     this->potentials = this->functional->calcPotential();
-    this->functional->pruneGrid(prec);
+    //this->functional->pruneGrid(prec);
     this->functional->refineGrid(prec);
     this->functional->clear();
 
