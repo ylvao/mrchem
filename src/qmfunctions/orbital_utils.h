@@ -52,8 +52,8 @@ OrbitalVector disjoin(OrbitalVector &Phi, int spin);
 
 OrbitalVector filter_spin(const OrbitalVector &Phi, int spin);
 
-void save_orbitals(OrbitalVector &Phi, const std::string &file, int n_orbs = -1);
-OrbitalVector load_orbitals(const std::string &file, int n_orbs = -1);
+void save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix = "", int n_orbs = -1);
+OrbitalVector load_orbitals(const std::string &file, const std::string &suffix = "", int n_orbs = -1);
 
 void free(OrbitalVector &Phi);
 void normalize(OrbitalVector &Phi);

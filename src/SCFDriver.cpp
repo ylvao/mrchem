@@ -317,7 +317,7 @@ void SCFDriver::setup() {
         molecule->initMagnetizability();
         for (int d = 0; d < 3; d++) {
             if (rsp_directions[d] == 0) continue;
-            rsp_calculations.push_back(h_B, 0.0, true, d);
+            rsp_calculations.push_back(h_B, 0.0, true, d, "H_B");
         }
     }
     if (calc_nmr_shielding) {
@@ -327,13 +327,14 @@ void SCFDriver::setup() {
             if (nmr_perturbation == "B") {
                 for (int d = 0; d < 3; d++) {
                     if (rsp_directions[d] == 0) continue;
-                    rsp_calculations.push_back(h_B, 0.0, true, d);
+                    rsp_calculations.push_back(h_B, 0.0, true, d, "H_B");
                 }
             } else {
                 const mrcpp::Coord<3> &r_K = molecule->getNucleus(K).getCoord();
                 for (int d = 0; d < 3; d++) {
                     if (rsp_directions[d] == 0) continue;
-                    rsp_calculations.push_back(h_M[K], 0.0, true, d);
+                    std::string name = "H_M" + std::to_string(K);
+                    rsp_calculations.push_back(h_M[K], 0.0, true, d, name);
                 }
             }
         }
@@ -721,9 +722,15 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
         solver->clearUnperturbed();
         delete solver;
     }
-
-    if (rsp_write_orbitals) NOT_IMPLEMENTED_ABORT;
-
+    if (rsp_write_orbitals) {
+        std::string suffix_x = rsp_calc.name + "_X_";
+        orbital::save_orbitals(*phi_x, file_final_orbitals, suffix_x);
+        if(dynamic) {
+            std::string suffix_y = rsp_calc.name + "_Y_";
+            orbital::save_orbitals(*phi_y, file_final_orbitals, suffix_y);
+        }
+    }
+    
     // Compute requested properties
     if (converged) calcLinearResponseProperties(rsp_calc);
 
