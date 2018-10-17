@@ -343,7 +343,7 @@ void Molecule::initPolarizability(double omega) {
     for (int i = 0; i < this->polarizability.size(); i++) {
         Polarizability &pol_i = *this->polarizability[i];
         double omega_i = pol_i.getFrequency();
-        if (fabs(omega_i - omega) < mrcpp::MachineZero) {
+        if (std::abs(omega_i - omega) < mrcpp::MachineZero) {
             MSG_ERROR("Polarizability already initialized");
             return;
         }
@@ -429,7 +429,7 @@ Polarizability& Molecule::getPolarizability(double omega) {
     Polarizability *pol_w = 0;
     for (int i = 0; i < this->polarizability.size(); i++) {
         double omega_i = this->polarizability[i]->getFrequency();
-        if (fabs(omega_i - omega) < mrcpp::MachineZero) {
+        if (std::abs(omega_i - omega) < mrcpp::MachineZero) {
             pol_w = this->polarizability[i];
             break;
         }

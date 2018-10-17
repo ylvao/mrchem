@@ -31,7 +31,7 @@ namespace mrchem {
 
 class Polarizability final {
 public:
-    Polarizability(double w = 0.0, const double *o = 0, bool v = false) {
+    Polarizability(double w = 0.0, const double *o = nullptr, bool v = false) {
         this->frequency = w;
         this->origin[0] = (o != 0) ? o[0] : 0.0;
         this->origin[1] = (o != 0) ? o[1] : 0.0;
