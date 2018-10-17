@@ -258,13 +258,13 @@ OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
  * imaginary ("phi_0_im.tree") parts. Negative n_orbs means that all orbitals in the
  * vector are saved.
  */
-void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, int n_orbs) {
+void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix, int n_orbs) {
     if (n_orbs < 0) n_orbs = Phi.size();
     if (n_orbs > Phi.size()) MSG_ERROR("Index out of bounds");
     for (int i = 0; i < n_orbs; i++) {
         if (not mpi::my_orb(Phi[i])) continue; //only save own orbitals
         std::stringstream orbname;
-        orbname << file << "_" << i;
+        orbname << file << "_" << suffix << i;
         Phi[i].saveOrbital(orbname.str());
     }
 }
@@ -279,13 +279,13 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, int n_o
  * imaginary ("phi_0_im.tree") parts. Negative n_orbs means that all orbitals matching
  * the prefix name will be read.
  */
-OrbitalVector orbital::load_orbitals(const std::string &file, int n_orbs) {
+OrbitalVector orbital::load_orbitals(const std::string &file, const std::string &suffix, int n_orbs) {
     OrbitalVector Phi;
     for (int i = 0; true; i++) {
         if (n_orbs > 0 and i >= n_orbs) break;
         Orbital phi_i;
         std::stringstream orbname;
-        orbname << file << "_" << i;
+        orbname << file << "_" << suffix << i;
         phi_i.loadOrbital(orbname.str());
         phi_i.setRankID(mpi::orb_rank);
         if (phi_i.hasReal() or phi_i.hasImag()) {
