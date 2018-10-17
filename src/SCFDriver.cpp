@@ -621,6 +621,7 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
+    d_fock->build();
 }
 
 void SCFDriver::clearPerturbedOperators() {

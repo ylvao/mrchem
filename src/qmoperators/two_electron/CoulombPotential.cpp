@@ -73,8 +73,8 @@ CoulombPotential::CoulombPotential(PoissonOperator *P,
 void CoulombPotential::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    setupDensity(prec);
     if(this->order == 1) {
+        setupDensity(prec);
         setupPotential(prec);
     }
     else if (this->order == 2) {
@@ -91,7 +91,8 @@ void CoulombPotential::setup(double prec) {
 void CoulombPotential::clear() {
     QMFunction::free(); // delete FunctionTree pointers
     clearApplyPrec();   // apply_prec = -1
-    mrcpp::clear_grid(this->density.real()); // clear MW coefs but keep the grid
+    if (this->order == 1) mrcpp::clear_grid(this->density.real()); // clear MW coefs but keep the grid
+    if (this->order == 2) mrcpp::clear_grid(this->perturbedDensity.real()); // clear MW coefs but keep the grid
 }
 
 /** @brief compute electron density
@@ -188,13 +189,15 @@ void CoulombPotential::setupHessian(double prec) {
     QMPotential &V = *this;
     Density &rho = this->perturbedDensity;
 
+    /*    
     // Adjust precision by system size
     double abs_prec = prec/rho.real().integrate();
-
+    */
+    
 //LUCA: this is currently using only the real part of the perturbed density. Should be OK for now
     Timer timer;
     V.alloc(NUMBER::Real);
-    mrcpp::apply(abs_prec, V.real(), P, rho.real());
+    mrcpp::apply(prec, V.real(), P, rho.real());
     timer.stop();
     int n = V.getNNodes();
     double t = timer.getWallTime();
