@@ -23,18 +23,23 @@
 
 namespace mrchem {
 
-class CoulombPotential final : public CoulombDerivative {
+class CoulombHessian final : public CoulombDerivative {
 public:
-    CoulombPotential();
+    CoulombHessian(OrbitalVector *X);
+    CoulombHessian(OrbitalVector *X,
+                   OrbitalVector *Y);
+    
     friend class CoulombOperator;
 
 protected:
+    OrbitalVector *pertX;             ///< Perturbed Orbitals defining the first order-electron density (both for static and dynamic pert)
+    OrbitalVector *pertY;             ///< Perturbed Orbitals defining the first order-electron density (only for dynamic pert)
 
     void setup(double prec);
     void clear();
 
     void setupDensity(double prec);
-    void setupPotential(double prec);
+    void setupHessian(double prec);
 };
 
 } //namespace mrchem

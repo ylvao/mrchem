@@ -2,7 +2,7 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
-#include "CoulombPotential.h"
+#include "CoulombHessian.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/density_utils.h"
@@ -25,7 +25,18 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  * the vector can change throughout the calculation. The density and (*this)
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
-CoulombPotential::CoulombPotential() {}
+CoulombHessian::CoulombHessian(OrbitalVector *X) {
+    this->pertX = X;
+    this->pertY = nullptr;
+    this->density.alloc(NUMBER::Real);
+}
+
+CoulombHessian::CoulombHessian(OrbitalVector *X,
+                               OrbitalVector *Y) {
+    this->pertX = X;
+    this->pertY = Y;
+    this->density.alloc(NUMBER::Real);
+}
 
 /** @brief prepare operator for application
  *
@@ -39,11 +50,11 @@ CoulombPotential::CoulombPotential() {}
  * potential function instead of the zeroth-order potential.
  *
  */
-void CoulombPotential::setup(double prec) {
+void CoulombHessian::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
     setupDensity(prec);
-    setupPotential(prec);
+    setupHessian(prec);
 }
 
 /** @brief clear operator after application
@@ -51,59 +62,69 @@ void CoulombPotential::setup(double prec) {
  * This will clear the operator and bring it back to the state after construction.
  * The operator can now be reused after another setup.
  */
-void CoulombPotential::clear() {
+void CoulombHessian::clear() {
     QMFunction::free(); // delete FunctionTree pointers
     clearApplyPrec();   // apply_prec = -1
     mrcpp::clear_grid(this->density.real()); // clear MW coefs but keep the grid
 }
 
-/** @brief compute electron density
+/** @brief compute first-order electron density
  *
  * @param[in] prec: apply precision
  *
- * This will compute the electron density as the sum of squares of the orbitals.
+ * This will compute the first-order perturbed electron density.
  */
-void CoulombPotential::setupDensity(double prec) {
-    if (hasDensity()) return;
+void CoulombHessian::setupDensity(double prec) {
+    if (not hasDensity()) MSG_ERROR("Ground-state density not initialized");
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (this->pertX == nullptr) MSG_ERROR("Perturbed orbitals not initialized");
 
     OrbitalVector &Phi = *this->orbitals;
+    OrbitalVector &X = *this->pertX;
+    OrbitalVector &Y = *this->pertY;
     Density &rho = this->density;
 
     Timer timer;
-    density::compute(prec, rho, Phi, DENSITY::Total);
+    if(this->pertY == nullptr) { // For static perturbations pertY is not required/defined
+        density::compute(prec, rho, Phi, X, DENSITY::Total);
+    } else {
+        density::compute(prec, rho, Phi, X, Y, DENSITY::Total);
+    }
     timer.stop();
     double t = timer.getWallTime();
     int n = rho.getNNodes();
-    Printer::printTree(0, "Coulomb density", n, t);
+    Printer::printTree(0, "Perturbed Coulomb density", n, t);
 }
 
-/** @brief compute Coulomb potential
+/** @brief compute Coulomb hessian
  *
  * @param prec: apply precision
  *
- * This will compute the Coulomb potential by application o the Poisson operator
- * to the precomputed electron density.
+ * This will compute the Coulomb hessian by application o the Poisson operator
+ * to the precomputed, perturbed electron density.
  */
-void CoulombPotential::setupPotential(double prec) {
+void CoulombHessian::setupHessian(double prec) {
     if (this->poisson == nullptr) MSG_ERROR("Poisson operator not initialized");
-    if (hasReal()) MSG_ERROR("Potential not properly cleared");
-    if (hasImag()) MSG_ERROR("Potential not properly cleared");
+    if (hasReal()) MSG_ERROR("Hessian not properly cleared");
+    if (hasImag()) MSG_ERROR("Hessian not properly cleared");
 
     PoissonOperator &P = *this->poisson;
     QMPotential &V = *this;
     Density &rho = this->density;
 
+    /*    
     // Adjust precision by system size
     double abs_prec = prec/rho.real().integrate();
-
+    */
+    
+//LUCA: this is currently using only the real part of the perturbed density. Should be OK for now
     Timer timer;
     V.alloc(NUMBER::Real);
-    mrcpp::apply(abs_prec, V.real(), P, rho.real());
+    mrcpp::apply(prec, V.real(), P, rho.real());
     timer.stop();
     int n = V.getNNodes();
     double t = timer.getWallTime();
-    Printer::printTree(0, "Coulomb potential", n, t);
+    Printer::printTree(0, "Coulomb hessian", n, t);
 }
 
 } //namespace mrchem
