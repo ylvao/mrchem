@@ -1,6 +1,6 @@
 #pragma once
 
-#include "qmoperators/two_electron/CoulombDerivative.h"
+#include "qmoperators/one_electron/QMPotential.h"
 #include "qmfunctions/Density.h"
 
 /** @class CoulombPotential
@@ -23,17 +23,27 @@
 
 namespace mrchem {
 
-class CoulombHessian final : public CoulombDerivative {
+class CoulombHessian final : public QMPotential {
 public:
-    CoulombHessian(OrbitalVector *X);
-    CoulombHessian(OrbitalVector *X,
-                   OrbitalVector *Y);
+    CoulombHessian(mrcpp::PoissonOperator *P,
+                     OrbitalVector *Phi,
+                     OrbitalVector *X);
+    CoulombHessian(mrcpp::PoissonOperator *P,
+                     OrbitalVector *Phi,
+                     OrbitalVector *X,
+                     OrbitalVector *Y);
     
     friend class CoulombOperator;
 
 protected:
+    Density density;                  ///< Perturbed electron density
+    OrbitalVector *orbitals;          ///< Unperturbed orbitals defining the ground-state electron density
     OrbitalVector *pertX;             ///< Perturbed Orbitals defining the first order-electron density (both for static and dynamic pert)
     OrbitalVector *pertY;             ///< Perturbed Orbitals defining the first order-electron density (only for dynamic pert)
+    mrcpp::PoissonOperator *poisson;  ///< Operator used to compute the potential
+
+    Density &getDensity() { return this->density; }
+    bool hasDensity() const { return (this->density.squaredNorm() < 0.0) ? false : true; }
 
     void setup(double prec);
     void clear();

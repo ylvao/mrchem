@@ -25,14 +25,22 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  * the vector can change throughout the calculation. The density and (*this)
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
-CoulombHessian::CoulombHessian(OrbitalVector *X) {
+CoulombHessian::CoulombHessian(PoissonOperator *P,
+                                   OrbitalVector *Phi,
+                                   OrbitalVector *X)
+        : QMPotential(1), density(), orbitals(Phi),
+          poisson(P) {
     this->pertX = X;
     this->pertY = nullptr;
     this->density.alloc(NUMBER::Real);
 }
 
-CoulombHessian::CoulombHessian(OrbitalVector *X,
-                               OrbitalVector *Y) {
+CoulombHessian::CoulombHessian(PoissonOperator *P,
+                                   OrbitalVector *Phi,
+                                   OrbitalVector *X,
+                                   OrbitalVector *Y)
+        : QMPotential(1), density(), orbitals(Phi),
+          poisson(P) {
     this->pertX = X;
     this->pertY = Y;
     this->density.alloc(NUMBER::Real);

@@ -25,7 +25,12 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  * the vector can change throughout the calculation. The density and (*this)
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
-CoulombPotential::CoulombPotential() {}
+CoulombPotential::CoulombPotential(PoissonOperator *P,
+                                   OrbitalVector *Phi)
+        : QMPotential(1), density(), orbitals(Phi),
+          poisson(P) {
+    this->density.alloc(NUMBER::Real);
+}
 
 /** @brief prepare operator for application
  *
