@@ -2,10 +2,10 @@
 #include "MRCPP/Timer"
 
 #include "XCPotential.h"
-#include "qmfunctions/Orbital.h"
-#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/Density.h"
+#include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
+#include "qmfunctions/orbital_utils.h"
 
 using mrcpp::FunctionTree;
 using mrcpp::Printer;
@@ -23,10 +23,10 @@ namespace mrchem {
  * xcfun when F.evalSetup is invoked.
  */
 XCPotential::XCPotential(mrdft::XCFunctional *F, OrbitalVector *Phi)
-        : QMPotential(1),
-          orbitals(Phi),
-          functional(F) {
-}
+        : QMPotential(1)
+        , orbitals(Phi)
+        , functional(F)
+        , energy(0.0) {}
 
 /** @brief Prepare the operator for application
  * 
@@ -146,7 +146,7 @@ void XCPotential::setupPotential(double prec) {
 FunctionTree<3> &XCPotential::getDensity(int spin) {
     if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
     if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
-    if (spin == DENSITY::Beta)  return this->functional->getDensity(mrdft::DensityType::Beta);
+    if (spin == DENSITY::Beta) return this->functional->getDensity(mrdft::DensityType::Beta);
     MSG_FATAL("Invalid density type");
 }
 
@@ -154,7 +154,7 @@ FunctionTree<3> &XCPotential::getDensity(int spin) {
  *
  * @param[in] type Which spin potential to return (alpha, beta or total)
  */
-FunctionTree<3>& XCPotential::getPotential(int spin) {
+FunctionTree<3> &XCPotential::getPotential(int spin) {
     bool spinFunctional = this->functional->isSpinSeparated();
     int pot_idx = -1;
     if (spinFunctional and spin == SPIN::Alpha) {
@@ -182,7 +182,7 @@ Orbital XCPotential::apply(Orbital phi) {
 
     FunctionTree<3> &V = getPotential(phi.spin());
     this->setReal(&V);
-    Orbital Vphi = QMPotential::apply(phi); 
+    Orbital Vphi = QMPotential::apply(phi);
     this->setReal(0);
 
     return Vphi;
