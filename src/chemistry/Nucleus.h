@@ -25,27 +25,27 @@
 
 #pragma once
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
-#include "PeriodicTable.h"
 #include "Element.h"
+#include "PeriodicTable.h"
 
 namespace mrchem {
 
 class Nucleus final {
 public:
     Nucleus(const Element &elm, const double *r = 0)
-            : charge(elm.getZ()),
-              element(&elm) {
+            : charge(elm.getZ())
+            , element(&elm) {
         setCoord(r);
     }
     Nucleus(const Nucleus &nuc)
-            : charge(nuc.charge),
-              element(nuc.element) {
+            : charge(nuc.charge)
+            , element(nuc.element) {
         setCoord(nuc.coord);
     }
-    const Nucleus &operator=(const Nucleus &nuc) {
+    Nucleus &operator=(const Nucleus &nuc) {
         if (this != &nuc) {
             this->charge = nuc.charge;
             this->element = nuc.element;
@@ -53,8 +53,6 @@ public:
         }
         return *this;
     }
-
-    ~Nucleus() { }
 
     void setCharge(double z) { this->charge = z; }
     void setCoord(const double *r) {
@@ -71,12 +69,10 @@ public:
     const double *getCoord() const { return this->coord; }
     const Element &getElement() const { return *this->element; }
 
-    friend std::ostream& operator<<(std::ostream &o, const Nucleus &nuc) {
+    friend std::ostream &operator<<(std::ostream &o, const Nucleus &nuc) {
         o << std::endl << *nuc.element << "   Z = ";
         o << nuc.charge << std::endl << "   ";
-        for (int i = 0; i < 3; i++) {
-            o << nuc.coord[i] << " ";
-        }
+        for (int d = 0; d < 3; d++) o << nuc.coord[d] << " ";
         o << std::endl;
         return o;
     }
@@ -89,9 +85,7 @@ private:
 
 class Nuclei : public std::vector<Nucleus> {
 public:
-    void push_back(const Nucleus &nuc) {
-        std::vector<Nucleus>::push_back(nuc);
-    }
+    void push_back(const Nucleus &nuc) { std::vector<Nucleus>::push_back(nuc); }
     void push_back(const char *sym, const double *r) {
         PeriodicTable pt;
         Nucleus nuc(pt.getElement(sym), r);

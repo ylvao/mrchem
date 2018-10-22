@@ -57,6 +57,8 @@ public:
     Molecule(const Nuclei &nucs, int c = 0, int m = 1);
     Molecule(const std::string &coord_file, int c = 0, int m = 1);
     Molecule(const std::vector<std::string> &coord_str, int c = 0, int m = 1);
+    Molecule(const Molecule &mol) = delete;
+    Molecule &operator=(const Molecule &mol) = delete;
     ~Molecule();
 
     int getCharge() const { return this->charge; }
@@ -86,16 +88,16 @@ public:
     void initPolarizability(double omega);
     void initOpticalRotation(double omega);
 
-    SCFEnergy& getSCFEnergy();
-    DipoleMoment& getDipoleMoment();
-    QuadrupoleMoment& getQuadrupoleMoment();
-    GeometryDerivatives& getGeometryDerivatives();
-    Magnetizability& getMagnetizability();
-    NMRShielding& getNMRShielding(int k);
-    HyperFineCoupling& getHyperFineCoupling(int k);
-    SpinSpinCoupling& getSpinSpinCoupling(int k, int l);
-    Polarizability& getPolarizability(double omega);
-    OpticalRotation& getOpticalRotation(double omega);
+    SCFEnergy &getSCFEnergy();
+    DipoleMoment &getDipoleMoment();
+    QuadrupoleMoment &getQuadrupoleMoment();
+    GeometryDerivatives &getGeometryDerivatives();
+    Magnetizability &getMagnetizability();
+    NMRShielding &getNMRShielding(int k);
+    HyperFineCoupling &getHyperFineCoupling(int k);
+    SpinSpinCoupling &getSpinSpinCoupling(int k, int l);
+    Polarizability &getPolarizability(double omega);
+    OpticalRotation &getOpticalRotation(double omega);
 
 protected:
     int charge;

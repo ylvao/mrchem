@@ -35,8 +35,7 @@ namespace mrchem {
 
 class NuclearFunction final : public mrcpp::RepresentableFunction<3> {
 public:
-    NuclearFunction() { }
-    ~NuclearFunction() { }
+    NuclearFunction() {}
 
     double evalf(const double *r) const;
     double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }

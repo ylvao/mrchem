@@ -7,23 +7,23 @@
 #include "MRCPP/Timer"
 
 #include "getkw/Getkw.hpp"
-#include "getkw/Section.hpp"
 #include "getkw/Keyword.hpp"
+#include "getkw/Section.hpp"
 
 #include "initial_guess/core.h"
 #include "initial_guess/gto.h"
 #include "initial_guess/sad.h"
 #include "utils/math_utils.h"
 
-#include "qmfunctions/Orbital.h"
 #include "qmfunctions/Density.h"
+#include "qmfunctions/Orbital.h"
 
 #include "SCFDriver.h"
-#include "chemistry/Molecule.h"
 #include "analyticfunctions/HydrogenFunction.h"
+#include "chemistry/Molecule.h"
 
-#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/density_utils.h"
+#include "qmfunctions/orbital_utils.h"
 
 #include "scf_solver/EnergyOptimizer.h"
 #include "scf_solver/HelmholtzVector.h"
@@ -102,12 +102,12 @@ SCFDriver::SCFDriver(Getkw &input) {
     wf_method = input.get<std::string>("WaveFunction.method");
 
     if (wf_method == "DFT") {
-        dft_spin         = input.get<bool>("DFT.spin");
-        dft_use_gamma    = input.get<bool>("DFT.use_gamma");
-        dft_x_fac        = input.get<double>("DFT.exact_exchange");
-        dft_cutoff       = input.get<double>("DFT.density_cutoff");
-        dft_func_coefs   = input.getDblVec("DFT.func_coefs");
-        dft_func_names   = input.getData("DFT.functionals");
+        dft_spin = input.get<bool>("DFT.spin");
+        dft_use_gamma = input.get<bool>("DFT.use_gamma");
+        dft_x_fac = input.get<double>("DFT.exact_exchange");
+        dft_cutoff = input.get<double>("DFT.density_cutoff");
+        dft_func_coefs = input.getDblVec("DFT.func_coefs");
+        dft_func_names = input.getData("DFT.functionals");
     }
 
     scf_run = input.get<bool>("SCF.run");
@@ -288,7 +288,7 @@ void SCFDriver::setup() {
     int nNucs = molecule->getNNuclei();
     h_E = new H_E_dip(r_O);
     h_B = new H_B_dip(*(useDerivative(diff_orb)), r_O);
-    h_M = new H_M_pso*[nNucs];
+    h_M = new H_M_pso *[nNucs];
     for (int k = 0; k < nNucs; k++) {
         const double *r_K = molecule->getNucleus(k).getCoord();
         h_M[k] = new H_M_pso(*(useDerivative(diff_pso)), r_K);
@@ -297,27 +297,19 @@ void SCFDriver::setup() {
     // Setting up properties
     if (nmr_nucleus_k[0] < 0) {
         nmr_nucleus_k.clear();
-        for (int k = 0; k < nNucs; k++) {
-            nmr_nucleus_k.push_back(k);
-        }
+        for (int k = 0; k < nNucs; k++) nmr_nucleus_k.push_back(k);
     }
     if (sscc_nucleus_k[0] < 0) {
         sscc_nucleus_k.clear();
-        for (int k = 0; k < nNucs; k++) {
-            sscc_nucleus_k.push_back(k);
-        }
+        for (int k = 0; k < nNucs; k++) sscc_nucleus_k.push_back(k);
     }
     if (sscc_nucleus_l[0] < 0) {
         sscc_nucleus_l.clear();
-        for (int l = 0; l < nNucs; l++) {
-            sscc_nucleus_l.push_back(l);
-        }
+        for (int l = 0; l < nNucs; l++) sscc_nucleus_l.push_back(l);
     }
     if (hfcc_nucleus_k[0] < 0) {
         hfcc_nucleus_k.clear();
-        for (int k = 0; k < nNucs; k++) {
-            hfcc_nucleus_k.push_back(k);
-        }
+        for (int k = 0; k < nNucs; k++) hfcc_nucleus_k.push_back(k);
     }
 
     if (calc_scf_energy) molecule->initSCFEnergy();
@@ -412,9 +404,7 @@ void SCFDriver::setup() {
         fock->setXCOperator(XC);
     }
     //HACK we need a better way to decide whether to initialize the external potential operator
-    if (ext_electric) {
-        Vext = new ElectricFieldOperator(ext_electric_field);
-    }
+    if (ext_electric) Vext = new ElectricFieldOperator(ext_electric_field);
     fock->setExtOperator(Vext);
     fock->build();
 }
@@ -426,8 +416,8 @@ void SCFDriver::setup() {
  * Returns the pointer to the correct derivative operator
  *
  */
-mrcpp::DerivativeOperator<3>* SCFDriver::useDerivative(string derivative_name) {
-    if (derivative_name == "PH_1")    return PH_1;
+mrcpp::DerivativeOperator<3> *SCFDriver::useDerivative(string derivative_name) {
+    if (derivative_name == "PH_1") return PH_1;
     if (derivative_name == "ABGV_00") return ABGV_00;
     if (derivative_name == "ABGV_55") return ABGV_55;
     MSG_FATAL("No such derivative operator");
@@ -451,7 +441,7 @@ void SCFDriver::clear() {
     if (V != 0) delete V;
     if (T != 0) delete T;
 
-    orbital::free(*phi);
+    if (phi != 0) orbital::free(*phi);
     if (phi != 0) delete phi;
     if (molecule != 0) delete molecule;
 
@@ -499,31 +489,43 @@ void SCFDriver::setup_np1() {
 
 void SCFDriver::clear_np1() {
     if (fock_np1 != 0) delete fock_np1;
-    if (XC_np1   != 0) delete XC_np1;
-    if (K_np1    != 0) delete K_np1;
-    if (J_np1    != 0) delete J_np1;
-    if (phi_np1  != 0) delete phi_np1;
+    if (XC_np1 != 0) delete XC_np1;
+    if (K_np1 != 0) delete K_np1;
+    if (J_np1 != 0) delete J_np1;
+    if (phi_np1 != 0) delete phi_np1;
 }
 
 void SCFDriver::setupInitialGroundState() {
     double prec = scf_orbital_prec[0];
     if (scf_start == "GTO")
-        if (wf_restricted)          *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a);
-        else                        *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
-    else if (scf_start == "CORE_SZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "CORE_DZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 2);
-    else if (scf_start == "CORE_TZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 3);
-    else if (scf_start == "CORE_QZ")*phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 4);
-    else if (scf_start == "SAD_SZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "SAD_DZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 2);
-    else if (scf_start == "SAD_TZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 3);
-    else if (scf_start == "SAD_QZ") *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 4);
-    else if (scf_start == "MW")     *phi = orbital::load_orbitals(file_start_orbitals);
-    else MSG_FATAL("Invalid initial guess");
+        if (wf_restricted)
+            *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a);
+        else
+            *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
+    else if (scf_start == "CORE_SZ")
+        *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "CORE_DZ")
+        *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 2);
+    else if (scf_start == "CORE_TZ")
+        *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 3);
+    else if (scf_start == "CORE_QZ")
+        *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 4);
+    else if (scf_start == "SAD_SZ")
+        *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 1);
+    else if (scf_start == "SAD_DZ")
+        *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 2);
+    else if (scf_start == "SAD_TZ")
+        *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 3);
+    else if (scf_start == "SAD_QZ")
+        *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 4);
+    else if (scf_start == "MW")
+        *phi = orbital::load_orbitals(file_start_orbitals);
+    else
+        MSG_FATAL("Invalid initial guess");
     orbital::print(*phi);
 }
 
-OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
+OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
     OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, kain);
@@ -536,7 +538,7 @@ OrbitalOptimizer* SCFDriver::setupOrbitalOptimizer() {
     return optimizer;
 }
 
-EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
+EnergyOptimizer *SCFDriver::setupEnergyOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
     EnergyOptimizer *optimizer = new EnergyOptimizer(*helmholtz);
@@ -548,7 +550,7 @@ EnergyOptimizer* SCFDriver::setupEnergyOptimizer() {
     return optimizer;
 }
 
-LinearResponseSolver* SCFDriver::setupLinearResponseSolver(bool dynamic) {
+LinearResponseSolver *SCFDriver::setupLinearResponseSolver(bool dynamic) {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
     LinearResponseSolver *lrs = 0;
@@ -602,15 +604,11 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     } else if (wf_method == "DFT") {
         xFac = dft_x_fac;
     }
-    if (xFac > mrcpp::MachineZero) {
-        NOT_IMPLEMENTED_ABORT;
-    }
+    if (xFac > mrcpp::MachineZero) NOT_IMPLEMENTED_ABORT;
 
     int d = rsp_calc.dir;
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
-    if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) {
-        NOT_IMPLEMENTED_ABORT;
-    }
+    if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) NOT_IMPLEMENTED_ABORT;
 
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
@@ -628,14 +626,14 @@ void SCFDriver::clearPerturbedOperators() {
     dJ = 0;
 }
 
-
 void SCFDriver::run() {
     if (not sanityCheck()) return;
 
     bool converged = runGroundState();
     if (converged) {
         for (int i = 0; i < rsp_calculations.size(); i++) {
-            runLinearResponse(rsp_calculations[i]);
+            const ResponseCalculation &rsp_calc = rsp_calculations[i];
+            runLinearResponse(rsp_calc);
         }
     }
 
@@ -768,18 +766,19 @@ void SCFDriver::calcGroundStateProperties() {
                 double r_x = (R_k[0] - R_l[0]);
                 double r_y = (R_k[1] - R_l[1]);
                 double r_z = (R_k[2] - R_l[2]);
-                double R_kl = std::pow(math_utils::calc_distance(R_k, R_l), 3.0);;
-                nuc(k,0) -= Z_k*Z_l*r_x/R_kl;
-                nuc(k,1) -= Z_k*Z_l*r_y/R_kl;
-                nuc(k,2) -= Z_k*Z_l*r_z/R_kl;
+                double R_kl = std::pow(math_utils::calc_distance(R_k, R_l), 3.0);
+                ;
+                nuc(k, 0) -= Z_k * Z_l * r_x / R_kl;
+                nuc(k, 1) -= Z_k * Z_l * r_y / R_kl;
+                nuc(k, 2) -= Z_k * Z_l * r_z / R_kl;
             }
             el.row(k) = r_rm3.trace(*phi).real();
             r_rm3.clear();
             vecsum += el.row(k);
             vecsum += nuc.row(k);
-            torque[0] += R_k[1]*(el(k,2)+nuc(k,2)) - R_k[2]*(el(k,1)+nuc(k,1));
-            torque[1] += R_k[2]*(el(k,0)+nuc(k,0)) - R_k[0]*(el(k,2)+nuc(k,2));
-            torque[2] += R_k[0]*(el(k,1)+nuc(k,1)) - R_k[1]*(el(k,0)+nuc(k,0));
+            torque[0] += R_k[1] * (el(k, 2) + nuc(k, 2)) - R_k[2] * (el(k, 1) + nuc(k, 1));
+            torque[1] += R_k[2] * (el(k, 0) + nuc(k, 0)) - R_k[0] * (el(k, 2) + nuc(k, 2));
+            torque[2] += R_k[0] * (el(k, 1) + nuc(k, 1)) - R_k[1] * (el(k, 0) + nuc(k, 0));
         }
         println(0, "nuclear part    ");
         println(0, nuc);
@@ -978,16 +977,18 @@ void SCFDriver::setupInitialGrid(mrdft::XCFunctional &func, const Molecule &mol)
     Printer::printFooter(0, timer, 2);
 }
 
-    /** @brief helper routine to set up the correct parameters in the functional before using it
+/** @brief helper routine to set up the correct parameters in the functional before using it
      *
      * param[in] order the requested order of the derivative (order=1 for SCF)
      *
      */
 
-mrdft::XCFunctional* SCFDriver::setupFunctional(int order) {
-    mrdft::XCFunctional* fun = new mrdft::XCFunctional(*MRA, dft_spin);
+mrdft::XCFunctional *SCFDriver::setupFunctional(int order) {
+    mrdft::XCFunctional *fun = new mrdft::XCFunctional(*MRA, dft_spin);
     for (int i = 0; i < dft_func_names.size(); i++) {
-        fun->setFunctional(dft_func_names[i], dft_func_coefs[i]);
+        double f_coef = dft_func_coefs[i];
+        const std::string &f_name = dft_func_names[i];
+        fun->setFunctional(f_name, f_coef);
     }
     fun->setUseGamma(dft_use_gamma);
     fun->setDensityCutoff(dft_cutoff);

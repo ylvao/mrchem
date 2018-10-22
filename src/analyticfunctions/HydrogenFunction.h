@@ -32,7 +32,6 @@ namespace mrchem {
 class RadialFunction final : public mrcpp::RepresentableFunction<1> {
 public:
     RadialFunction(int n, int l, double Z);
-    ~RadialFunction() { }
 
     double evalf(const double *r) const;
     double evalf(const std::array<double, 1> &r) const { return evalf(r.data()); }
@@ -47,11 +46,9 @@ protected:
     double evalfPoly(double r) const;
 };
 
-
 class AngularFunction final : public mrcpp::RepresentableFunction<3> {
 public:
     AngularFunction(int l, int m);
-    ~AngularFunction() { }
 
     double evalf(const double *r) const;
     double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
@@ -68,7 +65,6 @@ protected:
 class HydrogenFunction final : public mrcpp::RepresentableFunction<3> {
 public:
     HydrogenFunction(int n, int l, int m, double Z = 1.0, const double *o = 0);
-    ~HydrogenFunction() { }
 
     double evalf(const double *p) const;
     double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }

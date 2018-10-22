@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include "AOContraction.h"
+#include <vector>
 
 namespace mrchem {
 namespace gto_utils {
@@ -10,6 +10,7 @@ class AOBasis final {
 public:
     AOBasis();
     AOBasis(const AOBasis &bas);
+    AOBasis &operator=(const AOBasis &bas);
     ~AOBasis();
 
     void append(const AOContraction &ctr);
@@ -25,13 +26,12 @@ public:
     int getNFunc() const { return this->nFunc; }
 
     // This should print shell by shell
-    friend std::ostream& operator<<(std::ostream &o, const AOBasis &b) {
+    friend std::ostream &operator<<(std::ostream &o, const AOBasis &b) {
         o << "    nFunc " << b.nFunc << std::endl;
-        for (unsigned int i = 0; i < b.ctrs.size(); i++) {
-            o << "    " << *b.ctrs[i];
-        }
+        for (int i = 0; i < b.ctrs.size(); i++) o << "    " << *b.ctrs[i];
         return o;
     }
+
 private:
     int nPrim; ///< Total number of primitives in set
     int nFunc; ///< Total number of functions (all l-components included)
