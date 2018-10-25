@@ -26,26 +26,25 @@
 
 namespace mrchem {
 
-class XCPotential : public QMPotential {
+class XCPotentialD1 final : public XCPotential {
 public:
-    XCPotential(mrdft::XCFunctional *F)
-        : QMPotential(1),
-          functional(F) {
-          }
-
-    friend class XCOperator;
+    XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi = nullptr);
 
 protected:
-    double energy;                             ///< XC energy
-    mrdft::XCFunctional *functional;           ///< External XC functional to be used
+    OrbitalVector *orbitals;                   ///< External set of orbitals used to build the density
+    mrcpp::FunctionTreeVector<3> potentials;   ///< XC Potential functions collected in a vector
 
-    double getEnergy() const { return this->energy; }
+    void setup(double prec);
+    void clear();
 
-    virtual mrcpp::FunctionTree<3> &getDensity(int spin) = 0;
-    virtual void setupDensity() {}
-    virtual void setupPotential(double prec) {}
-    
-    virtual Orbital apply(Orbital phi) = 0;
+    void setupDensity();
+    void setupPotential(double prec);
+    mrcpp::FunctionTree<3> &getDensity(int spin);
+    mrcpp::FunctionTree<3> &getPotential(int spin);
+
+    Orbital apply(Orbital phi);
+
+
 };
 
 } //namespace mrchem
