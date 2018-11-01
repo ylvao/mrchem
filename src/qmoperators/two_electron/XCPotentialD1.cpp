@@ -135,7 +135,7 @@ void XCPotentialD1::setupPotential(double prec) {
  *
  * @param[in] type Which density to return (alpha, beta or total)
  */
-FunctionTree<3> &XCPotentialD1::getDensity(int spin) {
+mrcpp::FunctionTree<3> &XCPotentialD1::getDensity(int spin) {
     if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
     if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
     if (spin == DENSITY::Beta)  return this->functional->getDensity(mrdft::DensityType::Beta);

@@ -47,12 +47,18 @@ protected:
 
     void setupDensity();
     void setupPotential(double prec);
-    mrcpp::FunctionTree<3> &getPotential(int spin);
+    mrcpp::FunctionTree<3> &getDensity(int spin);
+    mrcpp::FunctionTree<3> &getPotential(int orbitalSpin, int densitySpin);
 
     Orbital apply(Orbital phi);
 
+    //LUCA I wanted to include the following declarations in the cpp
+    //file but i did not manage to get the syntax (copied from
+    //density_utils.copp) right.
+    int getPotentialIndex(int orbitalSpin, int densitySpin);
+    void setupGroundStateDensity();
+    void setupPerturbedDensity();
 
-    
 };
 
 } //namespace mrchem
