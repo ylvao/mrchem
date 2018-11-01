@@ -31,7 +31,7 @@ public:
     XCPotentialD2(mrdft::XCFunctional *F,
                   OrbitalVector *Phi,
                   OrbitalVector *X,
-                  OrbitalVector *Y = nullptr);
+                  OrbitalVector *Y);
 
 protected:
     OrbitalVector *orbitals;                   ///< External set of orbitals used to build the density

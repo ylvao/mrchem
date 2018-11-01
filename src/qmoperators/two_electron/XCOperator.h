@@ -3,6 +3,7 @@
 #include "qmoperators/RankZeroTensorOperator.h"
 #include "XCPotential.h"
 #include "XCPotentialD1.h"
+#include "XCPotentialD2.h"
 
 /** @class XCOperator
  *
@@ -22,6 +23,17 @@ public:
         RankZeroTensorOperator &XC = (*this);
         XC = *this->potential;
     }
+
+    XCOperator(mrdft::XCFunctional *F,
+               OrbitalVector *Phi,
+               OrbitalVector *X,
+               OrbitalVector *Y)
+            : potential(nullptr) {
+        this->potential = new XCPotentialD2(F, Phi, X, Y);
+        RankZeroTensorOperator &XC = (*this);
+        XC = *this->potential;
+    }
+    ~XCOperator() { if (this->potential != nullptr) delete this->potential; }
 
     double getEnergy() { return this->potential->getEnergy(); }
     mrcpp::FunctionTree<3> &getDensity(int spin) { return this->potential->getDensity(spin); }
