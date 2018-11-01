@@ -89,6 +89,7 @@ public:
     bool isGGA() const { return (xc_is_gga(this->functional)); }
     bool isMetaGGA() const { return (xc_is_metagga(this->functional)); }
     bool isSpinSeparated() const { return this->spin_separated; }
+    int getOrder() const { return this->order; }
 
     void evalSetup(int order);
     void setup();
@@ -100,6 +101,7 @@ public:
     mrcpp::FunctionTreeVector<3> calcHessian();
 
  protected:
+    int order;
     const bool spin_separated;                  ///< Spin polarization
     const mrcpp::MultiResolutionAnalysis<3> MRA;///< Computational domain
 

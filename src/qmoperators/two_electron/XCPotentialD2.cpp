@@ -1,6 +1,5 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-
 #include "XCPotential.h"
 #include "XCPotentialD2.h"
 #include "qmfunctions/Orbital.h"
@@ -14,7 +13,9 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
-/** @brief Constructor
+int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin);
+
+    /** @brief Constructor
  *
  * @param[in] F XCFunctional pointer
  * @param[in] Phi Vector of orbitals
@@ -24,8 +25,10 @@ namespace mrchem {
  * xcfun when F.evalSetup is invoked.
  */
 XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F, OrbitalVector *Phi)
-        : XCPotential(F),
-          orbitals(Phi) {
+        : XCPotential(F)
+          orbitals(Phi),
+          orbitals_x(X),
+          orbitals_y(Y) {
 }
 
 /** @brief Prepare the operator for application
@@ -43,7 +46,7 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F, OrbitalVector *Phi)
 void XCPotentialD2::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    setupDensity();
+    setupDensity(prec);
     setupPotential(prec);
 }
 
@@ -61,6 +64,11 @@ void XCPotentialD2::clear() {
  * size is determined inside the module.
  */
 void XCPotentialD2::setupDensity() {
+    setupGroundStateDensity();
+    setupPerturbedDensity();
+}
+
+void XCPotentialD2::setupGroundStateDensity() {
     if (this->functional->hasDensity()) return;
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &Phi = *this->orbitals;
@@ -91,6 +99,40 @@ void XCPotentialD2::setupDensity() {
     }
 }
 
+void XCPotentialD2::setupPerturbedDensity() {
+    if (this->orbitals_x == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (this->orbitals_y == nullptr) MSG_ERROR("Orbitals not initialized");
+    OrbitalVector &Phi = *this->orbitals;
+    OrbitalVector &X = *this->orbitals_x;
+    OrbitalVector &Y = *this->orbitals_y;
+    if (this->functional->isSpinSeparated()) {
+        Timer time_a;
+        FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
+        pertDensity_a->allocReal();
+        mrcpp::copy_grid(pertDensity_a->real(), tmp_a);
+        density::compute(-1.0, pertDensity_a, Phi, X, Y, DENSITY::Alpha);
+        time_a.stop();
+        Printer::printTree(0, "XC alpha density", pertDensity_a.getNNodes(), time_a.getWallTime());
+
+        Timer time_b;
+        FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
+        pertDensity_b->allocReal();
+        mrcpp::copy_grid(pertDensity_b->real(), tmp_b);
+        density::compute(-1.0, pertDensity_b, Phi, X, Y, DENSITY::Beta);
+        time_b.stop();
+        Printer::printTree(0, "XC beta density", pertDensity_b.getNNodes(), time_b.getWallTime());
+
+    } else {
+        Timer time_t;
+        FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
+        pertDensity_t->allocReal();
+        mrcpp::copy_grid(pertDensity_t->real(), tmp_t);
+        density::compute(-1.0, pertDensity_t, Phi, X, Y, DENSITY::Total);
+        time_t.stop();
+        Printer::printTree(0, "XC total density", pertDensity_t.getNNodes(), time_t.getWallTime());
+    }
+}
+
 /** @brief Compute XC potential(s)
  *
  * @param prec Precision used in refinement of density grid
@@ -118,7 +160,7 @@ void XCPotentialD2::setupPotential(double prec) {
 
     this->functional->setup();
     this->functional->evaluate();
-    this->energy = this->functional->calcEnergy();
+    //    this->energy = this->functional->calcEnergy();
     this->potentials = this->functional->calcPotential();
     this->functional->pruneGrid(prec);
     this->functional->refineGrid(prec);
@@ -131,34 +173,64 @@ void XCPotentialD2::setupPotential(double prec) {
     println(0, " XC grid change " << std::setw(26) << newNodes << std::setw(17) << newPoints);
 }
 
-/** @brief Return FunctionTree for the input density from the XCFunctional
- *
- * @param[in] type Which density to return (alpha, beta or total)
- */
-FunctionTree<3> &XCPotentialD2::getDensity(int spin) {
-    if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
-    if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
-    if (spin == DENSITY::Beta)  return this->functional->getDensity(mrdft::DensityType::Beta);
-    MSG_FATAL("Invalid density type");
-}
-
 /** @brief Return FunctionTree for the XC spin potential
  *
  * @param[in] type Which spin potential to return (alpha, beta or total)
  */
-FunctionTree<3>& XCPotentialD2::getPotential(int spin) {
-    bool spinFunctional = this->functional->isSpinSeparated();
-    int pot_idx = -1;
-    if (spinFunctional and spin == SPIN::Alpha) {
-        pot_idx = 0;
-    } else if (spinFunctional and spin == SPIN::Beta) {
-        pot_idx = 1;
-    } else if (not spinFunctional) {
-        pot_idx = 0;
-    } else {
-        NOT_IMPLEMENTED_ABORT;
-    }
+FunctionTree<3>& XCPotentialD2::getPotential(int orbitalSpin, int densitySpin) {
+    int pot_idx = XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin);
     return mrcpp::get_func(this->potentials, pot_idx);
+}
+
+int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
+
+    int spinFunctional = this->functional->isSpinSeparated()?:1:0;
+    
+    int functional_case;
+    functional_case += spinFunctional;       // 0  1
+    functional_case += orbitalSpin   << 2;   // 0  2  4  6
+    functional_case += densitySpin   << 4;   // 0  8 16 24
+
+    //OS Paired Alpha Beta
+    //DS Total  Spin  Alpha Beta
+    
+    // SF    OS             DS          case   Index 
+    //  0     0 (paired)     0 (total)     0    0    
+    //  1     0 (paired)     0 (total)     1    not implemented
+    //  0     1 (alpha )     0 (total)     2    not implemented 
+    //  1     1 (alpha )     0 (total)     3    not implemented 
+    //  0     2 (beta  )     0 (total)     4    not implemented 
+    //  1     2 (beta  )     0 (total)     5    not implemented 
+    //  0     3 (unused)     0 (total)     6    not implemented 
+    //  1     3 (unused)     0 (total)     7    not implemented 
+    //  0     0 (paired)     1 (spin )     8    not implemented 
+    //  1     0 (paired)     1 (spin )     9    not implemented 
+    //  0     1 (alpha )     1 (spin )    10    not implemented 
+    //  1     1 (alpha )     1 (spin )    11    not implemented 
+    //  0     2 (beta  )     1 (spin )    12    not implemented 
+    //  1     2 (beta  )     1 (spin )    13    not implemented 
+    //  0     3 (unused)     1 (spin )    14    not implemented  
+    //  1     3 (unused)     1 (spin )    15    not implemented  
+    //  0     0 (paired)     2 (alpha)    16    not implemented  
+    //  1     0 (paired)     2 (alpha)    17    not implemented  
+    //  0     1 (alpha )     2 (alpha)    18    not implemented  
+    //  1     1 (alpha )     2 (alpha)    19    not implemented  
+    //  0     2 (beta  )     2 (alpha)    20    not implemented  
+    //  1     2 (beta  )     2 (alpha)    21    not implemented  
+    //  0     3 (unused)     2 (alpha)    22    not implemented  
+    //  1     3 (unused)     2 (alpha)    23    not implemented  
+    //  0     0 (paired)     3 (beta )    24    not implemented  
+    //  1     0 (paired)     3 (beta )    25    not implemented  
+    //  0     1 (alpha )     3 (beta )    26    not implemented  
+    //  1     1 (alpha )     3 (beta )    27    not implemented  
+    //  0     2 (beta  )     3 (beta )    28    not implemented  
+    //  1     2 (beta  )     3 (beta )    29    not implemented  
+    //  0     3 (unused)     3 (beta )    30    not implemented  
+    //  1     3 (unused)     3 (beta )    31    not implemented  
+    switch(functional_case) {
+    case(0) potential_index = 0;    break;
+    default: MSG_FATAL("Not implemented: ABORT");
+    }
 }
 
 /** @brief XCPotentialD2 application
