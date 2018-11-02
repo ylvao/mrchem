@@ -7,11 +7,11 @@ namespace mrchem {
 
 class Cavity : public mrcpp::RepresentableFunction<3> {
 public: 
-  Cavity(std::vector<std::vector<double>> coord, std::vector<double> R, double slope);
+  Cavity(std::vector<std::array<double, 3>> coord, std::vector<double> R, double slope);
   double evalf(const double *r) const;
   double evalf(const std::array<double, 3> &r) const {return 0;}
 protected:
-  std::vector<std::vector<double>> pos;
+  std::vector<std::array<double, 3>> pos;
   std::vector<double> R;
   double d;
 };

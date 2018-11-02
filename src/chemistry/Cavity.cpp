@@ -5,7 +5,7 @@
 
 namespace mrchem {
 
-Cavity::Cavity(std::vector<std::vector<double>> coord, std::vector<double> R, double slope){
+Cavity::Cavity(std::vector<std::array<double, 3>> coord, std::vector<double> R, double slope){
   this->pos = coord;
   this->R = R;
   this->d = slope; 
