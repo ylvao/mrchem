@@ -14,8 +14,7 @@ Cavity::Cavity(std::vector<std::array<double, 3>> coord, std::vector<double> R, 
 
 double Cavity::evalf(const double *r) const {
   double C = 1.0;
-  double s, O;
-  //int size = pos.size();
+  double s, O;  
 
   for(int i = 0; i < pos.size(); i++){
     s = std::sqrt(std::pow(pos[i][0] - r[0], 2) + std::pow(pos[i][1] - r[1], 2) + std::pow(pos[i][2] - r[2], 2)) - R[i];
