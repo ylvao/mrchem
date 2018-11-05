@@ -43,7 +43,7 @@ double Cavity::evalf(const mrcpp::Coord<3> &r) const {
     double s, O;
 
     for (int i = 0; i < pos.size(); i++) {
-        s = math_utils::calc_distance(pos[i], r);
+        s = math_utils::calc_distance(pos[i], r) - R[i];
         O = 0.5 * (1 + std::erf(s / d));
         C *= 1 - (1 - O);
     }
