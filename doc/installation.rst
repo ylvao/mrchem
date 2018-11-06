@@ -13,7 +13,8 @@ correctly, provided all the necessary tools are available.
 Stallo
 ------
 
-::
+Using the Intel tool chain on Stallo::
+
     $ module load intel/2017a
     $ module load CMake/3.9.1
     $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
@@ -21,7 +22,9 @@ Stallo
 
 Fram
 ----
-::
+
+Using the Intel tool chain on Fram::
+
     $ module load intel/2017a
     $ module load CMake/3.9.1
     $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
