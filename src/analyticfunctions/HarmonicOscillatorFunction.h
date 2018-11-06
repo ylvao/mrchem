@@ -63,10 +63,13 @@ protected:
 
 class HarmonicOscillatorFunction final : public mrcpp::RepresentableFunction<3> {
 public:
-    HarmonicOscillatorFunction(int n[3], double m = 1.0, double *k = 0, const mrcpp::Coord<3> &o = {0.0, 0.0, 0.0})
-            : fx(n[0], m, ((k != 0) ? k[0] : 1.0), o[0])
-            , fy(n[1], m, ((k != 0) ? k[1] : 1.0), o[1])
-            , fz(n[2], m, ((k != 0) ? k[2] : 1.0), o[2]) {}
+    HarmonicOscillatorFunction(int n[3],
+                               double m = 1.0,
+                               double *k = nullptr,
+                               const mrcpp::Coord<3> &o = {0.0, 0.0, 0.0})
+            : fx(n[0], m, ((k != nullptr) ? k[0] : 1.0), o[0])
+            , fy(n[1], m, ((k != nullptr) ? k[1] : 1.0), o[1])
+            , fz(n[2], m, ((k != nullptr) ? k[2] : 1.0), o[2]) {}
 
     double evalf(const mrcpp::Coord<3> &r) const override { return fx(r[0]) * fy(r[1]) * fz(r[2]); }
 
