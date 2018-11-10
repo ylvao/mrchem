@@ -41,13 +41,13 @@ protected:
     Density *pertDensity_t;                    ///< total first-order perturbed electronic density
     Density *pertDensity_a;                    ///< alpha first-order perturbed electronic density
     Density *pertDensity_b;                    ///< beta  first-order perturbed electronic density
-    
+  
     void setup(double prec);
     void clear();
 
     void setupDensity();
     void setupPotential(double prec);
-    mrcpp::FunctionTree<3> &getDensity(int spin);
+    mrcpp::FunctionTree<3> &getPerturbedDensity(int spin);
     mrcpp::FunctionTree<3> &getPotential(int orbitalSpin, int densitySpin);
 
     Orbital apply(Orbital phi);

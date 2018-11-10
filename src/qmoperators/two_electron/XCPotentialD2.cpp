@@ -46,9 +46,13 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
  *
  */
 void XCPotentialD2::setup(double prec) {
+    std::cout << "setup XCPotentialD2" << std::endl;
     if (isSetup(prec)) return;
+    std::cout << "setup XCPotentialD2 prec " << std::endl;
     setApplyPrec(prec);
+    std::cout << "setup XCPotentialD2 dens" << std::endl;
     setupDensity();
+    std::cout << "setup XCPotentialD2 pot" << std::endl;
     setupPotential(prec);
 }
 
@@ -66,7 +70,9 @@ void XCPotentialD2::clear() {
  * size is determined inside the module.
  */
 void XCPotentialD2::setupDensity() {
-    XCPotentialD2::setupGroundStateDensity();
+    //std::cout << "setup pert dens" << std::endl;
+    //XCPotentialD2::setupGroundStateDensity();
+    std::cout << "setup pert dens" << std::endl;
     XCPotentialD2::setupPerturbedDensity();
 }
 
@@ -111,6 +117,7 @@ void XCPotentialD2::setupPerturbedDensity() {
     if (this->functional->isSpinSeparated()) {
         Timer time_a;
         FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
+        pertDensity_a = new Density(); //LUCA  shall I deallocate these at the end?
         pertDensity_a->alloc(NUMBER::Real);
         mrcpp::copy_grid(pertDensity_a->real(), tmp_a);
         density::compute(-1.0, *pertDensity_a, Phi, X, Y, DENSITY::Alpha);
@@ -119,6 +126,7 @@ void XCPotentialD2::setupPerturbedDensity() {
 
         Timer time_b;
         FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
+        pertDensity_b = new Density();
         pertDensity_b->alloc(NUMBER::Real);
         mrcpp::copy_grid(pertDensity_b->real(), tmp_b);
         density::compute(-1.0, *pertDensity_b, Phi, X, Y, DENSITY::Beta);
@@ -128,8 +136,13 @@ void XCPotentialD2::setupPerturbedDensity() {
     } else {
         Timer time_t;
         FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
+        std::cout << tmp_t << std::endl;
+        std::cout << "alloc pert" << std::endl;
+        pertDensity_t = new Density();
         pertDensity_t->alloc(NUMBER::Real);
+        std::cout << "cp grid" << std::endl;
         mrcpp::copy_grid(pertDensity_t->real(), tmp_t);
+        std::cout << "comp dens" << std::endl;
         density::compute(-1.0, *pertDensity_t, Phi, X, Y, DENSITY::Total);
         time_t.stop();
         Printer::printTree(0, "XC total density", pertDensity_t->getNNodes(), time_t.getWallTime());
@@ -188,9 +201,9 @@ FunctionTree<3>& XCPotentialD2::getPotential(int orbitalSpin, int densitySpin) {
 int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     int spinFunctional = this->functional->isSpinSeparated() ? 1 : 0;
+
     
-    int functional_case;
-    functional_case += spinFunctional;       // 0  1
+    int functional_case = spinFunctional;       // 0  1
     functional_case += orbitalSpin   << 2;   // 0  2  4  6
     functional_case += densitySpin   << 4;   // 0  8 16 24
 
@@ -231,7 +244,7 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
     //  0     3 (unused)     3 (beta )    30    not implemented  
     //  1     3 (unused)     3 (beta )    31    not implemented  
     switch(functional_case) {
-    case(0): return 0;
+    case(0): return 1;
     default: MSG_FATAL("Not implemented: ABORT");
     }
     
@@ -257,13 +270,19 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
     if(not spinSeparated and totalDens) {
         FunctionTree<3> &V = getPotential(phi.spin(), DENSITY::Total);
+        std::cout << "Potential V" << std::endl;
+        std::cout << V << std::endl;
         mrcpp::multiply(-1.0, *Vrho, 1.0, V, pertDensity_t->real());
+        std::cout << "Vrho" << std::endl;
+        std::cout << V << std::endl;
     } else {
         MSG_FATAL("Not implemented: abort!");
     }
 
     this->setReal(Vrho);
     Orbital Vrhophi = QMPotential::apply(phi); 
+    std::cout << "Vrhophi" << std::endl;
+    std::cout << Vrhophi.real() << std::endl;
     this->setReal(0);
     delete Vrho; //LUCA: enough to deallocate this FunctionTree?
     return Vrhophi;
@@ -273,7 +292,7 @@ Orbital XCPotentialD2::apply(Orbital phi) {
  *
  * @param[in] type Which density to return (alpha, beta or total)
  */
-mrcpp::FunctionTree<3> &XCPotentialD2::getDensity(int spin) {
+mrcpp::FunctionTree<3> &XCPotentialD2::getPerturbedDensity(int spin) {
     if (spin == DENSITY::Total) return pertDensity_t->real();
     if (spin == DENSITY::Alpha) return pertDensity_a->real();
     if (spin == DENSITY::Beta)  return pertDensity_b->real();

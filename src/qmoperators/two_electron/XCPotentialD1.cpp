@@ -131,17 +131,6 @@ void XCPotentialD1::setupPotential(double prec) {
     println(0, " XC grid change " << std::setw(26) << newNodes << std::setw(17) << newPoints);
 }
 
-/** @brief Return FunctionTree for the input density from the XCFunctional
- *
- * @param[in] type Which density to return (alpha, beta or total)
- */
-mrcpp::FunctionTree<3> &XCPotentialD1::getDensity(int spin) {
-    if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
-    if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
-    if (spin == DENSITY::Beta)  return this->functional->getDensity(mrdft::DensityType::Beta);
-    MSG_FATAL("Invalid density type");
-}
-
 /** @brief Return FunctionTree for the XC spin potential
  *
  * @param[in] type Which spin potential to return (alpha, beta or total)

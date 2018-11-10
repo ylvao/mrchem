@@ -40,8 +40,9 @@ protected:
     mrdft::XCFunctional *functional;           ///< External XC functional to be used
 
     double getEnergy() const { return this->energy; }
+    int getOrder() const { return this->functional->getOrder(); }
 
-    virtual mrcpp::FunctionTree<3> &getDensity(int spin) = 0;
+    mrcpp::FunctionTree<3> &getDensity(int spin);
     virtual void setupDensity() {}
     virtual void setupPotential(double prec) {}
     

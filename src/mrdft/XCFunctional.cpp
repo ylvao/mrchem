@@ -593,6 +593,7 @@ double XCFunctional::calcEnergy() {
  * Different calls for LDA and GGA, and for gamma-type vs explicit derivatives.
  */
 FunctionTreeVector<3> XCFunctional::calcPotential() {
+    std::cout << "Here we calc the pot" << std::endl;
     FunctionTreeVector<3> xc_pot;
     if (xcOutput.size() == 0) MSG_ERROR("XC output not initialized");
 
@@ -617,7 +618,10 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
  * deep copied into the corresponding potential functions.
  */
 void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
-    int nPotentials = isSpinSeparated() ? this->order + 1 : 1;
+    int nPotentials = this->order;
+    if (isSpinSeparated()) {
+        nPotentials = (this->order + 1) * (this->order + 2) / 2 - 1;
+    }
     for (int i = 0; i < nPotentials; i++) {
         FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i+1);
         FunctionTree<3> *pot = new FunctionTree<3>(MRA);

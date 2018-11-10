@@ -593,9 +593,9 @@ void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
 }
 
 void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
-    if (phi == 0) MSG_ERROR("Orbitals not initialized");
-    if (phi_x == 0) MSG_ERROR("X orbitals not initialized");
-    if (phi_y == 0) MSG_ERROR("Y orbitals not initialized");
+    if (phi == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (phi_x == nullptr) MSG_ERROR("X orbitals not initialized");
+    if (phi_y == nullptr) MSG_ERROR("Y orbitals not initialized");
 
     double xFac = 0.0;
     if (wf_method == "HF") {
@@ -603,6 +603,7 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     } else if (wf_method == "DFT") {
         xFac = dft_x_fac;
         xcfun = setupFunctional(2);
+        //xcfun->evalSetup(2);
         dXC = new XCOperator(xcfun, phi, phi_x, phi_y);
     }
     if (xFac > mrcpp::MachineZero) {
@@ -617,9 +618,13 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     if (rsp_calc.isDynamic()) {
         NOT_IMPLEMENTED_ABORT;
     }
+
+    std::cout << "Assembling fock" << std::endl;
     
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
+    
+    std::cout<< "Building fock" << std::endl;
     d_fock->build();
 }
 
@@ -712,7 +717,7 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
         LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);
         solver->setupUnperturbed(rsp_orbital_prec[1], fock, phi, &F);
         solver->setup(d_fock, phi_x);
-        converged = solver->optimize();
+        converged = solver->optimize(); //LUCA Here is a fock.setup()
         solver->clear();
         solver->clearUnperturbed();
         delete solver;

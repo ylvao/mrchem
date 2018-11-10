@@ -36,6 +36,7 @@ public:
     ~XCOperator() { if (this->potential != nullptr) delete this->potential; }
 
     double getEnergy() { return this->potential->getEnergy(); }
+    int getOrder() { return this->potential->getOrder(); }
     mrcpp::FunctionTree<3> &getDensity(int spin) { return this->potential->getDensity(spin); }
 
 protected:

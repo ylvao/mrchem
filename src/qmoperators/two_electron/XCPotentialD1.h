@@ -39,7 +39,6 @@ protected:
 
     void setupDensity();
     void setupPotential(double prec);
-    mrcpp::FunctionTree<3> &getDensity(int spin);
     mrcpp::FunctionTree<3> &getPotential(int spin);
 
     Orbital apply(Orbital phi);

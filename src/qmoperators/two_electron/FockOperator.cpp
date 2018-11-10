@@ -60,6 +60,8 @@ void FockOperator::build() {
     if (this->xc   != nullptr) this->V += *this->xc;
     if (this->ext  != nullptr) this->V += *this->ext;
 
+    std::cout << "Order " << this->xc->getOrder() << std::endl;
+    
     RankZeroTensorOperator &F = (*this);
     F = this->kinetic() + this->potential();
 }
@@ -77,9 +79,13 @@ void FockOperator::setup(double prec) {
     Printer::printDouble(0, "Precision", prec, 5);
     Printer::printSeparator(0, '-');
     this->kinetic().setup(prec);
+    std::cout << "setup Pot in" << std::endl;
     this->potential().setup(prec);
+    std::cout << "setup Pot out" << std::endl;
     this->perturbation().setup(prec);
+    std::cout << "setupInternal in" << std::endl;
     if (this->ex != 0) this->ex->setupInternal(prec);
+    std::cout << "setupInternal out" << std::endl;
     timer.stop();
     Printer::printFooter(0, timer, 2);
 }
