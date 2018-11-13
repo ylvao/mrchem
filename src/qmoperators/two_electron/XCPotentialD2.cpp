@@ -51,7 +51,7 @@ void XCPotentialD2::setup(double prec) {
     std::cout << "setup XCPotentialD2 prec " << std::endl;
     setApplyPrec(prec);
     std::cout << "setup XCPotentialD2 dens" << std::endl;
-    setupDensity();
+    setupPerturbedDensity();
     std::cout << "setup XCPotentialD2 pot" << std::endl;
     setupPotential(prec);
 }
@@ -69,14 +69,7 @@ void XCPotentialD2::clear() {
  * is kept as is, e.i. no additional refinement at this point, since the grid
  * size is determined inside the module.
  */
-void XCPotentialD2::setupDensity() {
-    //std::cout << "setup pert dens" << std::endl;
-    //XCPotentialD2::setupGroundStateDensity();
-    std::cout << "setup pert dens" << std::endl;
-    XCPotentialD2::setupPerturbedDensity();
-}
-
-void XCPotentialD2::setupGroundStateDensity() {
+void XCPotentialD2::setupDensity(double prec) {
     if (this->functional->hasDensity()) return;
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &Phi = *this->orbitals;
@@ -85,7 +78,7 @@ void XCPotentialD2::setupGroundStateDensity() {
         FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
         Density rho_a;
         rho_a.setReal(&tmp_a);
-        density::compute(-1.0, rho_a, Phi, DENSITY::Alpha);
+        density::compute(prec, rho_a, Phi, DENSITY::Alpha);
         time_a.stop();
         Printer::printTree(0, "XC alpha density", rho_a.getNNodes(), time_a.getWallTime());
 
@@ -93,7 +86,7 @@ void XCPotentialD2::setupGroundStateDensity() {
         FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
         Density rho_b;
         rho_b.setReal(&tmp_b);
-        density::compute(-1.0, rho_b, Phi, DENSITY::Beta);
+        density::compute(prec, rho_b, Phi, DENSITY::Beta);
         time_b.stop();
         Printer::printTree(0, "XC beta density", rho_b.getNNodes(), time_b.getWallTime());
     } else {
@@ -101,7 +94,7 @@ void XCPotentialD2::setupGroundStateDensity() {
         FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
         Density rho_t;
         rho_t.setReal(&tmp_t);
-        density::compute(-1.0, rho_t, Phi, DENSITY::Total);
+        density::compute(prec, rho_t, Phi, DENSITY::Total);
         time_t.stop();
         Printer::printTree(0, "XC total density", rho_t.getNNodes(), time_t.getWallTime());
     }
@@ -272,9 +265,11 @@ Orbital XCPotentialD2::apply(Orbital phi) {
         FunctionTree<3> &V = getPotential(phi.spin(), DENSITY::Total);
         std::cout << "Potential V" << std::endl;
         std::cout << V << std::endl;
+        mrcpp::build_grid(*Vrho, V);
+        mrcpp::build_grid(*Vrho, pertDensity_t->real());
         mrcpp::multiply(-1.0, *Vrho, 1.0, V, pertDensity_t->real());
         std::cout << "Vrho" << std::endl;
-        std::cout << V << std::endl;
+        std::cout << *Vrho << std::endl;
     } else {
         MSG_FATAL("Not implemented: abort!");
     }

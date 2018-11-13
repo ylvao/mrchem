@@ -60,7 +60,7 @@ void XCPotentialD1::clear() {
  * is kept as is, e.i. no additional refinement at this point, since the grid
  * size is determined inside the module.
  */
-void XCPotentialD1::setupDensity() {
+void XCPotentialD1::setupDensity(double prec) {
     if (this->functional->hasDensity()) return;
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &Phi = *this->orbitals;
@@ -69,7 +69,7 @@ void XCPotentialD1::setupDensity() {
         FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
         Density rho_a;
         rho_a.setReal(&tmp_a);
-        density::compute(-1.0, rho_a, Phi, DENSITY::Alpha);
+        density::compute(prec, rho_a, Phi, DENSITY::Alpha);
         time_a.stop();
         Printer::printTree(0, "XC alpha density", rho_a.getNNodes(), time_a.getWallTime());
 
@@ -77,7 +77,7 @@ void XCPotentialD1::setupDensity() {
         FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
         Density rho_b;
         rho_b.setReal(&tmp_b);
-        density::compute(-1.0, rho_b, Phi, DENSITY::Beta);
+        density::compute(prec, rho_b, Phi, DENSITY::Beta);
         time_b.stop();
         Printer::printTree(0, "XC beta density", rho_b.getNNodes(), time_b.getWallTime());
     } else {
@@ -85,7 +85,7 @@ void XCPotentialD1::setupDensity() {
         FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
         Density rho_t;
         rho_t.setReal(&tmp_t);
-        density::compute(-1.0, rho_t, Phi, DENSITY::Total);
+        density::compute(prec, rho_t, Phi, DENSITY::Total);
         time_t.stop();
         Printer::printTree(0, "XC total density", rho_t.getNNodes(), time_t.getWallTime());
     }

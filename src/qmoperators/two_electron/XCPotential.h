@@ -43,7 +43,7 @@ protected:
     int getOrder() const { return this->functional->getOrder(); }
 
     mrcpp::FunctionTree<3> &getDensity(int spin);
-    virtual void setupDensity() {}
+    virtual void setupDensity(double prec = -1.0) {}
     virtual void setupPotential(double prec) {}
     
     virtual Orbital apply(Orbital phi) = 0;

@@ -712,6 +712,16 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     setupPerturbedOrbitals(dynamic);
     setupPerturbedOperators(rsp_calc);
 
+    
+    fock->getXCOperator()->setupDensity(rel_prec);
+    std::cout << "Density tree before response fock" << std::endl;
+    std::cout << fock->getXCOperator()->getDensity(DENSITY::Total).integrate() << std::endl;
+    std::cout << fock->getXCOperator()->getDensity(DENSITY::Total) << std::endl;
+
+    d_fock->getXCOperator()->setupDensity(rel_prec);
+    std::cout << "Density tree before response d_fock" << std::endl;
+    std::cout << d_fock->getXCOperator()->getDensity(DENSITY::Total).integrate() << std::endl;
+    std::cout << d_fock->getXCOperator()->getDensity(DENSITY::Total) << std::endl;
     bool converged = true;
     if (rsp_run) {
         LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);

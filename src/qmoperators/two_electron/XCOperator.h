@@ -37,6 +37,7 @@ public:
 
     double getEnergy() { return this->potential->getEnergy(); }
     int getOrder() { return this->potential->getOrder(); }
+    void setupDensity(double prec = -1.0) { this->potential->setupDensity(prec); }
     mrcpp::FunctionTree<3> &getDensity(int spin) { return this->potential->getDensity(spin); }
 
 protected:

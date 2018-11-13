@@ -628,6 +628,7 @@ void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
         mrcpp::copy_grid(*pot, out_i);
         mrcpp::copy_func(*pot, out_i);
         potentials.push_back(std::make_tuple(1.0, pot));
+        std::cout << i << " " << out_i.integrate() << std::endl;
     }
 }
 
