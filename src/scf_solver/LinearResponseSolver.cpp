@@ -219,7 +219,6 @@ bool LinearResponseSolver::optimize() {
         orb_prec = adjustPrecision(err_o);
 
         // Setup perturbed Fock operator
-        std::cout << "Response fock setup" << std::endl;
         fock_1.setup(orb_prec); //LUCA: setup second fock (should not touch XCFunctional stuff here).
 
         // Iterate X orbitals

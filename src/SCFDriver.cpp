@@ -619,12 +619,8 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
         NOT_IMPLEMENTED_ABORT;
     }
 
-    std::cout << "Assembling fock" << std::endl;
-    
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
-    
-    std::cout<< "Building fock" << std::endl;
     d_fock->build();
 }
 
@@ -712,16 +708,9 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     setupPerturbedOrbitals(dynamic);
     setupPerturbedOperators(rsp_calc);
 
-    
-    fock->getXCOperator()->setupDensity(rel_prec);
-    std::cout << "Density tree before response fock" << std::endl;
-    std::cout << fock->getXCOperator()->getDensity(DENSITY::Total).integrate() << std::endl;
-    std::cout << fock->getXCOperator()->getDensity(DENSITY::Total) << std::endl;
-
+    fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
     d_fock->getXCOperator()->setupDensity(rel_prec);
-    std::cout << "Density tree before response d_fock" << std::endl;
-    std::cout << d_fock->getXCOperator()->getDensity(DENSITY::Total).integrate() << std::endl;
-    std::cout << d_fock->getXCOperator()->getDensity(DENSITY::Total) << std::endl;
+
     bool converged = true;
     if (rsp_run) {
         LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);

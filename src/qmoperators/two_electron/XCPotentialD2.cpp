@@ -46,13 +46,9 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
  *
  */
 void XCPotentialD2::setup(double prec) {
-    std::cout << "setup XCPotentialD2" << std::endl;
     if (isSetup(prec)) return;
-    std::cout << "setup XCPotentialD2 prec " << std::endl;
     setApplyPrec(prec);
-    std::cout << "setup XCPotentialD2 dens" << std::endl;
     setupPerturbedDensity();
-    std::cout << "setup XCPotentialD2 pot" << std::endl;
     setupPotential(prec);
 }
 
@@ -129,13 +125,9 @@ void XCPotentialD2::setupPerturbedDensity() {
     } else {
         Timer time_t;
         FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
-        std::cout << tmp_t << std::endl;
-        std::cout << "alloc pert" << std::endl;
         pertDensity_t = new Density();
         pertDensity_t->alloc(NUMBER::Real);
-        std::cout << "cp grid" << std::endl;
         mrcpp::copy_grid(pertDensity_t->real(), tmp_t);
-        std::cout << "comp dens" << std::endl;
         density::compute(-1.0, *pertDensity_t, Phi, X, Y, DENSITY::Total);
         time_t.stop();
         Printer::printTree(0, "XC total density", pertDensity_t->getNNodes(), time_t.getWallTime());
@@ -263,21 +255,15 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
     if(not spinSeparated and totalDens) {
         FunctionTree<3> &V = getPotential(phi.spin(), DENSITY::Total);
-        std::cout << "Potential V" << std::endl;
-        std::cout << V << std::endl;
         mrcpp::build_grid(*Vrho, V);
         mrcpp::build_grid(*Vrho, pertDensity_t->real());
         mrcpp::multiply(-1.0, *Vrho, 1.0, V, pertDensity_t->real());
-        std::cout << "Vrho" << std::endl;
-        std::cout << *Vrho << std::endl;
     } else {
         MSG_FATAL("Not implemented: abort!");
     }
 
     this->setReal(Vrho);
     Orbital Vrhophi = QMPotential::apply(phi); 
-    std::cout << "Vrhophi" << std::endl;
-    std::cout << Vrhophi.real() << std::endl;
     this->setReal(0);
     delete Vrho; //LUCA: enough to deallocate this FunctionTree?
     return Vrhophi;
