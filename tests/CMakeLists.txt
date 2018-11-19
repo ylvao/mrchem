@@ -21,3 +21,4 @@ target_link_libraries(mrchem-tests
 add_subdirectory(li)
 add_subdirectory(h2)
 add_subdirectory(h2o)
+add_subdirectory(rsp_lda_h2)
