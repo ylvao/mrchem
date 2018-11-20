@@ -254,13 +254,20 @@ void XCFunctional::refineGrid(double prec, bool abs_prec) {
         if (abs_prec) scale = rho_a->integrate() + rho_b->integrate();
         mrcpp::refine_grid(*rho_a, prec/scale);
         mrcpp::refine_grid(*rho_b, prec/scale);
-        mrcpp::refine_grid(*rho_a, *rho_b);
-        mrcpp::refine_grid(*rho_b, *rho_a);
+
+        // Extend to union grid
+        int nNodes = 1;
+        while (nNodes > 0) {
+            int nAlpha = mrcpp::refine_grid(*rho_a, *rho_b);
+            int nBeta = mrcpp::refine_grid(*rho_b, *rho_a);
+            nNodes = nAlpha + nBeta;
+        }
     } else {
         if (rho_t == nullptr) MSG_FATAL("Uninitialized total density");
         if (abs_prec) scale = rho_t->integrate();
         mrcpp::refine_grid(*rho_t, prec/scale);
     }
+
 }
 
 /** @brief Remove all grid refinement
@@ -330,11 +337,12 @@ void XCFunctional::clear() {
     mrcpp::clear(grad_b, true);
     mrcpp::clear(grad_t, true);
     mrcpp::clear(gamma, true);
+    clearGrid();
 
     // Clear MW coefs but keep the grid
-    if (rho_a != nullptr) mrcpp::clear_grid(*rho_a);
-    if (rho_b != nullptr) mrcpp::clear_grid(*rho_b);
-    if (rho_t != nullptr) mrcpp::clear_grid(*rho_t);
+    //if (rho_a != nullptr) mrcpp::clear_grid(*rho_a);
+    //if (rho_b != nullptr) mrcpp::clear_grid(*rho_b);
+    //if (rho_t != nullptr) mrcpp::clear_grid(*rho_t);
 }
 
 /** @brief Allocate input arrays for xcfun

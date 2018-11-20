@@ -29,9 +29,9 @@ namespace mrchem {
 class XCPotential : public QMPotential {
 public:
     XCPotential(mrdft::XCFunctional *F)
-        : QMPotential(1),
-          functional(F) {
-          }
+        : QMPotential(1, mpi::share_xc_pot)
+        , functional(F)
+        , energy(0.0) {}
 
     friend class XCOperator;
 
@@ -43,10 +43,14 @@ protected:
     int getOrder() const { return this->functional->getOrder(); }
 
     mrcpp::FunctionTree<3> &getDensity(int spin);
-    virtual void setupDensity(double prec = -1.0) {}
-    virtual void setupPotential(double prec) {}
-    
+    void setupDensity(double prec = -1.0);
+    virtual void setupPotential(double prec) {}    
     virtual Orbital apply(Orbital phi) = 0;
+
+    void setupDensity(double prec);
+    void setupPotential();
+
+    Orbital apply(Orbital phi);
 };
 
 } //namespace mrchem

@@ -28,6 +28,7 @@ void CoulombPotentialD1::setupDensity(double prec) {
     Density &rho = this->density;
 
     Timer timer;
+    rho.alloc(NUMBER::Real);
     density::compute(prec, rho, Phi, DENSITY::Total);
     timer.stop();
     double t = timer.getWallTime();

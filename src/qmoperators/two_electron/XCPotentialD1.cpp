@@ -3,9 +3,10 @@
 
 #include "XCPotential.h"
 #include "XCPotentialD1.h"
+#include "parallel.h"
 #include "qmfunctions/Orbital.h"
-#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/Density.h"
+#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/density_utils.h"
 
 using mrcpp::FunctionTree;
@@ -43,7 +44,7 @@ XCPotentialD1::XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi)
 void XCPotentialD1::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    setupDensity();
+    setupDensity(prec);
     setupPotential(prec);
 }
 
@@ -52,43 +53,6 @@ void XCPotentialD1::clear() {
     this->energy = 0.0;
     mrcpp::clear(this->potentials, true);
     clearApplyPrec();
-}
-
-/** @brief Compute electron density
- *
- * The density is computed on the grid provided by the MRDFT module. The grid
- * is kept as is, e.i. no additional refinement at this point, since the grid
- * size is determined inside the module.
- */
-void XCPotentialD1::setupDensity(double prec) {
-    if (this->functional->hasDensity()) return;
-    if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
-    OrbitalVector &Phi = *this->orbitals;
-    if (this->functional->isSpinSeparated()) {
-        Timer time_a;
-        FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
-        Density rho_a;
-        rho_a.setReal(&tmp_a);
-        density::compute(prec, rho_a, Phi, DENSITY::Alpha);
-        time_a.stop();
-        Printer::printTree(0, "XC alpha density", rho_a.getNNodes(), time_a.getWallTime());
-
-        Timer time_b;
-        FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
-        Density rho_b;
-        rho_b.setReal(&tmp_b);
-        density::compute(prec, rho_b, Phi, DENSITY::Beta);
-        time_b.stop();
-        Printer::printTree(0, "XC beta density", rho_b.getNNodes(), time_b.getWallTime());
-    } else {
-        Timer time_t;
-        FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
-        Density rho_t;
-        rho_t.setReal(&tmp_t);
-        density::compute(prec, rho_t, Phi, DENSITY::Total);
-        time_t.stop();
-        Printer::printTree(0, "XC total density", rho_t.getNNodes(), time_t.getWallTime());
-    }
 }
 
 /** @brief Compute XC potential(s)
@@ -120,8 +84,6 @@ void XCPotentialD1::setupPotential(double prec) {
     this->functional->evaluate();
     this->energy = this->functional->calcEnergy();
     this->potentials = this->functional->calcPotential();
-    this->functional->pruneGrid(prec);
-    this->functional->refineGrid(prec);
     this->functional->clear();
 
     int newNodes = this->functional->getNNodes() - inpNodes;
@@ -162,9 +124,9 @@ Orbital XCPotentialD1::apply(Orbital phi) {
     if (this->hasImag()) MSG_ERROR("Imaginary part of XC potential non-zero");
 
     FunctionTree<3> &V = getPotential(phi.spin());
-    this->setReal(&V);
+    this->set(NUMBER::Real, &V);
     Orbital Vphi = QMPotential::apply(phi); 
-    this->setReal(0);
+    this->set(NUMBER::Real, nullptr);
 
     return Vphi;
 }

@@ -48,7 +48,7 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
 void XCPotentialD2::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    setupPerturbedDensity();
+    setupPerturbedDensity(prec);
     setupPotential(prec);
 }
 
@@ -59,42 +59,6 @@ void XCPotentialD2::clear() {
     clearApplyPrec();
 }
 
-/** @brief Compute electron density
- *
- * The density is computed on the grid provided by the MRDFT module. The grid
- * is kept as is, e.i. no additional refinement at this point, since the grid
- * size is determined inside the module.
- */
-void XCPotentialD2::setupDensity(double prec) {
-    if (this->functional->hasDensity()) return;
-    if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
-    OrbitalVector &Phi = *this->orbitals;
-    if (this->functional->isSpinSeparated()) {
-        Timer time_a;
-        FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
-        Density rho_a;
-        rho_a.setReal(&tmp_a);
-        density::compute(prec, rho_a, Phi, DENSITY::Alpha);
-        time_a.stop();
-        Printer::printTree(0, "XC alpha density", rho_a.getNNodes(), time_a.getWallTime());
-
-        Timer time_b;
-        FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
-        Density rho_b;
-        rho_b.setReal(&tmp_b);
-        density::compute(prec, rho_b, Phi, DENSITY::Beta);
-        time_b.stop();
-        Printer::printTree(0, "XC beta density", rho_b.getNNodes(), time_b.getWallTime());
-    } else {
-        Timer time_t;
-        FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
-        Density rho_t;
-        rho_t.setReal(&tmp_t);
-        density::compute(prec, rho_t, Phi, DENSITY::Total);
-        time_t.stop();
-        Printer::printTree(0, "XC total density", rho_t.getNNodes(), time_t.getWallTime());
-    }
-}
 
 //LUCA This does not work in the case of a non spin separated functional used for an open-shell system!!
 void XCPotentialD2::setupPerturbedDensity() {
@@ -105,29 +69,32 @@ void XCPotentialD2::setupPerturbedDensity() {
     OrbitalVector &Y = *this->orbitals_y;
     if (this->functional->isSpinSeparated()) {
         Timer time_a;
-        FunctionTree<3> &tmp_a = getDensity(DENSITY::Alpha);
+        FunctionTree<3> &func_a = getDensity(mrdft::DensityType::Alpha);
         pertDensity_a = new Density(); //LUCA  shall I deallocate these at the end?
         pertDensity_a->alloc(NUMBER::Real);
-        mrcpp::copy_grid(pertDensity_a->real(), tmp_a);
+        mrcpp::copy_grid(pertDensity_a->real(), func_a);
         density::compute(-1.0, *pertDensity_a, Phi, X, Y, DENSITY::Alpha);
         time_a.stop();
-        Printer::printTree(0, "XC alpha density", pertDensity_a->getNNodes(), time_a.getWallTime());
+        Printer::printTree(0, "XC pert alpha density", pertDensity_a->getNNodes(), time_a.getWallTime());
 
         Timer time_b;
-        FunctionTree<3> &tmp_b = getDensity(DENSITY::Beta);
+        FunctionTree<3> &func_b = getDensity(mrdft::DensityType::Beta);
         pertDensity_b = new Density();
         pertDensity_b->alloc(NUMBER::Real);
-        mrcpp::copy_grid(pertDensity_b->real(), tmp_b);
+        mrcpp::copy_grid(pertDensity_b->real(), func_b);
         density::compute(-1.0, *pertDensity_b, Phi, X, Y, DENSITY::Beta);
         time_b.stop();
         Printer::printTree(0, "XC beta density", pertDensity_b->getNNodes(), time_b.getWallTime());
 
+        // Extend to union grid
+        while (mrcpp::refine_grid(func_a, func_b)) {}
+        while (mrcpp::refine_grid(func_b, func_a)) {}
     } else {
         Timer time_t;
-        FunctionTree<3> &tmp_t = getDensity(DENSITY::Total);
+        FunctionTree<3> &func_t = getDensity(mrdft::DensityType::Total);
         pertDensity_t = new Density();
         pertDensity_t->alloc(NUMBER::Real);
-        mrcpp::copy_grid(pertDensity_t->real(), tmp_t);
+        mrcpp::copy_grid(pertDensity_t->real(), func_t);
         density::compute(-1.0, *pertDensity_t, Phi, X, Y, DENSITY::Total);
         time_t.stop();
         Printer::printTree(0, "XC total density", pertDensity_t->getNNodes(), time_t.getWallTime());
@@ -163,8 +130,6 @@ void XCPotentialD2::setupPotential(double prec) {
     this->functional->evaluate();
     //    this->energy = this->functional->calcEnergy();
     this->potentials = this->functional->calcPotential();
-    this->functional->pruneGrid(prec);
-    this->functional->refineGrid(prec);
     this->functional->clear();
 
     int newNodes = this->functional->getNNodes() - inpNodes;
@@ -262,9 +227,9 @@ Orbital XCPotentialD2::apply(Orbital phi) {
         MSG_FATAL("Not implemented: abort!");
     }
 
-    this->setReal(Vrho);
+    this->set(NUMBER::Real, Vrho);
     Orbital Vrhophi = QMPotential::apply(phi); 
-    this->setReal(0);
+    this->set(NUMBER::Real, nullptr);
     delete Vrho; //LUCA: enough to deallocate this FunctionTree?
     return Vrhophi;
 }

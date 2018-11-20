@@ -1,8 +1,11 @@
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-
 #include "CoulombPotential.h"
+#include "parallel.h"
+#include "qmfunctions/Orbital.h"
+#include "qmfunctions/density_utils.h"
+#include "qmfunctions/orbital_utils.h"
 
 using mrcpp::PoissonOperator;
 using mrcpp::Printer;
@@ -20,11 +23,14 @@ namespace mrchem {
  * the vector can change throughout the calculation. The density and (*this)
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
+
 CoulombPotential::CoulombPotential(PoissonOperator *P)
-        : QMPotential(1),
-          density(),
-          poisson(P) {
-    this->density.alloc(NUMBER::Real);
+        : QMPotential(1, mpi::share_coul_pot)
+        , density(mpi::share_coul_dens)
+        , poisson(P) {}
+
+CoulombPotential::~CoulombPotential() {
+    this->density.free();
 }
 
 /** @brief prepare operator for application
@@ -52,9 +58,9 @@ void CoulombPotential::setup(double prec) {
  * The operator can now be reused after another setup.
  */
 void CoulombPotential::clear() {
-    QMFunction::free(); // delete FunctionTree pointers
-    clearApplyPrec();   // apply_prec = -1
-    mrcpp::clear_grid(this->density.real()); // clear MW coefs but keep the grid
+    QMFunction::free();   // delete FunctionTree pointers
+    this->density.free(); // delete FunctionTree pointers
+    clearApplyPrec();     // apply_prec = -1
 }
 
 /** @brief compute Coulomb potential
@@ -79,7 +85,13 @@ void CoulombPotential::setupPotential(double prec) {
 
     Timer timer;
     V.alloc(NUMBER::Real);
-    mrcpp::apply(abs_prec, V.real(), P, rho.real());
+    if (V.isShared()) {
+        int tag = 22445;
+        if (mpi::share_master()) mrcpp::apply(abs_prec, V.real(), P, rho.real());
+        mrcpp::share_tree(V.real(), 0, tag, mpi::comm_share);
+    } else {
+        mrcpp::apply(abs_prec, V.real(), P, rho.real());
+    }
     timer.stop();
     int n = V.getNNodes();
     double t = timer.getWallTime();

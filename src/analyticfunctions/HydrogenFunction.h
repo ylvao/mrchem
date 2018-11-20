@@ -33,10 +33,8 @@ namespace mrchem {
 class RadialFunction final : public mrcpp::RepresentableFunction<1> {
 public:
     RadialFunction(int n, int l, double Z);
-    ~RadialFunction() { }
 
-    double evalf(const double *r) const;
-    double evalf(const std::array<double, 1> &r) const { return evalf(r.data()); }
+    double evalf(const mrcpp::Coord<1> &r) const override;
 
 protected:
     const int N;
@@ -48,14 +46,11 @@ protected:
     double evalfPoly(double r) const;
 };
 
-
 class AngularFunction final : public mrcpp::RepresentableFunction<3> {
 public:
     AngularFunction(int l, int m);
-    ~AngularFunction() { }
 
-    double evalf(const double *r) const;
-    double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
+    double evalf(const mrcpp::Coord<3> &r) const override;
 
 protected:
     const int L;
@@ -63,19 +58,18 @@ protected:
     double c_0;
 
     double calcConstant() const;
-    double evalfPoly(const double *q) const;
+    double evalfPoly(const mrcpp::Coord<3> &q) const;
 };
 
 class HydrogenFunction final : public mrcpp::RepresentableFunction<3> {
 public:
-    HydrogenFunction(int n, int l, int m, double Z = 1.0, const double *o = 0);
-    ~HydrogenFunction() { }
+    HydrogenFunction(int n, int l, int m, double Z = 1.0);
+    HydrogenFunction(int n, int l, int m, double Z, const mrcpp::Coord<3> &o);
 
-    double evalf(const double *p) const;
-    double evalf(const std::array<double, 3> &r) const { return evalf(r.data()); }
+    double evalf(const mrcpp::Coord<3> &r) const override;
 
 protected:
-    double origin[3];
+    mrcpp::Coord<3> origin;
     RadialFunction R;
     AngularFunction Y;
 };

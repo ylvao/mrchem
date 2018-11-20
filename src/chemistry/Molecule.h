@@ -57,6 +57,8 @@ public:
     Molecule(const Nuclei &nucs, int c = 0, int m = 1);
     Molecule(const std::string &coord_file, int c = 0, int m = 1);
     Molecule(const std::vector<std::string> &coord_str, int c = 0, int m = 1);
+    Molecule(const Molecule &mol) = delete;
+    Molecule &operator=(const Molecule &mol) = delete;
     ~Molecule();
 
     int getCharge() const { return this->charge; }
@@ -64,8 +66,8 @@ public:
     int getNNuclei() const { return this->nuclei.size(); }
     int getNElectrons() const;
 
-    const double *getCenterOfMass() const { return this->COM; }
-    const double *getCenterOfCharge() const { return this->COC; }
+    const mrcpp::Coord<3> &getCenterOfMass() const { return this->COM; }
+    const mrcpp::Coord<3> &getCenterOfCharge() const { return this->COC; }
 
     Nuclei &getNuclei() { return this->nuclei; }
     const Nuclei &getNuclei() const { return this->nuclei; }
@@ -86,16 +88,16 @@ public:
     void initPolarizability(double omega);
     void initOpticalRotation(double omega);
 
-    SCFEnergy& getSCFEnergy();
-    DipoleMoment& getDipoleMoment();
-    QuadrupoleMoment& getQuadrupoleMoment();
-    GeometryDerivatives& getGeometryDerivatives();
-    Magnetizability& getMagnetizability();
-    NMRShielding& getNMRShielding(int k);
-    HyperFineCoupling& getHyperFineCoupling(int k);
-    SpinSpinCoupling& getSpinSpinCoupling(int k, int l);
-    Polarizability& getPolarizability(double omega);
-    OpticalRotation& getOpticalRotation(double omega);
+    SCFEnergy &getSCFEnergy();
+    DipoleMoment &getDipoleMoment();
+    QuadrupoleMoment &getQuadrupoleMoment();
+    GeometryDerivatives &getGeometryDerivatives();
+    Magnetizability &getMagnetizability();
+    NMRShielding &getNMRShielding(int k);
+    HyperFineCoupling &getHyperFineCoupling(int k);
+    SpinSpinCoupling &getSpinSpinCoupling(int k, int l);
+    Polarizability &getPolarizability(double omega);
+    OpticalRotation &getOpticalRotation(double omega);
 
 protected:
     int charge;
@@ -103,8 +105,8 @@ protected:
     Nuclei nuclei;
 
     // Properties
-    double COM[3];
-    double COC[3];
+    mrcpp::Coord<3> COM;
+    mrcpp::Coord<3> COC;
     SCFEnergy *energy;
     DipoleMoment *dipole;
     QuadrupoleMoment *quadrupole;

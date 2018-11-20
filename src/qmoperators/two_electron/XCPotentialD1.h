@@ -37,7 +37,6 @@ protected:
     void setup(double prec);
     void clear();
 
-    void setupDensity(double prec = -1.0);
     void setupPotential(double prec);
     mrcpp::FunctionTree<3> &getPotential(int spin);
 
