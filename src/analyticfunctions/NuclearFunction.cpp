@@ -48,7 +48,7 @@ double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
     return result;
 }
 
-bool NuclearFunction::isVisibleAtScale(int scale, int nQuadPts) const override {
+bool NuclearFunction::isVisibleAtScale(int scale, int nQuadPts) const {
     double minSmooth = this->smooth[0];
     for (int i = 1; i < this->smooth.size(); i++) {
         if (this->smooth[i] < minSmooth) {
@@ -64,7 +64,7 @@ bool NuclearFunction::isVisibleAtScale(int scale, int nQuadPts) const override {
     }
 }
 
-bool NuclearFunction::isZeroOnInterval(const double *a, const double *b) const override {
+bool NuclearFunction::isZeroOnInterval(const double *a, const double *b) const {
     int totSplit = 0;
     for (int i = 0; i < this->nuclei.size(); i++) {
         const mrcpp::Coord<3> &R = this->nuclei[i].getCoord();
