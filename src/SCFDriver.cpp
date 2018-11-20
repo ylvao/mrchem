@@ -156,6 +156,10 @@ SCFDriver::SCFDriver(Getkw &input) {
 
     file_start_orbitals = input.get<std::string>("Files.start_orbitals");
     file_final_orbitals = input.get<std::string>("Files.final_orbitals");
+    file_start_x_orbs = input.get<std::string>("Files.start_x_orbs");
+    file_final_x_orbs = input.get<std::string>("Files.final_x_orbs");
+    file_start_y_orbs = input.get<std::string>("Files.start_y_orbs");
+    file_final_y_orbs = input.get<std::string>("Files.final_y_orbs");
     file_basis_set = input.get<std::string>("Files.basis_set");
     file_dens_mat_a = input.get<std::string>("Files.dens_mat_a");
     file_dens_mat_b = input.get<std::string>("Files.dens_mat_b");
@@ -704,7 +708,7 @@ bool SCFDriver::runGroundState() {
 void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     double omega = rsp_calc.freq;
     bool dynamic = false;
-    if (fabs(omega) > mrcpp::MachineZero) dynamic = true;
+    if (std::abs(omega) > mrcpp::MachineZero) dynamic = true;
     setupPerturbedOrbitals(dynamic);
     setupPerturbedOperators(rsp_calc);
 
@@ -723,14 +727,12 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
         delete solver;
     }
     if (rsp_write_orbitals) {
-        std::string suffix_x = rsp_calc.name + "_X_";
-        orbital::save_orbitals(*phi_x, file_final_orbitals, suffix_x);
-        if(dynamic) {
-            std::string suffix_y = rsp_calc.name + "_Y_";
-            orbital::save_orbitals(*phi_y, file_final_orbitals, suffix_y);
-        }
+        std::stringstream suffix;
+        suffix << rsp_calc.name << "_" << rsp_calc.dir << "_";
+        orbital::save_orbitals(*phi_x, file_final_x_orbs, suffix.str());
+        if (dynamic) orbital::save_orbitals(*phi_y, file_final_y_orbs, suffix.str());
     }
-    
+
     // Compute requested properties
     if (converged) calcLinearResponseProperties(rsp_calc);
 
