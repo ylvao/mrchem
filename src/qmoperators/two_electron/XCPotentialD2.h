@@ -34,7 +34,6 @@ public:
                   OrbitalVector *Y);
 
 protected:
-    OrbitalVector *orbitals;                   ///< External set of orbitals used to build the density
     OrbitalVector *orbitals_x;                 ///< 1st external set of perturbed orbitals used to build the density
     OrbitalVector *orbitals_y;                 ///< 2nd external set of perturbed orbitals used to build the density
     mrcpp::FunctionTreeVector<3> potentials;   ///< XC Potential functions collected in a vector
@@ -46,7 +45,6 @@ protected:
     void clear();
 
     void setupPotential(double prec);
-    mrcpp::FunctionTree<3> &getPerturbedDensity(int spin);
     mrcpp::FunctionTree<3> &getPotential(int orbitalSpin, int densitySpin);
 
     Orbital apply(Orbital phi);
@@ -55,8 +53,7 @@ protected:
     //file but i did not manage to get the syntax (copied from
     //density_utils.copp) right.
     int getPotentialIndex(int orbitalSpin, int densitySpin);
-    void setupGroundStateDensity();
-    void setupPerturbedDensity();
+    void setupPerturbedDensity(double prec = -1.0);
 
 };
 

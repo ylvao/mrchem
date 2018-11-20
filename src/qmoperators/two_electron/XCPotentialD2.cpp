@@ -27,10 +27,9 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
                              OrbitalVector *Phi,
                              OrbitalVector *X,
                              OrbitalVector *Y)
-    : XCPotential(F),
-          orbitals(Phi),
-          orbitals_x(X),
-          orbitals_y(Y) {
+    : XCPotential(F, Phi)
+    , orbitals_x(X)
+    , orbitals_y(Y) {
 }
 
 /** @brief Prepare the operator for application
@@ -61,7 +60,7 @@ void XCPotentialD2::clear() {
 
 
 //LUCA This does not work in the case of a non spin separated functional used for an open-shell system!!
-void XCPotentialD2::setupPerturbedDensity() {
+void XCPotentialD2::setupPerturbedDensity(double prec) {
     if (this->orbitals_x == nullptr) MSG_ERROR("Orbitals not initialized");
     if (this->orbitals_y == nullptr) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &Phi = *this->orbitals;
@@ -69,8 +68,8 @@ void XCPotentialD2::setupPerturbedDensity() {
     OrbitalVector &Y = *this->orbitals_y;
     if (this->functional->isSpinSeparated()) {
         Timer time_a;
-        FunctionTree<3> &func_a = getDensity(mrdft::DensityType::Alpha);
-        pertDensity_a = new Density(); //LUCA  shall I deallocate these at the end?
+        FunctionTree<3> &func_a = this->getDensity(DENSITY::Alpha);
+        pertDensity_a = new Density(false); //LUCA  shall I deallocate these at the end?
         pertDensity_a->alloc(NUMBER::Real);
         mrcpp::copy_grid(pertDensity_a->real(), func_a);
         density::compute(-1.0, *pertDensity_a, Phi, X, Y, DENSITY::Alpha);
@@ -78,8 +77,8 @@ void XCPotentialD2::setupPerturbedDensity() {
         Printer::printTree(0, "XC pert alpha density", pertDensity_a->getNNodes(), time_a.getWallTime());
 
         Timer time_b;
-        FunctionTree<3> &func_b = getDensity(mrdft::DensityType::Beta);
-        pertDensity_b = new Density();
+        FunctionTree<3> &func_b = this->getDensity(DENSITY::Beta);
+        pertDensity_b = new Density(false);
         pertDensity_b->alloc(NUMBER::Real);
         mrcpp::copy_grid(pertDensity_b->real(), func_b);
         density::compute(-1.0, *pertDensity_b, Phi, X, Y, DENSITY::Beta);
@@ -91,8 +90,8 @@ void XCPotentialD2::setupPerturbedDensity() {
         while (mrcpp::refine_grid(func_b, func_a)) {}
     } else {
         Timer time_t;
-        FunctionTree<3> &func_t = getDensity(mrdft::DensityType::Total);
-        pertDensity_t = new Density();
+        FunctionTree<3> &func_t = this->getDensity(DENSITY::Total);
+        pertDensity_t = new Density(false);
         pertDensity_t->alloc(NUMBER::Real);
         mrcpp::copy_grid(pertDensity_t->real(), func_t);
         density::compute(-1.0, *pertDensity_t, Phi, X, Y, DENSITY::Total);
@@ -234,15 +233,4 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     return Vrhophi;
 }
 
-/** @brief Return FunctionTree for the first-order perturbed density
- *
- * @param[in] type Which density to return (alpha, beta or total)
- */
-mrcpp::FunctionTree<3> &XCPotentialD2::getPerturbedDensity(int spin) {
-    if (spin == DENSITY::Total) return pertDensity_t->real();
-    if (spin == DENSITY::Alpha) return pertDensity_a->real();
-    if (spin == DENSITY::Beta)  return pertDensity_b->real();
-    MSG_FATAL("Invalid density type");
 }
-
-} //namespace mrchem

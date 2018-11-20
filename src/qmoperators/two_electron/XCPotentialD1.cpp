@@ -25,9 +25,7 @@ namespace mrchem {
  * xcfun when F.evalSetup is invoked.
  */
 XCPotentialD1::XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi)
-        : XCPotential(F),
-          orbitals(Phi) {
-}
+    : XCPotential(F, Phi) {}
 
 /** @brief Prepare the operator for application
  * 

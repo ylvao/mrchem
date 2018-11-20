@@ -31,7 +31,6 @@ public:
     XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi = nullptr);
 
 protected:
-    OrbitalVector *orbitals;                   ///< External set of orbitals used to build the density
     mrcpp::FunctionTreeVector<3> potentials;   ///< XC Potential functions collected in a vector
 
     void setup(double prec);

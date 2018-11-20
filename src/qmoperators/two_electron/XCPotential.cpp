@@ -25,7 +25,7 @@ void XCPotential::setupDensity(double prec) {
     OrbitalVector &Phi = *this->orbitals;
     if (this->functional->isSpinSeparated()) {
         Timer time_a;
-        FunctionTree<3> &func_a = this->functional->getDensity(mrdft::DensityType::Alpha);
+        FunctionTree<3> &func_a = this->getDensity(DENSITY::Alpha);
         Density rho_a(false);
         rho_a.set(NUMBER::Real, &func_a);
         density::compute(prec, rho_a, Phi, DENSITY::Alpha);
@@ -34,7 +34,7 @@ void XCPotential::setupDensity(double prec) {
         Printer::printTree(0, "XC alpha density", func_a.getNNodes(), time_a.getWallTime());
 
         Timer time_b;
-        FunctionTree<3> &func_b = this->functional->getDensity(mrdft::DensityType::Beta);
+        FunctionTree<3> &func_b = this->getDensity(DENSITY::Beta);
         Density rho_b(false);
         rho_b.set(NUMBER::Real, &func_b);
         density::compute(prec, rho_b, Phi, DENSITY::Beta);
@@ -47,7 +47,7 @@ void XCPotential::setupDensity(double prec) {
         while (mrcpp::refine_grid(func_b, func_a)) {}
     } else {
         Timer time_t;
-        FunctionTree<3> &func_t = this->functional->getDensity(mrdft::DensityType::Total);
+        FunctionTree<3> &func_t = this->getDensity(DENSITY::Total);
         Density rho_t(false);
         rho_t.set(NUMBER::Real, &func_t);
         density::compute(prec, rho_t, Phi, DENSITY::Total);
@@ -55,6 +55,14 @@ void XCPotential::setupDensity(double prec) {
         time_t.stop();
         Printer::printTree(0, "XC total density", func_t.getNNodes(), time_t.getWallTime());
     }
+}
+
+mrcpp::FunctionTree<3> &XCPotential::getDensity(int spin) {
+    if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
+    if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
+    if (spin == DENSITY::Beta)  return this->functional->getDensity(mrdft::DensityType::Beta) ;
+    MSG_FATAL("Invalid density type");
+
 }
 
 }

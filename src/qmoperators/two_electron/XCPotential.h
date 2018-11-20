@@ -2,6 +2,7 @@
 
 #include "qmoperators/one_electron/QMPotential.h"
 #include "mrdft/XCFunctional.h"
+#include "parallel.h"
 
 /** @class XCPotential
  *
@@ -28,14 +29,16 @@ namespace mrchem {
 
 class XCPotential : public QMPotential {
 public:
-    XCPotential(mrdft::XCFunctional *F)
+ XCPotential(mrdft::XCFunctional *F, OrbitalVector *Phi)
         : QMPotential(1, mpi::share_xc_pot)
         , functional(F)
+        , orbitals(Phi)
         , energy(0.0) {}
 
     friend class XCOperator;
 
 protected:
+    OrbitalVector *orbitals;                   ///< External set of orbitals used to build the density
     double energy;                             ///< XC energy
     mrdft::XCFunctional *functional;           ///< External XC functional to be used
 
@@ -43,14 +46,12 @@ protected:
     int getOrder() const { return this->functional->getOrder(); }
 
     mrcpp::FunctionTree<3> &getDensity(int spin);
-    void setupDensity(double prec = -1.0);
     virtual void setupPotential(double prec) {}    
     virtual Orbital apply(Orbital phi) = 0;
 
-    void setupDensity(double prec);
+    void setupDensity(double prec = -1.0);
     void setupPotential();
 
-    Orbital apply(Orbital phi);
 };
 
 } //namespace mrchem
