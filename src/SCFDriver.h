@@ -50,6 +50,11 @@ public:
         return false;
     }
     bool isImaginary() const { return this->imag; }
+    std::string getFileSuffix() const {
+        std::stringstream suffix;
+        suffix << name << "_" << dir << "_";
+        return suffix.str();
+    }
 
     RankOneTensorOperator<3> *pert;
     double freq;
@@ -266,7 +271,7 @@ protected:
     void setupInitialGrid(mrdft::XCFunctional &func, const Molecule &mol);
     void setupInitialGroundState();
     void setupPerturbedOperators(const ResponseCalculation &rsp_calc);
-    void setupPerturbedOrbitals(bool dynamic);
+    void setupPerturbedOrbitals(const ResponseCalculation &rsp_calc);
 
     void clearPerturbedOperators();
     void clearPerturbedOrbitals(bool dynamic);
