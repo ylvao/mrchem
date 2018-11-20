@@ -571,14 +571,16 @@ LinearResponseSolver *SCFDriver::setupLinearResponseSolver(bool dynamic) {
     return lrs;
 }
 
-void SCFDriver::setupPerturbedOrbitals(bool dynamic) {
+void SCFDriver::setupPerturbedOrbitals(const ResponseCalculation &rsp_calc) {
     if (phi == 0) MSG_ERROR("Orbitals not initialized");
 
     phi_x = new OrbitalVector;
     *phi_x = orbital::param_copy(*phi);
-    if (dynamic) {
+    if (rsp_start == "MW") *phi_x = orbital::load_orbitals(file_start_x_orbs, rsp_calc.getFileSuffix());
+    if (rsp_calc.isDynamic()) {
         phi_y = new OrbitalVector;
         *phi_y = orbital::param_copy(*phi);
+        if (rsp_start == "MW") *phi_y = orbital::load_orbitals(file_start_y_orbs, rsp_calc.getFileSuffix());
     } else {
         phi_y = phi_x;
     }
@@ -706,10 +708,8 @@ bool SCFDriver::runGroundState() {
 }
 
 void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
-    double omega = rsp_calc.freq;
-    bool dynamic = false;
-    if (std::abs(omega) > mrcpp::MachineZero) dynamic = true;
-    setupPerturbedOrbitals(dynamic);
+    bool dynamic = rsp_calc.isDynamic();
+    setupPerturbedOrbitals(rsp_calc);
     setupPerturbedOperators(rsp_calc);
 
     //    fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
@@ -727,10 +727,8 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
         delete solver;
     }
     if (rsp_write_orbitals) {
-        std::stringstream suffix;
-        suffix << rsp_calc.name << "_" << rsp_calc.dir << "_";
-        orbital::save_orbitals(*phi_x, file_final_x_orbs, suffix.str());
-        if (dynamic) orbital::save_orbitals(*phi_y, file_final_y_orbs, suffix.str());
+        orbital::save_orbitals(*phi_x, file_final_x_orbs, rsp_calc.getFileSuffix());
+        if (dynamic) orbital::save_orbitals(*phi_y, file_final_y_orbs, rsp_calc.getFileSuffix());
     }
 
     // Compute requested properties
