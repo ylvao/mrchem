@@ -311,8 +311,8 @@ def setup_keywords(input_dir):
     response.add_kw('max_iter',         'INT', -1)
     response.add_kw('kain',             'INT', 0)
     response.add_kw('canonical',        'BOOL', True)
-    response.add_kw('orbital_thrs',     'DBL', 1.0)
-    response.add_kw('property_thrs',    'DBL', 1.0)
+    response.add_kw('orbital_thrs',     'DBL', -1.0)
+    response.add_kw('property_thrs',    'DBL', -1.0)
     response.add_kw('directions',       'INT_ARRAY', [1, 1, 1])
     response.add_kw('orbital_prec',     'DBL_ARRAY', [1.0e-4, -1.0])
     response.add_kw('initial_guess',    'STR', 'none')
@@ -440,8 +440,6 @@ def verify_response(rsp):
         rsp['orbital_prec'][1] = topsect['rel_prec'][0]
     if rsp['orbital_prec'][0] < 0:
         rsp['orbital_prec'][0] = rsp['orbital_prec'][1]
-    if rsp['property_thrs'][0] < 0:
-        rsp['property_thrs'][0] = 1.0
 
 
 def verify_ext_field(ext_field):
