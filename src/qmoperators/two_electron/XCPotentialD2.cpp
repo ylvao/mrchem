@@ -32,6 +32,10 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
     , orbitals_y(Y) {
 }
 
+XCPotentialD2::~XCPotentialD2() {
+    mrcpp::clear(this->potentials, true);
+}
+
 /** @brief Prepare the operator for application
  * 
  * @param[in] prec Apply precision
@@ -55,7 +59,6 @@ void XCPotentialD2::setup(double prec) {
 /** @brief Clears all data in the XCPotentialD2 object */
 void XCPotentialD2::clear() {
     this->energy = 0.0;
-    //    mrcpp::clear(this->potentials, true);
     clearApplyPrec();
 }
 
