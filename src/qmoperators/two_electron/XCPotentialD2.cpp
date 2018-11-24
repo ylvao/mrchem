@@ -149,6 +149,8 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     int spinFunctional = this->functional->isSpinSeparated() ? 1 : 0;
 
+    //Potential order (alpha/beta): v_a, v_b, v_aa, v_ab, v_bb
+    //Potential order (total density): v_r, v_rr
     
     int functional_case = spinFunctional;       // 0  1
     functional_case += orbitalSpin   << 2;   // 0  2  4  6
@@ -158,7 +160,9 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
     //DS Total  Spin  Alpha Beta
     
     // SF    OS             DS          case   Index 
-    //  0     0 (paired)     0 (total)     0    0    
+    switch(functional_case) {
+    //  0     0 (paired)     0 (total)     0    1    
+    case( 0): return 1;
     //  1     0 (paired)     0 (total)     1    not implemented
     //  0     1 (alpha )     0 (total)     2    not implemented 
     //  1     1 (alpha )     0 (total)     3    not implemented 
@@ -177,21 +181,23 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
     //  0     0 (paired)     2 (alpha)    16    not implemented  
     //  1     0 (paired)     2 (alpha)    17    not implemented  
     //  0     1 (alpha )     2 (alpha)    18    not implemented  
-    //  1     1 (alpha )     2 (alpha)    19    not implemented  
+    //  1     1 (alpha )     2 (alpha)    19    2  
+    case(19): return 2;
     //  0     2 (beta  )     2 (alpha)    20    not implemented  
-    //  1     2 (beta  )     2 (alpha)    21    not implemented  
+    //  1     2 (beta  )     2 (alpha)    21    3  
+    case(21): return 3;
     //  0     3 (unused)     2 (alpha)    22    not implemented  
     //  1     3 (unused)     2 (alpha)    23    not implemented  
     //  0     0 (paired)     3 (beta )    24    not implemented  
     //  1     0 (paired)     3 (beta )    25    not implemented  
     //  0     1 (alpha )     3 (beta )    26    not implemented  
-    //  1     1 (alpha )     3 (beta )    27    not implemented  
+    //  1     1 (alpha )     3 (beta )    27    3  
+    case(27): return 3;
     //  0     2 (beta  )     3 (beta )    28    not implemented  
-    //  1     2 (beta  )     3 (beta )    29    not implemented  
+    //  1     2 (beta  )     3 (beta )    29    4 
+    case(29): return 4;
     //  0     3 (unused)     3 (beta )    30    not implemented  
     //  1     3 (unused)     3 (beta )    31    not implemented  
-    switch(functional_case) {
-    case(0): return 1;
     default: MSG_FATAL("Not implemented: ABORT");
     }
     
