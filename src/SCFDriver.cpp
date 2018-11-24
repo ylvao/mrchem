@@ -399,7 +399,7 @@ void SCFDriver::setup() {
     }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
-        xcfun = setupFunctional(2); //LUCA why do we need second derivative here??
+        xcfun = setupFunctional(1); //LUCA why do we need second derivative here??
         XC = new XCOperator(xcfun, phi);
         fock->setXCOperator(XC);
     }

@@ -50,8 +50,6 @@ protected:
     virtual Orbital apply(Orbital phi) = 0;
 
     void setupDensity(double prec = -1.0);
-    void setupPotential();
-
 };
 
 } //namespace mrchem
