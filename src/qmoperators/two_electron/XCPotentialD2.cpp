@@ -47,15 +47,15 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
 void XCPotentialD2::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    setupDensity(prec);
+    //    setupDensity(prec);
     setupPerturbedDensity(prec);
-    setupPotential(prec);
+    //    setupPotential(prec);
 }
 
 /** @brief Clears all data in the XCPotentialD2 object */
 void XCPotentialD2::clear() {
     this->energy = 0.0;
-    mrcpp::clear(this->potentials, true);
+    //    mrcpp::clear(this->potentials, true);
     clearApplyPrec();
 }
 
@@ -69,32 +69,26 @@ void XCPotentialD2::setupPerturbedDensity(double prec) {
     OrbitalVector &Y = *this->orbitals_y;
     if (this->functional->isSpinSeparated()) {
         Timer time_a;
-        FunctionTree<3> &func_a = this->getDensity(DENSITY::Alpha);
         pertDensity_a = new Density(false); //LUCA  shall I deallocate these at the end?
         pertDensity_a->alloc(NUMBER::Real);
-        mrcpp::copy_grid(pertDensity_a->real(), func_a);
         density::compute(prec, *pertDensity_a, Phi, X, Y, DENSITY::Alpha);
         time_a.stop();
         Printer::printTree(0, "XC perturbed alpha density", pertDensity_a->getNNodes(), time_a.getWallTime());
 
         Timer time_b;
-        FunctionTree<3> &func_b = this->getDensity(DENSITY::Beta);
         pertDensity_b = new Density(false);
         pertDensity_b->alloc(NUMBER::Real);
-        mrcpp::copy_grid(pertDensity_b->real(), func_b);
         density::compute(prec, *pertDensity_b, Phi, X, Y, DENSITY::Beta);
         time_b.stop();
         Printer::printTree(0, "XC perturbed beta density", pertDensity_b->getNNodes(), time_b.getWallTime());
 
         // Extend to union grid
-        while (mrcpp::refine_grid(func_a, func_b)) {}
-        while (mrcpp::refine_grid(func_b, func_a)) {}
+        while (mrcpp::refine_grid(pertDensity_a->real(), pertDensity_b->real())) {}
+        while (mrcpp::refine_grid(pertDensity_b->real(), pertDensity_a->real())) {}
     } else {
         Timer time_t;
-        FunctionTree<3> &func_t = this->getDensity(DENSITY::Total);
         pertDensity_t = new Density(false);
         pertDensity_t->alloc(NUMBER::Real);
-        mrcpp::copy_grid(pertDensity_t->real(), func_t);
         density::compute(prec, *pertDensity_t, Phi, X, Y, DENSITY::Total);
         time_t.stop();
         Printer::printTree(0, "XC perturbed total density", pertDensity_t->getNNodes(), time_t.getWallTime());
