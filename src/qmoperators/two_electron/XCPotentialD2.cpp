@@ -13,7 +13,6 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
-
     /** @brief Constructor
  *
  * @param[in] F XCFunctional pointer
@@ -220,21 +219,46 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     bool alphaDens = (pertDensity_a != nullptr);
     bool betaDens =  (pertDensity_b != nullptr);
 
+    if (totalDens and (alphaDens or betaDens)) MSG_ERROR("Total density and spin separated densities are both available");
+
     FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
+    mrcpp::FunctionTreeVector<3> components;
     if(not spinSeparated and totalDens) {
-        FunctionTree<3> &V = getPotential(phi.spin(), DENSITY::Total);
-        mrcpp::build_grid(*Vrho, V);
-        mrcpp::build_grid(*Vrho, pertDensity_t->real());
-        mrcpp::multiply(-1.0, *Vrho, 1.0, V, pertDensity_t->real());
-    } else {
+        FunctionTree<3>* component = buildComponent(phi.spin(), DENSITY::Total, pertDensity_t->real());
+        components.push_back(std::make_tuple(1.0, component));
+    }
+    else if(spinSeparated) {
+        if (totalDens)  MSG_FATAL("Not implemented: abort!");
+        if (alphaDens) {
+            FunctionTree<3>* component = buildComponent(phi.spin(), DENSITY::Alpha, pertDensity_a->real());
+            components.push_back(std::make_tuple(1.0, component));
+        }
+        if (betaDens) {
+            FunctionTree<3>* component = buildComponent(phi.spin(), DENSITY::Beta, pertDensity_b->real());
+            components.push_back(std::make_tuple(1.0, component));
+        }
+    }
+    else {
         MSG_FATAL("Not implemented: abort!");
     }
 
+    mrcpp::build_grid(*Vrho, components);
+    mrcpp::add(-1.0, *Vrho, components);
     this->set(NUMBER::Real, Vrho);
     Orbital Vrhophi = QMPotential::apply(phi); 
     this->set(NUMBER::Real, nullptr);
     delete Vrho; //LUCA: enough to deallocate this FunctionTree?
+    mrcpp::clear(components, true);
     return Vrhophi;
+}
+
+FunctionTree<3>* XCPotentialD2::buildComponent(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
+    FunctionTree<3> *tmp = new FunctionTree<3>(*MRA);
+    FunctionTree<3> &V = getPotential(orbital_spin, density_spin);
+    mrcpp::build_grid(*tmp, V);
+    mrcpp::build_grid(*tmp, pert_dens);
+    mrcpp::multiply(-1.0, *tmp, 1.0, V, pert_dens);
+    return tmp;
 }
 
 }

@@ -33,7 +33,7 @@ public:
                   OrbitalVector *X,
                   OrbitalVector *Y);
     ~XCPotentialD2();
-
+    
 protected:
     OrbitalVector *orbitals_x;                 ///< 1st external set of perturbed orbitals used to build the density
     OrbitalVector *orbitals_y;                 ///< 2nd external set of perturbed orbitals used to build the density
@@ -46,7 +46,8 @@ protected:
     void clear();
 
     void setupPotential(double prec);
-    mrcpp::FunctionTree<3> &getPotential(int orbitalSpin, int densitySpin);
+    mrcpp::FunctionTree<3>& getPotential(int orbitalSpin, int densitySpin);
+    mrcpp::FunctionTree<3>* buildComponent(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
 
     Orbital apply(Orbital phi);
 
