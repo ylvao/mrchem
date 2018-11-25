@@ -32,6 +32,7 @@ public:
                   OrbitalVector *Phi,
                   OrbitalVector *X,
                   OrbitalVector *Y);
+    ~XCPotentialD2();
 
 protected:
     OrbitalVector *orbitals_x;                 ///< 1st external set of perturbed orbitals used to build the density
