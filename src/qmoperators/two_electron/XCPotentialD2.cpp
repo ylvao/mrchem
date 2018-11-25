@@ -152,8 +152,8 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
     //Potential order (total density): v_r, v_rr
     
     int functional_case = spinFunctional;       // 0  1
-    functional_case += orbitalSpin   << 2;   // 0  2  4  6
-    functional_case += densitySpin   << 4;   // 0  8 16 24
+    functional_case += orbitalSpin   << 1;   // 0  2  4  6
+    functional_case += densitySpin   << 3;   // 0  8 16 24
 
     //OS Paired Alpha Beta
     //DS Total  Spin  Alpha Beta
@@ -242,7 +242,7 @@ Orbital XCPotentialD2::apply(Orbital phi) {
         MSG_FATAL("Not implemented: abort!");
     }
 
-    mrcpp::build_grid(*Vrho, components);
+    mrcpp::build_grid(*Vrho, components); //LUCA just using "add" results in loss of precision.
     mrcpp::add(-1.0, *Vrho, components);
     this->set(NUMBER::Real, Vrho);
     Orbital Vrhophi = QMPotential::apply(phi); 
