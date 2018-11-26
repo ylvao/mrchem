@@ -148,8 +148,8 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     int spinFunctional = this->functional->isSpinSeparated() ? 1 : 0;
 
-    //Potential order (alpha/beta): v_a, v_b, v_aa, v_ab, v_bb
-    //Potential order (total density): v_r, v_rr
+    //Potential order (spin separated): v_a, v_b, v_aa, v_ab, v_bb
+    //Potential order (spin restricted, total density only): v_r, v_rr
     
     int functional_case = spinFunctional;       // 0  1
     functional_case += orbitalSpin   << 1;   // 0  2  4  6
@@ -164,8 +164,10 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
     case( 0): return 1;
     //  1     0 (paired)     0 (total)     1    not implemented
     //  0     1 (alpha )     0 (total)     2    not implemented 
+    case( 2): return 1;
     //  1     1 (alpha )     0 (total)     3    not implemented 
     //  0     2 (beta  )     0 (total)     4    not implemented 
+    case( 4): return 1;
     //  1     2 (beta  )     0 (total)     5    not implemented 
     //  0     3 (unused)     0 (total)     6    not implemented 
     //  1     3 (unused)     0 (total)     7    not implemented 
