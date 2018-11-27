@@ -162,43 +162,43 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
     switch(functional_case) {
     //  0     0 (paired)     0 (total)     0    1    
     case( 0): return 1;
-    //  1     0 (paired)     0 (total)     1    not implemented
+    //  1     0 (paired)     0 (total)     1    not valid
     //  0     1 (alpha )     0 (total)     2    not implemented 
     case( 2): return 1;
-    //  1     1 (alpha )     0 (total)     3    not implemented 
+    //  1     1 (alpha )     0 (total)     3    not valid
     //  0     2 (beta  )     0 (total)     4    not implemented 
     case( 4): return 1;
-    //  1     2 (beta  )     0 (total)     5    not implemented 
-    //  0     3 (unused)     0 (total)     6    not implemented 
-    //  1     3 (unused)     0 (total)     7    not implemented 
-    //  0     0 (paired)     1 (spin )     8    not implemented 
-    //  1     0 (paired)     1 (spin )     9    not implemented 
-    //  0     1 (alpha )     1 (spin )    10    not implemented 
-    //  1     1 (alpha )     1 (spin )    11    not implemented 
-    //  0     2 (beta  )     1 (spin )    12    not implemented 
-    //  1     2 (beta  )     1 (spin )    13    not implemented 
-    //  0     3 (unused)     1 (spin )    14    not implemented  
-    //  1     3 (unused)     1 (spin )    15    not implemented  
+    //  1     2 (beta  )     0 (total)     5    not valid
+    //  0     3 (unused)     0 (total)     6    not valid
+    //  1     3 (unused)     0 (total)     7    not valid
+    //  0     0 (paired)     1 (spin )     8    not valid
+    //  1     0 (paired)     1 (spin )     9    not valid
+    //  0     1 (alpha )     1 (spin )    10    not valid
+    //  1     1 (alpha )     1 (spin )    11    not valid
+    //  0     2 (beta  )     1 (spin )    12    not valid
+    //  1     2 (beta  )     1 (spin )    13    not valid
+    //  0     3 (unused)     1 (spin )    14    not valid
+    //  1     3 (unused)     1 (spin )    15    not valid
     //  0     0 (paired)     2 (alpha)    16    not implemented  
     //  1     0 (paired)     2 (alpha)    17    not implemented  
-    //  0     1 (alpha )     2 (alpha)    18    not implemented  
+    //  0     1 (alpha )     2 (alpha)    18    not valid 
     //  1     1 (alpha )     2 (alpha)    19    2  
     case(19): return 2;
-    //  0     2 (beta  )     2 (alpha)    20    not implemented  
+    //  0     2 (beta  )     2 (alpha)    20    not valid 
     //  1     2 (beta  )     2 (alpha)    21    3  
     case(21): return 3;
-    //  0     3 (unused)     2 (alpha)    22    not implemented  
-    //  1     3 (unused)     2 (alpha)    23    not implemented  
-    //  0     0 (paired)     3 (beta )    24    not implemented  
-    //  1     0 (paired)     3 (beta )    25    not implemented  
-    //  0     1 (alpha )     3 (beta )    26    not implemented  
+    //  0     3 (unused)     2 (alpha)    22    not valid
+    //  1     3 (unused)     2 (alpha)    23    not valid
+    //  0     0 (paired)     3 (beta )    24    not implemented 
+    //  1     0 (paired)     3 (beta )    25    not implemented 
+    //  0     1 (alpha )     3 (beta )    26    not valid 
     //  1     1 (alpha )     3 (beta )    27    3  
     case(27): return 3;
-    //  0     2 (beta  )     3 (beta )    28    not implemented  
+    //  0     2 (beta  )     3 (beta )    28    not valid
     //  1     2 (beta  )     3 (beta )    29    4 
     case(29): return 4;
-    //  0     3 (unused)     3 (beta )    30    not implemented  
-    //  1     3 (unused)     3 (beta )    31    not implemented  
+    //  0     3 (unused)     3 (beta )    30    not valid 
+    //  1     3 (unused)     3 (beta )    31    not valid 
     default: MSG_FATAL("Not implemented: ABORT");
     }
     
