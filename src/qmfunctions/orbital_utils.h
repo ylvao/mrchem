@@ -50,6 +50,8 @@ OrbitalVector param_copy(const OrbitalVector &Phi);
 OrbitalVector adjoin(OrbitalVector &Phi_a, OrbitalVector &Phi_b);
 OrbitalVector disjoin(OrbitalVector &Phi, int spin);
 
+OrbitalVector filter_spin(const OrbitalVector &Phi, int spin);
+
 void save_orbitals(OrbitalVector &Phi, const std::string &file, int n_orbs = -1);
 OrbitalVector load_orbitals(const std::string &file, int n_orbs = -1);
 
@@ -63,6 +65,7 @@ ComplexMatrix calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ket);
 ComplexMatrix calc_lowdin_matrix(OrbitalVector &Phi);
 
 ComplexMatrix localize(double prec, OrbitalVector &Phi);
+ComplexMatrix localize(double prec, OrbitalVector &Phi, int spin);
 ComplexMatrix diagonalize(double prec, OrbitalVector &Phi, ComplexMatrix &F);
 ComplexMatrix orthonormalize(double prec, OrbitalVector &Phi);
 
@@ -75,11 +78,15 @@ int size_alpha(const OrbitalVector &Phi);
 int size_beta(const OrbitalVector &Phi);
 int get_multiplicity(const OrbitalVector &Phi);
 int get_electron_number(const OrbitalVector &Phi, int spin = SPIN::Paired);
+bool orbital_order_is_sane(const OrbitalVector &Phi);
+int start_index(const OrbitalVector &Phi, int spin);
 
 void set_spins(OrbitalVector &Phi, const IntVector &spins);
 void set_errors(OrbitalVector &Phi, const DoubleVector &errors);
 void set_occupancies(OrbitalVector &Phi, const IntVector &occ);
 
+
+ 
 IntVector get_spins(const OrbitalVector &Phi);
 IntVector get_occupancies(const OrbitalVector &Phi);
 DoubleVector get_errors(const OrbitalVector &Phi);
