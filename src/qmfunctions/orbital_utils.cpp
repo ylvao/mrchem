@@ -475,25 +475,17 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi) {
         MSG_FATAL("Wrong orbital order: should be paired/alpha/beta");
     }
 
-    int nOrbitals = Phi.size();
-    int nPaired = size_paired(Phi);
-    int nAlpha = size_alpha(Phi);
-    int nBeta = size_beta(Phi);
+    int nO = Phi.size();
+    int nP = size_paired(Phi);
+    int nA = size_alpha(Phi);
+    int nB = size_beta(Phi);
 
-    ComplexMatrix Ut(nOrbitals,nOrbitals);
-    if (nPaired > 0) {
-        ComplexMatrix Up = localize(prec, Phi, SPIN::Paired);
-        Ut.block(0, 0, nPaired, nPaired) = Up;
-    }
-    if (nAlpha > 0) {
-        ComplexMatrix Ua = localize(prec, Phi, SPIN::Alpha);
-        Ut.block(nPaired, nPaired, nAlpha, nAlpha) = Ua;
-    }
-    if (nBeta > 0) {
-        ComplexMatrix Ub = localize(prec, Phi, SPIN::Beta);
-        Ut.block(nPaired + nAlpha, nPaired + nAlpha, nBeta, nBeta) = Ub;
-    }
+    ComplexMatrix Ut(nO,nO);
+    if (nP > 0) Ut.block(0, 0, nP, nP) = localize(prec, Phi, SPIN::Paired);
+    if (nA > 0) Ut.block(nP, nP, nA, nA) = localize(prec, Phi, SPIN::Alpha);
+    if (nB > 0) Ut.block(nP + nA, nP + nA, nB, nB) = localize(prec, Phi, SPIN::Beta);
 
+    //LUCA I guess it would be more efficient to rotate each orbital group separately
     Timer rot_t;
     OrbitalVector Psi = orbital::rotate(Ut, Phi, prec);
     orbital::free(Phi);
