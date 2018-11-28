@@ -29,10 +29,16 @@ XCPotentialD2::XCPotentialD2(mrdft::XCFunctional *F,
     : XCPotential(F, Phi)
     , orbitals_x(X)
     , orbitals_y(Y) {
+    pertDensity_t = nullptr;
+    pertDensity_a = nullptr;
+    pertDensity_b = nullptr;
 }
 
 XCPotentialD2::~XCPotentialD2() {
     mrcpp::clear(this->potentials, true);
+    if (pertDensity_t != nullptr) delete pertDensity_t;
+    if (pertDensity_a != nullptr) delete pertDensity_a;
+    if (pertDensity_b != nullptr) delete pertDensity_b;
 }
 
 /** @brief Prepare the operator for application
