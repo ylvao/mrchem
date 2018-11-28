@@ -479,22 +479,27 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi) {
     int nP = size_paired(Phi);
     int nA = size_alpha(Phi);
     int nB = size_beta(Phi);
+    
+    if(nO != nP + nA + nB)  {
+        orbital::print(Phi);
+        MSG_FATAL("Orbital number mismatch");
+    }
 
-    ComplexMatrix Ut(nO,nO);
-    if (nP > 0) Ut.block(0, 0, nP, nP) = localize(prec, Phi, SPIN::Paired);
-    if (nA > 0) Ut.block(nP, nP, nA, nA) = localize(prec, Phi, SPIN::Alpha);
-    if (nB > 0) Ut.block(nP + nA, nP + nA, nB, nB) = localize(prec, Phi, SPIN::Beta);
+    ComplexMatrix U = ComplexMatrix::Identity(nO,nO);
+    if (nP > 1) U.block(0, 0, nP, nP) = localize(prec, Phi, SPIN::Paired);
+    if (nA > 1) U.block(nP, nP, nA, nA) = localize(prec, Phi, SPIN::Alpha);
+    if (nB > 1) U.block(nP + nA, nP + nA, nB, nB) = localize(prec, Phi, SPIN::Beta);
 
     //LUCA I guess it would be more efficient to rotate each orbital group separately
     Timer rot_t;
-    OrbitalVector Psi = orbital::rotate(Ut, Phi, prec);
+    OrbitalVector Psi = orbital::rotate(U, Phi, prec);
     orbital::free(Phi);
     Phi = Psi;
     rot_t.stop();
     Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
     timer.stop();
     Printer::printFooter(0, timer, 2);
-    return Ut;
+    return U;
 }
 
 /** @brief extract the set of orbitals whith a defined spin.
@@ -553,8 +558,6 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi_all, int spin) {
     }
     return U;
 }
-
-
 
 /** @brief Perform the orbital rotation that diagonalizes the Fock matrix
  *
