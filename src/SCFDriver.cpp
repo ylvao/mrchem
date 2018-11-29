@@ -364,7 +364,7 @@ void SCFDriver::setup() {
             molecule->initPolarizability(omega);
             for (int d = 0; d < 3; d++) {
                 if (rsp_directions[d] == 0) continue;
-                rsp_calculations.push_back(h_E, omega, false, d);
+                rsp_calculations.push_back(h_E, omega, false, d, "H_E");
             }
         }
     }
