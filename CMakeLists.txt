@@ -54,17 +54,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/compiler_flags)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/custom)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/downloaded)
 
-macro (CHECK_IF_DEBUG)
-  if (NOT (CMAKE_BUILD_TYPE MATCHES debug))
-    get_filename_component(THIS_DIR ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-    STRING(REGEX REPLACE " " "_" THIS_DIR ${THIS_DIR}) #Replace spaces with underscores
-    if (DEFINED DEBUG_${THIS_DIR})
-      message(STATUS "Note: Targets in directory ${THIS_DIR} will be built Debug") #A reminder
-      set (CMAKE_BUILD_TYPE debug)
-    endif()
-  endif()
-endmacro()
-
 # included cmake modules
 include(autocmake_cxx)
 include(GNU.CXX)
@@ -83,4 +72,3 @@ include(main)
 include(feature_summary)
 include(tests)
 include(autocmake_save_flags)
-include(misc_macros)
