@@ -375,7 +375,6 @@ void orbital::orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi) {
     }
 }
 
-//LUCA: should this happen for all spins at the same time?
 ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
     ComplexMatrix S = ComplexMatrix::Zero(BraKet.size(), BraKet.size());
 
