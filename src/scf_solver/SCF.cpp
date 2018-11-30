@@ -43,14 +43,15 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
  * SCF solver will NOT take ownership of the HelmholtzVector, so the original object
  * must be taken care of externally (do not delete until SCF goes out of scope).
  */
-SCF::SCF(HelmholtzVector &h)
+SCF::SCF(HelmholtzVector &h, GroundStateHelmholtz *_gsh)
         : maxIter(-1)
         , rotation(0)
         , canonical(true)
         , orbThrs(-1.0)
         , propThrs(-1.0)
         , orbPrec{-1.0, -1.0, -1.0}
-        , helmholtz(&h) {}
+        , helmholtz(&h)
+        , gsh(_gsh) {}
 
 /** @brief Set convergence thresholds
  *

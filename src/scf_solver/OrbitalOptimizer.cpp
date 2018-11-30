@@ -29,7 +29,7 @@
 #include "parallel.h"
 
 #include "Accelerator.h"
-#include "HelmholtzVector.h"
+#include "GroundStateHelmholtz.h"
 #include "OrbitalOptimizer.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
@@ -51,8 +51,8 @@ namespace mrchem {
  * initialized at this stage, so the SCF solver needs to be "setup()" before
  * "optimize()".
  */
-OrbitalOptimizer::OrbitalOptimizer(HelmholtzVector &h, Accelerator *k)
-        : GroundStateSolver(h)
+OrbitalOptimizer::OrbitalOptimizer(HelmholtzVector &h, GroundStateHelmholtz *gsh, Accelerator *k)
+        : GroundStateSolver(h, gsh)
         , kain(k) {}
 
 /** @brief Prepare solver for optimization
@@ -64,11 +64,7 @@ OrbitalOptimizer::OrbitalOptimizer(HelmholtzVector &h, Accelerator *k)
  * SCF solver will NOT take ownership of the input, so these objects must be taken
  * care of externally (do not delete until SCF goes out of scope).
  */
-// clang-format off
-void OrbitalOptimizer::setup(FockOperator &fock,
-                             OrbitalVector &Phi,
-                             ComplexMatrix &F) {
-    // clang-format on
+void OrbitalOptimizer::setup(FockOperator &fock, OrbitalVector &Phi, ComplexMatrix &F) {
     this->fMat_n = &F;
     this->fOper_n = &fock;
     this->orbitals_n = &Phi;
@@ -115,7 +111,7 @@ bool OrbitalOptimizer::optimize() {
     ComplexMatrix &F = *this->fMat_n;
     FockOperator &fock = *this->fOper_n;
     OrbitalVector &Phi_n = *this->orbitals_n;
-    HelmholtzVector &H = *this->helmholtz;
+    GroundStateHelmholtz &H = *this->gsh;
 
     double orb_prec = this->orbPrec[0];
     double err_o = orbital::get_errors(Phi_n).maxCoeff();
@@ -149,13 +145,9 @@ bool OrbitalOptimizer::optimize() {
         this->property.push_back(E);
 
         // Setup Helmholtz operators and argument
-        H.setup(orb_prec, F.real().diagonal());
-        ComplexMatrix L = H.getLambdaMatrix();
-        OrbitalVector Psi_n = setupHelmholtzArguments(fock, L - F, Phi_n, true);
-
-        // Apply Helmholtz operators
-        OrbitalVector Phi_np1 = H(Psi_n);
-        Psi_n.clear();
+        H.setup(orb_prec);
+        OrbitalVector Phi_np1 = H(fock, F, Phi_n);
+        fock.clear();
         H.clear();
 
         ComplexMatrix U = orbital::orthonormalize(orb_prec, Phi_np1);

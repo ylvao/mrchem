@@ -44,7 +44,7 @@ class Accelerator;
 
 class OrbitalOptimizer final : public GroundStateSolver {
 public:
-    OrbitalOptimizer(HelmholtzVector &h, Accelerator *k = 0);
+    OrbitalOptimizer(HelmholtzVector &h, GroundStateHelmholtz *gsh, Accelerator *k = 0);
 
     void setup(FockOperator &fock, OrbitalVector &phi, ComplexMatrix &F);
     void clear();

@@ -44,12 +44,13 @@
 namespace mrchem {
 
 class HelmholtzVector;
+class GroundStateHelmholtz;
 class Accelerator;
 class FockOperator;
 
 class SCF {
 public:
-    SCF(HelmholtzVector &h);
+    SCF(HelmholtzVector &h, GroundStateHelmholtz *gsh = nullptr);
 
     virtual bool optimize() = 0;
 
@@ -71,6 +72,7 @@ protected:
     std::vector<double> property; ///< Convergence property error
 
     HelmholtzVector *helmholtz; ///< Pointer to external object
+    GroundStateHelmholtz *gsh;  ///< Pointer to external object
 
     bool checkConvergence(double err_o, double err_p) const;
     bool needLocalization(int nIter) const;

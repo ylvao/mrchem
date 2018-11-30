@@ -25,6 +25,7 @@
 #include "qmfunctions/orbital_utils.h"
 
 #include "scf_solver/EnergyOptimizer.h"
+#include "scf_solver/GroundStateHelmholtz.h"
 #include "scf_solver/HelmholtzVector.h"
 #include "scf_solver/KAIN.h"
 #include "scf_solver/LinearResponseSolver.h"
@@ -172,6 +173,7 @@ SCFDriver::SCFDriver(Getkw &input) {
     r_O[2] = 0.0;
 
     helmholtz = 0;
+    gsh = 0;
     kain = 0;
     kain_x = 0;
     kain_y = 0;
@@ -377,6 +379,7 @@ void SCFDriver::setup() {
 
     // Setting up SCF
     helmholtz = new HelmholtzVector(rel_prec, scf_lambda_thrs);
+    gsh = new GroundStateHelmholtz(rel_prec);
     if (scf_kain > 0) kain = new KAIN(scf_kain);
     if (rsp_kain > 0) kain_x = new KAIN(rsp_kain);
     if (rsp_kain > 0) kain_y = new KAIN(rsp_kain);
@@ -459,6 +462,7 @@ void SCFDriver::clear() {
     if (kain_x != 0) delete kain_x;
     if (kain_y != 0) delete kain_y;
     if (helmholtz != 0) delete helmholtz;
+    if (gsh != 0) delete gsh;
 }
 
 /** Setup n+1 Fock operator for energy optimization */
@@ -532,7 +536,7 @@ void SCFDriver::setupInitialGroundState() {
 OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
     if (helmholtz == 0) MSG_ERROR("Helmholtz operators not initialized");
 
-    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, kain);
+    OrbitalOptimizer *optimizer = new OrbitalOptimizer(*helmholtz, gsh, kain);
     optimizer->setMaxIterations(scf_max_iter);
     optimizer->setRotation(scf_rotation);
     optimizer->setCanonical(scf_canonical);

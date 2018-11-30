@@ -54,7 +54,7 @@ namespace mrchem {
  * so the SCF solver needs to be "setup()" before "optimize()".
  */
 EnergyOptimizer::EnergyOptimizer(HelmholtzVector &h)
-        : GroundStateSolver(h)
+        : GroundStateSolver(h, nullptr)
         , fOper_np1(0)
         , orbitals_np1(0) {}
 

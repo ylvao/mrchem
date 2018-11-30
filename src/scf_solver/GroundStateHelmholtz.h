@@ -25,38 +25,36 @@
 
 #pragma once
 
-#include "SCF.h"
-#include "properties/SCFEnergy.h"
+#include "qmfunctions/qmfunction_fwd.h"
+#include "qmoperators/qmoperator_fwd.h"
+#include "qmoperators/two_electron/FockOperator.h"
 
-/** @class GroundStateSolver
+/** @class GroundStateHelmholtz
  *
- * @brief Abstract class for different types of ground state SCF solvers
+ * @brief Container of HelmholtzOperators for a corresponding OrbtialVector
  *
- * The ground state SCF solvers share some common features which are collected in this
- * abstract base class. This is mainly the construction of the argument that is used
- * for the Helmholtz operators.
+ * This class assigns one HelmholtzOperator to each orbital in an OrbitalVector.
+ * The operators can be re-used if several orbitals share the same (or similar)
+ * energy, or if the change in energy is small relative to the previous iteration.
  */
 
 namespace mrchem {
 
-class GroundStateSolver : public SCF {
+class GroundStateHelmholtz {
 public:
-    GroundStateSolver(HelmholtzVector &h, GroundStateHelmholtz *gsh);
+    GroundStateHelmholtz(double build)
+            : build_prec(build) {}
 
-protected:
-    std::vector<SCFEnergy> energy;
+    void setup(double prec) { this->apply_prec = prec; }
+    void clear() { this->apply_prec = -1.0; }
 
-    ComplexMatrix *fMat_n;     ///< Fock matrix (pointer to external object)
-    FockOperator *fOper_n;     ///< Fock operator (pointer to external object)
-    OrbitalVector *orbitals_n; ///< Orbtials (pointer to external object)
+    OrbitalVector operator()(FockOperator &fock, ComplexMatrix &F, OrbitalVector &Phi);
 
-    OrbitalVector setupHelmholtzArguments(FockOperator &fock,
-                                          const ComplexMatrix &M,
-                                          OrbitalVector &Phi,
-                                          bool clearFock);
-    void printProperty() const;
-    double calcProperty();
-    double calcPropertyError() const;
+private:
+    double build_prec; ///< Precision for construction of Helmholtz operators
+    double apply_prec; ///< Precision for application of Helmholtz operators
+
+    Orbital apply(mrcpp::HelmholtzOperator &H, Orbital &inp) const;
 };
 
 } // namespace mrchem

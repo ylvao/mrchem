@@ -47,8 +47,8 @@ namespace mrchem {
  * Fock matrix, FockOperator and OrbitalVector are not initialized at this stage,
  * so the SCF solver needs to be "setup()" before "optimize()".
  */
-GroundStateSolver::GroundStateSolver(HelmholtzVector &h)
-        : SCF(h)
+GroundStateSolver::GroundStateSolver(HelmholtzVector &h, GroundStateHelmholtz *gsh)
+        : SCF(h, gsh)
         , fMat_n(0)
         , fOper_n(0)
         , orbitals_n(0) {}
