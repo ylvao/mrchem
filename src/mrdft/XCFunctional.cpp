@@ -645,7 +645,7 @@ void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
  * and whether explicit or gamma-type derivatives have been used in xcfun.
  */
 void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
-    if(this->order > 1) MSG_FATAL("Not implemented: abort!");
+    if(this->order > 1) NOT_IMPLEMENTED_ABORT;
     FunctionTree<3> * pot;
     if (isSpinSeparated()) {
         FunctionTree<3> & df_da = mrcpp::get_func(xcOutput, 1);
