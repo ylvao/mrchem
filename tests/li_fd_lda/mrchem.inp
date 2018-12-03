@@ -1,6 +1,6 @@
 # vim:syntax=sh:
 
-rel_prec = 1.0e-4                 # Overall relative precision
+rel_prec = 1.0e-3                 # Overall relative precision
 
 MRA {
   order = 6                       # Polynomial order
@@ -44,11 +44,12 @@ Properties {
 
 SCF {
   run = true
-  orbital_thrs = 1.0e-3           # Convergence threshold in orbital residual
+  orbital_thrs = 1.0e-2           # Convergence threshold in orbital residual
   kain = 3                        # Length of KAIN iterative history
   initial_guess = SAD_DZ
   rotation = 5                    # Diagonalize Fock matrix every n'th iteration
   canonical = false               # Use canonical of localized orbitals
   write_orbitals = false
+  max_iter = 5
 }
 
