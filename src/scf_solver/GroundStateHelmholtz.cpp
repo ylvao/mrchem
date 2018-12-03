@@ -40,37 +40,37 @@ using mrcpp::Timer;
 namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-OrbitalVector GroundStateHelmholtz::operator()(FockOperator &fock, ComplexMatrix &F, OrbitalVector &inp) {
+OrbitalVector GroundStateHelmholtz::operator()(FockOperator &fock, const ComplexMatrix &F, OrbitalVector &Phi) const {
+    Timer t_tot;
     Printer::printHeader(0, "Applying Helmholtz operators");
-    println(0, " Orb    RealNorm   Nodes     ImagNorm   Nodes     Timing");
-    Printer::printSeparator(0, '-');
     int oldprec = Printer::setPrecision(5);
 
-    OrbitalVector out = orbital::param_copy(inp);
+    Timer t_mat;
+    ComplexVector lambda = F.diagonal();
+    ComplexMatrix L = lambda.asDiagonal();
+    OrbitalVector MPhi = orbital::rotate(L - F, Phi);
+    t_mat.stop();
+    Printer::printDouble(0, "Computing matrix part", t_mat.getWallTime(), 5);
 
-    QMFunctionVector phi_vec;
-    for (int i = 0; i < inp.size(); i++) phi_vec.push_back(inp[i]);
+    Printer::printSeparator(0, '-');
+    println(0, " Orb    RealNorm   Nodes     ImagNorm   Nodes     Timing");
+    Printer::printSeparator(0, '-');
 
-    Timer tottimer;
-    for (int i = 0; i < inp.size(); i++) {
-        Timer timer;
-        ComplexDouble mu = std::sqrt(-2.0 * F(i, i));
-        if (std::abs(mu.imag()) > mrcpp::MachineZero) MSG_FATAL("Mu cannot be complex");
+    OrbitalVector out = orbital::param_copy(Phi);
+    for (int i = 0; i < Phi.size(); i++) {
+        if (not mpi::my_orb(out[i])) continue;
+        Timer t_i;
+        ComplexDouble mu_i = std::sqrt(-2.0 * lambda(i));
+        if (std::abs(mu_i.imag()) > mrcpp::MachineZero) MSG_FATAL("Mu cannot be complex");
 
-        ComplexVector c = -1.0 * F.row(i);
-        c(i) = 0.0;
+        Orbital psi_i = fock.potential()(Phi[i]);
+        psi_i.add(1.0, MPhi[i]);
+        psi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
+        MPhi[i].free();
 
-        Orbital chi = inp[i].paramCopy();
-        qmfunction::linear_combination(chi, c, phi_vec, this->apply_prec);
-
-        Orbital psi = fock.potential()(inp[i]);
-        psi.add(1.0, chi);
-        psi.rescale(-1.0 / (2.0 * MATHCONST::pi));
-        chi.free();
-
-        mrcpp::HelmholtzOperator H(*MRA, mu.real(), this->build_prec);
-        out[i] = apply(H, psi);
-        psi.free();
+        mrcpp::HelmholtzOperator H_i(*MRA, mu_i.real(), this->build_prec);
+        out[i] = apply(H_i, psi_i);
+        psi_i.free();
 
         int rNodes = out[i].getNNodes(NUMBER::Real);
         int iNodes = out[i].getNNodes(NUMBER::Imag);
@@ -79,18 +79,18 @@ OrbitalVector GroundStateHelmholtz::operator()(FockOperator &fock, ComplexMatrix
         if (out[i].hasReal()) rNorm = std::sqrt(out[i].real().getSquareNorm());
         if (out[i].hasImag()) iNorm = std::sqrt(out[i].imag().getSquareNorm());
 
-        timer.stop();
+        t_i.stop();
         Printer::setPrecision(5);
         printout(0, std::setw(3) << i);
         printout(0, " " << std::setw(14) << rNorm);
         printout(0, " " << std::setw(5) << rNodes);
         printout(0, " " << std::setw(14) << iNorm);
         printout(0, " " << std::setw(5) << iNodes);
-        printout(0, std::setw(14) << timer.getWallTime() << std::endl);
+        printout(0, std::setw(14) << t_i.getWallTime() << std::endl);
     }
 
-    tottimer.stop();
-    Printer::printFooter(0, tottimer, 2);
+    t_tot.stop();
+    Printer::printFooter(0, t_tot, 2);
     Printer::setPrecision(oldprec);
     return out;
 }

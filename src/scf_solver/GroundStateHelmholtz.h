@@ -48,7 +48,7 @@ public:
     void setup(double prec) { this->apply_prec = prec; }
     void clear() { this->apply_prec = -1.0; }
 
-    OrbitalVector operator()(FockOperator &fock, ComplexMatrix &F, OrbitalVector &Phi);
+    OrbitalVector operator()(FockOperator &fock, const ComplexMatrix &F, OrbitalVector &Phi) const;
 
 private:
     double build_prec; ///< Precision for construction of Helmholtz operators
