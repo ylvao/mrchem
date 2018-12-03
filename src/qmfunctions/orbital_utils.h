@@ -43,14 +43,14 @@ void orthogonalize(Orbital &phi, Orbital psi);
 
 OrbitalVector add(ComplexDouble a, OrbitalVector &Phi_a, ComplexDouble b, OrbitalVector &Phi_b, double prec = -1.0);
 OrbitalVector rotate(const ComplexMatrix &U, OrbitalVector &Phi, double prec = -1.0);
+void rotate_in_place(const ComplexMatrix & U, OrbitalVector & Phi, double prec = -1.0);
 
 OrbitalVector deep_copy(OrbitalVector &Phi);
 OrbitalVector param_copy(const OrbitalVector &Phi);
 
 OrbitalVector adjoin(OrbitalVector &Phi_a, OrbitalVector &Phi_b);
 OrbitalVector disjoin(OrbitalVector &Phi, int spin);
-
-OrbitalVector filter_spin(const OrbitalVector &Phi, int spin);
+void append(OrbitalVector &Phi, OrbitalVector &Psi);
 
 void save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix = "", int n_orbs = -1);
 OrbitalVector load_orbitals(const std::string &file, const std::string &suffix = "", int n_orbs = -1);
@@ -63,6 +63,7 @@ void orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &BraKet);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ket);
 ComplexMatrix calc_lowdin_matrix(OrbitalVector &Phi);
+ComplexMatrix calc_localization_matrix(double prec, OrbitalVector &Phi);
 
 ComplexMatrix localize(double prec, OrbitalVector &Phi);
 ComplexMatrix localize(double prec, OrbitalVector &Phi, int spin);
@@ -78,7 +79,7 @@ int size_alpha(const OrbitalVector &Phi);
 int size_beta(const OrbitalVector &Phi);
 int get_multiplicity(const OrbitalVector &Phi);
 int get_electron_number(const OrbitalVector &Phi, int spin = SPIN::Paired);
-bool orbital_order_is_sane(const OrbitalVector &Phi);
+bool orbital_vector_is_sane(const OrbitalVector &Phi);
 int start_index(const OrbitalVector &Phi, int spin);
 
 void set_spins(OrbitalVector &Phi, const IntVector &spins);
