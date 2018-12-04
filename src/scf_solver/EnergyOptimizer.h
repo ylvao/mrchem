@@ -45,8 +45,6 @@ namespace mrchem {
 
 class EnergyOptimizer final : public GroundStateSolver {
 public:
-    EnergyOptimizer(HelmholtzVector &h);
-
     void setup(FockOperator &fock,
                OrbitalVector &phi,
                ComplexMatrix &F,
@@ -57,10 +55,10 @@ public:
     bool optimize();
 
 protected:
-    FockOperator *fOper_np1;     ///< Next iteration Fock operator (pointer to external object)
-    OrbitalVector *orbitals_np1; ///< Next iteration orbitals (pointer to external object)
+    FockOperator *fOper_np1{nullptr};     ///< Next iteration Fock operator (pointer to external object)
+    OrbitalVector *orbitals_np1{nullptr}; ///< Next iteration orbitals (pointer to external object)
 
-    ComplexMatrix calcFockMatrixUpdate(double prec, OrbitalVector &dPhi_n);
+    ComplexMatrix calcFockMatrixUpdate(double prec, OrbitalVector &dPhi_n, const ComplexMatrix &L);
 };
 
 } // namespace mrchem

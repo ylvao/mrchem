@@ -19,8 +19,6 @@ class OrbitalOptimizer;
 class EnergyOptimizer;
 class GroundStateSolver;
 class LinearResponseSolver;
-class HelmholtzVector;
-class GroundStateHelmholtz;
 class KAIN;
 
 class H_E_dip;
@@ -208,8 +206,6 @@ protected:
     mrcpp::Coord<3> r_O;
 
     // SCF machinery
-    HelmholtzVector *helmholtz;
-    GroundStateHelmholtz *gsh;
     KAIN *kain;
     KAIN *kain_x;
     KAIN *kain_y;

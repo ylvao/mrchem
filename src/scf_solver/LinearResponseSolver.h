@@ -33,9 +33,12 @@
 
 namespace mrchem {
 
+class FockOperator;
+class Accelerator;
+
 class LinearResponseSolver final : public SCF {
 public:
-    LinearResponseSolver(HelmholtzVector &h, Accelerator *k_x = nullptr, Accelerator *k_y = nullptr);
+    LinearResponseSolver(Accelerator *k_x = nullptr, Accelerator *k_y = nullptr);
 
     void setupUnperturbed(double prec, FockOperator *fock, OrbitalVector *Phi, ComplexMatrix *F);
     void clearUnperturbed();
@@ -47,28 +50,24 @@ public:
     bool optimize();
 
 protected:
-    bool dynamic;
-    double frequency;
+    bool dynamic{false};
+    double frequency{0.0};
 
-    FockOperator *fOper_0;
-    FockOperator *fOper_1;
+    FockOperator *fOper_0{nullptr};
+    FockOperator *fOper_1{nullptr};
 
-    ComplexMatrix *fMat_0;
-    ComplexMatrix *fMat_x;
-    ComplexMatrix *fMat_y;
+    ComplexMatrix *fMat_0{nullptr};
+    ComplexMatrix *fMat_x{nullptr};
+    ComplexMatrix *fMat_y{nullptr};
 
-    OrbitalVector *orbitals_0;
-    OrbitalVector *orbitals_x;
-    OrbitalVector *orbitals_y;
+    OrbitalVector *orbitals_0{nullptr};
+    OrbitalVector *orbitals_x{nullptr};
+    OrbitalVector *orbitals_y{nullptr};
 
     Accelerator *kain_x;
     Accelerator *kain_y;
 
-    // clang-format off
-    OrbitalVector setupHelmholtzArguments(OrbitalVector &dPhi,
-                                          const ComplexMatrix &M,
-                                          bool adjoint);
-    // clang-format on
+    OrbitalVector setupHelmholtzArguments(OrbitalVector &dPhi, const ComplexMatrix &M, bool adjoint);
 
     void printProperty() const;
     double calcProperty();
