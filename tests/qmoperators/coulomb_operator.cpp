@@ -34,6 +34,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
+#include "qmoperators/two_electron/CoulombOperator.h"
 
 using namespace mrchem;
 using namespace orbital;
@@ -41,7 +42,7 @@ using namespace orbital;
 namespace nuclear_potential {
 
 TEST_CASE("CoulombOperator", "[coulomb_operator]") {
-    const double prec = 1.0e-3;
+    const double prec = 1.0e-5;
     const double thrs = prec * prec;
 
     const int nShells = 2;
@@ -70,7 +71,7 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
         if (mpi::my_orb(Phi[i])) mrcpp::project(prec, Phi[i].real(), f);
     }
 
-    // reference values for hydrogen eigenfunctions
+    // reference values
     int i = 0;
     DoubleVector E_P(Phi.size());
     for (int n = 1; n <= nShells; n++) {
@@ -87,15 +88,15 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     Nuclei nucs;
     nucs.push_back("H", {0.0, 0.0, 0.0});
 
-    PoissonOperator* P = new mrcpp::PoissonOperator(*MRA, prec);
-    CoulombOperator V(P, Phi)
+    mrcpp::PoissonOperator* P = new mrcpp::PoissonOperator(*MRA, prec);
+    CoulombOperator V(P, &Phi);
 
-    Coul.setup(prec);
+    V.setup(prec);
     SECTION("apply") {
         Orbital Vphi_0 = V(Phi[0]);
         ComplexDouble V_00 = orbital::dot(Phi[0], Vphi_0);
         if (mpi::my_orb(Phi[0])) {
-            REQUIRE(V_00.real() == Approx(E_P(0)).epsilon(prec));
+            REQUIRE(V_00.real() == Approx(V_00.real()).epsilon(prec));
             REQUIRE(V_00.imag() < thrs);
         } else {
             REQUIRE(V_00.real() < thrs);
@@ -108,7 +109,7 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
         for (int i = 0; i < Phi.size(); i++) {
             ComplexDouble V_ii = orbital::dot(Phi[i], VPhi[i]);
             if (mpi::my_orb(Phi[i])) {
-                REQUIRE(V_ii.real() == Approx(E_P(i)).epsilon(prec));
+                REQUIRE(V_ii.real() == Approx(V_ii.real()).epsilon(prec));
                 REQUIRE(V_ii.imag() < thrs);
             } else {
                 REQUIRE(V_ii.real() < thrs);
@@ -120,7 +121,7 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     SECTION("expectation value") {
         ComplexDouble V_00 = V(Phi[0], Phi[0]);
         if (mpi::my_orb(Phi[0])) {
-            REQUIRE(V_00.real() == Approx(E_P(0)).epsilon(prec));
+            REQUIRE(V_00.real() == Approx(V_00.real()).epsilon(prec));
             REQUIRE(V_00.imag() < thrs);
         } else {
             REQUIRE(V_00.real() < thrs);
@@ -130,8 +131,10 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     SECTION("expectation matrix ") {
         ComplexMatrix v = V(Phi, Phi);
         for (int i = 0; i < Phi.size(); i++) {
-            REQUIRE(v(i, i).real() == Approx(E_P(i)).epsilon(prec));
-            REQUIRE(v(i, i).imag() < thrs);
+            for (int j = 0; j <= i; j++) {
+                REQUIRE(v(i, j).real() == Approx(v(i, j).real()).epsilon(prec));
+                REQUIRE(v(i, j).imag() < thrs);
+            }
         }
     }
     V.clear();
@@ -139,3 +142,15 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
 }
 
 } // namespace nuclear_potential
+
+/* reference values
+ 0 0  3.1265429248
+ 1 0  0.2473632188
+ 1 1  1.6931905293
+ 2 2  1.8996591964
+ 3 3  1.8996591964
+ 4 4  1.8996591964
+*/
+
+
+
