@@ -35,30 +35,18 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
         printout(0, std::setw(14) << prec);
         printout(0, std::setw(14) << smooth << std::endl);
     }
-    Printer::printSeparator(0, '=', 2);
-    Printer::setPrecision(oldprec);
-}
-
-void NuclearPotential::setup(double prec) {
-    if (isSetup(prec)) return;
-    setApplyPrec(prec);
-
-    QMPotential &V = *this;
-
-    if (V.hasReal()) MSG_ERROR("Potential not properly cleared");
-    if (V.hasImag()) MSG_ERROR("Potential not properly cleared");
 
     Timer timer;
+    QMPotential &V = *this;
     qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
     timer.stop();
     int n = V.getNNodes(NUMBER::Total);
     double t = timer.getWallTime();
-    Printer::printTree(0, "Nuclear potential", n, t);
-}
+    Printer::printSeparator(0, '-');
+    Printer::printTree(0, "Projecting potential", n, t);
 
-void NuclearPotential::clear() {
-    free(NUMBER::Total); // delete FunctionTree pointers
-    clearApplyPrec();    // apply_prec = -1
+    Printer::printSeparator(0, '=', 2);
+    Printer::setPrecision(oldprec);
 }
 
 /** @brief computes the interaction energy of the nuclear potential with a second set of nuclei.
