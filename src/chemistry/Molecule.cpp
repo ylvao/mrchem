@@ -251,9 +251,9 @@ void Molecule::clearSpinSpinCoupling(int k, int l) {
 void Molecule::clearPolarizability() {
     int nPol = this->polarizability.size();
     for (int i = 0; i < nPol; i++) {
-        if (this->polarizability[i] != 0) {
+        if (this->polarizability[i] != nullptr) {
             delete this->polarizability[i];
-            this->polarizability[i] = 0;
+            this->polarizability[i] = nullptr;
         }
     }
     this->polarizability.clear();
@@ -426,7 +426,7 @@ SpinSpinCoupling& Molecule::getSpinSpinCoupling(int k, int l) {
 
 /** @brief Return property Polarizability */
 Polarizability& Molecule::getPolarizability(double omega) {
-    Polarizability *pol_w = 0;
+    Polarizability *pol_w = nullptr;
     for (int i = 0; i < this->polarizability.size(); i++) {
         double omega_i = this->polarizability[i]->getFrequency();
         if (std::abs(omega_i - omega) < mrcpp::MachineZero) {
@@ -586,20 +586,20 @@ void Molecule::printProperties() const {
     if (this->dipole != 0) println(0, *this->dipole);
     if (this->geomderiv != 0) println(0, *this->geomderiv);
     for (int i = 0; i < polarizability.size(); i++) {
-        if (this->polarizability[i] != 0) println(0, *this->polarizability[i]);
+        if (this->polarizability[i] != nullptr) println(0, *this->polarizability[i]);
     }
-    if (this->magnetizability != 0) println(0, *this->magnetizability);
+    if (this->magnetizability != nullptr) println(0, *this->magnetizability);
     if (this->nmr != 0) {
         for (int k = 0; k < this->nuclei.size(); k++) {
             if (this->nmr[k] != 0) println(0, *this->nmr[k]);
         }
     }
-    if (this->hfcc != 0) {
+    if (this->hfcc != nullptr) {
         for (int k = 0; k < this->nuclei.size(); k++) {
             if (this->hfcc[k] != 0) println(0, *this->hfcc[k]);
         }
     }
-    if (this->sscc != 0) {
+    if (this->sscc != nullptr) {
         for (int k = 0; k < this->nuclei.size(); k++) {
             for (int l = 0; l < this->nuclei.size(); l++) {
                 if (this->sscc[k][l] != 0) println(0, *this->sscc[k][l]);

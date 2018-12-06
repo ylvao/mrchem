@@ -404,7 +404,7 @@ void SCFDriver::setup() {
     }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
-        xcfun = setupFunctional(1); //LUCA why do we need second derivative here??
+        xcfun = setupFunctional(MRDFT::Gradient);
         XC = new XCOperator(xcfun, phi);
         fock->setXCOperator(XC);
     }
@@ -485,7 +485,7 @@ void SCFDriver::setup_np1() {
     }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
-        xcfun = setupFunctional(1);
+        xcfun = setupFunctional(MRDFT::Gradient);
         XC_np1 = new XCOperator(xcfun, phi_np1);
         fock_np1->setXCOperator(XC_np1);
     }
@@ -610,7 +610,7 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
         xFac = 1.0;
     } else if (wf_method == "DFT") {
         xFac = dft_x_fac;
-        xcfun = setupFunctional(2);
+        xcfun = setupFunctional(MRDFT::Hessian);
         //xcfun->evalSetup(2);
         dXC = new XCOperator(xcfun, phi, phi_x, phi_y);
     }
