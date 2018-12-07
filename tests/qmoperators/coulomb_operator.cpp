@@ -39,7 +39,7 @@
 using namespace mrchem;
 using namespace orbital;
 
-namespace nuclear_potential {
+namespace coulomb_potential {
 
 TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     const double prec = 1.0e-3;
@@ -74,7 +74,7 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
 
     int i = 0;
-    DoubleMatrix E_P = DoubleVector::Zero(Phi.size(), Phi.size());
+    DoubleMatrix E_P = DoubleMatrix::Zero(Phi.size(), Phi.size());
     E_P(0,0) = 3.1265435789;
     E_P(0,1) = 0.2473634645;
     E_P(1,0) = 0.2473634645;
