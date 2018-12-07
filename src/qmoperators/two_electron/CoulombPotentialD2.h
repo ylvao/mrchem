@@ -11,7 +11,7 @@ public:
                        OrbitalVector *X,
                        OrbitalVector *Y);
 
-protected:
+private:
     OrbitalVector *orbitals;   ///< Unperturbed orbitals defining the ground-state electron density
     OrbitalVector *orbitals_x; ///< Perturbed orbitals
     OrbitalVector *orbitals_y; ///< Perturbed orbitals

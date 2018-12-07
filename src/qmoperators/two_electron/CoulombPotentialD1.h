@@ -8,7 +8,7 @@ class CoulombPotentialD1 final : public CoulombPotential {
 public:
     CoulombPotentialD1(mrcpp::PoissonOperator *P, OrbitalVector *Phi);
 
-protected:
+private:
     OrbitalVector *orbitals; ///< Unperturbed orbitals defining the ground-state electron density
 
     void setupDensity(double prec);
