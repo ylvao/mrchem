@@ -42,7 +42,7 @@ using namespace orbital;
 namespace nuclear_potential {
 
 TEST_CASE("CoulombOperator", "[coulomb_operator]") {
-    const double prec = 1.0e-5;
+    const double prec = 1.0e-3;
     const double thrs = prec * prec;
 
     const int nShells = 2;
@@ -71,22 +71,17 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
         if (mpi::my_orb(Phi[i])) mrcpp::project(prec, Phi[i].real(), f);
     }
 
-    // reference values
-    int i = 0;
-    DoubleVector E_P(Phi.size());
-    for (int n = 1; n <= nShells; n++) {
-        int L = n;
-        double E_n = 1.0 / (2.0 * n * n); //E_n = Z^2/(2*n^2)
-        for (int l = 0; l < L; l++) {
-            int M = 2 * l + 1;
-            for (int m = 0; m < M; m++) {
-                E_P(i++) = -2.0 * E_n; //virial theorem: 2<E_K> = -<E_P>
-            }
-        }
-    }
+    // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
 
-    Nuclei nucs;
-    nucs.push_back("H", {0.0, 0.0, 0.0});
+    int i = 0;
+    DoubleMatrix E_P = DoubleVector::Zero(Phi.size(), Phi.size());
+    E_P(0,0) = 3.1265435789;
+    E_P(0,1) = 0.2473634645;
+    E_P(1,0) = 0.2473634645;
+    E_P(1,1) = 1.6931906101;
+    E_P(2,2) = 1.8996591843;
+    E_P(3,3) = 1.8996591843;
+    E_P(4,4) = 1.8996591843;
 
     mrcpp::PoissonOperator* P = new mrcpp::PoissonOperator(*MRA, prec);
     CoulombOperator V(P, &Phi);
@@ -154,3 +149,9 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
 
 
 
+  3.1265435789 == Approx( 3.1265435789 )
+  0.2473634645 == Approx( 0.2473634645 )
+  1.6931906101 == Approx( 1.6931906101 )
+  1.8996591843 == Approx( 1.8996591843 )
+  1.8996591843 == Approx( 1.8996591843 )
+  1.8996591843 == Approx( 1.8996591843 )
