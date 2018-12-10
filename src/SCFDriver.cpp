@@ -41,6 +41,7 @@
 #include "properties/DipoleMoment.h"
 #include "properties/GeometryDerivatives.h"
 #include "properties/Magnetizability.h"
+#include "properties/Polarizability.h"
 
 #include "qmoperators/one_electron/H_BB_dia.h"
 #include "qmoperators/one_electron/H_B_dip.h"
@@ -227,10 +228,6 @@ bool SCFDriver::sanityCheck() const {
         MSG_ERROR("Quadrupole moment not implemented");
         return false;
     }
-    if (calc_polarizability) {
-        MSG_ERROR("Polarizability not implemented");
-        return false;
-    }
     if (calc_hyperpolarizability) {
         MSG_ERROR("Hyperpolarizability not implemented");
         return false;
@@ -260,6 +257,7 @@ void SCFDriver::setup() {
     molecule->printGeometry();
     nuclei = &molecule->getNuclei();
 
+    
     // Setting up empty orbitals
     phi = new OrbitalVector;
 
@@ -364,7 +362,10 @@ void SCFDriver::setup() {
         for (int i = 0; i < pol_frequency.size(); i++) {
             double omega = pol_frequency[i];
             molecule->initPolarizability(omega);
-            NOT_IMPLEMENTED_ABORT;
+            for (int d = 0; d < 3; d++) {
+                if (rsp_directions[d] == 0) continue;
+                rsp_calculations.push_back(h_E, omega, false, d, "H_E");
+            }
         }
     }
     if (calc_optical_rotation) {
@@ -403,7 +404,7 @@ void SCFDriver::setup() {
     }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
-        xcfun = setupFunctional(1);
+        xcfun = setupFunctional(MRDFT::Gradient);
         XC = new XCOperator(xcfun, phi);
         fock->setXCOperator(XC);
     }
@@ -484,7 +485,7 @@ void SCFDriver::setup_np1() {
     }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
-        xcfun = setupFunctional(1);
+        xcfun = setupFunctional(MRDFT::Gradient);
         XC_np1 = new XCOperator(xcfun, phi_np1);
         fock_np1->setXCOperator(XC_np1);
     }
@@ -600,24 +601,32 @@ void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
 }
 
 void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
-    if (phi == 0) MSG_ERROR("Orbitals not initialized");
-    if (phi_x == 0) MSG_ERROR("X orbitals not initialized");
-    if (phi_y == 0) MSG_ERROR("Y orbitals not initialized");
+    if (phi == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (phi_x == nullptr) MSG_ERROR("X orbitals not initialized");
+    if (phi_y == nullptr) MSG_ERROR("Y orbitals not initialized");
 
     double xFac = 0.0;
     if (wf_method == "HF") {
         xFac = 1.0;
     } else if (wf_method == "DFT") {
         xFac = dft_x_fac;
+        xcfun = setupFunctional(MRDFT::Hessian);
+        dXC = new XCOperator(xcfun, phi, phi_x, phi_y);
     }
     if (xFac > mrcpp::MachineZero) NOT_IMPLEMENTED_ABORT;
 
+    dJ = new CoulombOperator(P, phi, phi_x, phi_y);
+
+    
     int d = rsp_calc.dir;
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
-    if (not rsp_calc.isImaginary() or rsp_calc.isDynamic()) NOT_IMPLEMENTED_ABORT;
+    if (rsp_calc.isDynamic()) {
+        NOT_IMPLEMENTED_ABORT;
+    }
 
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
+    d_fock->build();
 }
 
 void SCFDriver::clearPerturbedOperators() {
@@ -702,12 +711,15 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     setupPerturbedOrbitals(rsp_calc);
     setupPerturbedOperators(rsp_calc);
 
+    d_fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
+    d_fock->getXCOperator()->setupPotential(rel_prec);
+
     bool converged = true;
     if (rsp_run) {
         LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);
         solver->setupUnperturbed(rsp_orbital_prec[1], fock, phi, &F);
         solver->setup(d_fock, phi_x);
-        converged = solver->optimize();
+        converged = solver->optimize(); //LUCA Here is a fock.setup()
         solver->clear();
         solver->clearUnperturbed();
         delete solver;
@@ -863,6 +875,7 @@ void SCFDriver::calcGroundStateProperties() {
 
 void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc) {
     int j = rsp_calc.dir;
+    double freq = rsp_calc.freq;
 
     if (calc_magnetizability and rsp_calc.pert == h_B) {
         Printer::printHeader(0, "Calculating paramagnetic magnetizability");
@@ -871,6 +884,17 @@ void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc
         h_B->setup(rel_prec);
         para.row(j) = -h_B->trace(*phi, *phi_x, *phi_y).real();
         h_B->clear();
+        timer.stop();
+        Printer::printFooter(0, timer, 2);
+    }
+
+    if (calc_polarizability and rsp_calc.pert == h_E) {
+        Printer::printHeader(0, "Calculating polarizability");
+        Timer timer;
+        DoubleMatrix &tensor = molecule->getPolarizability(freq).get();
+        h_E->setup(rel_prec);
+        tensor.row(j) = -h_E->trace(*phi, *phi_x, *phi_y).real();
+        h_E->clear();
         timer.stop();
         Printer::printFooter(0, timer, 2);
     }

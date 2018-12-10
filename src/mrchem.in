@@ -541,11 +541,13 @@ def verify_wf(wf):
         exit()
 
 def verify_dft(dft):
-    if not dft['spin'].is_set():
-        wf = topsect.fetch_sect('WaveFunction')
-        if wf['restricted'][0]:
-            dft['spin'][0] = False
-        else:
+    wf = topsect.fetch_sect('WaveFunction')
+    # does not allow spin-separated functionals for a closed shell system
+    if wf['restricted'][0]:
+        dft['spin'][0] = False
+    else:
+        # allows spin-restricted functionals if the user requests it explicitly for an open shell system
+        if not dft['spin'].is_set():
             dft['spin'][0] = True
 
     n = 0

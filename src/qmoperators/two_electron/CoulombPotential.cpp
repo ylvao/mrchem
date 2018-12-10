@@ -1,14 +1,12 @@
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-
 #include "CoulombPotential.h"
 #include "parallel.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 
-using mrcpp::FunctionTree;
 using mrcpp::PoissonOperator;
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -25,10 +23,10 @@ namespace mrchem {
  * the vector can change throughout the calculation. The density and (*this)
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
-CoulombPotential::CoulombPotential(PoissonOperator *P, OrbitalVector *Phi)
+
+CoulombPotential::CoulombPotential(PoissonOperator *P)
         : QMPotential(1, mpi::share_coul_pot)
         , density(mpi::share_coul_dens)
-        , orbitals(Phi)
         , poisson(P) {}
 
 CoulombPotential::~CoulombPotential() {
@@ -42,6 +40,10 @@ CoulombPotential::~CoulombPotential() {
  * This will compute the Coulomb potential by application of the Poisson
  * operator to the density. If the density is not available it is computed
  * from the current orbitals (assuming that the orbitals are available).
+ * For first-order perturbations the first order density and the Hessian will be
+ * computed. In order to make the Hessian available to CoulombOperator, it is stored in the 
+ * potential function instead of the zeroth-order potential.
+ *
  */
 void CoulombPotential::setup(double prec) {
     if (isSetup(prec)) return;
@@ -61,28 +63,6 @@ void CoulombPotential::clear() {
     clearApplyPrec();     // apply_prec = -1
 }
 
-/** @brief compute electron density
- *
- * @param prec: apply precision
- *
- * This will compute the electron density as the sum of squares of the orbitals.
- */
-void CoulombPotential::setupDensity(double prec) {
-    if (hasDensity()) return;
-    if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
-
-    OrbitalVector &Phi = *this->orbitals;
-    Density &rho = this->density;
-
-    Timer timer;
-    rho.alloc(NUMBER::Real);
-    density::compute(prec, rho, Phi, DENSITY::Total);
-    timer.stop();
-    double t = timer.getWallTime();
-    int n = rho.getNNodes();
-    Printer::printTree(0, "Coulomb density", n, t);
-}
-
 /** @brief compute Coulomb potential
  *
  * @param prec: apply precision
@@ -92,6 +72,7 @@ void CoulombPotential::setupDensity(double prec) {
  */
 void CoulombPotential::setupPotential(double prec) {
     if (this->poisson == nullptr) MSG_ERROR("Poisson operator not initialized");
+    if (not hasDensity()) MSG_ERROR("Density not initialized");
     if (hasReal()) MSG_ERROR("Potential not properly cleared");
     if (hasImag()) MSG_ERROR("Potential not properly cleared");
 
@@ -100,7 +81,7 @@ void CoulombPotential::setupPotential(double prec) {
     Density &rho = this->density;
 
     // Adjust precision by system size
-    double abs_prec = prec / rho.real().integrate();
+    double abs_prec = prec/rho.norm();
 
     Timer timer;
     V.alloc(NUMBER::Real);

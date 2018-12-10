@@ -219,7 +219,7 @@ bool LinearResponseSolver::optimize() {
         orb_prec = adjustPrecision(err_o);
 
         // Setup perturbed Fock operator
-        fock_1.setup(orb_prec);
+        fock_1.setup(orb_prec); //LUCA: setup second fock (should not touch XCFunctional stuff here).
 
         // Iterate X orbitals
         if (X_n != nullptr) {

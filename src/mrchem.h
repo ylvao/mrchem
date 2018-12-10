@@ -40,7 +40,9 @@ namespace MATHCONST {
 namespace SPIN { enum type { Paired, Alpha, Beta }; }
 namespace NUMBER { enum type { Total, Real, Imag }; }
 namespace DENSITY { enum type { Total, Spin, Alpha, Beta }; }
+namespace MRDFT {enum type {Function, Gradient, Hessian}; }
 
+ 
 using ComplexInt = std::complex<int>;
 using ComplexDouble = std::complex<double>;
 
