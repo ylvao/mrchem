@@ -21,8 +21,8 @@ WaveFunction {
 }
 
 DFT {
-  exact_exchange = 0.25
 $functionals
+EXX     0.25
 PBEX    0.75
 PBEC    1.00
 $end

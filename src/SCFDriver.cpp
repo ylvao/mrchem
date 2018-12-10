@@ -104,7 +104,6 @@ SCFDriver::SCFDriver(Getkw &input) {
     if (wf_method == "DFT") {
         dft_spin = input.get<bool>("DFT.spin");
         dft_use_gamma = input.get<bool>("DFT.use_gamma");
-        dft_x_fac = input.get<double>("DFT.exact_exchange");
         dft_cutoff = input.get<double>("DFT.density_cutoff");
         dft_func_coefs = input.getDblVec("DFT.func_coefs");
         dft_func_names = input.getData("DFT.functionals");
@@ -397,16 +396,17 @@ void SCFDriver::setup() {
         K = new ExchangeOperator(P, phi);
         fock->setExchangeOperator(K);
     }
-    //For hybrid DFT we need a partial HF exchange
-    if (wf_method == "DFT" and (dft_x_fac > mrcpp::MachineZero)) {
-        K = new ExchangeOperator(P, phi, dft_x_fac);
-        fock->setExchangeOperator(K);
-    }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
         xcfun = setupFunctional(MRDFT::Gradient);
         XC = new XCOperator(xcfun, phi);
         fock->setXCOperator(XC);
+
+        //For hybrid DFT we need a partial HF exchange
+        if (xcfun->isHybrid()) {
+            K = new ExchangeOperator(P, phi, xcfun->amountEXX());
+            fock->setExchangeOperator(K);
+        }
     }
     //HACK we need a better way to decide whether to initialize the external potential operator
     if (ext_electric) Vext = new ElectricFieldOperator(ext_electric_field, r_O);
@@ -478,16 +478,16 @@ void SCFDriver::setup_np1() {
         K_np1 = new ExchangeOperator(P, phi);
         fock_np1->setExchangeOperator(K_np1);
     }
-    //For hybrid DFT we need a partial HF exchange
-    if (wf_method == "DFT" and (dft_x_fac > mrcpp::MachineZero)) {
-        K_np1 = new ExchangeOperator(P, phi_np1, dft_x_fac);
-        fock_np1->setExchangeOperator(K_np1);
-    }
     //For DFT we need the XC operator
     if (wf_method == "DFT") {
         xcfun = setupFunctional(MRDFT::Gradient);
         XC_np1 = new XCOperator(xcfun, phi_np1);
         fock_np1->setXCOperator(XC_np1);
+        //For hybrid DFT we need a partial HF exchange
+        if (xcfun->isHybrid()) {
+            K_np1 = new ExchangeOperator(P, phi_np1, xcfun->amountEXX());
+            fock_np1->setExchangeOperator(K_np1);
+        }
     }
     fock_np1->build();
 }
@@ -609,7 +609,7 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     if (wf_method == "HF") {
         xFac = 1.0;
     } else if (wf_method == "DFT") {
-        xFac = dft_x_fac;
+        xFac = xcfun->amountEXX();
         xcfun = setupFunctional(MRDFT::Hessian);
         dXC = new XCOperator(xcfun, phi, phi_x, phi_y);
     }

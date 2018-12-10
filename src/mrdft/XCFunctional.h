@@ -87,11 +87,18 @@ public:
     void setUseGamma(bool use) { this->use_gamma = use; }
     bool useGamma() const { return this->use_gamma; }
 
+    int getOrder() const { return this->order; }
     bool isLDA() const { return (not(isGGA() or isMetaGGA())); }
     bool isGGA() const { return (xc_is_gga(this->functional)); }
     bool isMetaGGA() const { return (xc_is_metagga(this->functional)); }
+    bool isHybrid() const { return (std::abs(this->amountEXX()) > mrcpp::MachineZero); }
     bool isSpinSeparated() const { return this->spin_separated; }
-    int getOrder() const { return this->order; }
+
+    double amountEXX() const {
+        double exx = 0.0;
+        xc_get(this->functional, "exx", &exx);
+        return exx;
+    }
 
     void evalSetup(int order);
     void setup();
