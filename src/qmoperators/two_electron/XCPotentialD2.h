@@ -1,7 +1,6 @@
 #pragma once
 
-#include "qmoperators/one_electron/QMPotential.h"
-#include "mrdft/XCFunctional.h"
+#include "qmoperators/two_electron/XCPotential.h"
 
 /** @class XCPotential
  *
@@ -28,26 +27,23 @@ namespace mrchem {
 
 class XCPotentialD2 final : public XCPotential {
 public:
-    XCPotentialD2(mrdft::XCFunctional *F,
-                  OrbitalVector *Phi,
-                  OrbitalVector *X,
-                  OrbitalVector *Y);
+    XCPotentialD2(mrdft::XCFunctional *F, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y);
     ~XCPotentialD2();
-    
-protected:
-    OrbitalVector *orbitals_x;                 ///< 1st external set of perturbed orbitals used to build the density
-    OrbitalVector *orbitals_y;                 ///< 2nd external set of perturbed orbitals used to build the density
-    mrcpp::FunctionTreeVector<3> potentials;   ///< XC Potential functions collected in a vector
-    Density *pertDensity_t;                    ///< total first-order perturbed electronic density
-    Density *pertDensity_a;                    ///< alpha first-order perturbed electronic density
-    Density *pertDensity_b;                    ///< beta  first-order perturbed electronic density
-  
+
+private:
+    OrbitalVector *orbitals_x;               ///< 1st external set of perturbed orbitals used to build the density
+    OrbitalVector *orbitals_y;               ///< 2nd external set of perturbed orbitals used to build the density
+    mrcpp::FunctionTreeVector<3> potentials; ///< XC Potential functions collected in a vector
+    Density *pertDensity_t;                  ///< total first-order perturbed electronic density
+    Density *pertDensity_a;                  ///< alpha first-order perturbed electronic density
+    Density *pertDensity_b;                  ///< beta  first-order perturbed electronic density
+
     void setup(double prec);
     void clear();
 
     void setupPotential(double prec);
-    mrcpp::FunctionTree<3>& getPotential(int orbitalSpin, int densitySpin);
-    mrcpp::FunctionTree<3>* buildComponent(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
+    mrcpp::FunctionTree<3> &getPotential(int orbitalSpin, int densitySpin);
+    mrcpp::FunctionTree<3> *buildComponent(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
 
     Orbital apply(Orbital phi);
 
@@ -56,7 +52,6 @@ protected:
     //density_utils.copp) right.
     int getPotentialIndex(int orbitalSpin, int densitySpin);
     void setupPerturbedDensity(double prec = -1.0);
-
 };
 
 } //namespace mrchem

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "qmoperators/one_electron/QMPotential.h"
-#include "mrdft/XCFunctional.h"
+#include "qmoperators/two_electron/XCPotential.h"
 
 /** @class XCPotential
  *
@@ -30,8 +29,8 @@ class XCPotentialD1 final : public XCPotential {
 public:
     XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi = nullptr);
 
-protected:
-    mrcpp::FunctionTreeVector<3> potentials;   ///< XC Potential functions collected in a vector
+private:
+    mrcpp::FunctionTreeVector<3> potentials; ///< XC Potential functions collected in a vector
 
     void setup(double prec);
     void clear();
@@ -40,8 +39,6 @@ protected:
     mrcpp::FunctionTree<3> &getPotential(int spin);
 
     Orbital apply(Orbital phi);
-
-
 };
 
 } //namespace mrchem
