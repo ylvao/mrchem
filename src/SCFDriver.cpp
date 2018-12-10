@@ -611,7 +611,6 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     } else if (wf_method == "DFT") {
         xFac = dft_x_fac;
         xcfun = setupFunctional(MRDFT::Hessian);
-        //xcfun->evalSetup(2);
         dXC = new XCOperator(xcfun, phi, phi_x, phi_y);
     }
     if (xFac > mrcpp::MachineZero) NOT_IMPLEMENTED_ABORT;
@@ -712,8 +711,7 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     setupPerturbedOrbitals(rsp_calc);
     setupPerturbedOperators(rsp_calc);
 
-    //    fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
-    d_fock->getXCOperator()->setupDensity(rel_prec);
+    d_fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
     d_fock->getXCOperator()->setupPotential(rel_prec);
 
     bool converged = true;
