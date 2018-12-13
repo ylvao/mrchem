@@ -802,46 +802,4 @@ FunctionTree<3> * XCFunctional::calcGradDotPotDensVec(FunctionTree<3> &V,
     return result;
 }
 
-/** @brief Compute the XC potential(s)
- *
- * Combines the xcfun output functions into the final XC hessian functions.
- * Different calls for LDA and GGA, and for gamma-type vs explicit derivatives.
- */
-FunctionTreeVector<3> XCFunctional::calcHessian() {
-    FunctionTreeVector<3> xc_hes;
-    if (xcOutput.size() == 0) MSG_ERROR("XC output not initialized");
-
-    Timer timer;
-    if (isLDA()) {
-        calcHessianLDA(xc_hes);
-    } else if (isGGA()) {
-        NOT_IMPLEMENTED_ABORT;
-        //        calcPotentialGGA(xc_pot);
-    } else {
-        MSG_FATAL("Invalid functional type");
-    }
-    timer.stop();
-    int n = mrcpp::sum_nodes(xc_hes);
-    double t = timer.getWallTime();
-    Printer::printTree(0, "XC Hessian", n, t);
-    return xc_hes;
-}
-
-/** @brief Hessian calculation for LDA functionals
- *
- * The hessian conicides with the xcfun output, which is then
- * deep copied into the corresponding potential functions.
- */
-void XCFunctional::calcHessianLDA(FunctionTreeVector<3> &hessians) {
-    int nHessians = isSpinSeparated() ? 3 : 1;
-    int offset =  isSpinSeparated() ? 3 : 2;
-    for (int i = offset; i < offset + nHessians; i++) {
-        FunctionTree<3> &out_i = mrcpp::get_func(hessians, i);
-        FunctionTree<3> *pot = new FunctionTree<3>(MRA);
-        mrcpp::copy_grid(*pot, out_i);
-        mrcpp::copy_func(*pot, out_i);
-        hessians.push_back(std::make_tuple(1.0, pot));
-    }
-}
-
 } //namespace mrdft
