@@ -491,8 +491,11 @@ The localization matrix is returned for further processing.
 ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, int spin) {
     OrbitalVector Phi_s = orbital::disjoin(Phi, spin);
     ComplexMatrix U = calc_localization_matrix(prec, Phi_s);
+    Timer rot_t;
     Phi_s = orbital::rotate(U, Phi_s, prec);
     orbital::append(Phi, Phi_s);
+    rot_t.stop();
+    Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
     return U;
 }
 
@@ -535,10 +538,8 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
         Printer::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime(), 5);
     }
 
-    Timer rot_t;
-    Phi = orbital::rotate(U, Phi, prec);
-    rot_t.stop();
-    Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
+    //rotation of orbitals done in orbital::localize
+
     return U;
 }
 
@@ -791,7 +792,7 @@ bool orbital::orbital_vector_is_sane(const OrbitalVector &Phi) {
     }
     return true; // sane orbital set
 }
-/** @brief Returns the start index of a given orbital type (p/a/b) 
+/** @brief Returns the start index of a given orbital type (p/a/b)
  *
  *  Returns a negative number if the type of orbitals is not present.
  *  The ordering of orbitals in a given OrbitalVector is fixed and
