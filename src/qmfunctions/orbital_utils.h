@@ -49,7 +49,6 @@ OrbitalVector param_copy(const OrbitalVector &Phi);
 
 OrbitalVector adjoin(OrbitalVector &Phi_a, OrbitalVector &Phi_b);
 OrbitalVector disjoin(OrbitalVector &Phi, int spin);
-void append(OrbitalVector &Phi, OrbitalVector &Psi);
 
 void save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix = "", int n_orbs = -1);
 OrbitalVector load_orbitals(const std::string &file, const std::string &suffix = "", int n_orbs = -1);
@@ -85,8 +84,6 @@ void set_spins(OrbitalVector &Phi, const IntVector &spins);
 void set_errors(OrbitalVector &Phi, const DoubleVector &errors);
 void set_occupancies(OrbitalVector &Phi, const IntVector &occ);
 
-
- 
 IntVector get_spins(const OrbitalVector &Phi);
 IntVector get_occupancies(const OrbitalVector &Phi);
 DoubleVector get_errors(const OrbitalVector &Phi);
