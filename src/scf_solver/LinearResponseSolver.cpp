@@ -168,10 +168,10 @@ void LinearResponseSolver::clear() {
  *
  */
 bool LinearResponseSolver::optimize() {
-    ComplexMatrix &F = *this->fMat_0;
-    ComplexMatrix &F_x = *this->fMat_x;
-    ComplexMatrix &F_y = *this->fMat_y;
-    FockOperator &fock_1 = *this->fOper_1;
+    ComplexMatrix &F_mat_0 = *this->fMat_0;
+    ComplexMatrix &F_mat_x = *this->fMat_x;
+    ComplexMatrix &F_mat_y = *this->fMat_y;
+    FockOperator &F_1 = *this->fOper_1;
     OrbitalVector &Phi = *this->orbitals_0;
     OrbitalVector *X_n = this->orbitals_x;
     OrbitalVector *Y_n = this->orbitals_y;
@@ -183,8 +183,8 @@ bool LinearResponseSolver::optimize() {
     double err_p = 1.0;
 
     // Setup Helmholtz operators (fixed, based on unperturbed system)
-    HelmholtzVector H(orb_prec, F.real().diagonal());
-    ComplexMatrix L = H.getLambdaMatrix();
+    HelmholtzVector H(orb_prec, F_mat_0.real().diagonal());
+    ComplexMatrix L_mat = H.getLambdaMatrix();
 
     // Placeholders for orbital errors
     DoubleVector errors_x = DoubleVector::Zero(Phi.size());
@@ -199,16 +199,16 @@ bool LinearResponseSolver::optimize() {
         orb_prec = adjustPrecision(err_o);
 
         // Setup perturbed Fock operator
-        fock_1.setup(orb_prec); //LUCA: setup second fock (should not touch XCFunctional stuff here).
+        F_1.setup(orb_prec);
 
         // Iterate X orbitals
         if (X_n != nullptr) {
             // Compute argument: psi_i = sum_j [L-F]_ij*x_j + (1 - rho_0)phi_i
-            OrbitalVector Psi_n = setupHelmholtzArguments(*X_n, L - F_x, false);
+            OrbitalVector Psi = setupHelmholtzArguments(*X_n, L_mat - F_mat_x, false);
 
             // Apply Helmholtz operators
-            OrbitalVector X_np1 = H(V_0, *X_n, Psi_n);
-            Psi_n.clear();
+            OrbitalVector X_np1 = H(V_0, *X_n, Psi);
+            Psi.clear();
 
             // Orthogonalize: X_np1 = (1 - rho_0)X_np1
             orbital::orthogonalize(X_np1, Phi);
@@ -237,15 +237,15 @@ bool LinearResponseSolver::optimize() {
         double prop = calcProperty();
         this->property.push_back(prop);
 
+        // Clear perturbed Fock operator
+        F_1.clear();
+
         // Compute errors
         err_p = std::abs(getUpdate(this->property, nIter, false));
         err_o = std::max(errors_x.maxCoeff(), errors_y.maxCoeff());
         err_t = std::sqrt(errors_x.dot(errors_x) + errors_y.dot(errors_y));
         converged = checkConvergence(err_o, err_p);
         this->orbError.push_back(err_t);
-
-        // Clear perturbed Fock operator
-        fock_1.clear();
 
         // Finalize SCF cycle
         timer.stop();
@@ -306,8 +306,7 @@ OrbitalVector LinearResponseSolver::setupHelmholtzArguments(OrbitalVector &Phi_1
     orbital::orthogonalize(part_2, Phi_0);
     timer_2.stop();
 
-    double coef = -1.0 / (2.0 * MATHCONST::pi);
-    OrbitalVector out = orbital::add(coef, part_1, coef, part_2, -1.0);
+    OrbitalVector out = orbital::add(1.0, part_1, 1.0, part_2, -1.0);
     part_1.clear();
     part_2.clear();
 
