@@ -218,22 +218,11 @@ OrbitalVector orbital::param_copy(const OrbitalVector &Phi) {
  */
 OrbitalVector orbital::adjoin(OrbitalVector &Phi_a, OrbitalVector &Phi_b) {
     OrbitalVector out;
-    for (int i = 0; i < Phi_a.size(); i++) out.push_back(Phi_a[i]);
-    for (int i = 0; i < Phi_b.size(); i++) out.push_back(Phi_b[i]);
+    for (auto &phi : Phi_a) out.push_back(phi);
+    for (auto &phi : Phi_b) out.push_back(phi);
     Phi_a.clear();
     Phi_b.clear();
     return out;
-}
-
-/** @brief Appends a vector to another
- *
- * Aappends the orbitals of the second vector to the first one.  The
- * ownership is transferred and the second vector is left empty.
- *
- */
-void orbital::append(OrbitalVector &Phi, OrbitalVector &Psi) {
-    Phi.insert(std::end(Phi), std::begin(Psi), std::end(Psi));
-    Psi.clear();
 }
 
 /** @brief Disjoin vector in two parts
@@ -493,7 +482,7 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, int spin) {
     ComplexMatrix U = calc_localization_matrix(prec, Phi_s);
     Timer rot_t;
     Phi_s = orbital::rotate(U, Phi_s, prec);
-    orbital::append(Phi, Phi_s);
+    Phi = orbital::adjoin(Phi, Phi_s);
     rot_t.stop();
     Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
     return U;
@@ -517,6 +506,7 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
         RRMaximizer rr(prec, Phi);
         rmat.stop();
         Printer::printDouble(0, "Computing position matrices", rmat.getWallTime(), 5);
+
         Timer rr_t;
         n_it = rr.maximize();
         rr_t.stop();
@@ -537,9 +527,6 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
         orth_t.stop();
         Printer::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime(), 5);
     }
-
-    //rotation of orbitals done in orbital::localize
-
     return U;
 }
 

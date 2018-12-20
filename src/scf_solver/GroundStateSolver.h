@@ -39,21 +39,16 @@
 
 namespace mrchem {
 
-class GroundStateSolver : public SCF {
-public:
-    GroundStateSolver(HelmholtzVector &h);
+class FockOperator;
 
+class GroundStateSolver : public SCF {
 protected:
     std::vector<SCFEnergy> energy;
 
-    ComplexMatrix *fMat_n;     ///< Fock matrix (pointer to external object)
-    FockOperator *fOper_n;     ///< Fock operator (pointer to external object)
-    OrbitalVector *orbitals_n; ///< Orbtials (pointer to external object)
+    ComplexMatrix *fMat_n{nullptr};     ///< Fock matrix (pointer to external object)
+    FockOperator *fOper_n{nullptr};     ///< Fock operator (pointer to external object)
+    OrbitalVector *orbitals_n{nullptr}; ///< Orbtials (pointer to external object)
 
-    OrbitalVector setupHelmholtzArguments(FockOperator &fock,
-                                          const ComplexMatrix &M,
-                                          OrbitalVector &Phi,
-                                          bool clearFock);
     void printProperty() const;
     double calcProperty();
     double calcPropertyError() const;
