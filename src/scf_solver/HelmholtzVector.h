@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include "mrchem.h"
 #include "qmfunctions/qmfunction_fwd.h"
 #include "qmoperators/qmoperator_fwd.h"
 
@@ -33,45 +34,25 @@
  * @brief Container of HelmholtzOperators for a corresponding OrbtialVector
  *
  * This class assigns one HelmholtzOperator to each orbital in an OrbitalVector.
- * The operators can be re-used if several orbitals share the same (or similar)
- * energy, or if the change in energy is small relative to the previous iteration.
+ * The operators are produced on the fly based on a vector of lambda parameters.
  */
 
 namespace mrchem {
 
 class HelmholtzVector final {
 public:
-    HelmholtzVector(double build, double thrs = -1.0);
+    HelmholtzVector(double pr, const DoubleVector &l);
 
-    void setup(double prec, const DoubleVector &energies);
-    void clear();
+    DoubleMatrix getLambdaMatrix() const { return this->lambda.asDiagonal(); }
 
-    void setThreshold(double thrs) { this->threshold = thrs; }
-    double getThreshold() const { return this->threshold; }
-
-    double getLambda(int i) const { return this->lambda[i]; }
-    DoubleVector getLambdaVector() const;
-    ComplexMatrix getLambdaMatrix() const;
-
-    mrcpp::HelmholtzOperator &operator[](int i);
-    const mrcpp::HelmholtzOperator &operator[](int i) const;
-
-    int printTreeSizes() const;
-
-    Orbital operator()(int i, Orbital inp);
-    OrbitalVector operator()(OrbitalVector &inp);
+    OrbitalVector operator()(OrbitalVector &Phi) const;
+    OrbitalVector operator()(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const;
 
 private:
-    double threshold;  ///< For re-using operators. Negative means always recreate
-    double build_prec; ///< Precision for construction of Helmholtz operators
-    double apply_prec; ///< Precision for application of Helmholtz operators
+    double prec;         ///< Precision for construction and application of Helmholtz operators
+    DoubleVector lambda; ///< Helmholtz parameter, mu_i = sqrt(-2.0*lambda_i)
 
-    std::vector<int> oper_idx;  ///< Points to a HelmholtzOperator in the operators vector
-    std::vector<double> lambda; ///< The lambda value used for the corresponding HelmholtzOperator
-    std::vector<mrcpp::HelmholtzOperator *> operators; ///< Vector of Helmholtz operators
-
-    int initHelmholtzOperator(double energy, int i);
-    void clearUnused();
+    Orbital apply(int i, Orbital &phi) const;
 };
 
 } // namespace mrchem

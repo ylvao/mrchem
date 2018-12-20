@@ -50,18 +50,8 @@ namespace mrchem {
  * initialized at this stage, so the SCF solver needs to be "setup()" before
  * "optimize()".
  */
-LinearResponseSolver::LinearResponseSolver(HelmholtzVector &h, Accelerator *k_x, Accelerator *k_y)
-        : SCF(h)
-        , dynamic(false)
-        , frequency(0.0)
-        , fOper_0(nullptr)
-        , fOper_1(nullptr)
-        , fMat_0(nullptr)
-        , fMat_x(nullptr)
-        , fMat_y(nullptr)
-        , orbitals_0(nullptr)
-        , orbitals_x(nullptr)
-        , orbitals_y(nullptr)
+LinearResponseSolver::LinearResponseSolver(Accelerator *k_x, Accelerator *k_y)
+        : SCF()
         , kain_x(k_x)
         , kain_y(k_y) {}
 
@@ -78,15 +68,10 @@ LinearResponseSolver::LinearResponseSolver(HelmholtzVector &h, Accelerator *k_x,
  * iteration). SCF solver will NOT take ownership of the input, so these objects
  * must be taken care of externally (do not delete until SCF goes out of scope).
  */
-// clang-format off
-void LinearResponseSolver::setupUnperturbed(double prec,
-                                            FockOperator *fock,
-                                            OrbitalVector *Phi,
-                                            ComplexMatrix *F) {
-    // clang-format on
-    this->fOper_0 = fock;
+void LinearResponseSolver::setupUnperturbed(double prec, FockOperator *F, OrbitalVector *Phi, ComplexMatrix *F_mat) {
+    this->fOper_0 = F;
     this->orbitals_0 = Phi;
-    this->fMat_0 = F;
+    this->fMat_0 = F_mat;
     this->fOper_0->setup(prec);
 }
 
@@ -110,13 +95,13 @@ void LinearResponseSolver::clearUnperturbed() {
  * SCF solver will NOT take ownership of the input, so these objects must be taken
  * care of externally (do not delete until SCF goes out of scope).
  */
-void LinearResponseSolver::setup(FockOperator *fock, OrbitalVector *X) {
+void LinearResponseSolver::setup(FockOperator *F_1, OrbitalVector *X) {
     if (this->orbitals_0 == nullptr) MSG_ERROR("Unperturbed system not set up");
 
     this->dynamic = false;
     this->frequency = 0.0;
 
-    this->fOper_1 = fock;
+    this->fOper_1 = F_1;
 
     this->orbitals_x = X;
     this->orbitals_y = nullptr;
@@ -130,19 +115,14 @@ void LinearResponseSolver::setup(FockOperator *fock, OrbitalVector *X) {
 /** @brief Prepare solver for optimization, dynamic version
  *
  * @param omega: Frequency of perturbing field
- * @param fock: Perturbed Fock operator (V_1 + h_1)
+ * @param F_1: Perturbed Fock operator (V_1 + h_1)
  * @param X: Perturbed orbitals to optimize (epsilon + omega)
  * @param Y: Perturbed orbitals to optimize (epsilon - omega)
  *
  * SCF solver will NOT take ownership of the input, so these objects must be taken
  * care of externally (do not delete until SCF goes out of scope).
  */
-// clang-format off
-void LinearResponseSolver::setup(double omega,
-                                 FockOperator *fock,
-                                 OrbitalVector *X,
-                                 OrbitalVector *Y) {
-    // clang-format on
+void LinearResponseSolver::setup(double omega, FockOperator *F_1, OrbitalVector *X, OrbitalVector *Y) {
     NOT_IMPLEMENTED_ABORT;
 }
 
@@ -188,14 +168,14 @@ void LinearResponseSolver::clear() {
  *
  */
 bool LinearResponseSolver::optimize() {
-    ComplexMatrix &F = *this->fMat_0;
-    ComplexMatrix &F_x = *this->fMat_x;
-    ComplexMatrix &F_y = *this->fMat_y;
-    FockOperator &fock_1 = *this->fOper_1;
+    ComplexMatrix &F_mat_0 = *this->fMat_0;
+    ComplexMatrix &F_mat_x = *this->fMat_x;
+    ComplexMatrix &F_mat_y = *this->fMat_y;
+    FockOperator &F_1 = *this->fOper_1;
     OrbitalVector &Phi = *this->orbitals_0;
     OrbitalVector *X_n = this->orbitals_x;
     OrbitalVector *Y_n = this->orbitals_y;
-    HelmholtzVector &H = *this->helmholtz;
+    RankZeroTensorOperator &V_0 = this->fOper_0->potential();
 
     double orb_prec = this->orbPrec[0];
     double err_o = 1.0;
@@ -203,8 +183,8 @@ bool LinearResponseSolver::optimize() {
     double err_p = 1.0;
 
     // Setup Helmholtz operators (fixed, based on unperturbed system)
-    H.setup(orb_prec, F.real().diagonal());
-    ComplexMatrix L = H.getLambdaMatrix();
+    HelmholtzVector H(orb_prec, F_mat_0.real().diagonal());
+    ComplexMatrix L_mat = H.getLambdaMatrix();
 
     // Placeholders for orbital errors
     DoubleVector errors_x = DoubleVector::Zero(Phi.size());
@@ -219,16 +199,16 @@ bool LinearResponseSolver::optimize() {
         orb_prec = adjustPrecision(err_o);
 
         // Setup perturbed Fock operator
-        fock_1.setup(orb_prec); //LUCA: setup second fock (should not touch XCFunctional stuff here).
+        F_1.setup(orb_prec);
 
         // Iterate X orbitals
         if (X_n != nullptr) {
-            // Compute argument: psi_i = V_0*x_i - sum_j [L-F]_ij*x_j + (1 - rho_0)phi_i
-            OrbitalVector Psi_n = setupHelmholtzArguments(*X_n, L - F_x, false);
+            // Compute argument: psi_i = sum_j [L-F]_ij*x_j + (1 - rho_0)phi_i
+            OrbitalVector Psi = setupHelmholtzArguments(*X_n, L_mat - F_mat_x, false);
 
             // Apply Helmholtz operators
-            OrbitalVector X_np1 = H(Psi_n);
-            Psi_n.clear();
+            OrbitalVector X_np1 = H(V_0, *X_n, Psi);
+            Psi.clear();
 
             // Orthogonalize: X_np1 = (1 - rho_0)X_np1
             orbital::orthogonalize(X_np1, Phi);
@@ -257,15 +237,15 @@ bool LinearResponseSolver::optimize() {
         double prop = calcProperty();
         this->property.push_back(prop);
 
+        // Clear perturbed Fock operator
+        F_1.clear();
+
         // Compute errors
         err_p = std::abs(getUpdate(this->property, nIter, false));
         err_o = std::max(errors_x.maxCoeff(), errors_y.maxCoeff());
         err_t = std::sqrt(errors_x.dot(errors_x) + errors_y.dot(errors_y));
         converged = checkConvergence(err_o, err_p);
         this->orbError.push_back(err_t);
-
-        // Clear perturbed Fock operator
-        fock_1.clear();
 
         // Finalize SCF cycle
         timer.stop();
@@ -278,7 +258,6 @@ bool LinearResponseSolver::optimize() {
     // Clear KAIN history and Helmholtz operators
     if (this->kain_x != nullptr) this->kain_x->clear();
     if (this->kain_y != nullptr) this->kain_y->clear();
-    H.clear();
 
     printConvergence(converged);
     return converged;
@@ -306,44 +285,33 @@ bool LinearResponseSolver::optimize() {
 OrbitalVector LinearResponseSolver::setupHelmholtzArguments(OrbitalVector &Phi_1,
                                                             const ComplexMatrix &M,
                                                             bool adjoint) {
-    Timer timer_tot, timer_1(false), timer_2(false), timer_3(false);
+    Timer timer_tot, timer_1(false), timer_2(false);
     Printer::printHeader(0, "Setting up Helmholtz arguments");
     int oldprec = Printer::setPrecision(5);
 
     OrbitalVector &Phi_0 = *this->orbitals_0;
-    RankZeroTensorOperator &V_0 = this->fOper_0->potential();
     RankZeroTensorOperator V_1 = this->fOper_1->potential() + this->fOper_1->perturbation();
 
     timer_1.start();
-    OrbitalVector part_1 = V_0(Phi_1);
+    OrbitalVector part_1 = orbital::rotate(M, Phi_1);
     timer_1.stop();
 
     timer_2.start();
-    OrbitalVector part_2 = orbital::rotate(M, Phi_1);
+    OrbitalVector part_2;
+    if (adjoint) {
+        part_2 = V_1.dagger(Phi_0);
+    } else {
+        part_2 = V_1(Phi_0);
+    }
+    orbital::orthogonalize(part_2, Phi_0);
     timer_2.stop();
 
-    timer_3.start();
-    OrbitalVector part_3;
-    if (adjoint) {
-        part_3 = V_1.dagger(Phi_0);
-    } else {
-        part_3 = V_1(Phi_0);
-    }
-    orbital::orthogonalize(part_3, Phi_0);
-    timer_3.stop();
-
-    double coef = -1.0 / (2.0 * MATHCONST::pi);
-    OrbitalVector part_12 = orbital::add(coef, part_1, coef, part_2, -1.0);
+    OrbitalVector out = orbital::add(1.0, part_1, 1.0, part_2, -1.0);
     part_1.clear();
     part_2.clear();
 
-    OrbitalVector out = orbital::add(1.0, part_12, coef, part_3, -1.0);
-    part_12.clear();
-    part_3.clear();
-
-    Printer::printDouble(0, "            V_0 phi_1", timer_1.getWallTime(), 5);
-    Printer::printDouble(0, "            F_0 phi_1", timer_2.getWallTime(), 5);
-    Printer::printDouble(0, "(1 - rho_0) V_1 phi_0", timer_3.getWallTime(), 5);
+    Printer::printDouble(0, "            F_0 phi_1", timer_1.getWallTime(), 5);
+    Printer::printDouble(0, "(1 - rho_0) V_1 phi_0", timer_2.getWallTime(), 5);
 
     timer_tot.stop();
     Printer::printFooter(0, timer_tot, 2);

@@ -44,15 +44,17 @@ class Accelerator;
 
 class OrbitalOptimizer final : public GroundStateSolver {
 public:
-    OrbitalOptimizer(HelmholtzVector &h, Accelerator *k = 0);
+    OrbitalOptimizer(Accelerator *k = nullptr);
 
-    void setup(FockOperator &fock, OrbitalVector &phi, ComplexMatrix &F);
+    void setup(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat);
     void clear();
 
     bool optimize();
 
 protected:
     Accelerator *kain; ///< KAIN accelerator(pointer to external object)
+
+    bool useKAIN() const { return (this->kain == nullptr) ? false : true; }
 };
 
 } // namespace mrchem

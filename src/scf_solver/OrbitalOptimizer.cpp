@@ -51,26 +51,22 @@ namespace mrchem {
  * initialized at this stage, so the SCF solver needs to be "setup()" before
  * "optimize()".
  */
-OrbitalOptimizer::OrbitalOptimizer(HelmholtzVector &h, Accelerator *k)
-        : GroundStateSolver(h)
+OrbitalOptimizer::OrbitalOptimizer(Accelerator *k)
+        : GroundStateSolver()
         , kain(k) {}
 
 /** @brief Prepare solver for optimization
  *
- * @param fock: FockOperator defining the SCF equations
+ * @param F: FockOperator defining the SCF equations
  * @param Phi: Orbitals to optimize
- * @param F: Fock matrix
+ * @param F_mat: Fock matrix
  *
  * SCF solver will NOT take ownership of the input, so these objects must be taken
  * care of externally (do not delete until SCF goes out of scope).
  */
-// clang-format off
-void OrbitalOptimizer::setup(FockOperator &fock,
-                             OrbitalVector &Phi,
-                             ComplexMatrix &F) {
-    // clang-format on
-    this->fMat_n = &F;
-    this->fOper_n = &fock;
+void OrbitalOptimizer::setup(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat) {
+    this->fMat_n = &F_mat;
+    this->fOper_n = &F;
     this->orbitals_n = &Phi;
 }
 
@@ -81,10 +77,10 @@ void OrbitalOptimizer::setup(FockOperator &fock,
  * Solver can be re-used after another setup.
  */
 void OrbitalOptimizer::clear() {
-    this->fMat_n = 0;
-    this->fOper_n = 0;
-    this->orbitals_n = 0;
-    if (this->kain != 0) this->kain->clear();
+    this->fMat_n = nullptr;
+    this->fOper_n = nullptr;
+    this->orbitals_n = nullptr;
+    if (useKAIN()) this->kain->clear();
     resetPrecision();
 }
 
@@ -112,18 +108,18 @@ void OrbitalOptimizer::clear() {
  * Post SCF: diagonalize/localize orbitals
  */
 bool OrbitalOptimizer::optimize() {
-    ComplexMatrix &F = *this->fMat_n;
-    FockOperator &fock = *this->fOper_n;
+    ComplexMatrix &F_mat = *this->fMat_n;
     OrbitalVector &Phi_n = *this->orbitals_n;
-    HelmholtzVector &H = *this->helmholtz;
+    FockOperator &F = *this->fOper_n;
+    RankZeroTensorOperator &V = F.potential();
 
     double orb_prec = this->orbPrec[0];
     double err_o = orbital::get_errors(Phi_n).maxCoeff();
     double err_t = 1.0;
     double err_p = 1.0;
 
-    fock.setup(orb_prec);
-    F = fock(Phi_n, Phi_n);
+    F.setup(orb_prec);
+    F_mat = F(Phi_n, Phi_n);
 
     int nIter = 0;
     bool converged = false;
@@ -135,38 +131,36 @@ bool OrbitalOptimizer::optimize() {
 
         // Rotate orbitals
         if (needLocalization(nIter)) {
-            ComplexMatrix U = orbital::localize(orb_prec, Phi_n);
-            fock.rotate(U);
-            F = U * F * U.adjoint();
-            if (this->kain != 0) this->kain->clear();
+            ComplexMatrix U_mat = orbital::localize(orb_prec, Phi_n);
+            F.rotate(U_mat);
+            F_mat = U_mat * F_mat * U_mat.adjoint();
+            if (useKAIN()) this->kain->clear();
         } else if (needDiagonalization(nIter)) {
-            ComplexMatrix U = orbital::diagonalize(orb_prec, Phi_n, F);
-            fock.rotate(U);
-            if (this->kain != 0) this->kain->clear();
+            ComplexMatrix U_mat = orbital::diagonalize(orb_prec, Phi_n, F_mat);
+            F.rotate(U_mat);
+            if (useKAIN()) this->kain->clear();
         }
         // Compute electronic energy
         double E = calcProperty();
         this->property.push_back(E);
 
-        // Setup Helmholtz operators and argument
-        H.setup(orb_prec, F.real().diagonal());
-        ComplexMatrix L = H.getLambdaMatrix();
-        OrbitalVector Psi_n = setupHelmholtzArguments(fock, L - F, Phi_n, true);
+        // Apply Helmholtz operator
+        HelmholtzVector H(orb_prec, F_mat.real().diagonal());
+        ComplexMatrix L_mat = H.getLambdaMatrix();
+        OrbitalVector Psi = orbital::rotate(L_mat - F_mat, Phi_n);
+        OrbitalVector Phi_np1 = H(V, Phi_n, Psi);
+        Psi.clear();
+        F.clear();
 
-        // Apply Helmholtz operators
-        OrbitalVector Phi_np1 = H(Psi_n);
-        Psi_n.clear();
-        H.clear();
-
-        ComplexMatrix U = orbital::orthonormalize(orb_prec, Phi_np1);
-        F = U * F * U.adjoint();
+        ComplexMatrix U_mat = orbital::orthonormalize(orb_prec, Phi_np1);
+        F_mat = U_mat * F_mat * U_mat.adjoint();
 
         // Compute orbital updates
         OrbitalVector dPhi_n = orbital::add(1.0, Phi_np1, -1.0, Phi_n);
         Phi_np1.clear();
 
         // Employ KAIN accelerator
-        if (this->kain != 0) this->kain->accelerate(orb_prec, Phi_n, dPhi_n);
+        if (useKAIN()) this->kain->accelerate(orb_prec, Phi_n, dPhi_n);
 
         // Compute errors
         DoubleVector errors = orbital::get_norms(dPhi_n);
@@ -185,20 +179,20 @@ bool OrbitalOptimizer::optimize() {
         orbital::set_errors(Phi_n, errors);
 
         // Compute Fock matrix
-        fock.setup(orb_prec);
-        F = fock(Phi_n, Phi_n);
+        F.setup(orb_prec);
+        F_mat = F(Phi_n, Phi_n);
 
         // Finalize SCF cycle
         timer.stop();
-        printOrbitals(F.real().diagonal(), Phi_n, 0);
+        printOrbitals(F_mat.real().diagonal(), Phi_n, 0);
         printProperty();
         printCycleFooter(timer.getWallTime());
 
         if (converged) break;
     }
 
-    if (this->kain != 0) this->kain->clear();
-    fock.clear();
+    if (useKAIN()) this->kain->clear();
+    F.clear();
 
     printConvergence(converged);
     return converged;

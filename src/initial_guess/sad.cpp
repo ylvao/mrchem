@@ -55,7 +55,7 @@ namespace mrchem {
 namespace initial_guess {
 namespace sad {
 
-ComplexMatrix diagonalize_fock(RankZeroTensorOperator &F, OrbitalVector &Phi, int spin);
+ComplexMatrix diagonalize_fock(KineticOperator &T, RankZeroTensorOperator &V, OrbitalVector &Phi, int spin);
 OrbitalVector rotate_orbitals(double prec, ComplexMatrix &U, OrbitalVector &Phi, int N, int spin);
 void project_atomic_densities(double prec, const Molecule &mol, mrcpp::FunctionTreeVector<3> &rho_atomic);
 
@@ -73,16 +73,16 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
 
     // Make Fock operator contributions
     mrcpp::PoissonOperator P(*MRA, prec);
-    mrcpp::ABGVOperator<3> D(*MRA, 0.5, 0.5);
+    mrcpp::ABGVOperator<3> D(*MRA, 0.0, 0.0);
     mrdft::XCFunctional xcfun(*MRA, not restricted);
     xcfun.setFunctional("SLATERX");
     xcfun.setFunctional("VWN5C");
     xcfun.evalSetup(1);
     KineticOperator T(D);
-    NuclearOperator V(mol.getNuclei(), prec);
+    NuclearOperator V_nuc(mol.getNuclei(), prec);
     CoulombOperator J(&P);
     XCOperator XC(&xcfun);
-    RankZeroTensorOperator F = T + V + J + XC;
+    RankZeroTensorOperator V = V_nuc + J + XC;
 
     // Compute Coulomb density
     Density &rho_j = J.getDensity();
@@ -126,7 +126,8 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
 
     Timer t_fock;
     Printer::printHeader(0, "Setting up Fock operator");
-    F.setup(prec);
+    T.setup(prec);
+    V.setup(prec);
     t_fock.stop();
     Printer::printFooter(0, t_fock, 2);
 
@@ -137,32 +138,36 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     if (restricted) {
         if (mult != 1) MSG_FATAL("Restricted open-shell not available");
         int Np = Nd / 2; //paired orbitals
-        ComplexMatrix U = initial_guess::sad::diagonalize_fock(F, Phi, SPIN::Paired);
+        ComplexMatrix U = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Paired);
         Psi = initial_guess::sad::rotate_orbitals(prec, U, Phi, Np, SPIN::Paired);
     } else {
         int Na = Nd / 2 + (mult - 1); //alpha orbitals
         int Nb = Nd / 2;              //beta orbitals
 
-        ComplexMatrix U_a = initial_guess::sad::diagonalize_fock(F, Phi, SPIN::Alpha);
+        ComplexMatrix U_a = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Alpha);
         OrbitalVector Psi_a = initial_guess::sad::rotate_orbitals(prec, U_a, Phi, Na, SPIN::Alpha);
 
-        ComplexMatrix U_b = initial_guess::sad::diagonalize_fock(F, Phi, SPIN::Beta);
+        ComplexMatrix U_b = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Beta);
         OrbitalVector Psi_b = initial_guess::sad::rotate_orbitals(prec, U_b, Phi, Nb, SPIN::Beta);
 
         Psi = orbital::adjoin(Psi_a, Psi_b);
     }
-    F.clear();
+    T.clear();
+    V.clear();
     t_diag.stop();
     Printer::printFooter(0, t_diag, 2);
 
     return Psi;
 }
 
-ComplexMatrix initial_guess::sad::diagonalize_fock(RankZeroTensorOperator &F, OrbitalVector &Phi, int spin) {
+ComplexMatrix initial_guess::sad::diagonalize_fock(KineticOperator &T,
+                                                   RankZeroTensorOperator &V,
+                                                   OrbitalVector &Phi,
+                                                   int spin) {
     Timer t1;
     for (int i = 0; i < Phi.size(); i++) Phi[i].setSpin(spin);
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
-    ComplexMatrix f_tilde = F(Phi, Phi);
+    ComplexMatrix f_tilde = T(Phi, Phi) + V(Phi, Phi);
     ComplexMatrix f = S_m12.adjoint() * f_tilde * S_m12;
     t1.stop();
     Printer::printDouble(0, "Compute Fock matrix", t1.getWallTime(), 5);
