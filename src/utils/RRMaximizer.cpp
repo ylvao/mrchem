@@ -56,10 +56,6 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
     RankZeroTensorOperator &r_y = r[1];
     RankZeroTensorOperator &r_z = r[2];
 
-    //ComplexMatrix R_x = r_x(Phi, Phi);
-    //ComplexMatrix R_y = r_y(Phi, Phi);
-    //ComplexMatrix R_z = r_z(Phi, Phi);
-
     ComplexMatrix R_x = ComplexMatrix::Zero(Phi.size(),Phi.size());
     ComplexMatrix R_y = ComplexMatrix::Zero(Phi.size(),Phi.size());
     ComplexMatrix R_z = ComplexMatrix::Zero(Phi.size(),Phi.size());
@@ -98,9 +94,9 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
         }
     }
 
-    mpi::allreduce_matrix(R_x, mpi::comm_orb);
-    mpi::allreduce_matrix(R_y, mpi::comm_orb);
-    mpi::allreduce_matrix(R_z, mpi::comm_orb);
+    //    mpi::allreduce_matrix(R_x, mpi::comm_orb);
+    //    mpi::allreduce_matrix(R_y, mpi::comm_orb);
+    //    mpi::allreduce_matrix(R_z, mpi::comm_orb);
 
     for (int i = 0; i < this->N; i++) {
         for (int j = 0; j <= i; j++) {
@@ -114,6 +110,9 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
             this->r_i_orig(j,i+2*this->N) = this->r_i_orig(i,j+2*this->N);
         }
     }
+
+    mpi::allreduce_matrix(this->r_i_orig, mpi::comm_orb);
+
     r_x.clear();
     r_y.clear();
     r_z.clear();
