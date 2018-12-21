@@ -60,43 +60,39 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
     ComplexMatrix R_y = ComplexMatrix::Zero(Phi.size(),Phi.size());
     ComplexMatrix R_z = ComplexMatrix::Zero(Phi.size(),Phi.size());
 
-    OrbitalVector Phi_r_x_Vec = r_x(Phi);
-    OrbitalVector Phi_r_y_Vec = r_y(Phi);
-    OrbitalVector Phi_r_z_Vec = r_z(Phi);
+    OrbitalVector xPhi_Vec = r_x(Phi);
+    OrbitalVector yPhi_Vec = r_y(Phi);
+    OrbitalVector zPhi_Vec = r_z(Phi);
 
-    OrbitalChunk Phi_r_x = mpi::get_my_chunk(Phi_r_x_Vec);
-    OrbitalChunk Phi_r_y = mpi::get_my_chunk(Phi_r_y_Vec);
-    OrbitalChunk Phi_r_z = mpi::get_my_chunk(Phi_r_z_Vec);
+    OrbitalChunk xPhi = mpi::get_my_chunk(xPhi_Vec);
+    OrbitalChunk yPhi = mpi::get_my_chunk(yPhi_Vec);
+    OrbitalChunk zPhi = mpi::get_my_chunk(zPhi_Vec);
 
     OrbitalIterator iter(Phi, true); //symmetric iterator;
     while (iter.next(1)) {
         for (int i = 0; i < iter.get_size(); i++) {
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);
-            for (int j = 0; j < Phi_r_x.size(); j++) {
+            for (int j = 0; j < xPhi.size(); j++) {
                 //note that idx_j are the same for x, y and z
-                int idx_j = std::get<0>(Phi_r_x[j]);
+                int idx_j = std::get<0>(xPhi[j]);
                 if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
-                Orbital &ket_j_x = std::get<1>(Phi_r_x[j]);
+                Orbital &ket_j_x = std::get<1>(xPhi[j]);
                 if (mpi::my_unique_orb(ket_j_x) or mpi::orb_rank == 0) {
                     R_x(idx_i, idx_j) = orbital::dot(bra_i, ket_j_x);
                     R_x(idx_j, idx_i) = R_x(idx_i, idx_j);
 
-                    Orbital &ket_j_y = std::get<1>(Phi_r_y[j]);
+                    Orbital &ket_j_y = std::get<1>(yPhi[j]);
                     R_y(idx_i, idx_j) = orbital::dot(bra_i, ket_j_y);
                     R_y(idx_j, idx_i) = R_y(idx_i, idx_j);
 
-                    Orbital &ket_j_z = std::get<1>(Phi_r_z[j]);
+                    Orbital &ket_j_z = std::get<1>(zPhi[j]);
                     R_z(idx_i, idx_j) = orbital::dot(bra_i, ket_j_z);
                     R_z(idx_j, idx_i) = R_z(idx_i, idx_j);
                 }
             }
         }
     }
-
-    //    mpi::allreduce_matrix(R_x, mpi::comm_orb);
-    //    mpi::allreduce_matrix(R_y, mpi::comm_orb);
-    //    mpi::allreduce_matrix(R_z, mpi::comm_orb);
 
     for (int i = 0; i < this->N; i++) {
         for (int j = 0; j <= i; j++) {
@@ -119,8 +115,8 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
 
     //rotate R matrices into orthonormal basis
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
-
     this->total_U = S_m12.real()*this->total_U;
+
     DoubleMatrix R(this->N, this->N);
     for(int d = 0; d < 3; d++){
         for (int j = 0; j < this->N; j++) {
