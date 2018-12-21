@@ -31,6 +31,7 @@
 #include "qmoperators/one_electron/PositionOperator.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
+#include "qmfunctions/OrbitalIterator.h"
 
 namespace mrchem {
 
@@ -55,9 +56,43 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
     RankZeroTensorOperator &r_y = r[1];
     RankZeroTensorOperator &r_z = r[2];
 
-    ComplexMatrix R_x = r_x(Phi, Phi);
-    ComplexMatrix R_y = r_y(Phi, Phi);
-    ComplexMatrix R_z = r_z(Phi, Phi);
+    ComplexMatrix R_x = ComplexMatrix::Zero(Phi.size(),Phi.size());
+    ComplexMatrix R_y = ComplexMatrix::Zero(Phi.size(),Phi.size());
+    ComplexMatrix R_z = ComplexMatrix::Zero(Phi.size(),Phi.size());
+
+    OrbitalVector xPhi_Vec = r_x(Phi);
+    OrbitalVector yPhi_Vec = r_y(Phi);
+    OrbitalVector zPhi_Vec = r_z(Phi);
+
+    OrbitalChunk xPhi = mpi::get_my_chunk(xPhi_Vec);
+    OrbitalChunk yPhi = mpi::get_my_chunk(yPhi_Vec);
+    OrbitalChunk zPhi = mpi::get_my_chunk(zPhi_Vec);
+
+    OrbitalIterator iter(Phi, true); //symmetric iterator;
+    while (iter.next(1)) {
+        for (int i = 0; i < iter.get_size(); i++) {
+            int idx_i = iter.idx(i);
+            Orbital &bra_i = iter.orbital(i);
+            for (int j = 0; j < xPhi.size(); j++) {
+                //note that idx_j are the same for x, y and z
+                int idx_j = std::get<0>(xPhi[j]);
+                if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
+                Orbital &ket_j_x = std::get<1>(xPhi[j]);
+                if (mpi::my_unique_orb(ket_j_x) or mpi::orb_rank == 0) {
+                    R_x(idx_i, idx_j) = orbital::dot(bra_i, ket_j_x);
+                    R_x(idx_j, idx_i) = R_x(idx_i, idx_j);
+
+                    Orbital &ket_j_y = std::get<1>(yPhi[j]);
+                    R_y(idx_i, idx_j) = orbital::dot(bra_i, ket_j_y);
+                    R_y(idx_j, idx_i) = R_y(idx_i, idx_j);
+
+                    Orbital &ket_j_z = std::get<1>(zPhi[j]);
+                    R_z(idx_i, idx_j) = orbital::dot(bra_i, ket_j_z);
+                    R_z(idx_j, idx_i) = R_z(idx_i, idx_j);
+                }
+            }
+        }
+    }
 
     for (int i = 0; i < this->N; i++) {
         for (int j = 0; j <= i; j++) {
@@ -71,14 +106,17 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
             this->r_i_orig(j,i+2*this->N) = this->r_i_orig(i,j+2*this->N);
         }
     }
+
+    mpi::allreduce_matrix(this->r_i_orig, mpi::comm_orb);
+
     r_x.clear();
     r_y.clear();
     r_z.clear();
 
     //rotate R matrices into orthonormal basis
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
-
     this->total_U = S_m12.real()*this->total_U;
+
     DoubleMatrix R(this->N, this->N);
     for(int d = 0; d < 3; d++){
         for (int j = 0; j < this->N; j++) {
@@ -375,4 +413,3 @@ void RRMaximizer::do_step(const DoubleVector &step) {
 }
 
 } //namespace mrchem
-
