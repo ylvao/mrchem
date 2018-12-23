@@ -619,18 +619,33 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
     return xc_pot;
 }
 
+void XCFunctional::calcPotentialtGGA(xc_pot) {
+    switch(this->order) {
+    case 1:
+        calcGradientGGA(xc_pot);
+        break;
+    case 2:
+        calcHessianGGA(xc_pot);
+        break;
+    case default:
+        NOT_IMPLEMENTED_ABORT;
+    }           
+}
+
 /** @brief Potential calculation for LDA functionals
  *
  * The potential conicides with the xcfun output, which is then
  * deep copied into the corresponding potential functions.
  */
 void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
-    int nPotentials = this->order;
+    int nPotentials = 1;
+    int nStart = 1;
     if (isSpinSeparated()) {
-        nPotentials = (this->order + 1) * (this->order + 2) / 2 - 1;
+        nPotentials = this->order + 1;
+        nStart = this->order * (this->order + 1) / 2; 
     }
     for (int i = 0; i < nPotentials; i++) {
-        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i+1);
+        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, nStart + i);
         FunctionTree<3> *pot = new FunctionTree<3>(MRA);
         mrcpp::copy_grid(*pot, out_i);
         mrcpp::copy_func(*pot, out_i);
@@ -644,8 +659,7 @@ void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
  * The method used depends on whether the functional is spin-separated
  * and whether explicit or gamma-type derivatives have been used in xcfun.
  */
-void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
-    if(this->order > 1) NOT_IMPLEMENTED_ABORT;
+void XCFunctional::calcGradientGGA(FunctionTreeVector<3> &potentials) {
     FunctionTree<3> * pot;
     if (isSpinSeparated()) {
         FunctionTree<3> & df_da = mrcpp::get_func(xcOutput, 1);
@@ -690,6 +704,7 @@ void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
     pot = 0;
 }
 
+
 /** @brief XC potential calculation
  *
  * @param[in] df_drho Functional derivative wrt rho
@@ -699,7 +714,7 @@ void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
  * Computes the XC potential for a non-spin separated functional and
  * gamma-type derivatives.
  */
-FunctionTree<3> * XCFunctional::calcPotentialGGA(FunctionTree<3> & df_drho,
+FunctionTree<3> * XCFunctional::calcGradientGGA(FunctionTree<3> & df_drho,
                                                  FunctionTree<3> & df_dgamma,
                                                  FunctionTreeVector<3> grad_rho) {
     FunctionTreeVector<3> funcs;

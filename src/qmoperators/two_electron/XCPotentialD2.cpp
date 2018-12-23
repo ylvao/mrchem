@@ -133,7 +133,6 @@ void XCPotentialD2::setupPotential(double prec) {
 
     this->functional->setup();
     this->functional->evaluate();
-    //    this->energy = this->functional->calcEnergy();
     this->potentials = this->functional->calcPotential();
     this->functional->clear();
 
