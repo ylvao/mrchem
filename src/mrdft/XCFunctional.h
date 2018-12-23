@@ -144,18 +144,21 @@ public:
 
     void calcPotentialLDA(mrcpp::FunctionTreeVector<3> &potentials);
     void calcPotentialGGA(mrcpp::FunctionTreeVector<3> &potentials);
+    void calcGradientGGA(mrcpp::FunctionTreeVector<3> &potentials);
+    void calcHessianGGA(mrcpp::FunctionTreeVector<3> &potentials);
 
-    mrcpp::FunctionTree<3> *calcPotentialGGA(mrcpp::FunctionTree<3> &df_drho, mrcpp::FunctionTreeVector<3> &df_dgr);
-    mrcpp::FunctionTree<3> *calcPotentialGGA(mrcpp::FunctionTree<3> &df_drho,
-                                             mrcpp::FunctionTree<3> &df_dgamma,
-                                             mrcpp::FunctionTreeVector<3> grad_rho);
-    mrcpp::FunctionTree<3> *calcPotentialGGA(mrcpp::FunctionTree<3> &df_drhoa,
-                                             mrcpp::FunctionTree<3> &df_dgaa,
-                                             mrcpp::FunctionTree<3> &df_dgab,
-                                             mrcpp::FunctionTreeVector<3> grad_rhoa,
-                                             mrcpp::FunctionTreeVector<3> grad_rhob);
+    mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drho, mrcpp::FunctionTreeVector<3> &df_dgr);
+    mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drho,
+                                            mrcpp::FunctionTree<3> &df_dgamma,
+                                            mrcpp::FunctionTreeVector<3> grad_rho);
+    mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drhoa,
+                                            mrcpp::FunctionTree<3> &df_dgaa,
+                                            mrcpp::FunctionTree<3> &df_dgab,
+                                            mrcpp::FunctionTreeVector<3> grad_rhoa,
+                                            mrcpp::FunctionTreeVector<3> grad_rhob);
 
     mrcpp::FunctionTree<3> *calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V, mrcpp::FunctionTreeVector<3> &rho);
+    mrcpp::FunctionTree<3> *doubleDivergence(mrcpp::FunctionTreeVector<3> & df2dg2);
 };
 
 } //namespace mrdft

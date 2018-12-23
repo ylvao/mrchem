@@ -619,19 +619,6 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
     return xc_pot;
 }
 
-void XCFunctional::calcPotentialtGGA(xc_pot) {
-    switch(this->order) {
-    case 1:
-        calcGradientGGA(xc_pot);
-        break;
-    case 2:
-        calcHessianGGA(xc_pot);
-        break;
-    case default:
-        NOT_IMPLEMENTED_ABORT;
-    }           
-}
-
 /** @brief Potential calculation for LDA functionals
  *
  * The potential conicides with the xcfun output, which is then
@@ -655,6 +642,22 @@ void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
 
 /** @brief Potential calculation for GGA functionals
  *
+ */
+void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
+    switch(this->order) {
+    case 1:
+        calcGradientGGA(potentials);
+        break;
+    case 2:
+        calcHessianGGA(potentials);
+        break;
+    default:
+        NOT_IMPLEMENTED_ABORT;        
+    }           
+}
+
+/** @brief Potential calculation for GGA functionals
+ *
  * The potential functions are assembled from the xcfun output functions.
  * The method used depends on whether the functional is spin-separated
  * and whether explicit or gamma-type derivatives have been used in xcfun.
@@ -668,9 +671,9 @@ void XCFunctional::calcGradientGGA(FunctionTreeVector<3> &potentials) {
             FunctionTree<3> & df_dgaa = mrcpp::get_func(xcOutput, 3);
             FunctionTree<3> & df_dgab = mrcpp::get_func(xcOutput, 4);
             FunctionTree<3> & df_dgbb = mrcpp::get_func(xcOutput, 5);
-            pot = calcPotentialGGA(df_da, df_dgaa, df_dgab, grad_a, grad_b);
+            pot = calcGradientGGA(df_da, df_dgaa, df_dgab, grad_a, grad_b);
             potentials.push_back(std::make_tuple(1.0, pot));
-            pot = calcPotentialGGA(df_db, df_dgbb, df_dgab, grad_b, grad_a);
+            pot = calcGradientGGA(df_db, df_dgbb, df_dgab, grad_b, grad_a);
             potentials.push_back(std::make_tuple(1.0, pot));
         } else {
             FunctionTreeVector<3> df_dga;
@@ -681,27 +684,61 @@ void XCFunctional::calcGradientGGA(FunctionTreeVector<3> &potentials) {
             df_dgb.push_back(xcOutput[6]);
             df_dgb.push_back(xcOutput[7]);
             df_dgb.push_back(xcOutput[8]);
-            pot = calcPotentialGGA(df_da, df_dga);
+            pot = calcGradientGGA(df_da, df_dga);
             potentials.push_back(std::make_tuple(1.0, pot));
-            pot = calcPotentialGGA(df_db, df_dgb);
+            pot = calcGradientGGA(df_db, df_dgb);
             potentials.push_back(std::make_tuple(1.0, pot));
         }
     } else {
         FunctionTree<3> & df_dt = mrcpp::get_func(xcOutput, 1);
         if (useGamma()) {
             FunctionTree<3> & df_dgamma = mrcpp::get_func(xcOutput, 2);
-            pot = calcPotentialGGA(df_dt, df_dgamma, grad_t);
+            pot = calcGradientGGA(df_dt, df_dgamma, grad_t);
             potentials.push_back(std::make_tuple(1.0, pot));
         } else {
             FunctionTreeVector<3> df_dgt;
             df_dgt.push_back(xcOutput[2]);
             df_dgt.push_back(xcOutput[3]);
             df_dgt.push_back(xcOutput[4]);
-            pot = calcPotentialGGA(df_dt, df_dgt);
+            pot = calcGradientGGA(df_dt, df_dgt);
             potentials.push_back(std::make_tuple(1.0, pot));
         }
     }
     pot = 0;
+}
+
+void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
+    // 0 1    2-4  5      6-8     9-14
+    // f dfdr dfdg df2dr2 df2drdg df2dg2
+
+    FunctionTreeVector<3> funcs;
+    
+    if (isSpinSeparated() or useGamma()) NOT_IMPLEMENTED_ABORT;
+
+    //collects double der wrt rho
+    funcs.push_back(xcOutput[5]);
+
+    //mixed rho gradrho derivative 
+    FunctionTreeVector<3> df2drdg(xcOutput.begin() + 6, xcOutput.begin() + 8);
+    FunctionTree<3> *tmp1 = new FunctionTree<3>(MRA);
+    mrcpp::divergence(*tmp1, *derivative, df2drdg);
+    funcs.push_back(std::make_tuple(-1.0, tmp1));
+    mrcpp::clear(df2drdg, false);
+    
+    //double gradrho derivative
+    FunctionTreeVector<3> df2dg2(xcOutput.begin() + 9, xcOutput.begin() + 14);
+    FunctionTree<3> *tmp2 = doubleDivergence(df2dg2);
+    funcs.push_back(std::make_tuple(1.0, tmp2));
+    mrcpp::clear(df2dg2, false);
+
+    //add the three parts
+    FunctionTree<3> *V = new FunctionTree<3>(MRA);
+    mrcpp::build_grid(*V, funcs);
+    mrcpp::add(-1.0, *V, funcs);
+    delete tmp1;
+    delete tmp2;
+    mrcpp::clear(funcs, true);
+    potentials.push_back(std::make_tuple(1.0, V));
 }
 
 
@@ -743,7 +780,7 @@ FunctionTree<3> * XCFunctional::calcGradientGGA(FunctionTree<3> & df_drho,
  * gamma-type derivatives. Can be used both for alpha and beta
  * potentials by permuting the spin parameter.
  */
-FunctionTree<3> * XCFunctional::calcPotentialGGA(FunctionTree<3> & df_drhoa,
+FunctionTree<3> * XCFunctional::calcGradientGGA(FunctionTree<3> & df_drhoa,
                                                  FunctionTree<3> & df_dgaa,
                                                  FunctionTree<3> & df_dgab,
                                                  FunctionTreeVector<3> grad_rhoa,
@@ -772,7 +809,7 @@ FunctionTree<3> * XCFunctional::calcPotentialGGA(FunctionTree<3> & df_drhoa,
  *
  * Computes the XC potential for explicit derivatives.
  */
-FunctionTree<3> * XCFunctional::calcPotentialGGA(FunctionTree<3> & df_drho,
+FunctionTree<3> * XCFunctional::calcGradientGGA(FunctionTree<3> & df_drho,
                                                  FunctionTreeVector<3> & df_dgr) {
     FunctionTreeVector<3> funcs;
     funcs.push_back(std::make_tuple(1.0, &df_drho));
@@ -786,6 +823,31 @@ FunctionTree<3> * XCFunctional::calcPotentialGGA(FunctionTree<3> & df_drho,
     mrcpp::add(-1.0, *V, funcs);
     delete tmp;
     return V;
+}
+
+FunctionTree<3> * XCFunctional::doubleDivergence(FunctionTreeVector<3> & df2dg2) {
+    FunctionTreeVector<3> tmp;
+    tmp.push_back(df2dg2[0]); //xx
+    tmp.push_back(df2dg2[1]); //xy
+    tmp.push_back(df2dg2[2]); //xz
+    tmp.push_back(df2dg2[1]); //yx
+    tmp.push_back(df2dg2[3]); //yy
+    tmp.push_back(df2dg2[4]); //yz
+    tmp.push_back(df2dg2[2]); //zx
+    tmp.push_back(df2dg2[4]); //zy
+    tmp.push_back(df2dg2[5]); //zz
+    FunctionTreeVector<3> gradient;
+    for (int i = 0; i < 3; i++) {
+        FunctionTree<3> *component = new FunctionTree<3>(MRA);
+        FunctionTreeVector<3> grad_comp(tmp.begin() + 3 * i, tmp.begin() + 3 * i + 2);
+        mrcpp::divergence(*component, *derivative, grad_comp);
+        gradient.push_back(std::make_tuple(1.0, component));
+    }
+    FunctionTree<3> *output = new FunctionTree<3>(MRA);
+    mrcpp::divergence(*output, *derivative, gradient);
+    mrcpp::clear(tmp, false);
+    mrcpp::clear(gradient, true);
+    return output;
 }
 
 /** @brief Helper function to compute divergence of a vector field times a function
