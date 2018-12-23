@@ -156,8 +156,8 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     int spinFunctional = this->functional->isSpinSeparated() ? 1 : 0;
 
-    //Potential order (spin separated): v_a, v_b, v_aa, v_ab, v_bb
-    //Potential order (spin restricted, total density only): v_r, v_rr
+    //Potential order (spin separated): v_aa, v_ab, v_bb
+    //Potential order (spin restricted, total density only): v_rr
 
     int functional_case = spinFunctional; // 0  1
     functional_case += orbitalSpin << 1;  // 0  2  4  6
@@ -168,17 +168,17 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     // SF    OS             DS          case   Index
     switch (functional_case) {
-        //  0     0 (paired)     0 (total)     0    1
+        //  0     0 (paired)     0 (total)     0    
         case (0):
-            return 1;
+            return 0;
         //  1     0 (paired)     0 (total)     1    not valid
-        //  0     1 (alpha )     0 (total)     2    not implemented
+        //  0     1 (alpha )     0 (total)     2    
         case (2):
-            return 1;
+            return 0;
         //  1     1 (alpha )     0 (total)     3    not valid
-        //  0     2 (beta  )     0 (total)     4    not implemented
+        //  0     2 (beta  )     0 (total)     4    
         case (4):
-            return 1;
+            return 0;
         //  1     2 (beta  )     0 (total)     5    not valid
         //  0     3 (unused)     0 (total)     6    not valid
         //  1     3 (unused)     0 (total)     7    not valid
@@ -193,25 +193,25 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
         //  0     0 (paired)     2 (alpha)    16    not implemented
         //  1     0 (paired)     2 (alpha)    17    not implemented
         //  0     1 (alpha )     2 (alpha)    18    not valid
-        //  1     1 (alpha )     2 (alpha)    19    2
+        //  1     1 (alpha )     2 (alpha)    19    
         case (19):
-            return 2;
+            return 0;
         //  0     2 (beta  )     2 (alpha)    20    not valid
-        //  1     2 (beta  )     2 (alpha)    21    3
+        //  1     2 (beta  )     2 (alpha)    21    
         case (21):
-            return 3;
+            return 1;
         //  0     3 (unused)     2 (alpha)    22    not valid
         //  1     3 (unused)     2 (alpha)    23    not valid
         //  0     0 (paired)     3 (beta )    24    not implemented
         //  1     0 (paired)     3 (beta )    25    not implemented
         //  0     1 (alpha )     3 (beta )    26    not valid
-        //  1     1 (alpha )     3 (beta )    27    3
+        //  1     1 (alpha )     3 (beta )    27    
         case (27):
-            return 3;
+            return 1;
         //  0     2 (beta  )     3 (beta )    28    not valid
-        //  1     2 (beta  )     3 (beta )    29    4
+        //  1     2 (beta  )     3 (beta )    29    
         case (29):
-            return 4;
+            return 2;
         //  0     3 (unused)     3 (beta )    30    not valid
         //  1     3 (unused)     3 (beta )    31    not valid
         default:

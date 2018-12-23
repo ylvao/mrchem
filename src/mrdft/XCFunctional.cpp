@@ -626,7 +626,7 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
  */
 void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
     int nPotentials = 1;
-    int nStart = 1;
+    int nStart = this->order;
     if (isSpinSeparated()) {
         nPotentials = this->order + 1;
         nStart = this->order * (this->order + 1) / 2; 
