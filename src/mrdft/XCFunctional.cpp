@@ -719,14 +719,14 @@ void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
     funcs.push_back(xcOutput[5]);
 
     //mixed rho gradrho derivative 
-    FunctionTreeVector<3> df2drdg(xcOutput.begin() + 6, xcOutput.begin() + 8);
+    FunctionTreeVector<3> df2drdg(xcOutput.begin() + 6, xcOutput.begin() + 9);
     FunctionTree<3> *tmp1 = new FunctionTree<3>(MRA);
     mrcpp::divergence(*tmp1, *derivative, df2drdg);
     funcs.push_back(std::make_tuple(-1.0, tmp1));
     mrcpp::clear(df2drdg, false);
     
     //double gradrho derivative
-    FunctionTreeVector<3> df2dg2(xcOutput.begin() + 9, xcOutput.begin() + 14);
+    FunctionTreeVector<3> df2dg2(xcOutput.begin() + 9, xcOutput.end());
     FunctionTree<3> *tmp2 = doubleDivergence(df2dg2);
     funcs.push_back(std::make_tuple(1.0, tmp2));
     mrcpp::clear(df2dg2, false);
@@ -737,7 +737,7 @@ void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
     mrcpp::add(-1.0, *V, funcs);
     delete tmp1;
     delete tmp2;
-    mrcpp::clear(funcs, true);
+    mrcpp::clear(funcs, false);
     potentials.push_back(std::make_tuple(1.0, V));
 }
 
@@ -839,7 +839,7 @@ FunctionTree<3> * XCFunctional::doubleDivergence(FunctionTreeVector<3> & df2dg2)
     FunctionTreeVector<3> gradient;
     for (int i = 0; i < 3; i++) {
         FunctionTree<3> *component = new FunctionTree<3>(MRA);
-        FunctionTreeVector<3> grad_comp(tmp.begin() + 3 * i, tmp.begin() + 3 * i + 2);
+        FunctionTreeVector<3> grad_comp(tmp.begin() + 3 * i, tmp.begin() + 3 * (i + 1));
         mrcpp::divergence(*component, *derivative, grad_comp);
         gradient.push_back(std::make_tuple(1.0, component));
     }
