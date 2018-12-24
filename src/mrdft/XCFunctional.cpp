@@ -722,7 +722,7 @@ void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
     FunctionTreeVector<3> df2drdg(xcOutput.begin() + 6, xcOutput.begin() + 9);
     FunctionTree<3> *tmp1 = new FunctionTree<3>(MRA);
     mrcpp::divergence(*tmp1, *derivative, df2drdg);
-    funcs.push_back(std::make_tuple(-1.0, tmp1));
+    funcs.push_back(std::make_tuple(-2.0, tmp1));
     mrcpp::clear(df2drdg, false);
     
     //double gradrho derivative
