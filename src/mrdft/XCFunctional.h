@@ -146,6 +146,8 @@ public:
     void calcPotentialGGA(mrcpp::FunctionTreeVector<3> &potentials);
     void calcGradientGGA(mrcpp::FunctionTreeVector<3> &potentials);
     void calcHessianGGA(mrcpp::FunctionTreeVector<3> &potentials);
+    void calcHessianGGAgamma(mrcpp::FunctionTreeVector<3> &potentials);
+    void calcHessianGGAgrad(mrcpp::FunctionTreeVector<3> &potentials);
 
     mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drho, mrcpp::FunctionTreeVector<3> &df_dgr);
     mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drho,

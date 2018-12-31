@@ -626,7 +626,7 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
  */
 void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
     int nPotentials = 1;
-    int nStart = this->order;
+    int nStart = this->order; //PROBLEM: if I use a higher order than necessary this wil fail miserably!
     if (isSpinSeparated()) {
         nPotentials = this->order + 1;
         nStart = this->order * (this->order + 1) / 2; 
@@ -704,10 +704,33 @@ void XCFunctional::calcGradientGGA(FunctionTreeVector<3> &potentials) {
             potentials.push_back(std::make_tuple(1.0, pot));
         }
     }
-    pot = 0;
+    pot = nullptr;
 }
 
 void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
+    if (isSpinSeparated()) NOT_IMPLEMENTED_ABORT;
+    if (useGamma()) {
+        calcHessianGGAgamma(potentials);
+    } else {
+        calcHessianGGAgrad(potentials);
+    }
+}
+
+void XCFunctional::calcHessianGGAgamma(FunctionTreeVector<3> &potentials) {
+    // 0 1    2    3      4       5
+    // f dfdr dfdg df2dr2 df2drdg df2dg2
+    
+    for (int i = 2; i < 6; i++) {
+        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i);
+        FunctionTree<3> *pot = new FunctionTree<3>(MRA);
+        mrcpp::copy_grid(*pot, out_i);
+        mrcpp::copy_func(*pot, out_i);
+        potentials.push_back(std::make_tuple(1.0, pot));
+    }
+}
+
+
+void XCFunctional::calcHessianGGAgrad(FunctionTreeVector<3> &potentials) {
     // 0 1    2-4  5      6-8     9-14
     // f dfdr dfdg df2dr2 df2drdg df2dg2
 
@@ -721,6 +744,7 @@ void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
     //mixed rho gradrho derivative 
     FunctionTreeVector<3> df2drdg(xcOutput.begin() + 6, xcOutput.begin() + 9);
     FunctionTree<3> *tmp1 = new FunctionTree<3>(MRA);
+    mrcpp::build_grid(*tmp1, df2drdg);
     mrcpp::divergence(*tmp1, *derivative, df2drdg);
     funcs.push_back(std::make_tuple(-2.0, tmp1));
     mrcpp::clear(df2drdg, false);
@@ -735,10 +759,14 @@ void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
     FunctionTree<3> *V = new FunctionTree<3>(MRA);
     mrcpp::build_grid(*V, funcs);
     mrcpp::add(-1.0, *V, funcs);
+    potentials.push_back(std::make_tuple(1.0, V));
+
+    
+
     delete tmp1;
     delete tmp2;
     mrcpp::clear(funcs, false);
-    potentials.push_back(std::make_tuple(1.0, V));
+    V = nullptr;
 }
 
 
@@ -830,20 +858,22 @@ FunctionTree<3> * XCFunctional::doubleDivergence(FunctionTreeVector<3> & df2dg2)
     tmp.push_back(df2dg2[0]); //xx
     tmp.push_back(df2dg2[1]); //xy
     tmp.push_back(df2dg2[2]); //xz
-    tmp.push_back(df2dg2[1]); //yx
+    tmp.push_back(df2dg2[1]); //yx --> xy
     tmp.push_back(df2dg2[3]); //yy
     tmp.push_back(df2dg2[4]); //yz
-    tmp.push_back(df2dg2[2]); //zx
-    tmp.push_back(df2dg2[4]); //zy
+    tmp.push_back(df2dg2[2]); //zx --> xz
+    tmp.push_back(df2dg2[4]); //zy --> yz 
     tmp.push_back(df2dg2[5]); //zz
     FunctionTreeVector<3> gradient;
     for (int i = 0; i < 3; i++) {
         FunctionTree<3> *component = new FunctionTree<3>(MRA);
         FunctionTreeVector<3> grad_comp(tmp.begin() + 3 * i, tmp.begin() + 3 * (i + 1));
+        mrcpp::build_grid(*component, grad_comp);
         mrcpp::divergence(*component, *derivative, grad_comp);
         gradient.push_back(std::make_tuple(1.0, component));
     }
     FunctionTree<3> *output = new FunctionTree<3>(MRA);
+    mrcpp::build_grid(*output, gradient);
     mrcpp::divergence(*output, *derivative, gradient);
     mrcpp::clear(tmp, false);
     mrcpp::clear(gradient, true);

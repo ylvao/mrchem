@@ -1,5 +1,6 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include "MRCPP/MWOperators"
 
 #include "XCPotential.h"
 #include "XCPotentialD2.h"
@@ -11,6 +12,8 @@
 using mrcpp::FunctionTree;
 using mrcpp::Printer;
 using mrcpp::Timer;
+using mrcpp::DerivativeOperator;
+using mrcpp::ABGVOperator;
 
 namespace mrchem {
 
@@ -267,8 +270,76 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     return Vrhophi;
 }
 
-FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spin, Density &pert_dens) {
-    FunctionTree<3> &dRho = pert_dens.real();
+FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
+    mrcpp::DerivativeOperator<3> *derivative = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
+    FunctionTree<3> &rho = this->getDensity(DENSITY::Total);
+    mrcpp::FunctionTreeVector<3> grad_rho = mrcpp::gradient(*derivative, rho);
+    mrcpp::FunctionTreeVector<3> grad_eta = mrcpp::gradient(*derivative, pert_dens);
+    mrcpp::FunctionTree<3> *gr_dot_gpr = new FunctionTree<3>(*MRA);
+    mrcpp::dot(apply_prec, *gr_dot_gpr, grad_rho, grad_eta);
+    
+    mrcpp::FunctionTree<3> *prod1 = new FunctionTree<3>(*MRA);
+    mrcpp::multiply(apply_prec, *prod1, 1.0, mrcpp::get_func(potentials, 1), pert_dens);
+    mrcpp::FunctionTree<3> *prod2 = new FunctionTree<3>(*MRA);
+    mrcpp::multiply(apply_prec, *prod2, 1.0, mrcpp::get_func(potentials, 2), *gr_dot_gpr);
+    mrcpp::FunctionTree<3> *prod3 = new FunctionTree<3>(*MRA);
+    mrcpp::multiply(apply_prec, *prod3, 1.0, mrcpp::get_func(potentials, 2), pert_dens);
+    mrcpp::FunctionTree<3> *prod4 = new FunctionTree<3>(*MRA);
+    mrcpp::multiply(apply_prec, *prod4, 1.0, mrcpp::get_func(potentials, 3), *gr_dot_gpr);
+    
+    mrcpp::FunctionTree<3> *sum_34 = new FunctionTree<3>(*MRA);
+    mrcpp::build_grid(*sum_34, *prod3);
+    mrcpp::build_grid(*sum_34, *prod4);
+    mrcpp::add(-1.0, *sum_34, 1.0, *prod3, 2.0, *prod4);
+    
+    mrcpp::FunctionTree<3> *div1 = calcGradDotPotDensVec(*sum_34, grad_rho);
+    mrcpp::FunctionTree<3> *div2 = calcGradDotPotDensVec(mrcpp::get_func(potentials, 0), grad_eta);
+
+    mrcpp::FunctionTreeVector<3> temp_fun;
+    
+    temp_fun.push_back(std::make_tuple(1.0, prod1));
+    temp_fun.push_back(std::make_tuple(2.0, prod2));
+    temp_fun.push_back(std::make_tuple(-2.0, div1));
+    temp_fun.push_back(std::make_tuple(-2.0, div2));
+
+    mrcpp::FunctionTree<3> *component = new FunctionTree<3>(*MRA); 
+    mrcpp::build_grid(*component, temp_fun);
+    mrcpp::add(-1.0, *component, temp_fun);
+
+    mrcpp::clear(temp_fun, false);
+    delete derivative;
+    mrcpp::clear(grad_rho, true);
+    mrcpp::clear(grad_eta, true);
+    delete gr_dot_gpr;
+    delete prod1;
+    delete prod2;
+    delete prod3;
+    delete prod4;
+    delete sum_34;
+    delete div1;
+    delete div2;
+    return component;
+}
+
+FunctionTree<3> * XCPotentialD2::calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V,
+                                                       mrcpp::FunctionTreeVector<3> &rho) {
+    mrcpp::DerivativeOperator<3> *derivative = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
+    mrcpp::FunctionTreeVector<3> vec;
+    for (int d = 0; d < rho.size(); d++) {
+        mrcpp::FunctionTree<3> &rho_d = mrcpp::get_func(rho, d);
+        mrcpp::FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
+        mrcpp::copy_grid(*Vrho, rho_d);
+        mrcpp::multiply(-1.0, *Vrho, 1.0, V, rho_d);
+        vec.push_back(std::make_tuple(1.0, Vrho));
+    }
+    mrcpp::FunctionTree<3> *result = new FunctionTree<3>(*MRA);
+    mrcpp::divergence(*result, *derivative, vec);
+    mrcpp::clear(vec, true);
+    return result;
+}
+
+/*
+FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
     FunctionTree<3> *tmp = new FunctionTree<3>(*MRA);
     FunctionTree<3> &V = getPotential(orbital_spin, density_spin);
     mrcpp::build_grid(*tmp, V);
@@ -276,5 +347,5 @@ FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spi
     mrcpp::multiply(-1.0, *tmp, 1.0, V, dRho);
     return tmp;
 }
-
+*/
 } // namespace mrchem

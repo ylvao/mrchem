@@ -23,6 +23,7 @@
  * the XC potentials: either with explicit derivatives or gamma-type derivatives.
  */
 
+#include "MRCPP/MWFunctions"
 namespace mrchem {
 
 class XCPotentialD2 final : public XCPotential {
@@ -52,6 +53,8 @@ private:
     //density_utils.copp) right.
     int getPotentialIndex(int orbitalSpin, int densitySpin);
     void setupPerturbedDensity(double prec = -1.0);
+    mrcpp::FunctionTree<3> *calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V,
+                                                  mrcpp::FunctionTreeVector<3> &rho);
 };
 
 } //namespace mrchem
