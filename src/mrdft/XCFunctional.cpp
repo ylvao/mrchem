@@ -734,6 +734,15 @@ void XCFunctional::calcHessianGGAgrad(FunctionTreeVector<3> &potentials) {
     // 0 1    2-4  5      6-8     9-14
     // f dfdr dfdg df2dr2 df2drdg df2dg2
 
+    for (int i = 5; i < 15; i++) {
+        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i);
+        FunctionTree<3> *pot = new FunctionTree<3>(MRA);
+        mrcpp::copy_grid(*pot, out_i);
+        mrcpp::copy_func(*pot, out_i);
+        potentials.push_back(std::make_tuple(1.0, pot));
+    }
+
+    /*    
     FunctionTreeVector<3> funcs;
     
     if (isSpinSeparated() or useGamma()) NOT_IMPLEMENTED_ABORT;
@@ -767,6 +776,7 @@ void XCFunctional::calcHessianGGAgrad(FunctionTreeVector<3> &potentials) {
     delete tmp2;
     mrcpp::clear(funcs, false);
     V = nullptr;
+    */
 }
 
 
