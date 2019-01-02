@@ -487,8 +487,8 @@ FunctionTree<3> * XCPotentialD2::calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V
     for (int d = 0; d < rho.size(); d++) {
         mrcpp::FunctionTree<3> &rho_d = mrcpp::get_func(rho, d);
         mrcpp::FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
-        mrcpp::copy_grid(*Vrho, rho_d);
-        mrcpp::multiply(-1.0, *Vrho, 1.0, V, rho_d);
+        //        mrcpp::copy_grid(*Vrho, rho_d);
+        mrcpp::multiply(apply_prec, *Vrho, 1.0, V, rho_d);
         vec.push_back(std::make_tuple(1.0, Vrho));
     }
     mrcpp::FunctionTree<3> *result = new FunctionTree<3>(*MRA);
