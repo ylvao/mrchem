@@ -31,9 +31,9 @@ namespace mrchem {
 class Polarizability final {
 public:
     explicit Polarizability(double w = 0.0, mrcpp::Coord<3> o = {0.0, 0.0, 0.0}, bool v = false)
-        : frequency(w)
+        : velocity(v)
+        , frequency(w)
         , origin(o)
-        , velocity(v)
         , tensor(DoubleMatrix::Zero(3, 3)) {}
     ~Polarizability() { }
 
