@@ -35,14 +35,14 @@ void NuclearFunction::push_back(const Nucleus &nuc, double S) {
 }
 
 double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
-    double c = -1.0/(3.0*mrcpp::root_pi);
+    double c = -1.0 / (3.0 * mrcpp::root_pi);
     double result = 0.0;
     for (int i = 0; i < this->nuclei.size(); i++) {
         double S_i = this->smooth[i];
         double Z_i = this->nuclei[i].getCharge();
         const mrcpp::Coord<3> &R = this->nuclei[i].getCoord();
-        double R1 = math_utils::calc_distance(R, r)/S_i;
-        double partResult = -std::erf(R1)/R1 + c*(std::exp(-R1*R1) + 16.0*std::exp(-4.0*R1*R1));
+        double R1 = math_utils::calc_distance(R, r) / S_i;
+        double partResult = -std::erf(R1) / R1 + c * (std::exp(-R1 * R1) + 16.0 * std::exp(-4.0 * R1 * R1));
         result += Z_i*partResult/S_i;
     }
     return result;
@@ -56,7 +56,7 @@ bool NuclearFunction::isVisibleAtScale(int scale, int nQuadPts) const {
         }
     }
     double stdDeviation = std::pow(minSmooth, -0.5);
-    int visibleScale = int (floor(std::log2(nQuadPts*5.0*stdDeviation)));
+    int visibleScale = int (std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
     if (scale < visibleScale) {
         return false;
     } else {

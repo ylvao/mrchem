@@ -22,8 +22,8 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
     for (int i = 0; i < nucs.size(); i++) {
         const Nucleus &nuc = nucs[i];
         double Z = nuc.getCharge();
-        double Z_5 = pow(Z, 5.0);
-        double smooth = pow(c / Z_5, 1.0 / 3.0);
+        double Z_5 = std::pow(Z, 5.0);
+        double smooth = std::pow(c / Z_5, 1.0 / 3.0);
         this->func.push_back(nuc, smooth);
 
         std::stringstream symbol;
@@ -38,7 +38,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
 
     Timer timer;
     QMPotential &V = *this;
-    qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
+    qmfunction::project(V, this->func, NUMBER::Real, prec);
     timer.stop();
     int n = V.getNNodes(NUMBER::Total);
     double t = timer.getWallTime();
