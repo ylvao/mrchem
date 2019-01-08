@@ -221,9 +221,11 @@ double RRMaximizer::make_hessian() {
  */
 void RRMaximizer::multiply_hessian(DoubleVector &vec, DoubleVector &Hv) {
     double djk, djl, dik, dil;
+    int kl;
     for (int d = 0; d < 3; d++) {
-        int kl = 0;
-        for (int l = 0; l < this->N; l++) {
+#pragma omp parallel for schedule(guided) private(kl, djk, djl, dik, dil)
+        for (int l = this->N - 1; l > 0; l--) { //start with largest l, to ease scheduling (l=0 not used)
+            kl = (l*(l-1))/2; //must be redefined for each l, since l may jump in a omp threads.
             for (int k = 0; k < l; k++) {
                 if (d==0) Hv(kl) = 0.0;
                 int ij = 0;
