@@ -349,6 +349,10 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
 
 FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
     mrcpp::DerivativeOperator<3> *derivative = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
+    FunctionTree<3> &rho = this->getDensity(DENSITY::Total);
+    mrcpp::FunctionTreeVector<3> densities;
+    densities.push_back(std::make_tuple(1.0, &rho));
+    densities.push_back(std::make_tuple(1.0, &pert_dens));
     mrcpp::FunctionTreeVector<3> grad_eta = mrcpp::gradient(*derivative, pert_dens);
     mrcpp::FunctionTreeVector<3> d2fdrdg(potentials.begin() + 1, potentials.begin() + 4);
     mrcpp::FunctionTreeVector<3> d2fdgdgx(potentials.begin() + 4, potentials.begin() + 7); 
@@ -362,26 +366,36 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     d2fdgdgz.push_back(potentials[9]); //zz
 
     mrcpp::FunctionTree<3> *prod1 = new FunctionTree<3>(*MRA);
-    mrcpp::multiply(apply_prec, *prod1, 1.0, mrcpp::get_func(potentials, 0), pert_dens);
+    mrcpp::build_grid(*prod1, densities);
+    mrcpp::multiply(-1.0, *prod1, 1.0, mrcpp::get_func(potentials, 0), pert_dens);
 
     mrcpp::FunctionTree<3> *prod2 = new FunctionTree<3>(*MRA);
-    mrcpp::dot(apply_prec, *prod2, d2fdrdg, grad_eta);
+    mrcpp::build_grid(*prod2, densities);
+    mrcpp::dot(-1.0, *prod2, d2fdrdg, grad_eta);
 
     mrcpp::FunctionTree<3> *prod3 = new FunctionTree<3>(*MRA);
-    mrcpp::multiply(apply_prec, *prod3, 1.0, mrcpp::get_func(potentials, 1), pert_dens);
+    mrcpp::build_grid(*prod3, densities);
+    mrcpp::multiply(-1.0, *prod3, 1.0, mrcpp::get_func(potentials, 1), pert_dens);
+
     mrcpp::FunctionTree<3> *prod4 = new FunctionTree<3>(*MRA);
-    mrcpp::multiply(apply_prec, *prod4, 1.0, mrcpp::get_func(potentials, 2), pert_dens);
+    mrcpp::build_grid(*prod4, densities);
+    mrcpp::multiply(-1.0, *prod4, 1.0, mrcpp::get_func(potentials, 2), pert_dens);
+
     mrcpp::FunctionTree<3> *prod5 = new FunctionTree<3>(*MRA);
-    mrcpp::multiply(apply_prec, *prod5, 1.0, mrcpp::get_func(potentials, 3), pert_dens);
+    mrcpp::build_grid(*prod5, densities);
+    mrcpp::multiply(-1.0, *prod5, 1.0, mrcpp::get_func(potentials, 3), pert_dens);
     
     mrcpp::FunctionTree<3> *prod6 = new FunctionTree<3>(*MRA);
-    mrcpp::dot(apply_prec, *prod6, d2fdgdgx, grad_eta);
+    mrcpp::build_grid(*prod6, densities);
+    mrcpp::dot(-1.0, *prod6, d2fdgdgx, grad_eta);
 
     mrcpp::FunctionTree<3> *prod7 = new FunctionTree<3>(*MRA);
-    mrcpp::dot(apply_prec, *prod7, d2fdgdgy, grad_eta);
+    mrcpp::build_grid(*prod7, densities);
+    mrcpp::dot(-1.0, *prod7, d2fdgdgy, grad_eta);
 
     mrcpp::FunctionTree<3> *prod8 = new FunctionTree<3>(*MRA);
-    mrcpp::dot(apply_prec, *prod8, d2fdgdgz, grad_eta);
+    mrcpp::build_grid(*prod8, densities);
+    mrcpp::dot(-1.0, *prod8, d2fdgdgz, grad_eta);
     
     mrcpp::FunctionTree<3> *sum_36 = new FunctionTree<3>(*MRA);
     mrcpp::FunctionTree<3> *sum_47 = new FunctionTree<3>(*MRA);
@@ -420,7 +434,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     temp_sum.push_back(std::make_tuple(-1.0, div2));
 
     mrcpp::FunctionTree<3> *component = new FunctionTree<3>(*MRA);
-    mrcpp::build_grid(*component, temp_sum);
+    mrcpp::build_grid(*component, densities);
     mrcpp::add(-1.0, *component, temp_sum);
 
     std::cout << "freshly baked pieces" << std::endl;
