@@ -122,26 +122,30 @@ void density::compute(double prec, Density &rho, OrbitalVector &Phi, int spin) {
         }
     }
 
-    // Add up shared contributions into the grand master
+    // Add up local contributions into the grand master
     mpi::reduce_density(part_prec, rho_loc, mpi::comm_orb);
     if (mpi::grand_master()) {
         // If numerically exact the grid is huge at this point
         if (mpi::numerically_exact) rho_loc.crop(add_prec);
-        // MPI grand master copies the function into final memory
-        mrcpp::copy_grid(rho.real(), rho_loc.real());
-        mrcpp::copy_func(rho.real(), rho_loc.real());
     }
-    rho_loc.release();
 
     if (rho.isShared()) {
         int tag = 3141;
         // MPI grand master distributes to shared masters
-        mpi::broadcast_density(rho, mpi::comm_sh_group);
+        mpi::broadcast_density(rho_loc, mpi::comm_sh_group);
+        if (mpi::share_master()) {
+            // MPI shared masters copies the function into final memory
+            mrcpp::copy_grid(rho.real(), rho_loc.real());
+            mrcpp::copy_func(rho.real(), rho_loc.real());
+        }
         // MPI share masters distributes to their sharing ranks
         mpi::share_function(rho, 0, tag, mpi::comm_share);
     } else {
         // MPI grand master distributes to all ranks
-        mpi::broadcast_density(rho, mpi::comm_orb);
+        mpi::broadcast_density(rho_loc, mpi::comm_orb);
+        // All MPI ranks copies the function into final memory
+        mrcpp::copy_grid(rho.real(), rho_loc.real());
+        mrcpp::copy_func(rho.real(), rho_loc.real());
     }
 }
 

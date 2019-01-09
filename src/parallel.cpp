@@ -204,9 +204,10 @@ void mpi::recv_orbital(Orbital &orb, int src, int tag) {
 #endif
 }
 
-//send a density with MPI
+//send a function with MPI
 void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
+    if (func.isShared()) MSG_WARN("Sending a shared function is not recommended");
     FunctionData &funcinfo = func.getFunctionData();
     MPI_Send(&funcinfo, sizeof(FunctionData), MPI_BYTE, dst, 0, comm);
 
@@ -215,9 +216,10 @@ void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
 #endif
 }
 
-//receive a denstity with MPI
+//receive a function with MPI
 void mpi::recv_function(QMFunction &func, int src, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
+    if (func.isShared()) MSG_WARN("Receiving a shared function is not recommended");
     MPI_Status status;
 
     FunctionData &funcinfo = func.getFunctionData();
