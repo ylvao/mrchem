@@ -254,7 +254,6 @@ void SCFDriver::setup() {
     molecule->printGeometry();
     nuclei = &molecule->getNuclei();
 
-    
     // Setting up empty orbitals
     phi = new OrbitalVector;
 
@@ -604,12 +603,9 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
 
     dJ = new CoulombOperator(P, phi, phi_x, phi_y);
 
-    
     int d = rsp_calc.dir;
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
-    if (rsp_calc.isDynamic()) {
-        NOT_IMPLEMENTED_ABORT;
-    }
+    if (rsp_calc.isDynamic()) NOT_IMPLEMENTED_ABORT;
 
     d_fock = new FockOperator(0, 0, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
@@ -878,9 +874,9 @@ void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc
     if (calc_polarizability and rsp_calc.pert == h_E) {
         Printer::printHeader(0, "Calculating polarizability");
         Timer timer;
-        DoubleMatrix &tensor = molecule->getPolarizability(freq).get();
+        DoubleMatrix &pol = molecule->getPolarizability(freq).getTensor();
         h_E->setup(rel_prec);
-        tensor.row(j) = -h_E->trace(*phi, *phi_x, *phi_y).real();
+        pol.row(j) = -h_E->trace(*phi, *phi_x, *phi_y).real();
         h_E->clear();
         timer.stop();
         Printer::printFooter(0, timer, 2);

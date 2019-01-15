@@ -29,44 +29,54 @@
 
 namespace mrchem {
 
+// clang-format off
 class GeometryDerivatives final {
 public:
-    GeometryDerivatives(int k) {
-        this->nuclear = DoubleMatrix::Zero(k, 3);
-        this->electronic = DoubleMatrix::Zero(k, 3);
-    }
-    ~GeometryDerivatives() { }
+    explicit GeometryDerivatives(int k)
+        : nuc_tensor{DoubleMatrix::Zero(k, 3)}
+        , el_tensor{DoubleMatrix::Zero(k, 3)} {}
 
-    DoubleMatrix get() const { return this->nuclear + this->electronic; }
-    DoubleMatrix &getNuclear() { return this->nuclear; }
-    DoubleMatrix &getElectronic() { return this->electronic; }
+    DoubleMatrix getTensor() const { return getNuclear() + getElectronic(); }
+    DoubleMatrix &getNuclear() { return this->nuc_tensor; }
+    DoubleMatrix &getElectronic() { return this->el_tensor; }
+    const DoubleMatrix &getNuclear() const { return this->nuc_tensor; }
+    const DoubleMatrix &getElectronic() const { return this->el_tensor; }
 
-    friend std::ostream& operator<<(std::ostream &o, const GeometryDerivatives &geomderiv) {
-        DoubleMatrix gd = geomderiv.get();
+    friend std::ostream& operator<<(std::ostream &o, const GeometryDerivatives &gd) {
+        auto length_au = gd.getTensor().norm();
 
-        int oldPrec = mrcpp::Printer::setPrecision(10);
-        double au = gd.norm();
-        o<<"                                                            "<<std::endl;
-        o<<"============================================================"<<std::endl;
-        o<<"                   Geometry derivatives                     "<<std::endl;
-        o<<"------------------------------------------------------------"<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<" Length of vector:   (au)    " << std::setw(30) << au        <<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<"------------------------------------------------------------"<<std::endl;
-        o<<"                                                            "<<std::endl;
-        for (int k = 0; k < gd.rows(); k++) {
-            o<<std::setw(19)<<gd(k,0)<<std::setw(20)<<gd(k,1)<<std::setw(20)<<gd(k,2)<<std::endl;
-        }
-        o<<"                                                            "<<std::endl;
-        o<<"============================================================"<<std::endl;
-        o<<"                                                            "<<std::endl;
+        auto oldPrec = mrcpp::Printer::setPrecision(10);
+        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
+        o << "                                                            " << std::endl;
+        o << "============================================================" << std::endl;
+        o << "                   Geometry derivatives                     " << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o << " Length of vector:   (au)    " << std::setw(30) << length_au  << std::endl;
+        o << "                                                            " << std::endl;
+        o << "-------------------------- Total ---------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<             gd.getTensor().format(clean_format)                << std::endl;
+        o << "                                                            " << std::endl;
+        o << "------------------------- Nuclear --------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<             gd.getNuclear().format(clean_format)               << std::endl;
+        o << "                                                            " << std::endl;
+        o << "------------------------ Electronic ------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<             gd.getElectronic().format(clean_format)            << std::endl;
+        o << "                                                            " << std::endl;
+        o << "============================================================" << std::endl;
+        o << "                                                            " << std::endl;
         mrcpp::Printer::setPrecision(oldPrec);
+
         return o;
     }
-protected:
-    DoubleMatrix nuclear;
-    DoubleMatrix electronic;
+
+private:
+    DoubleMatrix nuc_tensor;
+    DoubleMatrix el_tensor;
 };
+// clang-format on
 
 } //namespace mrchem

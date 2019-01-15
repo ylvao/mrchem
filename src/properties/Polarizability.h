@@ -28,53 +28,50 @@
 #include "mrchem.h"
 
 namespace mrchem {
+
+// clang-format off
 class Polarizability final {
 public:
-    explicit Polarizability(double w = 0.0, mrcpp::Coord<3> o = {0.0, 0.0, 0.0}, bool v = false)
-        : velocity(v)
-        , frequency(w)
-        , origin(o)
-        , tensor(DoubleMatrix::Zero(3, 3)) {}
-    ~Polarizability() { }
+    explicit Polarizability(double w = 0.0) : frequency(w) {}
 
     double getFrequency() const { return this->frequency; }
-    bool getVelocityGauge() const { return this->velocity; }
-    const mrcpp::Coord<3> getGaugeOrigin() const { return this->origin; }
-    DoubleMatrix &get() { return this->tensor; }
+    DoubleMatrix &getTensor() { return this->tensor; }
+    const DoubleMatrix &getTensor() const { return this->tensor; }
 
     friend std::ostream& operator<<(std::ostream &o, const Polarizability &pol) {
-        
-        double w_au = 0.0;  // Only static Polarizability
-        double isoPolarau = pol.tensor.trace()/3.0;
-        
-        Eigen::IOFormat clean_format(10, 0, ", ", "\n", "[", "]");
-        double isoPolarsi = isoPolarau * 0.0; // Luca: FIX THIS
-        
-        int oldPrec = mrcpp::Printer::setPrecision(10);
-        o<<"                                                            "<<std::endl;
-        o<<"============================================================"<<std::endl;
-        o<<"                   Polarizability tensor                    "<<std::endl;
-        o<<"------------------------------------------------------------"<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<" Frequency:       (au)       " << std::setw(30) << w_au      <<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<" Isotropic average(au)       " << std::setw(30) << isoPolarau<<std::endl;
-        o<<" Isotropic average(SI)       TO BE FIXED                    "<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<"-------------------------- Tensor --------------------------"<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<                pol.tensor.format(clean_format)               <<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<"============================================================"<<std::endl;
-        o<<"                                                            "<<std::endl;
+        auto w_au = pol.getFrequency();
+        auto iso_au = pol.getTensor().trace() / 3.0;
+        auto iso_si = iso_au * 0.0; // Luca: FIX THIS
+
+        auto oldPrec = mrcpp::Printer::setPrecision(10);
+        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
+        o << "                                                            " << std::endl;
+        o << "============================================================" << std::endl;
+        o << "                   Polarizability tensor                    " << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o << " Frequency:        (au)      " << std::setw(30) << w_au       << std::endl;
+        o << "                                                            " << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o << " Isotropic average (au)      " << std::setw(30) << iso_au     << std::endl;
+        o << " Isotropic average (SI)      TO BE FIXED                    " << std::endl;
+        o << "                                                            " << std::endl;
+        o << "-------------------------- Tensor --------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<             pol.getTensor().format(clean_format)               << std::endl;
+        o << "                                                            " << std::endl;
+        o << "============================================================" << std::endl;
+        o << "                                                            " << std::endl;
         mrcpp::Printer::setPrecision(oldPrec);
+
         return o;
     }
+
 private:
-    bool velocity;
     double frequency;
-    mrcpp::Coord<3> origin;
-    DoubleMatrix tensor;
+    DoubleMatrix tensor{DoubleMatrix::Zero(3,3)};
 };
-    
+// clang-format on
+
 } //namespace mrchem
