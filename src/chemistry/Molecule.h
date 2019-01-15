@@ -116,14 +116,12 @@ protected:
     mrcpp::Coord<3> COC{};
     std::unique_ptr<SCFEnergy> energy{};
     std::unique_ptr<DipoleMoment> dipole{};
-    //std::unique_ptr<QuadrupoleMoment> quadrupole{};
     std::unique_ptr<GeometryDerivatives> geomderiv{};
     std::unique_ptr<Magnetizability> magnetizability{};
     std::vector<std::unique_ptr<Polarizability>> polarizability{};
     std::vector<std::unique_ptr<NMRShielding>> nmr{};
     std::vector<std::unique_ptr<HyperFineCoupling>> hfcc{};
     std::vector<std::vector<std::unique_ptr<SpinSpinCoupling>>> sscc{};
-    //std::vector<std::unique_ptr<OpticalRotation>> optical_rotation{};
 
     void calcCenterOfMass();
     void calcCenterOfCharge();
