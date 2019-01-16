@@ -58,8 +58,6 @@ void XCPotentialD2::setup(double prec) {
     setApplyPrec(prec);
     //setupDensity(prec);
     setupPerturbedDensity(prec);
-    std::cout << "Freshly baked perturbed density" << std::endl;
-    std::cout << pertDensity_t->real() << std::endl;
     //setupPotential(prec);
 }
 
@@ -275,7 +273,9 @@ Orbital XCPotentialD2::apply(Orbital phi) {
 
 FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
     FunctionTree<3> *component = nullptr;
-    if (this->functional->useGamma()) {
+    if (this->functional->isLDA()) {
+        component = buildComponentLDA(orbital_spin, density_spin, pert_dens);
+    } else if (this->functional->useGamma()) {
         component = buildComponentGamma(orbital_spin, density_spin, pert_dens);
     } else {
         component = buildComponentGrad(orbital_spin, density_spin, pert_dens);
@@ -361,12 +361,6 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     mrcpp::build_grid(*component, densities);
     mrcpp::add(-1.0, *component, temp_sum);
 
-    std::cout << "freshly baked pieces" << std::endl;
-    std::cout << *prod1 << std::endl;
-    std::cout << *prod2 << std::endl;
-    std::cout << *div1 << std::endl;
-    std::cout << *div2 << std::endl;
-
     mrcpp::clear(grad_eta, true);
     mrcpp::clear(d2fdrdg, false);
     mrcpp::clear(d2fdgdgx, false);
@@ -380,8 +374,6 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     delete prod3; delete prod4;
     delete prod5; delete prod6;
     delete prod7; delete prod8;
-    std::cout << "freshly baked component" << std::endl;
-    std::cout << *component << std::endl;
     return component;
 }
 
@@ -433,15 +425,6 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     mrcpp::build_grid(*component, densities);
     mrcpp::add(-1.0, *component, temp_fun);
 
-    std::cout << "freshly baked pieces" << std::endl;
-    std::cout << *prod1 << std::endl;
-    std::cout << *prod2 << std::endl;
-    std::cout << *sum_42 << std::endl;
-    std::cout << *div2 << std::endl;
-    std::cout << "freshly baked component" << std::endl;
-    std::cout << *component << std::endl;
-
-    
     mrcpp::clear(densities, false);
     mrcpp::clear(temp_fun, false);
     delete derivative;
@@ -478,8 +461,7 @@ FunctionTree<3> * XCPotentialD2::calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V
     return result;
 }
 
-/*
-FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
+FunctionTree<3> *XCPotentialD2::buildComponentLDA(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
     FunctionTree<3> *tmp = new FunctionTree<3>(*MRA);
     FunctionTree<3> &V = getPotential(orbital_spin, density_spin);
     mrcpp::build_grid(*tmp, V);
@@ -487,5 +469,5 @@ FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spi
     mrcpp::multiply(-1.0, *tmp, 1.0, V, dRho);
     return tmp;
 }
-*/
+
 } // namespace mrchem

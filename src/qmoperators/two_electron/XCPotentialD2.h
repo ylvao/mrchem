@@ -47,6 +47,7 @@ private:
     mrcpp::FunctionTree<3> *buildComponent(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
     mrcpp::FunctionTree<3> *buildComponentGamma(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
     mrcpp::FunctionTree<3> *buildComponentGrad(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
+    mrcpp::FunctionTree<3> *buildComponentLDA(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
 
     Orbital apply(Orbital phi);
 
