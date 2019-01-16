@@ -37,6 +37,18 @@ matrix:
         - CXX_COMPILER='g++'
         - C_COMPILER='gcc'
         - COVERAGE='--coverage'
+    - os: linux
+      addons: &2
+        apt:
+          packages:
+            - clang
+            - libboost-all-dev
+            - libpython3.5-dev
+            - python3.5-dev
+      env:
+        - BUILD_TYPE='release'
+        - CXX_COMPILER='clang++'
+        - C_COMPILER='clang'
 
 env:
   global:
@@ -78,12 +90,12 @@ script:
   - |
     python ./setup \
            --type=${BUILD_TYPE} \
-           --prefix=$HOME/Software/MRChem \
+           --prefix=${HOME}/Software/MRChem \
            --cxx=${CXX_COMPILER} \
            ${COVERAGE} \
            ${OPENMP} \
            --cmake-options="-DEigen3_DIR=${HOME}/Deps/eigen/share/eigen3/cmake -DCMAKE_C_COMPILER=${C_COMPILER} -DPYTHON_EXECUTABLE=$(type -P python)"
-  - cmake --build build --target install -- VERBOSE=1
+  - cmake --build build --target install -- VERBOSE=1 -j2
   - cd build
   - |
     if [[ "${COVERAGE}" = "--coverage" ]]; then
