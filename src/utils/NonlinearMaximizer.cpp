@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2018 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
  *
  * This file is part of MRChem.
  *
@@ -60,7 +60,7 @@ int NonlinearMaximizer::maximize() {
     DoubleVector eiVal(N2h),old_step(N2h),diag(N2h),step(N2h) ;
     double mu_Newton_init=2.0,acc_fac=1.0;
     double mu_Newton=mu_Newton_init;
-    double lamb1,sq,a,c,x,direction=0.0;
+    double lamb1,sq,a,c,x=0.0,direction=0.0;
     int N_newton_step=0,newton_step_exact=0;
     double maxEiVal;
 

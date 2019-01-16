@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2018 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
  *
  * This file is part of MRChem.
  *
@@ -34,11 +34,19 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 
 #include "Nucleus.h"
+#include "properties/DipoleMoment.h"
+#include "properties/GeometryDerivatives.h"
+#include "properties/HyperFineCoupling.h"
+#include "properties/Magnetizability.h"
+#include "properties/NMRShielding.h"
+#include "properties/Polarizability.h"
 #include "properties/SCFEnergy.h"
+#include "properties/SpinSpinCoupling.h"
 #include "properties/properties_fwd.h"
 
 /** @class Molecule
@@ -54,12 +62,11 @@ namespace mrchem {
 
 class Molecule final {
 public:
-    Molecule(const Nuclei &nucs, int c = 0, int m = 1);
-    Molecule(const std::string &coord_file, int c = 0, int m = 1);
-    Molecule(const std::vector<std::string> &coord_str, int c = 0, int m = 1);
+    explicit Molecule(const Nuclei &nucs, int c = 0, int m = 1);
+    explicit Molecule(const std::string &coord_file, int c = 0, int m = 1);
+    explicit Molecule(const std::vector<std::string> &coord_str, int c = 0, int m = 1);
     Molecule(const Molecule &mol) = delete;
     Molecule &operator=(const Molecule &mol) = delete;
-    ~Molecule();
 
     int getCharge() const { return this->charge; }
     int getMultiplicity() const { return this->multiplicity; }
@@ -70,8 +77,8 @@ public:
     const mrcpp::Coord<3> &getCenterOfCharge() const { return this->COC; }
 
     Nuclei &getNuclei() { return this->nuclei; }
-    const Nuclei &getNuclei() const { return this->nuclei; }
     Nucleus &getNucleus(int i) { return this->nuclei[i]; }
+    const Nuclei &getNuclei() const { return this->nuclei; }
     const Nucleus &getNucleus(int i) const { return this->nuclei[i]; }
 
     void printGeometry() const;
@@ -105,35 +112,21 @@ protected:
     Nuclei nuclei;
 
     // Properties
-    mrcpp::Coord<3> COM;
-    mrcpp::Coord<3> COC;
-    SCFEnergy *energy;
-    DipoleMoment *dipole;
-    QuadrupoleMoment *quadrupole;
-    GeometryDerivatives *geomderiv;
-    Magnetizability *magnetizability;
-    NMRShielding **nmr;
-    HyperFineCoupling **hfcc;
-    SpinSpinCoupling ***sscc;
-    std::vector<Polarizability *> polarizability;
-    std::vector<OpticalRotation *> optical_rotation;
+    mrcpp::Coord<3> COM{};
+    mrcpp::Coord<3> COC{};
+    std::unique_ptr<SCFEnergy> energy{};
+    std::unique_ptr<DipoleMoment> dipole{};
+    std::unique_ptr<GeometryDerivatives> geomderiv{};
+    std::unique_ptr<Magnetizability> magnetizability{};
+    std::vector<std::unique_ptr<Polarizability>> polarizability{};
+    std::vector<std::unique_ptr<NMRShielding>> nmr{};
+    std::vector<std::unique_ptr<HyperFineCoupling>> hfcc{};
+    std::vector<std::vector<std::unique_ptr<SpinSpinCoupling>>> sscc{};
 
     void calcCenterOfMass();
     void calcCenterOfCharge();
 
-    void allocNuclearProperties();
-    void freeNuclearProperties();
-
-    void clearSCFEnergy();
-    void clearDipoleMoment();
-    void clearQuadrupoleMoment();
-    void clearGeometryDerivatives();
-    void clearMagnetizability();
-    void clearNMRShielding(int k);
-    void clearHyperFineCoupling(int k);
-    void clearSpinSpinCoupling(int k, int l);
-    void clearPolarizability();
-    void clearOpticalRotation();
+    void initNuclearProperties(int nNucs);
 
     void readCoordinateFile(const std::string &file);
     void readCoordinateString(const std::vector<std::string> &coord_str);

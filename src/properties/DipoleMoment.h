@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2018 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
  *
  * This file is part of MRChem.
  *
@@ -29,44 +29,52 @@
 
 namespace mrchem {
 
+// clang-format off
 class DipoleMoment final {
 public:
-    DipoleMoment() {
-        this->nuclear = DoubleVector::Zero(3);
-        this->electronic = DoubleVector::Zero(3);
-    }
-    ~DipoleMoment() { }
+    DoubleVector getTensor() const { return getNuclear() + getElectronic(); }
+    DoubleVector &getNuclear() { return this->nuc_tensor; }
+    DoubleVector &getElectronic() { return this->el_tensor; }
+    const DoubleVector &getNuclear() const { return this->nuc_tensor; }
+    const DoubleVector &getElectronic() const { return this->el_tensor; }
 
-    DoubleVector get() const { return this->nuclear + this->electronic; }
-    DoubleVector &getNuclear() { return this->nuclear; }
-    DoubleVector &getElectronic() { return this->electronic; }
+    friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dip) {
+        auto length_au = dip.getTensor().norm();
+        auto length_db = length_au * PHYSCONST::Debye;
 
-    friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dipole) {
-        DoubleVector mu = dipole.get();
-
-        int oldPrec = mrcpp::Printer::setPrecision(10);
-        double au = mu.norm();
-        double debye = au * PHYSCONST::Debye;
-        o<<"                                                            "<<std::endl;
-        o<<"============================================================"<<std::endl;
-        o<<"                         Dipole moment                      "<<std::endl;
-        o<<"------------------------------------------------------------"<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<" Length of vector:   (au)    " << std::setw(30) << au        <<std::endl;
-        o<<"                     (Debye) " << std::setw(30) << debye     <<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<"------------------------------------------------------------"<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<std::setw(19)<<mu(0)<<std::setw(20)<<mu(1)<<std::setw(20)<<mu(2)<<std::endl;
-        o<<"                                                            "<<std::endl;
-        o<<"============================================================"<<std::endl;
-        o<<"                                                            "<<std::endl;
+        auto oldPrec = mrcpp::Printer::setPrecision(10);
+        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
+        o << "                                                            " << std::endl;
+        o << "============================================================" << std::endl;
+        o << "                         Dipole moment                      " << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o << " Length of vector:   (au)    " << std::setw(30) << length_au  << std::endl;
+        o << "                     (Debye) " << std::setw(30) << length_db  << std::endl;
+        o << "                                                            " << std::endl;
+        o << "-------------------------- Total ---------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<    dip.getTensor().transpose().format(clean_format)            << std::endl;
+        o << "                                                            " << std::endl;
+        o << "------------------------- Nuclear --------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<    dip.getNuclear().transpose().format(clean_format)           << std::endl;
+        o << "                                                            " << std::endl;
+        o << "------------------------ Electronic ------------------------" << std::endl;
+        o << "                                                            " << std::endl;
+        o <<    dip.getElectronic().transpose().format(clean_format)        << std::endl;
+        o << "                                                            " << std::endl;
+        o << "============================================================" << std::endl;
+        o << "                                                            " << std::endl;
         mrcpp::Printer::setPrecision(oldPrec);
+
         return o;
     }
-protected:
-    DoubleVector nuclear;
-    DoubleVector electronic;
+
+private:
+    DoubleVector nuc_tensor{DoubleVector::Zero(3)};
+    DoubleVector el_tensor{DoubleVector::Zero(3)};
 };
+// clang-format on
 
 } //namespace mrchem

@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2018 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
  *
  * This file is part of MRChem.
  *
@@ -35,14 +35,16 @@
 
 namespace mrchem {
 
+// clang-format off
 class SCFEnergy final {
 public:
-    SCFEnergy(double nuc = 0.0, double el = 0.0, double orb = 0.0,
-              double kin = 0.0, double en = 0.0, double ee = 0.0,
-              double xc = 0.0, double x = 0.0, double nex = 0.0,
-              double ext = 0.0) :
+    SCFEnergy() = default;
+    SCFEnergy(double nuc, double el, double orb,
+              double kin, double en, double ee,
+              double xc, double x, double nex,
+              double ext) :
         E_nuc(nuc), E_el(el), E_orb(orb), E_kin(kin), E_en(en),
-        E_ee(ee), E_x(x), E_xc(xc), E_nex(nex), E_ext(ext){ }
+        E_ee(ee), E_x(x), E_xc(xc), E_nex(nex), E_ext(ext) {}
 
     double getTotalEnergy() const { return this->E_nuc + this->E_el; }
     double getNuclearEnergy() const { return this->E_nuc; }
@@ -56,11 +58,12 @@ public:
     double getExchangeEnergy() const { return this->E_x; }
 
     friend std::ostream& operator<<(std::ostream &o, const SCFEnergy &en) {
-        double E_au = en.E_nuc + en.E_el;
-        double E_kJ = E_au   * PHYSCONST::kJ;
-        double E_kcal = E_au * PHYSCONST::kcal;
-        double E_eV = E_au   * PHYSCONST::eV;
-        int oldPrec = mrcpp::Printer::setPrecision(15);
+        auto E_au   = en.E_nuc + en.E_el;
+        auto E_kJ   = E_au * PHYSCONST::kJ;
+        auto E_kcal = E_au * PHYSCONST::kcal;
+        auto E_eV   = E_au * PHYSCONST::eV;
+
+        auto oldPrec = mrcpp::Printer::setPrecision(15);
         o << "                                                            " << std::endl;
         o << "============================================================" << std::endl;
         o << "                         SCF Energy                         " << std::endl;
@@ -72,8 +75,8 @@ public:
         o << " Coulomb energy:              " << std::setw(29) << en.E_ee   << std::endl;
         o << " Exchange energy:             " << std::setw(29) << en.E_x    << std::endl;
         o << " X-C energy:                  " << std::setw(29) << en.E_xc   << std::endl;
-        o << " El. External field energy:   " << std::setw(29) << en.E_ext  << std::endl;
-        o << " Nuc. External field energy:  " << std::setw(29) << en.E_nex  << std::endl;
+        o << " El. external field energy:   " << std::setw(29) << en.E_ext  << std::endl;
+        o << " Nuc. external field energy:  " << std::setw(29) << en.E_nex  << std::endl;
         o << "                                                            " << std::endl;
         o << "------------------------------------------------------------" << std::endl;
         o << "                                                            " << std::endl;
@@ -90,21 +93,23 @@ public:
         o << "============================================================" << std::endl;
         o << "                                                            " << std::endl;
         mrcpp::Printer::setPrecision(oldPrec);
+
         return o;
     }
 
-protected:
-    double E_nuc;
-    double E_el;
+private:
+    double E_nuc{0.0};
+    double E_el{0.0};
 
-    double E_orb;
-    double E_kin;
-    double E_en;
-    double E_ee;
-    double E_x;
-    double E_xc;
-    double E_nex;
-    double E_ext;
+    double E_orb{0.0};
+    double E_kin{0.0};
+    double E_en{0.0};
+    double E_ee{0.0};
+    double E_x{0.0};
+    double E_xc{0.0};
+    double E_nex{0.0};
+    double E_ext{0.0};
 };
+// clang-format on
 
 } //namespace mrchem

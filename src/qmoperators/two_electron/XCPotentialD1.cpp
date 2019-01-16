@@ -75,20 +75,11 @@ void XCPotentialD1::setupPotential(double prec) {
     if (not this->functional->hasDensity()) MSG_ERROR("XC density not initialized");
     if (this->potentials.size() != 0) MSG_ERROR("Potential not properly cleared");
 
-    int inpNodes = this->functional->getNNodes();
-    int inpPoints = this->functional->getNPoints();
-
     this->functional->setup();
     this->functional->evaluate();
     this->energy = this->functional->calcEnergy();
     this->potentials = this->functional->calcPotential();
     this->functional->clear();
-
-    int newNodes = this->functional->getNNodes() - inpNodes;
-    int newPoints = this->functional->getNPoints() - inpPoints;
-
-    println(0, " XC grid size   " << std::setw(26) << inpNodes << std::setw(17) << inpPoints);
-    println(0, " XC grid change " << std::setw(26) << newNodes << std::setw(17) << newPoints);
 }
 
 /** @brief Return FunctionTree for the XC spin potential
