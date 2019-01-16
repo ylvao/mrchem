@@ -100,13 +100,11 @@ GaussExp<3> AOContraction::getContraction(int m, const mrcpp::Coord<3> &center) 
             MSG_ERROR("We don't support g-functions at the moment");
         }
     }
-
     normFac = std::sqrt(normFac);
+
+    std::array<int, 3> pow{angMom[0], angMom[1], angMom[2]};
     for (unsigned int i = 0; i < expo.size(); i++) {
-        GaussFunc<3> gto;
-        gto.setPos(center.data());
-        gto.setExp(this->expo[i]);
-        gto.setPower(GTOS[this->L].comp[m]);
+        GaussFunc<3> gto(this->expo[i], 1.0, center, pow);
         gto.normalize();
         gto.setCoef(normFac*gto.getCoef()*this->coefs[i]);
         ctr.append(gto);

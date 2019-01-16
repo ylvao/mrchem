@@ -192,7 +192,7 @@ int XCFunctional::getNPoints() const {
  * refinement). This is meant only to provide an initial guess for the grid, there
  * are no guarantees regarding the precision.
  */
-void XCFunctional::buildGrid(double Z, const double *R) {
+void XCFunctional::buildGrid(double Z, const mrcpp::Coord<3> &R) {
     for (int i = 0; i < 5; i++) {
         mrcpp::GaussFunc<3> gauss(std::pow(Z, i), 1.0, R);
         if (isSpinSeparated()) {
