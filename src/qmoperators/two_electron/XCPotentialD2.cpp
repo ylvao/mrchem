@@ -332,6 +332,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     mrcpp::FunctionTree<3> *prod8 = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*prod8, densities);
     mrcpp::dot(-1.0, *prod8, d2fdgdgz, grad_eta);
+    mrcpp::clear(grad_eta, true);
     
     mrcpp::FunctionTree<3> *sum_36 = new FunctionTree<3>(*MRA);
     mrcpp::FunctionTree<3> *sum_47 = new FunctionTree<3>(*MRA);
@@ -348,8 +349,10 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
 
     mrcpp::FunctionTree<3> *div1 = new FunctionTree<3>(*MRA);
     mrcpp::divergence(*div1, *derivative, temp_div1);
+    mrcpp::clear(temp_div1, true);
     mrcpp::FunctionTree<3> *div2 = new FunctionTree<3>(*MRA);
     mrcpp::divergence(*div2, *derivative, temp_div2);
+    mrcpp::clear(temp_div2, true);
 
     mrcpp::FunctionTreeVector<3> temp_sum;
     temp_sum.push_back(std::make_tuple(1.0, prod1));
@@ -360,20 +363,12 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     mrcpp::FunctionTree<3> *component = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*component, densities);
     mrcpp::add(-1.0, *component, temp_sum);
+    mrcpp::clear(temp_sum, true);
 
-    mrcpp::clear(grad_eta, true);
     mrcpp::clear(d2fdrdg, false);
     mrcpp::clear(d2fdgdgx, false);
     mrcpp::clear(d2fdgdgy, false);
     mrcpp::clear(d2fdgdgz, false);
-    mrcpp::clear(temp_div1, false);
-    mrcpp::clear(temp_div2, false);
-    mrcpp::clear(temp_sum, false);
-    delete div1;  delete div2;
-    delete prod1; delete prod2;
-    delete prod3; delete prod4;
-    delete prod5; delete prod6;
-    delete prod7; delete prod8;
     return component;
 }
 
@@ -405,14 +400,22 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     mrcpp::FunctionTree<3> *prod4 = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*prod4, densities);
     mrcpp::multiply(-1.0, *prod4, 1.0, mrcpp::get_func(potentials, 3), *gr_dot_gpr);
+    delete gr_dot_gpr;
 
     mrcpp::FunctionTree<3> *div3 = calcGradDotPotDensVec(*prod3, grad_rho);
+    delete prod3;
     mrcpp::FunctionTree<3> *div4 = calcGradDotPotDensVec(*prod4, grad_rho);
+    delete prod4;
+    mrcpp::clear(grad_rho, true);
+
     mrcpp::FunctionTree<3> *div2 = calcGradDotPotDensVec(mrcpp::get_func(potentials, 0), grad_eta);
+    mrcpp::clear(grad_eta, true);
 
     mrcpp::FunctionTree<3> *sum_42 = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*sum_42, densities);
     mrcpp::add(-1.0, *sum_42, 2.0, *div4, 1.0, *div2);
+    delete div2;
+    delete div4;
 
     mrcpp::FunctionTreeVector<3> temp_fun;
 
@@ -426,19 +429,8 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     mrcpp::add(-1.0, *component, temp_fun);
 
     mrcpp::clear(densities, false);
-    mrcpp::clear(temp_fun, false);
+    mrcpp::clear(temp_fun, true);
     delete derivative;
-    mrcpp::clear(grad_rho, true);
-    mrcpp::clear(grad_eta, true);
-    delete gr_dot_gpr;
-    delete prod1;
-    delete prod2;
-    delete prod3;
-    delete prod4;
-    delete sum_42;
-    delete div2;
-    delete div3;
-    delete div4;
     return component;
 }
 
