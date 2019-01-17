@@ -244,16 +244,16 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     FunctionTree<3> *Vrho = new FunctionTree<3>(*MRA);
     mrcpp::FunctionTreeVector<3> components;
     if (not spinSeparated and totalDens) {
-        FunctionTree<3> *component = buildComponent(phi.spin(), DENSITY::Total, *pertDensity_t);
+        FunctionTree<3> *component = buildComponent(phi.spin(), DENSITY::Total, pertDensity_t->real());
         components.push_back(std::make_tuple(1.0, component));
     } else if (spinSeparated) {
         if (totalDens) NOT_IMPLEMENTED_ABORT;
         if (alphaDens) {
-            FunctionTree<3> *component = buildComponent(phi.spin(), DENSITY::Alpha, *pertDensity_a);
+            FunctionTree<3> *component = buildComponent(phi.spin(), DENSITY::Alpha, pertDensity_a->real());
             components.push_back(std::make_tuple(1.0, component));
         }
         if (betaDens) {
-            FunctionTree<3> *component = buildComponent(phi.spin(), DENSITY::Beta, *pertDensity_b);
+            FunctionTree<3> *component = buildComponent(phi.spin(), DENSITY::Beta, pertDensity_b->real());
             components.push_back(std::make_tuple(1.0, component));
         }
     } else {
@@ -465,8 +465,8 @@ FunctionTree<3> *XCPotentialD2::buildComponentLDA(int orbital_spin, int density_
     FunctionTree<3> *tmp = new FunctionTree<3>(*MRA);
     FunctionTree<3> &V = getPotential(orbital_spin, density_spin);
     mrcpp::build_grid(*tmp, V);
-    mrcpp::build_grid(*tmp, dRho);
-    mrcpp::multiply(-1.0, *tmp, 1.0, V, dRho);
+    mrcpp::build_grid(*tmp, pert_dens);
+    mrcpp::multiply(-1.0, *tmp, 1.0, V, pert_dens);
     return tmp;
 }
 
