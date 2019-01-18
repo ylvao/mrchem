@@ -39,7 +39,7 @@
 using namespace mrchem;
 using namespace orbital;
 
-namespace coulomb_hessian {
+namespace xc_hessian {
 
 TEST_CASE("XCHessian", "[xc_hessian]") {
     const double prec = 1.0e-3;
@@ -154,4 +154,4 @@ TEST_CASE("XCHessian", "[xc_hessian]") {
     V.clear();
 }
 
-} // namespace nuclear_potential
+} // namespace xc_hessian
