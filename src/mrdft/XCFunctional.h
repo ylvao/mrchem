@@ -76,7 +76,7 @@ public:
     int getNNodes() const;
     int getNPoints() const;
 
-    void buildGrid(double Z, const double *R);
+    void buildGrid(double Z, const mrcpp::Coord<3> &R);
     void pruneGrid(double prec, bool abs_prec = true);
     void refineGrid(double prec, bool abs_prec = true);
     void clearGrid();
