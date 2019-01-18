@@ -39,30 +39,27 @@
 using namespace mrchem;
 using namespace orbital;
 
-namespace xc_operator {
+namespace coulomb_hessian {
 
-TEST_CASE("XCOperator", "[xc_operator]") {
+TEST_CASE("XCHessianPBE", "[xc_hessian_pbe]") {
     const double prec = 1.0e-3;
     const double thrs = 1.0e-8;
 
-    const int nShells = 2;
     std::vector<int> ns;
     std::vector<int> ls;
     std::vector<int> ms;
-
+    
     OrbitalVector Phi;
-    for (int n = 1; n <= nShells; n++) {
-        int L = n;
-        for (int l = 0; l < L; l++) {
-            int M = 2 * l + 1;
-            for (int m = 0; m < M; m++) {
-                ns.push_back(n);
-                ls.push_back(l);
-                ms.push_back(m);
-                Phi.push_back(Orbital(SPIN::Paired));
-            }
-        }
-    }
+    ns.push_back(1);
+    ls.push_back(0);
+    ms.push_back(0);
+    Phi.push_back(Orbital(SPIN::Paired));
+
+    ns.push_back(2);
+    ls.push_back(0);
+    ms.push_back(0);
+    Phi.push_back(Orbital(SPIN::Paired));
+
     mpi::distribute(Phi);
 
     for (int i = 0; i < Phi.size(); i++) {
@@ -70,25 +67,47 @@ TEST_CASE("XCOperator", "[xc_operator]") {
         if (mpi::my_orb(Phi[i])) qmfunction::project(Phi[i], f, NUMBER::Real, prec);
     }
 
-    mrdft::XCFunctional fun(*MRA, false);
-    fun.setFunctional("LDA", 1.0);
-    fun.setUseGamma(false);
-    fun.setDensityCutoff(1.0e-10);
-    fun.evalSetup(1);
-    XCOperator V(&fun, &Phi);
-    
-    // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
+    std::vector<int> ns_x;
+    std::vector<int> ls_x;
+    std::vector<int> ms_x;
 
+    OrbitalVector Phi_x;
+    ns_x.push_back(2);
+    ls_x.push_back(0);
+    ms_x.push_back(0);
+    Phi_x.push_back(Orbital(SPIN::Paired));
+
+    ns_x.push_back(2);
+    ls_x.push_back(1);
+    ms_x.push_back(1);
+    Phi_x.push_back(Orbital(SPIN::Paired));
+
+    mpi::distribute(Phi_x);
+
+    for (int i = 0; i < Phi_x.size(); i++) {
+        HydrogenFunction f(ns_x[i], ls_x[i], ms_x[i]);
+        if (mpi::my_orb(Phi_x[i])) qmfunction::project(Phi_x[i], f, NUMBER::Real, prec);
+    }
+
+    int i = 0;
     DoubleMatrix E_P = DoubleMatrix::Zero(Phi.size(), Phi.size());
-    E_P(0,0) = -0.4574999901;
-    E_P(0,1) = -0.0593789497;
-    E_P(1,0) = -0.0593789497;
-    E_P(1,1) = -0.1894199551;
-    E_P(2,2) = -0.2109971956;
-    E_P(3,3) = -0.2109971956;
-    E_P(4,4) = -0.2109971956;
 
+    E_P(0,0) = -0.0496021801 ;
+    E_P(0,1) = -0.0234437207 ;
+    E_P(1,0) = -0.0234437207 ;
+    E_P(1,1) =  0.0061055193 ;
+
+    mrdft::XCFunctional fun(*MRA, false);
+    fun.setFunctional("PBE", 1.0);
+    fun.setUseGamma(true);
+    fun.setDensityCutoff(1.0e-10);
+    fun.evalSetup(MRDFT::Hessian);
+    XCOperator V(&fun, &Phi, &Phi_x, &Phi_x);
+    
     V.setup(prec);
+    V.setupDensity(prec);
+    V.setupPotential(prec);
+    V.setupDensity(prec);
     SECTION("apply") {
         Orbital Vphi_0 = V(Phi[0]);
         ComplexDouble V_00 = orbital::dot(Phi[0], Vphi_0);
@@ -102,7 +121,7 @@ TEST_CASE("XCOperator", "[xc_operator]") {
     }
     SECTION("vector apply") {
         OrbitalVector VPhi = V(Phi);
-                for (int i = 0; i < Phi.size(); i++) {
+        for (int i = 0; i < Phi.size(); i++) {
             ComplexDouble V_ii = orbital::dot(Phi[i], VPhi[i]);
             if (mpi::my_orb(Phi[i])) {
                 REQUIRE(V_ii.real() == Approx(E_P(i,i)).epsilon(thrs));
@@ -127,7 +146,8 @@ TEST_CASE("XCOperator", "[xc_operator]") {
         ComplexMatrix v = V(Phi, Phi);
         for (int i = 0; i < Phi.size(); i++) {
             for (int j = 0; j <= i; j++) {
-                if (std::abs(v(i,j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E_P(i, j)).epsilon(thrs));
+                if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E_P(i,j)).epsilon(thrs));
+                //                REQUIRE(v(i, j).real() == v(i, j).real());
                 REQUIRE(v(i, j).imag() < thrs);
             }
         }
@@ -135,4 +155,4 @@ TEST_CASE("XCOperator", "[xc_operator]") {
     V.clear();
 }
 
-} // namespace nuclear_potential
+} // namespace xc_hessian_pbe

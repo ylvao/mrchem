@@ -41,7 +41,7 @@ using namespace orbital;
 
 namespace xc_operator {
 
-TEST_CASE("XCOperator", "[xc_operator]") {
+TEST_CASE("XCOperatorBLYP", "[xc_operator_blyp]") {
     const double prec = 1.0e-3;
     const double thrs = 1.0e-8;
 
@@ -71,7 +71,7 @@ TEST_CASE("XCOperator", "[xc_operator]") {
     }
 
     mrdft::XCFunctional fun(*MRA, false);
-    fun.setFunctional("LDA", 1.0);
+    fun.setFunctional("BLYP", 1.0);
     fun.setUseGamma(false);
     fun.setDensityCutoff(1.0e-10);
     fun.evalSetup(1);
@@ -80,13 +80,13 @@ TEST_CASE("XCOperator", "[xc_operator]") {
     // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
 
     DoubleMatrix E_P = DoubleMatrix::Zero(Phi.size(), Phi.size());
-    E_P(0,0) = -0.4574999901;
-    E_P(0,1) = -0.0593789497;
-    E_P(1,0) = -0.0593789497;
-    E_P(1,1) = -0.1894199551;
-    E_P(2,2) = -0.2109971956;
-    E_P(3,3) = -0.2109971956;
-    E_P(4,4) = -0.2109971956;
+    E_P(0,0) = -0.4632575525;
+    E_P(0,1) = -0.0654671939;
+    E_P(1,0) = -0.0654671939;
+    E_P(1,1) = -0.1793901728;
+    E_P(2,2) = -0.1988746843;
+    E_P(3,3) = -0.1988746843;
+    E_P(4,4) = -0.1988746843;
 
     V.setup(prec);
     SECTION("apply") {
