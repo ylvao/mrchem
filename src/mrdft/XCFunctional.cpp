@@ -741,42 +741,6 @@ void XCFunctional::calcHessianGGAgrad(FunctionTreeVector<3> &potentials) {
         mrcpp::copy_func(*pot, out_i);
         potentials.push_back(std::make_tuple(1.0, pot));
     }
-
-    /*    
-    FunctionTreeVector<3> funcs;
-    
-    if (isSpinSeparated() or useGamma()) NOT_IMPLEMENTED_ABORT;
-
-    //collects double der wrt rho
-    funcs.push_back(xcOutput[5]);
-
-    //mixed rho gradrho derivative 
-    FunctionTreeVector<3> df2drdg(xcOutput.begin() + 6, xcOutput.begin() + 9);
-    FunctionTree<3> *tmp1 = new FunctionTree<3>(MRA);
-    mrcpp::build_grid(*tmp1, df2drdg);
-    mrcpp::divergence(*tmp1, *derivative, df2drdg);
-    funcs.push_back(std::make_tuple(-2.0, tmp1));
-    mrcpp::clear(df2drdg, false);
-    
-    //double gradrho derivative
-    FunctionTreeVector<3> df2dg2(xcOutput.begin() + 9, xcOutput.end());
-    FunctionTree<3> *tmp2 = doubleDivergence(df2dg2);
-    funcs.push_back(std::make_tuple(1.0, tmp2));
-    mrcpp::clear(df2dg2, false);
-
-    //add the three parts
-    FunctionTree<3> *V = new FunctionTree<3>(MRA);
-    mrcpp::build_grid(*V, funcs);
-    mrcpp::add(-1.0, *V, funcs);
-    potentials.push_back(std::make_tuple(1.0, V));
-
-    
-
-    delete tmp1;
-    delete tmp2;
-    mrcpp::clear(funcs, false);
-    V = nullptr;
-    */
 }
 
 
