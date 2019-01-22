@@ -12,8 +12,7 @@ namespace mrchem {
 
 QMDelta::QMDelta(const mrcpp::Coord<3> &o, double expo)
         : QMPotential(1)
-        , func(expo, std::pow(expo / MATHCONST::pi, 3.0 / 2.0), o) {
-}
+        , func(expo, std::pow(expo / MATHCONST::pi, 3.0 / 2.0), o) {}
 
 void QMDelta::setup(double prec) {
     if (isSetup(prec)) return;
