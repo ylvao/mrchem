@@ -144,6 +144,10 @@ private:
 
     void setupGradient();
 
+    void setup_partial();
+    void setup_partial(FunctionTree<3> &rho_a, FunctionTree<3> &rho_b);
+    void setup_partial(FunctionTree<3> &rho_t);
+    void setup_contracted();
     void setupXCInput();
     void setupXCOutput();
     int setupXCInputDensity();
