@@ -108,10 +108,10 @@ public:
     double calcEnergy();
     mrcpp::FunctionTreeVector<3> calcPotential();
 
- protected:
+protected:
     int order;
-    const bool spin_separated;                  ///< Spin polarization
-    const mrcpp::MultiResolutionAnalysis<3> MRA;///< Computational domain
+    const bool spin_separated;                   ///< Spin polarization
+    const mrcpp::MultiResolutionAnalysis<3> MRA; ///< Computational domain
 
     bool use_gamma; ///< Whether gamma-type or explicit derivatives are used
     double cutoff;  ///< Below the cutoff value, the density will be considered zero
@@ -160,7 +160,7 @@ public:
                                             mrcpp::FunctionTreeVector<3> grad_rhob);
 
     mrcpp::FunctionTree<3> *calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V, mrcpp::FunctionTreeVector<3> &rho);
-    mrcpp::FunctionTree<3> *doubleDivergence(mrcpp::FunctionTreeVector<3> & df2dg2);
+    mrcpp::FunctionTree<3> *doubleDivergence(mrcpp::FunctionTreeVector<3> &df2dg2);
 };
 
 } //namespace mrdft

@@ -1,6 +1,6 @@
+#include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-#include "MRCPP/MWOperators"
 
 #include "XCPotential.h"
 #include "XCPotentialD2.h"
@@ -9,11 +9,11 @@
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 
+using mrcpp::ABGVOperator;
+using mrcpp::DerivativeOperator;
 using mrcpp::FunctionTree;
 using mrcpp::Printer;
 using mrcpp::Timer;
-using mrcpp::DerivativeOperator;
-using mrcpp::ABGVOperator;
 
 namespace mrchem {
 
@@ -171,15 +171,15 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     // SF    OS             DS          case   Index
     switch (functional_case) {
-        //  0     0 (paired)     0 (total)     0    
+        //  0     0 (paired)     0 (total)     0
         case (0):
             return 0;
         //  1     0 (paired)     0 (total)     1    not valid
-        //  0     1 (alpha )     0 (total)     2    
+        //  0     1 (alpha )     0 (total)     2
         case (2):
             return 0;
         //  1     1 (alpha )     0 (total)     3    not valid
-        //  0     2 (beta  )     0 (total)     4    
+        //  0     2 (beta  )     0 (total)     4
         case (4):
             return 0;
         //  1     2 (beta  )     0 (total)     5    not valid
@@ -196,11 +196,11 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
         //  0     0 (paired)     2 (alpha)    16    not implemented
         //  1     0 (paired)     2 (alpha)    17    not implemented
         //  0     1 (alpha )     2 (alpha)    18    not valid
-        //  1     1 (alpha )     2 (alpha)    19    
+        //  1     1 (alpha )     2 (alpha)    19
         case (19):
             return 0;
         //  0     2 (beta  )     2 (alpha)    20    not valid
-        //  1     2 (beta  )     2 (alpha)    21    
+        //  1     2 (beta  )     2 (alpha)    21
         case (21):
             return 1;
         //  0     3 (unused)     2 (alpha)    22    not valid
@@ -208,11 +208,11 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
         //  0     0 (paired)     3 (beta )    24    not implemented
         //  1     0 (paired)     3 (beta )    25    not implemented
         //  0     1 (alpha )     3 (beta )    26    not valid
-        //  1     1 (alpha )     3 (beta )    27    
+        //  1     1 (alpha )     3 (beta )    27
         case (27):
             return 1;
         //  0     2 (beta  )     3 (beta )    28    not valid
-        //  1     2 (beta  )     3 (beta )    29    
+        //  1     2 (beta  )     3 (beta )    29
         case (29):
             return 2;
         //  0     3 (unused)     3 (beta )    30    not valid
@@ -270,7 +270,6 @@ Orbital XCPotentialD2::apply(Orbital phi) {
     return Vrhophi;
 }
 
-
 FunctionTree<3> *XCPotentialD2::buildComponent(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
     FunctionTree<3> *component = nullptr;
     if (this->functional->isLDA()) {
@@ -291,7 +290,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     densities.push_back(std::make_tuple(1.0, &pert_dens));
     mrcpp::FunctionTreeVector<3> grad_eta = mrcpp::gradient(*derivative, pert_dens);
     mrcpp::FunctionTreeVector<3> d2fdrdg(potentials.begin() + 1, potentials.begin() + 4);
-    mrcpp::FunctionTreeVector<3> d2fdgdgx(potentials.begin() + 4, potentials.begin() + 7); 
+    mrcpp::FunctionTreeVector<3> d2fdgdgx(potentials.begin() + 4, potentials.begin() + 7);
     mrcpp::FunctionTreeVector<3> d2fdgdgy;
     d2fdgdgy.push_back(potentials[5]); //yx --> xy
     d2fdgdgy.push_back(potentials[7]); //yy
@@ -320,7 +319,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     mrcpp::FunctionTree<3> *prod5 = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*prod5, densities);
     mrcpp::multiply(-1.0, *prod5, 1.0, mrcpp::get_func(potentials, 3), pert_dens);
-    
+
     mrcpp::FunctionTree<3> *prod6 = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*prod6, densities);
     mrcpp::dot(-1.0, *prod6, d2fdgdgx, grad_eta);
@@ -333,11 +332,11 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     mrcpp::build_grid(*prod8, densities);
     mrcpp::dot(-1.0, *prod8, d2fdgdgz, grad_eta);
     mrcpp::clear(grad_eta, true);
-    
+
     mrcpp::FunctionTree<3> *sum_36 = new FunctionTree<3>(*MRA);
     mrcpp::FunctionTree<3> *sum_47 = new FunctionTree<3>(*MRA);
     mrcpp::FunctionTree<3> *sum_58 = new FunctionTree<3>(*MRA);
-    
+
     mrcpp::FunctionTreeVector<3> temp_div1;
     temp_div1.push_back(std::make_tuple(1.0, prod3));
     temp_div1.push_back(std::make_tuple(1.0, prod4));
@@ -372,7 +371,6 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     return component;
 }
 
-
 FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int density_spin, FunctionTree<3> &pert_dens) {
     mrcpp::DerivativeOperator<3> *derivative = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
     FunctionTree<3> &rho = this->getDensity(DENSITY::Total);
@@ -382,7 +380,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     mrcpp::FunctionTreeVector<3> grad_rho = mrcpp::gradient(*derivative, rho);
     mrcpp::FunctionTreeVector<3> grad_eta = mrcpp::gradient(*derivative, pert_dens);
     mrcpp::FunctionTree<3> *gr_dot_gpr = new FunctionTree<3>(*MRA);
-    mrcpp::build_grid(*gr_dot_gpr, densities);  // All functions shall use the same grid here...
+    mrcpp::build_grid(*gr_dot_gpr, densities); // All functions shall use the same grid here...
     mrcpp::dot(-1.0, *gr_dot_gpr, grad_rho, grad_eta);
 
     mrcpp::FunctionTree<3> *prod1 = new FunctionTree<3>(*MRA);
@@ -424,7 +422,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     temp_fun.push_back(std::make_tuple(-2.0, div3));
     temp_fun.push_back(std::make_tuple(-2.0, sum_42));
 
-    mrcpp::FunctionTree<3> *component = new FunctionTree<3>(*MRA); 
+    mrcpp::FunctionTree<3> *component = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*component, densities);
     mrcpp::add(-1.0, *component, temp_fun);
 
@@ -434,10 +432,8 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     return component;
 }
 
-
-//Copied from XCFunctional. Ideally it should end up in mrcpp 
-FunctionTree<3> * XCPotentialD2::calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V,
-                                                       mrcpp::FunctionTreeVector<3> &rho) {
+//Copied from XCFunctional. Ideally it should end up in mrcpp
+FunctionTree<3> *XCPotentialD2::calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V, mrcpp::FunctionTreeVector<3> &rho) {
     mrcpp::DerivativeOperator<3> *derivative = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
     mrcpp::FunctionTreeVector<3> vec;
     for (int d = 0; d < rho.size(); d++) {
