@@ -450,6 +450,9 @@ def setup(app):
     dot = which('dot')
     if dot is not None:
         dot_path = os.path.split(which('dot'))[0]
+    else:
+        dot_path = ''
+
     rep = { '@PROJECT_VERSION_MAJOR@' : major,
             '@PROJECT_VERSION_MINOR@' : minor,
             '@PROJECT_VERSION_PATCH@' : patch,
