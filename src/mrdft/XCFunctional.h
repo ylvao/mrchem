@@ -102,7 +102,7 @@ public:
         return exx;
     }
 
-    void evalSetup(int order);
+    void evalSetup(int order, int mod = 1);
     void setup();
     void clear();
 
@@ -145,8 +145,8 @@ private:
     void setupGradient();
 
     void setup_partial();
-    void setup_partial(FunctionTree<3> &rho_a, FunctionTree<3> &rho_b);
-    void setup_partial(FunctionTree<3> &rho_t);
+    void setup_partial(mrcpp::FunctionTree<3> &rho_a, mrcpp::FunctionTree<3> &rho_b);
+    void setup_partial(mrcpp::FunctionTree<3> &rho_t);
     void setup_contracted();
     void setupXCInput();
     void setupXCOutput();
