@@ -1,6 +1,3 @@
-# Much disgusting
-link_directories(${STAGED_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-
 # <<< Build MRChem library >>>
 add_library(mrchem
   parallel.cpp
@@ -9,16 +6,9 @@ add_library(mrchem
 
 target_include_directories(mrchem
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  )
-
-# This command will become unnecessary, eventually
-target_include_directories(mrchem
-  PUBLIC
-    $<BUILD_INTERFACE:${STAGED_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}>
-    $<BUILD_INTERFACE:${STAGED_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/MRCPP>
   )
 
 list(APPEND _public_headers
@@ -26,12 +16,7 @@ list(APPEND _public_headers
   mrchem.h
   mrenv.h
   parallel.h
-  ${CMAKE_BINARY_DIR}/config.h
-  )
-
-add_dependencies(mrchem
-  mrcpp_external
-  xcfun_external
+  ${PROJECT_BINARY_DIR}/config.h
   )
 
 add_subdirectory(chemistry)
@@ -45,9 +30,9 @@ add_subdirectory(utils)
 target_link_libraries(mrchem
   PUBLIC
     Eigen3::Eigen
-    mrcpp
-    xcfun
-    getkw
+    MRCPP::mrcpp
+    XCFun::xcfun
+    getkw::getkw
   )
 
 set_target_properties(mrchem
@@ -99,19 +84,13 @@ set_target_properties(mrchem.x
     INSTALL_RPATH_USE_LINK_PATH ON
   )
 
-add_dependencies(mrchem.x
-  mrcpp_external
-  xcfun_external
-  getkw_external
-  )
-
 target_link_libraries(mrchem.x
   PRIVATE
     mrchem
-    mrcpp
-    getkw
-    xcfun
-    )
+    MRCPP::mrcpp
+    getkw::getkw
+    XCFun::xcfun
+  )
 
 # RPATH fixing
 file(RELATIVE_PATH _rel ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR} ${CMAKE_INSTALL_PREFIX})
@@ -145,11 +124,11 @@ add_subdirectory(initial_guess)
 set(MRCHEM_EXECUTABLE ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/mrchem.x)
 # configure into CMakeFiles directory, because it must be in a different directory
 # since file(COPY) does rename files
-configure_file(mrchem.in ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mrchem @ONLY)
+configure_file(mrchem.in ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mrchem @ONLY)
 # now copy the temporary into the final destination, setting the permissions
 file(
-  COPY ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mrchem
-  DESTINATION ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+  COPY ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mrchem
+  DESTINATION ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
   FILE_PERMISSIONS
     OWNER_READ OWNER_WRITE OWNER_EXECUTE
     GROUP_READ GROUP_EXECUTE
@@ -158,7 +137,7 @@ file(
 
 install(
   PROGRAMS
-    ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/mrchem
+    ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/mrchem
   DESTINATION
     ${CMAKE_INSTALL_BINDIR}
   )

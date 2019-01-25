@@ -1,18 +1,22 @@
 configure_file (
-  "${CMAKE_SOURCE_DIR}/config.h.in"
-  "${CMAKE_BINARY_DIR}/config.h"
+  "${PROJECT_SOURCE_DIR}/config.h.in"
+  "${PROJECT_BINARY_DIR}/config.h"
   )
 
-# FIXME Remove
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(PYTHON_SITE_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages)
 
-set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_BINARY_DIR}/subprojects)
-
-set(STAGED_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/stage)
-message(STATUS "${PROJECT_NAME} staged install: ${STAGED_INSTALL_PREFIX}")
-
+# Fetch dependencies
+include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_getkw.cmake)
+file(
+  COPY
+    ${getkw_sources_BINARY_DIR}/Python/${PYTHON_SITE_INSTALL_DIR}/getkw.py
+    ${getkw_sources_BINARY_DIR}/Python/${PYTHON_SITE_INSTALL_DIR}/pyparsing.py
+  DESTINATION
+    ${PROJECT_BINARY_DIR}/${PYTHON_SITE_INSTALL_DIR}
+  )
+include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_xcfun.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_eigen3.cmake)
+include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_mrcpp.cmake)
 
-add_subdirectory(external)
 add_subdirectory(src)
 add_subdirectory(pilot)

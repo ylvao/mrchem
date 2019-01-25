@@ -5,7 +5,7 @@
 # handle git branch changes too well.
 #
 
-cd @CMAKE_SOURCE_DIR@
+cd @PROJECT_SOURCE_DIR@
 git ls-files "*.cpp" "*.h" "*.c" "*.f90" "*.F90" > mrcpp.files
 [ -f pilot/mrchem.cpp ] && echo "pilot/mrchem.cpp" >> mrcpp.files
 

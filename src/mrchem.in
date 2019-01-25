@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-
-
 #
 # MRChem, a numerical real-space code for molecular electronic structure
 # calculations within the self-consistent field (SCF) approximations of quantum
@@ -27,9 +25,6 @@
 # <https://mrchem.readthedocs.io/>
 #
 
-ON = 1
-OFF = 0
-
 import math
 import optparse
 import os
@@ -38,11 +33,14 @@ import subprocess
 import sys
 import tempfile
 
+ON = 1
+OFF = 0
+
 # FIXME This will pick up modules when installed
 sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
 # FIXME For use from within the build tree
-sys.path.append("@STAGED_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
-sys.path.append('@CMAKE_SOURCE_DIR@/src/chemistry')
+sys.path.append("@PROJECT_BINARY_DIR@/@PYTHON_SITE_INSTALL_DIR@")
+sys.path.append('@PROJECT_SOURCE_DIR@/src/chemistry')
 
 import getkw  # isort:skip
 from periodictable import PeriodicTable as PT  # isort:skip
@@ -426,9 +424,8 @@ def verify_molecule(mol):
         elm = sp[0].lower()
         x_a, y_a, z_a = list(map(float, sp[1:]))
         x_b, y_b, z_b = AA * x_a, AA * y_a, AA * z_a
-        coords[i] = "%s       % 10.10f    % 10.10f    % 10.10f" % (elm.title(),
-                                                                   x_b, y_b,
-                                                                   z_b)
+        coords[i] = "%s       % 10.10f    % 10.10f    % 10.10f" % (
+            elm.title(), x_b, y_b, z_b)
         i = i + 1
     mol.get('angstrom').set(False)
 
@@ -507,6 +504,7 @@ def verify_hfcc(hfcc):
     if not hfcc.get('nucleus_k').is_set():
         hfcc['nucleus_k'].get().append(-1)
 
+
 def verify_wf(wf):
     valid_methods = {
         'Core',
@@ -534,6 +532,7 @@ def verify_wf(wf):
     elif not (method in valid_methods):
         print('Invalid WaveFunction method: ' + method)
         exit()
+
 
 def verify_dft(dft):
     wf = topsect.fetch_sect('WaveFunction')

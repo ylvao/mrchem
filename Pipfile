@@ -14,6 +14,7 @@ Sphinx = "*"
 sphinx_rtd_theme = "*"
 sphinxcontrib-bibtex = "*"
 pyyaml = ">=4.2b1"
+yapf = "*"
 
 [pipenv]
 allow_prereleases = true
