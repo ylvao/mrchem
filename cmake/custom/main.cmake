@@ -11,6 +11,8 @@ set_property(DIRECTORY PROPERTY EP_BASE ${CMAKE_BINARY_DIR}/subprojects)
 set(STAGED_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/stage)
 message(STATUS "${PROJECT_NAME} staged install: ${STAGED_INSTALL_PREFIX}")
 
+include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_eigen3.cmake)
+
 add_subdirectory(external)
 add_subdirectory(src)
 add_subdirectory(pilot)
