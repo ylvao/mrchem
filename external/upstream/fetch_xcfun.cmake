@@ -12,9 +12,9 @@ else()
   FetchContent_Populate(xcfun_sources
     QUIET
     GIT_REPOSITORY
-      https://github.com/robertodr/xcfun.git
+      https://github.com/dftlibs/xcfun.git
     GIT_TAG
-      target-alias # Preferable to have a tag for a release
+      master # Preferable to have a tag for a release
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}

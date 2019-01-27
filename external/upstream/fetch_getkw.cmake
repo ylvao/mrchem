@@ -9,9 +9,9 @@ else()
   FetchContent_Populate(getkw_sources
     QUIET
     GIT_REPOSITORY
-      https://github.com/robertodr/libgetkw.git
+      https://github.com/dev-cafe/libgetkw.git
     GIT_TAG
-      target-alias # Preferable to have a tag for a release
+      master # Preferable to have a tag for a release
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
