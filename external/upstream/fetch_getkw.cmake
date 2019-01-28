@@ -12,6 +12,8 @@ else()
       https://github.com/dev-cafe/libgetkw.git
     GIT_TAG
       986403e1f9b50210d6e45bb4fa336f08ddd31960 # Preferable to have a tag for a release
+    GIT_SHALLOW
+      1
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
