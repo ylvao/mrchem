@@ -709,7 +709,7 @@ int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
 * usage among all MPI
 *
 */
-int orbital::print_size_nodes(const OrbitalVector &Phi, char *txt, bool all) {
+    int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string txt, bool all, int printLevl) {
     int nOrbs = Phi.size();
     IntVector sNodes = IntVector::Zero(nOrbs);
     int sVec = get_size_nodes(Phi, sNodes);
@@ -718,7 +718,7 @@ int orbital::print_size_nodes(const OrbitalVector &Phi, char *txt, bool all) {
     double nSum = 0.0, vSum = 0.0;
     double nOwnOrbs = 0.0, OwnSumMax = 0.0, OwnSumMin = 9.9e9;
     double totMax = 0.0, totMin = 9.9e9;
-    if (mpi::orb_rank == 0) std::cout << "OrbitalVector sizes statistics " << txt << " (MB)" << std::endl;
+    println(0, "OrbitalVector sizes statistics " << txt << " (MB)");
     //stats for own orbitals
     for (int i = 0; i < nOrbs; i++) {
         if (sNodes[i] > 0) {
@@ -761,15 +761,13 @@ int orbital::print_size_nodes(const OrbitalVector &Phi, char *txt, bool all) {
     }
     totMax *= 4.0 / (1024.0);
     totMin *= 4.0 / (1024.0);
-    if (mpi::orb_rank == 0) std::cout << "Total orbvec " << (int)vSum / (1024) << ", ";
-    if (mpi::orb_rank == 0) std::cout << "Av/MPI " << (int)vSum / (1024) / mpi::orb_size << ", ";
-    if (mpi::orb_rank == 0) std::cout << "Max/MPI " << (int)OwnSumMax / (1024) << ", ";
-    if (mpi::orb_rank == 0) std::cout << "Max/orb " << (int)vMax / (1024) << ", ";
-    if (mpi::orb_rank == 0) std::cout << "Min/orb " << (int)vMin / (1024) << ", ";
-    if (mpi::orb_rank == 0 and all)
-        std::cout << "Total max " << (int)totMax << ", Total min " << (int)totMin << " MB" << std::endl;
-    if (mpi::orb_rank == 0 and not all) std::cout << "Total master " << (int)totMax << " MB" << std::endl;
-
+    printout(printLevl, "Total orbvec " << static_cast<int>(vSum / 1024));
+    printout(printLevl, ", Av/MPI " << static_cast<int>(vSum / 1024 / mpi::orb_size));
+    printout(printLevl, ", Max/MPI " << static_cast<int>(OwnSumMax / 1024));
+    printout(printLevl, ", Max/orb " << static_cast<int>(vMax / 1024));
+    printout(printLevl, ", Min/orb " << static_cast<int>(vMin / 1024));
+    if ( all ) println(printLevl, ", Total max " << static_cast<int>(totMax) << ", Total min " << static_cast<int>(totMin) << " MB");
+    if ( not all ) println(printLevl, ", Total master " << static_cast<int>(totMax) << " MB");
     return vSum;
 }
 
