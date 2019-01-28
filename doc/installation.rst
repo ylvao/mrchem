@@ -57,10 +57,10 @@ Stallo
 
 Using the Intel tool chain on Stallo::
 
-    $ module load intel/2017a
     $ module load CMake/3.11.4-GCCcore-7.3.0
     $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
     $ module load Eigen/3.3.5
+    $ module load intel/2017a
 
 Fram
 ----
