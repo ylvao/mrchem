@@ -58,9 +58,9 @@ Stallo
 Using the Intel tool chain on Stallo::
 
     $ module load intel/2017a
-    $ module load CMake/3.9.1
+    $ module load CMake/3.11.4-GCCcore-7.3.0
     $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
-    $ module load Eigen/3.3.4
+    $ module load Eigen/3.3.5
 
 Fram
 ----
@@ -68,7 +68,7 @@ Fram
 Using the Intel tool chain on Fram::
 
     $ module load intel/2017a
-    $ module load CMake/3.9.1
+    $ module load CMake/3.12.1
     $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
 
 Eigen is not available through the module system on Fram, so it must be
@@ -103,6 +103,12 @@ To build the code with hybrid MPI/OpenMP parallelization::
 
 The MRChem executables will be installed in ``<install-dir>/bin``.
 
+If you want only to recompile one of the external library (for example mrcpp), without rebuilding from scratch, try::
+
+   $ cd <build-dir>/subproject/Build/mrcpp_external
+   $ make install
+   
+Note that this will leave your build in an undefined state, since it will not try to update the mrchem parts.
 
 -------
 Testing
