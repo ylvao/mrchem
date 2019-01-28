@@ -23,6 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include "MRCPP/trees/SerialTree.h"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
@@ -682,6 +683,89 @@ DoubleVector orbital::get_errors(const OrbitalVector &Phi) {
     DoubleVector errors = DoubleVector::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) errors(i) = Phi[i].error();
     return errors;
+}
+
+/** @brief Returns the size of the coefficients of all nodes in the vector in kBytes */
+int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
+    int nOrbs = Phi.size();
+    int totsize = 0;
+    for (int i = 0; i < nOrbs; i++){
+        if( Phi[i].hasReal()){
+            double fac = Phi[i].real().getKp1_d()*8;//number of coeff in one node
+            fac *= sizeof(double);// Number of Bytes in one node
+            sNodes[i] = (int)(fac/1024 * Phi[i].getNNodes(NUMBER::Total)); //kBytes in one orbital
+            totsize += sNodes[i];
+        }
+    }
+    return totsize;
+}
+
+/** @brief Prints statistics about the size of orbitals in an OrbitalVector
+*
+* This is a collective function. Can be made non-collective by setting all = false.
+*
+*/
+int orbital::print_size_nodes(const OrbitalVector &Phi, char* txt, bool all) {
+    int nOrbs = Phi.size();
+    IntVector sNodes = IntVector::Zero(nOrbs);
+    int sVec = get_size_nodes(Phi, sNodes);
+    double nMax = 0.0, vMax = 0.0; //node max, vector max
+    double nMin = 9.9e9, vMin = 9.9e9;
+    double nSum = 0.0, vSum = 0.0;
+    double nOwnOrbs = 0.0, OwnSumMax = 0.0, OwnSumMin = 9.9e9;
+    double totMax = 0.0, totMin = 9.9e9;
+    if (mpi::orb_rank==0) std::cout<< "OrbitalVector sizes statistics "<< txt << " (MB)" << std::endl;
+    //stats for own orbitals
+    for (int i = 0; i < nOrbs; i++){
+        if(sNodes[i] > 0){
+            nOwnOrbs++;
+            if (sNodes[i] > nMax) nMax = sNodes[i];
+            if (sNodes[i] < nMin) nMin = sNodes[i];
+            nSum += sNodes[i];
+        }
+    }
+    if (nSum == 0.0) nMin = 0.0;
+
+    DoubleMatrix VecStats = DoubleMatrix::Zero(5, mpi::orb_size);
+    VecStats(0,mpi::orb_rank) = nMax;
+    VecStats(1,mpi::orb_rank) = nMin;
+    VecStats(2,mpi::orb_rank) = nSum;
+    VecStats(3,mpi::orb_rank) = nOwnOrbs;
+    VecStats(4,mpi::orb_rank) = Printer::printMem("",true);
+
+    if(all){
+        mpi::allreduce_matrix(VecStats, mpi::comm_orb);
+        //overall stats
+        for (int i = 0; i < mpi::orb_size; i++){
+            if (VecStats(0,i) > vMax) vMax = VecStats(0,i);
+            if (VecStats(1,i) < vMin) vMin = VecStats(1,i);
+            if (VecStats(2,i) > OwnSumMax) OwnSumMax = VecStats(2,i);
+            if (VecStats(2,i) < OwnSumMin) OwnSumMin = VecStats(2,i);
+            if (VecStats(4,i) > totMax) totMax = VecStats(4,i);
+            if (VecStats(4,i) < totMin) totMin = VecStats(4,i);
+            vSum += VecStats(2,i);
+        }
+    }else{
+        int i = mpi::orb_rank;
+        if (VecStats(0,i) > vMax) vMax = VecStats(0,i);
+        if (VecStats(1,i) < vMin) vMin = VecStats(1,i);
+        if (VecStats(2,i) > OwnSumMax) OwnSumMax = VecStats(2,i);
+        if (VecStats(2,i) < OwnSumMin) OwnSumMin = VecStats(2,i);
+        if (VecStats(4,i) > totMax) totMax = VecStats(4,i);
+        if (VecStats(4,i) < totMin) totMin = VecStats(4,i);
+        vSum += VecStats(2,i);
+    }
+    totMax *= 4.0/(1024.0);
+    totMin *= 4.0/(1024.0);
+    if (mpi::orb_rank == 0) std::cout<<"Total orbvec "<<(int)vSum/(1024)<<", ";
+    if (mpi::orb_rank == 0) std::cout<<"Av/MPI "<<(int)vSum/(1024)/mpi::orb_size<<", ";
+    if (mpi::orb_rank == 0) std::cout<<"Max/MPI "<<(int)OwnSumMax/(1024)<<", ";
+    if (mpi::orb_rank == 0) std::cout<<"Max/orb "<<(int)vMax/(1024)<<", ";
+    if (mpi::orb_rank == 0) std::cout<<"Min/orb "<<(int)vMin/(1024)<<", ";
+    if (mpi::orb_rank == 0 and all ) std::cout<<"Total max "<<(int)totMax<<", Total min "<<(int)totMin<<" MB"<<std::endl;
+    if (mpi::orb_rank == 0 and not all ) std::cout<<"Total master "<<(int)totMax<<" MB"<<std::endl;
+
+    return vSum;
 }
 
 /** @brief Assign errors to each orbital.
