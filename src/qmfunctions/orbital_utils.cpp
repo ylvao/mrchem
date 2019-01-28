@@ -692,7 +692,7 @@ int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
         if (Phi[i].hasReal()) {
             double fac = Phi[i].real().getKp1_d() * 8;                       //number of coeff in one node
             fac *= sizeof(double);                                           // Number of Bytes in one node
-            sNodes[i] = (int)(fac / 1024 * Phi[i].getNNodes(NUMBER::Total)); //kBytes in one orbital
+            sNodes[i] = static_cast<int>(fac / 1024 * Phi[i].getNNodes(NUMBER::Total)); //kBytes in one orbital
             totsize += sNodes[i];
         }
     }
