@@ -85,4 +85,4 @@ public:
     }
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -19,4 +19,4 @@ protected:
     AngularMomentumOperator l;
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -300,4 +300,4 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
     }
 }
 
-} //namespace orbital_vector_tests
+} // namespace orbital_vector_tests

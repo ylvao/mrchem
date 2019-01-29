@@ -59,12 +59,12 @@ TEST_CASE("KineticOperator", "[kinetic_operator]") {
     // reference values for harmonic oscillator eigenfunctions
     DoubleVector E_K(nFuncs);
     for (int i = 0; i < nFuncs; i++) {
-        //energy = (nu + 1/2)
+        // energy = (nu + 1/2)
         double E_x = (i + 0.5);
         double E_y = (0 + 0.5);
         double E_z = (0 + 0.5);
 
-        //virial theorem: <E_K> = <E_P> = E/2
+        // virial theorem: <E_K> = <E_P> = E/2
         E_K(i) = 0.5 * (E_x + E_y + E_z);
     }
 
@@ -116,4 +116,4 @@ TEST_CASE("KineticOperator", "[kinetic_operator]") {
     T.clear();
 }
 
-} //namespace kinetic_operator
+} // namespace kinetic_operator

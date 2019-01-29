@@ -47,13 +47,13 @@ int NonlinearMaximizer::maximize() {
     double value_functional_old, step_norm2, first_order, second_order;
 
     int print =
-        0; //0: print nothing, 1: print only one line, 2: print one line per iteration; >50 print entire matrices
-    int maxIter = 150;  //max number of iterations
+        0; // 0: print nothing, 1: print only one line, 2: print one line per iteration; >50 print entire matrices
+    int maxIter = 150;  // max number of iterations
     int CG_maxiter = 5; // max number of iterations for the Conjugated Gradient solver for Newton step
     bool converged = false;
-    double threshold = 1.0e-12;    //convergence when norm of gradient is smaller than threshold
-    double CG_threshold = 1.0e-12; //convergence when norm of residue is smaller than threshold
-    double h = 0.1;                //initial value of trust radius, should be set small enough.
+    double threshold = 1.0e-12;    // convergence when norm of gradient is smaller than threshold
+    double CG_threshold = 1.0e-12; // convergence when norm of residue is smaller than threshold
+    double h = 0.1;                // initial value of trust radius, should be set small enough.
     bool wrongstep = false;
     int newton_step = 0;
     double mu_min = 1.0E-12;
@@ -65,7 +65,7 @@ int NonlinearMaximizer::maximize() {
     int N_newton_step = 0, newton_step_exact = 0;
     double maxEiVal;
 
-    //value_functional is what should be maximized (i.e. the sum of <i R i>^2 for orbitals)
+    // value_functional is what should be maximized (i.e. the sum of <i R i>^2 for orbitals)
     value_functional = this->functional();
     value_functional_old = value_functional;
     if (print > 10 and mpi::orb_rank == 0) cout << "size " << N2h << endl;
@@ -73,7 +73,7 @@ int NonlinearMaximizer::maximize() {
 
     if (print > 100 and mpi::orb_rank == 0) cout << "gradient " << gradient << endl;
 
-    //Start of iterations
+    // Start of iterations
     for (iter = 1; iter < maxIter + 1 && !converged; iter++) {
         if (print > 5 and mpi::orb_rank == 0) cout << " iteration  " << iter << endl;
         dcount = 0;
@@ -85,9 +85,9 @@ int NonlinearMaximizer::maximize() {
         }
         //    cout << " maxEiVal: "  << maxEiVal << endl;
 
-        //We shift the eigenvalues, such that all are <0 (since we want a maximum)
+        // We shift the eigenvalues, such that all are <0 (since we want a maximum)
 
-        //To find mu, the trust radius is approximated using only the largest contribution in the series
+        // To find mu, the trust radius is approximated using only the largest contribution in the series
         mu = mu_min;
         for (i = 0; i < N2h; i++) {
             if (eiVal(i) + std::abs(this->gradient(i)) / h > mu)
@@ -95,7 +95,7 @@ int NonlinearMaximizer::maximize() {
         }
 
         diag = DoubleVector::Constant(N2h, -mu);
-        diag += eiVal; //shifted eigenvalues of Hessian
+        diag += eiVal; // shifted eigenvalues of Hessian
         if (print > 100 and mpi::orb_rank == 0) {
             cout << "mu and The shifted eigenvalues of H are: " << mu << " h= " << h << "  " << diag << endl;
         }
@@ -116,7 +116,7 @@ int NonlinearMaximizer::maximize() {
             direction = direction / std::sqrt(new_norm * old_norm);
         }
         if (direction > 0.95) {
-            //direction is not changing much: accelerate!
+            // direction is not changing much: accelerate!
             acc_fac = 1.5;
             if (direction > 0.98) acc_fac = 2.0;
             if (direction > 0.99) acc_fac = 5.0;
@@ -126,12 +126,12 @@ int NonlinearMaximizer::maximize() {
         }
         step_norm2 = step.transpose() * step;
         first_order = this->gradient.transpose() * step;
-        second_order = 0.0; //step.transpose()*this->hessian*step;
+        second_order = 0.0; // step.transpose()*this->hessian*step;
         for (i = 0; i < N2h; i++) { second_order += step(i) * step(i) * eiVal(i); }
         if (print > 10 and mpi::orb_rank == 0)
             cout << " gradient magnitude: " << first_order * first_order / step_norm2 << endl;
 
-        //Newton step when all eigenvalues are <0, and gradient/h sufficiently small
+        // Newton step when all eigenvalues are <0, and gradient/h sufficiently small
         newton_step = 0;
         if (mu < mu_min * 1.1) {
             newton_step = 1;
@@ -139,12 +139,12 @@ int NonlinearMaximizer::maximize() {
             if ((N_newton_step > 2 && (step_norm2 < 1.E-3 || newton_step_exact == 1))) {
                 if (print > 10 and mpi::orb_rank == 0) cout << "Taking Newton step  " << endl;
                 newton_step_exact = 1;
-                mu_Newton *= 0.2; //level shift for positive and zero eigenvalues
+                mu_Newton *= 0.2; // level shift for positive and zero eigenvalues
                 DoubleVector r(N2h), Ap(N2h), p(N2h), z(N2h), err(N2h), precond(N2h);
                 double pAp, Hij;
                 multiply_hessian(step, Ap);
                 for (int i = 0; i < N2h; i++) {
-                    //we take the shifted diagonal of the Hessian diag(i) as preconditioner
+                    // we take the shifted diagonal of the Hessian diag(i) as preconditioner
                     precond(i) = diag(i);
                     r(i) = -this->gradient(i) - Ap(i);
                     z(i) = r(i) / precond(i);
@@ -160,7 +160,7 @@ int NonlinearMaximizer::maximize() {
                     for (int i = 0; i < N2h; i++) { step(i) = step(i) + a * p(i); }
                     multiply_hessian(step, Ap);
                     for (int i = 0; i < N2h; i++) {
-                        //Note: Should we compute from step to avoid accumulation of errors or rather reuse Ap?
+                        // Note: Should we compute from step to avoid accumulation of errors or rather reuse Ap?
                         r(i) = -this->gradient(i) - Ap(i);
                         z(i) = r(i) / precond(i);
                     }
@@ -170,7 +170,7 @@ int NonlinearMaximizer::maximize() {
                     b = b / rz;
                     for (int i = 0; i < N2h; i++) { p(i) = z(i) + b * p(i); }
                     if (print > 10) {
-                        //test
+                        // test
                         double ee = 0.0;
                         for (int i = 0; i < N2h; i++) {
                             double ss = 0.0;
@@ -219,11 +219,11 @@ int NonlinearMaximizer::maximize() {
             cout << " r*r  " << value_functional << " change in r*r  " << value_functional - value_functional_old
                  << endl;
 
-        //relative_change is the size of  second order change compared to actual change
+        // relative_change is the size of  second order change compared to actual change
         // = 0 if no higher order contributions
         relative_change = std::abs(expected_change - (value_functional - value_functional_old)) /
                           (1.0E-25 + std::abs(value_functional - value_functional_old));
-        gradient_norm = this->make_gradient() / value_functional / N2h; //update gradient
+        gradient_norm = this->make_gradient() / value_functional / N2h; // update gradient
         direction = 0.0;
         old_norm = 0.0;
         new_norm = 0.0;
@@ -240,26 +240,26 @@ int NonlinearMaximizer::maximize() {
         if (print == 2) cout << setprecision(4) << setw(9) << direction;
 
         if (value_functional - value_functional_old < -threshold) {
-            //jumped to far, value_functional is decreasing
-            //jump back!
+            // jumped to far, value_functional is decreasing
+            // jump back!
             h = 0.05 * h;
             if (print >= 2) cout << endl;
             if (print >= 2) cout << "Wrong step! Returning ";
             wrongstep = true;
             N_newton_step = 0;
-            //go back
+            // go back
             this->do_step(-step);
-            gradient_norm = this->make_gradient() / value_functional_old / N2h; //update gradient
+            gradient_norm = this->make_gradient() / value_functional_old / N2h; // update gradient
         } else {
-            //take this point as new reference
+            // take this point as new reference
             value_functional_old = value_functional;
             wrongstep = false;
             old_step = step;
         }
 
         if (newton_step != 1) {
-            //change the trust radius h, based on how close the resulting r*r is to the
-            //1st+2nd order predicted value
+            // change the trust radius h, based on how close the resulting r*r is to the
+            // 1st+2nd order predicted value
             if (relative_change < 0.0001) {
                 h = 10.0 * h;
             } else if (relative_change < 0.001) {
@@ -285,13 +285,13 @@ int NonlinearMaximizer::maximize() {
         if (print > 10 and mpi::orb_rank == 0) cout << "gradient norm " << gradient_norm << endl;
 
         if (gradient_norm < threshold && maxEiVal < 10 * std::sqrt(std::abs(threshold))) {
-            //finished
+            // finished
             converged = true;
         }
         if (print == 2 && !wrongstep) { cout << setw(10) << dcount; }
         if (print == 2) cout << endl;
 
-    } //iterations
+    } // iterations
 
     if (print > 15 and mpi::orb_rank == 0) {
         cout << "Exact Hessian (upper left corner)" << endl;
@@ -309,4 +309,4 @@ int NonlinearMaximizer::maximize() {
     return iter;
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -75,7 +75,7 @@ protected:
         double min = 1.0e10;
         double isoval = 0.0;
         for (int n = 0; n < nRealPoints; n++) {
-            o << this->values[n] << " "; //12.5E
+            o << this->values[n] << " "; // 12.5E
             if (n % 6 == 5) o << std::endl;
             if (this->values[n] < min) min = this->values[n];
             if (this->values[n] > max) max = this->values[n];
@@ -96,4 +96,4 @@ protected:
     }
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -59,17 +59,17 @@ ComplexMatrix diagonalize_fock(KineticOperator &T, RankZeroTensorOperator &V, Or
 OrbitalVector rotate_orbitals(double prec, ComplexMatrix &U, OrbitalVector &Phi, int N, int spin);
 void project_atomic_densities(double prec, const Molecule &mol, mrcpp::FunctionTreeVector<3> &rho_atomic);
 
-} //namespace sad
-} //namespace initial_guess
+} // namespace sad
+} // namespace initial_guess
 
 OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
     // Figure out number of occupied orbitals
-    int mult = mol.getMultiplicity(); //multiplicity
-    int Ne = mol.getNElectrons();     //total electrons
-    int Nd = Ne - (mult - 1);         //doubly occupied electrons
+    int mult = mol.getMultiplicity(); // multiplicity
+    int Ne = mol.getNElectrons();     // total electrons
+    int Nd = Ne - (mult - 1);         // doubly occupied electrons
     if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
-    int Na = Nd / 2 + (mult - 1); //alpha orbitals
-    int Nb = Nd / 2;              //beta orbitals
+    int Na = Nd / 2 + (mult - 1); // alpha orbitals
+    int Nb = Nd / 2;              // beta orbitals
 
     // Make Fock operator contributions
     mrcpp::PoissonOperator P(*MRA, prec);
@@ -137,12 +137,12 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     OrbitalVector Psi;
     if (restricted) {
         if (mult != 1) MSG_FATAL("Restricted open-shell not available");
-        int Np = Nd / 2; //paired orbitals
+        int Np = Nd / 2; // paired orbitals
         ComplexMatrix U = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Paired);
         Psi = initial_guess::sad::rotate_orbitals(prec, U, Phi, Np, SPIN::Paired);
     } else {
-        int Na = Nd / 2 + (mult - 1); //alpha orbitals
-        int Nb = Nd / 2;              //beta orbitals
+        int Na = Nd / 2 + (mult - 1); // alpha orbitals
+        int Nb = Nd / 2;              // beta orbitals
 
         ComplexMatrix U_a = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Alpha);
         OrbitalVector Psi_a = initial_guess::sad::rotate_orbitals(prec, U_a, Phi, Na, SPIN::Alpha);
@@ -244,4 +244,4 @@ void initial_guess::sad::project_atomic_densities(double prec,
     Printer::printFooter(0, timer, 2);
 }
 
-} //namespace mrchem
+} // namespace mrchem

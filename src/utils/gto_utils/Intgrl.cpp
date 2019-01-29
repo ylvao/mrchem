@@ -32,8 +32,8 @@ Intgrl::~Intgrl() {
 void Intgrl::readIntgrlFile(std::ifstream &ifs) {
     int nTypes;
     std::string line;
-    GETLINE(ifs, line); //First line is a comment
-    GETLINE(ifs, line); //Second line is number of atom types
+    GETLINE(ifs, line); // First line is a comment
+    GETLINE(ifs, line); // Second line is number of atom types
     std::istringstream iss(line);
     iss >> nTypes;
     for (int i = 0; i < nTypes; i++) { readAtomBlock(ifs); }
@@ -126,5 +126,5 @@ GaussExp<3> Intgrl::getMolBasis(bool norm) const {
     return molexp;
 }
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

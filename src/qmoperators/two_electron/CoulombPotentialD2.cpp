@@ -37,4 +37,4 @@ void CoulombPotentialD2::setupDensity(double prec) {
     Printer::printTree(0, "Perturbed Coulomb density", n, t);
 }
 
-} //namespace mrchem
+} // namespace mrchem

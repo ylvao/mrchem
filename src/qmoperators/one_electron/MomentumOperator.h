@@ -38,4 +38,4 @@ protected:
     QMMomentum p_z;
 };
 
-} //namespace mrchem
+} // namespace mrchem

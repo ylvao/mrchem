@@ -67,4 +67,4 @@ protected:
     T oper[I];
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -33,5 +33,5 @@ protected:
     void transformToSpherical();
 };
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

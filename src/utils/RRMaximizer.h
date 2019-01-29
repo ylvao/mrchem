@@ -57,4 +57,4 @@ protected:
     void do_step(const DoubleVector &step);
 };
 
-} //namespace mrchem
+} // namespace mrchem

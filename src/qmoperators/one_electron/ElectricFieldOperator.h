@@ -36,11 +36,11 @@ public:
     }
 
     /** @brief returns the total nuclear contribution to the interaction
- * energy
- *
- * @param[in] the set of nuclei
- *
- */
+     * energy
+     *
+     * @param[in] the set of nuclei
+     *
+     */
     ComplexDouble trace(const Nuclei &nucs) {
         ComplexDouble result = 0.0;
         for (auto &nuc_k : nucs) result += trace(nuc_k);
@@ -48,11 +48,11 @@ public:
     }
 
     /** @brief returns contribution to the interaction energy from a
- * single nucleus
- *
- * @param[in] the nucleus
- *
- */
+     * single nucleus
+     *
+     * @param[in] the nucleus
+     *
+     */
     ComplexDouble trace(const Nucleus &nuc) { return -dipole.trace(nuc).dot(field); }
 
     using RankZeroTensorOperator::trace;
@@ -62,4 +62,4 @@ protected:
     H_E_dip dipole;        ///< the dipole moment operator
 };
 
-} //namespace mrchem
+} // namespace mrchem

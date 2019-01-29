@@ -43,6 +43,6 @@ namespace sad {
 
 OrbitalVector setup(double prec, const Molecule &mol, bool restricted, int zeta);
 
-} //namespace sad
-} //namespace initial_guess
-} //namespace mrchem
+} // namespace sad
+} // namespace initial_guess
+} // namespace mrchem

@@ -40,5 +40,5 @@ protected:
     void readAtomData(std::ifstream &ifs, int n_atoms, double z);
 };
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

@@ -341,9 +341,9 @@ void XCFunctional::clear() {
     clearGrid();
 
     // Clear MW coefs but keep the grid
-    //if (rho_a != nullptr) mrcpp::clear_grid(*rho_a);
-    //if (rho_b != nullptr) mrcpp::clear_grid(*rho_b);
-    //if (rho_t != nullptr) mrcpp::clear_grid(*rho_t);
+    // if (rho_a != nullptr) mrcpp::clear_grid(*rho_a);
+    // if (rho_b != nullptr) mrcpp::clear_grid(*rho_b);
+    // if (rho_t != nullptr) mrcpp::clear_grid(*rho_t);
 }
 
 /** @brief Allocate input arrays for xcfun
@@ -515,7 +515,7 @@ void XCFunctional::evaluate() {
  * param[in] inp Input values
  * param[out] out Output values
  *
-*/
+ */
 void XCFunctional::evaluateBlock(MatrixXd &inp, MatrixXd &out) const {
     if (inp.cols() != getInputLength()) MSG_ERROR("Invalid input");
 
@@ -567,7 +567,8 @@ void XCFunctional::compressNodeData(int n, int nFuncs, FunctionTreeVector<3> tre
 
 /** @brief Converts data from a matrix to a FunctionNode
  *
- * The matrix containing the output from xcfun is converted back to the corresponding FunctionNode(s). The matrix dimensions are the overall number of grid points (nCoefs) and the number of functions (nFuncs).
+ * The matrix containing the output from xcfun is converted back to the corresponding FunctionNode(s). The matrix
+ * dimensions are the overall number of grid points (nCoefs) and the number of functions (nFuncs).
  *
  * parma[in] n the Index of the requested node
  * param[in] nFuncs The number of functions
@@ -627,7 +628,7 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
  */
 void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
     int nPotentials = 1;
-    int nStart = this->order; //PROBLEM: if I use a higher order than necessary this wil fail miserably!
+    int nStart = this->order; // PROBLEM: if I use a higher order than necessary this wil fail miserably!
     if (isSpinSeparated()) {
         nPotentials = this->order + 1;
         nStart = this->order * (this->order + 1) / 2;
@@ -827,15 +828,15 @@ FunctionTree<3> *XCFunctional::calcGradientGGA(FunctionTree<3> &df_drho, Functio
 
 FunctionTree<3> *XCFunctional::doubleDivergence(FunctionTreeVector<3> &df2dg2) {
     FunctionTreeVector<3> tmp;
-    tmp.push_back(df2dg2[0]); //xx
-    tmp.push_back(df2dg2[1]); //xy
-    tmp.push_back(df2dg2[2]); //xz
-    tmp.push_back(df2dg2[1]); //yx --> xy
-    tmp.push_back(df2dg2[3]); //yy
-    tmp.push_back(df2dg2[4]); //yz
-    tmp.push_back(df2dg2[2]); //zx --> xz
-    tmp.push_back(df2dg2[4]); //zy --> yz
-    tmp.push_back(df2dg2[5]); //zz
+    tmp.push_back(df2dg2[0]); // xx
+    tmp.push_back(df2dg2[1]); // xy
+    tmp.push_back(df2dg2[2]); // xz
+    tmp.push_back(df2dg2[1]); // yx --> xy
+    tmp.push_back(df2dg2[3]); // yy
+    tmp.push_back(df2dg2[4]); // yz
+    tmp.push_back(df2dg2[2]); // zx --> xz
+    tmp.push_back(df2dg2[4]); // zy --> yz
+    tmp.push_back(df2dg2[5]); // zz
     FunctionTreeVector<3> gradient;
     for (int i = 0; i < 3; i++) {
         FunctionTree<3> *component = new FunctionTree<3>(MRA);
@@ -880,4 +881,4 @@ FunctionTree<3> *XCFunctional::calcGradDotPotDensVec(FunctionTree<3> &V, Functio
     return result;
 }
 
-} //namespace mrdft
+} // namespace mrdft

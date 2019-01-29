@@ -56,4 +56,4 @@ using OrbitalVector = std::vector<Orbital>;
 
 class Density;
 
-} //namespace mrchem
+} // namespace mrchem

@@ -198,4 +198,4 @@ PeriodicTable::map_t PeriodicTable::_init_bysymbol() {
 PeriodicTable::map_t PeriodicTable::byName = _init_byname();
 PeriodicTable::map_t PeriodicTable::bySymbol = _init_bysymbol();
 
-} //namespace mrchem
+} // namespace mrchem

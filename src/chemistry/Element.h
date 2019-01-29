@@ -69,4 +69,4 @@ protected:
     const double g_val;       /** g-value */
 };
 
-} //namespace mrchem
+} // namespace mrchem

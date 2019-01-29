@@ -79,4 +79,4 @@ bool NuclearFunction::isZeroOnInterval(const double *a, const double *b) const {
     }
 }
 
-} //namespace mrchem
+} // namespace mrchem

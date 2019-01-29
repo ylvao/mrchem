@@ -49,4 +49,4 @@ public:
     ComplexMatrix trace(OrbitalVector &phi, OrbitalVector &x, OrbitalVector &y);
 };
 
-} //namespace mrchem
+} // namespace mrchem

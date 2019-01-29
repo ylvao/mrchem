@@ -13,7 +13,7 @@ namespace mrchem {
 
 namespace omp {
 extern int n_threads;
-} //namespace omp
+} // namespace omp
 
 namespace mpi {
 extern bool numerically_exact;
@@ -63,6 +63,6 @@ void allreduce_matrix(IntMatrix &vec, MPI_Comm comm);
 void allreduce_matrix(DoubleMatrix &mat, MPI_Comm comm);
 void allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm);
 
-} //namespace mpi
+} // namespace mpi
 
-} //namespace mrchem
+} // namespace mrchem

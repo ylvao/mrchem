@@ -53,4 +53,4 @@ protected:
     std::vector<double> smooth;
 };
 
-} //namespace mrchem
+} // namespace mrchem

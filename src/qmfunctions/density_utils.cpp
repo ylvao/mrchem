@@ -195,7 +195,7 @@ void density::compute_X(double prec, Density &rho, OrbitalVector &Phi, OrbitalVe
             if (not mpi::my_orb(X[i])) MSG_FATAL("Inconsistent MPI distribution");
 
             double occ = density::compute_occupation(Phi[i], spin);
-            if (std::abs(occ) < mrcpp::MachineZero) continue; //next orbital if this one is not occupied!
+            if (std::abs(occ) < mrcpp::MachineZero) continue; // next orbital if this one is not occupied!
 
             Density rho_i(false);
             qmfunction::multiply_real(rho_i, Phi[i], X[i], mult_prec);
@@ -251,7 +251,7 @@ void density::compute_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalV
             if (not mpi::my_orb(Y[i])) MSG_FATAL("Inconsistent MPI distribution");
 
             double occ = density::compute_occupation(Phi[i], spin);
-            if (std::abs(occ) < mrcpp::MachineZero) continue; //next orbital if this one is not occupied!
+            if (std::abs(occ) < mrcpp::MachineZero) continue; // next orbital if this one is not occupied!
 
             Density rho_x(false);
             Density rho_y(false);
@@ -307,4 +307,4 @@ double density::compute_occupation(Orbital &phi, int dens_spin) {
     return occ;
 }
 
-} //namespace mrchem
+} // namespace mrchem

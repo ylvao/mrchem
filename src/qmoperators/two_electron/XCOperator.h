@@ -41,4 +41,4 @@ private:
     XCPotential *potential;
 };
 
-} //namespace mrchem
+} // namespace mrchem

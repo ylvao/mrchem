@@ -331,4 +331,4 @@ void qmfunction::multiply_imag(QMFunction &out, QMFunction inp_a, QMFunction inp
     mpi::share_function(out, 0, 9292, mpi::comm_share);
 }
 
-} //namespace mrchem
+} // namespace mrchem

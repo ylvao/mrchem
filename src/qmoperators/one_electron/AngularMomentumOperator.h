@@ -21,4 +21,4 @@ protected:
     MomentumOperator p;
 };
 
-} //namespace mrchem
+} // namespace mrchem

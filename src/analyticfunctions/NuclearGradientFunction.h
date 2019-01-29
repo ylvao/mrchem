@@ -55,4 +55,4 @@ protected:
     double du_dr(double r1) const;
 };
 
-} //namespace mrchem
+} // namespace mrchem

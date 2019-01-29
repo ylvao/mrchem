@@ -46,5 +46,5 @@ ComplexMatrix hermitian_matrix_pow(const ComplexMatrix &A, double b);
 ComplexMatrix diagonalize_hermitian_matrix(const ComplexMatrix &A, DoubleVector &diag);
 void diagonalize_block(ComplexMatrix &M, ComplexMatrix &U, int nstart, int nsize);
 
-} //namespace math_utils
-} //namespace mrchem
+} // namespace math_utils
+} // namespace mrchem

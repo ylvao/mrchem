@@ -50,7 +50,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
 }
 
 /** @brief computes the interaction energy of the nuclear potential with a second set of nuclei.
- * 
+ *
  * @param[in] nucs the set of nuclei
  *
  * Note: this function is not suited to compute the nuclear self-energy
@@ -69,4 +69,4 @@ double NuclearOperator::trace(const Nuclei &nucs) {
     return E_nuc;
 }
 
-} //namespace mrchem
+} // namespace mrchem

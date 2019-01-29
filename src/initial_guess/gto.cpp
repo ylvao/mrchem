@@ -67,11 +67,11 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const std::string &bas_file,
                                         const std::string &mo_file) {
     // Figure out number of occupied orbitals
-    int mult = mol.getMultiplicity(); //multiplicity
-    int Ne = mol.getNElectrons();     //total electrons
-    int Nd = Ne - (mult - 1);         //doubly occupied electrons
+    int mult = mol.getMultiplicity(); // multiplicity
+    int Ne = mol.getNElectrons();     // total electrons
+    int Nd = Ne - (mult - 1);         // doubly occupied electrons
     if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
-    int Np = Nd / 2; //paired orbitals
+    int Np = Nd / 2; // paired orbitals
 
     // Project GTO expansion
     return initial_guess::gto::project_mo(prec, bas_file, mo_file, SPIN::Paired, Np);
@@ -100,12 +100,12 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const std::string &moa_file,
                                         const std::string &mob_file) {
     // Figure out number of occupied orbitals
-    int mult = mol.getMultiplicity(); //multiplicity
-    int Ne = mol.getNElectrons();     //total electrons
-    int Nd = Ne - (mult - 1);         //paired electrons
+    int mult = mol.getMultiplicity(); // multiplicity
+    int Ne = mol.getNElectrons();     // total electrons
+    int Nd = Ne - (mult - 1);         // paired electrons
     if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
-    int Na = Nd / 2 + (mult - 1); //alpha orbitals
-    int Nb = Nd / 2;              //beta orbitals
+    int Na = Nd / 2 + (mult - 1); // alpha orbitals
+    int Nb = Nd / 2;              // beta orbitals
 
     // Project orbitals
     OrbitalVector Phi_a = initial_guess::gto::project_mo(prec, bas_file, moa_file, SPIN::Alpha, Na);
@@ -244,9 +244,9 @@ mrcpp::FunctionTree<3> *initial_guess::gto::project_density(double prec,
     return rho;
 }
 
-} //namespace mrchem
+} // namespace mrchem
 
-//void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
+// void OrbitalVector::readVirtuals(const string &bf, const string &mo, int n_occ) {
 //    Timer timer;
 //    int oldPrec = Printer::setPrecision(15);
 //    printout(0, "\n\n=============== Setting up virtual orbitals ");

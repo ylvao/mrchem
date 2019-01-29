@@ -38,4 +38,4 @@ protected:
     QMNabla d_z;
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -81,4 +81,4 @@ protected:
     const HarmonicOscillator1D fz;
 };
 
-} //namespace mrchem
+} // namespace mrchem

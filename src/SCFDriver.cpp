@@ -392,19 +392,19 @@ void SCFDriver::setup() {
         K = new ExchangeOperator(P, phi);
         fock->setExchangeOperator(K);
     }
-    //For DFT we need the XC operator
+    // For DFT we need the XC operator
     if (wf_method == "DFT") {
         xcfun = setupFunctional(MRDFT::Gradient);
         XC = new XCOperator(xcfun, phi);
         fock->setXCOperator(XC);
 
-        //For hybrid DFT we need a partial HF exchange
+        // For hybrid DFT we need a partial HF exchange
         if (xcfun->isHybrid()) {
             K = new ExchangeOperator(P, phi, xcfun->amountEXX());
             fock->setExchangeOperator(K);
         }
     }
-    //HACK we need a better way to decide whether to initialize the external potential operator
+    // HACK we need a better way to decide whether to initialize the external potential operator
     if (ext_electric) Vext = new ElectricFieldOperator(ext_electric_field, r_O);
     fock->setExtOperator(Vext);
     fock->build();
@@ -472,12 +472,12 @@ void SCFDriver::setup_np1() {
         K_np1 = new ExchangeOperator(P, phi);
         fock_np1->setExchangeOperator(K_np1);
     }
-    //For DFT we need the XC operator
+    // For DFT we need the XC operator
     if (wf_method == "DFT") {
         xcfun = setupFunctional(MRDFT::Gradient);
         XC_np1 = new XCOperator(xcfun, phi_np1);
         fock_np1->setXCOperator(XC_np1);
-        //For hybrid DFT we need a partial HF exchange
+        // For hybrid DFT we need a partial HF exchange
         if (xcfun->isHybrid()) {
             K_np1 = new ExchangeOperator(P, phi_np1, xcfun->amountEXX());
             fock_np1->setExchangeOperator(K_np1);
@@ -694,16 +694,16 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     setupPerturbedOrbitals(rsp_calc);
     setupPerturbedOperators(rsp_calc);
 
-    d_fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
+    d_fock->getXCOperator()->setupDensity(rel_prec); // Luca: maybe this is not the best place to do this....
     d_fock->getXCOperator()->setupPotential(rel_prec);
-    d_fock->getXCOperator()->setupDensity(rel_prec); //Luca: maybe this is not the best place to do this....
+    d_fock->getXCOperator()->setupDensity(rel_prec); // Luca: maybe this is not the best place to do this....
 
     bool converged = true;
     if (rsp_run) {
         LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);
         solver->setupUnperturbed(rsp_orbital_prec[1], fock, phi, &F);
         solver->setup(d_fock, phi_x);
-        converged = solver->optimize(); //LUCA Here is a fock.setup()
+        converged = solver->optimize(); // LUCA Here is a fock.setup()
         solver->clear();
         solver->clearUnperturbed();
         delete solver;
@@ -1007,8 +1007,8 @@ mrdft::XCFunctional *SCFDriver::setupFunctional(int order) {
     fun->setUseGamma(dft_use_gamma);
     fun->setDensityCutoff(dft_cutoff);
     fun->evalSetup(order);
-    //setupInitialGrid(*fun, *molecule);
+    // setupInitialGrid(*fun, *molecule);
     return fun;
 }
 
-} //namespace mrchem
+} // namespace mrchem

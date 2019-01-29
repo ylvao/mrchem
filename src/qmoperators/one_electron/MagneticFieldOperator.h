@@ -36,4 +36,4 @@ protected:
     H_B_dip dipole;
 };
 
-} //namespace mrchem
+} // namespace mrchem

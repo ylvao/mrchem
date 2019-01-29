@@ -43,5 +43,5 @@ protected:
     std::vector<double> coefs;
 };
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

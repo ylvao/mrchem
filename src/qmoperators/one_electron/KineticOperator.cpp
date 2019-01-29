@@ -91,4 +91,4 @@ ComplexMatrix KineticOperator::dagger(OrbitalVector &bra, OrbitalVector &ket) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-} //namespace mrchem
+} // namespace mrchem

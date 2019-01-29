@@ -20,4 +20,4 @@ protected:
     SpinOperator s;
 };
 
-} //namespace mrchem
+} // namespace mrchem

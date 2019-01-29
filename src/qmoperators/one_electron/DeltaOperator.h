@@ -28,4 +28,4 @@ protected:
     QMDelta delta;
 };
 
-} //namespace mrchem
+} // namespace mrchem

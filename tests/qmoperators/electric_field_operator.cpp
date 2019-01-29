@@ -72,10 +72,10 @@ TEST_CASE("ElectricFieldOperator", "[electric_field_operator]") {
     ElectricFieldOperator EF(field, {0.0, 0.0, 0.0});
     EF.setup(prec);
 
-    //origin
+    // origin
     mrcpp::Coord<3> o{0.4, 0.3, 0.2};
 
-    //setting up the orbitals
+    // setting up the orbitals
     for (int i = 0; i < nFuncs; i++) Phi.push_back(Orbital(SPIN::Paired));
     mpi::distribute(Phi);
 
@@ -85,7 +85,7 @@ TEST_CASE("ElectricFieldOperator", "[electric_field_operator]") {
     }
 
     SECTION("apply") {
-        //update ref based on MPI
+        // update ref based on MPI
         for (int i = 0; i < nFuncs; i++) {
             for (int j = 0; j < nFuncs; j++) {
                 if (not(mpi::my_orb(Phi[i])) or not(mpi::my_orb(Phi[j]))) ref(i, j) = 0.0;
@@ -106,7 +106,7 @@ TEST_CASE("ElectricFieldOperator", "[electric_field_operator]") {
     }
 
     SECTION("vector apply") {
-        //update ref based on MPI
+        // update ref based on MPI
         for (int i = 0; i < nFuncs; i++) {
             for (int j = 0; j < nFuncs; j++) {
                 if (not(mpi::my_orb(Phi[i])) or not(mpi::my_orb(Phi[j]))) ref(i, j) = 0.0;
@@ -177,4 +177,4 @@ TEST_CASE("ElectricFieldEnergy", "[electric_field_energy]") {
     EF.clear();
 }
 
-} //namespace electric_field_operator
+} // namespace electric_field_operator

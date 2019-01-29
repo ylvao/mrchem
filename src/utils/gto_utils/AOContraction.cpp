@@ -117,5 +117,5 @@ void AOContraction::append(double e, double c) {
     this->coefs.push_back(c);
 }
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

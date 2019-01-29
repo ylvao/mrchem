@@ -41,4 +41,4 @@ private:
     Orbital apply(Orbital phi);
 };
 
-} //namespace mrchem
+} // namespace mrchem

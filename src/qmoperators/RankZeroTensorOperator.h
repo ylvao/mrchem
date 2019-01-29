@@ -170,4 +170,4 @@ inline RankZeroTensorOperator operator-(RankZeroTensorOperator A, RankZeroTensor
     return out;
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -74,4 +74,4 @@ protected:
     AngularFunction Y;
 };
 
-} //namespace mrchem
+} // namespace mrchem

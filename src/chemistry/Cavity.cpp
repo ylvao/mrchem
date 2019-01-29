@@ -51,4 +51,4 @@ double Cavity::evalf(const mrcpp::Coord<3> &r) const {
     return C;
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -3,7 +3,7 @@
 #include "PositionOperator.h"
 #include "chemistry/Nucleus.h"
 
-/** Class H_E_dip 
+/** Class H_E_dip
  *
  * @brief Electric dipole operator
  *
@@ -31,10 +31,10 @@ public:
     }
 
     /** @brief returns the nuclear contribution to the dipole moment
- *
- * @param[in] the set of nuclei
- *
- */
+     *
+     * @param[in] the set of nuclei
+     *
+     */
     ComplexVector trace(const Nuclei &nucs) {
         ComplexVector result = ComplexVector::Zero(3);
         for (auto &nuc_k : nucs) result += trace(nuc_k);
@@ -42,10 +42,10 @@ public:
     }
 
     /** @brief returns the contribution to the dipole moment
- *
- * @param[in] the nucleus
- *
- */
+     *
+     * @param[in] the nucleus
+     *
+     */
     ComplexVector trace(const Nucleus &nuc) {
         ComplexVector result = ComplexVector::Zero(3);
         double Z = nuc.getCharge();
@@ -59,4 +59,4 @@ public:
     using RankOneTensorOperator<3>::trace;
 };
 
-} //namespace mrchem
+} // namespace mrchem

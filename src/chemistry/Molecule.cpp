@@ -384,4 +384,4 @@ void Molecule::printProperties() const {
     }
 }
 
-} //namespace mrchem
+} // namespace mrchem

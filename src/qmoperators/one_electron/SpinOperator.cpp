@@ -52,4 +52,4 @@ Orbital QMSpin::dagger(Orbital inp) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-} //namespace mrchem
+} // namespace mrchem

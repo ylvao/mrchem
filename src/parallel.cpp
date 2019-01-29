@@ -16,7 +16,7 @@ namespace omp {
 
 int n_threads = omp_get_max_threads();
 
-} //namespace omp
+} // namespace omp
 
 namespace mpi {
 
@@ -38,7 +38,7 @@ MPI_Comm comm_orb;
 MPI_Comm comm_share;
 MPI_Comm comm_sh_group;
 
-} //namespace mpi
+} // namespace mpi
 
 void mpi::initialize(int argc, char **argv) {
     omp_set_dynamic(0);
@@ -183,7 +183,7 @@ void mpi::allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm) {
 #endif
 }
 
-//send an orbital with MPI, includes orbital meta data
+// send an orbital with MPI, includes orbital meta data
 void mpi::send_orbital(Orbital &orb, int dst, int tag) {
 #ifdef HAVE_MPI
     mpi::send_function(orb, dst, tag, mpi::comm_orb);
@@ -193,7 +193,7 @@ void mpi::send_orbital(Orbital &orb, int dst, int tag) {
 #endif
 }
 
-//receive an orbital with MPI, includes orbital meta data
+// receive an orbital with MPI, includes orbital meta data
 void mpi::recv_orbital(Orbital &orb, int src, int tag) {
 #ifdef HAVE_MPI
     mpi::recv_function(orb, src, tag, mpi::comm_orb);
@@ -204,7 +204,7 @@ void mpi::recv_orbital(Orbital &orb, int src, int tag) {
 #endif
 }
 
-//send a function with MPI
+// send a function with MPI
 void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
     if (func.isShared()) MSG_WARN("Sending a shared function is not recommended");
@@ -216,7 +216,7 @@ void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
 #endif
 }
 
-//receive a function with MPI
+// receive a function with MPI
 void mpi::recv_function(QMFunction &func, int src, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
     if (func.isShared()) MSG_WARN("Receiving a shared function is not recommended");
@@ -301,4 +301,4 @@ void mpi::broadcast_density(Density &rho, MPI_Comm comm) {
 #endif
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -182,23 +182,23 @@ void ExchangePotential::setupInternal(double prec) {
     for (int i = 0; i < Phi.size(); i++) calcInternal(i);
 
     // Off-diagonal must come last because it IS in-place
-    OrbitalIterator iter(Phi, true); //symmetric iterator
+    OrbitalIterator iter(Phi, true); // symmetric iterator
     Orbital ex_rcv;
-    while (iter.next(1)) { //one orbital at the time
+    while (iter.next(1)) { // one orbital at the time
         if (iter.get_size() > 0) {
             Orbital &phi_i = iter.orbital(0);
             int idx = iter.idx(0);
             for (int j = 0; j < Phi.size(); j++) {
-                if (mpi::my_orb(phi_i) and j <= idx) continue; //compute only i<j for own block
+                if (mpi::my_orb(phi_i) and j <= idx) continue; // compute only i<j for own block
                 Orbital &phi_j = (*this->orbitals)[j];
                 if (mpi::my_orb(phi_j)) calcInternal(idx, j, phi_i, phi_j);
             }
-            //must send exchange_i to owner and receive exchange computed by other
+            // must send exchange_i to owner and receive exchange computed by other
             if (iter.get_step(0) and not mpi::my_orb(phi_i))
                 mpi::send_function(Ex[idx], phi_i.rankID(), idx, mpi::comm_orb);
 
             if (iter.get_sent_size()) {
-                //get exchange from where we sent orbital to
+                // get exchange from where we sent orbital to
                 int idx_sent = iter.get_idx_sent(0);
                 int sent_rank = iter.get_rank_sent(0);
                 mpi::recv_function(ex_rcv, sent_rank, idx_sent, mpi::comm_orb);
@@ -209,8 +209,8 @@ void ExchangePotential::setupInternal(double prec) {
                 mpi::send_function(Ex[idx], phi_i.rankID(), idx, mpi::comm_orb);
             if (not mpi::my_orb(Ex[idx])) Ex[idx].free(NUMBER::Total);
         } else {
-            if (iter.get_sent_size()) { //must receive exchange computed by other
-                //get exchange from where we sent orbital to
+            if (iter.get_sent_size()) { // must receive exchange computed by other
+                // get exchange from where we sent orbital to
                 int idx_sent = iter.get_idx_sent(0);
                 int sent_rank = iter.get_rank_sent(0);
                 mpi::recv_function(ex_rcv, sent_rank, idx_sent, mpi::comm_orb);
@@ -227,8 +227,8 @@ void ExchangePotential::setupInternal(double prec) {
         n += Ex[i].getNNodes(NUMBER::Total);
     }
 
-    mpi::allreduce_vector(this->tot_norms, mpi::comm_orb);  //to be checked
-    mpi::allreduce_matrix(this->part_norms, mpi::comm_orb); //to be checked
+    mpi::allreduce_vector(this->tot_norms, mpi::comm_orb);  // to be checked
+    mpi::allreduce_matrix(this->part_norms, mpi::comm_orb); // to be checked
 
     timer.stop();
     double t = timer.getWallTime();
@@ -271,7 +271,7 @@ void ExchangePotential::calcInternal(int i) {
         this->part_norms(i, i) = phi_iii.norm();
         this->exchange.push_back(phi_iii);
     } else {
-        //put empty orbital to fill the exchange vector
+        // put empty orbital to fill the exchange vector
         Orbital phi_iii = phi_i.paramCopy();
         this->exchange.push_back(phi_iii);
     }
@@ -387,31 +387,31 @@ double ExchangePotential::getScaledPrecision(int i, int j) const {
 }
 
 /** @brief determines the exchange factor to be used in the calculation of the exact exchange
-  *
-  * @param [in] orb input orbital to which K is applied
-  *
-  * The factor is computed in terms of the occupancy of the two orbitals and in terms of the spin
-  * 0.5 factors are used in order to preserve occupancy of the set of doubly occupied orbitals
-  * this-> is the orbital defining the operator whereas the input orbital (orb) is the one
-  * the operator is applied to
-  *
-  * Occupancy: Single/Double
-  * Spin: alpha/beta
-  *
-  * K (this->) | orb (input) | factor
-  * alpha      | alpha       | 1.0
-  * alpha      | beta        | 0.0
-  * alpha      | double      | 0.5
-  * -------------------------------
-  * beta       | alpha       | 0.0
-  * beta       | beta        | 1.0
-  * beta       | double      | 0.5
-  * -------------------------------
-  * double     | alpha       | 1.0
-  * double     | beta        | 1.0
-  * double     | double      | 1.0
-  *
-  */
+ *
+ * @param [in] orb input orbital to which K is applied
+ *
+ * The factor is computed in terms of the occupancy of the two orbitals and in terms of the spin
+ * 0.5 factors are used in order to preserve occupancy of the set of doubly occupied orbitals
+ * this-> is the orbital defining the operator whereas the input orbital (orb) is the one
+ * the operator is applied to
+ *
+ * Occupancy: Single/Double
+ * Spin: alpha/beta
+ *
+ * K (this->) | orb (input) | factor
+ * alpha      | alpha       | 1.0
+ * alpha      | beta        | 0.0
+ * alpha      | double      | 0.5
+ * -------------------------------
+ * beta       | alpha       | 0.0
+ * beta       | beta        | 1.0
+ * beta       | double      | 0.5
+ * -------------------------------
+ * double     | alpha       | 1.0
+ * double     | beta        | 1.0
+ * double     | double      | 1.0
+ *
+ */
 double ExchangePotential::getSpinFactor(Orbital phi_i, Orbital phi_j) const {
     double out = 0.0;
     if (phi_j.spin() == SPIN::Paired)
@@ -423,4 +423,4 @@ double ExchangePotential::getSpinFactor(Orbital phi_i, Orbital phi_j) const {
     return out;
 }
 
-} //namespace mrchem
+} // namespace mrchem

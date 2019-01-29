@@ -73,5 +73,5 @@ GaussExp<3> AOBasis::getNormBasis(const mrcpp::Coord<3> &center) const {
     return abas;
 }
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

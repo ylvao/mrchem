@@ -44,7 +44,7 @@
  *                [Q_21,   Q_22,   \cdots, Q_2N  ]
  *                [\cdots, \cdots, \cdots, \cdots]
  *                [Q_M1,   Q_M2,   \cdots, Q_MN  ]
- * 
+ *
  * A particular component can be applied in the following way:
  *      \psi = Q[i][j](\phi)
  *
@@ -53,7 +53,7 @@
  * a single fundamental operator), but these can easily be reused by other
  * operators, e.g. the AngularMomentumOperator is constructed from
  * PositionOperator and MomentumOperator:
- * 
+ *
  *      l[0] = (r[1]p[2] - r[2]p[1])
  *      l[1] = (r[2]p[0] - r[0]p[2])
  *      l[2] = (r[0]p[1] - r[1]p[0])
@@ -70,4 +70,4 @@ class RankZeroTensorOperator;
 template <int I> class RankOneTensorOperator;
 template <int I, int J> class RankTwoTensorOperator;
 
-} //namespace mrchem
+} // namespace mrchem

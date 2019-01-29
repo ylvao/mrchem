@@ -47,7 +47,7 @@ public:
     int maximize();
 
 protected:
-    int N2h; //size (for orbital localization: N2h = N*(N-1)/2)
+    int N2h; // size (for orbital localization: N2h = N*(N-1)/2)
     DoubleMatrix hessian;
     DoubleVector gradient;
 
@@ -59,4 +59,4 @@ protected:
     virtual void do_step(const DoubleVector &step) {}
 };
 
-} //namespace mrchem
+} // namespace mrchem

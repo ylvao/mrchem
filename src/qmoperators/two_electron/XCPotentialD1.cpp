@@ -28,7 +28,7 @@ XCPotentialD1::XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi)
         : XCPotential(F, Phi) {}
 
 /** @brief Prepare the operator for application
- * 
+ *
  * @param[in] prec Apply precision
  *
  * Sequence of steps required to compute the XC potentials:
@@ -121,4 +121,4 @@ Orbital XCPotentialD1::apply(Orbital phi) {
     return Vphi;
 }
 
-} //namespace mrchem
+} // namespace mrchem

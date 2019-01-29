@@ -41,4 +41,4 @@ private:
     NuclearPotential r_m1;
 };
 
-} //namespace mrchem
+} // namespace mrchem
