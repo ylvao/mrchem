@@ -9,9 +9,9 @@ else()
   FetchContent_Populate(mrcpp_sources
     QUIET
     GIT_REPOSITORY
-      https://github.com/robertodr/mrcpp.git
+      https://github.com/MRChemSoft/mrcpp.git
     GIT_TAG
-      fetch-eigen3 # Preferable to have a tag for a release
+      stigrj-patch-1 # Preferable to have a tag for a release
     GIT_SHALLOW
       1
     CMAKE_ARGS
