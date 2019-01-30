@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -682,6 +682,95 @@ DoubleVector orbital::get_errors(const OrbitalVector &Phi) {
     DoubleVector errors = DoubleVector::Zero(nOrbs);
     for (int i = 0; i < nOrbs; i++) errors(i) = Phi[i].error();
     return errors;
+}
+
+/** @brief Returns the size of the coefficients of all nodes in the vector in kBytes */
+int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
+    int nOrbs = Phi.size();
+    int totsize = 0;
+    for (int i = 0; i < nOrbs; i++) {
+        if (Phi[i].hasReal()) {
+            double fac = Phi[i].real().getKp1_d() * 8;                                  //number of coeff in one node
+            fac *= sizeof(double);                                                      // Number of Bytes in one node
+            sNodes[i] = static_cast<int>(fac / 1024 * Phi[i].getNNodes(NUMBER::Total)); //kBytes in one orbital
+            totsize += sNodes[i];
+        }
+    }
+    return totsize;
+}
+
+/** @brief Prints statistics about the size of orbitals in an OrbitalVector
+*
+* This is a collective function. Can be made non-collective by setting all = false.
+* outputs respectively:
+* Total size of orbital vector, average per MPI, Max per MPI, Max (largest)
+* orbital, smallest orbital, max total (not only the orbitalvector) memory
+* usage among all MP, minimum total (not only the orbitalvector) memory
+* usage among all MPI
+*
+*/
+int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string txt, bool all, int printLevl) {
+    int nOrbs = Phi.size();
+    IntVector sNodes = IntVector::Zero(nOrbs);
+    int sVec = get_size_nodes(Phi, sNodes);
+    double nMax = 0.0, vMax = 0.0; //node max, vector max
+    double nMin = 9.9e9, vMin = 9.9e9;
+    double nSum = 0.0, vSum = 0.0;
+    double nOwnOrbs = 0.0, OwnSumMax = 0.0, OwnSumMin = 9.9e9;
+    double totMax = 0.0, totMin = 9.9e9;
+    println(0, "OrbitalVector sizes statistics " << txt << " (MB)");
+    //stats for own orbitals
+    for (int i = 0; i < nOrbs; i++) {
+        if (sNodes[i] > 0) {
+            nOwnOrbs++;
+            if (sNodes[i] > nMax) nMax = sNodes[i];
+            if (sNodes[i] < nMin) nMin = sNodes[i];
+            nSum += sNodes[i];
+        }
+    }
+    if (nSum == 0.0) nMin = 0.0;
+
+    DoubleMatrix VecStats = DoubleMatrix::Zero(5, mpi::orb_size);
+    VecStats(0, mpi::orb_rank) = nMax;
+    VecStats(1, mpi::orb_rank) = nMin;
+    VecStats(2, mpi::orb_rank) = nSum;
+    VecStats(3, mpi::orb_rank) = nOwnOrbs;
+    VecStats(4, mpi::orb_rank) = Printer::printMem("", true);
+
+    if (all) {
+        mpi::allreduce_matrix(VecStats, mpi::comm_orb);
+        //overall stats
+        for (int i = 0; i < mpi::orb_size; i++) {
+            if (VecStats(0, i) > vMax) vMax = VecStats(0, i);
+            if (VecStats(1, i) < vMin) vMin = VecStats(1, i);
+            if (VecStats(2, i) > OwnSumMax) OwnSumMax = VecStats(2, i);
+            if (VecStats(2, i) < OwnSumMin) OwnSumMin = VecStats(2, i);
+            if (VecStats(4, i) > totMax) totMax = VecStats(4, i);
+            if (VecStats(4, i) < totMin) totMin = VecStats(4, i);
+            vSum += VecStats(2, i);
+        }
+    } else {
+        int i = mpi::orb_rank;
+        if (VecStats(0, i) > vMax) vMax = VecStats(0, i);
+        if (VecStats(1, i) < vMin) vMin = VecStats(1, i);
+        if (VecStats(2, i) > OwnSumMax) OwnSumMax = VecStats(2, i);
+        if (VecStats(2, i) < OwnSumMin) OwnSumMin = VecStats(2, i);
+        if (VecStats(4, i) > totMax) totMax = VecStats(4, i);
+        if (VecStats(4, i) < totMin) totMin = VecStats(4, i);
+        vSum += VecStats(2, i);
+    }
+    totMax *= 4.0 / (1024.0);
+    totMin *= 4.0 / (1024.0);
+    printout(printLevl, "Total orbvec " << static_cast<int>(vSum / 1024));
+    printout(printLevl, ", Av/MPI " << static_cast<int>(vSum / 1024 / mpi::orb_size));
+    printout(printLevl, ", Max/MPI " << static_cast<int>(OwnSumMax / 1024));
+    printout(printLevl, ", Max/orb " << static_cast<int>(vMax / 1024));
+    printout(printLevl, ", Min/orb " << static_cast<int>(vMin / 1024));
+    if (all)
+        println(printLevl,
+                ", Total max " << static_cast<int>(totMax) << ", Total min " << static_cast<int>(totMin) << " MB");
+    if (not all) println(printLevl, ", Total master " << static_cast<int>(totMax) << " MB");
+    return vSum;
 }
 
 /** @brief Assign errors to each orbital.

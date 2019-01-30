@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -107,14 +107,16 @@ int QMFunction::getNNodes(int type) const {
     return nNodes;
 }
 
-void QMFunction::crop(double prec) {
-    if (prec < 0.0) return;
+int QMFunction::crop(double prec) {
+    if (prec < 0.0) return 0;
     bool need_to_crop = not(isShared()) or mpi::share_master();
+    int nChunksremoved = 0;
     if (need_to_crop) {
-        if (hasReal()) real().crop(prec, 1.0, false);
-        if (hasImag()) imag().crop(prec, 1.0, false);
+        if (hasReal()) nChunksremoved = real().crop(prec, 1.0, false);
+        if (hasImag()) nChunksremoved += imag().crop(prec, 1.0, false);
     }
     mpi::share_function(*this, 0, 7744, mpi::comm_share);
+    return nChunksremoved;
 }
 
 ComplexDouble QMFunction::integrate() const {

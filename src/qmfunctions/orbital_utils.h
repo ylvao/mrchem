@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2019 Stig Rune Jensen, Jonas Juselius, Luca Frediani, and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -78,6 +78,8 @@ int get_multiplicity(const OrbitalVector &Phi);
 int get_electron_number(const OrbitalVector &Phi, int spin = SPIN::Paired);
 int start_index(const OrbitalVector &Phi, int spin);
 int get_n_nodes(const OrbitalVector &Phi);
+int get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes);
+int print_size_nodes(const OrbitalVector &Phi, const std::string txt = "", bool all = true, int printLevl = 0);
 bool orbital_vector_is_sane(const OrbitalVector &Phi);
 
 void set_spins(OrbitalVector &Phi, const IntVector &spins);
