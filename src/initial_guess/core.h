@@ -45,6 +45,6 @@ namespace core {
 OrbitalVector setup(double prec, const Molecule &mol, bool restricted, int zeta);
 OrbitalVector project_ao(double prec, const Nuclei &nucs, int spin, int zeta);
 
-} //namespace core
-} //namespace initial_guess
-} //namespace mrchem
+} // namespace core
+} // namespace initial_guess
+} // namespace mrchem

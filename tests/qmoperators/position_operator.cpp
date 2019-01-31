@@ -81,4 +81,4 @@ TEST_CASE("PositionOperator", "[position_operator]") {
     r.clear();
 }
 
-} //namespace position_operator
+} // namespace position_operator

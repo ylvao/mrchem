@@ -51,4 +51,4 @@ ComplexMatrix IdentityOperator::dagger(OrbitalVector &bra, OrbitalVector &ket) {
     return operator()(bra, ket);
 }
 
-} //namespace mrchem
+} // namespace mrchem

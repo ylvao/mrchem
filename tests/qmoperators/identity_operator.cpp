@@ -132,4 +132,4 @@ TEST_CASE("IdentityOperator", "[identity_operator]") {
     }
 }
 
-} //namespace identity_operator_tests
+} // namespace identity_operator_tests

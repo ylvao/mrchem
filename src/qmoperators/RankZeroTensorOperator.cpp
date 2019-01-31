@@ -325,4 +325,4 @@ Orbital RankZeroTensorOperator::applyOperTerm(int n, Orbital inp) {
     return out;
 }
 
-} //namespace mrchem
+} // namespace mrchem

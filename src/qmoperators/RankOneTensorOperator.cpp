@@ -57,6 +57,6 @@ template <int I> ComplexVector RankOneTensorOperator<I>::trace(OrbitalVector &ph
     return out;
 }
 
-} //namespace mrchem
+} // namespace mrchem
 
 template class mrchem::RankOneTensorOperator<3>;

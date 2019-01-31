@@ -51,6 +51,6 @@ ComplexMatrix RankTwoTensorOperator<I, J>::trace(OrbitalVector &phi, OrbitalVect
     return out;
 }
 
-} //namespace mrchem
+} // namespace mrchem
 
 template class mrchem::RankTwoTensorOperator<3, 3>;

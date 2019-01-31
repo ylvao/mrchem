@@ -32,4 +32,4 @@ void NuclearGradientPotential::clear() {
     clearApplyPrec();    // apply_prec = -1
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -47,4 +47,4 @@ private:
     CoulombPotential *potential;
 };
 
-} //namespace mrchem
+} // namespace mrchem

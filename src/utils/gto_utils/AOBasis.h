@@ -38,5 +38,5 @@ private:
     std::vector<AOContraction *> ctrs;
 };
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

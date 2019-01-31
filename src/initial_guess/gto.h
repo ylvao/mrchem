@@ -62,6 +62,6 @@ mrcpp::FunctionTree<3> *project_density(double prec,
                                         const std::string &bas_file,
                                         const std::string &dens_file);
 
-} //namespace gto
-} //namespace initial_guess
-} //namespace mrchem
+} // namespace gto
+} // namespace initial_guess
+} // namespace mrchem

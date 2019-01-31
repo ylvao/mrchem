@@ -35,4 +35,4 @@ protected:
     PositionPotential r_z;
 };
 
-} //namespace mrchem
+} // namespace mrchem

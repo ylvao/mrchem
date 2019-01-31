@@ -76,11 +76,11 @@ TEST_CASE("NuclearOperator", "[nuclear_operator]") {
     DoubleVector E_P(Phi.size());
     for (int n = 1; n <= nShells; n++) {
         int L = n;
-        double E_n = 1.0 / (2.0 * n * n); //E_n = Z^2/(2*n^2)
+        double E_n = 1.0 / (2.0 * n * n); // E_n = Z^2/(2*n^2)
         for (int l = 0; l < L; l++) {
             int M = 2 * l + 1;
             for (int m = 0; m < M; m++) {
-                E_P(i++) = -2.0 * E_n; //virial theorem: 2<E_K> = -<E_P>
+                E_P(i++) = -2.0 * E_n; // virial theorem: 2<E_K> = -<E_P>
             }
         }
     }

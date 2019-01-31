@@ -14,4 +14,4 @@ private:
     void setupDensity(double prec);
 };
 
-} //namespace mrchem
+} // namespace mrchem

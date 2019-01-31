@@ -88,4 +88,4 @@ protected:
     virtual Orbital dagger(Orbital inp) = 0;
 };
 
-} //namespace mrchem
+} // namespace mrchem

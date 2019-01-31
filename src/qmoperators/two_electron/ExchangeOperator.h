@@ -36,4 +36,4 @@ protected:
     ExchangePotential *exchange;
 };
 
-} //namespace mrchem
+} // namespace mrchem

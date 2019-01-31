@@ -44,4 +44,4 @@ protected:
     void setupPotential(double prec);
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -30,7 +30,7 @@
 namespace mrchem {
 
 /** @brief computes the repulsion self energy of a set of nuclei
- * 
+ *
  * @param[in] nucs the set of nuclei
  *
  */
@@ -52,4 +52,4 @@ double compute_nuclear_repulsion(const Nuclei &nucs) {
     return E_nuc;
 }
 
-} //namespace mrchem
+} // namespace mrchem

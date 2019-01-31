@@ -72,8 +72,8 @@ int PT[29][2] = {
 };
 // clang-format on
 
-} //namespace core
-} //namespace initial_guess
+} // namespace core
+} // namespace initial_guess
 
 /** @brief Produce an initial guess of orbitals
  *
@@ -88,9 +88,9 @@ int PT[29][2] = {
  *
  */
 OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
-    int mult = mol.getMultiplicity(); //multiplicity
-    int Ne = mol.getNElectrons();     //total electrons
-    int Nd = Ne - (mult - 1);         //doubly occupied
+    int mult = mol.getMultiplicity(); // multiplicity
+    int Ne = mol.getNElectrons();     // total electrons
+    int Nd = Ne - (mult - 1);         // doubly occupied
     if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
 
     // Make Fock operator contributions
@@ -135,7 +135,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     if (restricted) {
         if (mult != 1) MSG_FATAL("Restricted open-shell not available");
 
-        int Np = Nd / 2; //paired orbitals
+        int Np = Nd / 2; // paired orbitals
         for (int i = 0; i < Np; i++) {
             ComplexVector v_i = U.row(i);
             Orbital psi_i(SPIN::Paired);
@@ -143,8 +143,8 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
             Psi.push_back(psi_i);
         }
     } else {
-        int Na = Nd / 2 + (mult - 1); //alpha orbitals
-        int Nb = Nd / 2;              //beta orbitals
+        int Na = Nd / 2 + (mult - 1); // alpha orbitals
+        int Nb = Nd / 2;              // beta orbitals
 
         OrbitalVector Psi_a;
         for (int i = 0; i < Na; i++) {
@@ -246,4 +246,4 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
     return Phi;
 }
 
-} //namespace mrchem
+} // namespace mrchem

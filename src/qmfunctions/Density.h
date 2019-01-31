@@ -58,4 +58,4 @@ public:
     void loadDensity(const std::string &file);
 };
 
-} //namespace mrchem
+} // namespace mrchem

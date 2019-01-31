@@ -38,4 +38,4 @@ protected:
     PositionOperator r_k;
 };
 
-} //namespace mrchem
+} // namespace mrchem

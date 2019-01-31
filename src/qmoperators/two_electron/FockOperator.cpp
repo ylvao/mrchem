@@ -46,7 +46,7 @@ FockOperator::FockOperator(KineticOperator *t,
         , ext(ext) {}
 
 /** @brief build the Fock operator once all contributions are in place
- * 
+ *
  */
 void FockOperator::build() {
     this->T = RankZeroTensorOperator();
@@ -188,4 +188,4 @@ ComplexMatrix FockOperator::dagger(OrbitalVector &bra, OrbitalVector &ket) {
     NOT_IMPLEMENTED_ABORT;
 }
 
-} //namespace mrchem
+} // namespace mrchem

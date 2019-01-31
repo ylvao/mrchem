@@ -37,7 +37,7 @@ CoulombPotential::CoulombPotential(PoissonOperator *P)
  * operator to the density. If the density is not available it is computed
  * from the current orbitals (assuming that the orbitals are available).
  * For first-order perturbations the first order density and the Hessian will be
- * computed. In order to make the Hessian available to CoulombOperator, it is stored in the 
+ * computed. In order to make the Hessian available to CoulombOperator, it is stored in the
  * potential function instead of the zeroth-order potential.
  *
  */
@@ -91,4 +91,4 @@ void CoulombPotential::setupPotential(double prec) {
     Printer::printTree(0, "Coulomb potential", n, t);
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -174,4 +174,4 @@ double HydrogenFunction::evalf(const mrcpp::Coord<3> &p) const {
     return this->R.evalf(r) * this->Y.evalf(q);
 }
 
-} //namespace mrchem
+} // namespace mrchem

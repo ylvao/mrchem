@@ -48,7 +48,7 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
     this->r_i_orig = DoubleMatrix::Zero(this->N, 3 * this->N);
     this->r_i = DoubleMatrix(this->N, 3 * this->N);
 
-    //Make R matrix
+    // Make R matrix
     PositionOperator r;
     r.setup(prec);
 
@@ -68,13 +68,13 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
     OrbitalChunk yPhi = mpi::get_my_chunk(yPhi_Vec);
     OrbitalChunk zPhi = mpi::get_my_chunk(zPhi_Vec);
 
-    OrbitalIterator iter(Phi, true); //symmetric iterator;
+    OrbitalIterator iter(Phi, true); // symmetric iterator;
     while (iter.next(1)) {
         for (int i = 0; i < iter.get_size(); i++) {
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);
             for (int j = 0; j < xPhi.size(); j++) {
-                //note that idx_j are the same for x, y and z
+                // note that idx_j are the same for x, y and z
                 int idx_j = std::get<0>(xPhi[j]);
                 if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
                 Orbital &ket_j_x = std::get<1>(xPhi[j]);
@@ -113,7 +113,7 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
     r_y.clear();
     r_z.clear();
 
-    //rotate R matrices into orthonormal basis
+    // rotate R matrices into orthonormal basis
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
     this->total_U = S_m12.real() * this->total_U;
 
@@ -122,14 +122,14 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
         for (int j = 0; j < this->N; j++) {
             for (int i = 0; i <= j; i++) {
                 R(i, j) = this->r_i_orig(i, j + d * this->N);
-                R(j, i) = this->r_i_orig(i, j + d * this->N); //Enforce symmetry
+                R(j, i) = this->r_i_orig(i, j + d * this->N); // Enforce symmetry
             }
         }
         R = this->total_U.transpose() * R * this->total_U;
         for (int j = 0; j < this->N; j++) {
             for (int i = 0; i <= j; i++) {
                 this->r_i(i, j + d * this->N) = R(i, j);
-                this->r_i(j, i + d * this->N) = R(i, j); //Enforce symmetry
+                this->r_i(j, i + d * this->N) = R(i, j); // Enforce symmetry
             }
         }
     }
@@ -139,7 +139,7 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
  * f$  \sum_{i=1,N}\langle i| {\bf R}| i \rangle^2\f$
  */
 double RRMaximizer::functional() const {
-    //s1 is what should be maximized (i.e. the sum of <i R i>^2)
+    // s1 is what should be maximized (i.e. the sum of <i R i>^2)
     double s1 = 0.0;
     for (int d = 0; d < 3; d++) {
         for (int j = 0; j < this->N; j++) {
@@ -389,7 +389,7 @@ double RRMaximizer::get_hessian(int ij, int kl) {
  */
 void RRMaximizer::do_step(const DoubleVector &step) {
     DoubleMatrix A(this->N, this->N);
-    //define rotation U=exp(-A), A real antisymmetric, from step
+    // define rotation U=exp(-A), A real antisymmetric, from step
     int ij = 0;
     for (int j = 0; j < this->N; j++) {
         for (int i = 0; i < j; i++) {
@@ -400,11 +400,11 @@ void RRMaximizer::do_step(const DoubleVector &step) {
         A(j, j) = 0.0;
     }
 
-    //calculate U=exp(-A) by diagonalization and U=Vexp(id)Vt with VdVt=iA
-    //could also sum the term in the expansion if A is small
+    // calculate U=exp(-A) by diagonalization and U=Vexp(id)Vt with VdVt=iA
+    // could also sum the term in the expansion if A is small
     this->total_U *= math_utils::skew_matrix_exp(A);
 
-    //rotate the original r matrix with total U
+    // rotate the original r matrix with total U
     DoubleMatrix r(this->N, this->N);
     for (int d = 0; d < 3; d++) {
         for (int j = 0; j < this->N; j++) {
@@ -417,4 +417,4 @@ void RRMaximizer::do_step(const DoubleVector &step) {
     }
 }
 
-} //namespace mrchem
+} // namespace mrchem

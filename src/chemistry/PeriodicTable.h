@@ -23,7 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-/** 
+/**
  *
  * \date Jun 7, 2009
  * \author Jonas Juselius <jonas.juselius@uit.no> \n
@@ -59,4 +59,4 @@ private:
     static map_t _init_bysymbol();
 };
 
-} //namespace mrchem
+} // namespace mrchem

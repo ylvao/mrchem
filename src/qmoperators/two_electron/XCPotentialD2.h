@@ -51,12 +51,12 @@ private:
 
     Orbital apply(Orbital phi);
 
-    //LUCA I wanted to include the following declarations in the cpp
-    //file but i did not manage to get the syntax (copied from
-    //density_utils.copp) right.
+    // LUCA I wanted to include the following declarations in the cpp
+    // file but i did not manage to get the syntax (copied from
+    // density_utils.copp) right.
     int getPotentialIndex(int orbitalSpin, int densitySpin);
     void setupPerturbedDensity(double prec = -1.0);
     mrcpp::FunctionTree<3> *calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V, mrcpp::FunctionTreeVector<3> &rho);
 };
 
-} //namespace mrchem
+} // namespace mrchem

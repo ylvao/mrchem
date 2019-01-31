@@ -30,4 +30,4 @@ protected:
     DistancePotential r_pow;
 };
 
-} //namespace mrchem
+} // namespace mrchem

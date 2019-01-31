@@ -37,4 +37,4 @@ void QMDelta::clear() {
     clearApplyPrec();
 }
 
-} //namespace mrchem
+} // namespace mrchem

@@ -64,9 +64,9 @@ mrcpp::FunctionTree<3> &XCPotential::getDensity(int spin) {
     MSG_FATAL("Invalid density type");
 }
 
-//NOTE AFTER DISCUSSION WITH STIG: Need to move stuff that is
-//iteration-independent out of the response loop, so that all required
-//functions, which only depend on the GS density are computed
-//once. Comment: still the grid for rho_1 is borrowed from rho_0 and
-//rho_0 should still be available.
+// NOTE AFTER DISCUSSION WITH STIG: Need to move stuff that is
+// iteration-independent out of the response loop, so that all required
+// functions, which only depend on the GS density are computed
+// once. Comment: still the grid for rho_1 is borrowed from rho_0 and
+// rho_0 should still be available.
 } // namespace mrchem

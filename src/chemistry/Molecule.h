@@ -132,4 +132,4 @@ protected:
     void readCoordinateString(const std::vector<std::string> &coord_str);
 };
 
-} //namespace mrchem
+} // namespace mrchem

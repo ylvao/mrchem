@@ -38,4 +38,4 @@ class Polarizability;
 class OpticalRotation;
 class GeometryDerivatives;
 
-} //namespace mrchem
+} // namespace mrchem

@@ -41,5 +41,5 @@ void multiply_real(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double p
 void multiply_imag(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec);
 void linear_combination(QMFunction &out, const ComplexVector &c, QMFunctionVector &inp, double prec);
 
-} //namespace qmfunction
-} //namespace mrchem
+} // namespace qmfunction
+} // namespace mrchem

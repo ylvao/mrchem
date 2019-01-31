@@ -30,7 +30,7 @@
 #include "MRCPP/MWFunctions"
 #include "XCFun/xcfun.h"
 
-/** 
+/**
  *  @class XCFunctional
  *  @brief Compute XC functional with XCFun
  *
@@ -163,4 +163,4 @@ protected:
     mrcpp::FunctionTree<3> *doubleDivergence(mrcpp::FunctionTreeVector<3> &df2dg2);
 };
 
-} //namespace mrdft
+} // namespace mrdft

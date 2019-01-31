@@ -33,4 +33,4 @@ class Molecule;
 class Element;
 class PeriodicTable;
 
-} //namespace mrchem
+} // namespace mrchem

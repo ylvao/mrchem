@@ -32,7 +32,7 @@ GaussExp<3> OrbitalExp::getMO(int i, const DoubleMatrix &M) const {
     int n = 0;
     for (int j = 0; j < size(); j++) {
         GaussExp<3> ao_j = getAO(j);
-        //ao_i.normalize();
+        // ao_i.normalize();
         if (std::abs(M(i, j)) > mrcpp::MachineZero) {
             ao_j *= M(i, j);
             mo_i.append(ao_j);
@@ -46,7 +46,7 @@ GaussExp<3> OrbitalExp::getMO(int i, const DoubleMatrix &M) const {
         zeroExp.append(zeroFunc);
         mo_i.append(zeroExp);
     }
-    //mo_i->normalize();
+    // mo_i->normalize();
     return mo_i;
 }
 
@@ -74,7 +74,7 @@ void OrbitalExp::rotate(const DoubleMatrix &U) {
         int n = 0;
         for (int j = 0; j < size(); j++) {
             GaussExp<3> ao_j = getAO(j);
-            //ao_j.normalize();
+            // ao_j.normalize();
             if (std::abs(U(i, j)) > mrcpp::MachineZero) {
                 ao_j *= U(i, j);
                 mo_i->append(ao_j);
@@ -88,7 +88,7 @@ void OrbitalExp::rotate(const DoubleMatrix &U) {
             ao_j.append(zeroFunc);
             mo_i->append(ao_j);
         }
-        //mo_i->normalize();
+        // mo_i->normalize();
         tmp.push_back(mo_i);
     }
     for (int i = 0; i < size(); i++) {
@@ -208,5 +208,5 @@ int OrbitalExp::getAngularMomentum(int n) const {
     return l;
 }
 
-} //namespace gto_utils
-} //namespace mrchem
+} // namespace gto_utils
+} // namespace mrchem

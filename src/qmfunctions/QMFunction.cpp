@@ -88,9 +88,9 @@ void QMFunction::free(int type) {
 }
 
 /** @brief Returns the orbital meta data
-     *
-     * Tree sizes (nChunks) are flushed before return.
-     */
+ *
+ * Tree sizes (nChunks) are flushed before return.
+ */
 FunctionData &QMFunction::getFunctionData() {
     this->func_ptr->flushFuncData();
     return this->func_ptr->func_data;
@@ -220,4 +220,4 @@ void QMFunction::rescale(ComplexDouble c) {
     out.add(c, tmp);
 }
 
-} //namespace mrchem
+} // namespace mrchem

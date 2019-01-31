@@ -37,4 +37,4 @@ protected:
     NuclearGradientPotential z_rm3;
 };
 
-} //namespace mrchem
+} // namespace mrchem

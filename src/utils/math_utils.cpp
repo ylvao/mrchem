@@ -99,12 +99,12 @@ DoubleMatrix read_matrix_file(const std::string &file) {
  *      \f$iA\f$ (V unitary complex matrix)
  */
 DoubleMatrix skew_matrix_exp(const DoubleMatrix &A) {
-    //calculates U=exp(-A)=exp(i(iA)) iA=HermitianMatrix
-    //skew=antisymmetric real
+    // calculates U=exp(-A)=exp(i(iA)) iA=HermitianMatrix
+    // skew=antisymmetric real
     ComplexDouble im(0.0, 1.0);
     ComplexMatrix Aim = im * A;
 
-    //NB: eigenvalues are real, but eigenvectors are complex
+    // NB: eigenvalues are real, but eigenvectors are complex
     DoubleVector diag;
     ComplexMatrix U = diagonalize_hermitian_matrix(Aim, diag);
 
@@ -112,7 +112,7 @@ DoubleMatrix skew_matrix_exp(const DoubleMatrix &A) {
     for (int j = 0; j < A.cols(); j++) { diagim(j, j) = std::exp(im * diag(j)); }
 
     Aim = U * diagim * U.adjoint();
-    return Aim.real(); //imaginary part is zero
+    return Aim.real(); // imaginary part is zero
 }
 
 /** @brief Compute the power of a Hermitian matrix
@@ -150,8 +150,8 @@ ComplexMatrix hermitian_matrix_pow(const ComplexMatrix &A, double b) {
 ComplexMatrix diagonalize_hermitian_matrix(const ComplexMatrix &A, DoubleVector &diag) {
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(A.cols());
     es.compute(A);
-    diag = es.eigenvalues();  //real
-    return es.eigenvectors(); //complex
+    diag = es.eigenvalues();  // real
+    return es.eigenvectors(); // complex
 }
 
 /** @brief Compute the eigenvalues and eigenvectors of a Hermitian matrix block
@@ -172,5 +172,5 @@ void diagonalize_block(ComplexMatrix &A, ComplexMatrix &U, int nstart, int nsize
     A.block(nstart, nstart, nsize, nsize) = ei_val.asDiagonal();
 }
 
-} //namespace math_utils
-} //namespace mrchem
+} // namespace math_utils
+} // namespace mrchem

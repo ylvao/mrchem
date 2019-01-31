@@ -53,4 +53,4 @@ protected:
     void setupDensity(double prec = -1.0);
 };
 
-} //namespace mrchem
+} // namespace mrchem

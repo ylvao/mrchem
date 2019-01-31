@@ -24,4 +24,4 @@ protected:
     DeltaOperator delta;
 };
 
-} //namespace mrchem
+} // namespace mrchem

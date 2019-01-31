@@ -88,4 +88,4 @@ private:
     std::ostream &print(std::ostream &o) const;
 };
 
-} //namespace mrchem
+} // namespace mrchem

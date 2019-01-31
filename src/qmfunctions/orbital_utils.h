@@ -95,5 +95,5 @@ ComplexVector get_integrals(const OrbitalVector &Phi);
 
 void print(const OrbitalVector &Phi);
 
-} //namespace orbital
-} //namespace mrchem
+} // namespace orbital
+} // namespace mrchem

@@ -57,4 +57,4 @@ protected:
     void calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_j);
 };
 
-} //namespace mrchem
+} // namespace mrchem

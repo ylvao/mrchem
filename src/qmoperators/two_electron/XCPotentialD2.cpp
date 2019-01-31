@@ -42,7 +42,7 @@ XCPotentialD2::~XCPotentialD2() {
 }
 
 /** @brief Prepare the operator for application
- * 
+ *
  * @param[in] prec Apply precision
  *
  * Sequence of steps required to compute the XC potentials:
@@ -56,9 +56,9 @@ XCPotentialD2::~XCPotentialD2() {
 void XCPotentialD2::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    //setupDensity(prec);
+    // setupDensity(prec);
     setupPerturbedDensity(prec);
-    //setupPotential(prec);
+    // setupPotential(prec);
 }
 
 /** @brief Clears all data in the XCPotentialD2 object */
@@ -73,7 +73,7 @@ void XCPotentialD2::clear() {
     clearApplyPrec();
 }
 
-//LUCA This does not work in the case of a non spin separated functional used for an open-shell system!!
+// LUCA This does not work in the case of a non spin separated functional used for an open-shell system!!
 void XCPotentialD2::setupPerturbedDensity(double prec) {
     if (this->orbitals_x == nullptr) MSG_ERROR("Orbitals not initialized");
     if (this->orbitals_y == nullptr) MSG_ERROR("Orbitals not initialized");
@@ -159,15 +159,15 @@ int XCPotentialD2::getPotentialIndex(int orbitalSpin, int densitySpin) {
 
     int spinFunctional = this->functional->isSpinSeparated() ? 1 : 0;
 
-    //Potential order (spin separated): v_aa, v_ab, v_bb
-    //Potential order (spin restricted, total density only): v_rr
+    // Potential order (spin separated): v_aa, v_ab, v_bb
+    // Potential order (spin restricted, total density only): v_rr
 
     int functional_case = spinFunctional; // 0  1
     functional_case += orbitalSpin << 1;  // 0  2  4  6
     functional_case += densitySpin << 3;  // 0  8 16 24
 
-    //OS Paired Alpha Beta
-    //DS Total  Spin  Alpha Beta
+    // OS Paired Alpha Beta
+    // DS Total  Spin  Alpha Beta
 
     // SF    OS             DS          case   Index
     switch (functional_case) {
@@ -260,7 +260,7 @@ Orbital XCPotentialD2::apply(Orbital phi) {
         NOT_IMPLEMENTED_ABORT;
     }
 
-    mrcpp::build_grid(*Vrho, components); //LUCA just using "add" results in loss of precision.
+    mrcpp::build_grid(*Vrho, components); // LUCA just using "add" results in loss of precision.
     mrcpp::add(-1.0, *Vrho, components);
     this->setReal(Vrho);
     Orbital Vrhophi = QMPotential::apply(phi);
@@ -292,13 +292,13 @@ FunctionTree<3> *XCPotentialD2::buildComponentGrad(int orbital_spin, int density
     mrcpp::FunctionTreeVector<3> d2fdrdg(potentials.begin() + 1, potentials.begin() + 4);
     mrcpp::FunctionTreeVector<3> d2fdgdgx(potentials.begin() + 4, potentials.begin() + 7);
     mrcpp::FunctionTreeVector<3> d2fdgdgy;
-    d2fdgdgy.push_back(potentials[5]); //yx --> xy
-    d2fdgdgy.push_back(potentials[7]); //yy
-    d2fdgdgy.push_back(potentials[8]); //yz
+    d2fdgdgy.push_back(potentials[5]); // yx --> xy
+    d2fdgdgy.push_back(potentials[7]); // yy
+    d2fdgdgy.push_back(potentials[8]); // yz
     mrcpp::FunctionTreeVector<3> d2fdgdgz;
-    d2fdgdgz.push_back(potentials[6]); //zx --> xz
-    d2fdgdgz.push_back(potentials[8]); //zy --> yz
-    d2fdgdgz.push_back(potentials[9]); //zz
+    d2fdgdgz.push_back(potentials[6]); // zx --> xz
+    d2fdgdgz.push_back(potentials[8]); // zy --> yz
+    d2fdgdgz.push_back(potentials[9]); // zz
 
     mrcpp::FunctionTree<3> *prod1 = new FunctionTree<3>(*MRA);
     mrcpp::build_grid(*prod1, densities);
@@ -432,7 +432,7 @@ FunctionTree<3> *XCPotentialD2::buildComponentGamma(int orbital_spin, int densit
     return component;
 }
 
-//Copied from XCFunctional. Ideally it should end up in mrcpp
+// Copied from XCFunctional. Ideally it should end up in mrcpp
 FunctionTree<3> *XCPotentialD2::calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V, mrcpp::FunctionTreeVector<3> &rho) {
     mrcpp::DerivativeOperator<3> *derivative = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
     mrcpp::FunctionTreeVector<3> vec;

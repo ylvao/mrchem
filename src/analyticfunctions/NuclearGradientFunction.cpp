@@ -86,4 +86,4 @@ double NuclearGradientFunction::du_dr(double r1) const {
 }
 // clang-format on
 
-} //namespace mrchem
+} // namespace mrchem

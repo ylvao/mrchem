@@ -283,4 +283,4 @@ TEST_CASE("QMFunction", "[qmfunction]") {
     }
 }
 
-} //namespace qmfunction_tests
+} // namespace qmfunction_tests

@@ -262,7 +262,7 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const s
     if (n_orbs < 0) n_orbs = Phi.size();
     if (n_orbs > Phi.size()) MSG_ERROR("Index out of bounds");
     for (int i = 0; i < n_orbs; i++) {
-        if (not mpi::my_orb(Phi[i])) continue; //only save own orbitals
+        if (not mpi::my_orb(Phi[i])) continue; // only save own orbitals
         std::stringstream orbname;
         orbname << file << "_" << suffix << i;
         Phi[i].saveOrbital(orbname.str());
@@ -296,7 +296,7 @@ OrbitalVector orbital::load_orbitals(const std::string &file, const std::string 
             break;
         }
     }
-    //distribute errors
+    // distribute errors
     DoubleVector errors = DoubleVector::Zero(Phi.size());
     for (int i = 0; i < Phi.size(); i++) {
         if (mpi::my_orb(Phi[i])) errors(i) = Phi[i].error();
@@ -896,4 +896,4 @@ void orbital::print(const OrbitalVector &Phi) {
     printout(0, "============================================================\n\n\n");
 }
 
-} //namespace mrchem
+} // namespace mrchem

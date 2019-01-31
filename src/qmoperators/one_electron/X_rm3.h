@@ -23,4 +23,4 @@ protected:
     PositionOperator r;
 };
 
-} //namespace mrchem
+} // namespace mrchem

@@ -39,4 +39,4 @@ protected:
     QMIdentity I;
 };
 
-} //namespace mrchem
+} // namespace mrchem

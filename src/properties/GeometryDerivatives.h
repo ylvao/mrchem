@@ -79,4 +79,4 @@ private:
 };
 // clang-format on
 
-} //namespace mrchem
+} // namespace mrchem

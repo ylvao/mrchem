@@ -285,4 +285,4 @@ protected:
     mrcpp::DerivativeOperator<3> *useDerivative(std::string derivative_name);
 };
 
-} //namespace mrchem
+} // namespace mrchem

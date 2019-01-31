@@ -156,4 +156,4 @@ TEST_CASE("Orbital", "[orbital]") {
     }
 }
 
-} //namespace orbital_tests
+} // namespace orbital_tests

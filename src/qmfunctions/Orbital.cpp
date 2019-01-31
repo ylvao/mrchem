@@ -116,11 +116,11 @@ Orbital Orbital::dagger() const {
  * and imaginary ("phi_0_im.tree") parts.
  */
 void Orbital::saveOrbital(const std::string &file) {
-    //writing meta data
+    // writing meta data
     std::stringstream metafile;
     metafile << file << ".meta";
 
-    //this flushes tree sizes
+    // this flushes tree sizes
     FunctionData &func_data = getFunctionData();
     OrbitalData &orb_data = getOrbitalData();
 
@@ -131,14 +131,14 @@ void Orbital::saveOrbital(const std::string &file) {
     f.write((char *)&orb_data, sizeof(OrbitalData));
     f.close();
 
-    //writing real part
+    // writing real part
     if (hasReal()) {
         std::stringstream fname;
         fname << file << "_re";
         real().saveTree(fname.str());
     }
 
-    //writing imaginary part
+    // writing imaginary part
     if (hasImag()) {
         std::stringstream fname;
         fname << file << "_im";
@@ -158,11 +158,11 @@ void Orbital::loadOrbital(const std::string &file) {
     if (hasReal()) MSG_ERROR("Orbital not empty");
     if (hasImag()) MSG_ERROR("Orbital not empty");
 
-    //reading meta data
+    // reading meta data
     std::stringstream fmeta;
     fmeta << file << ".meta";
 
-    //this flushes tree sizes
+    // this flushes tree sizes
     FunctionData &func_data = getFunctionData();
     OrbitalData &orb_data = getOrbitalData();
 
@@ -172,7 +172,7 @@ void Orbital::loadOrbital(const std::string &file) {
     if (f.is_open()) f.read((char *)&orb_data, sizeof(OrbitalData));
     f.close();
 
-    //reading real part
+    // reading real part
     if (func_data.real_size > 0) {
         std::stringstream fname;
         fname << file << "_re";
@@ -180,7 +180,7 @@ void Orbital::loadOrbital(const std::string &file) {
         real().loadTree(fname.str());
     }
 
-    //reading imaginary part
+    // reading imaginary part
     if (func_data.imag_size > 0) {
         std::stringstream fname;
         fname << file << "_im";
@@ -211,4 +211,4 @@ std::ostream &Orbital::print(std::ostream &o) const {
     return o;
 }
 
-} //namespace mrchem
+} // namespace mrchem

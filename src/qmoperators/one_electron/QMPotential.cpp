@@ -154,4 +154,4 @@ void QMPotential::calcImagPart(Orbital &out, Orbital &inp, bool dagger) {
     }
 }
 
-} //namespace mrchem
+} // namespace mrchem

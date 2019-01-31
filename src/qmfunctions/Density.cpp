@@ -52,11 +52,11 @@ Density &Density::operator=(const Density &dens) {
  * and imaginary ("phi_0_im.tree") parts.
  */
 void Density::saveDensity(const std::string &file) {
-    //writing meta data
+    // writing meta data
     std::stringstream metafile;
     metafile << file << ".meta";
 
-    //this flushes tree sizes
+    // this flushes tree sizes
     FunctionData &func_data = getFunctionData();
 
     std::fstream f;
@@ -65,14 +65,14 @@ void Density::saveDensity(const std::string &file) {
     f.write((char *)&func_data, sizeof(FunctionData));
     f.close();
 
-    //writing real part
+    // writing real part
     if (hasReal()) {
         std::stringstream fname;
         fname << file << "_re";
         real().saveTree(fname.str());
     }
 
-    //writing imaginary part
+    // writing imaginary part
     if (hasImag()) {
         std::stringstream fname;
         fname << file << "_im";
@@ -92,11 +92,11 @@ void Density::loadDensity(const std::string &file) {
     if (hasReal()) MSG_ERROR("Density not empty");
     if (hasImag()) MSG_ERROR("Density not empty");
 
-    //reading meta data
+    // reading meta data
     std::stringstream fmeta;
     fmeta << file << ".meta";
 
-    //this flushes tree sizes
+    // this flushes tree sizes
     FunctionData &func_data = getFunctionData();
 
     std::fstream f;
@@ -104,7 +104,7 @@ void Density::loadDensity(const std::string &file) {
     if (f.is_open()) f.read((char *)&func_data, sizeof(FunctionData));
     f.close();
 
-    //reading real part
+    // reading real part
     if (func_data.real_size > 0) {
         std::stringstream fname;
         fname << file << "_re";
@@ -112,7 +112,7 @@ void Density::loadDensity(const std::string &file) {
         real().loadTree(fname.str());
     }
 
-    //reading imaginary part
+    // reading imaginary part
     if (func_data.imag_size > 0) {
         std::stringstream fname;
         fname << file << "_im";
@@ -121,4 +121,4 @@ void Density::loadDensity(const std::string &file) {
     }
 }
 
-} //namespace mrchem
+} // namespace mrchem

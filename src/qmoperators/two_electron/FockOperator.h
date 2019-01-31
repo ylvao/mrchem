@@ -76,4 +76,4 @@ protected:
     ElectricFieldOperator *ext; ///< Total external potential
 };
 
-} //namespace mrchem
+} // namespace mrchem
