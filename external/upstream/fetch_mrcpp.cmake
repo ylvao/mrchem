@@ -11,7 +11,7 @@ else()
     GIT_REPOSITORY
       https://github.com/MRChemSoft/mrcpp.git
     GIT_TAG
-      stigrj-patch-1 # Preferable to have a tag for a release
+      16da6e17742b3d6a2e0b1517f91ee086c0bd828a # Preferable to have a tag for a release
     GIT_SHALLOW
       1
     CMAKE_ARGS
