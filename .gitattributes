@@ -12,3 +12,6 @@ src/mrchem.in licensefile=.githooks/LICENSE-Python
 
 tests/*/*.h licensefile=.githooks/LICENSE-C++
 tests/*/*.cpp licensefile=.githooks/LICENSE-C++
+
+cmake/update.py !licensefile
+cmake/autocmake/*.py !licensefile

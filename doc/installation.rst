@@ -7,7 +7,7 @@ Installation
 Build prerequisites
 -------------------
 
-The supplied setup script should be able to configure things
+The supplied ``setup`` script should be able to configure things
 correctly, provided all the necessary tools are available.
 
 Python
@@ -23,7 +23,7 @@ More specifically, users will need Python:
 Developers will additionally need Python to build the documentation locally with
 Sphinx.
 
-We **strongly** suggest not to install these Python dependencies locally, but
+We **strongly** suggest not to install these Python dependencies globally, but
 rather to use a local virtual environment.
 We provide both a ``Pipfile`` and a ``requirements.txt`` specifying the Python
 dependencies.
@@ -72,8 +72,7 @@ Using the Intel tool chain on Fram::
     $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
 
 Eigen is not available through the module system on Fram, so it must be
-installed manually by the user, see the `Eigen3
-<http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ home page or the
+installed manually by the user, see the `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ home page or the
 ``.ci/eigen.sh`` source file for details.
 
 -------------------------------
@@ -83,6 +82,11 @@ Obtaining and building the code
 The public version of MRChem is available on GitHub::
 
     $ git clone git@github.com:MRChemSoft/mrchem.git
+
+MRChem also depends on `XCFun <https://github.com/dftlibs/xcfun>`_,
+`Getkw <https://github.com/dev-cafe/libgetkw>`_ and `MRCPP <https://github.com/MRChemSoft/mrcpp>`_.
+We have structured the build system such that these dependencies will be **fetched**
+when configuring the project if they are not already installed.
 
 To build the code with only shared memory OpenMP parallelization::
 
@@ -103,12 +107,19 @@ To build the code with hybrid MPI/OpenMP parallelization::
 
 The MRChem executables will be installed in ``<install-dir>/bin``.
 
-If you want only to recompile one of the external library (for example mrcpp), without rebuilding from scratch, try::
+If the dependencies are already installed, say in the folder ``<dependencies-prefix>``,
+you can pass the following flag to the ``setup`` script to use them::
 
-   $ cd <build-dir>/subproject/Build/mrcpp_external
-   $ make install
-   
-Note that this will leave your build in an undefined state, since it will not try to update the mrchem parts.
+    $ ./setup --prefix=<install-dir> --cmake-options="-DXCFun_DIR="<dependencies-prefix>/share/cmake/XCFun" -Dgetkw_DIR="<dependencies-prefix>/share/cmake/getkw" -DMRCPP_DIR="<dependencies-prefix>/share/cmake/MRCPP""
+
+When fetching dependencies at configuration, a shallow Git clone is performed into ``<build-dir>``.
+For the example of MRCPP, sources are saved into the folders ``<build-dir>/mrcpp_sources-src`` and built into ``<build-dir>/mrcpp_source-build``.
+If you want only to recompile one of the external libraries (for example MRCPP), without rebuilding from scratch, try::
+
+   $ cd <build-dir>/mrcpp_sources-build
+   $ make
+
+Note that this will leave your build in an undefined state, since it will not try to update the MRChem parts.
 
 -------
 Testing

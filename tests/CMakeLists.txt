@@ -1,10 +1,9 @@
 # Unit tests
-# FIXME
-link_directories(${STAGED_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-
-# Prepare Catch "library"
-add_library(Catch INTERFACE)
-target_include_directories(Catch INTERFACE ${CMAKE_SOURCE_DIR}/external/catch)
+# Prepare "Catch" library for other executables, if not already available
+if(NOT TARGET Catch)
+  add_library(Catch INTERFACE)
+  target_include_directories(Catch INTERFACE ${PROJECT_SOURCE_DIR}/external/catch)
+endif()
 
 add_executable(mrchem-tests unit_tests.cpp)
 
