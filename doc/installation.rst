@@ -83,7 +83,7 @@ The public version of MRChem is available on GitHub::
 
     $ git clone git@github.com:MRChemSoft/mrchem.git
 
-MRChem depends on `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_, `XCFun <https://github.com/dftlibs/xcfun>`_,
+MRChem also depends on `XCFun <https://github.com/dftlibs/xcfun>`_,
 `Getkw <https://github.com/dev-cafe/libgetkw>`_ and `MRCPP <https://github.com/MRChemSoft/mrcpp>`_.
 We have structured the build system such that these dependencies will be **fetched**
 when configuring the project if they are not already installed.
