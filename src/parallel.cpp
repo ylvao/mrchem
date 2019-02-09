@@ -33,7 +33,7 @@ int orb_rank = 0;
 int orb_size = 1;
 int share_rank = 0;
 int share_size = 1;
-int sh_group_rank=0;
+int sh_group_rank = 0;
 
 MPI_Comm comm_orb;
 MPI_Comm comm_share;
@@ -266,9 +266,9 @@ void mpi::reduce_function(double prec, QMFunction &func, MPI_Comm comm) {
     if (comm_size == 1) return;
 
     int fac = 1; // powers of 2
-    while(fac<comm_size){
-        if ((comm_rank/fac) % 2 == 0) {
-            //receive
+    while (fac < comm_size) {
+        if ((comm_rank / fac) % 2 == 0) {
+            // receive
             int src = comm_rank + fac;
             if (src < comm_size) {
                 QMFunction func_i(false);
@@ -278,13 +278,13 @@ void mpi::reduce_function(double prec, QMFunction &func, MPI_Comm comm) {
                 func.crop(prec);
             }
         }
-        if ((comm_rank/fac) % 2 == 1) {
-            //send
+        if ((comm_rank / fac) % 2 == 1) {
+            // send
             int dest = comm_rank - fac;
-            if (dest >= 0 ) {
+            if (dest >= 0) {
                 int tag = 3333 + comm_rank;
                 mpi::send_function(func, dest, tag, comm);
-                break; //once data is sent we are done
+                break; // once data is sent we are done
             }
         }
         fac *= 2;
@@ -307,21 +307,21 @@ void mpi::broadcast_function(QMFunction &func, MPI_Comm comm) {
     if (comm_size == 1) return;
 
     int fac = 1; // powers of 2
-    while(fac < comm_size) fac *= 2;
+    while (fac < comm_size) fac *= 2;
     fac /= 2;
 
     while (fac > 0) {
         if (comm_rank % fac == 0 and (comm_rank / fac) % 2 == 1) {
-            //receive
+            // receive
             int src = comm_rank - fac;
             int tag = 4334 + comm_rank;
             mpi::recv_function(func, src, tag, comm);
         }
-        if (comm_rank % fac == 0 and (comm_rank / fac) % 2 == 0 ){
-            //send
+        if (comm_rank % fac == 0 and (comm_rank / fac) % 2 == 0) {
+            // send
             int dst = comm_rank + fac;
             int tag = 4334 + dst;
-            if(dst < comm_size)mpi::send_function(func, dst, tag, comm);
+            if (dst < comm_size) mpi::send_function(func, dst, tag, comm);
         }
         fac /= 2;
     }

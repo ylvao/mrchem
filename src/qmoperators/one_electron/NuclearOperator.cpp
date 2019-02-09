@@ -17,7 +17,7 @@ namespace mrchem {
  * @param[in] prec precision used both in smoothing and projection
  *
  * We create two different analytic functions for the nuclear potential:
- * 
+ *
  * 1) this->func: The total potential from all nuclei of the system.
  *                This is needed later for analytic calculations.
  *
@@ -42,7 +42,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
         double smooth = std::pow(c / Z_5, 1.0 / 3.0);
 
         this->func.push_back(nuc, smooth);
-        if (mpi::orb_rank == i%mpi::orb_size) loc_func.push_back(nuc, smooth); 
+        if (mpi::orb_rank == i % mpi::orb_size) loc_func.push_back(nuc, smooth);
 
         std::stringstream symbol;
         symbol << nuc.getElement().getSymbol();
@@ -99,7 +99,6 @@ void NuclearPotential::allreducePotential(double prec, QMFunction &V_loc) {
         mrcpp::copy_func(V_tot.real(), V_loc.real());
     }
 }
-
 
 /** @brief computes the interaction energy of the nuclear potential with a second set of nuclei.
  *
