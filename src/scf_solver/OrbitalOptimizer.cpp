@@ -146,7 +146,7 @@ bool OrbitalOptimizer::optimize() {
 
         // Apply Helmholtz operator
         HelmholtzVector H(orb_prec, F_mat.real().diagonal());
-        OrbitalVector Psi = H(F_mat, Phi_n);
+        OrbitalVector Psi = H.rotate(F_mat, Phi_n);
         OrbitalVector Phi_np1 = H(V, Phi_n, Psi);
         Psi.clear();
         F.clear();
