@@ -140,14 +140,16 @@ Orbital HelmholtzVector::apply(int i, Orbital &phi) const {
     if (std::abs(mu_i.imag()) > mrcpp::MachineZero) MSG_ABORT("Mu cannot be complex");
     mrcpp::HelmholtzOperator H(*MRA, mu_i.real(), this->prec);
 
+    double abs_prec = this->prec / phi.norm();
+
     Orbital out = phi.paramCopy();
     if (phi.hasReal()) {
         out.alloc(NUMBER::Real);
-        mrcpp::apply(this->prec, out.real(), H, phi.real());
+        mrcpp::apply(abs_prec, out.real(), H, phi.real());
     }
     if (phi.hasImag()) {
         out.alloc(NUMBER::Imag);
-        mrcpp::apply(this->prec, out.imag(), H, phi.imag());
+        mrcpp::apply(abs_prec, out.imag(), H, phi.imag());
         if (phi.conjugate()) out.imag().rescale(-1.0);
     }
     return out;
