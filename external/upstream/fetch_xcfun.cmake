@@ -15,8 +15,6 @@ else()
       https://github.com/dftlibs/xcfun.git
     GIT_TAG
       a486a3f1483925c84590cf7ea012cf177f67ae9b # Preferable to have a tag for a release
-    GIT_SHALLOW
-      1
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}

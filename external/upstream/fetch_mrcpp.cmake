@@ -12,8 +12,6 @@ else()
       https://github.com/MRChemSoft/mrcpp.git
     GIT_TAG
       16da6e17742b3d6a2e0b1517f91ee086c0bd828a # Preferable to have a tag for a release
-    GIT_SHALLOW
-      1
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
