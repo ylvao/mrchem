@@ -1067,7 +1067,7 @@ VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order) {
     return mask;
 }
 
-void XCFunctional::fill_output_mask(MatrixXi mask, int value) {
+void fill_output_mask(MatrixXi &mask, int value) {
     for (int i = 0, i < mask.rows(); i++) {
         mask(i,i) = value;
         value++;
@@ -1076,5 +1076,5 @@ void XCFunctional::fill_output_mask(MatrixXi mask, int value) {
             mask(i,j) = value;
             value++;
         }
-    }
-    
+    }   
+}
