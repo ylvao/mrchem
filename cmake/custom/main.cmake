@@ -7,13 +7,6 @@ set(PYTHON_SITE_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION_MAJOR
 
 # Fetch dependencies
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_getkw.cmake)
-file(
-  COPY
-    ${getkw_sources_BINARY_DIR}/Python/${PYTHON_SITE_INSTALL_DIR}/getkw.py
-    ${getkw_sources_BINARY_DIR}/Python/${PYTHON_SITE_INSTALL_DIR}/pyparsing.py
-  DESTINATION
-    ${PROJECT_BINARY_DIR}/${PYTHON_SITE_INSTALL_DIR}
-  )
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_xcfun.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_eigen3.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_mrcpp.cmake)

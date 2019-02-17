@@ -39,7 +39,7 @@ OFF = 0
 # FIXME This will pick up modules when installed
 sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
 # FIXME For use from within the build tree
-sys.path.append("@PROJECT_BINARY_DIR@/@PYTHON_SITE_INSTALL_DIR@")
+sys.path.append("@getkw_PYMOD@")
 sys.path.append('@PROJECT_SOURCE_DIR@/src/chemistry')
 
 import getkw  # isort:skip
