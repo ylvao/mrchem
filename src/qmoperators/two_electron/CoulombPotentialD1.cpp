@@ -18,7 +18,7 @@ CoulombPotentialD1::CoulombPotentialD1(mrcpp::PoissonOperator *P, OrbitalVector 
  *
  * This will compute the electron density as the sum of squares of the orbitals.
  */
-void CoulombPotentialD1::setupDensity(double prec) {
+void CoulombPotentialD1::setupGlobalDensity(double prec) {
     if (hasDensity()) return;
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
 
@@ -33,7 +33,7 @@ void CoulombPotentialD1::setupDensity(double prec) {
     Printer::printTree(0, "Coulomb density", n, t);
 }
 
-/** @brief compute electron density
+/** @brief compute local electron density (only own MPI orbitals)
  *
  * @param[in] prec: apply precision
  *

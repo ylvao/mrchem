@@ -45,10 +45,10 @@ protected:
     void setup(double prec);
     void clear();
 
+    virtual void setupGlobalDensity(double prec) {}
     virtual void setupLocalDensity(double prec) {}
-    virtual void setupDensity(double prec) {}
 
-    void setupPotential(double prec);
+    void setupGlobalPotential(double prec);
     QMFunction setupLocalPotential(double prec);
     void allreducePotential(double prec, QMFunction &V_loc);
 };

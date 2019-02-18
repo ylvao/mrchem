@@ -185,7 +185,6 @@ def setup_keywords(input_dir):
     mpi.add_kw('share_nuclear_potential','BOOL', False)
     mpi.add_kw('share_coulomb_density',  'BOOL', False)
     mpi.add_kw('share_coulomb_potential','BOOL', False)
-    mpi.add_kw('local_coulomb_potential','BOOL', False)
     mpi.add_kw('share_xc_density',       'BOOL', False)
     mpi.add_kw('share_xc_potential',     'BOOL', False)
     mpi.add_kw('shared_memory_size',     'INT', 10000)
@@ -420,7 +419,6 @@ def verify_top(top):
 
     if not top.get('nuc_prec').is_set():
         top['nuc_prec'][0] = top['rel_prec'][0]
-
 
 def verify_mra(mra):
     basis_type = mra.get('basis_type')

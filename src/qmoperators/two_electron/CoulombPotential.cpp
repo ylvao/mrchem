@@ -26,7 +26,7 @@ namespace mrchem {
 
 CoulombPotential::CoulombPotential(PoissonOperator *P, OrbitalVector *Phi)
         : QMPotential(1, mpi::share_coul_pot)
-        , local(mpi::local_coul_pot)
+        , local(not(mpi::numerically_exact))
         , density(mpi::share_coul_dens)
         , orbitals(Phi)
         , poisson(P) {}
@@ -51,8 +51,8 @@ void CoulombPotential::setup(double prec) {
         QMFunction V = setupLocalPotential(prec);
         allreducePotential(prec, V);
     } else {
-        setupDensity(prec);
-        setupPotential(prec);
+        setupGlobalDensity(prec);
+        setupGlobalPotential(prec);
     }
 }
 
@@ -74,7 +74,7 @@ void CoulombPotential::clear() {
  * This will compute the Coulomb potential by application o the Poisson operator
  * to the precomputed electron density.
  */
-void CoulombPotential::setupPotential(double prec) {
+void CoulombPotential::setupGlobalPotential(double prec) {
     if (this->poisson == nullptr) MSG_ERROR("Poisson operator not initialized");
 
     PoissonOperator &P = *this->poisson;

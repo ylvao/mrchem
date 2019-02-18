@@ -17,7 +17,7 @@ CoulombPotentialD2::CoulombPotentialD2(mrcpp::PoissonOperator *P,
         , orbitals_x(X)
         , orbitals_y(Y) {}
 
-void CoulombPotentialD2::setupDensity(double prec) {
+void CoulombPotentialD2::setupGlobalDensity(double prec) {
     if (hasDensity()) return;
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     if (this->orbitals_x == nullptr) MSG_ERROR("Orbitals not initialized");
@@ -34,6 +34,25 @@ void CoulombPotentialD2::setupDensity(double prec) {
     double t = timer.getWallTime();
     int n = rho.getNNodes(NUMBER::Total);
     Printer::printTree(0, "Perturbed Coulomb density", n, t);
+}
+
+void CoulombPotentialD2::setupLocalDensity(double prec) {
+    if (hasDensity()) return;
+    if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (this->orbitals_x == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (this->orbitals_y == nullptr) MSG_ERROR("Orbitals not initialized");
+
+    Density &rho = this->density;
+    OrbitalVector &Phi = *this->orbitals;
+    OrbitalVector &X = *this->orbitals_x;
+    OrbitalVector &Y = *this->orbitals_y;
+
+    Timer timer;
+    density::compute_local(prec, rho, Phi, X, Y, DENSITY::Total);
+    timer.stop();
+    double t = timer.getWallTime();
+    int n = rho.getNNodes(NUMBER::Total);
+    Printer::printTree(0, "Coulomb density", n, t);
 }
 
 } // namespace mrchem

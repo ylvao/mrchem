@@ -12,7 +12,8 @@ private:
     OrbitalVector *orbitals_x; ///< Perturbed orbitals
     OrbitalVector *orbitals_y; ///< Perturbed orbitals
 
-    void setupDensity(double prec);
+    void setupGlobalDensity(double prec);
+    void setupLocalDensity(double prec);
 };
 
 } // namespace mrchem

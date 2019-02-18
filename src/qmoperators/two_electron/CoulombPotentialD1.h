@@ -10,7 +10,7 @@ public:
 
 private:
     void setupLocalDensity(double prec);
-    void setupDensity(double prec);
+    void setupGlobalDensity(double prec);
 };
 
 } // namespace mrchem

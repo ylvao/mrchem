@@ -24,7 +24,6 @@ bool numerically_exact = false;
 bool share_nuc_pot = false;
 bool share_coul_dens = false;
 bool share_coul_pot = false;
-bool local_coul_pot = false;
 bool share_xc_dens = false;
 bool share_xc_pot = false;
 int shared_memory_size = 1000;

@@ -52,6 +52,8 @@ namespace density {
 Density compute(double prec, Orbital phi, int spin);
 void compute_X(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, int spin);
 void compute_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, int spin);
+void compute_local_X(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, int spin);
+void compute_local_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, int spin);
 double compute_occupation(Orbital &phi, int dens_spin);
 } // namespace density
 
@@ -90,26 +92,6 @@ Density density::compute(double prec, Orbital phi, int spin) {
         rho.real().setZero();
     }
     return rho;
-}
-
-/** @brief Compute local density as the sum of own (MPI) orbitals
- */
-void density::compute_local(double prec, Density &rho, OrbitalVector &Phi, int spin) {
-    int N_el = orbital::get_electron_number(Phi);
-    double mult_prec = prec;       // prec for rho_i = |phi_i|^2
-    double add_prec = prec / N_el; // prec for rho = sum_i rho_i
-
-    if (not rho.hasReal()) rho.alloc(NUMBER::Real);
-
-    // Compute local density from own orbitals
-    rho.real().setZero();
-    for (auto &phi_i : Phi) {
-        if (mpi::my_orb(phi_i)) {
-            Density rho_i = density::compute(mult_prec, phi_i, spin);
-            rho.add(1.0, rho_i);
-            rho.crop(add_prec);
-        }
-    }
 }
 
 /** @brief Compute density as the sum of squared orbitals
@@ -312,6 +294,101 @@ void density::compute_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalV
         // All MPI ranks copies the function into final memory
         mrcpp::copy_grid(rho.real(), rho_loc.real());
         mrcpp::copy_func(rho.real(), rho_loc.real());
+    }
+}
+
+/** @brief Compute local density as the sum of own (MPI) orbitals
+ */
+void density::compute_local(double prec, Density &rho, OrbitalVector &Phi, int spin) {
+    int N_el = orbital::get_electron_number(Phi);
+    double mult_prec = prec;       // prec for rho_i = |phi_i|^2
+    double add_prec = prec / N_el; // prec for rho = sum_i rho_i
+
+    if (not rho.hasReal()) rho.alloc(NUMBER::Real);
+
+    // Compute local density from own orbitals
+    rho.real().setZero();
+    for (auto &phi_i : Phi) {
+        if (mpi::my_orb(phi_i)) {
+            Density rho_i = density::compute(mult_prec, phi_i, spin);
+            rho.add(1.0, rho_i);
+            rho.crop(add_prec);
+        }
+    }
+}
+
+/** @brief Compute local density as the sum of own (MPI) orbitals
+ */
+void density::compute_local(double prec,
+                            Density &rho,
+                            OrbitalVector &Phi,
+                            OrbitalVector &X,
+                            OrbitalVector &Y,
+                            int spin) {
+    if (&X == &Y) {
+        density::compute_local_X(prec, rho, Phi, X, spin);
+    } else {
+        density::compute_local_XY(prec, rho, Phi, X, Y, spin);
+    }
+}
+
+void density::compute_local_X(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, int spin) {
+    int N_el = orbital::get_electron_number(Phi);
+    double mult_prec = prec;       // prec for rho_i = |x_i><phi_i| + |phi_i><x_i|
+    double add_prec = prec / N_el; // prec for rho = sum_i rho_i
+    if (Phi.size() != X.size()) MSG_ERROR("Size mismatch");
+
+    if (not rho.hasReal()) rho.alloc(NUMBER::Real);
+
+    // Compute local density from own orbitals
+    rho.real().setZero();
+    for (int i = 0; i < Phi.size(); i++) {
+        if (mpi::my_orb(Phi[i])) {
+            if (not mpi::my_orb(X[i])) MSG_FATAL("Inconsistent MPI distribution");
+
+            double occ = density::compute_occupation(Phi[i], spin);
+            if (std::abs(occ) < mrcpp::MachineZero) continue; // next orbital if this one is not occupied!
+
+            Density rho_i(false);
+            qmfunction::multiply_real(rho_i, Phi[i], X[i], mult_prec);
+            rho.add(2.0 * occ, rho_i);
+            rho.crop(add_prec);
+        }
+    }
+}
+
+void density::compute_local_XY(double prec,
+                               Density &rho,
+                               OrbitalVector &Phi,
+                               OrbitalVector &X,
+                               OrbitalVector &Y,
+                               int spin) {
+    int N_el = orbital::get_electron_number(Phi);
+    double mult_prec = prec;       // prec for rho_i = |x_i><phi_i| + |phi_i><y_i|
+    double add_prec = prec / N_el; // prec for rho = sum_i rho_i
+    if (Phi.size() != X.size()) MSG_ERROR("Size mismatch");
+    if (Phi.size() != Y.size()) MSG_ERROR("Size mismatch");
+
+    if (not rho.hasReal()) rho.alloc(NUMBER::Real);
+
+    // Compute local density from own orbitals
+    rho.real().setZero();
+    for (int i = 0; i < Phi.size(); i++) {
+        if (mpi::my_orb(Phi[i])) {
+            if (not mpi::my_orb(X[i])) MSG_FATAL("Inconsistent MPI distribution");
+            if (not mpi::my_orb(Y[i])) MSG_FATAL("Inconsistent MPI distribution");
+
+            double occ = density::compute_occupation(Phi[i], spin);
+            if (std::abs(occ) < mrcpp::MachineZero) continue; // next orbital if this one is not occupied!
+
+            Density rho_x(false);
+            Density rho_y(false);
+            qmfunction::multiply(rho_x, X[i], Phi[i].dagger(), mult_prec);
+            qmfunction::multiply(rho_y, Phi[i], Y[i].dagger(), mult_prec);
+            rho.add(occ, rho_x);
+            rho.add(occ, rho_y);
+            rho.crop(add_prec);
+        }
     }
 }
 
