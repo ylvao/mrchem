@@ -59,7 +59,6 @@
  *
  */
 
-namespace mrdft {
 
 class XCFunctional final {
 public:
@@ -102,7 +101,7 @@ public:
         return exx;
     }
 
-    void evalSetup(int order, int mod = 1);
+    void evalSetup(int order);
     void setup();
     void clear();
 

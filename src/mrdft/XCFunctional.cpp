@@ -42,6 +42,8 @@ using mrcpp::Plotter;
 using mrcpp::Printer;
 using mrcpp::Timer;
 
+using Eigen::MatrixXi;
+using Eigen::VectorXi;
 using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 using Eigen::VectorXd;
@@ -663,20 +665,20 @@ void XCFunctional::evaluate() {
 
 
 
-void XCFunctional::contractNodeData(int n, int n_coefs, MatrixXd &out_data, MatrixXd &con_data) {
+void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_data, MatrixXd &con_data) {
 
     MatrixXi output_mask = build_output_mask(isLDA(), isSpinSeparated(), order);
     VectorXi density_mask = build_density_mask(isLDA(), isSpinSeparated(), order);
     if(output_mask.rows() != density_mask.size()) MSG_FATAL("Inconsistent lengths");
 
     VectorXd cont_i;
-    for (int i = 0; i < output_mask.cols()) {
-        cont_i = VectorXd::Zero(n_coefs);
-        for (int j = 0; i < output_mask.rows()) {
+    for (int i = 0; i < output_mask.cols(); i++) {
+        cont_i = VectorXd::Zero(n_points);
+        for (int j = 0; j < output_mask.rows(); j++) {
             int out_index = output_mask(i,j);
             int den_index = density_mask(j);
             if(den_index >= 0) {
-                FunctionNode<3> &dens_node = mrcpp::get_func(xcDensity, density_index(i)).getEndFuncNode(n);
+                FunctionNode<3> &dens_node = mrcpp::get_func(xcDensity, density_mask(i)).getEndFuncNode(node_index);
                 VectorXd dens_i;
                 dens_node.getValues(dens_i);
                 cont_i += out_data.col(out_index).array() * dens_i.array();
