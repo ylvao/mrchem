@@ -75,8 +75,12 @@ def main():
     if printlevel > 1:
         print("Starting " + sys.argv[0])
 
-    input = getkw.GetkwParser()
-    inkw = input.parseFile(inpfil)
+    # Generate temporary file with case fixed (all uppercase)
+    lced = convert_to_lower_case(inpfil)
+    # Parse temporary input file
+    inkw = getkw.GetkwParser().parseFile(lced)
+    # Remove temporary input file
+    os.remove(lced)
     inkw.sanitize(valid_keywords)
     topsect = inkw.get_topsect()
     inkw.run_callbacks(valid_keywords)
@@ -92,6 +96,27 @@ def main():
             fd.seek(0)
             p = subprocess.Popen(executable, stdin=fd)
             sts = os.waitpid(p.pid, 0)[1]
+
+
+            def convert_to_lower_case(filename):
+    """
+    Reads contents of filename and converts them to lowercase.
+    The case-converted contents are written back to a temporary file.
+    """
+    contents = ''
+    final = ''
+    with open(filename, 'r') as inputFile:
+        contents = inputFile.readlines()
+    final = [l.lower() for l in contents]
+
+    # Write to temporary file in current working directory
+    # The temporary file has the name of the input file, joined with a unique id
+    temp, path = tempfile.mkstemp(prefix=filename + '.', dir=os.getcwd())
+    with open(path, 'w') as fout:
+        for l in final:
+            fout.write('{:s}'.format(l))
+        os.close(temp)
+    return path
 
 
 def parse_cmdline():
@@ -154,7 +179,7 @@ def setup_keywords(input_dir):
     top.add_kw('teletype',              'BOOL', False)
     # yapf: enable
 
-    mpi = getkw.Section('MPI')
+    mpi = getkw.Section('mpi')
     # yapf: disable
     mpi.add_kw('numerically_exact',      'BOOL', False)
     mpi.add_kw('share_nuclear_potential','BOOL', False)
@@ -166,10 +191,10 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(mpi)
 
-    mra = getkw.Section('MRA', callback=verify_mra)
+    mra = getkw.Section('mra', callback=verify_mra)
     # yapf: disable
     mra.add_kw('order',                 'INT', -1)
-    mra.add_kw('basis_type',            'STR', 'Interpolating')
+    mra.add_kw('basis_type',            'STR', 'interpolating')
     mra.add_kw('min_scale',             'INT', 0)
     mra.add_kw('max_scale',             'INT', 25)
     mra.add_kw('boxes',                 'INT_ARRAY', [1, 1, 1])
@@ -180,16 +205,16 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(mra)
 
-    derivatives = getkw.Section('Derivatives')
+    derivatives = getkw.Section('derivatives')
     # yapf: disable
-    derivatives.add_kw('kinetic',       'STR', 'ABGV_55')
-    derivatives.add_kw('h_orb',         'STR', 'ABGV_00')
-    derivatives.add_kw('h_pso',         'STR', 'ABGV_00')
-    derivatives.add_kw('dft',           'STR', 'ABGV_00')
+    derivatives.add_kw('kinetic',       'STR', 'abgv_55')
+    derivatives.add_kw('h_orb',         'STR', 'abgv_00')
+    derivatives.add_kw('h_pso',         'STR', 'abgv_00')
+    derivatives.add_kw('dft',           'STR', 'abgv_00')
     # yapf: enable
     top.add_sect(derivatives)
 
-    molecule = getkw.Section('Molecule', callback=verify_molecule)
+    molecule = getkw.Section('molecule', callback=verify_molecule)
     # yapf: disable
     molecule.add_kw('charge',           'INT', 0)
     molecule.add_kw('multiplicity',     'INT', 1)
@@ -198,14 +223,14 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(molecule)
 
-    wavefunction = getkw.Section('WaveFunction', callback=verify_wf)
+    wavefunction = getkw.Section('wavefunction', callback=verify_wf)
     # yapf: disable
     wavefunction.add_kw('restricted',   'BOOL', True)
-    wavefunction.add_kw('method',       'STR', 'HF')
+    wavefunction.add_kw('method',       'STR', 'hf')
     # yapf: enable
     top.add_sect(wavefunction)
 
-    dft = getkw.Section('DFT', callback=verify_dft)
+    dft = getkw.Section('dft', callback=verify_dft)
     # yapf: disable
     dft.add_kw('spin',                  'BOOL', False)
     dft.add_kw('orbital_free',          'BOOL', False)
@@ -216,7 +241,7 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(dft)
 
-    properties = getkw.Section('Properties')
+    properties = getkw.Section('properties')
     # yapf: disable
     properties.add_kw('scf_energy',             'BOOL', False)
     properties.add_kw('dipole_moment',          'BOOL', False)
@@ -232,7 +257,7 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(properties)
 
-    external_field = getkw.Section('ExternalField', callback=verify_ext_field)
+    external_field = getkw.Section('externalfield', callback=verify_ext_field)
     # yapf: disable
     external_field.add_kw('electric_run',       'BOOL', False)
     external_field.add_kw('electric_field',     'DBL_ARRAY')
@@ -241,7 +266,7 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(external_field)
 
-    polarizability = getkw.Section('Polarizability', callback=verify_pol)
+    polarizability = getkw.Section('polarizability', callback=verify_pol)
     # yapf: disable
     polarizability.add_kw('velocity',           'BOOL', False)
     polarizability.add_kw('frequency',          'DBL_ARRAY')
@@ -249,36 +274,36 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(polarizability)
 
-    optical_rotation = getkw.Section('OpticalRotation', callback=verify_optrot)
+    optical_rotation = getkw.Section('opticalrotation', callback=verify_optrot)
     # yapf: disable
-    optical_rotation.add_kw('perturbation',     'STR', 'E')
+    optical_rotation.add_kw('perturbation',     'STR', 'e')
     optical_rotation.add_kw('velocity',         'BOOL', False)
     optical_rotation.add_kw('frequency',        'DBL_ARRAY')
     optical_rotation.add_kw('wavelength',       'DBL_ARRAY')
     # yapf: enable
     top.add_sect(optical_rotation)
 
-    nmr = getkw.Section('NMRShielding', callback=verify_nmr)
+    nmr = getkw.Section('nmrshielding', callback=verify_nmr)
     # yapf: disable
-    nmr.add_kw('perturbation',          'STR', 'B')
+    nmr.add_kw('perturbation',          'STR', 'b')
     nmr.add_kw('nucleus_k',             'INT_ARRAY')
     # yapf: enable
     top.add_sect(nmr)
 
-    sscc = getkw.Section('SpinSpinCoupling', callback=verify_sscc)
+    sscc = getkw.Section('spinspincoupling', callback=verify_sscc)
     # yapf: disable
     sscc.add_kw('nucleus_k',            'INT_ARRAY')
     sscc.add_kw('nucleus_l',            'INT_ARRAY')
     # yapf: enable
     top.add_sect(sscc)
 
-    hfcc = getkw.Section('HyperfineCoupling', callback=verify_hfcc)
+    hfcc = getkw.Section('hyperfinecoupling', callback=verify_hfcc)
     # yapf: disable
     hfcc.add_kw('nucleus_k',            'INT_ARRAY')
     # yapf: enable
     top.add_sect(hfcc)
 
-    scf = getkw.Section('SCF', callback=verify_scf)
+    scf = getkw.Section('scf', callback=verify_scf)
     # yapf: disable
     scf.add_kw('run',                   'BOOL', True)
     scf.add_kw('max_iter',              'INT', -1)
@@ -294,7 +319,7 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(scf)
 
-    kinetic_free = getkw.Section('KineticFree', callback=verify_kinetic_free)
+    kinetic_free = getkw.Section('kineticfree', callback=verify_kinetic_free)
     # yapf: disable
     kinetic_free.add_kw('run',                   'BOOL', False)
     kinetic_free.add_kw('max_iter',              'INT', -1)
@@ -304,7 +329,7 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(kinetic_free)
 
-    response = getkw.Section('Response', callback=verify_response)
+    response = getkw.Section('response', callback=verify_response)
     # yapf: disable
     response.add_kw('run',              'BOOL', True)
     response.add_kw('max_iter',         'INT', -1)
@@ -319,15 +344,15 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(response)
 
-    initial = getkw.Section('LSDalton')
+    initial = getkw.Section('lsdalton')
     # yapf: disable
     initial.add_kw('run',               'BOOL', False)
-    initial.add_kw('basis',             'STR', '3-21G')
-    initial.add_kw('method',            'STR', 'HF')
+    initial.add_kw('basis',             'STR', '3-21g')
+    initial.add_kw('method',            'STR', 'hf')
     # yapf: enable
     top.add_sect(initial)
 
-    files = getkw.Section('Files')
+    files = getkw.Section('files')
     # Set up directory for orbitals, subdirectory of input_dir
     orbs_dir = os.path.join(input_dir, 'orbitals')
     if not os.path.exists(orbs_dir):
@@ -356,7 +381,7 @@ def setup_keywords(input_dir):
     # yapf: enable
     top.add_sect(files)
 
-    pilot = getkw.Section('Pilot')
+    pilot = getkw.Section('pilot')
     # yapf: disable
     pilot.add_kw('run_projection',      'BOOL', False)
     pilot.add_kw('run_addition',        'BOOL', False)
@@ -374,7 +399,7 @@ def setup_keywords(input_dir):
 def verify_top(top):
     if not top.get('rel_prec').is_set():
         if not top.get('est_norm').is_set():
-            mol = topsect.fetch_sect('Molecule')
+            mol = topsect.fetch_sect('molecule')
             if mol.get('coords').is_set():
                 coords = mol.get('coords').get()
                 est_au = estimate_energy(coords)
@@ -400,9 +425,9 @@ def verify_mra(mra):
     basis_type = mra.get('basis_type')
     wlet = basis_type.get()
     if re.match('legen.*', wlet, re.I):
-        basis_type.set("L")
+        basis_type.set("l")
     elif re.match('inter.*', wlet, re.I):
-        basis_type.set("I")
+        basis_type.set("i")
     else:
         print("Invalid basis type: ", basis_type)
         sys.exit(1)
@@ -419,7 +444,7 @@ def verify_molecule(mol):
         AA = 1.889725989
     coords = mol.get('coords').get()
     i = 0
-    for line in coords[:]:
+    for line in coords:
         sp = line.split()
         elm = sp[0].lower()
         x_a, y_a, z_a = list(map(float, sp[1:]))
@@ -432,7 +457,7 @@ def verify_molecule(mol):
 
 def verify_response(rsp):
     if not rsp.get('canonical').is_set():
-        scf = topsect.fetch_sect('SCF')
+        scf = topsect.fetch_sect('scf')
         rsp['canonical'][0] = scf['canonical'][0]
     if rsp['orbital_prec'][1] < 0:
         rsp['orbital_prec'][1] = topsect['rel_prec'][0]
@@ -473,7 +498,7 @@ def verify_pol(pol):
 
 def verify_optrot(optrot):
     pert = optrot['perturbation'].get()
-    if pert != 'B' and pert != 'E':
+    if pert != 'b' and pert != 'e':
         print("invalid optical rotation perturbation:", pert)
         exit()
     if optrot.get('wavelength').is_set():
@@ -486,7 +511,7 @@ def verify_optrot(optrot):
 
 def verify_nmr(nmr):
     pert = nmr['perturbation'].get()
-    if pert != 'B' and pert != 'M':
+    if pert != 'b' and pert != 'm':
         print("invalid NMR shielding perturbation:", pert)
         exit()
     if not nmr.get('nucleus_k').is_set():
@@ -506,28 +531,23 @@ def verify_hfcc(hfcc):
 
 
 def verify_wf(wf):
-    valid_methods = {
-        'Core',
-        'Hartree',
-        'HF',
-        'DFT'
-    }
+    valid_methods = {'core', 'hartree', 'hf', 'dft'}
     default_functionals = {
-        'LDA',
-        'PBE',
-        'PBE0',
-        'BLYP',
-        'B3LYP',
-        'BP86',
-        'PW91',
+        'lda',
+        'pbe',
+        'pbe0',
+        'blyp',
+        'b3lyp',
+        'bp86',
+        'pw91',
     }
     method = wf['method'][0]
     if method in default_functionals:
-        dft = topsect.fetch_sect('DFT')
+        dft = topsect.fetch_sect('dft')
         if dft['functionals'].is_set():
             print('Cannot overwrite default functional: ' + method)
             exit()
-        wf['method'][0] = 'DFT'
+        wf['method'][0] = 'dft'
         dft['functionals'].get().append(method + ' 1.00')
     elif not (method in valid_methods):
         print('Invalid WaveFunction method: ' + method)
@@ -535,7 +555,7 @@ def verify_wf(wf):
 
 
 def verify_dft(dft):
-    wf = topsect.fetch_sect('WaveFunction')
+    wf = topsect.fetch_sect('wavefunction')
     # does not allow spin-separated functionals for a closed shell system
     if wf['restricted'][0]:
         dft['spin'][0] = False
@@ -581,7 +601,7 @@ def verify_kinetic_free(kinetic_free):
 # is used to set the precision parameter in mrchem in case of abs_prec.
 def estimate_energy(coords):
     est_en = 0.0
-    for line in coords[:]:
+    for line in coords:
         sp = line.split()
         elm = sp[0].lower()
         Z = PT[elm].Z

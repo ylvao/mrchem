@@ -36,7 +36,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
-Getkw mrchem::Input;
+Getkw mrchem::input;
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
 using namespace mrcpp;
@@ -68,19 +68,19 @@ int main(int argc, char **argv) {
     Timer timer;
 
     // Reading input
-    double prec = Input.get<double>("rel_prec");
-    bool wf_restricted = Input.get<bool>("WaveFunction.restricted");
-    int mol_charge = Input.get<int>("Molecule.charge");
-    int mol_multiplicity = Input.get<int>("Molecule.multiplicity");
-    std::vector<std::string> mol_coords = Input.getData("Molecule.coords");
-    std::string scf_guess = Input.get<std::string>("SCF.initial_guess");
-    std::string orb_file = Input.get<std::string>("Files.start_orbitals");
+    double prec = input.get<double>("rel_prec");
+    bool wf_restricted = input.get<bool>("wavefunction.restricted");
+    int mol_charge = input.get<int>("molecule.charge");
+    int mol_multiplicity = input.get<int>("molecule.multiplicity");
+    std::vector<std::string> mol_coords = input.getData("molecule.coords");
+    std::string scf_guess = input.get<std::string>("scf.initial_guess");
+    std::string orb_file = input.get<std::string>("files.start_orbitals");
 
     int ig_zeta = 0;
-         if (scf_guess == "CORE_SZ") { ig_zeta = 1; }
-    else if (scf_guess == "CORE_DZ") { ig_zeta = 2; }
-    else if (scf_guess == "CORE_TZ") { ig_zeta = 3; }
-    else if (scf_guess == "CORE_QZ") { ig_zeta = 4; }
+         if (scf_guess == "core_sz") { ig_zeta = 1; }
+    else if (scf_guess == "core_dz") { ig_zeta = 2; }
+    else if (scf_guess == "core_tz") { ig_zeta = 3; }
+    else if (scf_guess == "core_qz") { ig_zeta = 4; }
     else { MSG_FATAL("Invalid initial guess"); }
 
     // Setting up molecule

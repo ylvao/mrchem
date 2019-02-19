@@ -36,7 +36,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
-Getkw mrchem::Input;
+Getkw mrchem::input;
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
 using namespace mrcpp;
@@ -66,18 +66,18 @@ int main(int argc, char **argv) {
     Timer timer;
 
     // Reading input
-    double prec = Input.get<double>("rel_prec");
-    bool wf_restricted = Input.get<bool>("WaveFunction.restricted");
-    int mol_charge = Input.get<int>("Molecule.charge");
-    int mol_multiplicity = Input.get<int>("Molecule.multiplicity");
-    std::vector<std::string> mol_coords = Input.getData("Molecule.coords");
-    std::string scf_guess = Input.get<std::string>("SCF.initial_guess");
-    std::string orb_file = Input.get<std::string>("Files.start_orbitals");
-    std::string bas_file = Input.get<std::string>("Files.basis_set");
-    std::string moa_file = Input.get<std::string>("Files.mo_mat_a");
-    std::string mob_file = Input.get<std::string>("Files.mo_mat_b");
+    double prec = input.get<double>("rel_prec");
+    bool wf_restricted = input.get<bool>("wavefunction.restricted");
+    int mol_charge = input.get<int>("molecule.charge");
+    int mol_multiplicity = input.get<int>("molecule.multiplicity");
+    std::vector<std::string> mol_coords = input.getData("molecule.coords");
+    std::string scf_guess = input.get<std::string>("scf.initial_guess");
+    std::string orb_file = input.get<std::string>("files.start_orbitals");
+    std::string bas_file = input.get<std::string>("files.basis_set");
+    std::string moa_file = input.get<std::string>("files.mo_mat_a");
+    std::string mob_file = input.get<std::string>("files.mo_mat_b");
 
-    if (scf_guess != "GTO") MSG_FATAL("Invalid initial guess");
+    if (scf_guess != "gto") MSG_FATAL("Invalid initial guess");
 
     // Setting up molecule
     Molecule mol(mol_coords, mol_charge, mol_multiplicity);

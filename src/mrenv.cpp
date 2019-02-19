@@ -26,11 +26,11 @@ void initialize(int argc, char **argv) {
     }
 
     // Initialize input
-    Input = Getkw(infile, false, true);
+    input = Getkw(infile, false, true);
 
     // Initialize printing
-    int printlevel = Input.get<int>("printlevel");
-    bool teletype = Input.get<bool>("teletype");
+    int printlevel = input.get<int>("printlevel");
+    bool teletype = input.get<bool>("teletype");
     if (teletype) {
         Printer::init(printlevel, mpi::orb_rank, mpi::orb_size, "mrchem");
     } else {
@@ -38,19 +38,19 @@ void initialize(int argc, char **argv) {
     }
     Printer::setPrecision(15);
 
-    mpi::numerically_exact = Input.get<bool>("MPI.numerically_exact");
-    mpi::share_nuc_pot = Input.get<bool>("MPI.share_nuclear_potential");
-    mpi::share_coul_dens = Input.get<bool>("MPI.share_coulomb_density");
-    mpi::share_coul_pot = Input.get<bool>("MPI.share_coulomb_potential");
-    mpi::share_xc_dens = Input.get<bool>("MPI.share_xc_density");
-    mpi::share_xc_pot = Input.get<bool>("MPI.share_xc_potential");
-    mpi::shared_memory_size = Input.get<int>("MPI.shared_memory_size");
+    mpi::numerically_exact = input.get<bool>("mpi.numerically_exact");
+    mpi::share_nuc_pot = input.get<bool>("mpi.share_nuclear_potential");
+    mpi::share_coul_dens = input.get<bool>("mpi.share_coulomb_density");
+    mpi::share_coul_pot = input.get<bool>("mpi.share_coulomb_potential");
+    mpi::share_xc_dens = input.get<bool>("mpi.share_xc_density");
+    mpi::share_xc_pot = input.get<bool>("mpi.share_xc_potential");
+    mpi::shared_memory_size = input.get<int>("mpi.shared_memory_size");
 
     // Initialize world box
-    int min_scale = Input.get<int>("MRA.min_scale");
-    int max_scale = Input.get<int>("MRA.max_scale");
-    vector<int> corner = Input.getIntVec("MRA.corner");
-    vector<int> boxes = Input.getIntVec("MRA.boxes");
+    int min_scale = input.get<int>("mra.min_scale");
+    int max_scale = input.get<int>("mra.max_scale");
+    vector<int> corner = input.getIntVec("mra.corner");
+    vector<int> boxes = input.getIntVec("mra.boxes");
     std::array<int, 3> c_idx;
     std::array<int, 3> n_bxs;
     std::copy_n(corner.begin(), 3, c_idx.begin());
@@ -58,8 +58,8 @@ void initialize(int argc, char **argv) {
     BoundingBox<3> world(min_scale, c_idx, n_bxs);
 
     // Initialize scaling basis
-    int order = Input.get<int>("MRA.order");
-    string btype = Input.get<string>("MRA.basis_type");
+    int order = input.get<int>("mra.order");
+    string btype = input.get<string>("mra.basis_type");
 
     int max_depth = max_scale - min_scale;
     if (min_scale < MinScale) MSG_FATAL("Root scale too large");
@@ -67,10 +67,10 @@ void initialize(int argc, char **argv) {
     if (max_depth > MaxDepth) MSG_FATAL("Max depth too large");
 
     // Initialize global MRA
-    if (btype == "I") {
+    if (btype == "i") {
         InterpolatingBasis basis(order);
         MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
-    } else if (btype == "L") {
+    } else if (btype == "l") {
         LegendreBasis basis(order);
         MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else {

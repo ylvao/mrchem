@@ -43,7 +43,7 @@ namespace NUMBER { enum type { Total, Real, Imag }; }
 namespace DENSITY { enum type { Total, Spin, Alpha, Beta }; }
 namespace MRDFT {enum type {Function, Gradient, Hessian}; }
 
- 
+
 using ComplexInt = std::complex<int>;
 using ComplexDouble = std::complex<double>;
 
@@ -55,7 +55,7 @@ using IntMatrix = Eigen::MatrixXi;
 using DoubleMatrix = Eigen::MatrixXd;
 using ComplexMatrix = Eigen::MatrixXcd;
 
-extern Getkw Input;
+extern Getkw input;
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; //< Global MRA
 
 } //namespace mrchem

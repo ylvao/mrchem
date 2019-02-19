@@ -1,7 +1,9 @@
 import os
 import re
-from periodictable import PeriodicTableByZ as PTz
+
 from periodictable import PeriodicTableByName as PTn
+from periodictable import PeriodicTableByZ as PTz
+
 
 def makexyz(coords):
     nAtoms = len(coords)
@@ -26,7 +28,7 @@ def makedal(coords, method, charge, mult):
     lsdal = "**GENERAL\n"
     lsdal += ".NOGCBASIS\n"
     lsdal += "**WAVE FUNCTIONS\n"
-    if method == "HF":
+    if method == "hf":
         lsdal += ".HF\n"
     else:
         lsdal += ".DFT\n"
