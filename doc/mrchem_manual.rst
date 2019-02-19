@@ -7,7 +7,8 @@ The mrchem input file
 ---------------------
 
 The input file is organized in sections and keywords that can be of different
-type
+type.
+Input reading is **case-insensitive**.
 
 .. code-block:: bash
 
@@ -40,7 +41,7 @@ with ``abs_prec``. This will provide e.g. mHa precision in the total energy
 regardless of the molecular size (this might get `very` expensive for large
 systems). In this case the magnitude of the energy is estimated as
 
-.. math:: \tilde{E} = \sum_i^{nuc} Z_i^{5/2} 
+.. math:: \tilde{E} = \sum_i^{nuc} Z_i^{5/2}
 
 and the relative precision is set as
 
@@ -142,7 +143,7 @@ WaveFunction
 
 Here we give the wavefunction method and whether we run spin restricted (alpha
 and beta spins are forced to occupy the same spatial orbitals) or not (method
-must be specified, otherwise defaults are shown) 
+must be specified, otherwise defaults are shown)
 
 .. code-block:: bash
 
@@ -157,7 +158,7 @@ functional(s) must be specified in a separate DFT section (see below).
 
 DFT
 ---
- 
+
 This section specifies the exchange-correlation functional used in DFT
 (functional names must be specified, otherwise defaults are shown)
 
@@ -271,7 +272,7 @@ in the SCF iterations. To improve efficiency, the first iterations are done
 with reduced precision, starting at ``init`` and gradually increased
 to ``final``. The initial precision should not be set lower than
 ``init=1.0e-3``, and the final precision should not exceed the top level
-``rel_prec``. Negative values sets them equal to ``rel_prec``. 
+``rel_prec``. Negative values sets them equal to ``rel_prec``.
 
 The ``kain`` keyword sets the size of the iterative subspace that is used
 in the KAIN accelerator for the orbital optimization.
@@ -335,7 +336,7 @@ Example 2
 ---------
 
 The following input will compute the B3LYP energy (six digits) and dipole moment
-(four digits) of carbon monoxide 
+(four digits) of carbon monoxide
 
 .. code-block:: bash
 
