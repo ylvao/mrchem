@@ -98,7 +98,7 @@ def main():
             sts = os.waitpid(p.pid, 0)[1]
 
 
-            def convert_to_lower_case(filename):
+def convert_to_lower_case(filename):
     """
     Reads contents of filename and converts them to lowercase.
     The case-converted contents are written back to a temporary file.
