@@ -1,10 +1,11 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-#include "utils/math_utils.h"
 
 #include "NuclearOperator.h"
+#include "chemistry/chemistry_utils.h"
 #include "parallel.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/math_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -41,8 +42,11 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
         double Z_5 = std::pow(Z, 5.0);
         double smooth = std::pow(c / Z_5, 1.0 / 3.0);
 
+        // All projection must be done on grand master in order to be exact
+        int proj_rank = (mpi::numerically_exact) ? 0 : i % mpi::orb_size;
+
         this->func.push_back(nuc, smooth);
-        if (mpi::orb_rank == i % mpi::orb_size) loc_func.push_back(nuc, smooth);
+        if (mpi::orb_rank == proj_rank) loc_func.push_back(nuc, smooth);
 
         std::stringstream symbol;
         symbol << nuc.getElement().getSymbol();
@@ -56,15 +60,19 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
 
     Timer t_tot;
 
+    // Scale precision by system size
+    int Z_tot = chemistry::get_total_charge(nucs);
+    double abs_prec = prec / Z_tot;
+
     Timer t_loc;
     QMFunction V_loc(false);
-    qmfunction::project(V_loc, loc_func, NUMBER::Real, prec);
+    qmfunction::project(V_loc, loc_func, NUMBER::Real, abs_prec);
     t_loc.stop();
     Printer::printSeparator(0, '-');
     Printer::printTree(0, "Nuclear potential", V_loc.getNNodes(NUMBER::Total), t_loc.getWallTime());
 
     Timer t_com;
-    allreducePotential(prec, V_loc);
+    allreducePotential(abs_prec, V_loc);
     t_com.stop();
     Printer::printTree(0, "Allreduce potential", this->getNNodes(NUMBER::Total), t_com.getWallTime());
 
@@ -78,6 +86,10 @@ void NuclearPotential::allreducePotential(double prec, QMFunction &V_loc) {
 
     // Add up local contributions into the grand master
     mpi::reduce_function(prec, V_loc, mpi::comm_orb);
+    if (mpi::grand_master()) {
+        // If numerically exact the grid is huge at this point
+        if (mpi::numerically_exact) V_loc.crop(prec);
+    }
 
     if (not V_tot.hasReal()) V_tot.alloc(NUMBER::Real);
     if (V_tot.isShared()) {

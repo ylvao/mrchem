@@ -31,6 +31,7 @@ namespace mrchem {
 namespace chemistry {
 
 double compute_nuclear_repulsion(const Nuclei &nucs);
+double get_total_charge(const Nuclei &nucs);
 
 } // namespace chemistry
 } // namespace mrchem
