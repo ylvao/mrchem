@@ -62,109 +62,109 @@ SCFDriver::SCFDriver(Getkw &input) {
     rel_prec = input.get<double>("rel_prec");
     nuc_prec = input.get<double>("nuc_prec");
 
-    gauge = input.getDblVec("MRA.gauge_origin");
-    center_of_mass = input.get<bool>("MRA.center_of_mass");
-    center_of_charge = input.get<bool>("MRA.center_of_charge");
+    gauge = input.getDblVec("mra.gauge_origin");
+    center_of_mass = input.get<bool>("mra.center_of_mass");
+    center_of_charge = input.get<bool>("mra.center_of_charge");
 
-    diff_kin = input.get<std::string>("Derivatives.kinetic");
-    diff_orb = input.get<std::string>("Derivatives.h_orb");
-    diff_pso = input.get<std::string>("Derivatives.h_pso");
+    diff_kin = input.get<std::string>("derivatives.kinetic");
+    diff_orb = input.get<std::string>("derivatives.h_orb");
+    diff_pso = input.get<std::string>("derivatives.h_pso");
 
-    calc_scf_energy = input.get<bool>("Properties.scf_energy");
-    calc_dipole_moment = input.get<bool>("Properties.dipole_moment");
-    calc_quadrupole_moment = input.get<bool>("Properties.quadrupole_moment");
-    calc_magnetizability = input.get<bool>("Properties.magnetizability");
-    calc_nmr_shielding = input.get<bool>("Properties.nmr_shielding");
-    calc_hyperfine_coupling = input.get<bool>("Properties.hyperfine_coupling");
-    calc_spin_spin_coupling = input.get<bool>("Properties.spin_spin_coupling");
-    calc_polarizability = input.get<bool>("Properties.polarizability");
-    calc_hyperpolarizability = input.get<bool>("Properties.hyperpolarizability");
-    calc_optical_rotation = input.get<bool>("Properties.optical_rotation");
-    calc_geometry_derivatives = input.get<bool>("Properties.geometry_derivatives");
+    calc_scf_energy = input.get<bool>("properties.scf_energy");
+    calc_dipole_moment = input.get<bool>("properties.dipole_moment");
+    calc_quadrupole_moment = input.get<bool>("properties.quadrupole_moment");
+    calc_magnetizability = input.get<bool>("properties.magnetizability");
+    calc_nmr_shielding = input.get<bool>("properties.nmr_shielding");
+    calc_hyperfine_coupling = input.get<bool>("properties.hyperfine_coupling");
+    calc_spin_spin_coupling = input.get<bool>("properties.spin_spin_coupling");
+    calc_polarizability = input.get<bool>("properties.polarizability");
+    calc_hyperpolarizability = input.get<bool>("properties.hyperpolarizability");
+    calc_optical_rotation = input.get<bool>("properties.optical_rotation");
+    calc_geometry_derivatives = input.get<bool>("properties.geometry_derivatives");
 
-    nmr_perturbation = input.get<std::string>("NMRShielding.perturbation");
-    nmr_nucleus_k = input.getIntVec("NMRShielding.nucleus_k");
-    hfcc_nucleus_k = input.getIntVec("HyperfineCoupling.nucleus_k");
-    sscc_nucleus_k = input.getIntVec("SpinSpinCoupling.nucleus_k");
-    sscc_nucleus_l = input.getIntVec("SpinSpinCoupling.nucleus_l");
-    pol_velocity = input.get<bool>("Polarizability.velocity");
-    pol_frequency = input.getDblVec("Polarizability.frequency");
-    optrot_velocity = input.get<bool>("OpticalRotation.velocity");
-    optrot_frequency = input.getDblVec("OpticalRotation.frequency");
-    optrot_perturbation = input.get<std::string>("OpticalRotation.perturbation");
+    nmr_perturbation = input.get<std::string>("nmrshielding.perturbation");
+    nmr_nucleus_k = input.getIntVec("nmrshielding.nucleus_k");
+    hfcc_nucleus_k = input.getIntVec("hyperfinecoupling.nucleus_k");
+    sscc_nucleus_k = input.getIntVec("spinspincoupling.nucleus_k");
+    sscc_nucleus_l = input.getIntVec("spinspincoupling.nucleus_l");
+    pol_velocity = input.get<bool>("polarizability.velocity");
+    pol_frequency = input.getDblVec("polarizability.frequency");
+    optrot_velocity = input.get<bool>("opticalrotation.velocity");
+    optrot_frequency = input.getDblVec("opticalrotation.frequency");
+    optrot_perturbation = input.get<std::string>("opticalrotation.perturbation");
 
-    mol_charge = input.get<int>("Molecule.charge");
-    mol_multiplicity = input.get<int>("Molecule.multiplicity");
-    mol_coords = input.getData("Molecule.coords");
+    mol_charge = input.get<int>("molecule.charge");
+    mol_multiplicity = input.get<int>("molecule.multiplicity");
+    mol_coords = input.getData("molecule.coords");
 
-    wf_restricted = input.get<bool>("WaveFunction.restricted");
-    wf_method = input.get<std::string>("WaveFunction.method");
+    wf_restricted = input.get<bool>("wavefunction.restricted");
+    wf_method = input.get<std::string>("wavefunction.method");
 
-    if (wf_method == "DFT") {
-        dft_spin = input.get<bool>("DFT.spin");
-        dft_use_gamma = input.get<bool>("DFT.use_gamma");
-        dft_cutoff = input.get<double>("DFT.density_cutoff");
-        dft_func_coefs = input.getDblVec("DFT.func_coefs");
-        dft_func_names = input.getData("DFT.functionals");
+    if (wf_method == "dft") {
+        dft_spin = input.get<bool>("dft.spin");
+        dft_use_gamma = input.get<bool>("dft.use_gamma");
+        dft_cutoff = input.get<double>("dft.density_cutoff");
+        dft_func_coefs = input.getDblVec("dft.func_coefs");
+        dft_func_names = input.getData("dft.functionals");
     }
 
-    scf_run = input.get<bool>("SCF.run");
-    scf_start = input.get<std::string>("SCF.initial_guess");
-    scf_kain = input.get<int>("SCF.kain");
-    scf_max_iter = input.get<int>("SCF.max_iter");
-    scf_rotation = input.get<int>("SCF.rotation");
-    scf_canonical = input.get<bool>("SCF.canonical");
-    scf_write_orbitals = input.get<bool>("SCF.write_orbitals");
-    scf_orbital_thrs = input.get<double>("SCF.orbital_thrs");
-    scf_property_thrs = input.get<double>("SCF.property_thrs");
-    scf_lambda_thrs = input.get<double>("SCF.lambda_thrs");
-    scf_orbital_prec = input.getDblVec("SCF.orbital_prec");
+    scf_run = input.get<bool>("scf.run");
+    scf_start = input.get<std::string>("scf.initial_guess");
+    scf_kain = input.get<int>("scf.kain");
+    scf_max_iter = input.get<int>("scf.max_iter");
+    scf_rotation = input.get<int>("scf.rotation");
+    scf_canonical = input.get<bool>("scf.canonical");
+    scf_write_orbitals = input.get<bool>("scf.write_orbitals");
+    scf_orbital_thrs = input.get<double>("scf.orbital_thrs");
+    scf_property_thrs = input.get<double>("scf.property_thrs");
+    scf_lambda_thrs = input.get<double>("scf.lambda_thrs");
+    scf_orbital_prec = input.getDblVec("scf.orbital_prec");
 
-    kin_free_run = input.get<bool>("KineticFree.run");
-    kin_free_max_iter = input.get<int>("KineticFree.max_iter");
-    kin_free_canonical = input.get<bool>("KineticFree.canonical");
-    kin_free_orb_thrs = input.get<double>("KineticFree.orbital_thrs");
-    kin_free_prop_thrs = input.get<double>("KineticFree.property_thrs");
+    kin_free_run = input.get<bool>("kineticfree.run");
+    kin_free_max_iter = input.get<int>("kineticfree.max_iter");
+    kin_free_canonical = input.get<bool>("kineticfree.canonical");
+    kin_free_orb_thrs = input.get<double>("kineticfree.orbital_thrs");
+    kin_free_prop_thrs = input.get<double>("kineticfree.property_thrs");
 
-    rsp_run = input.get<bool>("Response.run");
-    rsp_start = input.get<std::string>("Response.initial_guess");
-    rsp_kain = input.get<int>("Response.kain");
-    rsp_max_iter = input.get<int>("Response.max_iter");
-    rsp_canonical = input.get<bool>("Response.canonical");
-    rsp_write_orbitals = input.get<bool>("Response.write_orbitals");
-    rsp_orbital_thrs = input.get<double>("Response.orbital_thrs");
-    rsp_property_thrs = input.get<double>("Response.property_thrs");
-    rsp_directions = input.getIntVec("Response.directions");
-    rsp_orbital_prec = input.getDblVec("Response.orbital_prec");
+    rsp_run = input.get<bool>("response.run");
+    rsp_start = input.get<std::string>("response.initial_guess");
+    rsp_kain = input.get<int>("response.kain");
+    rsp_max_iter = input.get<int>("response.max_iter");
+    rsp_canonical = input.get<bool>("response.canonical");
+    rsp_write_orbitals = input.get<bool>("response.write_orbitals");
+    rsp_orbital_thrs = input.get<double>("response.orbital_thrs");
+    rsp_property_thrs = input.get<double>("response.property_thrs");
+    rsp_directions = input.getIntVec("response.directions");
+    rsp_orbital_prec = input.getDblVec("response.orbital_prec");
 
-    ext_electric = input.get<bool>("ExternalField.electric_run");
-    ext_magnetic = input.get<bool>("ExternalField.magnetic_run");
+    ext_electric = input.get<bool>("externalfield.electric_run");
+    ext_magnetic = input.get<bool>("externalfield.magnetic_run");
     if (ext_electric) {
-        std::vector<double> tmp = input.getDblVec("ExternalField.electric_field");
+        std::vector<double> tmp = input.getDblVec("externalfield.electric_field");
         ext_electric_field[0] = tmp[0];
         ext_electric_field[1] = tmp[1];
         ext_electric_field[2] = tmp[2];
     }
     if (ext_magnetic) {
-        std::vector<double> tmp = input.getDblVec("ExternalField.magnetic_field");
+        std::vector<double> tmp = input.getDblVec("externalfield.magnetic_field");
         ext_magnetic_field[0] = tmp[0];
         ext_magnetic_field[1] = tmp[1];
         ext_magnetic_field[2] = tmp[2];
     }
 
-    file_start_orbitals = input.get<std::string>("Files.start_orbitals");
-    file_final_orbitals = input.get<std::string>("Files.final_orbitals");
-    file_start_x_orbs = input.get<std::string>("Files.start_x_orbs");
-    file_final_x_orbs = input.get<std::string>("Files.final_x_orbs");
-    file_start_y_orbs = input.get<std::string>("Files.start_y_orbs");
-    file_final_y_orbs = input.get<std::string>("Files.final_y_orbs");
-    file_basis_set = input.get<std::string>("Files.basis_set");
-    file_dens_mat_a = input.get<std::string>("Files.dens_mat_a");
-    file_dens_mat_b = input.get<std::string>("Files.dens_mat_b");
-    file_fock_mat = input.get<std::string>("Files.fock_mat");
-    file_energy_vec = input.get<std::string>("Files.energy_vec");
-    file_mo_mat_a = input.get<std::string>("Files.mo_mat_a");
-    file_mo_mat_b = input.get<std::string>("Files.mo_mat_b");
+    file_start_orbitals = input.get<std::string>("files.start_orbitals");
+    file_final_orbitals = input.get<std::string>("files.final_orbitals");
+    file_start_x_orbs = input.get<std::string>("files.start_x_orbs");
+    file_final_x_orbs = input.get<std::string>("files.final_x_orbs");
+    file_start_y_orbs = input.get<std::string>("files.start_y_orbs");
+    file_final_y_orbs = input.get<std::string>("files.final_y_orbs");
+    file_basis_set = input.get<std::string>("files.basis_set");
+    file_dens_mat_a = input.get<std::string>("files.dens_mat_a");
+    file_dens_mat_b = input.get<std::string>("files.dens_mat_b");
+    file_fock_mat = input.get<std::string>("files.fock_mat");
+    file_energy_vec = input.get<std::string>("files.energy_vec");
+    file_mo_mat_a = input.get<std::string>("files.mo_mat_a");
+    file_mo_mat_b = input.get<std::string>("files.mo_mat_b");
 
     r_O[0] = 0.0;
     r_O[1] = 0.0;
@@ -383,17 +383,17 @@ void SCFDriver::setup() {
     // All cases need kinetic energy and nuclear potential
     fock = new FockOperator(T, V);
     // For Hartree, HF and DFT we need the coulomb part
-    if (wf_method == "Hartree" or wf_method == "HF" or wf_method == "DFT") {
+    if (wf_method == "hartree" or wf_method == "hf" or wf_method == "dft") {
         J = new CoulombOperator(P, phi);
         fock->setCoulombOperator(J);
     }
     // For HF we need the full HF exchange
-    if (wf_method == "HF") {
+    if (wf_method == "hf") {
         K = new ExchangeOperator(P, phi);
         fock->setExchangeOperator(K);
     }
     // For DFT we need the XC operator
-    if (wf_method == "DFT") {
+    if (wf_method == "dft") {
         xcfun = setupFunctional(MRDFT::Gradient);
         XC = new XCOperator(xcfun, phi);
         fock->setXCOperator(XC);
@@ -418,9 +418,9 @@ void SCFDriver::setup() {
  *
  */
 mrcpp::DerivativeOperator<3> *SCFDriver::useDerivative(string derivative_name) {
-    if (derivative_name == "PH_1") return PH_1;
-    if (derivative_name == "ABGV_00") return ABGV_00;
-    if (derivative_name == "ABGV_55") return ABGV_55;
+    if (derivative_name == "ph_1") return PH_1;
+    if (derivative_name == "abgv_00") return ABGV_00;
+    if (derivative_name == "abgv_55") return ABGV_55;
     MSG_FATAL("No such derivative operator");
 }
 
@@ -463,17 +463,17 @@ void SCFDriver::setup_np1() {
 
     fock_np1 = new FockOperator(T, V);
     // For Hartree, HF and DFT we need the coulomb part
-    if (wf_method == "Hartree" or wf_method == "HF" or wf_method == "DFT") {
+    if (wf_method == "hartree" or wf_method == "hf" or wf_method == "dft") {
         J_np1 = new CoulombOperator(P, phi_np1);
         fock_np1->setCoulombOperator(J_np1);
     }
     // For HF we need the full HF exchange
-    if (wf_method == "HF") {
+    if (wf_method == "hf") {
         K_np1 = new ExchangeOperator(P, phi);
         fock_np1->setExchangeOperator(K_np1);
     }
     // For DFT we need the XC operator
-    if (wf_method == "DFT") {
+    if (wf_method == "dft") {
         xcfun = setupFunctional(MRDFT::Gradient);
         XC_np1 = new XCOperator(xcfun, phi_np1);
         fock_np1->setXCOperator(XC_np1);
@@ -496,28 +496,28 @@ void SCFDriver::clear_np1() {
 
 void SCFDriver::setupInitialGroundState() {
     double prec = scf_orbital_prec[0];
-    if (scf_start == "GTO")
+    if (scf_start == "gto")
         if (wf_restricted)
             *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a);
         else
             *phi = initial_guess::gto::setup(prec, *molecule, file_basis_set, file_mo_mat_a, file_mo_mat_b);
-    else if (scf_start == "CORE_SZ")
+    else if (scf_start == "core_sz")
         *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "CORE_DZ")
+    else if (scf_start == "core_dz")
         *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 2);
-    else if (scf_start == "CORE_TZ")
+    else if (scf_start == "core_tz")
         *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 3);
-    else if (scf_start == "CORE_QZ")
+    else if (scf_start == "core_qz")
         *phi = initial_guess::core::setup(prec, *molecule, wf_restricted, 4);
-    else if (scf_start == "SAD_SZ")
+    else if (scf_start == "sad_sz")
         *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 1);
-    else if (scf_start == "SAD_DZ")
+    else if (scf_start == "sad_dz")
         *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 2);
-    else if (scf_start == "SAD_TZ")
+    else if (scf_start == "sad_tz")
         *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 3);
-    else if (scf_start == "SAD_QZ")
+    else if (scf_start == "sad_qz")
         *phi = initial_guess::sad::setup(prec, *molecule, wf_restricted, 4);
-    else if (scf_start == "MW")
+    else if (scf_start == "mw")
         *phi = orbital::load_orbitals(file_start_orbitals);
     else
         MSG_FATAL("Invalid initial guess");
@@ -592,9 +592,9 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     if (phi_y == nullptr) MSG_ERROR("Y orbitals not initialized");
 
     double xFac = 0.0;
-    if (wf_method == "HF") {
+    if (wf_method == "hf") {
         xFac = 1.0;
-    } else if (wf_method == "DFT") {
+    } else if (wf_method == "dft") {
         xFac = xcfun->amountEXX();
         xcfun = setupFunctional(MRDFT::Hessian);
         dXC = new XCOperator(xcfun, phi, phi_x, phi_y);

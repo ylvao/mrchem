@@ -19,7 +19,7 @@
 
 #include "SCFDriver.h"
 
-Getkw mrchem::Input;
+Getkw mrchem::input;
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
 using namespace mrcpp;
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
     Timer timer;
 
-    SCFDriver driver(Input);
+    SCFDriver driver(input);
     driver.setup();
     driver.run();
     driver.clear();
