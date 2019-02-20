@@ -34,7 +34,7 @@ namespace mrchem {
  * @param[in] nucs the set of nuclei
  *
  */
-double compute_nuclear_repulsion(const Nuclei &nucs) {
+double chemistry::compute_nuclear_repulsion(const Nuclei &nucs) {
     int nNucs = nucs.size();
     double E_nuc = 0.0;
     for (int i = 0; i < nNucs; i++) {

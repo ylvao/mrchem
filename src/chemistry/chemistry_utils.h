@@ -28,7 +28,9 @@
 #include "chemistry_fwd.h"
 
 namespace mrchem {
+namespace chemistry {
 
 double compute_nuclear_repulsion(const Nuclei &nucs);
 
+} // namespace chemistry
 } // namespace mrchem
