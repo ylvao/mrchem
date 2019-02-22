@@ -39,6 +39,7 @@
 #include "chemistry/Molecule.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/OrbitalIterator.h"
+#include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 
@@ -57,7 +58,7 @@ namespace sad {
 
 ComplexMatrix diagonalize_fock(KineticOperator &T, RankZeroTensorOperator &V, OrbitalVector &Phi, int spin);
 OrbitalVector rotate_orbitals(double prec, ComplexMatrix &U, OrbitalVector &Phi, int N, int spin);
-void project_atomic_densities(double prec, const Molecule &mol, mrcpp::FunctionTreeVector<3> &rho_atomic);
+void project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol);
 
 } // namespace sad
 } // namespace initial_guess
@@ -86,20 +87,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
 
     // Compute Coulomb density
     Density &rho_j = J.getDensity();
-    rho_j.alloc(NUMBER::Real);
-
-    // MPI grand master computes SAD density
-    if (mpi::grand_master()) {
-        // Compute atomic densities
-        mrcpp::FunctionTreeVector<3> rho_atomic;
-        initial_guess::sad::project_atomic_densities(prec, mol, rho_atomic);
-
-        // Add atomic densities
-        mrcpp::add(prec, rho_j.real(), rho_atomic);
-        mrcpp::clear(rho_atomic, true);
-    }
-    // MPI grand master distributes the full density
-    mpi::broadcast_function(rho_j, mpi::comm_orb);
+    initial_guess::sad::project_atomic_densities(prec, rho_j, mol);
 
     // Compute XC density
     if (restricted) {
@@ -211,34 +199,42 @@ OrbitalVector initial_guess::sad::rotate_orbitals(double prec, ComplexMatrix &U,
     return Psi;
 }
 
-void initial_guess::sad::project_atomic_densities(double prec,
-                                                  const Molecule &mol,
-                                                  mrcpp::FunctionTreeVector<3> &rho_atomic) {
+void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol) {
     Timer timer;
     Printer::printHeader(0, "Projecting Gaussian-type density");
     println(0, " Nr  Element                                 Rho_i");
     Printer::printSeparator(0, '-');
 
+    double crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
+
     std::string sad_path = SAD_BASIS_DIR;
+
+    Density rho_loc(false);
+    rho_loc.alloc(NUMBER::Real);
+    rho_loc.real().setZero();
 
     int oldprec = Printer::setPrecision(15);
     const Nuclei &nucs = mol.getNuclei();
     for (int k = 0; k < nucs.size(); k++) {
-        const std::string &sym = nucs[k].getElement().getSymbol();
+        if (mpi::orb_rank != k % mpi::orb_size) continue;
 
+        const std::string &sym = nucs[k].getElement().getSymbol();
         std::stringstream bas;
         std::stringstream dens;
         bas << sad_path << sym << ".bas";
         dens << sad_path << sym << ".dens";
 
-        mrcpp::FunctionTree<3> *rho = initial_guess::gto::project_density(prec, nucs[k], bas.str(), dens.str());
+        Density rho_k = initial_guess::gto::project_density(prec, nucs[k], bas.str(), dens.str());
         printout(0, std::setw(3) << k);
         printout(0, std::setw(7) << sym);
-        printout(0, std::setw(49) << rho->integrate() << "\n");
+        printout(0, std::setw(49) << rho_k.integrate().real() << "\n");
 
-        rho_atomic.push_back(std::make_tuple(1.0, rho));
+        rho_loc.add(1.0, rho_k);
+        rho_loc.crop(crop_prec);
     }
     Printer::setPrecision(oldprec);
+
+    density::allreduce_density(prec, rho_tot, rho_loc);
 
     timer.stop();
     Printer::printFooter(0, timer, 2);

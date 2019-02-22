@@ -52,7 +52,6 @@ namespace density {
 Density compute(double prec, Orbital phi, int spin);
 void compute_local_X(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, int spin);
 void compute_local_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, int spin);
-void allreduce_density(double prec, Density &rho_tot, Density &rho_loc);
 double compute_occupation(Orbital &phi, int dens_spin);
 } // namespace density
 
@@ -225,7 +224,7 @@ void density::compute_local_XY(double prec,
     }
 }
 
-void density::compute(double prec, Density &rho, mrcpp::GaussExp<3> &dens_exp, int spin) {
+void density::compute(double prec, Density &rho, mrcpp::GaussExp<3> &dens_exp) {
     if (not rho.hasReal()) rho.alloc(NUMBER::Real);
     mrcpp::project(prec, rho.real(), dens_exp);
 }
