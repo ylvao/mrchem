@@ -189,16 +189,16 @@ VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order) {
         mask(0) = -1;
         break;
     case 2:
-        mask(0) = 1;
+        mask(0) = 0;
         if (is_lda and is_spin_sep) {
             mask.resize(2);
-            mask << 2, 3;
+            mask << 0, 1;
         } else if (is_gga and not is_spin_sep) {
             mask.resize(4);
-            mask << 4, 5, 6, 7;
+            mask << 0, 1, 2, 3;
         } else if (is_gga and is_spin_sep) {
             mask.resize(8);
-            mask << 8, 9, 10, 11, 12, 13, 14, 15;
+            mask << 0, 1, 2, 3, 4, 5, 6, 7;
         }
         break;
     default:
@@ -213,7 +213,7 @@ void fill_output_mask(MatrixXi &mask, int value) {
         value++;
         for (int j = i+1; j < mask.cols(); j++) {
             mask(i,j) = value;
-            mask(i,j) = value;
+            mask(j,i) = value;
             value++;
         }
     }   
@@ -759,7 +759,8 @@ void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_
             int out_index = output_mask(i,j);
             int den_index = density_mask(j);
             if(den_index >= 0) {
-                FunctionNode<3> &dens_node = mrcpp::get_func(xcDensity, density_mask(i)).getEndFuncNode(node_index);
+                FunctionTree<3> &dens_func = mrcpp::get_func(xcDensity, den_index);
+                FunctionNode<3> &dens_node = dens_func.getEndFuncNode(node_index);
                 VectorXd dens_i;
                 dens_node.getValues(dens_i);
                 cont_ij = out_data.col(out_index).array() * dens_i.array();
