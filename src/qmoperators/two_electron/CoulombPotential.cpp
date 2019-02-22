@@ -46,7 +46,9 @@ CoulombPotential::CoulombPotential(PoissonOperator *P, OrbitalVector *Phi)
 void CoulombPotential::setup(double prec) {
     if (isSetup(prec)) return;
     setApplyPrec(prec);
-    if (useLocal()) {
+    if (hasDensity()) {
+        setupGlobalPotential(prec);
+    } else if (useLocal()) {
         setupLocalDensity(prec);
         QMFunction V = setupLocalPotential(prec);
         allreducePotential(prec, V);
