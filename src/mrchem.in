@@ -420,7 +420,6 @@ def verify_top(top):
     if not top.get('nuc_prec').is_set():
         top['nuc_prec'][0] = top['rel_prec'][0]
 
-
 def verify_mra(mra):
     basis_type = mra.get('basis_type')
     wlet = basis_type.get()

@@ -49,12 +49,10 @@ double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
 }
 
 bool NuclearFunction::isVisibleAtScale(int scale, int nQuadPts) const {
-    double minSmooth = this->smooth[0];
-    for (int i = 1; i < this->smooth.size(); i++) {
-        if (this->smooth[i] < minSmooth) { minSmooth = this->smooth[i]; }
-    }
+    double minSmooth = 1.0;
+    if (this->smooth.size() > 0) minSmooth = *std::min_element(this->smooth.begin(), this->smooth.end());
     double stdDeviation = std::pow(minSmooth, -0.5);
-    int visibleScale = int(std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
+    int visibleScale = static_cast<int>(std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
     if (scale < visibleScale) {
         return false;
     } else {

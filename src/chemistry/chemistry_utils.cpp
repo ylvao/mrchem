@@ -34,7 +34,7 @@ namespace mrchem {
  * @param[in] nucs the set of nuclei
  *
  */
-double compute_nuclear_repulsion(const Nuclei &nucs) {
+double chemistry::compute_nuclear_repulsion(const Nuclei &nucs) {
     int nNucs = nucs.size();
     double E_nuc = 0.0;
     for (int i = 0; i < nNucs; i++) {
@@ -50,6 +50,13 @@ double compute_nuclear_repulsion(const Nuclei &nucs) {
         }
     }
     return E_nuc;
+}
+
+/** @brief Returns the sum of atomic charges*/
+double chemistry::get_total_charge(const Nuclei &nucs) {
+    double charge = 0;
+    for (const auto &nuc : nucs) charge += nuc.getCharge();
+    return charge;
 }
 
 } // namespace mrchem

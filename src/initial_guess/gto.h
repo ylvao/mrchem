@@ -38,6 +38,7 @@
  * external input to provide basis set information and MO coefficients.
  */
 
+// clang-format off
 namespace mrchem {
 class Molecule;
 class Nucleus;
@@ -49,19 +50,30 @@ class OrbitalExp;
 namespace initial_guess {
 namespace gto {
 
-OrbitalVector setup(double prec, const Molecule &mol, const std::string &bas_file, const std::string &mo_file);
+OrbitalVector setup(double prec,
+                    const Molecule &mol,
+                    const std::string &bas_file,
+                    const std::string &mo_file);
 OrbitalVector setup(double prec,
                     const Molecule &mol,
                     const std::string &bas_file,
                     const std::string &moa_file,
                     const std::string &mob_file);
-OrbitalVector project_ao(double prec, const std::string &bas_file, int spin, int N = -1);
-OrbitalVector project_mo(double prec, const std::string &bas_file, const std::string &mo_file, int spin, int N = -1);
-mrcpp::FunctionTree<3> *project_density(double prec,
-                                        const Nucleus &nuc,
-                                        const std::string &bas_file,
-                                        const std::string &dens_file);
+OrbitalVector project_ao(double prec,
+                         const std::string &bas_file,
+                         int spin,
+                         int N = -1);
+OrbitalVector project_mo(double prec,
+                         const std::string &bas_file,
+                         const std::string &mo_file,
+                         int spin,
+                         int N = -1);
+Density project_density(double prec,
+                        const Nucleus &nuc,
+                        const std::string &bas_file,
+                        const std::string &dens_file);
 
 } // namespace gto
 } // namespace initial_guess
 } // namespace mrchem
+// clang-format on

@@ -36,7 +36,9 @@
 #include "utils/gto_utils/OrbitalExp.h"
 
 #include "chemistry/Molecule.h"
+#include "qmfunctions/Density.h"
 #include "qmfunctions/Orbital.h"
+#include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 
@@ -212,24 +214,10 @@ OrbitalVector initial_guess::gto::project_ao(double prec, const std::string &bas
     return Phi;
 }
 
-/** @brief Project the N first GTO expansions of the MO basis
- *
- * @param prec Precision used in projection
- * @param bas_file String containing basis set file
- * @param mo_file String containing MO matrix file
- * @param N Number of orbitals to project
- * @param spin Spin parameter of orbitals
- *
- * @returns Phi: vector or MW orbitals
- *
- * Projects the N first rows of the MO matrix from GTO orbitals into
- * corresponding MW orbitals. All orbitals get the same spin parameter.
- *
- */
-mrcpp::FunctionTree<3> *initial_guess::gto::project_density(double prec,
-                                                            const Nucleus &nuc,
-                                                            const std::string &bas_file,
-                                                            const std::string &dens_file) {
+Density initial_guess::gto::project_density(double prec,
+                                            const Nucleus &nuc,
+                                            const std::string &bas_file,
+                                            const std::string &dens_file) {
     // Setup AO basis
     gto_utils::Intgrl intgrl(bas_file);
     intgrl.getNucleus(0).setCoord(nuc.getCoord());
@@ -239,8 +227,8 @@ mrcpp::FunctionTree<3> *initial_guess::gto::project_density(double prec,
     DoubleMatrix D = math_utils::read_matrix_file(dens_file);
     GaussExp<3> dens_exp = gto_exp.getDens(D);
 
-    mrcpp::FunctionTree<3> *rho = new mrcpp::FunctionTree<3>(*MRA);
-    mrcpp::project(prec, *rho, dens_exp);
+    Density rho(false);
+    density::compute(prec, rho, dens_exp);
     return rho;
 }
 

@@ -30,9 +30,12 @@
 namespace mrchem {
 namespace density {
 
-void compute(double prec, Density &rho, mrcpp::GaussExp<3> &dens_exp, int spin);
+void allreduce_density(double prec, Density &rho_tot, Density &rho_loc);
+void compute(double prec, Density &rho, mrcpp::GaussExp<3> &dens_exp);
 void compute(double prec, Density &rho, OrbitalVector &Phi, int spin);
 void compute(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, int spin);
+void compute_local(double prec, Density &rho, OrbitalVector &Phi, int spin);
+void compute_local(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, int spin);
 
 } // namespace density
 } // namespace mrchem
