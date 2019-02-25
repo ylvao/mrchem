@@ -10,6 +10,7 @@ include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_getkw.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_xcfun.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_eigen3.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_mrcpp.cmake)
+include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_nlohmann_json.cmake)
 
 add_subdirectory(src)
 add_subdirectory(pilot)

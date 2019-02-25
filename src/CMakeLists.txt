@@ -33,6 +33,7 @@ target_link_libraries(mrchem
     MRCPP::mrcpp
     XCFun::xcfun
     getkw::getkw
+    nlohmann_json::nlohmann_json
   )
 
 set_target_properties(mrchem
@@ -85,6 +86,7 @@ target_link_libraries(mrchem.x
     MRCPP::mrcpp
     getkw::getkw
     XCFun::xcfun
+    nlohmann_json::nlohmann_json
   )
 
 # RPATH fixing
