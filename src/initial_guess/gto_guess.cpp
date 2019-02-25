@@ -37,6 +37,8 @@
 #include "qmfunctions/orbital_utils.h"
 
 Getkw mrchem::input;
+nlohmann::json mrchem::json_input;
+
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
 using namespace mrcpp;

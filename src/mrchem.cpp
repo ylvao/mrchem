@@ -9,9 +9,7 @@
  *
  */
 
-#include "MRCPP/Printer"
 #include "MRCPP/Timer"
-#include "getkw/Getkw.hpp"
 
 #include "mrchem.h"
 #include "mrenv.h"
@@ -19,10 +17,10 @@
 
 #include "SCFDriver.h"
 
-Getkw mrchem::input;
+nlohmann::json mrchem::json_input;
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
-using namespace mrcpp;
+using mrcpp::Timer;
 using namespace mrchem;
 
 int main(int argc, char **argv) {
@@ -31,10 +29,12 @@ int main(int argc, char **argv) {
 
     Timer timer;
 
+    /*
     SCFDriver driver(input);
     driver.setup();
     driver.run();
     driver.clear();
+    */
 
     timer.stop();
     double wt = timer.getWallTime();

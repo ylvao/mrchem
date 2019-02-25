@@ -12,6 +12,7 @@
 #include <complex>
 
 #include <Eigen/Core>
+#include <nlohmann/json.hpp>
 
 #include "MRCPP/MWFunctions"
 #include "config.h"
@@ -56,6 +57,7 @@ using DoubleMatrix = Eigen::MatrixXd;
 using ComplexMatrix = Eigen::MatrixXcd;
 
 extern Getkw input;
+extern nlohmann::json json_input;
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; //< Global MRA
 
 } //namespace mrchem
