@@ -742,8 +742,6 @@ void XCFunctional::evaluate() {
     printout(2, std::endl);
 }
 
-
-
 void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_data, MatrixXd &con_data) {
 
     MatrixXi output_mask = build_output_mask(isLDA(), isSpinSeparated(), order);
@@ -769,7 +767,7 @@ void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_
             }
             cont_i += cont_ij;
         }
-        con_data.col(i) = cont_i;
+        con_data.col(i+1) = cont_i; //The first column contains the energy functional
     }
 }
 
