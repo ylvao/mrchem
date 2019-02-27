@@ -705,7 +705,8 @@ void XCFunctional::evaluate() {
 
     int nInp = getInputLength();          // Input parameters to XCFun
     int nOut = getOutputLength();         // Output parameters from XCFun
-    int nCon = getContractedLength();     // Contracted parameters to XCPotential 
+    int nCon = getContractedLength();     // Contracted parameters to XCPotential
+    int nFcs = nCon + 1;                  // One extra function for the energy density
     int nPts = getNodeLength();           // Number of gridpoints in a node
 
 #pragma omp parallel firstprivate(nInp, nOut)
