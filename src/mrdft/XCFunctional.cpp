@@ -216,7 +216,7 @@ void fill_output_mask(MatrixXi &mask, int value) {
             mask(j,i) = value;
             value++;
         }
-    }   
+    }
 }
 }
 
