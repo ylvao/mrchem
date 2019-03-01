@@ -70,11 +70,6 @@ target_sources(mrchem.x
     $<BUILD_INTERFACE:$<JOIN:${CMAKE_CURRENT_LIST_DIR}/,${_public_headers}>>
   )
 
-target_link_libraries(mrchem.x
-  PRIVATE
-    mrchem
-  )
-
 set_target_properties(mrchem.x
   PROPERTIES
     MACOSX_RPATH ON
