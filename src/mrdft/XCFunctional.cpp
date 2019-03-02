@@ -37,6 +37,7 @@
 using mrcpp::DerivativeOperator;
 using mrcpp::FunctionNode;
 using mrcpp::FunctionTree;
+using mrcpp::Plotter;
 using mrcpp::FunctionTreeVector;
 using mrcpp::Plotter;
 using mrcpp::Printer;
@@ -134,6 +135,8 @@ void fill_output_mask(MatrixXi &mask, int value) {
     }
 }
 } // namespace
+
+static int xc_iteration = 0;
 
 namespace {
 MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order);
@@ -757,6 +760,9 @@ void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_
             cont_ij = VectorXd::Zero(n_points);
             int out_index = output_mask(i,j);
             int den_index = density_mask(j);
+            //            if(den_index >= 2) {
+            //                continue;
+            //            } else if(den_index >= 0) {
             if(den_index >= 0) {
                 FunctionTree<3> &dens_func = mrcpp::get_func(xcDensity, den_index);
                 FunctionNode<3> &dens_node = dens_func.getEndFuncNode(node_index);
