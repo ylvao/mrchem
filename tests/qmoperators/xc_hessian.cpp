@@ -97,12 +97,12 @@ TEST_CASE("XCHessian", "[xc_hessian]") {
     E_P(1, 0) = -0.0226852770676;
     E_P(1, 1) = 0.00549970397828;
 
-    mrdft::XCFunctional fun(*MRA, false);
-    fun.setFunctional("LDA", 1.0);
-    fun.setUseGamma(true);
-    fun.setDensityCutoff(1.0e-10);
-    fun.evalSetup(MRDFT::Hessian);
-    XCOperator V(&fun, &Phi, &Phi_x, &Phi_x);
+    auto fun = std::make_shared<mrdft::XCFunctional>(*MRA, false);
+    fun->setFunctional("LDA", 1.0);
+    fun->setUseGamma(true);
+    fun->setDensityCutoff(1.0e-10);
+    fun->evalSetup(MRDFT::Hessian);
+    XCOperator V(fun, &Phi, &Phi_x, &Phi_x);
 
     V.setup(prec);
     V.setupDensity(prec);

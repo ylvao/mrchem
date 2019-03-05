@@ -70,12 +70,12 @@ TEST_CASE("XCOperator", "[xc_operator]") {
         if (mpi::my_orb(Phi[i])) qmfunction::project(Phi[i], f, NUMBER::Real, prec);
     }
 
-    mrdft::XCFunctional fun(*MRA, false);
-    fun.setFunctional("LDA", 1.0);
-    fun.setUseGamma(false);
-    fun.setDensityCutoff(1.0e-10);
-    fun.evalSetup(1);
-    XCOperator V(&fun, &Phi);
+    auto fun = std::make_shared<mrdft::XCFunctional>(*MRA, false);
+    fun->setFunctional("LDA", 1.0);
+    fun->setUseGamma(false);
+    fun->setDensityCutoff(1.0e-10);
+    fun->evalSetup(1);
+    XCOperator V(fun, &Phi);
 
     // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
 

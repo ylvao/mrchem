@@ -2,7 +2,7 @@
 
 #include "DistanceOperator.h"
 #include "PositionOperator.h"
-#include "RankTwoTensorOperator.h"
+#include "qmoperators/RankTwoTensorOperator.h"
 
 namespace mrchem {
 

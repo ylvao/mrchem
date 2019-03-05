@@ -6,7 +6,10 @@ namespace mrchem {
 
 class CoulombPotentialD2 final : public CoulombPotential {
 public:
-    CoulombPotentialD2(mrcpp::PoissonOperator *P, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y);
+    CoulombPotentialD2(std::shared_ptr<mrcpp::PoissonOperator> P,
+                       OrbitalVector *Phi,
+                       OrbitalVector *X,
+                       OrbitalVector *Y);
 
 private:
     OrbitalVector *orbitals_x; ///< Perturbed orbitals

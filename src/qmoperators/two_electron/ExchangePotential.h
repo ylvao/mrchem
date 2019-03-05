@@ -21,12 +21,10 @@ namespace mrchem {
 
 class ExchangePotential final : public QMOperator {
 public:
-    ExchangePotential(mrcpp::PoissonOperator *P, OrbitalVector *phi, bool s);
-    ~ExchangePotential() override {}
+    ExchangePotential(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *phi, bool s);
+    ~ExchangePotential() override = default;
 
-    void rotate(const ComplexMatrix &U);
-
-    void setupInternal(double prec);
+    friend class ExchangeOperator;
 
 protected:
     bool screen;             ///< Apply screening in exchange evaluation
@@ -35,8 +33,12 @@ protected:
     OrbitalVector exchange;  ///< Precomputed exchange orbitals from the occupied orbital set
 
     // Pointers to external objects, ownership outside this class
-    OrbitalVector *orbitals;         ///< Orbitals defining the exchange operator
-    mrcpp::PoissonOperator *poisson; ///< Poisson operator to compute orbital contributions
+    OrbitalVector *orbitals;                         ///< Orbitals defining the exchange operator
+    std::shared_ptr<mrcpp::PoissonOperator> poisson; ///< Poisson operator to compute orbital contributions
+
+    auto &getPoisson() { return this->poisson; }
+
+    void rotate(const ComplexMatrix &U);
 
     void setup(double prec) override;
     void clear() override;
@@ -53,6 +55,7 @@ protected:
 
     Orbital calcExchange(Orbital phi_p);
 
+    void setupInternal(double prec);
     void calcInternal(int i);
     void calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_j);
 };

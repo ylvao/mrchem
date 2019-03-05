@@ -18,22 +18,21 @@ namespace mrchem {
 
 class ExchangeOperator final : public RankZeroTensorOperator {
 public:
-    ExchangeOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi, double xFac = 1.0)
-            : exchange(nullptr) {
-        this->exchange = new ExchangePotential(P, Phi, false);
-
+    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi, double xFac = 1.0)
+            : exchange(new ExchangePotential(P, Phi, false)) {
         RankZeroTensorOperator &K = (*this);
         K = xFac * (*exchange);
     }
-    ~ExchangeOperator() override { delete this->exchange; }
+    ~ExchangeOperator() override = default;
 
+    auto &getPoisson() { return this->exchange->getPoisson(); }
     void setupInternal(double prec) { this->exchange->setupInternal(prec); }
     void rotate(const ComplexMatrix &U) { this->exchange->rotate(U); }
 
     ComplexDouble trace(OrbitalVector &Phi) { return 0.5 * RankZeroTensorOperator::trace(Phi); }
 
 protected:
-    ExchangePotential *exchange;
+    std::shared_ptr<ExchangePotential> exchange;
 };
 
 } // namespace mrchem

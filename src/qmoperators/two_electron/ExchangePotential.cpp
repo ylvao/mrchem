@@ -12,6 +12,9 @@
 using mrcpp::Printer;
 using mrcpp::Timer;
 
+using PoissonOperator = mrcpp::PoissonOperator;
+using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
+
 namespace mrchem {
 
 /** @brief constructor
@@ -19,7 +22,7 @@ namespace mrchem {
  * @param[in] P Poisson operator (does not take ownership)
  * @param[in] Phi vector of orbitals which define the exchange operator
  */
-ExchangePotential::ExchangePotential(mrcpp::PoissonOperator *P, OrbitalVector *Phi, bool s)
+ExchangePotential::ExchangePotential(PoissonOperator_p P, OrbitalVector *Phi, bool s)
         : screen(s)
         , orbitals(Phi)
         , poisson(P) {

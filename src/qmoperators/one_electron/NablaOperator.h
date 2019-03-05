@@ -7,11 +7,11 @@ namespace mrchem {
 
 class QMNabla final : public QMOperator {
 public:
-    QMNabla(int d, mrcpp::DerivativeOperator<3> &D);
+    QMNabla(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D);
 
 protected:
     const int apply_dir;
-    mrcpp::DerivativeOperator<3> *derivative;
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative;
 
     void setup(double prec) override { setApplyPrec(prec); }
     void clear() override { clearApplyPrec(); }
@@ -22,7 +22,7 @@ protected:
 
 class NablaOperator final : public RankOneTensorOperator<3> {
 public:
-    NablaOperator(mrcpp::DerivativeOperator<3> &D)
+    NablaOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
             : d_x(0, D)
             , d_y(1, D)
             , d_z(2, D) {

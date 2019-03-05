@@ -28,7 +28,7 @@ namespace mrchem {
 
 class XCPotentialD2 final : public XCPotential {
 public:
-    XCPotentialD2(mrdft::XCFunctional *F, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y);
+    XCPotentialD2(std::shared_ptr<mrdft::XCFunctional> F, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y);
     ~XCPotentialD2() override;
 
 private:

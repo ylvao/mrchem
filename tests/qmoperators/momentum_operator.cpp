@@ -66,7 +66,7 @@ TEST_CASE("MomentumOperator", "[momentum_operator]") {
         }
     }
 
-    mrcpp::ABGVOperator<3> D(*MRA, 0.5, 0.5);
+    auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
     MomentumOperator p(D);
     p.setup(prec);
     SECTION("vector apply") {

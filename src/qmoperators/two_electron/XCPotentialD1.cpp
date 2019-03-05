@@ -13,6 +13,9 @@ using mrcpp::FunctionTree;
 using mrcpp::Printer;
 using mrcpp::Timer;
 
+using XCFunctional = mrdft::XCFunctional;
+using XCFunctional_p = std::shared_ptr<mrdft::XCFunctional>;
+
 namespace mrchem {
 
 /** @brief Constructor
@@ -24,7 +27,7 @@ namespace mrchem {
  * Then the functional is set up for subsequent calculations, fixing some internals of
  * xcfun when F.evalSetup is invoked.
  */
-XCPotentialD1::XCPotentialD1(mrdft::XCFunctional *F, OrbitalVector *Phi)
+XCPotentialD1::XCPotentialD1(XCFunctional_p F, OrbitalVector *Phi)
         : XCPotential(F, Phi) {}
 
 /** @brief Prepare the operator for application

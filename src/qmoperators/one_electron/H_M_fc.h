@@ -2,7 +2,7 @@
 
 #include "DeltaOperator.h"
 #include "H_B_spin.h"
-#include "RankOneTensorOperator.h"
+#include "qmoperators/RankOneTensorOperator.h"
 
 namespace mrchem {
 

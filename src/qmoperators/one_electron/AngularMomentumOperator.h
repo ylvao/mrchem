@@ -7,7 +7,7 @@ namespace mrchem {
 
 class AngularMomentumOperator final : public RankOneTensorOperator<3> {
 public:
-    AngularMomentumOperator(mrcpp::DerivativeOperator<3> &D, const mrcpp::Coord<3> &o)
+    AngularMomentumOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D, const mrcpp::Coord<3> &o)
             : r(o)
             , p(D) {
         RankOneTensorOperator<3> &h = (*this);

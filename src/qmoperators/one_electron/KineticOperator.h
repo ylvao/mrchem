@@ -18,7 +18,7 @@ namespace mrchem {
 
 class KineticOperator final : public RankZeroTensorOperator {
 public:
-    KineticOperator(mrcpp::DerivativeOperator<3> &D)
+    KineticOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
             : p(D) {
         RankZeroTensorOperator &p_x = this->p[0];
         RankZeroTensorOperator &p_y = this->p[1];

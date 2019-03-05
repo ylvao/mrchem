@@ -68,7 +68,7 @@ TEST_CASE("KineticOperator", "[kinetic_operator]") {
         E_K(i) = 0.5 * (E_x + E_y + E_z);
     }
 
-    mrcpp::ABGVOperator<3> D(*MRA, 0.5, 0.5);
+    auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
     KineticOperator T(D);
     T.setup(prec);
     SECTION("apply") {

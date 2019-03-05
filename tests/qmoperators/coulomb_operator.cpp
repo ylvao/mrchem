@@ -81,8 +81,8 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     E_P(3, 3) = 1.8983578764;
     E_P(4, 4) = 1.8983578764;
 
-    mrcpp::PoissonOperator P(*MRA, prec);
-    CoulombOperator V(&P, &Phi);
+    auto P = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
+    CoulombOperator V(P, &Phi);
 
     V.setup(prec);
     SECTION("apply") {

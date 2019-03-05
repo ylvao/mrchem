@@ -97,8 +97,8 @@ TEST_CASE("CoulombHessian", "[coulomb_hessian]") {
     E_P(1, 0) = 0.0873913761675;
     E_P(1, 1) = 0.0341665770117;
 
-    mrcpp::PoissonOperator P(*MRA, prec);
-    CoulombOperator V(&P, &Phi, &Phi_x, &Phi_x);
+    auto P = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
+    CoulombOperator V(P, &Phi, &Phi_x, &Phi_x);
 
     V.setup(prec);
     SECTION("apply") {

@@ -17,34 +17,30 @@ namespace mrchem {
 
 class CoulombOperator final : public RankZeroTensorOperator {
 public:
-    CoulombOperator(mrcpp::PoissonOperator *P)
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P)
             : potential(new CoulombPotential(P)) {
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
     }
-    CoulombOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi)
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi)
             : potential(new CoulombPotentialD1(P, Phi)) {
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
     }
-    CoulombOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y)
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y)
             : potential(new CoulombPotentialD2(P, Phi, X, Y)) {
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
     }
-    ~CoulombOperator() override {
-        if (this->potential != nullptr) delete this->potential;
-    }
+    ~CoulombOperator() override = default;
 
-    Density &getDensity() {
-        if (potential != nullptr) return this->potential->getDensity();
-        MSG_FATAL("Coulomb operator not properly initialized");
-    }
+    auto &getPoisson() { return this->potential->getPoisson(); }
+    auto &getDensity() { return this->potential->getDensity(); }
 
     ComplexDouble trace(OrbitalVector &Phi) { return 0.5 * RankZeroTensorOperator::trace(Phi); }
 
 private:
-    CoulombPotential *potential;
+    std::shared_ptr<CoulombPotential> potential;
 };
 
 } // namespace mrchem

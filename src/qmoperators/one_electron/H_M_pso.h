@@ -8,7 +8,7 @@ namespace mrchem {
 
 class H_M_pso final : public RankOneTensorOperator<3> {
 public:
-    H_M_pso(mrcpp::DerivativeOperator<3> &D, const mrcpp::Coord<3> &k)
+    H_M_pso(std::shared_ptr<mrcpp::DerivativeOperator<3>> D, const mrcpp::Coord<3> &k)
             : r_m3(3.0, k)
             , l(D, k) {
         const double alpha_2 = PHYSCONST::alpha * PHYSCONST::alpha;

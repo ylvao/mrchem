@@ -14,17 +14,17 @@ using mrcpp::Timer;
 namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-QMNabla::QMNabla(int d, DerivativeOperator<3> &D)
+QMNabla::QMNabla(int d, std::shared_ptr<DerivativeOperator<3>> D)
         : QMOperator()
         , apply_dir(d)
-        , derivative(&D) {}
+        , derivative(D) {}
 
 Orbital QMNabla::apply(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     if (this->derivative == nullptr) MSG_ERROR("No derivative operator");
 
-    int dir = this->apply_dir;
-    DerivativeOperator<3> &D = *this->derivative;
+    auto dir = this->apply_dir;
+    auto &D = *this->derivative;
 
     Orbital out = inp.paramCopy();
 
