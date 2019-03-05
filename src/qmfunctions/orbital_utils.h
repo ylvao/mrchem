@@ -57,15 +57,13 @@ void normalize(OrbitalVector &Phi);
 void orthogonalize(OrbitalVector &Phi);
 void orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi);
 
+ComplexMatrix calc_lowdin_matrix(OrbitalVector &Phi);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &BraKet);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ket);
-ComplexMatrix calc_lowdin_matrix(OrbitalVector &Phi);
-ComplexMatrix calc_localization_matrix(double prec, OrbitalVector &Phi);
 
-ComplexMatrix localize(double prec, OrbitalVector &Phi);
-ComplexMatrix localize(double prec, OrbitalVector &Phi, int spin);
+ComplexMatrix localize(double prec, OrbitalVector &Phi, ComplexMatrix &F);
 ComplexMatrix diagonalize(double prec, OrbitalVector &Phi, ComplexMatrix &F);
-ComplexMatrix orthonormalize(double prec, OrbitalVector &Phi);
+ComplexMatrix orthonormalize(double prec, OrbitalVector &Phi, ComplexMatrix &F);
 
 int size_empty(const OrbitalVector &Phi);
 int size_occupied(const OrbitalVector &Phi);
@@ -79,7 +77,6 @@ int get_electron_number(const OrbitalVector &Phi, int spin = SPIN::Paired);
 int start_index(const OrbitalVector &Phi, int spin);
 int get_n_nodes(const OrbitalVector &Phi);
 int get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes);
-int print_size_nodes(const OrbitalVector &Phi, const std::string txt = "", bool all = true, int printLevl = 0);
 bool orbital_vector_is_sane(const OrbitalVector &Phi);
 
 void set_spins(OrbitalVector &Phi, const IntVector &spins);
@@ -94,6 +91,8 @@ DoubleVector get_squared_norms(const OrbitalVector &Phi);
 ComplexVector get_integrals(const OrbitalVector &Phi);
 
 void print(const OrbitalVector &Phi);
+void print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F_mat);
+int print_size_nodes(const OrbitalVector &Phi, const std::string &txt = "", bool all = true, int plevel = 0);
 
 } // namespace orbital
 } // namespace mrchem

@@ -42,6 +42,11 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
+namespace orbital {
+ComplexMatrix localize(double prec, OrbitalVector &Phi, int spin);
+ComplexMatrix calc_localization_matrix(double prec, OrbitalVector &Phi);
+} // namespace orbital
+
 /****************************************
  * Orbital related standalone functions *
  ****************************************/
@@ -443,7 +448,7 @@ ComplexMatrix orbital::calc_lowdin_matrix(OrbitalVector &Phi) {
     return S_m12;
 }
 
-ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi) {
+ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
     Printer::printHeader(0, "Localizing orbitals");
     Timer timer;
     if (not orbital_vector_is_sane(Phi)) {
@@ -460,6 +465,10 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi) {
     if (nB > 0) U.block(nP + nA, nP + nA, nB, nB) = localize(prec, Phi, SPIN::Beta);
     timer.stop();
     Printer::printFooter(0, timer, 2);
+
+    // Transform Fock matrix
+    F = U * F * U.adjoint();
+
     return U;
 }
 
@@ -572,7 +581,7 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
  * Orthonormalizes the orbitals by multiplication of the Löwdin matrix S^(-1/2).
  * Orbitals are rotated in place, and the transformation matrix is returned.
  */
-ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi) {
+ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
     Printer::printHeader(0, "Lowdin orthonormalization");
     Timer timer;
 
@@ -586,8 +595,12 @@ ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi) {
     rot_t.stop();
     Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
 
+    // Transform Fock matrix
+    F = U * F * U.adjoint();
+
     timer.stop();
     Printer::printFooter(0, timer, 2);
+
     return U;
 }
 
@@ -704,80 +717,6 @@ int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
         }
     }
     return totsize;
-}
-
-/** @brief Prints statistics about the size of orbitals in an OrbitalVector
- *
- * This is a collective function. Can be made non-collective by setting all = false.
- * outputs respectively:
- * Total size of orbital vector, average per MPI, Max per MPI, Max (largest)
- * orbital, smallest orbital, max total (not only the orbitalvector) memory
- * usage among all MP, minimum total (not only the orbitalvector) memory
- * usage among all MPI
- *
- */
-int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string txt, bool all, int printLevl) {
-    int nOrbs = Phi.size();
-    IntVector sNodes = IntVector::Zero(nOrbs);
-    int sVec = get_size_nodes(Phi, sNodes);
-    double nMax = 0.0, vMax = 0.0; // node max, vector max
-    double nMin = 9.9e9, vMin = 9.9e9;
-    double nSum = 0.0, vSum = 0.0;
-    double nOwnOrbs = 0.0, OwnSumMax = 0.0, OwnSumMin = 9.9e9;
-    double totMax = 0.0, totMin = 9.9e9;
-    println(0, "OrbitalVector sizes statistics " << txt << " (MB)");
-    // stats for own orbitals
-    for (int i = 0; i < nOrbs; i++) {
-        if (sNodes[i] > 0) {
-            nOwnOrbs++;
-            if (sNodes[i] > nMax) nMax = sNodes[i];
-            if (sNodes[i] < nMin) nMin = sNodes[i];
-            nSum += sNodes[i];
-        }
-    }
-    if (nSum == 0.0) nMin = 0.0;
-
-    DoubleMatrix VecStats = DoubleMatrix::Zero(5, mpi::orb_size);
-    VecStats(0, mpi::orb_rank) = nMax;
-    VecStats(1, mpi::orb_rank) = nMin;
-    VecStats(2, mpi::orb_rank) = nSum;
-    VecStats(3, mpi::orb_rank) = nOwnOrbs;
-    VecStats(4, mpi::orb_rank) = Printer::printMem("", true);
-
-    if (all) {
-        mpi::allreduce_matrix(VecStats, mpi::comm_orb);
-        // overall stats
-        for (int i = 0; i < mpi::orb_size; i++) {
-            if (VecStats(0, i) > vMax) vMax = VecStats(0, i);
-            if (VecStats(1, i) < vMin) vMin = VecStats(1, i);
-            if (VecStats(2, i) > OwnSumMax) OwnSumMax = VecStats(2, i);
-            if (VecStats(2, i) < OwnSumMin) OwnSumMin = VecStats(2, i);
-            if (VecStats(4, i) > totMax) totMax = VecStats(4, i);
-            if (VecStats(4, i) < totMin) totMin = VecStats(4, i);
-            vSum += VecStats(2, i);
-        }
-    } else {
-        int i = mpi::orb_rank;
-        if (VecStats(0, i) > vMax) vMax = VecStats(0, i);
-        if (VecStats(1, i) < vMin) vMin = VecStats(1, i);
-        if (VecStats(2, i) > OwnSumMax) OwnSumMax = VecStats(2, i);
-        if (VecStats(2, i) < OwnSumMin) OwnSumMin = VecStats(2, i);
-        if (VecStats(4, i) > totMax) totMax = VecStats(4, i);
-        if (VecStats(4, i) < totMin) totMin = VecStats(4, i);
-        vSum += VecStats(2, i);
-    }
-    totMax *= 4.0 / (1024.0);
-    totMin *= 4.0 / (1024.0);
-    printout(printLevl, "Total orbvec " << static_cast<int>(vSum / 1024));
-    printout(printLevl, ", Av/MPI " << static_cast<int>(vSum / 1024 / mpi::orb_size));
-    printout(printLevl, ", Max/MPI " << static_cast<int>(OwnSumMax / 1024));
-    printout(printLevl, ", Max/orb " << static_cast<int>(vMax / 1024));
-    printout(printLevl, ", Min/orb " << static_cast<int>(vMin / 1024));
-    if (all)
-        println(printLevl,
-                ", Total max " << static_cast<int>(totMax) << ", Total min " << static_cast<int>(totMin) << " MB");
-    if (not all) println(printLevl, ", Total master " << static_cast<int>(totMax) << " MB");
-    return vSum;
 }
 
 /** @brief Assign errors to each orbital.
@@ -901,6 +840,106 @@ void orbital::print(const OrbitalVector &Phi) {
     printout(0, "------------------------------------------------------------\n");
     for (int i = 0; i < Phi.size(); i++) println(0, std::setw(4) << i << Phi[i]);
     printout(0, "============================================================\n\n\n");
+}
+
+void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F_mat) {
+    if (Phi.size() == 0) return;
+    if (F_mat.cols() != Phi.size()) MSG_FATAL("Invalid Fock matrix");
+    int oldprec = Printer::setPrecision(5);
+    Printer::printHeader(0, "Orbital energies");
+    println(0, "    n  spin  occ                            epsilon  ");
+    Printer::printSeparator(0, '-');
+    Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F_mat.cols());
+    es.compute(F_mat);
+
+    Printer::setPrecision(15);
+    DoubleVector epsilon = es.eigenvalues();
+    for (int i = 0; i < epsilon.size(); i++) {
+        printout(0, std::setw(5) << i);
+        printout(0, std::setw(5) << Phi[i].printSpin());
+        printout(0, std::setw(5) << Phi[i].occ());
+        printout(0, std::setw(44) << epsilon(i) << std::endl);
+    }
+    Printer::printSeparator(0, '=', 2);
+    Printer::setPrecision(oldprec);
+}
+
+/** @brief Prints statistics about the size of orbitals in an OrbitalVector
+ *
+ * This is a collective function. Can be made non-collective by setting all = false.
+ * outputs respectively:
+ * Total size of orbital vector, average per MPI, Max per MPI, Max (largest)
+ * orbital, smallest orbital, max total (not only the orbitalvector) memory
+ * usage among all MP, minimum total (not only the orbitalvector) memory
+ * usage among all MPI
+ *
+ */
+int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string &txt, bool all, int plevel) {
+    int nOrbs = Phi.size();
+    IntVector sNodes = IntVector::Zero(nOrbs);
+    get_size_nodes(Phi, sNodes);
+    double nMax = 0.0, vMax = 0.0; // node max, vector max
+    double nMin = 9.9e9, vMin = 9.9e9;
+    double nSum = 0.0, vSum = 0.0;
+    double nOwnOrbs = 0.0, ownSumMax = 0.0, ownSumMin = 9.9e9;
+    double totMax = 0.0, totMin = 9.9e9;
+    println(0, "OrbitalVector sizes statistics " << txt << " (MB)");
+    // stats for own orbitals
+    for (int i = 0; i < nOrbs; i++) {
+        if (sNodes[i] > 0) {
+            nOwnOrbs++;
+            if (sNodes[i] > nMax) nMax = sNodes[i];
+            if (sNodes[i] < nMin) nMin = sNodes[i];
+            nSum += sNodes[i];
+        }
+    }
+    if (nSum == 0.0) nMin = 0.0;
+
+    DoubleMatrix vecStats = DoubleMatrix::Zero(5, mpi::orb_size);
+    vecStats(0, mpi::orb_rank) = nMax;
+    vecStats(1, mpi::orb_rank) = nMin;
+    vecStats(2, mpi::orb_rank) = nSum;
+    vecStats(3, mpi::orb_rank) = nOwnOrbs;
+    vecStats(4, mpi::orb_rank) = Printer::printMem("", true);
+
+    if (all) {
+        mpi::allreduce_matrix(vecStats, mpi::comm_orb);
+        // overall stats
+        for (int i = 0; i < mpi::orb_size; i++) {
+            if (vecStats(0, i) > vMax) vMax = vecStats(0, i);
+            if (vecStats(1, i) < vMin) vMin = vecStats(1, i);
+            if (vecStats(2, i) > ownSumMax) ownSumMax = vecStats(2, i);
+            if (vecStats(2, i) < ownSumMin) ownSumMin = vecStats(2, i);
+            if (vecStats(4, i) > totMax) totMax = vecStats(4, i);
+            if (vecStats(4, i) < totMin) totMin = vecStats(4, i);
+            vSum += vecStats(2, i);
+        }
+    } else {
+        int i = mpi::orb_rank;
+        if (vecStats(0, i) > vMax) vMax = vecStats(0, i);
+        if (vecStats(1, i) < vMin) vMin = vecStats(1, i);
+        if (vecStats(2, i) > ownSumMax) ownSumMax = vecStats(2, i);
+        if (vecStats(2, i) < ownSumMin) ownSumMin = vecStats(2, i);
+        if (vecStats(4, i) > totMax) totMax = vecStats(4, i);
+        if (vecStats(4, i) < totMin) totMin = vecStats(4, i);
+        vSum += vecStats(2, i);
+    }
+    totMax *= 4.0 / (1024.0);
+    totMin *= 4.0 / (1024.0);
+    printout(plevel, "Total orbvec " << static_cast<int>(vSum / 1024));
+    printout(plevel, ", Av/MPI " << static_cast<int>(vSum / 1024 / mpi::orb_size));
+    printout(plevel, ", Max/MPI " << static_cast<int>(ownSumMax / 1024));
+    printout(plevel, ", Max/orb " << static_cast<int>(vMax / 1024));
+    printout(plevel, ", Min/orb " << static_cast<int>(vMin / 1024));
+
+    auto totMinInt = static_cast<int>(totMin);
+    auto totMaxInt = static_cast<int>(totMax);
+    if (all) {
+        println(plevel, ", Total max " << totMaxInt << ", Total min " << totMinInt << " MB");
+    } else {
+        println(plevel, ", Total master " << totMaxInt << " MB");
+    }
+    return vSum;
 }
 
 } // namespace mrchem
