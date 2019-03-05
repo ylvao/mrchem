@@ -38,6 +38,8 @@
 #include <string>
 #include <vector>
 
+#include "MRCPP/Printer"
+
 #include "Nucleus.h"
 #include "properties/DipoleMoment.h"
 #include "properties/GeometryDerivatives.h"
@@ -48,6 +50,7 @@
 #include "properties/SCFEnergy.h"
 #include "properties/SpinSpinCoupling.h"
 #include "properties/properties_fwd.h"
+#include "qmfunctions/Orbital.h"
 
 /** @class Molecule
  *
@@ -62,7 +65,7 @@ namespace mrchem {
 
 class Molecule final {
 public:
-    explicit Molecule(const Nuclei &nucs, int c = 0, int m = 1);
+    explicit Molecule(int c = 0, int m = 1);
     explicit Molecule(const std::string &coord_file, int c = 0, int m = 1);
     explicit Molecule(const std::vector<std::string> &coord_str, int c = 0, int m = 1);
     Molecule(const Molecule &mol) = delete;
@@ -73,13 +76,19 @@ public:
     int getNNuclei() const { return this->nuclei.size(); }
     int getNElectrons() const;
 
-    const mrcpp::Coord<3> &getCenterOfMass() const { return this->COM; }
-    const mrcpp::Coord<3> &getCenterOfCharge() const { return this->COC; }
+    void setCharge(int c) { this->charge = c; }
+    void setMultiplicity(int m) { this->multiplicity = m; }
+
+    mrcpp::Coord<3> calcCenterOfMass() const;
+    mrcpp::Coord<3> calcCenterOfCharge() const;
 
     Nuclei &getNuclei() { return this->nuclei; }
-    Nucleus &getNucleus(int i) { return this->nuclei[i]; }
+    OrbitalVector &getOrbitals() { return this->orbitals; }
+    ComplexMatrix &getFockMatrix() { return this->fock_matrix; }
+
     const Nuclei &getNuclei() const { return this->nuclei; }
-    const Nucleus &getNucleus(int i) const { return this->nuclei[i]; }
+    const OrbitalVector &getOrbitals() const { return this->orbitals; }
+    const ComplexMatrix &getFockMatrix() const { return this->fock_matrix; }
 
     void printGeometry() const;
     void printProperties() const;
@@ -107,13 +116,13 @@ public:
     OpticalRotation &getOpticalRotation(double omega);
 
 protected:
-    int charge;
-    int multiplicity;
-    Nuclei nuclei;
+    int charge{0};
+    int multiplicity{1};
+    Nuclei nuclei{};
+    OrbitalVector orbitals{};
+    ComplexMatrix fock_matrix{};
 
     // Properties
-    mrcpp::Coord<3> COM{};
-    mrcpp::Coord<3> COC{};
     std::unique_ptr<SCFEnergy> energy{};
     std::unique_ptr<DipoleMoment> dipole{};
     std::unique_ptr<GeometryDerivatives> geomderiv{};
@@ -122,9 +131,6 @@ protected:
     std::vector<std::unique_ptr<NMRShielding>> nmr{};
     std::vector<std::unique_ptr<HyperFineCoupling>> hfcc{};
     std::vector<std::vector<std::unique_ptr<SpinSpinCoupling>>> sscc{};
-
-    void calcCenterOfMass();
-    void calcCenterOfCharge();
 
     void initNuclearProperties(int nNucs);
 
