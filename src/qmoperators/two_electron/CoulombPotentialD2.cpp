@@ -9,10 +9,11 @@ using mrcpp::Timer;
 
 using PoissonOperator = mrcpp::PoissonOperator;
 using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
+using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 
-CoulombPotentialD2::CoulombPotentialD2(PoissonOperator_p P, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y)
+CoulombPotentialD2::CoulombPotentialD2(PoissonOperator_p P, OrbitalVector_p Phi, OrbitalVector_p X, OrbitalVector_p Y)
         : CoulombPotential(P, Phi)
         , orbitals_x(X)
         , orbitals_y(Y) {}

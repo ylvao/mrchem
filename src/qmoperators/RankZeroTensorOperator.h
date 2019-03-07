@@ -25,6 +25,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "chemistry/chemistry_fwd.h"
 #include "qmfunctions/qmfunction_fwd.h"
 #include "qmoperators/QMOperator.h"

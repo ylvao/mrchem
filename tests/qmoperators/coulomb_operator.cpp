@@ -50,7 +50,11 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     std::vector<int> ls;
     std::vector<int> ms;
 
-    OrbitalVector Phi;
+    auto Phi_p = std::make_shared<OrbitalVector>();
+    auto P_p = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
+    CoulombOperator V(P_p, Phi_p);
+
+    OrbitalVector &Phi = *Phi_p;
     for (int n = 1; n <= nShells; n++) {
         int L = n;
         for (int l = 0; l < L; l++) {
@@ -80,9 +84,6 @@ TEST_CASE("CoulombOperator", "[coulomb_operator]") {
     E_P(2, 2) = 1.8983578764;
     E_P(3, 3) = 1.8983578764;
     E_P(4, 4) = 1.8983578764;
-
-    auto P = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
-    CoulombOperator V(P, &Phi);
 
     V.setup(prec);
     SECTION("apply") {

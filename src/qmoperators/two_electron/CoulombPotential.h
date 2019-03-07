@@ -25,15 +25,16 @@ namespace mrchem {
 
 class CoulombPotential : public QMPotential {
 public:
-    CoulombPotential(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi = nullptr);
+    CoulombPotential(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi = nullptr);
     ~CoulombPotential() override = default;
 
     friend class CoulombOperator;
 
 protected:
-    bool local;              ///< Compute local (MPI) potential before broadcast
-    Density density;         ///< Ground-state electron density
-    OrbitalVector *orbitals; ///< Unperturbed orbitals defining the ground-state electron density
+    bool local;      ///< Compute local (MPI) potential before broadcast
+    Density density; ///< Ground-state electron density
+
+    std::shared_ptr<OrbitalVector> orbitals; ///< Unperturbed orbitals defining the ground-state electron density
     std::shared_ptr<mrcpp::PoissonOperator> poisson; ///< Operator used to compute the potential
 
     auto &getPoisson() { return this->poisson; }

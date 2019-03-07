@@ -50,7 +50,15 @@ TEST_CASE("XCOperatorBLYP", "[xc_operator_blyp]") {
     std::vector<int> ls;
     std::vector<int> ms;
 
-    OrbitalVector Phi;
+    auto Phi_p = std::make_shared<OrbitalVector>();
+    auto fun_p = std::make_shared<mrdft::XCFunctional>(*MRA, false);
+    fun_p->setFunctional("BLYP", 1.0);
+    fun_p->setUseGamma(false);
+    fun_p->setDensityCutoff(1.0e-10);
+    fun_p->evalSetup(1);
+    XCOperator V(fun_p, Phi_p);
+
+    OrbitalVector &Phi = *Phi_p;
     for (int n = 1; n <= nShells; n++) {
         int L = n;
         for (int l = 0; l < L; l++) {
@@ -69,13 +77,6 @@ TEST_CASE("XCOperatorBLYP", "[xc_operator_blyp]") {
         HydrogenFunction f(ns[i], ls[i], ms[i]);
         if (mpi::my_orb(Phi[i])) qmfunction::project(Phi[i], f, NUMBER::Real, prec);
     }
-
-    auto fun = std::make_shared<mrdft::XCFunctional>(*MRA, false);
-    fun->setFunctional("BLYP", 1.0);
-    fun->setUseGamma(false);
-    fun->setDensityCutoff(1.0e-10);
-    fun->evalSetup(1);
-    XCOperator V(fun, &Phi);
 
     // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
 

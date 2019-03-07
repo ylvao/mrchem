@@ -49,7 +49,12 @@ TEST_CASE("CoulombHessian", "[coulomb_hessian]") {
     std::vector<int> ls;
     std::vector<int> ms;
 
-    OrbitalVector Phi;
+    auto Phi_p = std::make_shared<OrbitalVector>();
+    auto X_p = std::make_shared<OrbitalVector>();
+    auto P_p = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
+    CoulombOperator V(P_p, Phi_p, X_p, X_p);
+
+    OrbitalVector &Phi = *Phi_p;
     ns.push_back(1);
     ls.push_back(0);
     ms.push_back(0);
@@ -71,7 +76,7 @@ TEST_CASE("CoulombHessian", "[coulomb_hessian]") {
     std::vector<int> ls_x;
     std::vector<int> ms_x;
 
-    OrbitalVector Phi_x;
+    OrbitalVector &Phi_x = *X_p;
     ns_x.push_back(2);
     ls_x.push_back(0);
     ms_x.push_back(0);
@@ -96,9 +101,6 @@ TEST_CASE("CoulombHessian", "[coulomb_hessian]") {
     E_P(0, 1) = 0.0873913761675;
     E_P(1, 0) = 0.0873913761675;
     E_P(1, 1) = 0.0341665770117;
-
-    auto P = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
-    CoulombOperator V(P, &Phi, &Phi_x, &Phi_x);
 
     V.setup(prec);
     SECTION("apply") {

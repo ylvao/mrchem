@@ -56,13 +56,14 @@ FockOperator::FockOperator(KineticOperator_p t,
  *
  */
 void FockOperator::build(double exx) {
+    this->exact_exchange = exx;
     this->T = RankZeroTensorOperator();
     if (this->kin != nullptr) this->T += (*this->kin);
 
     this->V = RankZeroTensorOperator();
     if (this->nuc != nullptr) this->V += (*this->nuc);
     if (this->coul != nullptr) this->V += (*this->coul);
-    if (this->ex != nullptr) this->V -= exx * (*this->ex);
+    if (this->ex != nullptr) this->V -= this->exact_exchange * (*this->ex);
     if (this->xc != nullptr) this->V += (*this->xc);
     if (this->ext != nullptr) this->V += (*this->ext);
 
@@ -154,7 +155,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
     // Electronic part
     if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
     if (this->coul != nullptr) E_ee = this->coul->trace(Phi).real();
-    if (this->ex != nullptr) E_x = -this->ex->trace(Phi).real();
+    if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
     if (this->xc != nullptr) E_xc = this->xc->getEnergy();
     if (this->xc != nullptr) E_xc2 = this->xc->trace(Phi).real();
     if (this->ext != nullptr) E_ext = this->ext->trace(Phi).real();

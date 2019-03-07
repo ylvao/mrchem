@@ -82,13 +82,17 @@ public:
     mrcpp::Coord<3> calcCenterOfMass() const;
     mrcpp::Coord<3> calcCenterOfCharge() const;
 
-    Nuclei &getNuclei() { return this->nuclei; }
-    OrbitalVector &getOrbitals() { return this->orbitals; }
-    ComplexMatrix &getFockMatrix() { return this->fock_matrix; }
+    auto &getNuclei() { return this->nuclei; }
+    auto &getOrbitals() { return this->orbitals_0; }
+    auto &getOrbitalsX() { return this->orbitals_x; }
+    auto &getOrbitalsY() { return this->orbitals_y; }
+    auto &getFockMatrix() { return this->fock_matrix; }
 
-    const Nuclei &getNuclei() const { return this->nuclei; }
-    const OrbitalVector &getOrbitals() const { return this->orbitals; }
-    const ComplexMatrix &getFockMatrix() const { return this->fock_matrix; }
+    const auto &getNuclei() const { return this->nuclei; }
+    const auto &getOrbitals() const { return this->orbitals_0; }
+    const auto &getOrbitalsX() const { return this->orbitals_x; }
+    const auto &getOrbitalsY() const { return this->orbitals_y; }
+    const auto &getFockMatrix() const { return this->fock_matrix; }
 
     void printGeometry() const;
     void printProperties() const;
@@ -119,8 +123,11 @@ protected:
     int charge{0};
     int multiplicity{1};
     Nuclei nuclei{};
-    OrbitalVector orbitals{};
     ComplexMatrix fock_matrix{};
+
+    std::shared_ptr<OrbitalVector> orbitals_0{};
+    std::shared_ptr<OrbitalVector> orbitals_x{};
+    std::shared_ptr<OrbitalVector> orbitals_y{};
 
     // Properties
     std::unique_ptr<SCFEnergy> energy{};

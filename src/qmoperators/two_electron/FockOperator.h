@@ -57,6 +57,7 @@ public:
     using RankZeroTensorOperator::dagger;
 
 protected:
+    double exact_exchange{1.0};
     RankZeroTensorOperator T;   ///< Total kinetic energy operator
     RankZeroTensorOperator V;   ///< Total potential energy operator
     RankZeroTensorOperator H_1; ///< Perturbation operators

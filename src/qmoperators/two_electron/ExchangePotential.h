@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "qmfunctions/qmfunction_fwd.h"
 #include "qmoperators/QMOperator.h"
 
@@ -21,7 +23,7 @@ namespace mrchem {
 
 class ExchangePotential final : public QMOperator {
 public:
-    ExchangePotential(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *phi, bool s);
+    ExchangePotential(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, bool s);
     ~ExchangePotential() override = default;
 
     friend class ExchangeOperator;
@@ -32,8 +34,7 @@ protected:
     DoubleMatrix part_norms; ///< Partial norms for use in screening
     OrbitalVector exchange;  ///< Precomputed exchange orbitals from the occupied orbital set
 
-    // Pointers to external objects, ownership outside this class
-    OrbitalVector *orbitals;                         ///< Orbitals defining the exchange operator
+    std::shared_ptr<OrbitalVector> orbitals;         ///< Orbitals defining the exchange operator
     std::shared_ptr<mrcpp::PoissonOperator> poisson; ///< Poisson operator to compute orbital contributions
 
     auto &getPoisson() { return this->poisson; }

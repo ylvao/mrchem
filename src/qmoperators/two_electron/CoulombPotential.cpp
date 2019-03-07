@@ -12,6 +12,7 @@ using mrcpp::Timer;
 
 using PoissonOperator = mrcpp::PoissonOperator;
 using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
+using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 
@@ -26,7 +27,7 @@ namespace mrchem {
  * QMPotential is uninitialized at this point and will be computed at setup.
  */
 
-CoulombPotential::CoulombPotential(PoissonOperator_p P, OrbitalVector *Phi)
+CoulombPotential::CoulombPotential(PoissonOperator_p P, OrbitalVector_p Phi)
         : QMPotential(1, mpi::share_coul_pot)
         , local(not(mpi::numerically_exact))
         , density(mpi::share_coul_dens)

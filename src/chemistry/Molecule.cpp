@@ -359,8 +359,8 @@ void Molecule::printGeometry() const {
  * Only properties that have been initialized will be printed.
  */
 void Molecule::printProperties() const {
-    const OrbitalVector &Phi = getOrbitals();
-    const ComplexMatrix &F_mat = getFockMatrix();
+    const auto &Phi = *getOrbitals();
+    const auto &F_mat = getFockMatrix();
     orbital::print_eigenvalues(Phi, F_mat);
 
     if (this->energy != nullptr) println(0, *this->energy);

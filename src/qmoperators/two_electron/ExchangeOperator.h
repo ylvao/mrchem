@@ -18,7 +18,7 @@ namespace mrchem {
 
 class ExchangeOperator final : public RankZeroTensorOperator {
 public:
-    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi, double xFac = 1.0)
+    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, double xFac = 1.0)
             : exchange(new ExchangePotential(P, Phi, false)) {
         RankZeroTensorOperator &K = (*this);
         K = xFac * (*exchange);

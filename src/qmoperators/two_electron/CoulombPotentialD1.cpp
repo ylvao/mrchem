@@ -12,9 +12,6 @@ using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
 
 namespace mrchem {
 
-CoulombPotentialD1::CoulombPotentialD1(PoissonOperator_p P, OrbitalVector *Phi)
-        : CoulombPotential(P, Phi) {}
-
 /** @brief compute electron density
  *
  * @param[in] prec: apply precision

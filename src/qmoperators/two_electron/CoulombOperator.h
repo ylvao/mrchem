@@ -22,12 +22,15 @@ public:
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
     }
-    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi)
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi)
             : potential(new CoulombPotentialD1(P, Phi)) {
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
     }
-    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y)
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
+                    std::shared_ptr<OrbitalVector> Phi,
+                    std::shared_ptr<OrbitalVector> X,
+                    std::shared_ptr<OrbitalVector> Y)
             : potential(new CoulombPotentialD2(P, Phi, X, Y)) {
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
