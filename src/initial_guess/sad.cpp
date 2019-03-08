@@ -73,16 +73,16 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     int Nb = Nd / 2;              // beta orbitals
 
     // Make Fock operator contributions
-    auto P = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
-    auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
-    auto xcfun = std::make_shared<mrdft::XCFunctional>(*MRA, not restricted);
-    xcfun->setFunctional("SLATERX");
-    xcfun->setFunctional("VWN5C");
-    xcfun->evalSetup(1);
-    KineticOperator T(D);
+    auto P_p = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
+    auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
+    auto xcfun_p = std::make_shared<mrdft::XCFunctional>(*MRA, not(restricted));
+    xcfun_p->setFunctional("SLATERX");
+    xcfun_p->setFunctional("VWN5C");
+    xcfun_p->evalSetup(1);
+    KineticOperator T(D_p);
     NuclearOperator V_nuc(mol.getNuclei(), prec);
-    CoulombOperator J(P);
-    XCOperator XC(xcfun);
+    CoulombOperator J(P_p);
+    XCOperator XC(xcfun_p);
     RankZeroTensorOperator V = V_nuc + J + XC;
 
     // Compute Coulomb density

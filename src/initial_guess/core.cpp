@@ -94,8 +94,8 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
 
     // Make Fock operator contributions
-    auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
-    KineticOperator T(D);
+    auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
+    KineticOperator T(D_p);
     NuclearOperator V(mol.getNuclei(), prec);
 
     // Project AO basis of hydrogen functions
@@ -169,8 +169,6 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
 
     t_diag.stop();
     Printer::printFooter(0, t_diag, 1);
-
-    math_utils::print_matrix(0, es.eigenvalues(), "Eigenvalues", 10);
 
     return Psi;
 }
