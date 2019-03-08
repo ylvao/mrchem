@@ -83,30 +83,25 @@ public:
     mrcpp::Coord<3> calcCenterOfCharge() const;
 
     auto &getNuclei() { return this->nuclei; }
-    auto &getOrbitals() { return this->orbitals_0; }
-    auto &getOrbitalsX() { return this->orbitals_x; }
-    auto &getOrbitalsY() { return this->orbitals_y; }
+    auto &getOrbitals() { return *this->orbitals_0; }
+    auto &getOrbitalsX() { return *this->orbitals_x; }
+    auto &getOrbitalsY() { return *this->orbitals_y; }
     auto &getFockMatrix() { return this->fock_matrix; }
 
     const auto &getNuclei() const { return this->nuclei; }
-    const auto &getOrbitals() const { return this->orbitals_0; }
-    const auto &getOrbitalsX() const { return this->orbitals_x; }
-    const auto &getOrbitalsY() const { return this->orbitals_y; }
+    const auto &getOrbitals() const { return *this->orbitals_0; }
+    const auto &getOrbitalsX() const { return *this->orbitals_x; }
+    const auto &getOrbitalsY() const { return *this->orbitals_y; }
     const auto &getFockMatrix() const { return this->fock_matrix; }
+
+    auto getOrbitals_p() const { return this->orbitals_0; }
+    auto getOrbitalsX_p() const { return this->orbitals_x; }
+    auto getOrbitalsY_p() const { return this->orbitals_y; }
 
     void printGeometry() const;
     void printProperties() const;
 
-    void initSCFEnergy();
-    void initDipoleMoment();
-    void initGeometryDerivatives();
-    void initMagnetizability();
-    void initQuadrupoleMoment();
-    void initNMRShielding(int k);
-    void initHyperFineCoupling(int k);
-    void initSpinSpinCoupling(int k, int l);
-    void initPolarizability(double omega);
-    void initOpticalRotation(double omega);
+    void initPerturbedOrbitals(bool dynamic);
 
     SCFEnergy &getSCFEnergy();
     DipoleMoment &getDipoleMoment();
@@ -125,22 +120,21 @@ protected:
     Nuclei nuclei{};
     ComplexMatrix fock_matrix{};
 
-    std::shared_ptr<OrbitalVector> orbitals_0{};
-    std::shared_ptr<OrbitalVector> orbitals_x{};
-    std::shared_ptr<OrbitalVector> orbitals_y{};
+    std::shared_ptr<OrbitalVector> orbitals_0{std::make_shared<OrbitalVector>()};
+    std::shared_ptr<OrbitalVector> orbitals_x{nullptr};
+    std::shared_ptr<OrbitalVector> orbitals_y{nullptr};
 
     // Properties
-    std::unique_ptr<SCFEnergy> energy{};
-    std::unique_ptr<DipoleMoment> dipole{};
-    std::unique_ptr<GeometryDerivatives> geomderiv{};
-    std::unique_ptr<Magnetizability> magnetizability{};
+    std::unique_ptr<SCFEnergy> energy{nullptr};
+    std::unique_ptr<DipoleMoment> dipole{nullptr};
+    std::unique_ptr<GeometryDerivatives> geomderiv{nullptr};
+    std::unique_ptr<Magnetizability> magnetizability{nullptr};
     std::vector<std::unique_ptr<Polarizability>> polarizability{};
     std::vector<std::unique_ptr<NMRShielding>> nmr{};
     std::vector<std::unique_ptr<HyperFineCoupling>> hfcc{};
     std::vector<std::vector<std::unique_ptr<SpinSpinCoupling>>> sscc{};
 
     void initNuclearProperties(int nNucs);
-
     void readCoordinateFile(const std::string &file);
     void readCoordinateString(const std::vector<std::string> &coord_str);
 };
