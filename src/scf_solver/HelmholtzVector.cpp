@@ -139,7 +139,7 @@ OrbitalVector HelmholtzVector::rotate(const ComplexMatrix &F_mat, OrbitalVector 
  * MPI: Output vector gets the same MPI distribution as input vector. Only
  *      local orbitals are computed.
  */
-OrbitalVector HelmholtzVector::operator()(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const {
+OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const {
     Timer t_tot;
     Printer::printHeader(0, "Applying Helmholtz operators");
     int oldprec = Printer::setPrecision(5);

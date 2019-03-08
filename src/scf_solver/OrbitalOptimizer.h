@@ -26,6 +26,7 @@
 #pragma once
 
 #include "GroundStateSolver.h"
+#include "KAIN.h"
 
 /** @class OrbitalOptimizer
  *
@@ -40,21 +41,12 @@
 
 namespace mrchem {
 
-class Accelerator;
-
 class OrbitalOptimizer final : public GroundStateSolver {
 public:
-    OrbitalOptimizer(Accelerator *k = nullptr);
+    OrbitalOptimizer() = default;
+    ~OrbitalOptimizer() override = default;
 
-    void setup(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat);
-    void clear();
-
-    bool optimize();
-
-protected:
-    Accelerator *kain; ///< KAIN accelerator(pointer to external object)
-
-    bool useKAIN() const { return (this->kain == nullptr) ? false : true; }
+    bool optimize(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat);
 };
 
 } // namespace mrchem

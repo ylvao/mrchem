@@ -42,15 +42,11 @@ namespace mrchem {
  *
  * Prints the current nuclear, electronic and total energies.
  */
-double GroundStateSolver::calcProperty() {
+double GroundStateSolver::calcProperty(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat) {
     Printer::printHeader(0, "Calculating SCF energy");
     Timer timer;
 
-    ComplexMatrix &F = *this->fMat_n;
-    FockOperator &fock = *this->fOper_n;
-    OrbitalVector &Phi = *this->orbitals_n;
-
-    SCFEnergy E = fock.trace(Phi, F);
+    SCFEnergy E = F.trace(Phi, F_mat);
     this->energy.push_back(E);
 
     timer.stop();
@@ -108,6 +104,12 @@ void GroundStateSolver::printProperty() const {
     Printer::printSeparator(0, '-');
     printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0));
     Printer::printSeparator(0, '=');
+}
+
+/** @brief Reset accumulated data */
+void GroundStateSolver::reset() {
+    SCFSolver::reset();
+    this->energy.clear();
 }
 
 } // namespace mrchem

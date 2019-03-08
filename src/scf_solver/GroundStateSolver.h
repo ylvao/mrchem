@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "SCF.h"
+#include "SCFSolver.h"
 #include "properties/SCFEnergy.h"
 
 /** @class GroundStateSolver
@@ -41,17 +41,18 @@ namespace mrchem {
 
 class FockOperator;
 
-class GroundStateSolver : public SCF {
+class GroundStateSolver : public SCFSolver {
+public:
+    GroundStateSolver() = default;
+    virtual ~GroundStateSolver() override = default;
+
 protected:
     std::vector<SCFEnergy> energy;
 
-    ComplexMatrix *fMat_n{nullptr};     ///< Fock matrix (pointer to external object)
-    FockOperator *fOper_n{nullptr};     ///< Fock operator (pointer to external object)
-    OrbitalVector *orbitals_n{nullptr}; ///< Orbtials (pointer to external object)
-
-    void printProperty() const;
-    double calcProperty();
+    void reset() override;
+    double calcProperty(FockOperator &F, OrbitalVector &Phi_n, ComplexMatrix &F_mat);
     double calcPropertyError() const;
+    void printProperty() const;
 };
 
 } // namespace mrchem
