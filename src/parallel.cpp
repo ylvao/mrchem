@@ -121,8 +121,8 @@ void mpi::distribute(OrbitalVector &Phi) {
 
 /** @brief Free all function pointers not belonging to this MPI rank */
 void mpi::free_foreign(OrbitalVector &Phi) {
-    for (int i = 0; i < Phi.size(); i++) {
-        if (not mpi::my_orb(Phi[i])) Phi[i].free(NUMBER::Total);
+    for (auto &i : Phi) {
+        if (not mpi::my_orb(i)) i.free(NUMBER::Total);
     }
 }
 

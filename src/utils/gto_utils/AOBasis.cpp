@@ -43,8 +43,8 @@ void AOBasis::append(const AOContraction &ctr) {
 GaussExp<3> AOBasis::getAO(int n, const mrcpp::Coord<3> &center) const {
     assert(n >= 0 and n < nFunc);
     int m = 0;
-    for (int i = 0; i < ctrs.size(); i++) {
-        const AOContraction &ctr = *(ctrs)[i];
+    for (auto i : ctrs) {
+        const AOContraction &ctr = *i;
         for (int j = 0; j < ctr.getNComp(); j++) {
             if (m == n) return ctr.getNormContraction(j, center);
             m++;
@@ -56,8 +56,8 @@ GaussExp<3> AOBasis::getAO(int n, const mrcpp::Coord<3> &center) const {
 GaussExp<3> AOBasis::getBasis(const mrcpp::Coord<3> &center) const {
     NOT_IMPLEMENTED_ABORT;
     GaussExp<3> abas;
-    for (unsigned int i = 0; i < this->ctrs.size(); i++) {
-        const AOContraction &ctr = *this->ctrs[i];
+    for (auto i : this->ctrs) {
+        const AOContraction &ctr = *i;
         for (int m = 0; m < ctr.getNComp(); m++) abas.append(ctr.getContraction(m, center));
     }
     return abas;
@@ -66,8 +66,8 @@ GaussExp<3> AOBasis::getBasis(const mrcpp::Coord<3> &center) const {
 GaussExp<3> AOBasis::getNormBasis(const mrcpp::Coord<3> &center) const {
     NOT_IMPLEMENTED_ABORT;
     GaussExp<3> abas;
-    for (unsigned int i = 0; i < this->ctrs.size(); i++) {
-        const AOContraction &ctr = *(this->ctrs[i]);
+    for (auto i : this->ctrs) {
+        const AOContraction &ctr = *i;
         for (int m = 0; m < ctr.getNComp(); m++) abas.append(ctr.getNormContraction(m, center));
     }
     return abas;

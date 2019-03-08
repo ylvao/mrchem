@@ -21,8 +21,8 @@ OrbitalExp::OrbitalExp(Intgrl &intgrl)
 }
 
 OrbitalExp::~OrbitalExp() {
-    for (int i = 0; i < this->orbitals.size(); i++) {
-        if (this->orbitals[i] != 0) { delete this->orbitals[i]; }
+    for (auto &orbital : this->orbitals) {
+        if (orbital != 0) { delete orbital; }
     }
 }
 
@@ -186,9 +186,9 @@ void OrbitalExp::transformToSpherical() {
         }
     }
     this->orbitals.clear();
-    for (int i = 0; i < tmp.size(); i++) {
-        this->orbitals.push_back(tmp[i]);
-        tmp[i] = 0;
+    for (auto &i : tmp) {
+        this->orbitals.push_back(i);
+        i = 0;
     }
     this->cartesian = false;
 }

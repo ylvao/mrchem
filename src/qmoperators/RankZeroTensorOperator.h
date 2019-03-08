@@ -129,14 +129,8 @@ inline RankZeroTensorOperator operator*(RankZeroTensorOperator A, RankZeroTensor
         for (int k = 0; k < b_terms; k++) {
             ComplexDouble b_k = B.coef_exp[k];
             QMOperatorVector tmp;
-            for (int l = 0; l < B.oper_exp[k].size(); l++) {
-                QMOperator *B_kl = B.oper_exp[k][l];
-                tmp.push_back(B_kl);
-            }
-            for (int j = 0; j < A.oper_exp[i].size(); j++) {
-                QMOperator *A_ij = A.oper_exp[i][j];
-                tmp.push_back(A_ij);
-            }
+            for (auto B_kl : B.oper_exp[k]) { tmp.push_back(B_kl); }
+            for (auto A_ij : A.oper_exp[i]) { tmp.push_back(A_ij); }
             out.coef_exp.push_back(b_k * a_i);
             out.oper_exp.push_back(tmp);
         }

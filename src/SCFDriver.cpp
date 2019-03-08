@@ -321,8 +321,7 @@ void SCFDriver::setup() {
         }
     }
     if (calc_nmr_shielding) {
-        for (int k = 0; k < nmr_nucleus_k.size(); k++) {
-            int K = nmr_nucleus_k[k];
+        for (auto &K : nmr_nucleus_k) {
             molecule->initNMRShielding(K);
             if (nmr_perturbation == "B") {
                 for (int d = 0; d < 3; d++) {
@@ -340,23 +339,17 @@ void SCFDriver::setup() {
         }
     }
     if (calc_hyperfine_coupling) {
-        for (int k = 0; k < hfcc_nucleus_k.size(); k++) {
-            int K = hfcc_nucleus_k[k];
-            molecule->initHyperFineCoupling(K);
-        }
+        for (auto &K : hfcc_nucleus_k) { molecule->initHyperFineCoupling(K); }
     }
     if (calc_spin_spin_coupling) {
-        for (int k = 0; k < sscc_nucleus_k.size(); k++) {
-            int K = sscc_nucleus_k[k];
-            for (int l = 0; l < sscc_nucleus_l.size(); l++) {
-                int L = sscc_nucleus_l[l];
+        for (auto &K : sscc_nucleus_k) {
+            for (auto &L : sscc_nucleus_l) {
                 if (K != L) molecule->initSpinSpinCoupling(K, L);
             }
         }
     }
     if (calc_polarizability) {
-        for (int i = 0; i < pol_frequency.size(); i++) {
-            double omega = pol_frequency[i];
+        for (auto &omega : pol_frequency) {
             molecule->initPolarizability(omega);
             for (int d = 0; d < 3; d++) {
                 if (rsp_directions[d] == 0) continue;
@@ -365,8 +358,7 @@ void SCFDriver::setup() {
         }
     }
     if (calc_optical_rotation) {
-        for (int i = 0; i < optrot_frequency.size(); i++) {
-            double omega = optrot_frequency[i];
+        for (auto &omega : optrot_frequency) {
             molecule->initOpticalRotation(omega);
             NOT_IMPLEMENTED_ABORT;
         }

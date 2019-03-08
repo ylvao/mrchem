@@ -28,7 +28,7 @@ public:
     // This should print shell by shell
     friend std::ostream &operator<<(std::ostream &o, const AOBasis &b) {
         o << "    nFunc " << b.nFunc << std::endl;
-        for (int i = 0; i < b.ctrs.size(); i++) o << "    " << *b.ctrs[i];
+        for (auto ctr : b.ctrs) o << "    " << *ctr;
         return o;
     }
 

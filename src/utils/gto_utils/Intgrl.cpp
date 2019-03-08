@@ -21,11 +21,11 @@ Intgrl::Intgrl(const std::string &file) {
 }
 
 Intgrl::~Intgrl() {
-    for (int i = 0; i < this->nuclei.size(); i++) {
-        if (this->nuclei[i] != 0) { delete this->nuclei[i]; }
+    for (auto &i : this->nuclei) {
+        if (i != 0) { delete i; }
     }
-    for (int i = 0; i < this->basis.size(); i++) {
-        if (this->basis[i] != 0) { delete this->basis[i]; }
+    for (auto &basi : this->basis) {
+        if (basi != 0) { delete basi; }
     }
 }
 

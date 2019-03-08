@@ -147,8 +147,8 @@ void Molecule::initSpinSpinCoupling(int k, int l) {
 
 /** @brief Initialize property Polarizability */
 void Molecule::initPolarizability(double omega) {
-    for (auto i = 0; i < this->polarizability.size(); i++) {
-        const Polarizability &pol_i = *this->polarizability[i];
+    for (auto &i : this->polarizability) {
+        const Polarizability &pol_i = *i;
         auto omega_i = pol_i.getFrequency();
         if (std::abs(omega_i - omega) < mrcpp::MachineZero) {
             MSG_ERROR("Polarizability already initialized");
@@ -320,9 +320,9 @@ void Molecule::readCoordinateFile(const std::string &coord_file) {
 void Molecule::readCoordinateString(const std::vector<std::string> &coord_str) {
     Coord<3> coord;
     std::string sym;
-    for (auto i = 0; i < coord_str.size(); i++) {
+    for (const auto &i : coord_str) {
         std::stringstream ss;
-        ss.str(coord_str[i]);
+        ss.str(i);
         ss >> sym;
         ss >> coord[0];
         ss >> coord[1];

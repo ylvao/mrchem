@@ -379,13 +379,13 @@ void Accelerator::sortLinearSystem(std::vector<DoubleMatrix> &A_matrices,
 int Accelerator::printTreeSizes() const {
     int totNodes = 0;
     int totTrees = 0;
-    for (int i = 0; i < this->orbitals.size(); i++) {
-        totTrees += this->orbitals[i].size();
-        totNodes += orbital::get_n_nodes(this->orbitals[i]);
+    for (const auto &orbital : this->orbitals) {
+        totTrees += orbital.size();
+        totNodes += orbital::get_n_nodes(orbital);
     }
-    for (int i = 0; i < this->dOrbitals.size(); i++) {
-        totTrees += this->dOrbitals[i].size();
-        totNodes += orbital::get_n_nodes(this->dOrbitals[i]);
+    for (const auto &dOrbital : this->dOrbitals) {
+        totTrees += dOrbital.size();
+        totNodes += orbital::get_n_nodes(dOrbital);
     }
     println(0, " Accelerator       " << std::setw(15) << totTrees << std::setw(25) << totNodes);
     return totNodes;
