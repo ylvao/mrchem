@@ -10,8 +10,8 @@ class DistancePotential final : public QMPotential {
 public:
     DistancePotential(double pow, const mrcpp::Coord<3> &r_K, double S);
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 
 protected:
     const double power;

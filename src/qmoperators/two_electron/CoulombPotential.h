@@ -26,7 +26,7 @@ namespace mrchem {
 class CoulombPotential : public QMPotential {
 public:
     CoulombPotential(mrcpp::PoissonOperator *P, OrbitalVector *Phi = nullptr);
-    virtual ~CoulombPotential() = default;
+    ~CoulombPotential() override = default;
 
     friend class CoulombOperator;
 
@@ -42,8 +42,8 @@ protected:
     bool useLocal() const { return this->local; }
     bool useGlobal() const { return not(this->local); }
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 
     virtual void setupGlobalDensity(double prec) {}
     virtual void setupLocalDensity(double prec) {}

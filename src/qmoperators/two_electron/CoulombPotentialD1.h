@@ -9,8 +9,8 @@ public:
     CoulombPotentialD1(mrcpp::PoissonOperator *P, OrbitalVector *Phi);
 
 private:
-    void setupLocalDensity(double prec);
-    void setupGlobalDensity(double prec);
+    void setupLocalDensity(double prec) override;
+    void setupGlobalDensity(double prec) override;
 };
 
 } // namespace mrchem

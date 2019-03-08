@@ -12,8 +12,8 @@ public:
 protected:
     mrcpp::GaussFunc<3> func;
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 };
 
 class DeltaOperator final : public RankZeroTensorOperator {

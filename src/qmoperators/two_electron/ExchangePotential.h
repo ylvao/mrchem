@@ -22,7 +22,7 @@ namespace mrchem {
 class ExchangePotential final : public QMOperator {
 public:
     ExchangePotential(mrcpp::PoissonOperator *P, OrbitalVector *phi, bool s);
-    ~ExchangePotential() {}
+    ~ExchangePotential() override {}
 
     void rotate(const ComplexMatrix &U);
 
@@ -38,11 +38,11 @@ protected:
     OrbitalVector *orbitals;         ///< Orbitals defining the exchange operator
     mrcpp::PoissonOperator *poisson; ///< Poisson operator to compute orbital contributions
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 
-    Orbital apply(Orbital phi_p);
-    Orbital dagger(Orbital phi_p);
+    Orbital apply(Orbital phi_p) override;
+    Orbital dagger(Orbital phi_p) override;
 
     using QMOperator::apply;
     using QMOperator::dagger;

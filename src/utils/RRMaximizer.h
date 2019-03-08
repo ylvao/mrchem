@@ -42,8 +42,8 @@ class RRMaximizer final : public NonlinearMaximizer {
 public:
     RRMaximizer(double prec, OrbitalVector &Phi);
     const DoubleMatrix &getTotalU() const { return this->total_U; }
-    double get_hessian(int i, int j);
-    void multiply_hessian(DoubleVector &vec, DoubleVector &Hv);
+    double get_hessian(int i, int j) override;
+    void multiply_hessian(DoubleVector &vec, DoubleVector &Hv) override;
 
 protected:
     int N;                 // number of orbitals
@@ -51,10 +51,10 @@ protected:
     DoubleMatrix r_i;      // rotated  r_i_orig
     DoubleMatrix total_U;  // the rotation matrix of the orbitals
 
-    double functional() const;
-    double make_gradient();
-    double make_hessian();
-    void do_step(const DoubleVector &step);
+    double functional() const override;
+    double make_gradient() override;
+    double make_hessian() override;
+    void do_step(const DoubleVector &step) override;
 };
 
 } // namespace mrchem

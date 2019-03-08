@@ -11,11 +11,11 @@ public:
             : QMOperator() {}
 
 protected:
-    void setup(double prec) { setApplyPrec(prec); }
-    void clear() { clearApplyPrec(); }
+    void setup(double prec) override { setApplyPrec(prec); }
+    void clear() override { clearApplyPrec(); }
 
-    Orbital apply(Orbital inp);
-    Orbital dagger(Orbital inp);
+    Orbital apply(Orbital inp) override;
+    Orbital dagger(Orbital inp) override;
 };
 
 class IdentityOperator final : public RankZeroTensorOperator {

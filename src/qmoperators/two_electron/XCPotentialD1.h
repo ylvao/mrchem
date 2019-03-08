@@ -32,13 +32,13 @@ public:
 private:
     mrcpp::FunctionTreeVector<3> potentials; ///< XC Potential functions collected in a vector
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 
-    void setupPotential(double prec);
+    void setupPotential(double prec) override;
     mrcpp::FunctionTree<3> &getPotential(int spin);
 
-    Orbital apply(Orbital phi);
+    Orbital apply(Orbital phi) override;
 };
 
 } // namespace mrchem

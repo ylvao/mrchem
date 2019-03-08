@@ -9,10 +9,10 @@ namespace mrchem {
 class NuclearPotential final : public QMPotential {
 public:
     NuclearPotential(const Nuclei &nucs, double prec);
-    ~NuclearPotential() { free(NUMBER::Total); }
+    ~NuclearPotential() override { free(NUMBER::Total); }
 
-    void setup(double prec) { setApplyPrec(prec); }
-    void clear() { clearApplyPrec(); }
+    void setup(double prec) override { setApplyPrec(prec); }
+    void clear() override { clearApplyPrec(); }
 
     Nuclei &getNuclei() { return this->func.getNuclei(); }
     const Nuclei &getNuclei() const { return this->func.getNuclei(); }

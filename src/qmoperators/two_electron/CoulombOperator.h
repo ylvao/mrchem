@@ -32,7 +32,7 @@ public:
         RankZeroTensorOperator &J = (*this);
         J = *this->potential;
     }
-    ~CoulombOperator() {
+    ~CoulombOperator() override {
         if (this->potential != nullptr) delete this->potential;
     }
 

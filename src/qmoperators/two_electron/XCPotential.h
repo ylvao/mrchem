@@ -34,7 +34,7 @@ public:
             , energy(0.0)
             , orbitals(Phi)
             , functional(F) {}
-    virtual ~XCPotential() = default;
+    ~XCPotential() override = default;
 
     friend class XCOperator;
 
@@ -48,7 +48,7 @@ protected:
 
     mrcpp::FunctionTree<3> &getDensity(int spin);
     virtual void setupPotential(double prec) {}
-    virtual Orbital apply(Orbital phi) = 0;
+    Orbital apply(Orbital phi) override = 0;
 
     void setupDensity(double prec = -1.0);
 };

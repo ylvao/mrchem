@@ -12,8 +12,8 @@ public:
 protected:
     mrcpp::AnalyticFunction<3> func;
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 };
 
 class PositionOperator : public RankOneTensorOperator<3> {
@@ -27,7 +27,7 @@ public:
         r[1] = r_y;
         r[2] = r_z;
     }
-    virtual ~PositionOperator() = default;
+    ~PositionOperator() override = default;
 
 protected:
     PositionPotential r_x;

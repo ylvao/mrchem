@@ -25,7 +25,7 @@ public:
         RankZeroTensorOperator &K = (*this);
         K = xFac * (*exchange);
     }
-    ~ExchangeOperator() { delete this->exchange; }
+    ~ExchangeOperator() override { delete this->exchange; }
 
     void setupInternal(double prec) { this->exchange->setupInternal(prec); }
     void rotate(const ComplexMatrix &U) { this->exchange->rotate(U); }
