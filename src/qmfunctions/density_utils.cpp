@@ -69,13 +69,13 @@ Density density::compute(double prec, Orbital phi, int spin) {
     Density rho(false);
     FunctionTreeVector<3> sum_vec;
     if (phi.hasReal()) {
-        FunctionTree<3> *real_2 = new FunctionTree<3>(*MRA);
+        auto *real_2 = new FunctionTree<3>(*MRA);
         mrcpp::copy_grid(*real_2, phi.real());
         mrcpp::square(prec, *real_2, phi.real());
         sum_vec.push_back(std::make_tuple(occ, real_2));
     }
     if (phi.hasImag()) {
-        FunctionTree<3> *imag_2 = new FunctionTree<3>(*MRA);
+        auto *imag_2 = new FunctionTree<3>(*MRA);
         mrcpp::copy_grid(*imag_2, phi.imag());
         mrcpp::square(prec, *imag_2, phi.imag());
         sum_vec.push_back(std::make_tuple(occ, imag_2));

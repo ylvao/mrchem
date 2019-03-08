@@ -57,7 +57,7 @@ void Intgrl::readAtomBlock(std::ifstream &ifs) {
         for (int j = 0; j < funcsPerShell[i]; j++) { readContractionBlock(ifs, bas, i); }
     }
     for (int i = 0; i < nAtoms; i++) {
-        AOBasis *aoBas = new AOBasis(bas);
+        auto *aoBas = new AOBasis(bas);
         this->basis.push_back(aoBas);
     }
 }
@@ -72,7 +72,7 @@ void Intgrl::readAtomData(std::ifstream &ifs, int n_atoms, double z) {
         PeriodicTable pt;
         const Element &element = pt.getElement(sym.c_str());
 
-        Nucleus *nuc = new Nucleus(element, coord);
+        auto *nuc = new Nucleus(element, coord);
         nuc->setCharge(z);
         this->nuclei.push_back(nuc);
     }

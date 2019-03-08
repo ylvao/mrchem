@@ -140,7 +140,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
 
     // Orbital energies
     for (int i = 0; i < Phi.size(); i++) {
-        double occ = (double)Phi[i].occ();
+        auto occ = (double)Phi[i].occ();
         E_orb += occ * F(i, i).real();
     }
 

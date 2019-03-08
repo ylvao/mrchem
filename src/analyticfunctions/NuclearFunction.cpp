@@ -52,7 +52,7 @@ bool NuclearFunction::isVisibleAtScale(int scale, int nQuadPts) const {
     double minSmooth = 1.0;
     if (this->smooth.size() > 0) minSmooth = *std::min_element(this->smooth.begin(), this->smooth.end());
     double stdDeviation = std::pow(minSmooth, -0.5);
-    int visibleScale = static_cast<int>(std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
+    auto visibleScale = static_cast<int>(std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
     if (scale < visibleScale) {
         return false;
     } else {

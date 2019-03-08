@@ -517,7 +517,7 @@ void SCFDriver::setupInitialGroundState() {
 }
 
 OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
-    OrbitalOptimizer *optimizer = new OrbitalOptimizer(kain);
+    auto *optimizer = new OrbitalOptimizer(kain);
     optimizer->setMaxIterations(scf_max_iter);
     optimizer->setRotation(scf_rotation);
     optimizer->setCanonical(scf_canonical);
@@ -528,7 +528,7 @@ OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
 }
 
 EnergyOptimizer *SCFDriver::setupEnergyOptimizer() {
-    EnergyOptimizer *optimizer = new EnergyOptimizer();
+    auto *optimizer = new EnergyOptimizer();
     optimizer->setMaxIterations(kin_free_max_iter);
     optimizer->setCanonical(kin_free_canonical);
     optimizer->setThreshold(kin_free_orb_thrs, kin_free_prop_thrs);
@@ -990,7 +990,7 @@ void SCFDriver::setupInitialGrid(mrdft::XCFunctional &func, const Molecule &mol)
  */
 
 mrdft::XCFunctional *SCFDriver::setupFunctional(int order) {
-    mrdft::XCFunctional *fun = new mrdft::XCFunctional(*MRA, dft_spin);
+    auto *fun = new mrdft::XCFunctional(*MRA, dft_spin);
     for (int i = 0; i < dft_func_names.size(); i++) {
         double f_coef = dft_func_coefs[i];
         const std::string &f_name = dft_func_names[i];

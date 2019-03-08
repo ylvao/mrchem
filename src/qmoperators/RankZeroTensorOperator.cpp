@@ -291,7 +291,7 @@ ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi, OrbitalVector &X
         if (mpi::my_orb(Phi[i])) {
             if (not mpi::my_orb(X[i])) MSG_ERROR("MPI communication needed");
             if (not mpi::my_orb(Y[i])) MSG_ERROR("MPI communication needed");
-            double eta_i = (double)Phi[i].occ();
+            auto eta_i = (double)Phi[i].occ();
             ComplexDouble result_1 = O(Phi[i], X[i]);
             ComplexDouble result_2 = O(Y[i], Phi[i]);
             result += eta_i * (result_1 + result_2);
