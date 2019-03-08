@@ -30,7 +30,7 @@ AOBasis &AOBasis::operator=(const AOBasis &bas) {
 
 AOBasis::~AOBasis() {
     for (unsigned int i = 0; i < ctrs.size(); i++) {
-        if (this->ctrs[i] != 0) delete this->ctrs[i];
+        if (this->ctrs[i] != nullptr) delete this->ctrs[i];
     }
 }
 

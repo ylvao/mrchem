@@ -267,9 +267,9 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec, OrbitalVector &
         double t = timer.getWallTime();
         Printer::printDouble(0, "Fock matrix n+1", t, 5);
     }
-    if (j_np1 != 0) j_np1->clear();
-    if (k_np1 != 0) k_np1->clear();
-    if (xc_np1 != 0) xc_np1->clear();
+    if (j_np1 != nullptr) j_np1->clear();
+    if (k_np1 != nullptr) k_np1->clear();
+    if (xc_np1 != nullptr) xc_np1->clear();
 
     // Re-computing non-orthogonal phi_np1
     Phi_np1 = orbital::add(1.0, Phi_n, 1.0, dPhi_n);

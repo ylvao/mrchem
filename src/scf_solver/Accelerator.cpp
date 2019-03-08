@@ -138,8 +138,8 @@ void Accelerator::push_back(OrbitalVector &Phi,
     int nHistory = this->orbitals.size();
     bool historyIsFull = false;
     if (nHistory >= this->maxHistory) { historyIsFull = true; }
-    if (F != 0) {
-        if (dF == 0) { MSG_ERROR("Need to give both F and dF"); }
+    if (F != nullptr) {
+        if (dF == nullptr) { MSG_ERROR("Need to give both F and dF"); }
         if (this->fock.size() != nHistory) { MSG_ERROR("Size mismatch orbitals vs matrices"); }
     }
 
@@ -155,8 +155,8 @@ void Accelerator::push_back(OrbitalVector &Phi,
 
     this->orbitals.push_back(Phi);
     this->dOrbitals.push_back(dPhi);
-    if (F != 0) this->fock.push_back(*F);
-    if (dF != 0) this->dFock.push_back(*dF);
+    if (F != nullptr) this->fock.push_back(*F);
+    if (dF != nullptr) this->dFock.push_back(*dF);
 
     Phi.clear();
     dPhi.clear();

@@ -16,7 +16,7 @@ using namespace mrchem;
 namespace mrenv {
 
 void initialize(int argc, char **argv) {
-    const char *infile = 0;
+    const char *infile = nullptr;
     if (argc == 1) {
         infile = "STDIN";
     } else if (argc == 2) {
@@ -113,8 +113,8 @@ void initialize(int argc, char **argv) {
 
 void finalize(double wt) {
     // Delete global MRA
-    if (MRA != 0) delete MRA;
-    MRA = 0;
+    if (MRA != nullptr) delete MRA;
+    MRA = nullptr;
 
     Printer::setPrecision(6);
     println(0, endl);

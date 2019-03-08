@@ -22,10 +22,10 @@ Intgrl::Intgrl(const std::string &file) {
 
 Intgrl::~Intgrl() {
     for (auto &i : this->nuclei) {
-        if (i != 0) { delete i; }
+        if (i != nullptr) { delete i; }
     }
     for (auto &basi : this->basis) {
-        if (basi != 0) { delete basi; }
+        if (basi != nullptr) { delete basi; }
     }
 }
 

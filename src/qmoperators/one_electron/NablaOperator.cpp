@@ -21,7 +21,7 @@ QMNabla::QMNabla(int d, DerivativeOperator<3> &D)
 
 Orbital QMNabla::apply(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (this->derivative == 0) MSG_ERROR("No derivative operator");
+    if (this->derivative == nullptr) MSG_ERROR("No derivative operator");
 
     int dir = this->apply_dir;
     DerivativeOperator<3> &D = *this->derivative;

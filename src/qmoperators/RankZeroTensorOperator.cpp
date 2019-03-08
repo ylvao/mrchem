@@ -318,7 +318,7 @@ Orbital RankZeroTensorOperator::applyOperTerm(int n, Orbital inp) {
 
     Orbital out = inp;
     for (auto &m : this->oper_exp[n]) {
-        if (m == 0) MSG_FATAL("Invalid oper term");
+        if (m == nullptr) MSG_FATAL("Invalid oper term");
         QMOperator &O_nm = *m;
         out = O_nm.apply(out);
     }

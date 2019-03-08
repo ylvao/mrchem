@@ -195,7 +195,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
 
     // Treat Fock matrix as a whole using Frobenius inner product
     if (this->fock.size() == this->orbitals.size()) {
-        if (F == 0 or dF == 0) MSG_ERROR("Invalid fock matrix");
+        if (F == nullptr or dF == nullptr) MSG_ERROR("Invalid fock matrix");
 
         ComplexMatrix X_m = this->fock[nHistory];
         const ComplexMatrix &fX_m = this->dFock[nHistory];

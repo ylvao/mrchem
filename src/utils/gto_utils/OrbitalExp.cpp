@@ -22,7 +22,7 @@ OrbitalExp::OrbitalExp(Intgrl &intgrl)
 
 OrbitalExp::~OrbitalExp() {
     for (auto &orbital : this->orbitals) {
-        if (orbital != 0) { delete orbital; }
+        if (orbital != nullptr) { delete orbital; }
     }
 }
 
@@ -94,7 +94,7 @@ void OrbitalExp::rotate(const DoubleMatrix &U) {
     for (int i = 0; i < size(); i++) {
         delete orbitals[i];
         orbitals[i] = tmp[i];
-        tmp[i] = 0;
+        tmp[i] = nullptr;
     }
 }
 
@@ -120,7 +120,7 @@ void OrbitalExp::transformToSpherical() {
         if (l < 2) {
             GaussExp<3> *orb = this->orbitals[n];
             tmp.push_back(orb);
-            this->orbitals[n] = 0;
+            this->orbitals[n] = nullptr;
             n++;
         } else if (l == 2) {
             for (int i = 0; i < 5; i++) {
@@ -180,15 +180,15 @@ void OrbitalExp::transformToSpherical() {
         }
     }
     for (int i = 0; i < nOrbs; i++) {
-        if (this->orbitals[i] != 0) {
+        if (this->orbitals[i] != nullptr) {
             delete this->orbitals[i];
-            this->orbitals[i] = 0;
+            this->orbitals[i] = nullptr;
         }
     }
     this->orbitals.clear();
     for (auto &i : tmp) {
         this->orbitals.push_back(i);
-        i = 0;
+        i = nullptr;
     }
     this->cartesian = false;
 }
