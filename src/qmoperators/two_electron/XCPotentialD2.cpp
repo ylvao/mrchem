@@ -30,8 +30,12 @@ namespace mrchem {
  * Then the functional is set up for subsequent calculations, fixing some internals of
  * xcfun when F.evalSetup is invoked.
  */
-XCPotentialD2::XCPotentialD2(XCFunctional_p F, OrbitalVector_p Phi, OrbitalVector_p X, OrbitalVector_p Y)
-        : XCPotential(F, Phi)
+XCPotentialD2::XCPotentialD2(XCFunctional_p F,
+                             OrbitalVector_p Phi,
+                             OrbitalVector_p X,
+                             OrbitalVector_p Y,
+                             bool mpi_shared)
+        : XCPotential(F, Phi, mpi_shared)
         , orbitals_x(X)
         , orbitals_y(Y)
         , pertDensity_t(nullptr)

@@ -13,7 +13,7 @@ void finalize_mra();
 
 int main(int argc, char *argv[]) {
     // global setup
-    mrchem::mpi::initialize(argc, argv);
+    mrchem::mpi::initialize();
     mrchem::mpi::numerically_exact = true; // Required for MPI invariant results
     initialize_mra();
 

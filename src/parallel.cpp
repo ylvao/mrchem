@@ -21,11 +21,6 @@ int n_threads = omp_get_max_threads();
 namespace mpi {
 
 bool numerically_exact = false;
-bool share_nuc_pot = false;
-bool share_coul_dens = false;
-bool share_coul_pot = false;
-bool share_xc_dens = false;
-bool share_xc_pot = false;
 int shared_memory_size = 1000;
 
 int orb_rank = 0;
@@ -40,11 +35,11 @@ MPI_Comm comm_sh_group;
 
 } // namespace mpi
 
-void mpi::initialize(int argc, char **argv) {
+void mpi::initialize() {
     omp_set_dynamic(0);
 
 #ifdef HAVE_MPI
-    MPI_Init(&argc, &argv);
+    MPI_Init();
 
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);

@@ -29,8 +29,8 @@ namespace mrchem {
 
 class XCPotential : public QMPotential {
 public:
-    XCPotential(std::shared_ptr<mrdft::XCFunctional> F, std::shared_ptr<OrbitalVector> Phi)
-            : QMPotential(1, mpi::share_xc_pot)
+    XCPotential(std::shared_ptr<mrdft::XCFunctional> F, std::shared_ptr<OrbitalVector> Phi, bool mpi_shared = false)
+            : QMPotential(1, mpi_shared)
             , energy(0.0)
             , orbitals(Phi)
             , functional(F) {}

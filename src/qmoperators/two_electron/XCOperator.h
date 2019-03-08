@@ -17,8 +17,10 @@ namespace mrchem {
 
 class XCOperator final : public RankZeroTensorOperator {
 public:
-    XCOperator(std::shared_ptr<mrdft::XCFunctional> F, std::shared_ptr<OrbitalVector> Phi = nullptr) {
-        potential = std::make_shared<XCPotentialD1>(F, Phi);
+    explicit XCOperator(std::shared_ptr<mrdft::XCFunctional> F,
+                        std::shared_ptr<OrbitalVector> Phi = nullptr,
+                        bool mpi_shared = false) {
+        potential = std::make_shared<XCPotentialD1>(F, Phi, mpi_shared);
 
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &XC = (*this);
@@ -27,8 +29,9 @@ public:
     XCOperator(std::shared_ptr<mrdft::XCFunctional> F,
                std::shared_ptr<OrbitalVector> Phi,
                std::shared_ptr<OrbitalVector> X,
-               std::shared_ptr<OrbitalVector> Y) {
-        potential = std::make_shared<XCPotentialD2>(F, Phi, X, Y);
+               std::shared_ptr<OrbitalVector> Y,
+               bool mpi_shared = false) {
+        potential = std::make_shared<XCPotentialD2>(F, Phi, X, Y, mpi_shared);
 
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &XC = (*this);

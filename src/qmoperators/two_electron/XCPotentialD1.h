@@ -27,7 +27,9 @@ namespace mrchem {
 
 class XCPotentialD1 final : public XCPotential {
 public:
-    XCPotentialD1(std::shared_ptr<mrdft::XCFunctional> F, std::shared_ptr<OrbitalVector> Phi = nullptr);
+    explicit XCPotentialD1(std::shared_ptr<mrdft::XCFunctional> F,
+                           std::shared_ptr<OrbitalVector> Phi = nullptr,
+                           bool mpi_shared = false);
 
 private:
     mrcpp::FunctionTreeVector<3> potentials; ///< XC Potential functions collected in a vector

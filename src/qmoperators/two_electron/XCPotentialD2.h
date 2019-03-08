@@ -31,7 +31,8 @@ public:
     XCPotentialD2(std::shared_ptr<mrdft::XCFunctional> F,
                   std::shared_ptr<OrbitalVector> Phi,
                   std::shared_ptr<OrbitalVector> X,
-                  std::shared_ptr<OrbitalVector> Y);
+                  std::shared_ptr<OrbitalVector> Y,
+                  bool mpi_shared = false);
     ~XCPotentialD2() override;
 
 private:

@@ -9,7 +9,8 @@ public:
     CoulombPotentialD2(std::shared_ptr<mrcpp::PoissonOperator> P,
                        std::shared_ptr<OrbitalVector> Phi,
                        std::shared_ptr<OrbitalVector> X,
-                       std::shared_ptr<OrbitalVector> Y);
+                       std::shared_ptr<OrbitalVector> Y,
+                       bool mpi_share = false);
 
 private:
     std::shared_ptr<OrbitalVector> orbitals_x; ///< Perturbed orbitals

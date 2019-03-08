@@ -26,8 +26,11 @@ namespace mrchem {
  *              nuclei, which are distributed among the available
  *              MPIs. This is used only for the projection below.
  */
-NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
-        : QMPotential(1, mpi::share_nuc_pot) {
+NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double smooth_prec, bool mpi_share)
+        : QMPotential(1, mpi_share) {
+    if (proj_prec < 0.0) MSG_FATAL("Negative projection precision");
+    if (smooth_prec < 0.0) smooth_prec = proj_prec;
+
     int oldprec = Printer::setPrecision(5);
     Printer::printHeader(0, "Setting up nuclear potential");
     println(0, " Nr  Element         Charge        Precision     Smoothing ");
@@ -35,7 +38,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
 
     NuclearFunction loc_func;
 
-    double c = 0.00435 * prec;
+    double c = 0.00435 * smooth_prec;
     for (int i = 0; i < nucs.size(); i++) {
         const Nucleus &nuc = nucs[i];
         double Z = nuc.getCharge();
@@ -54,7 +57,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
         printout(0, std::setw(3) << i + 1 << "     ");
         printout(0, symbol.str()[0] << symbol.str()[1]);
         printout(0, std::setw(21) << Z);
-        printout(0, std::setw(14) << prec);
+        printout(0, std::setw(14) << smooth_prec);
         printout(0, std::setw(14) << smooth << std::endl);
     }
 
@@ -62,7 +65,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double prec)
 
     // Scale precision by system size
     int Z_tot = chemistry::get_total_charge(nucs);
-    double abs_prec = prec / Z_tot;
+    double abs_prec = proj_prec / Z_tot;
 
     Timer t_loc;
     QMFunction V_loc(false);
