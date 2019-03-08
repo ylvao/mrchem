@@ -1,5 +1,6 @@
 # <<< Build MRChem library >>>
 add_library(mrchem
+  driver.cpp
   parallel.cpp
   mrenv.cpp
   )
@@ -12,7 +13,7 @@ target_include_directories(mrchem
   )
 
 list(APPEND _public_headers
-  SCFDriver.h
+  driver.h
   mrchem.h
   mrenv.h
   parallel.h
@@ -65,8 +66,6 @@ install(
 add_executable(mrchem.x mrchem.cpp)
 
 target_sources(mrchem.x
-  PRIVATE
-    SCFDriver.cpp
   PUBLIC
     $<BUILD_INTERFACE:$<JOIN:${CMAKE_CURRENT_LIST_DIR}/,${_public_headers}>>
   )

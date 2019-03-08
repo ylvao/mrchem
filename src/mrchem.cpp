@@ -11,35 +11,43 @@
 
 #include "MRCPP/Timer"
 
+#include "driver.h"
 #include "mrchem.h"
 #include "mrenv.h"
 #include "parallel.h"
 
-#include "SCFDriver.h"
+#include "chemistry/Molecule.h"
 
-nlohmann::json mrchem::json_input;
+// Initializing global variables
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
-using mrcpp::Timer;
+using json = nlohmann::json;
+using Timer = mrcpp::Timer;
 using namespace mrchem;
 
 int main(int argc, char **argv) {
-    mpi::initialize(argc, argv);
-    mrenv::initialize(argc, argv);
+    mpi::initialize();
+    const auto json_input = mrenv::fetch_input(argc, argv);
+
+    mrenv::initialize(json_input);
+    const auto &json_mol = json_input["molecule"].get<json>();
+    const auto &json_guess = json_input["initial_guess"].get<json>();
+    const auto &json_scf = json_input["scf_calculation"].get<json>();
+    const auto &json_rsps = json_input["rsp_calculations"].get<json>();
 
     Timer timer;
+    Molecule mol;
+    driver::init_molecule(json_mol, mol);
+    driver::run_guess(json_guess, mol);
+    if (driver::run_scf(json_scf, mol)) {
+        for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
+    }
 
-    /*
-    SCFDriver driver(input);
-    driver.setup();
-    driver.run();
-    driver.clear();
-    */
+    mol.printGeometry();
+    mol.printProperties();
 
     timer.stop();
-    double wt = timer.getWallTime();
-
-    mrenv::finalize(wt);
+    mrenv::finalize(timer.getWallTime());
     mpi::finalize();
     return 0;
 }

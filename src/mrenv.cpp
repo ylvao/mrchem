@@ -11,7 +11,15 @@ using Printer = mrcpp::Printer;
 
 namespace mrchem {
 
-void mrenv::initialize(int argc, char **argv) {
+namespace mrenv {
+void init_printer(const json &json_print);
+void init_mra(const json &json_mra);
+void init_mpi(const json &json_mpi);
+void print_header();
+void print_footer(double wt);
+} // namespace mrenv
+
+json mrenv::fetch_input(int argc, char **argv) {
     const char *infile = nullptr;
     if (argc == 1) {
         infile = "STDIN";
@@ -22,12 +30,30 @@ void mrenv::initialize(int argc, char **argv) {
     }
 
     // Read JSON input
+    json input;
     std::ifstream ifs(infile, std::ios_base::in);
-    ifs >> json_input;
+    ifs >> input;
     ifs.close();
 
+    return input;
+}
+
+void mrenv::initialize(const json &input) {
+    auto json_print = input.find("printer");
+    auto json_mra = input.find("mra");
+    auto json_mpi = input.find("mpi");
+
+    if (json_mra == input.end()) MSG_FATAL("Missing MRA input!");
+
+    if (json_print != input.end()) mrenv::init_printer(*json_print);
+    if (json_mra != input.end()) mrenv::init_mra(*json_mra);
+    if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
+
+    mrenv::print_header();
+}
+
+void mrenv::init_printer(const json &json_print) {
     // Initialize printing
-    auto json_print = json_input["printer"].get<json>();
     auto printlevel = json_print["printlevel"].get<int>();
     auto printprec = json_print["printprec"].get<int>();
     auto teletype = json_print["teletype"].get<bool>();
@@ -38,19 +64,10 @@ void mrenv::initialize(int argc, char **argv) {
         Printer::init(printlevel, mpi::orb_rank, mpi::orb_size);
     }
     Printer::setPrecision(printprec);
+}
 
-    // Initialize global MPI parameters
-    auto json_mpi = json_input["mpi"].get<json>();
-    mpi::numerically_exact = json_mpi["numerically_exact"].get<bool>();
-    mpi::share_nuc_pot = json_mpi["share_nuclear_potential"].get<bool>();
-    mpi::share_coul_dens = json_mpi["share_coulomb_density"].get<bool>();
-    mpi::share_coul_pot = json_mpi["share_coulomb_potential"].get<bool>();
-    mpi::share_xc_dens = json_mpi["share_xc_density"].get<bool>();
-    mpi::share_xc_pot = json_mpi["share_xc_potential"].get<bool>();
-    mpi::shared_memory_size = json_mpi["shared_memory_size"].get<int>();
-
+void mrenv::init_mra(const json &json_mra) {
     // Initialize world box
-    auto json_mra = json_input["mra"].get<json>();
     auto min_scale = json_mra["min_scale"].get<int>();
     auto max_scale = json_mra["max_scale"].get<int>();
     auto corner = json_mra["corner"].get<std::array<int, 3>>();
@@ -77,7 +94,16 @@ void mrenv::initialize(int argc, char **argv) {
     } else {
         MSG_FATAL("Invalid basis type!");
     }
+}
 
+void mrenv::init_mpi(const json &json_mpi) {
+    auto exact = json_mpi["numerically_exact"].get<bool>();
+    auto memory_size = json_mpi["shared_memory_size"].get<int>();
+    mpi::numerically_exact = exact;
+    mpi::shared_memory_size = memory_size;
+}
+
+void mrenv::print_header() {
     println(0, std::endl << std::endl);
     println(0, "************************************************************");
     println(0, "***     __  __ ____   ____ _                             ***");
@@ -106,14 +132,6 @@ void mrenv::initialize(int argc, char **argv) {
     }
 
     Printer::printEnvironment();
-
-    Printer::printHeader(0, "JSON input");
-    println(0, std::setw(2) << json_input);
-    Printer::printSeparator(0, '=', 2);
-
-    auto oldprec = Printer::setPrecision(6);
-    MRA->print();
-    Printer::setPrecision(oldprec);
 }
 
 void mrenv::finalize(double wt) {

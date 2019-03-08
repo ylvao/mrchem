@@ -12,12 +12,9 @@
 #include <complex>
 
 #include <Eigen/Core>
-#include <nlohmann/json.hpp>
 
 #include "MRCPP/MWFunctions"
 #include "config.h"
-
-class Getkw;
 
 // clang-format off
 namespace mrchem {
@@ -56,8 +53,6 @@ using IntMatrix = Eigen::MatrixXi;
 using DoubleMatrix = Eigen::MatrixXd;
 using ComplexMatrix = Eigen::MatrixXcd;
 
-extern Getkw input;
-extern nlohmann::json json_input;
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; //< Global MRA
 
 } //namespace mrchem
