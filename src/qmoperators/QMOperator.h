@@ -55,16 +55,15 @@ class Orbital;
 
 class QMOperator {
 public:
-    QMOperator()
-            : apply_prec(-1.0) {}
-    virtual ~QMOperator() {}
+    QMOperator(){};
+    virtual ~QMOperator(){};
 
     double prec() { return this->apply_prec; }
 
     friend RankZeroTensorOperator;
 
 protected:
-    double apply_prec;
+    double apply_prec{-1.0};
 
     void setApplyPrec(double prec) {
         if (this->apply_prec < 0.0) {

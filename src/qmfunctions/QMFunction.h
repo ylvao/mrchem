@@ -72,7 +72,7 @@ public:
     void add(ComplexDouble c, QMFunction inp);
 
 protected:
-    bool conj;
+    bool conj{false};
     std::shared_ptr<ComplexFunction> func_ptr;
 };
 
