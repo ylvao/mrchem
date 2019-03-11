@@ -22,9 +22,9 @@ protected:
 class NuclearGradientOperator : public RankOneTensorOperator<3> {
 public:
     NuclearGradientOperator(const Nucleus &nuc, double c)
-            : x_rm3(0, nuc, c)
-            , y_rm3(1, nuc, c)
-            , z_rm3(2, nuc, c) {
+            : x_rm3(new NuclearGradientPotential(0, nuc, c))
+            , y_rm3(new NuclearGradientPotential(1, nuc, c))
+            , z_rm3(new NuclearGradientPotential(2, nuc, c)) {
         RankOneTensorOperator &v = (*this);
         v[0] = x_rm3;
         v[1] = y_rm3;
@@ -32,9 +32,9 @@ public:
     }
 
 protected:
-    NuclearGradientPotential x_rm3;
-    NuclearGradientPotential y_rm3;
-    NuclearGradientPotential z_rm3;
+    std::shared_ptr<NuclearGradientPotential> x_rm3;
+    std::shared_ptr<NuclearGradientPotential> y_rm3;
+    std::shared_ptr<NuclearGradientPotential> z_rm3;
 };
 
 } // namespace mrchem

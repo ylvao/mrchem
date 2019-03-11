@@ -19,13 +19,13 @@ protected:
 class DeltaOperator final : public RankZeroTensorOperator {
 public:
     DeltaOperator(const mrcpp::Coord<3> &o, double expo = 1.0e6)
-            : delta(o, expo) {
+            : delta(new QMDelta(o, expo)) {
         RankZeroTensorOperator &d = (*this);
         d = delta;
     }
 
 protected:
-    QMDelta delta;
+    std::shared_ptr<QMDelta> delta;
 };
 
 } // namespace mrchem

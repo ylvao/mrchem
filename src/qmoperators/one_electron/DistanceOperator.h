@@ -21,13 +21,13 @@ protected:
 class DistanceOperator final : public RankZeroTensorOperator {
 public:
     DistanceOperator(double pow, const mrcpp::Coord<3> &R, double S = 1.0e-7)
-            : r_pow(pow, R, S) {
+            : r_pow(new DistancePotential(pow, R, S)) {
         RankZeroTensorOperator &v = (*this);
         v = r_pow;
     }
 
 protected:
-    DistancePotential r_pow;
+    std::shared_ptr<DistancePotential> r_pow;
 };
 
 } // namespace mrchem

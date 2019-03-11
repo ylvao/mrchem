@@ -20,7 +20,8 @@ protected:
 
 class IdentityOperator final : public RankZeroTensorOperator {
 public:
-    IdentityOperator() {
+    IdentityOperator()
+            : I(new QMIdentity) {
         RankZeroTensorOperator &h = (*this);
         h = I;
     }
@@ -36,7 +37,7 @@ public:
     using RankZeroTensorOperator::dagger;
 
 protected:
-    QMIdentity I;
+    std::shared_ptr<QMIdentity> I;
 };
 
 } // namespace mrchem

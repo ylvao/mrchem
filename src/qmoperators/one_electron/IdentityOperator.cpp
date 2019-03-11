@@ -23,7 +23,7 @@ Orbital QMIdentity::dagger(Orbital inp) {
 
 /** Overwrite default deep copy by more efficient dot product */
 ComplexDouble IdentityOperator::operator()(Orbital bra, Orbital ket) {
-    if (this->I.prec() < 0.0) MSG_ERROR("Uninitialized operator");
+    if (this->I->prec() < 0.0) MSG_ERROR("Uninitialized operator");
     return orbital::dot(bra, ket);
 }
 
@@ -34,7 +34,7 @@ ComplexDouble IdentityOperator::dagger(Orbital bra, Orbital ket) {
 
 /** Overwrite default deep copy by calculation of overlap matrix */
 ComplexMatrix IdentityOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
-    if (this->I.prec() < 0.0) MSG_ERROR("Uninitialized operator");
+    if (this->I->prec() < 0.0) MSG_ERROR("Uninitialized operator");
 
     ComplexMatrix S;
     if (&bra == &ket) {

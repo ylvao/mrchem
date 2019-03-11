@@ -23,9 +23,9 @@ protected:
 class SpinOperator final : public RankOneTensorOperator<3> {
 public:
     SpinOperator()
-            : s_x(0)
-            , s_y(1)
-            , s_z(2) {
+            : s_x(new QMSpin(0))
+            , s_y(new QMSpin(1))
+            , s_z(new QMSpin(2)) {
         RankOneTensorOperator &s = *this;
         s[0] = s_x;
         s[1] = s_y;
@@ -33,9 +33,9 @@ public:
     }
 
 protected:
-    QMSpin s_x;
-    QMSpin s_y;
-    QMSpin s_z;
+    std::shared_ptr<QMSpin> s_x;
+    std::shared_ptr<QMSpin> s_y;
+    std::shared_ptr<QMSpin> s_z;
 };
 
 } // namespace mrchem

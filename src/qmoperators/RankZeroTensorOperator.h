@@ -63,12 +63,12 @@ namespace mrchem {
  */
 
 // Convenience typedef
-using QMOperatorVector = std::vector<QMOperator *>;
+using QMOperatorVector = std::vector<std::shared_ptr<QMOperator>>;
 
 class RankZeroTensorOperator {
 public:
     RankZeroTensorOperator() {}
-    RankZeroTensorOperator(QMOperator &O) { *this = O; }
+    RankZeroTensorOperator(std::shared_ptr<QMOperator> O) { *this = O; }
     RankZeroTensorOperator(const RankZeroTensorOperator &O) { *this = O; }
     virtual ~RankZeroTensorOperator() {}
 
@@ -92,9 +92,9 @@ public:
     ComplexDouble trace(OrbitalVector &Phi);
     ComplexDouble trace(OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y);
 
-    RankZeroTensorOperator &operator=(QMOperator &O);
-    RankZeroTensorOperator &operator+=(QMOperator &O);
-    RankZeroTensorOperator &operator-=(QMOperator &O);
+    RankZeroTensorOperator &operator=(std::shared_ptr<QMOperator> O);
+    RankZeroTensorOperator &operator+=(std::shared_ptr<QMOperator> O);
+    RankZeroTensorOperator &operator-=(std::shared_ptr<QMOperator> O);
     RankZeroTensorOperator &operator=(const RankZeroTensorOperator &O);
     RankZeroTensorOperator &operator+=(const RankZeroTensorOperator &O);
     RankZeroTensorOperator &operator-=(const RankZeroTensorOperator &O);
@@ -131,8 +131,8 @@ inline RankZeroTensorOperator operator*(RankZeroTensorOperator A, RankZeroTensor
         for (int k = 0; k < b_terms; k++) {
             ComplexDouble b_k = B.coef_exp[k];
             QMOperatorVector tmp;
-            for (auto B_kl : B.oper_exp[k]) { tmp.push_back(B_kl); }
-            for (auto A_ij : A.oper_exp[i]) { tmp.push_back(A_ij); }
+            for (auto B_kl : B.oper_exp[k]) tmp.push_back(B_kl);
+            for (auto A_ij : A.oper_exp[i]) tmp.push_back(A_ij);
             out.coef_exp.push_back(b_k * a_i);
             out.oper_exp.push_back(tmp);
         }

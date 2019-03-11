@@ -20,12 +20,12 @@ public:
     CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P)
             : potential(new CoulombPotential(P)) {
         RankZeroTensorOperator &J = (*this);
-        J = *this->potential;
+        J = potential;
     }
     CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi)
             : potential(new CoulombPotentialD1(P, Phi)) {
         RankZeroTensorOperator &J = (*this);
-        J = *this->potential;
+        J = potential;
     }
     CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
                     std::shared_ptr<OrbitalVector> Phi,
@@ -33,7 +33,7 @@ public:
                     std::shared_ptr<OrbitalVector> Y)
             : potential(new CoulombPotentialD2(P, Phi, X, Y)) {
         RankZeroTensorOperator &J = (*this);
-        J = *this->potential;
+        J = potential;
     }
     ~CoulombOperator() override = default;
 

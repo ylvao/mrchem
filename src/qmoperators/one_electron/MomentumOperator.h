@@ -23,9 +23,9 @@ protected:
 class MomentumOperator final : public RankOneTensorOperator<3> {
 public:
     MomentumOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
-            : p_x(0, D)
-            , p_y(1, D)
-            , p_z(2, D) {
+            : p_x(new QMMomentum(0, D))
+            , p_y(new QMMomentum(1, D))
+            , p_z(new QMMomentum(2, D)) {
         RankOneTensorOperator<3> &p = (*this);
         p[0] = p_x;
         p[1] = p_y;
@@ -33,9 +33,9 @@ public:
     }
 
 protected:
-    QMMomentum p_x;
-    QMMomentum p_y;
-    QMMomentum p_z;
+    std::shared_ptr<QMMomentum> p_x;
+    std::shared_ptr<QMMomentum> p_y;
+    std::shared_ptr<QMMomentum> p_z;
 };
 
 } // namespace mrchem
