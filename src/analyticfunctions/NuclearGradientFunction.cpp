@@ -41,7 +41,7 @@ double NuclearGradientFunction::evalf(const mrcpp::Coord<3> &r) const {
 
 bool NuclearGradientFunction::isVisibleAtScale(int scale, int nQuadPts) const {
     double stdDeviation = std::pow(this->smooth, -0.5);
-    auto visibleScale = int(std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
+    auto visibleScale = static_cast<int>(std::floor(std::log2(nQuadPts * 5.0 * stdDeviation)));
     return (scale < visibleScale) ? false : true;
 }
 
