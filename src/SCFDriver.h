@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "qmfunctions/qmfunction_fwd.h"
@@ -205,53 +206,39 @@ protected:
     // Gauge origin
     mrcpp::Coord<3> r_O;
 
-    // SCF machinery
-    KAIN *kain;
-    KAIN *kain_x;
-    KAIN *kain_y;
-
     // MRA operators
-    mrcpp::PoissonOperator *P;
-    mrcpp::PHOperator<3> *PH_1;
-    mrcpp::PHOperator<3> *PH_2;
-    mrcpp::ABGVOperator<3> *ABGV_00;
-    mrcpp::ABGVOperator<3> *ABGV_55;
+    std::shared_ptr<mrcpp::PoissonOperator> P{nullptr};
+    std::shared_ptr<mrcpp::PHOperator<3>> PH_1{nullptr};
+    std::shared_ptr<mrcpp::PHOperator<3>> PH_2{nullptr};
+    std::shared_ptr<mrcpp::ABGVOperator<3>> ABGV_00{nullptr};
+    std::shared_ptr<mrcpp::ABGVOperator<3>> ABGV_55{nullptr};
 
     // Unperturbed quantities
-    Molecule *molecule;
-    Nuclei *nuclei;
-    OrbitalVector *phi;
-    KineticOperator *T;
-    NuclearOperator *V;
-    CoulombOperator *J;
-    ExchangeOperator *K;
-    XCOperator *XC;
-    ElectricFieldOperator *Vext;
-    FockOperator *fock;
-    ComplexMatrix F;
-
-    OrbitalVector *phi_np1;
-    CoulombOperator *J_np1;
-    ExchangeOperator *K_np1;
-    XCOperator *XC_np1;
-    FockOperator *fock_np1;
-    ComplexMatrix F_np1;
+    std::shared_ptr<Molecule> molecule{nullptr};
+    std::shared_ptr<OrbitalVector> phi{nullptr};
+    std::shared_ptr<KineticOperator> T{nullptr};
+    std::shared_ptr<NuclearOperator> V{nullptr};
+    std::shared_ptr<CoulombOperator> J{nullptr};
+    std::shared_ptr<ExchangeOperator> K{nullptr};
+    std::shared_ptr<XCOperator> XC{nullptr};
+    std::shared_ptr<ElectricFieldOperator> Vext{nullptr};
+    std::shared_ptr<FockOperator> fock{nullptr};
 
     // Perturbed quantities
-    OrbitalVector *phi_x;
-    OrbitalVector *phi_y;
-    CoulombOperator *dJ;
-    ExchangeOperator *dK;
-    XCOperator *dXC;
-    FockOperator *d_fock;
+    std::shared_ptr<OrbitalVector> phi_x{nullptr};
+    std::shared_ptr<OrbitalVector> phi_y{nullptr};
+    std::shared_ptr<CoulombOperator> dJ{nullptr};
+    std::shared_ptr<ExchangeOperator> dK{nullptr};
+    std::shared_ptr<XCOperator> dXC{nullptr};
+    std::shared_ptr<FockOperator> d_fock{nullptr};
 
     // XCFun
-    mrdft::XCFunctional *xcfun;
+    std::shared_ptr<mrdft::XCFunctional> xcfun{nullptr};
 
     // Perturbation operators
-    H_E_dip *h_E;  // dH/dE
-    H_B_dip *h_B;  // dH/dB
-    H_M_pso **h_M; // dH/dM[K]
+    H_E_dip *h_E{nullptr};  // dH/dE
+    H_B_dip *h_B{nullptr};  // dH/dB
+    H_M_pso **h_M{nullptr}; // dH/dM[K]
 
     bool sanityCheck() const;
 
@@ -261,28 +248,13 @@ protected:
     void calcGroundStateProperties();
     void calcLinearResponseProperties(const ResponseCalculation &rsp_calc);
 
-    mrdft::XCFunctional *setupFunctional(int order);
+    std::shared_ptr<mrdft::XCFunctional> setupFunctional(int order);
     void setupInitialGrid(mrdft::XCFunctional &func, const Molecule &mol);
     void setupInitialGroundState();
     void setupPerturbedOperators(const ResponseCalculation &rsp_calc);
     void setupPerturbedOrbitals(const ResponseCalculation &rsp_calc);
 
-    void clearPerturbedOperators();
-    void clearPerturbedOrbitals(bool dynamic);
-
-    GroundStateSolver *setupInitialGuessSolver();
-    OrbitalOptimizer *setupOrbitalOptimizer();
-    EnergyOptimizer *setupEnergyOptimizer();
-    LinearResponseSolver *setupLinearResponseSolver(bool dynamic);
-
-    void setup_np1();
-    void clear_np1();
-
-    void printEigenvalues(OrbitalVector &orbs, ComplexMatrix &f_mat);
-
-    void extendRotationMatrix(const OrbitalVector &orbs, ComplexMatrix &O);
-
-    mrcpp::DerivativeOperator<3> *useDerivative(std::string derivative_name);
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> useDerivative(std::string derivative_name);
 };
 
 } // namespace mrchem
