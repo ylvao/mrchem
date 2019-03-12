@@ -464,6 +464,12 @@ bool SCFDriver::runGroundState() {
         fock->setup(rel_prec);
         F = (*fock)(*phi, *phi);
         fock->clear();
+
+        if (scf_canonical) {
+            orbital::diagonalize(rel_prec, *phi, F);
+        } else {
+            orbital::localize(rel_prec, *phi, F);
+        }
     }
 
     // Optimize energy
