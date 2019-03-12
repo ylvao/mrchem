@@ -22,13 +22,13 @@ public:
     explicit QMPotential(int adap, bool shared = false);
     QMPotential(const QMPotential &pot) = delete;
     QMPotential &operator=(const QMPotential &pot) = delete;
-    virtual ~QMPotential();
+    ~QMPotential() override;
 
 protected:
     int adap_build;
 
-    virtual Orbital apply(Orbital inp);
-    virtual Orbital dagger(Orbital inp);
+    Orbital apply(Orbital inp) override;
+    Orbital dagger(Orbital inp) override;
 
     void calcRealPart(Orbital &out, Orbital &inp, bool dagger);
     void calcImagPart(Orbital &out, Orbital &inp, bool dagger);

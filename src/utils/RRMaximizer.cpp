@@ -348,13 +348,13 @@ double RRMaximizer::get_hessian(int ij, int kl) {
     double hessian_val = 0.0;
 
     double jr = 0.5*(std::sqrt(9.0+8.0*ij)+1.0);
-    int j = (int) (jr-1.0E-9);//the last jr is exactly the integer *over* the wanted j, if something is not subtracted
+    auto j = (int) (jr-1.0E-9);//the last jr is exactly the integer *over* the wanted j, if something is not subtracted
     int i = ij-(j*(j-1))/2;
 
     if(i>=j or i<0 or j<0)std::cout<<" ij ERROR "<<i<<" "<<j<<" "<<ij<<std::endl;
     //std::cout<<"i "<<i<<" j"<<j<<" ij"<<ij<<std::endl;
     double lr = 0.5*(std::sqrt(9.0+8.0*kl)+1.0);
-    int l = (int) (lr-1.0E-9);
+    auto l = (int) (lr-1.0E-9);
     int k = kl-(l*(l-1))/2;
 
     if(k>=l or k<0 or l<0)std::cout<<" kl ERROR "<<k<<" "<<l<<" "<<kl<<std::endl;

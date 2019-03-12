@@ -178,9 +178,9 @@ const Element PeriodicTable::elements[PeriodicTable::nElements] = {
 PeriodicTable::map_t PeriodicTable::_init_byname() {
     string name;
     map_t _map;
-    for (int i = 0; i < PeriodicTable::nElements; i++) {
-        name = elements[i].getName();
-        _map[name] = &elements[i];
+    for (const auto &element : elements) {
+        name = element.getName();
+        _map[name] = &element;
     }
     return _map;
 }
@@ -188,9 +188,9 @@ PeriodicTable::map_t PeriodicTable::_init_byname() {
 PeriodicTable::map_t PeriodicTable::_init_bysymbol() {
     string name;
     map_t _map;
-    for (int i = 0; i < PeriodicTable::nElements; i++) {
-        name = elements[i].getSymbol();
-        _map[name] = &elements[i];
+    for (const auto &element : elements) {
+        name = element.getSymbol();
+        _map[name] = &element;
     }
     return _map;
 }

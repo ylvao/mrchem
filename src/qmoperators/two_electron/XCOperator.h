@@ -27,7 +27,7 @@ public:
         RankZeroTensorOperator &XC = (*this);
         XC = *this->potential;
     }
-    ~XCOperator() {
+    ~XCOperator() override {
         if (this->potential != nullptr) delete this->potential;
     }
 

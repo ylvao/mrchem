@@ -153,7 +153,7 @@ ComplexMatrix initial_guess::sad::diagonalize_fock(KineticOperator &T,
                                                    OrbitalVector &Phi,
                                                    int spin) {
     Timer t1;
-    for (int i = 0; i < Phi.size(); i++) Phi[i].setSpin(spin);
+    for (auto &i : Phi) i.setSpin(spin);
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
     ComplexMatrix f_tilde = T(Phi, Phi) + V(Phi, Phi);
     ComplexMatrix f = S_m12.adjoint() * f_tilde * S_m12;

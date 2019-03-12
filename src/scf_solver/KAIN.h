@@ -48,13 +48,13 @@ public:
             : Accelerator(max, min, sep) {}
 
 protected:
-    void setupLinearSystem();
+    void setupLinearSystem() override;
     // clang-format off
     void expandSolution(double prec,
                         OrbitalVector &Phi,
                         OrbitalVector &dPhi,
                         ComplexMatrix *F,
-                        ComplexMatrix *dF);
+                        ComplexMatrix *dF) override;
     // clang-format on
 };
 

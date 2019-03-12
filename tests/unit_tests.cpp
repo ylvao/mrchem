@@ -46,6 +46,6 @@ void initialize_mra() {
 }
 
 void finalize_mra() {
-    if (mrchem::MRA != 0) delete mrchem::MRA;
-    mrchem::MRA = 0;
+    if (mrchem::MRA != nullptr) delete mrchem::MRA;
+    mrchem::MRA = nullptr;
 }

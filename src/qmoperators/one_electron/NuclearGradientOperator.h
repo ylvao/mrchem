@@ -12,8 +12,8 @@ public:
             : QMPotential(1)
             , func(d, nuc, c) {}
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 
 protected:
     NuclearGradientFunction func;

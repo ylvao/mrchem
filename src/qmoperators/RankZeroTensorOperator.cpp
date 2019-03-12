@@ -101,8 +101,8 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator=(const RankZeroTensorOp
  */
 RankZeroTensorOperator &RankZeroTensorOperator::operator+=(const RankZeroTensorOperator &O) {
     if (this != &O) {
-        for (int i = 0; i < O.coef_exp.size(); i++) this->coef_exp.push_back(O.coef_exp[i]);
-        for (int i = 0; i < O.oper_exp.size(); i++) this->oper_exp.push_back(O.oper_exp[i]);
+        for (auto i : O.coef_exp) this->coef_exp.push_back(i);
+        for (const auto &i : O.oper_exp) this->oper_exp.push_back(i);
     }
     return *this;
 }
@@ -114,8 +114,8 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator+=(const RankZeroTensorO
  */
 RankZeroTensorOperator &RankZeroTensorOperator::operator-=(const RankZeroTensorOperator &O) {
     if (this != &O) {
-        for (int i = 0; i < O.coef_exp.size(); i++) this->coef_exp.push_back(-O.coef_exp[i]);
-        for (int i = 0; i < O.oper_exp.size(); i++) this->oper_exp.push_back(O.oper_exp[i]);
+        for (auto i : O.coef_exp) this->coef_exp.push_back(-i);
+        for (const auto &i : O.oper_exp) this->oper_exp.push_back(i);
     }
     return *this;
 }
@@ -128,16 +128,16 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator-=(const RankZeroTensorO
  * applied with the given precision. Must be called prior to application.
  */
 void RankZeroTensorOperator::setup(double prec) {
-    for (int i = 0; i < this->oper_exp.size(); i++) {
-        for (int j = 0; j < this->oper_exp[i].size(); j++) { this->oper_exp[i][j]->setup(prec); }
+    for (auto &i : this->oper_exp) {
+        for (int j = 0; j < i.size(); j++) { i[j]->setup(prec); }
     }
 }
 
 /** @brief run clear on all operators in the expansion
  */
 void RankZeroTensorOperator::clear() {
-    for (int i = 0; i < this->oper_exp.size(); i++) {
-        for (int j = 0; j < this->oper_exp[i].size(); j++) { this->oper_exp[i][j]->clear(); }
+    for (auto &i : this->oper_exp) {
+        for (int j = 0; j < i.size(); j++) { i[j]->clear(); }
     }
 }
 
@@ -183,8 +183,8 @@ Orbital RankZeroTensorOperator::dagger(Orbital inp) {
 OrbitalVector RankZeroTensorOperator::operator()(OrbitalVector &inp) {
     RankZeroTensorOperator &O = *this;
     OrbitalVector out;
-    for (int i = 0; i < inp.size(); i++) {
-        Orbital out_i = O(inp[i]);
+    for (const auto &i : inp) {
+        Orbital out_i = O(i);
         out.push_back(out_i);
     }
     return out;
@@ -291,7 +291,7 @@ ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi, OrbitalVector &X
         if (mpi::my_orb(Phi[i])) {
             if (not mpi::my_orb(X[i])) MSG_ERROR("MPI communication needed");
             if (not mpi::my_orb(Y[i])) MSG_ERROR("MPI communication needed");
-            double eta_i = (double)Phi[i].occ();
+            auto eta_i = (double)Phi[i].occ();
             ComplexDouble result_1 = O(Phi[i], X[i]);
             ComplexDouble result_2 = O(Y[i], Phi[i]);
             result += eta_i * (result_1 + result_2);
@@ -317,9 +317,9 @@ Orbital RankZeroTensorOperator::applyOperTerm(int n, Orbital inp) {
     if (not mpi::my_orb(inp)) return inp.paramCopy();
 
     Orbital out = inp;
-    for (int m = 0; m < this->oper_exp[n].size(); m++) {
-        if (this->oper_exp[n][m] == 0) MSG_FATAL("Invalid oper term");
-        QMOperator &O_nm = *this->oper_exp[n][m];
+    for (auto &m : this->oper_exp[n]) {
+        if (m == nullptr) MSG_FATAL("Invalid oper term");
+        QMOperator &O_nm = *m;
         out = O_nm.apply(out);
     }
     return out;

@@ -29,7 +29,7 @@ namespace mrchem {
 class XCPotentialD2 final : public XCPotential {
 public:
     XCPotentialD2(mrdft::XCFunctional *F, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y);
-    ~XCPotentialD2();
+    ~XCPotentialD2() override;
 
 private:
     OrbitalVector *orbitals_x;               ///< 1st external set of perturbed orbitals used to build the density
@@ -39,17 +39,17 @@ private:
     Density *pertDensity_a;                  ///< alpha first-order perturbed electronic density
     Density *pertDensity_b;                  ///< beta  first-order perturbed electronic density
 
-    void setup(double prec);
-    void clear();
+    void setup(double prec) override;
+    void clear() override;
 
-    void setupPotential(double prec);
+    void setupPotential(double prec) override;
     mrcpp::FunctionTree<3> &getPotential(int orbitalSpin, int densitySpin);
     mrcpp::FunctionTree<3> *buildComponent(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
     mrcpp::FunctionTree<3> *buildComponentGamma(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
     mrcpp::FunctionTree<3> *buildComponentGrad(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
     mrcpp::FunctionTree<3> *buildComponentLDA(int orbital_spin, int density_spin, mrcpp::FunctionTree<3> &pert_dens);
 
-    Orbital apply(Orbital phi);
+    Orbital apply(Orbital phi) override;
 
     // LUCA I wanted to include the following declarations in the cpp
     // file but i did not manage to get the syntax (copied from

@@ -21,11 +21,11 @@ Intgrl::Intgrl(const std::string &file) {
 }
 
 Intgrl::~Intgrl() {
-    for (int i = 0; i < this->nuclei.size(); i++) {
-        if (this->nuclei[i] != 0) { delete this->nuclei[i]; }
+    for (auto &i : this->nuclei) {
+        if (i != nullptr) { delete i; }
     }
-    for (int i = 0; i < this->basis.size(); i++) {
-        if (this->basis[i] != 0) { delete this->basis[i]; }
+    for (auto &basi : this->basis) {
+        if (basi != nullptr) { delete basi; }
     }
 }
 
@@ -57,7 +57,7 @@ void Intgrl::readAtomBlock(std::ifstream &ifs) {
         for (int j = 0; j < funcsPerShell[i]; j++) { readContractionBlock(ifs, bas, i); }
     }
     for (int i = 0; i < nAtoms; i++) {
-        AOBasis *aoBas = new AOBasis(bas);
+        auto *aoBas = new AOBasis(bas);
         this->basis.push_back(aoBas);
     }
 }
@@ -72,7 +72,7 @@ void Intgrl::readAtomData(std::ifstream &ifs, int n_atoms, double z) {
         PeriodicTable pt;
         const Element &element = pt.getElement(sym.c_str());
 
-        Nucleus *nuc = new Nucleus(element, coord);
+        auto *nuc = new Nucleus(element, coord);
         nuc->setCharge(z);
         this->nuclei.push_back(nuc);
     }

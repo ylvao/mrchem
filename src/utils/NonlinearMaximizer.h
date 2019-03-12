@@ -42,12 +42,11 @@ namespace mrchem {
 
 class NonlinearMaximizer {
 public:
-    NonlinearMaximizer()
-            : N2h(0) {}
+    NonlinearMaximizer(){};
     int maximize();
 
 protected:
-    int N2h; // size (for orbital localization: N2h = N*(N-1)/2)
+    int N2h{0}; // size (for orbital localization: N2h = N*(N-1)/2)
     DoubleMatrix hessian;
     DoubleVector gradient;
 

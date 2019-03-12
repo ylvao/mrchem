@@ -204,7 +204,7 @@ void qmfunction::multiply_real(QMFunction &out, QMFunction inp_a, QMFunction inp
 
     FunctionTreeVector<3> vec;
     if (inp_a.hasReal() and inp_b.hasReal()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        auto *tree = new FunctionTree<3>(*MRA);
         if (need_to_multiply) {
             double coef = 1.0;
             if (prec < 0.0) {
@@ -220,7 +220,7 @@ void qmfunction::multiply_real(QMFunction &out, QMFunction inp_a, QMFunction inp
         vec.push_back(std::make_tuple(1.0, tree));
     }
     if (inp_a.hasImag() and inp_b.hasImag()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        auto *tree = new FunctionTree<3>(*MRA);
         if (need_to_multiply) {
             double coef = -1.0 * conj_a * conj_b;
             if (prec < 0.0) {
@@ -273,7 +273,7 @@ void qmfunction::multiply_imag(QMFunction &out, QMFunction inp_a, QMFunction inp
 
     FunctionTreeVector<3> vec;
     if (inp_a.hasReal() and inp_b.hasImag()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        auto *tree = new FunctionTree<3>(*MRA);
         if (need_to_multiply) {
             double coef = conj_b;
             if (prec < 0.0) {
@@ -289,7 +289,7 @@ void qmfunction::multiply_imag(QMFunction &out, QMFunction inp_a, QMFunction inp
         vec.push_back(std::make_tuple(1.0, tree));
     }
     if (inp_a.hasImag() and inp_b.hasReal()) {
-        FunctionTree<3> *tree = new FunctionTree<3>(*MRA);
+        auto *tree = new FunctionTree<3>(*MRA);
         if (need_to_multiply) {
             double coef = conj_a;
             if (prec < 0.0) {

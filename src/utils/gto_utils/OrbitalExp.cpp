@@ -21,8 +21,8 @@ OrbitalExp::OrbitalExp(Intgrl &intgrl)
 }
 
 OrbitalExp::~OrbitalExp() {
-    for (int i = 0; i < this->orbitals.size(); i++) {
-        if (this->orbitals[i] != 0) { delete this->orbitals[i]; }
+    for (auto &orbital : this->orbitals) {
+        if (orbital != nullptr) { delete orbital; }
     }
 }
 
@@ -70,7 +70,7 @@ GaussExp<3> OrbitalExp::getDens(const DoubleMatrix &D) const {
 void OrbitalExp::rotate(const DoubleMatrix &U) {
     std::vector<GaussExp<3> *> tmp;
     for (int i = 0; i < size(); i++) {
-        GaussExp<3> *mo_i = new GaussExp<3>;
+        auto *mo_i = new GaussExp<3>;
         int n = 0;
         for (int j = 0; j < size(); j++) {
             GaussExp<3> ao_j = getAO(j);
@@ -94,7 +94,7 @@ void OrbitalExp::rotate(const DoubleMatrix &U) {
     for (int i = 0; i < size(); i++) {
         delete orbitals[i];
         orbitals[i] = tmp[i];
-        tmp[i] = 0;
+        tmp[i] = nullptr;
     }
 }
 
@@ -120,7 +120,7 @@ void OrbitalExp::transformToSpherical() {
         if (l < 2) {
             GaussExp<3> *orb = this->orbitals[n];
             tmp.push_back(orb);
-            this->orbitals[n] = 0;
+            this->orbitals[n] = nullptr;
             n++;
         } else if (l == 2) {
             for (int i = 0; i < 5; i++) {
@@ -134,14 +134,14 @@ void OrbitalExp::transformToSpherical() {
             Gaussian<3> &zz = this->orbitals[n + 5]->getFunc(0);
 
             {
-                GaussExp<3> *spherical = new GaussExp<3>;
+                auto *spherical = new GaussExp<3>;
                 spherical->append(xy);
                 spherical->getFunc(0).setCoef(xy.getCoef());
                 spherical->normalize();
                 tmp.push_back(spherical);
             }
             {
-                GaussExp<3> *spherical = new GaussExp<3>;
+                auto *spherical = new GaussExp<3>;
                 spherical->append(yz);
                 spherical->getFunc(0).setCoef(yz.getCoef());
                 spherical->normalize();
@@ -149,7 +149,7 @@ void OrbitalExp::transformToSpherical() {
             }
             {
                 double coef = 1.0 / std::sqrt(3.0);
-                GaussExp<3> *spherical = new GaussExp<3>;
+                auto *spherical = new GaussExp<3>;
                 spherical->append(xx);
                 spherical->append(yy);
                 spherical->append(zz);
@@ -160,13 +160,13 @@ void OrbitalExp::transformToSpherical() {
                 tmp.push_back(spherical);
             }
             {
-                GaussExp<3> *spherical = new GaussExp<3>;
+                auto *spherical = new GaussExp<3>;
                 spherical->append(xz);
                 spherical->normalize();
                 tmp.push_back(spherical);
             }
             {
-                GaussExp<3> *spherical = new GaussExp<3>;
+                auto *spherical = new GaussExp<3>;
                 spherical->append(xx);
                 spherical->append(yy);
                 spherical->getFunc(0).setCoef(0.5 * xx.getCoef());
@@ -180,15 +180,15 @@ void OrbitalExp::transformToSpherical() {
         }
     }
     for (int i = 0; i < nOrbs; i++) {
-        if (this->orbitals[i] != 0) {
+        if (this->orbitals[i] != nullptr) {
             delete this->orbitals[i];
-            this->orbitals[i] = 0;
+            this->orbitals[i] = nullptr;
         }
     }
     this->orbitals.clear();
-    for (int i = 0; i < tmp.size(); i++) {
-        this->orbitals.push_back(tmp[i]);
-        tmp[i] = 0;
+    for (auto &i : tmp) {
+        this->orbitals.push_back(i);
+        i = nullptr;
     }
     this->cartesian = false;
 }

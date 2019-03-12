@@ -187,9 +187,9 @@ OrbitalVector orbital::rotate(const ComplexMatrix &U, OrbitalVector &Phi, double
  */
 OrbitalVector orbital::deep_copy(OrbitalVector &Phi) {
     OrbitalVector out;
-    for (int i = 0; i < Phi.size(); i++) {
-        Orbital out_i = Phi[i].paramCopy();
-        if (mpi::my_orb(out_i)) qmfunction::deep_copy(out_i, Phi[i]);
+    for (auto &i : Phi) {
+        Orbital out_i = i.paramCopy();
+        if (mpi::my_orb(out_i)) qmfunction::deep_copy(out_i, i);
         out.push_back(out_i);
     }
     return out;
@@ -202,8 +202,8 @@ OrbitalVector orbital::deep_copy(OrbitalVector &Phi) {
  */
 OrbitalVector orbital::param_copy(const OrbitalVector &Phi) {
     OrbitalVector out;
-    for (int i = 0; i < Phi.size(); i++) {
-        Orbital out_i = Phi[i].paramCopy();
+    for (const auto &i : Phi) {
+        Orbital out_i = i.paramCopy();
         out.push_back(out_i);
     }
     return out;
@@ -235,11 +235,11 @@ OrbitalVector orbital::adjoin(OrbitalVector &Phi_a, OrbitalVector &Phi_b) {
 OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
     OrbitalVector out;
     OrbitalVector tmp;
-    for (int i = 0; i < Phi.size(); i++) {
-        if (Phi[i].spin() == spin) {
-            out.push_back(Phi[i]);
+    for (auto &i : Phi) {
+        if (i.spin() == spin) {
+            out.push_back(i);
         } else {
-            tmp.push_back(Phi[i]);
+            tmp.push_back(i);
         }
     }
     Phi.clear();
@@ -357,8 +357,8 @@ void orbital::orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi) {
     while (iter.next()) {
         for (int i = 0; i < iter.get_size(); i++) {
             Orbital &psi_i = iter.orbital(i);
-            for (int j = 0; j < myPhi.size(); j++) {
-                Orbital &phi_j = std::get<1>(myPhi[j]);
+            for (auto &j : myPhi) {
+                Orbital &phi_j = std::get<1>(j);
                 orbital::orthogonalize(phi_j, psi_i);
             }
         }
@@ -378,9 +378,9 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
         for (int i = 0; i < iter.get_size(); i++) {
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);
-            for (int j = 0; j < myKet.size(); j++) {
-                int idx_j = std::get<0>(myKet[j]);
-                Orbital &ket_j = std::get<1>(myKet[j]);
+            for (auto &j : myKet) {
+                int idx_j = std::get<0>(j);
+                Orbital &ket_j = std::get<1>(j);
                 if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
                 if (mpi::my_unique_orb(ket_j) or mpi::orb_rank == 0) {
                     S(idx_i, idx_j) = orbital::dot(bra_i, ket_j);
@@ -419,9 +419,9 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
         for (int i = 0; i < iter.get_size(); i++) {
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);
-            for (int j = 0; j < myKet.size(); j++) {
-                int idx_j = std::get<0>(myKet[j]);
-                Orbital &ket_j = std::get<1>(myKet[j]);
+            for (auto &j : myKet) {
+                int idx_j = std::get<0>(j);
+                Orbital &ket_j = std::get<1>(j);
                 if (mpi::my_unique_orb(ket_j) or mpi::grand_master()) S(idx_i, idx_j) = orbital::dot(bra_i, ket_j);
             }
         }
@@ -697,9 +697,9 @@ int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
     int totsize = 0;
     for (int i = 0; i < nOrbs; i++) {
         if (Phi[i].hasReal()) {
-            double fac = Phi[i].real().getKp1_d() * 8;                                  //number of coeff in one node
+            double fac = Phi[i].real().getKp1_d() * 8;                                  // number of coeff in one node
             fac *= sizeof(double);                                                      // Number of Bytes in one node
-            sNodes[i] = static_cast<int>(fac / 1024 * Phi[i].getNNodes(NUMBER::Total)); //kBytes in one orbital
+            sNodes[i] = static_cast<int>(fac / 1024 * Phi[i].getNNodes(NUMBER::Total)); // kBytes in one orbital
             totsize += sNodes[i];
         }
     }
@@ -707,26 +707,26 @@ int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
 }
 
 /** @brief Prints statistics about the size of orbitals in an OrbitalVector
-*
-* This is a collective function. Can be made non-collective by setting all = false.
-* outputs respectively:
-* Total size of orbital vector, average per MPI, Max per MPI, Max (largest)
-* orbital, smallest orbital, max total (not only the orbitalvector) memory
-* usage among all MP, minimum total (not only the orbitalvector) memory
-* usage among all MPI
-*
-*/
+ *
+ * This is a collective function. Can be made non-collective by setting all = false.
+ * outputs respectively:
+ * Total size of orbital vector, average per MPI, Max per MPI, Max (largest)
+ * orbital, smallest orbital, max total (not only the orbitalvector) memory
+ * usage among all MP, minimum total (not only the orbitalvector) memory
+ * usage among all MPI
+ *
+ */
 int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string txt, bool all, int printLevl) {
     int nOrbs = Phi.size();
     IntVector sNodes = IntVector::Zero(nOrbs);
     int sVec = get_size_nodes(Phi, sNodes);
-    double nMax = 0.0, vMax = 0.0; //node max, vector max
+    double nMax = 0.0, vMax = 0.0; // node max, vector max
     double nMin = 9.9e9, vMin = 9.9e9;
     double nSum = 0.0, vSum = 0.0;
     double nOwnOrbs = 0.0, OwnSumMax = 0.0, OwnSumMin = 9.9e9;
     double totMax = 0.0, totMin = 9.9e9;
     println(0, "OrbitalVector sizes statistics " << txt << " (MB)");
-    //stats for own orbitals
+    // stats for own orbitals
     for (int i = 0; i < nOrbs; i++) {
         if (sNodes[i] > 0) {
             nOwnOrbs++;
@@ -746,7 +746,7 @@ int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string txt, b
 
     if (all) {
         mpi::allreduce_matrix(VecStats, mpi::comm_orb);
-        //overall stats
+        // overall stats
         for (int i = 0; i < mpi::orb_size; i++) {
             if (VecStats(0, i) > vMax) vMax = VecStats(0, i);
             if (VecStats(1, i) < vMin) vMin = VecStats(1, i);

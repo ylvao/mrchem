@@ -170,46 +170,46 @@ SCFDriver::SCFDriver(Getkw &input) {
     r_O[1] = 0.0;
     r_O[2] = 0.0;
 
-    kain = 0;
-    kain_x = 0;
-    kain_y = 0;
+    kain = nullptr;
+    kain_x = nullptr;
+    kain_y = nullptr;
 
-    P = 0;
-    PH_1 = 0;
-    PH_2 = 0;
-    ABGV_00 = 0;
-    ABGV_55 = 0;
+    P = nullptr;
+    PH_1 = nullptr;
+    PH_2 = nullptr;
+    ABGV_00 = nullptr;
+    ABGV_55 = nullptr;
 
-    molecule = 0;
-    nuclei = 0;
-    phi = 0;
+    molecule = nullptr;
+    nuclei = nullptr;
+    phi = nullptr;
 
-    T = 0;
-    V = 0;
-    J = 0;
-    K = 0;
-    XC = 0;
-    Vext = 0;
-    fock = 0;
+    T = nullptr;
+    V = nullptr;
+    J = nullptr;
+    K = nullptr;
+    XC = nullptr;
+    Vext = nullptr;
+    fock = nullptr;
 
-    phi_np1 = 0;
-    J_np1 = 0;
-    K_np1 = 0;
-    XC_np1 = 0;
-    fock_np1 = 0;
+    phi_np1 = nullptr;
+    J_np1 = nullptr;
+    K_np1 = nullptr;
+    XC_np1 = nullptr;
+    fock_np1 = nullptr;
 
-    phi_x = 0;
-    phi_y = 0;
-    dJ = 0;
-    dK = 0;
-    dXC = 0;
-    d_fock = 0;
+    phi_x = nullptr;
+    phi_y = nullptr;
+    dJ = nullptr;
+    dK = nullptr;
+    dXC = nullptr;
+    d_fock = nullptr;
 
-    xcfun = 0;
+    xcfun = nullptr;
 
-    h_E = 0;
-    h_B = 0;
-    h_M = 0;
+    h_E = nullptr;
+    h_B = nullptr;
+    h_M = nullptr;
 }
 
 bool SCFDriver::sanityCheck() const {
@@ -321,8 +321,7 @@ void SCFDriver::setup() {
         }
     }
     if (calc_nmr_shielding) {
-        for (int k = 0; k < nmr_nucleus_k.size(); k++) {
-            int K = nmr_nucleus_k[k];
+        for (auto &K : nmr_nucleus_k) {
             molecule->initNMRShielding(K);
             if (nmr_perturbation == "B") {
                 for (int d = 0; d < 3; d++) {
@@ -340,23 +339,17 @@ void SCFDriver::setup() {
         }
     }
     if (calc_hyperfine_coupling) {
-        for (int k = 0; k < hfcc_nucleus_k.size(); k++) {
-            int K = hfcc_nucleus_k[k];
-            molecule->initHyperFineCoupling(K);
-        }
+        for (auto &K : hfcc_nucleus_k) { molecule->initHyperFineCoupling(K); }
     }
     if (calc_spin_spin_coupling) {
-        for (int k = 0; k < sscc_nucleus_k.size(); k++) {
-            int K = sscc_nucleus_k[k];
-            for (int l = 0; l < sscc_nucleus_l.size(); l++) {
-                int L = sscc_nucleus_l[l];
+        for (auto &K : sscc_nucleus_k) {
+            for (auto &L : sscc_nucleus_l) {
                 if (K != L) molecule->initSpinSpinCoupling(K, L);
             }
         }
     }
     if (calc_polarizability) {
-        for (int i = 0; i < pol_frequency.size(); i++) {
-            double omega = pol_frequency[i];
+        for (auto &omega : pol_frequency) {
             molecule->initPolarizability(omega);
             for (int d = 0; d < 3; d++) {
                 if (rsp_directions[d] == 0) continue;
@@ -365,8 +358,7 @@ void SCFDriver::setup() {
         }
     }
     if (calc_optical_rotation) {
-        for (int i = 0; i < optrot_frequency.size(); i++) {
-            double omega = optrot_frequency[i];
+        for (auto &omega : optrot_frequency) {
             molecule->initOpticalRotation(omega);
             NOT_IMPLEMENTED_ABORT;
         }
@@ -426,34 +418,34 @@ mrcpp::DerivativeOperator<3> *SCFDriver::useDerivative(string derivative_name) {
 
 void SCFDriver::clear() {
     for (int k = 0; k < molecule->getNNuclei(); k++) {
-        if (h_M[k] != 0) delete h_M[k];
+        if (h_M[k] != nullptr) delete h_M[k];
     }
-    if (h_M != 0) delete[] h_M;
-    if (h_B != 0) delete h_B;
-    if (h_E != 0) delete h_E;
+    if (h_M != nullptr) delete[] h_M;
+    if (h_B != nullptr) delete h_B;
+    if (h_E != nullptr) delete h_E;
 
-    if (xcfun != 0) delete xcfun;
+    if (xcfun != nullptr) delete xcfun;
 
-    if (fock != 0) delete fock;
-    if (Vext != 0) delete Vext;
-    if (XC != 0) delete XC;
-    if (K != 0) delete K;
-    if (J != 0) delete J;
-    if (V != 0) delete V;
-    if (T != 0) delete T;
+    if (fock != nullptr) delete fock;
+    if (Vext != nullptr) delete Vext;
+    if (XC != nullptr) delete XC;
+    if (K != nullptr) delete K;
+    if (J != nullptr) delete J;
+    if (V != nullptr) delete V;
+    if (T != nullptr) delete T;
 
-    if (phi != 0) delete phi;
-    if (molecule != 0) delete molecule;
+    if (phi != nullptr) delete phi;
+    if (molecule != nullptr) delete molecule;
 
-    if (ABGV_55 != 0) delete ABGV_55;
-    if (ABGV_00 != 0) delete ABGV_00;
-    if (PH_2 != 0) delete PH_2;
-    if (PH_1 != 0) delete PH_1;
-    if (P != 0) delete P;
+    if (ABGV_55 != nullptr) delete ABGV_55;
+    if (ABGV_00 != nullptr) delete ABGV_00;
+    if (PH_2 != nullptr) delete PH_2;
+    if (PH_1 != nullptr) delete PH_1;
+    if (P != nullptr) delete P;
 
-    if (kain != 0) delete kain;
-    if (kain_x != 0) delete kain_x;
-    if (kain_y != 0) delete kain_y;
+    if (kain != nullptr) delete kain;
+    if (kain_x != nullptr) delete kain_x;
+    if (kain_y != nullptr) delete kain_y;
 }
 
 /** Setup n+1 Fock operator for energy optimization */
@@ -487,11 +479,11 @@ void SCFDriver::setup_np1() {
 }
 
 void SCFDriver::clear_np1() {
-    if (fock_np1 != 0) delete fock_np1;
-    if (XC_np1 != 0) delete XC_np1;
-    if (K_np1 != 0) delete K_np1;
-    if (J_np1 != 0) delete J_np1;
-    if (phi_np1 != 0) delete phi_np1;
+    if (fock_np1 != nullptr) delete fock_np1;
+    if (XC_np1 != nullptr) delete XC_np1;
+    if (K_np1 != nullptr) delete K_np1;
+    if (J_np1 != nullptr) delete J_np1;
+    if (phi_np1 != nullptr) delete phi_np1;
 }
 
 void SCFDriver::setupInitialGroundState() {
@@ -525,7 +517,7 @@ void SCFDriver::setupInitialGroundState() {
 }
 
 OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
-    OrbitalOptimizer *optimizer = new OrbitalOptimizer(kain);
+    auto *optimizer = new OrbitalOptimizer(kain);
     optimizer->setMaxIterations(scf_max_iter);
     optimizer->setRotation(scf_rotation);
     optimizer->setCanonical(scf_canonical);
@@ -536,7 +528,7 @@ OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
 }
 
 EnergyOptimizer *SCFDriver::setupEnergyOptimizer() {
-    EnergyOptimizer *optimizer = new EnergyOptimizer();
+    auto *optimizer = new EnergyOptimizer();
     optimizer->setMaxIterations(kin_free_max_iter);
     optimizer->setCanonical(kin_free_canonical);
     optimizer->setThreshold(kin_free_orb_thrs, kin_free_prop_thrs);
@@ -546,7 +538,7 @@ EnergyOptimizer *SCFDriver::setupEnergyOptimizer() {
 }
 
 LinearResponseSolver *SCFDriver::setupLinearResponseSolver(bool dynamic) {
-    LinearResponseSolver *lrs = 0;
+    LinearResponseSolver *lrs = nullptr;
     if (dynamic) {
         lrs = new LinearResponseSolver(kain_x, kain_y);
     } else {
@@ -560,7 +552,7 @@ LinearResponseSolver *SCFDriver::setupLinearResponseSolver(bool dynamic) {
 }
 
 void SCFDriver::setupPerturbedOrbitals(const ResponseCalculation &rsp_calc) {
-    if (phi == 0) MSG_ERROR("Orbitals not initialized");
+    if (phi == nullptr) MSG_ERROR("Orbitals not initialized");
 
     phi_x = new OrbitalVector;
     *phi_x = orbital::param_copy(*phi);
@@ -575,14 +567,14 @@ void SCFDriver::setupPerturbedOrbitals(const ResponseCalculation &rsp_calc) {
 }
 
 void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
-    if (not dynamic) phi_y = 0;
-    if (phi_x != 0) {
+    if (not dynamic) phi_y = nullptr;
+    if (phi_x != nullptr) {
         delete phi_x;
-        phi_x = 0;
+        phi_x = nullptr;
     }
-    if (phi_y != 0) {
+    if (phi_y != nullptr) {
         delete phi_y;
-        phi_y = 0;
+        phi_y = nullptr;
     }
 }
 
@@ -607,21 +599,21 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
     if (rsp_calc.isDynamic()) NOT_IMPLEMENTED_ABORT;
 
-    d_fock = new FockOperator(0, 0, dJ, dK, dXC);
+    d_fock = new FockOperator(nullptr, nullptr, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
     d_fock->build();
 }
 
 void SCFDriver::clearPerturbedOperators() {
-    if (d_fock != 0) delete d_fock;
-    if (dXC != 0) delete dXC;
-    if (dK != 0) delete dK;
-    if (dJ != 0) delete dJ;
+    if (d_fock != nullptr) delete d_fock;
+    if (dXC != nullptr) delete dXC;
+    if (dK != nullptr) delete dK;
+    if (dJ != nullptr) delete dJ;
 
-    d_fock = 0;
-    dXC = 0;
-    dK = 0;
-    dJ = 0;
+    d_fock = nullptr;
+    dXC = nullptr;
+    dK = nullptr;
+    dJ = nullptr;
 }
 
 void SCFDriver::run() {
@@ -641,8 +633,8 @@ void SCFDriver::run() {
 }
 
 bool SCFDriver::runGroundState() {
-    if (phi == 0) MSG_ERROR("Orbitals not initialized");
-    if (fock == 0) MSG_ERROR("Fock operator not initialized");
+    if (phi == nullptr) MSG_ERROR("Orbitals not initialized");
+    if (fock == nullptr) MSG_ERROR("Fock operator not initialized");
     bool converged = true;
 
     // Setup initial guess
@@ -998,7 +990,7 @@ void SCFDriver::setupInitialGrid(mrdft::XCFunctional &func, const Molecule &mol)
  */
 
 mrdft::XCFunctional *SCFDriver::setupFunctional(int order) {
-    mrdft::XCFunctional *fun = new mrdft::XCFunctional(*MRA, dft_spin);
+    auto *fun = new mrdft::XCFunctional(*MRA, dft_spin);
     for (int i = 0; i < dft_func_names.size(); i++) {
         double f_coef = dft_func_coefs[i];
         const std::string &f_name = dft_func_names[i];

@@ -34,8 +34,7 @@ namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 QMFunction::QMFunction(bool share)
-        : conj(false)
-        , func_ptr(std::make_shared<ComplexFunction>(share)) {}
+        : func_ptr(std::make_shared<ComplexFunction>(share)) {}
 
 QMFunction::QMFunction(const QMFunction &func)
         : conj(func.conj)

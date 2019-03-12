@@ -19,13 +19,13 @@ namespace mrchem {
 class ExchangeOperator final : public RankZeroTensorOperator {
 public:
     ExchangeOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi, double xFac = 1.0)
-            : exchange(0) {
+            : exchange(nullptr) {
         this->exchange = new ExchangePotential(P, Phi, false);
 
         RankZeroTensorOperator &K = (*this);
         K = xFac * (*exchange);
     }
-    ~ExchangeOperator() { delete this->exchange; }
+    ~ExchangeOperator() override { delete this->exchange; }
 
     void setupInternal(double prec) { this->exchange->setupInternal(prec); }
     void rotate(const ComplexMatrix &U) { this->exchange->rotate(U); }

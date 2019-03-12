@@ -78,7 +78,7 @@ void FockOperator::setup(double prec) {
     this->kinetic().setup(prec);
     this->potential().setup(prec);
     this->perturbation().setup(prec);
-    if (this->ex != 0) this->ex->setupInternal(prec);
+    if (this->ex != nullptr) this->ex->setupInternal(prec);
     timer.stop();
     Printer::printFooter(0, timer, 2);
 }
@@ -140,7 +140,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
 
     // Orbital energies
     for (int i = 0; i < Phi.size(); i++) {
-        double occ = (double)Phi[i].occ();
+        auto occ = (double)Phi[i].occ();
         E_orb += occ * F(i, i).real();
     }
 
