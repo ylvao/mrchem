@@ -26,8 +26,10 @@ private:
 
 class NuclearOperator final : public RankZeroTensorOperator {
 public:
-    NuclearOperator(const Nuclei &nucs, double prec)
-            : r_m1(new NuclearPotential(nucs, prec)) {
+    NuclearOperator(const Nuclei &nucs, double prec) {
+        r_m1 = std::make_shared<NuclearPotential>(nucs, prec);
+
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &v = (*this);
         v = r_m1;
     }
@@ -40,7 +42,7 @@ public:
     using RankZeroTensorOperator::trace;
 
 private:
-    std::shared_ptr<NuclearPotential> r_m1;
+    std::shared_ptr<NuclearPotential> r_m1{nullptr};
 };
 
 } // namespace mrchem

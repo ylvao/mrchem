@@ -20,6 +20,7 @@ public:
         RankZeroTensorOperator &k_y = this->r_k[1];
         RankZeroTensorOperator &k_z = this->r_k[2];
 
+        // Invoke operator= to assign *this operator
         RankTwoTensorOperator<3, 3> &h = (*this);
         h[0][0] = -(alpha_2 / 2.0) * r_m3 * (o_y * k_y + o_z * k_z);
         h[0][1] = (alpha_2 / 2.0) * r_m3 * (o_x * k_y);
@@ -32,7 +33,7 @@ public:
         h[2][2] = -(alpha_2 / 2.0) * r_m3 * (o_x * k_x + o_y * k_y);
     }
 
-protected:
+private:
     DistanceOperator r_m3;
     PositionOperator r_o;
     PositionOperator r_k;

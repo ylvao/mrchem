@@ -24,6 +24,7 @@ class H_E_dip final : public PositionOperator {
 public:
     H_E_dip(const mrcpp::Coord<3> &o)
             : PositionOperator(o) {
+        // Invoke operator= to assign *this operator
         RankOneTensorOperator<3> &h = (*this);
         h[0] = -1.0 * (*this)[0];
         h[1] = -1.0 * (*this)[1];

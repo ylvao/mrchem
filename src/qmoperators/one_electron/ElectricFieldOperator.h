@@ -31,6 +31,7 @@ public:
         RankZeroTensorOperator &d_y = this->dipole[1];
         RankZeroTensorOperator &d_z = this->dipole[2];
 
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &HEF = (*this);
         HEF = -f[0] * d_x - f[1] * d_y - f[2] * d_z;
     }
@@ -57,7 +58,7 @@ public:
 
     using RankZeroTensorOperator::trace;
 
-protected:
+private:
     Eigen::Vector3d field; ///< the external field vector
     H_E_dip dipole;        ///< the dipole moment operator
 };

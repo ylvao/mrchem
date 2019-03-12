@@ -28,7 +28,7 @@ public:
 
     friend class ExchangeOperator;
 
-protected:
+private:
     bool screen;             ///< Apply screening in exchange evaluation
     DoubleVector tot_norms;  ///< Total norms for use in screening
     DoubleMatrix part_norms; ///< Partial norms for use in screening

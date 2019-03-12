@@ -20,12 +20,9 @@ class KineticOperator final : public RankZeroTensorOperator {
 public:
     KineticOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
             : p(D) {
-        RankZeroTensorOperator &p_x = this->p[0];
-        RankZeroTensorOperator &p_y = this->p[1];
-        RankZeroTensorOperator &p_z = this->p[2];
-
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &t = (*this);
-        t = 0.5 * (p_x * p_x + p_y * p_y + p_z * p_z);
+        t = 0.5 * (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
     }
 
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
@@ -34,7 +31,7 @@ public:
     using RankZeroTensorOperator::operator();
     using RankZeroTensorOperator::dagger;
 
-protected:
+private:
     MomentumOperator p;
 };
 

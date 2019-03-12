@@ -26,6 +26,7 @@ public:
         RankZeroTensorOperator &d_y = this->dipole[1];
         RankZeroTensorOperator &d_z = this->dipole[2];
 
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &HMF = (*this);
         HMF = f[0] * d_x + f[1] * d_y + f[2] * d_z;
     }
@@ -33,7 +34,7 @@ public:
     ComplexDouble trace(const Nuclei &nucs) { return 0.0; }
     ComplexDouble trace(const Nucleus &nuc) { return 0.0; }
 
-protected:
+private:
     Eigen::Vector3d field;
     H_B_dip dipole;
 };

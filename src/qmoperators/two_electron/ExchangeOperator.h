@@ -18,8 +18,10 @@ namespace mrchem {
 
 class ExchangeOperator final : public RankZeroTensorOperator {
 public:
-    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi)
-            : exchange(new ExchangePotential(P, Phi, false)) {
+    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi) {
+        exchange = std::make_shared<ExchangePotential>(P, Phi, false);
+
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &K = (*this);
         K = exchange;
     }
@@ -31,8 +33,8 @@ public:
 
     ComplexDouble trace(OrbitalVector &Phi) { return 0.5 * RankZeroTensorOperator::trace(Phi); }
 
-protected:
-    std::shared_ptr<ExchangePotential> exchange;
+private:
+    std::shared_ptr<ExchangePotential> exchange{nullptr};
 };
 
 } // namespace mrchem
