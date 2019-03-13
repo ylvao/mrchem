@@ -15,7 +15,6 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.cpp)
   target_link_libraries(mrchem-pilot
       MRCPP::mrcpp
       XCFun::xcfun
-      getkw::getkw
       )
 
   set(MRCHEM_DRIVER_DEBUG ON)

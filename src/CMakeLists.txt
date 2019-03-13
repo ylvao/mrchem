@@ -33,7 +33,6 @@ target_link_libraries(mrchem
     Eigen3::Eigen
     MRCPP::mrcpp
     XCFun::xcfun
-    getkw::getkw
     nlohmann_json::nlohmann_json
   )
 
@@ -83,7 +82,6 @@ target_link_libraries(mrchem.x
   PRIVATE
     mrchem
     MRCPP::mrcpp
-    getkw::getkw
     XCFun::xcfun
     nlohmann_json::nlohmann_json
   )
