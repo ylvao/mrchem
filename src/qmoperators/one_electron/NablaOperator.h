@@ -7,11 +7,11 @@ namespace mrchem {
 
 class QMNabla final : public QMOperator {
 public:
-    QMNabla(int d, mrcpp::DerivativeOperator<3> &D);
+    QMNabla(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D);
 
-protected:
+private:
     const int apply_dir;
-    mrcpp::DerivativeOperator<3> *derivative;
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative;
 
     void setup(double prec) override { setApplyPrec(prec); }
     void clear() override { clearApplyPrec(); }
@@ -22,20 +22,22 @@ protected:
 
 class NablaOperator final : public RankOneTensorOperator<3> {
 public:
-    NablaOperator(mrcpp::DerivativeOperator<3> &D)
-            : d_x(0, D)
-            , d_y(1, D)
-            , d_z(2, D) {
+    NablaOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D) {
+        d_x = std::make_shared<QMNabla>(0, D);
+        d_y = std::make_shared<QMNabla>(1, D);
+        d_z = std::make_shared<QMNabla>(2, D);
+
+        // Invoke operator= to assign *this operator
         RankOneTensorOperator<3> &d = (*this);
         d[0] = d_x;
         d[1] = d_y;
         d[2] = d_z;
     }
 
-protected:
-    QMNabla d_x;
-    QMNabla d_y;
-    QMNabla d_z;
+private:
+    std::shared_ptr<QMNabla> d_x{nullptr};
+    std::shared_ptr<QMNabla> d_y{nullptr};
+    std::shared_ptr<QMNabla> d_z{nullptr};
 };
 
 } // namespace mrchem

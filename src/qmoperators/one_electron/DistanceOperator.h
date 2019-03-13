@@ -13,21 +13,23 @@ public:
     void setup(double prec) override;
     void clear() override;
 
-protected:
+private:
     const double power;
     NuclearFunction func;
 };
 
 class DistanceOperator final : public RankZeroTensorOperator {
 public:
-    DistanceOperator(double pow, const mrcpp::Coord<3> &R, double S = 1.0e-7)
-            : r_pow(pow, R, S) {
+    DistanceOperator(double pow, const mrcpp::Coord<3> &R, double S = 1.0e-7) {
+        r_pow = std::make_shared<DistancePotential>(pow, R, S);
+
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &v = (*this);
         v = r_pow;
     }
 
-protected:
-    DistancePotential r_pow;
+private:
+    std::shared_ptr<DistancePotential> r_pow{nullptr};
 };
 
 } // namespace mrchem

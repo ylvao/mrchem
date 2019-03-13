@@ -2,7 +2,7 @@
 
 #include "DeltaOperator.h"
 #include "H_B_spin.h"
-#include "RankOneTensorOperator.h"
+#include "qmoperators/RankOneTensorOperator.h"
 
 namespace mrchem {
 
@@ -13,13 +13,14 @@ public:
         const double coef = -(8.0 / 3.0) * MATHCONST::pi;
         const double alpha_2 = PHYSCONST::alpha * PHYSCONST::alpha;
 
+        // Invoke operator= to assign *this operator
         RankOneTensorOperator<3> &h = (*this);
         h[0] = (coef * alpha_2) * delta * s[0];
         h[1] = (coef * alpha_2) * delta * s[1];
         h[2] = (coef * alpha_2) * delta * s[2];
     }
 
-protected:
+private:
     H_B_spin s;
     DeltaOperator delta;
 };

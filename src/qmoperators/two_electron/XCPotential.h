@@ -29,7 +29,7 @@ namespace mrchem {
 
 class XCPotential : public QMPotential {
 public:
-    XCPotential(mrdft::XCFunctional *F, OrbitalVector *Phi)
+    XCPotential(std::shared_ptr<mrdft::XCFunctional> F, std::shared_ptr<OrbitalVector> Phi)
             : QMPotential(1, mpi::share_xc_pot)
             , energy(0.0)
             , orbitals(Phi)
@@ -39,14 +39,14 @@ public:
     friend class XCOperator;
 
 protected:
-    double energy;                   ///< XC energy
-    OrbitalVector *orbitals;         ///< External set of orbitals used to build the density
-    mrdft::XCFunctional *functional; ///< External XC functional to be used
+    double energy;                                   ///< XC energy
+    std::shared_ptr<OrbitalVector> orbitals;         ///< External set of orbitals used to build the density
+    std::shared_ptr<mrdft::XCFunctional> functional; ///< External XC functional to be used
 
     double getEnergy() const { return this->energy; }
-    int getOrder() const { return this->functional->getOrder(); }
-
     mrcpp::FunctionTree<3> &getDensity(int spin);
+    std::shared_ptr<mrdft::XCFunctional> &getFunctional() { return this->functional; }
+
     virtual void setupPotential(double prec) {}
     Orbital apply(Orbital phi) override = 0;
 

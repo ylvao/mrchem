@@ -24,34 +24,27 @@ class ElectricFieldOperator;
 
 class FockOperator final : public RankZeroTensorOperator {
 public:
-    FockOperator(KineticOperator *t = nullptr,
-                 NuclearOperator *v = nullptr,
-                 CoulombOperator *j = nullptr,
-                 ExchangeOperator *k = nullptr,
-                 XCOperator *xc = nullptr,
-                 ElectricFieldOperator *ext = nullptr);
+    FockOperator(std::shared_ptr<KineticOperator> t = nullptr,
+                 std::shared_ptr<NuclearOperator> v = nullptr,
+                 std::shared_ptr<CoulombOperator> j = nullptr,
+                 std::shared_ptr<ExchangeOperator> k = nullptr,
+                 std::shared_ptr<XCOperator> xc = nullptr,
+                 std::shared_ptr<ElectricFieldOperator> ext = nullptr);
 
     RankZeroTensorOperator &kinetic() { return this->T; }
     RankZeroTensorOperator &potential() { return this->V; }
     RankZeroTensorOperator &perturbation() { return this->H_1; }
 
-    KineticOperator *getKineticOperator() { return this->kin; }
-    NuclearOperator *getNuclearOperator() { return this->nuc; }
-    CoulombOperator *getCoulombOperator() { return this->coul; }
-    ExchangeOperator *getExchangeOperator() { return this->ex; }
-    XCOperator *getXCOperator() { return this->xc; }
-    ElectricFieldOperator *getExtOperator() { return this->ext; }
-
-    void setKineticOperator(KineticOperator *t) { this->kin = t; }
-    void setNuclearOperator(NuclearOperator *v) { this->nuc = v; }
-    void setCoulombOperator(CoulombOperator *j) { this->coul = j; }
-    void setExchangeOperator(ExchangeOperator *k) { this->ex = k; }
-    void setXCOperator(XCOperator *xc) { this->xc = xc; }
-    void setExtOperator(ElectricFieldOperator *ext) { this->ext = ext; }
+    std::shared_ptr<KineticOperator> &getKineticOperator() { return this->kin; }
+    std::shared_ptr<NuclearOperator> &getNuclearOperator() { return this->nuc; }
+    std::shared_ptr<CoulombOperator> &getCoulombOperator() { return this->coul; }
+    std::shared_ptr<ExchangeOperator> &getExchangeOperator() { return this->ex; }
+    std::shared_ptr<XCOperator> &getXCOperator() { return this->xc; }
+    std::shared_ptr<ElectricFieldOperator> &getExtOperator() { return this->ext; }
 
     void rotate(const ComplexMatrix &U);
 
-    void build();
+    void build(double exx = 1.0);
     void setup(double prec);
     void clear();
 
@@ -63,17 +56,18 @@ public:
     using RankZeroTensorOperator::operator();
     using RankZeroTensorOperator::dagger;
 
-protected:
+private:
+    double exact_exchange{1.0};
     RankZeroTensorOperator T;   ///< Total kinetic energy operator
     RankZeroTensorOperator V;   ///< Total potential energy operator
     RankZeroTensorOperator H_1; ///< Perturbation operators
 
-    KineticOperator *kin;
-    NuclearOperator *nuc;
-    CoulombOperator *coul;
-    ExchangeOperator *ex;
-    XCOperator *xc;
-    ElectricFieldOperator *ext; ///< Total external potential
+    std::shared_ptr<KineticOperator> kin;
+    std::shared_ptr<NuclearOperator> nuc;
+    std::shared_ptr<CoulombOperator> coul;
+    std::shared_ptr<ExchangeOperator> ex;
+    std::shared_ptr<XCOperator> xc;
+    std::shared_ptr<ElectricFieldOperator> ext; ///< Total external potential
 };
 
 } // namespace mrchem

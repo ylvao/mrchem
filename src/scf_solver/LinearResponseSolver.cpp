@@ -26,11 +26,13 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
-#include "Accelerator.h"
 #include "HelmholtzVector.h"
+#include "KAIN.h"
 #include "LinearResponseSolver.h"
+
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
+
 #include "qmoperators/two_electron/FockOperator.h"
 
 using mrcpp::Printer;
@@ -38,116 +40,11 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
-/** @brief constructor
- *
- * @param h: Helmholtz operators
- * @param k_x: Iterative accelerator X orbitals
- * @param k_y: Iterative accelerator Y orbitals
- *
- * SCF solver will NOT take ownership of the HelmholtzVector or the Accelerators,
- * so the original objects must be taken care of externally (do not delete until
- * SCF goes out of scope). Fock matrix, FockOperator and OrbitalVector are not
- * initialized at this stage, so the SCF solver needs to be "setup()" before
- * "optimize()".
- */
-LinearResponseSolver::LinearResponseSolver(Accelerator *k_x, Accelerator *k_y)
-        : SCF()
-        , kain_x(k_x)
-        , kain_y(k_y) {}
-
-/** @brief Prepare the unperturbed parts of the response solver for optimization
- *
- * @param prec: Precision
- * @param fock: Unperturbed Fock operator
- * @param Phi: Unperturbed orbitals to optimize
- * @param F: Unperturbed Fock matrix
- *
- * The unperturbed part of the response solver remains unchanged during the SCF
- * procedure and for all types and directions of the perturbation, so it needs to
- * be setup only once (unlike the perturbed parts which must be updated in each
- * iteration). SCF solver will NOT take ownership of the input, so these objects
- * must be taken care of externally (do not delete until SCF goes out of scope).
- */
-void LinearResponseSolver::setupUnperturbed(double prec, FockOperator *F, OrbitalVector *Phi, ComplexMatrix *F_mat) {
-    this->fOper_0 = F;
-    this->orbitals_0 = Phi;
-    this->fMat_0 = F_mat;
-    this->fOper_0->setup(prec);
-}
-
-/** @brief Clear the unperturbed parts of the response solver after optimization
- *
- * Clear pointers that was set during setupUnperturbed. Solver can be re-used after
- * another setupUnperturbed.
- */
-void LinearResponseSolver::clearUnperturbed() {
-    this->fOper_0->clear();
-    this->fOper_0 = nullptr;
-    this->orbitals_0 = nullptr;
-    this->fMat_0 = nullptr;
-}
-
-/** @brief Prepare solver for optimization, static version
- *
- * @param fock: Perturbed Fock operator (V_1 + h_1)
- * @param X: Perturbed orbitals to optimize (epsilon + omega)
- *
- * SCF solver will NOT take ownership of the input, so these objects must be taken
- * care of externally (do not delete until SCF goes out of scope).
- */
-void LinearResponseSolver::setup(FockOperator *F_1, OrbitalVector *X) {
-    if (this->orbitals_0 == nullptr) MSG_ERROR("Unperturbed system not set up");
-
-    this->dynamic = false;
-    this->frequency = 0.0;
-
-    this->fOper_1 = F_1;
-
-    this->orbitals_x = X;
-    this->orbitals_y = nullptr;
-
-    this->fMat_x = new ComplexMatrix;
-    this->fMat_y = nullptr;
-
-    *this->fMat_x = *this->fMat_0;
-}
-
-/** @brief Prepare solver for optimization, dynamic version
- *
- * @param omega: Frequency of perturbing field
- * @param F_1: Perturbed Fock operator (V_1 + h_1)
- * @param X: Perturbed orbitals to optimize (epsilon + omega)
- * @param Y: Perturbed orbitals to optimize (epsilon - omega)
- *
- * SCF solver will NOT take ownership of the input, so these objects must be taken
- * care of externally (do not delete until SCF goes out of scope).
- */
-void LinearResponseSolver::setup(double omega, FockOperator *F_1, OrbitalVector *X, OrbitalVector *Y) {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-/** @brief Clear solver after optimization
- *
- * Clear pointers that was set during setup, and reset the precision parameter
- * (only the current precision orbPrec[0], not the boundary values orbPrec[1,2]).
- * Solver can be re-used after another setup.
- */
-void LinearResponseSolver::clear() {
-    if (this->fMat_x != nullptr) delete this->fMat_x;
-    if (this->fMat_y != nullptr) delete this->fMat_y;
-
-    this->orbitals_x = nullptr;
-    this->orbitals_y = nullptr;
-    this->fOper_1 = nullptr;
-
-    if (this->kain_x != nullptr) this->kain_x->clear();
-    if (this->kain_y != nullptr) this->kain_y->clear();
-
-    this->orbError.clear();
-    this->property.clear();
-
-    resetPrecision();
-}
+LinearResponseSolver::LinearResponseSolver(bool dyn, FockOperator &F_0, OrbitalVector &Phi_0, ComplexMatrix &F_mat_0)
+        : dynamic(dyn)
+        , f_oper_0(&F_0)
+        , f_mat_0(&F_mat_0)
+        , phi_0(&Phi_0) {}
 
 /** @brief Run orbital optimization
  *
@@ -167,28 +64,31 @@ void LinearResponseSolver::clear() {
  *  5) Check for convergence
  *
  */
-bool LinearResponseSolver::optimize() {
-    ComplexMatrix &F_mat_0 = *this->fMat_0;
-    ComplexMatrix &F_mat_x = *this->fMat_x;
-    ComplexMatrix &F_mat_y = *this->fMat_y;
-    FockOperator &F_1 = *this->fOper_1;
-    OrbitalVector &Phi = *this->orbitals_0;
-    OrbitalVector *X_n = this->orbitals_x;
-    OrbitalVector *Y_n = this->orbitals_y;
-    RankZeroTensorOperator &V_0 = this->fOper_0->potential();
+bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVector &X_n, OrbitalVector &Y_n) {
+    OrbitalVector &Phi_0 = *this->phi_0;
+    ComplexMatrix &F_mat_0 = *this->f_mat_0;
+    ComplexMatrix F_mat_x = F_mat_0 + omega * ComplexMatrix::Identity(Phi_0.size(), Phi_0.size());
+    ComplexMatrix F_mat_y = F_mat_0 - omega * ComplexMatrix::Identity(Phi_0.size(), Phi_0.size());
+
+    RankZeroTensorOperator V_0 = this->f_oper_0->potential();
+    RankZeroTensorOperator V_1 = F_1.potential() + F_1.perturbation();
 
     double orb_prec = this->orbPrec[0];
+    double max_prec = this->orbPrec[2];
     double err_o = 1.0;
     double err_t = 1.0;
     double err_p = 1.0;
 
+    // Setup KAIN accelerators
+    KAIN kain_x(this->history);
+    KAIN kain_y(this->history);
+
     // Setup Helmholtz operators (fixed, based on unperturbed system)
-    HelmholtzVector H(orb_prec, F_mat_0.real().diagonal());
-    ComplexMatrix L_mat = H.getLambdaMatrix();
+    HelmholtzVector H(max_prec, F_mat_0.real().diagonal());
 
     // Placeholders for orbital errors
-    DoubleVector errors_x = DoubleVector::Zero(Phi.size());
-    DoubleVector errors_y = DoubleVector::Zero(Phi.size());
+    DoubleVector errors_x = DoubleVector::Zero(Phi_0.size());
+    DoubleVector errors_y = DoubleVector::Zero(Phi_0.size());
 
     int nIter = 0;
     bool converged = false;
@@ -198,43 +98,71 @@ bool LinearResponseSolver::optimize() {
         printCycleHeader(nIter);
         orb_prec = adjustPrecision(err_o);
 
-        // Setup perturbed Fock operator
+        // Setup perturbed Fock operator (including V_1)
         F_1.setup(orb_prec);
 
-        // Iterate X orbitals
-        if (X_n != nullptr) {
-            // Compute argument: psi_i = sum_j [L-F]_ij*x_j + (1 - rho_0)phi_i
-            OrbitalVector Psi = setupHelmholtzArguments(*X_n, L_mat - F_mat_x, false);
+        { // Iterate X orbitals
+            // Compute argument: psi_i = sum_j [L-F]_ij*x_j + (1 - rho_0)V_1(phi_i)
+            OrbitalVector Psi_1 = H.rotate(F_mat_x, X_n);
+            OrbitalVector Psi_2 = V_1(Phi_0);
+            orbital::orthogonalize(Psi_2, Phi_0);
+            OrbitalVector Psi = orbital::add(1.0, Psi_1, 1.0, Psi_2, -1.0);
+            Psi_1.clear();
+            Psi_2.clear();
 
             // Apply Helmholtz operators
-            OrbitalVector X_np1 = H(V_0, *X_n, Psi);
+            OrbitalVector X_np1 = H.apply(V_0, X_n, Psi);
             Psi.clear();
 
             // Orthogonalize: X_np1 = (1 - rho_0)X_np1
-            orbital::orthogonalize(X_np1, Phi);
+            orbital::orthogonalize(X_np1, Phi_0);
 
             // Compute update and errors
-            OrbitalVector dX_n = orbital::add(1.0, X_np1, -1.0, *X_n);
+            OrbitalVector dX_n = orbital::add(1.0, X_np1, -1.0, X_n);
+            X_np1.clear();
             errors_x = orbital::get_norms(dX_n);
 
             // Compute KAIN update:
-            if (this->kain_x != nullptr) {
-                X_np1.clear();
-                this->kain_x->accelerate(orb_prec, *X_n, dX_n);
-                X_np1 = orbital::add(1.0, *X_n, 1.0, dX_n);
-            }
+            kain_x.accelerate(orb_prec, X_n, dX_n);
 
             // Prepare for next iteration
-            *X_n = X_np1;
-            orbital::set_errors(*X_n, errors_x);
-            printOrbitals(orbital::get_norms(*X_n), *X_n, 0);
+            X_n = orbital::add(1.0, X_n, 1.0, dX_n);
+            orbital::set_errors(X_n, errors_x);
+            printOrbitals(orbital::get_norms(X_n), X_n, 0);
         }
 
-        // Iterate Y orbitals
-        if (Y_n != nullptr) NOT_IMPLEMENTED_ABORT;
+        if (dynamic) { // Iterate Y orbitals
+            // Compute argument: psi_i = sum_j [L-F]_ij*y_j + (1 - rho_0)V_1^dagger(phi_i)
+            OrbitalVector Psi_1 = H.rotate(F_mat_y, Y_n);
+            OrbitalVector Psi_2 = V_1.dagger(Phi_0);
+            orbital::orthogonalize(Psi_2, Phi_0);
+            OrbitalVector Psi = orbital::add(1.0, Psi_1, 1.0, Psi_2, -1.0);
+            Psi_1.clear();
+            Psi_2.clear();
+
+            // Apply Helmholtz operators
+            OrbitalVector Y_np1 = H.apply(V_0, Y_n, Psi);
+            Psi.clear();
+
+            // Orthogonalize: Y_np1 = (1 - rho_0)Y_np1
+            orbital::orthogonalize(Y_np1, Phi_0);
+
+            // Compute update and errors
+            OrbitalVector dY_n = orbital::add(1.0, Y_np1, -1.0, Y_n);
+            Y_np1.clear();
+            errors_y = orbital::get_norms(dY_n);
+
+            // Compute KAIN update:
+            kain_y.accelerate(orb_prec, Y_n, dY_n);
+
+            // Prepare for next iteration
+            Y_n = orbital::add(1.0, Y_n, 1.0, dY_n);
+            orbital::set_errors(Y_n, errors_y);
+            printOrbitals(orbital::get_norms(Y_n), Y_n, 0);
+        }
 
         // Compute property
-        double prop = calcProperty();
+        double prop = F_1.perturbation().trace(Phi_0, X_n, Y_n).real();
         this->property.push_back(prop);
 
         // Clear perturbed Fock operator
@@ -255,81 +183,10 @@ bool LinearResponseSolver::optimize() {
         if (converged) break;
     }
 
-    // Clear KAIN history and Helmholtz operators
-    if (this->kain_x != nullptr) this->kain_x->clear();
-    if (this->kain_y != nullptr) this->kain_y->clear();
-
     printConvergence(converged);
+    reset();
+
     return converged;
-}
-
-/** @brief Computes the Helmholtz argument for the all orbitals
- *
- * @param Phi_1: Perturbed orbitals
- * @param M: Rotation matrix for second term
- * @param adjoint: Use adjoint of Fock operator
- *
- * Argument contains the unperturbed potential operator acting on perturbed
- * orbital i, and the sum of all perturbed orbitals weighted by the unperturbed
- * Fock matrix, and finally the perturbed Fock operator acting on the unperturbed
- * orbitals (projected out occupied space). The effect of using inexact Helmholtz
- * operators are included in Lambda, which is a diagonal matrix with the actual
- * lambda parameters used in the Helmholtz operators (input matrix M is assumed
- * to be L-F).
- *
- * psi_j = \hat{V}^0 phi^1_i
- *       - \sum_j (\Lambda_{ij}-F^0_{ij})phi^1_j
- *       + (1 - rho^0) V^1 phi^0_i
- *
- */
-OrbitalVector LinearResponseSolver::setupHelmholtzArguments(OrbitalVector &Phi_1,
-                                                            const ComplexMatrix &M,
-                                                            bool adjoint) {
-    Timer timer_tot, timer_1(false), timer_2(false);
-    Printer::printHeader(0, "Setting up Helmholtz arguments");
-    int oldprec = Printer::setPrecision(5);
-
-    OrbitalVector &Phi_0 = *this->orbitals_0;
-    RankZeroTensorOperator V_1 = this->fOper_1->potential() + this->fOper_1->perturbation();
-
-    timer_1.start();
-    OrbitalVector part_1 = orbital::rotate(M, Phi_1);
-    timer_1.stop();
-
-    timer_2.start();
-    OrbitalVector part_2;
-    if (adjoint) {
-        part_2 = V_1.dagger(Phi_0);
-    } else {
-        part_2 = V_1(Phi_0);
-    }
-    orbital::orthogonalize(part_2, Phi_0);
-    timer_2.stop();
-
-    OrbitalVector out = orbital::add(1.0, part_1, 1.0, part_2, -1.0);
-    part_1.clear();
-    part_2.clear();
-
-    Printer::printDouble(0, "            F_0 phi_1", timer_1.getWallTime(), 5);
-    Printer::printDouble(0, "(1 - rho_0) V_1 phi_0", timer_2.getWallTime(), 5);
-
-    timer_tot.stop();
-    Printer::printFooter(0, timer_tot, 2);
-    Printer::setPrecision(oldprec);
-
-    return out;
-}
-
-/** @brief Computes the expectation value with the perturbing operator(s) */
-double LinearResponseSolver::calcProperty() {
-    FockOperator &F_1 = *this->fOper_1;
-    OrbitalVector &Phi = *this->orbitals_0;
-    OrbitalVector *X = this->orbitals_x;
-    OrbitalVector *Y = this->orbitals_y;
-
-    // Static response
-    if (Y == nullptr) Y = X;
-    return F_1.perturbation().trace(Phi, *X, *Y).real();
 }
 
 /** @brief Pretty printing of the computed property with update */

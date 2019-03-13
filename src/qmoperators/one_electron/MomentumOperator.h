@@ -7,11 +7,11 @@ namespace mrchem {
 
 class QMMomentum final : public QMOperator {
 public:
-    QMMomentum(int d, mrcpp::DerivativeOperator<3> &D);
+    QMMomentum(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D);
 
-protected:
+private:
     const int apply_dir;
-    mrcpp::DerivativeOperator<3> *derivative;
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative;
 
     void setup(double prec) override { setApplyPrec(prec); }
     void clear() override { clearApplyPrec(); }
@@ -22,20 +22,22 @@ protected:
 
 class MomentumOperator final : public RankOneTensorOperator<3> {
 public:
-    MomentumOperator(mrcpp::DerivativeOperator<3> &D)
-            : p_x(0, D)
-            , p_y(1, D)
-            , p_z(2, D) {
+    MomentumOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D) {
+        p_x = std::make_shared<QMMomentum>(0, D);
+        p_y = std::make_shared<QMMomentum>(1, D);
+        p_z = std::make_shared<QMMomentum>(2, D);
+
+        // Invoke operator= to assign *this operator
         RankOneTensorOperator<3> &p = (*this);
         p[0] = p_x;
         p[1] = p_y;
         p[2] = p_z;
     }
 
-protected:
-    QMMomentum p_x;
-    QMMomentum p_y;
-    QMMomentum p_z;
+private:
+    std::shared_ptr<QMMomentum> p_x{nullptr};
+    std::shared_ptr<QMMomentum> p_y{nullptr};
+    std::shared_ptr<QMMomentum> p_z{nullptr};
 };
 
 } // namespace mrchem

@@ -26,7 +26,7 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
-#include "SCF.h"
+#include "SCFSolver.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
@@ -40,7 +40,7 @@ namespace mrchem {
  * @param orb: threshold for orbitals
  * @param prop: threshold for property
  */
-void SCF::setThreshold(double orb, double prop) {
+void SCFSolver::setThreshold(double orb, double prop) {
     this->orbThrs = orb;
     this->propThrs = prop;
 }
@@ -53,10 +53,17 @@ void SCF::setThreshold(double orb, double prop) {
  * The precision will increase dynamically during the SCF optimization, starting
  * from "init", ending at "final".
  */
-void SCF::setOrbitalPrec(double init, double final) {
+void SCFSolver::setOrbitalPrec(double init, double final) {
     this->orbPrec[0] = init;
     this->orbPrec[1] = init;
     this->orbPrec[2] = final;
+}
+
+/** @brief Reset accumulated data */
+void SCFSolver::reset() {
+    this->orbError.clear();
+    this->property.clear();
+    this->orbPrec[0] = this->orbPrec[1];
 }
 
 /** @brief Adjust dynamic precision
@@ -67,7 +74,7 @@ void SCF::setOrbitalPrec(double init, double final) {
  * the SCF equations, and at least by 25%. Sets the internal precision parameter
  * and returns the current prec.
  */
-double SCF::adjustPrecision(double error) {
+double SCFSolver::adjustPrecision(double error) {
     if (this->orbPrec[0] > 0.0) this->orbPrec[0] *= 0.5;
     this->orbPrec[0] = std::min(10.0 * error * error, this->orbPrec[0]);
     this->orbPrec[0] = std::max(this->orbPrec[0], this->orbPrec[2]);
@@ -88,7 +95,7 @@ double SCF::adjustPrecision(double error) {
  *
  * A negative threshold means that it is inactive.
  */
-bool SCF::checkConvergence(double err_o, double err_p) const {
+bool SCFSolver::checkConvergence(double err_o, double err_p) const {
     bool conv_o = false;
     bool conv_p = false;
     if (err_o < this->orbThrs or this->orbThrs < 0.0) conv_o = true;
@@ -103,7 +110,7 @@ bool SCF::checkConvergence(double err_o, double err_p) const {
  * This check is based on the "canonical" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
-bool SCF::needLocalization(int nIter) const {
+bool SCFSolver::needLocalization(int nIter) const {
     bool loc = false;
     if (this->canonical) {
         loc = false;
@@ -124,7 +131,7 @@ bool SCF::needLocalization(int nIter) const {
  * This check is based on the "canonical" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
-bool SCF::needDiagonalization(int nIter) const {
+bool SCFSolver::needDiagonalization(int nIter) const {
     bool diag = false;
     if (not this->canonical) {
         diag = false;
@@ -146,7 +153,7 @@ bool SCF::needDiagonalization(int nIter) const {
  *
  * Returns the difference between the i-th and (i-1)-th entry of the convergence vector.
  */
-double SCF::getUpdate(const std::vector<double> &vec, int i, bool absPrec) const {
+double SCFSolver::getUpdate(const std::vector<double> &vec, int i, bool absPrec) const {
     if (i < 1 or i > vec.size()) MSG_ERROR("Invalid argument");
     double E_i = vec[i - 1];
     double E_im1 = 0.0;
@@ -164,7 +171,7 @@ double SCF::getUpdate(const std::vector<double> &vec, int i, bool absPrec) const
  *
  * Adds convergence status based on the property threshold.
  */
-void SCF::printUpdate(const std::string &name, double P, double dP) const {
+void SCFSolver::printUpdate(const std::string &name, double P, double dP) const {
     int oldPrec = Printer::setPrecision(15);
     double p = 1.0;
     if (std::abs(P) > mrcpp::MachineZero) { p = P; }
@@ -183,7 +190,7 @@ void SCF::printUpdate(const std::string &name, double P, double dP) const {
  * @param Phi: orbital vector
  * @param flag: interpret epsilon as energy or norm
  */
-void SCF::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &Phi, int flag) const {
+void SCFSolver::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &Phi, int flag) const {
     Printer::printHeader(0, "Orbitals");
     if (flag == 0) println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
     if (flag == 1) println(0, " Orb    Norm          Error         nNodes  Spin  Occ  Done ");
@@ -219,7 +226,7 @@ void SCF::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &Phi, i
  *
  * Prints convergence in both orbitals and property.
  */
-void SCF::printConvergence(bool converged) const {
+void SCFSolver::printConvergence(bool converged) const {
     int iter = this->orbError.size();
     int oldPrec = Printer::getPrecision();
     Printer::printHeader(0, "Convergence rate");
@@ -251,7 +258,7 @@ void SCF::printConvergence(bool converged) const {
  *
  * @param nIter: current iteration number
  */
-void SCF::printCycleHeader(int nIter) const {
+void SCFSolver::printCycleHeader(int nIter) const {
     printout(0, std::endl << std::endl);
     printout(0, "#######################");
     printout(0, " SCF cycle " << std::setw(2) << nIter << " ");
@@ -263,7 +270,7 @@ void SCF::printCycleHeader(int nIter) const {
  *
  * @param t: timing for SCF cycle
  */
-void SCF::printCycleFooter(double t) const {
+void SCFSolver::printCycleFooter(double t) const {
     int oldPrec = Printer::setPrecision(5);
     printout(0, std::endl << std::endl);
     printout(0, "################");

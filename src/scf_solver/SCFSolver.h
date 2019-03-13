@@ -43,8 +43,12 @@
 
 namespace mrchem {
 
-class SCF {
+class SCFSolver {
 public:
+    SCFSolver() = default;
+    virtual ~SCFSolver() = default;
+
+    void setHistory(int hist) { this->history = hist; }
     void setRotation(int iter) { this->rotation = iter; }
     void setCanonical(bool can) { this->canonical = can; }
     void setThreshold(double orb, double prop);
@@ -52,6 +56,7 @@ public:
     void setMaxIterations(int m_iter) { this->maxIter = m_iter; }
 
 protected:
+    int history{0};                      ///< Maximum length of KAIN history
     int maxIter{-1};                     ///< Maximum number of iterations
     int rotation{0};                     ///< Number of iterations between localization/diagonalization
     bool canonical{true};                ///< Use localized or canonical orbitals
@@ -62,12 +67,13 @@ protected:
     std::vector<double> orbError; ///< Convergence orbital error
     std::vector<double> property; ///< Convergence property error
 
+    virtual void reset();
+
     bool checkConvergence(double err_o, double err_p) const;
     bool needLocalization(int nIter) const;
     bool needDiagonalization(int nIter) const;
 
     double adjustPrecision(double error);
-    void resetPrecision() { this->orbPrec[0] = this->orbPrec[1]; }
 
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
     void printUpdate(const std::string &name, double P, double dP) const;

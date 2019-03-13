@@ -169,47 +169,6 @@ SCFDriver::SCFDriver(Getkw &input) {
     r_O[0] = 0.0;
     r_O[1] = 0.0;
     r_O[2] = 0.0;
-
-    kain = nullptr;
-    kain_x = nullptr;
-    kain_y = nullptr;
-
-    P = nullptr;
-    PH_1 = nullptr;
-    PH_2 = nullptr;
-    ABGV_00 = nullptr;
-    ABGV_55 = nullptr;
-
-    molecule = nullptr;
-    nuclei = nullptr;
-    phi = nullptr;
-
-    T = nullptr;
-    V = nullptr;
-    J = nullptr;
-    K = nullptr;
-    XC = nullptr;
-    Vext = nullptr;
-    fock = nullptr;
-
-    phi_np1 = nullptr;
-    J_np1 = nullptr;
-    K_np1 = nullptr;
-    XC_np1 = nullptr;
-    fock_np1 = nullptr;
-
-    phi_x = nullptr;
-    phi_y = nullptr;
-    dJ = nullptr;
-    dK = nullptr;
-    dXC = nullptr;
-    d_fock = nullptr;
-
-    xcfun = nullptr;
-
-    h_E = nullptr;
-    h_B = nullptr;
-    h_M = nullptr;
 }
 
 bool SCFDriver::sanityCheck() const {
@@ -250,16 +209,15 @@ bool SCFDriver::sanityCheck() const {
 
 void SCFDriver::setup() {
     // Setting up molecule
-    molecule = new Molecule(mol_coords, mol_charge, mol_multiplicity);
+    molecule = std::make_shared<Molecule>(mol_coords, mol_charge, mol_multiplicity);
     molecule->printGeometry();
-    nuclei = &molecule->getNuclei();
 
     // Setting up empty orbitals
-    phi = new OrbitalVector;
+    phi = molecule->getOrbitals_p();
 
     // Defining gauge origin
-    const mrcpp::Coord<3> &COM = molecule->getCenterOfMass();
-    const mrcpp::Coord<3> &COC = molecule->getCenterOfCharge();
+    auto COM = molecule->calcCenterOfMass();
+    auto COC = molecule->calcCenterOfCharge();
     if (center_of_mass) {
         r_O[0] = COM[0];
         r_O[1] = COM[1];
@@ -275,20 +233,20 @@ void SCFDriver::setup() {
     }
 
     // Setting up MW operators
-    P = new mrcpp::PoissonOperator(*MRA, rel_prec);
-    PH_1 = new mrcpp::PHOperator<3>(*MRA, 1); // first derivative
-    PH_2 = new mrcpp::PHOperator<3>(*MRA, 2); // second derivative
-    ABGV_00 = new mrcpp::ABGVOperator<3>(*MRA, 0.0, 0.0);
-    ABGV_55 = new mrcpp::ABGVOperator<3>(*MRA, 0.5, 0.5);
+    P = std::make_shared<mrcpp::PoissonOperator>(*MRA, rel_prec);
+    PH_1 = std::make_shared<mrcpp::PHOperator<3>>(*MRA, 1); // first derivative
+    PH_2 = std::make_shared<mrcpp::PHOperator<3>>(*MRA, 2); // second derivative
+    ABGV_00 = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
+    ABGV_55 = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
 
     // Setting up perturbation operators
     int nNucs = molecule->getNNuclei();
     h_E = new H_E_dip(r_O);
-    h_B = new H_B_dip(*(useDerivative(diff_orb)), r_O);
+    h_B = new H_B_dip(useDerivative(diff_orb), r_O);
     h_M = new H_M_pso *[nNucs];
     for (int k = 0; k < nNucs; k++) {
-        const mrcpp::Coord<3> &r_K = molecule->getNucleus(k).getCoord();
-        h_M[k] = new H_M_pso(*(useDerivative(diff_pso)), r_K);
+        const mrcpp::Coord<3> &r_K = molecule->getNuclei()[k].getCoord();
+        h_M[k] = new H_M_pso(useDerivative(diff_pso), r_K);
     }
 
     // Setting up properties
@@ -309,12 +267,7 @@ void SCFDriver::setup() {
         for (int k = 0; k < nNucs; k++) hfcc_nucleus_k.push_back(k);
     }
 
-    if (calc_scf_energy) molecule->initSCFEnergy();
-    if (calc_dipole_moment) molecule->initDipoleMoment();
-    if (calc_quadrupole_moment) molecule->initQuadrupoleMoment();
-    if (calc_geometry_derivatives) molecule->initGeometryDerivatives();
     if (calc_magnetizability) {
-        molecule->initMagnetizability();
         for (int d = 0; d < 3; d++) {
             if (rsp_directions[d] == 0) continue;
             rsp_calculations.push_back(h_B, 0.0, true, d, "H_B");
@@ -322,14 +275,12 @@ void SCFDriver::setup() {
     }
     if (calc_nmr_shielding) {
         for (auto &K : nmr_nucleus_k) {
-            molecule->initNMRShielding(K);
             if (nmr_perturbation == "B") {
                 for (int d = 0; d < 3; d++) {
                     if (rsp_directions[d] == 0) continue;
                     rsp_calculations.push_back(h_B, 0.0, true, d, "H_B");
                 }
             } else {
-                const mrcpp::Coord<3> &r_K = molecule->getNucleus(K).getCoord();
                 for (int d = 0; d < 3; d++) {
                     if (rsp_directions[d] == 0) continue;
                     std::string name = "H_M" + std::to_string(K);
@@ -338,68 +289,49 @@ void SCFDriver::setup() {
             }
         }
     }
-    if (calc_hyperfine_coupling) {
-        for (auto &K : hfcc_nucleus_k) { molecule->initHyperFineCoupling(K); }
-    }
-    if (calc_spin_spin_coupling) {
-        for (auto &K : sscc_nucleus_k) {
-            for (auto &L : sscc_nucleus_l) {
-                if (K != L) molecule->initSpinSpinCoupling(K, L);
-            }
-        }
-    }
     if (calc_polarizability) {
         for (auto &omega : pol_frequency) {
-            molecule->initPolarizability(omega);
             for (int d = 0; d < 3; d++) {
                 if (rsp_directions[d] == 0) continue;
                 rsp_calculations.push_back(h_E, omega, false, d, "H_E");
             }
         }
     }
-    if (calc_optical_rotation) {
-        for (auto &omega : optrot_frequency) {
-            molecule->initOpticalRotation(omega);
-            NOT_IMPLEMENTED_ABORT;
-        }
-    }
-
-    // Setting up SCF
-    if (scf_kain > 0) kain = new KAIN(scf_kain);
-    if (rsp_kain > 0) kain_x = new KAIN(rsp_kain);
-    if (rsp_kain > 0) kain_y = new KAIN(rsp_kain);
 
     // Setting up Fock operator
-    T = new KineticOperator(*(useDerivative(diff_kin)));
-    V = new NuclearOperator(*nuclei, nuc_prec);
+    auto &nuclei = molecule->getNuclei();
+    T = std::make_shared<KineticOperator>(useDerivative(diff_kin));
+    V = std::make_shared<NuclearOperator>(nuclei, nuc_prec);
     // All cases need kinetic energy and nuclear potential
-    fock = new FockOperator(T, V);
+    fock = std::make_shared<FockOperator>(T, V);
     // For Hartree, HF and DFT we need the coulomb part
     if (wf_method == "hartree" or wf_method == "hf" or wf_method == "dft") {
-        J = new CoulombOperator(P, phi);
-        fock->setCoulombOperator(J);
+        J = std::make_shared<CoulombOperator>(P, phi);
+        fock->getCoulombOperator() = J;
     }
     // For HF we need the full HF exchange
     if (wf_method == "hf") {
-        K = new ExchangeOperator(P, phi);
-        fock->setExchangeOperator(K);
+        K = std::make_shared<ExchangeOperator>(P, phi);
+        fock->getExchangeOperator() = K;
     }
     // For DFT we need the XC operator
+    double exx = 1.0;
     if (wf_method == "dft") {
         xcfun = setupFunctional(MRDFT::Gradient);
-        XC = new XCOperator(xcfun, phi);
-        fock->setXCOperator(XC);
+        XC = std::make_shared<XCOperator>(xcfun, phi);
+        fock->getXCOperator() = XC;
 
         // For hybrid DFT we need a partial HF exchange
         if (xcfun->isHybrid()) {
-            K = new ExchangeOperator(P, phi, xcfun->amountEXX());
-            fock->setExchangeOperator(K);
+            exx = xcfun->amountEXX();
+            K = std::make_shared<ExchangeOperator>(P, phi);
+            fock->getExchangeOperator() = K;
         }
     }
     // HACK we need a better way to decide whether to initialize the external potential operator
-    if (ext_electric) Vext = new ElectricFieldOperator(ext_electric_field, r_O);
-    fock->setExtOperator(Vext);
-    fock->build();
+    if (ext_electric) Vext = std::make_shared<ElectricFieldOperator>(ext_electric_field, r_O);
+    fock->getExtOperator() = Vext;
+    fock->build(exx);
 }
 
 /** @brief choose the right derivative operator to use
@@ -409,7 +341,7 @@ void SCFDriver::setup() {
  * Returns the pointer to the correct derivative operator
  *
  */
-mrcpp::DerivativeOperator<3> *SCFDriver::useDerivative(string derivative_name) {
+std::shared_ptr<mrcpp::DerivativeOperator<3>> SCFDriver::useDerivative(string derivative_name) {
     if (derivative_name == "ph_1") return PH_1;
     if (derivative_name == "abgv_00") return ABGV_00;
     if (derivative_name == "abgv_55") return ABGV_55;
@@ -423,67 +355,6 @@ void SCFDriver::clear() {
     if (h_M != nullptr) delete[] h_M;
     if (h_B != nullptr) delete h_B;
     if (h_E != nullptr) delete h_E;
-
-    if (xcfun != nullptr) delete xcfun;
-
-    if (fock != nullptr) delete fock;
-    if (Vext != nullptr) delete Vext;
-    if (XC != nullptr) delete XC;
-    if (K != nullptr) delete K;
-    if (J != nullptr) delete J;
-    if (V != nullptr) delete V;
-    if (T != nullptr) delete T;
-
-    if (phi != nullptr) delete phi;
-    if (molecule != nullptr) delete molecule;
-
-    if (ABGV_55 != nullptr) delete ABGV_55;
-    if (ABGV_00 != nullptr) delete ABGV_00;
-    if (PH_2 != nullptr) delete PH_2;
-    if (PH_1 != nullptr) delete PH_1;
-    if (P != nullptr) delete P;
-
-    if (kain != nullptr) delete kain;
-    if (kain_x != nullptr) delete kain_x;
-    if (kain_y != nullptr) delete kain_y;
-}
-
-/** Setup n+1 Fock operator for energy optimization */
-void SCFDriver::setup_np1() {
-    phi_np1 = new OrbitalVector;
-    *phi_np1 = orbital::param_copy(*phi);
-
-    fock_np1 = new FockOperator(T, V);
-    // For Hartree, HF and DFT we need the coulomb part
-    if (wf_method == "hartree" or wf_method == "hf" or wf_method == "dft") {
-        J_np1 = new CoulombOperator(P, phi_np1);
-        fock_np1->setCoulombOperator(J_np1);
-    }
-    // For HF we need the full HF exchange
-    if (wf_method == "hf") {
-        K_np1 = new ExchangeOperator(P, phi);
-        fock_np1->setExchangeOperator(K_np1);
-    }
-    // For DFT we need the XC operator
-    if (wf_method == "dft") {
-        xcfun = setupFunctional(MRDFT::Gradient);
-        XC_np1 = new XCOperator(xcfun, phi_np1);
-        fock_np1->setXCOperator(XC_np1);
-        // For hybrid DFT we need a partial HF exchange
-        if (xcfun->isHybrid()) {
-            K_np1 = new ExchangeOperator(P, phi_np1, xcfun->amountEXX());
-            fock_np1->setExchangeOperator(K_np1);
-        }
-    }
-    fock_np1->build();
-}
-
-void SCFDriver::clear_np1() {
-    if (fock_np1 != nullptr) delete fock_np1;
-    if (XC_np1 != nullptr) delete XC_np1;
-    if (K_np1 != nullptr) delete K_np1;
-    if (J_np1 != nullptr) delete J_np1;
-    if (phi_np1 != nullptr) delete phi_np1;
 }
 
 void SCFDriver::setupInitialGroundState() {
@@ -516,65 +387,15 @@ void SCFDriver::setupInitialGroundState() {
     orbital::print(*phi);
 }
 
-OrbitalOptimizer *SCFDriver::setupOrbitalOptimizer() {
-    auto *optimizer = new OrbitalOptimizer(kain);
-    optimizer->setMaxIterations(scf_max_iter);
-    optimizer->setRotation(scf_rotation);
-    optimizer->setCanonical(scf_canonical);
-    optimizer->setThreshold(scf_orbital_thrs, scf_property_thrs);
-    optimizer->setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
-
-    return optimizer;
-}
-
-EnergyOptimizer *SCFDriver::setupEnergyOptimizer() {
-    auto *optimizer = new EnergyOptimizer();
-    optimizer->setMaxIterations(kin_free_max_iter);
-    optimizer->setCanonical(kin_free_canonical);
-    optimizer->setThreshold(kin_free_orb_thrs, kin_free_prop_thrs);
-    optimizer->setOrbitalPrec(rel_prec, rel_prec);
-
-    return optimizer;
-}
-
-LinearResponseSolver *SCFDriver::setupLinearResponseSolver(bool dynamic) {
-    LinearResponseSolver *lrs = nullptr;
-    if (dynamic) {
-        lrs = new LinearResponseSolver(kain_x, kain_y);
-    } else {
-        lrs = new LinearResponseSolver(kain_x);
-    }
-    lrs->setMaxIterations(rsp_max_iter);
-    lrs->setThreshold(rsp_orbital_thrs, rsp_property_thrs);
-    lrs->setOrbitalPrec(rsp_orbital_prec[0], rsp_orbital_prec[1]);
-
-    return lrs;
-}
-
 void SCFDriver::setupPerturbedOrbitals(const ResponseCalculation &rsp_calc) {
-    if (phi == nullptr) MSG_ERROR("Orbitals not initialized");
-
-    phi_x = new OrbitalVector;
+    molecule->initPerturbedOrbitals(rsp_calc.isDynamic());
+    phi_x = molecule->getOrbitalsX_p();
+    phi_y = molecule->getOrbitalsY_p();
     *phi_x = orbital::param_copy(*phi);
+    *phi_y = orbital::param_copy(*phi);
     if (rsp_start == "MW") *phi_x = orbital::load_orbitals(file_start_x_orbs, rsp_calc.getFileSuffix());
     if (rsp_calc.isDynamic()) {
-        phi_y = new OrbitalVector;
-        *phi_y = orbital::param_copy(*phi);
         if (rsp_start == "MW") *phi_y = orbital::load_orbitals(file_start_y_orbs, rsp_calc.getFileSuffix());
-    } else {
-        phi_y = phi_x;
-    }
-}
-
-void SCFDriver::clearPerturbedOrbitals(bool dynamic) {
-    if (not dynamic) phi_y = nullptr;
-    if (phi_x != nullptr) {
-        delete phi_x;
-        phi_x = nullptr;
-    }
-    if (phi_y != nullptr) {
-        delete phi_y;
-        phi_y = nullptr;
     }
 }
 
@@ -589,31 +410,19 @@ void SCFDriver::setupPerturbedOperators(const ResponseCalculation &rsp_calc) {
     } else if (wf_method == "dft") {
         xFac = xcfun->amountEXX();
         xcfun = setupFunctional(MRDFT::Hessian);
-        dXC = new XCOperator(xcfun, phi, phi_x, phi_y);
+        dXC = std::make_shared<XCOperator>(xcfun, phi, phi_x, phi_y);
     }
     if (xFac > mrcpp::MachineZero) NOT_IMPLEMENTED_ABORT;
 
-    dJ = new CoulombOperator(P, phi, phi_x, phi_y);
+    dJ = std::make_shared<CoulombOperator>(P, phi, phi_x, phi_y);
 
     int d = rsp_calc.dir;
     RankOneTensorOperator<3> &dH = *rsp_calc.pert;
     if (rsp_calc.isDynamic()) NOT_IMPLEMENTED_ABORT;
 
-    d_fock = new FockOperator(nullptr, nullptr, dJ, dK, dXC);
+    d_fock = std::make_shared<FockOperator>(nullptr, nullptr, dJ, dK, dXC);
     d_fock->perturbation() += dH[d];
-    d_fock->build();
-}
-
-void SCFDriver::clearPerturbedOperators() {
-    if (d_fock != nullptr) delete d_fock;
-    if (dXC != nullptr) delete dXC;
-    if (dK != nullptr) delete dK;
-    if (dJ != nullptr) delete dJ;
-
-    d_fock = nullptr;
-    dXC = nullptr;
-    dK = nullptr;
-    dJ = nullptr;
+    d_fock->build(xFac);
 }
 
 void SCFDriver::run() {
@@ -627,7 +436,6 @@ void SCFDriver::run() {
         }
     }
 
-    printEigenvalues(*phi, F);
     molecule->printGeometry();
     molecule->printProperties();
 }
@@ -640,37 +448,38 @@ bool SCFDriver::runGroundState() {
     // Setup initial guess
     setupInitialGroundState();
 
+    auto &F = molecule->getFockMatrix();
+
     // Optimize orbitals
     if (scf_run) {
-        OrbitalOptimizer *solver = setupOrbitalOptimizer();
-        solver->setup(*fock, *phi, F);
-        converged = solver->optimize();
-        solver->clear();
-        delete solver;
+        OrbitalOptimizer solver;
+        solver.setHistory(scf_kain);
+        solver.setMaxIterations(scf_max_iter);
+        solver.setRotation(scf_rotation);
+        solver.setCanonical(scf_canonical);
+        solver.setThreshold(scf_orbital_thrs, scf_property_thrs);
+        solver.setOrbitalPrec(scf_orbital_prec[0], scf_orbital_prec[1]);
+        converged = solver.optimize(*fock, *phi, F);
     } else {
         fock->setup(rel_prec);
         F = (*fock)(*phi, *phi);
         fock->clear();
-    }
 
-    if (scf_canonical) {
-        orbital::diagonalize(rel_prec / 10, *phi, F);
-    } else {
-        ComplexMatrix U = orbital::localize(rel_prec / 10, *phi);
-        F = U * F * U.adjoint();
+        if (scf_canonical) {
+            orbital::diagonalize(rel_prec, *phi, F);
+        } else {
+            orbital::localize(rel_prec, *phi, F);
+        }
     }
 
     // Optimize energy
     if (kin_free_run) {
-        setup_np1();
-
-        EnergyOptimizer *solver = setupEnergyOptimizer();
-        solver->setup(*fock, *phi, F, *fock_np1, *phi_np1);
-        converged = solver->optimize();
-        solver->clear();
-
-        clear_np1();
-        delete solver;
+        EnergyOptimizer solver;
+        solver.setMaxIterations(kin_free_max_iter);
+        solver.setCanonical(kin_free_canonical);
+        solver.setThreshold(kin_free_orb_thrs, kin_free_prop_thrs);
+        solver.setOrbitalPrec(rel_prec, rel_prec);
+        converged = solver.optimize(*fock, *phi, F);
     }
 
     if (scf_write_orbitals) orbital::save_orbitals(*phi, file_final_orbitals);
@@ -686,19 +495,24 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
     setupPerturbedOrbitals(rsp_calc);
     setupPerturbedOperators(rsp_calc);
 
-    d_fock->getXCOperator()->setupDensity(rel_prec); // Luca: maybe this is not the best place to do this....
-    d_fock->getXCOperator()->setupPotential(rel_prec);
-    d_fock->getXCOperator()->setupDensity(rel_prec); // Luca: maybe this is not the best place to do this....
+    auto &F = molecule->getFockMatrix();
+
+    if (d_fock->getXCOperator() != nullptr) {
+        d_fock->getXCOperator()->setupDensity(rel_prec);
+        d_fock->getXCOperator()->setupPotential(rel_prec);
+    }
 
     bool converged = true;
     if (rsp_run) {
-        LinearResponseSolver *solver = setupLinearResponseSolver(dynamic);
-        solver->setupUnperturbed(rsp_orbital_prec[1], fock, phi, &F);
-        solver->setup(d_fock, phi_x);
-        converged = solver->optimize(); // LUCA Here is a fock.setup()
-        solver->clear();
-        solver->clearUnperturbed();
-        delete solver;
+        LinearResponseSolver solver(dynamic, *fock, *phi, F);
+        solver.setHistory(rsp_kain);
+        solver.setMaxIterations(rsp_max_iter);
+        solver.setThreshold(rsp_orbital_thrs, rsp_property_thrs);
+        solver.setOrbitalPrec(rsp_orbital_prec[0], rsp_orbital_prec[1]);
+
+        fock->setup(rsp_orbital_prec[1]);
+        converged = solver.optimize(rsp_calc.freq, *d_fock, *phi_x, *phi_y);
+        fock->clear();
     }
     if (rsp_write_orbitals) {
         orbital::save_orbitals(*phi_x, file_final_x_orbs, rsp_calc.getFileSuffix());
@@ -707,12 +521,12 @@ void SCFDriver::runLinearResponse(const ResponseCalculation &rsp_calc) {
 
     // Compute requested properties
     if (converged) calcLinearResponseProperties(rsp_calc);
-
-    clearPerturbedOperators();
-    clearPerturbedOrbitals(dynamic);
 }
 
 void SCFDriver::calcGroundStateProperties() {
+    auto &F = molecule->getFockMatrix();
+    auto &nuclei = molecule->getNuclei();
+
     if (calc_scf_energy) {
         fock->setup(rel_prec);
         Printer::printHeader(0, "Calculating SCF energy");
@@ -730,7 +544,7 @@ void SCFDriver::calcGroundStateProperties() {
         DoubleVector &el = molecule->getDipoleMoment().getElectronic();
         H_E_dip mu(r_O);
         mu.setup(rel_prec);
-        nuc = mu.trace(*nuclei).real();
+        nuc = mu.trace(nuclei).real();
         el = mu.trace(*phi).real();
         mu.clear();
         timer.stop();
@@ -744,17 +558,17 @@ void SCFDriver::calcGroundStateProperties() {
         DoubleVector vecsum = DoubleVector::Zero(3);
         DoubleVector torque = DoubleVector::Zero(3);
 
-        for (int k = 0; k < nuclei->size(); k++) {
-            const Nucleus &nuc_k = (*nuclei)[k];
+        for (int k = 0; k < nuclei.size(); k++) {
+            const Nucleus &nuc_k = nuclei[k];
             double Z_k = nuc_k.getCharge();
             const mrcpp::Coord<3> &R_k = nuc_k.getCoord();
             Nuclei nucs;
             nucs.push_back("H", R_k);
             NuclearGradientOperator r_rm3(nuc_k, 1.0e-2);
             r_rm3.setup(1.0e-4);
-            for (int l = 0; l < nuclei->size(); l++) {
+            for (int l = 0; l < nuclei.size(); l++) {
                 if (l == k) continue;
-                const Nucleus &nuc_l = (*nuclei)[l];
+                const Nucleus &nuc_l = nuclei[l];
                 double Z_l = nuc_l.getCharge();
                 const mrcpp::Coord<3> &R_l = nuc_l.getCoord();
                 double r_x = (R_k[0] - R_l[0]);
@@ -917,47 +731,6 @@ void SCFDriver::calcLinearResponseProperties(const ResponseCalculation &rsp_calc
     */
 }
 
-void SCFDriver::printEigenvalues(OrbitalVector &Phi, ComplexMatrix &f_mat) {
-    int oldprec = Printer::setPrecision(5);
-    Printer::printHeader(0, "Fock matrix");
-    println(0, f_mat.real());
-    Printer::printSeparator(0, '=', 2);
-
-    Printer::printHeader(0, "Orbital energies");
-    println(0, "    n  spin  occ                            epsilon  ");
-    Printer::printSeparator(0, '-');
-    Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(f_mat.cols());
-    es.compute(f_mat);
-
-    Printer::setPrecision(15);
-    DoubleVector epsilon = es.eigenvalues();
-    for (int i = 0; i < epsilon.size(); i++) {
-        printout(0, setw(5) << i);
-        printout(0, setw(5) << Phi[i].printSpin());
-        printout(0, setw(5) << Phi[i].occ());
-        printout(0, setw(44) << epsilon(i) << endl);
-    }
-    Printer::printSeparator(0, '=', 2);
-    Printer::setPrecision(oldprec);
-}
-
-void SCFDriver::extendRotationMatrix(const OrbitalVector &orbs, ComplexMatrix &O) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
-    int nPaired = orbs.getNPaired();
-    int nAlpha  = orbs.getNAlpha();
-    int nBeta   = orbs.getNBeta();
-    int nCols   = O.cols();
-
-    if (nBeta > nAlpha) {
-        MSG_ERROR("Inconsistent orbital set: too many beta orbitals");
-    }
-
-    O.conservativeResize(nPaired + nAlpha + nBeta, NoChange);
-    O.block(nPaired + nAlpha, 0, nBeta, nCols) = O.block(nPaired, 0, nBeta, nCols);
-    */
-}
-
 /** @brief Build initial density grid for DFT
  *
  * This will refine the density grid in XCFunctional around each nuclear site
@@ -989,8 +762,8 @@ void SCFDriver::setupInitialGrid(mrdft::XCFunctional &func, const Molecule &mol)
  *
  */
 
-mrdft::XCFunctional *SCFDriver::setupFunctional(int order) {
-    auto *fun = new mrdft::XCFunctional(*MRA, dft_spin);
+std::shared_ptr<mrdft::XCFunctional> SCFDriver::setupFunctional(int order) {
+    auto fun = std::make_shared<mrdft::XCFunctional>(*MRA, dft_spin);
     for (int i = 0; i < dft_func_names.size(); i++) {
         double f_coef = dft_func_coefs[i];
         const std::string &f_name = dft_func_names[i];

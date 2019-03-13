@@ -45,20 +45,17 @@ namespace mrchem {
 
 class EnergyOptimizer final : public GroundStateSolver {
 public:
-    void setup(FockOperator &fock,
-               OrbitalVector &phi,
-               ComplexMatrix &F,
-               FockOperator &fock_np1,
-               OrbitalVector &phi_np1);
-    void clear();
+    EnergyOptimizer() = default;
+    ~EnergyOptimizer() override = default;
 
-    bool optimize();
+    bool optimize(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat);
 
-protected:
-    FockOperator *fOper_np1{nullptr};     ///< Next iteration Fock operator (pointer to external object)
-    OrbitalVector *orbitals_np1{nullptr}; ///< Next iteration orbitals (pointer to external object)
-
-    ComplexMatrix calcFockMatrixUpdate(double prec, OrbitalVector &dPhi_n, const ComplexMatrix &L);
+private:
+    ComplexMatrix calcFockMatrixUpdate(double prec,
+                                       FockOperator &F_n,
+                                       OrbitalVector &Phi_np1,
+                                       OrbitalVector &Phi_n,
+                                       OrbitalVector &dPhi_n);
 };
 
 } // namespace mrchem

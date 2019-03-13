@@ -32,6 +32,8 @@
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 
+using QMOperator_p = std::shared_ptr<mrchem::QMOperator>;
+
 namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
@@ -50,11 +52,11 @@ ComplexVector RankZeroTensorOperator::getCoefVector() const {
  *
  * Clears the operator expansion and sets the right hand side as the only component.
  */
-RankZeroTensorOperator &RankZeroTensorOperator::operator=(QMOperator &O) {
+RankZeroTensorOperator &RankZeroTensorOperator::operator=(QMOperator_p O) {
     this->clear();
     this->coef_exp.push_back(1.0);
     QMOperatorVector tmp;
-    tmp.push_back(&O);
+    tmp.push_back(O);
     this->oper_exp.push_back(tmp);
     return *this;
 }
@@ -63,10 +65,10 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator=(QMOperator &O) {
  *
  * Adds a new term to the operator expansion.
  */
-RankZeroTensorOperator &RankZeroTensorOperator::operator+=(QMOperator &O) {
+RankZeroTensorOperator &RankZeroTensorOperator::operator+=(QMOperator_p O) {
     this->coef_exp.push_back(1.0);
     QMOperatorVector tmp;
-    tmp.push_back(&O);
+    tmp.push_back(O);
     this->oper_exp.push_back(tmp);
     return *this;
 }
@@ -75,10 +77,10 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator+=(QMOperator &O) {
  *
  * Adds a new term to the operator expansion with -1 coefficient.
  */
-RankZeroTensorOperator &RankZeroTensorOperator::operator-=(QMOperator &O) {
+RankZeroTensorOperator &RankZeroTensorOperator::operator-=(QMOperator_p O) {
     this->coef_exp.push_back(-1.0);
     QMOperatorVector tmp;
-    tmp.push_back(&O);
+    tmp.push_back(O);
     this->oper_exp.push_back(tmp);
     return *this;
 }
@@ -317,10 +319,9 @@ Orbital RankZeroTensorOperator::applyOperTerm(int n, Orbital inp) {
     if (not mpi::my_orb(inp)) return inp.paramCopy();
 
     Orbital out = inp;
-    for (auto &m : this->oper_exp[n]) {
-        if (m == nullptr) MSG_FATAL("Invalid oper term");
-        QMOperator &O_nm = *m;
-        out = O_nm.apply(out);
+    for (auto O_nm : this->oper_exp[n]) {
+        if (O_nm == nullptr) MSG_FATAL("Invalid oper term");
+        out = O_nm->apply(out);
     }
     return out;
 }

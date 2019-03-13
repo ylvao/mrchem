@@ -25,10 +25,10 @@
 
 #include <fstream>
 
-#include "MRCPP/Printer"
-
 #include "Molecule.h"
 #include "Nucleus.h"
+
+#include "qmfunctions/orbital_utils.h"
 
 using mrcpp::Coord;
 using mrcpp::Printer;
@@ -37,19 +37,12 @@ namespace mrchem {
 
 /** @brief Constructor
  *
- * @param nucs: list of nuclei
  * @param c: total charge
  * @param m: spin multiplicity
- *
- * Nuclei are copied, all properties are uninitialized at this point.
  */
-Molecule::Molecule(const Nuclei &nucs, int c, int m)
+Molecule::Molecule(int c, int m)
         : charge(c)
-        , multiplicity(m)
-        , nuclei(nucs) {
-    calcCenterOfMass();
-    calcCenterOfCharge();
-}
+        , multiplicity(m) {}
 
 /** @brief Constructor
  *
@@ -63,9 +56,6 @@ Molecule::Molecule(const std::string &coord_file, int c, int m)
         : charge(c)
         , multiplicity(m) {
     readCoordinateFile(coord_file);
-    calcCenterOfMass();
-    calcCenterOfCharge();
-    initNuclearProperties(getNuclei().size());
 }
 
 /** @brief Constructor
@@ -80,164 +70,91 @@ Molecule::Molecule(const std::vector<std::string> &coord_str, int c, int m)
         : charge(c)
         , multiplicity(m) {
     readCoordinateString(coord_str);
-    calcCenterOfMass();
-    calcCenterOfCharge();
-    initNuclearProperties(getNuclei().size());
 }
 
 void Molecule::initNuclearProperties(int nNucs) {
     for (auto k = 0; k < nNucs; k++) {
-        this->nmr.push_back(nullptr);
-        this->hfcc.push_back(nullptr);
-        this->sscc.push_back(std::vector<std::unique_ptr<SpinSpinCoupling>>{});
-        for (auto &sscc_k : this->sscc) sscc_k.push_back(nullptr);
+        nmr.push_back(nullptr);
+        hfcc.push_back(nullptr);
+        sscc.push_back(std::vector<std::unique_ptr<SpinSpinCoupling>>{});
+        for (auto l = 0; l < nNucs; l++) sscc[k].push_back(nullptr);
     }
 }
 
-/** @brief Initialize property SCFEnergy */
-void Molecule::initSCFEnergy() {
-    if (this->energy != nullptr) MSG_WARN("SCFEnergy already initialized");
-    this->energy = std::make_unique<SCFEnergy>();
-}
-
-/** @brief Initialize property DipoleMoment */
-void Molecule::initDipoleMoment() {
-    if (this->dipole != nullptr) MSG_WARN("Dipole moment already initialized");
-    this->dipole = std::make_unique<DipoleMoment>();
-}
-
-/** @brief Initialize property QuadrupoleMoment */
-void Molecule::initQuadrupoleMoment() {
-    NOT_IMPLEMENTED_ABORT;
-    /*
-    if (this->quadrupole != nullptr) MSG_WARN("Quadrupole moment already initialized");
-    this->quadrupole = new QuadrupoleMoment();
-    */
-}
-
-/** @brief Initialize property GeometryDerivatives */
-void Molecule::initGeometryDerivatives() {
-    if (this->geomderiv != nullptr) MSG_WARN("Geometry derivatives already initialized");
-    this->geomderiv = std::make_unique<GeometryDerivatives>(this->nuclei.size());
-}
-
-/** @brief Initialize property Magnetizability */
-void Molecule::initMagnetizability() {
-    if (this->magnetizability != nullptr) MSG_WARN("Magnetizability already initialized");
-    this->magnetizability = std::make_unique<Magnetizability>();
-}
-
-/** @brief Initialize property NMRShielding */
-void Molecule::initNMRShielding(int k) {
-    if (this->nmr[k] != nullptr) MSG_ERROR("NMR shielding tensor already initialized");
-    this->nmr[k] = std::make_unique<NMRShielding>(getNucleus(k));
-}
-
-/** @brief Initialize property HyperFineCoupling */
-void Molecule::initHyperFineCoupling(int k) {
-    if (this->hfcc[k] != nullptr) MSG_ERROR("HyperFine coupling tensor already initialized");
-    this->hfcc[k] = std::make_unique<HyperFineCoupling>(getNucleus(k));
-}
-
-/** @brief Initialize property SpinSpinCoupling */
-void Molecule::initSpinSpinCoupling(int k, int l) {
-    if (this->sscc[k][l] != nullptr) MSG_ERROR("Spin-spin coupling tensor already initialized");
-    this->sscc[k][l] = std::make_unique<SpinSpinCoupling>(getNucleus(k), getNucleus(l));
-}
-
-/** @brief Initialize property Polarizability */
-void Molecule::initPolarizability(double omega) {
-    for (auto &i : this->polarizability) {
-        const Polarizability &pol_i = *i;
-        auto omega_i = pol_i.getFrequency();
-        if (std::abs(omega_i - omega) < mrcpp::MachineZero) {
-            MSG_ERROR("Polarizability already initialized");
-            return;
-        }
+void Molecule::initPerturbedOrbitals(bool dynamic) {
+    if (dynamic) {
+        this->orbitals_x = std::make_shared<OrbitalVector>();
+        this->orbitals_y = std::make_shared<OrbitalVector>();
+    } else {
+        this->orbitals_x = std::make_shared<OrbitalVector>();
+        this->orbitals_y = this->orbitals_x;
     }
-    this->polarizability.push_back(std::make_unique<Polarizability>(omega));
-}
-
-/** @brief Initialize property OpticalRotation */
-void Molecule::initOpticalRotation(double omega) {
-    NOT_IMPLEMENTED_ABORT;
-    /*
-    for (auto i = 0; i < this->optical_rotation.size(); i++) {
-        OpticalRotation &optrot_i = *this->optical_rotation[i];
-        auto omega_i = optrot_i.getFrequency();
-        if (fabs(omega_i - omega) < MachineZero) {
-            MSG_ERROR("OpticalRotation already initialized");
-            return;
-        }
-    }
-    OpticalRotation *optrot = new OpticalRotation(omega);
-    this->optical_rotation.push_back(optrot);
-    */
 }
 
 /** @brief Return property SCFEnergy */
 SCFEnergy &Molecule::getSCFEnergy() {
-    if (this->energy == nullptr) MSG_ERROR("Uninitialized SCF energy");
-    return *this->energy;
+    if (energy == nullptr) energy = std::make_unique<SCFEnergy>();
+    return *energy;
 }
 
 /** @brief Return property DipoleMoment */
 DipoleMoment &Molecule::getDipoleMoment() {
-    if (this->dipole == nullptr) MSG_ERROR("Uninitialized dipole moment");
-    return *this->dipole;
+    if (dipole == nullptr) dipole = std::make_unique<DipoleMoment>();
+    return *dipole;
 }
 
 /** @brief Return property QuadrupoleMoment */
 QuadrupoleMoment &Molecule::getQuadrupoleMoment() {
     NOT_IMPLEMENTED_ABORT;
-    /*
-    if (this->quadrupole == nullptr) MSG_ERROR("Uninitialized quadrupole moment");
-    return *this->quadrupole;
-    */
 }
 
 /** @brief Return property GeometryDerivatives */
 GeometryDerivatives &Molecule::getGeometryDerivatives() {
-    if (this->geomderiv == nullptr) MSG_ERROR("Uninitialized geometry derivatives");
-    return *this->geomderiv;
+    NOT_IMPLEMENTED_ABORT;
 }
 
 /** @brief Return property Magnetizability */
 Magnetizability &Molecule::getMagnetizability() {
-    if (this->magnetizability == nullptr) MSG_ERROR("Uninitialized magnetizability");
-    return *this->magnetizability;
+    if (magnetizability == nullptr) magnetizability = std::make_unique<Magnetizability>();
+    return *magnetizability;
 }
 
 /** @brief Return property NMRShielding */
 NMRShielding &Molecule::getNMRShielding(int k) {
-    if (this->nmr[k] == nullptr) MSG_ERROR("Uninitialized NMR shielding tensor " << k);
-    return *this->nmr[k];
+    if (nmr.size() == 0) initNuclearProperties(getNNuclei());
+    if (nmr[k] == nullptr) nmr[k] = std::make_unique<NMRShielding>(nuclei[k]);
+    return *nmr[k];
 }
 
 /** @brief Return property HyperFineCoupling */
 HyperFineCoupling &Molecule::getHyperFineCoupling(int k) {
-    if (this->hfcc[k] == nullptr) MSG_ERROR("Uninitialized hyperfine coupling tensor " << k);
-    return *this->hfcc[k];
+    if (hfcc.size() == 0) initNuclearProperties(getNNuclei());
+    if (hfcc[k] == nullptr) hfcc[k] = std::make_unique<HyperFineCoupling>(nuclei[k]);
+    return *hfcc[k];
 }
 
 /** @brief Return property SpinSpinCoupling */
 SpinSpinCoupling &Molecule::getSpinSpinCoupling(int k, int l) {
-    if (this->sscc[k][l] == nullptr) MSG_ERROR("Uninitialized spin-spin coupling tensor " << k << " " << l);
-    return *this->sscc[k][l];
+    if (sscc.size() == 0) initNuclearProperties(getNNuclei());
+    if (sscc[k][l] == nullptr) sscc[k][l] = std::make_unique<SpinSpinCoupling>(nuclei[k], nuclei[l]);
+    return *sscc[k][l];
 }
 
 /** @brief Return property Polarizability */
 Polarizability &Molecule::getPolarizability(double omega) {
     auto idx = -1;
-    for (auto i = 0; i < this->polarizability.size(); i++) {
-        auto omega_i = this->polarizability[i]->getFrequency();
+    for (auto i = 0; i < polarizability.size(); i++) {
+        auto omega_i = polarizability[i]->getFrequency();
         if (std::abs(omega_i - omega) < mrcpp::MachineZero) {
             idx = i;
             break;
         }
     }
-    if (idx < 0) MSG_ERROR("Uninitialized polarizability");
-    return *(this->polarizability[idx]);
+    if (idx < 0) {
+        polarizability.push_back(std::make_unique<Polarizability>(omega));
+        idx = polarizability.size() - 1;
+    }
+    return *polarizability[idx];
 }
 
 /** @brief Return property OpticalRotation */
@@ -248,38 +165,42 @@ OpticalRotation &Molecule::getOpticalRotation(double omega) {
 /** @brief Return number of electrons */
 int Molecule::getNElectrons() const {
     auto totZ = 0;
-    for (auto i = 0; i < getNNuclei(); i++) totZ += getNucleus(i).getElement().getZ();
+    for (auto i = 0; i < getNNuclei(); i++) totZ += getNuclei()[i].getElement().getZ();
     return totZ - this->charge;
 }
 
 /** @brief Compute nuclear center of mass */
-void Molecule::calcCenterOfMass() {
-    this->COM.fill(0.0);
+Coord<3> Molecule::calcCenterOfMass() const {
+    Coord<3> COM;
+    COM.fill(0.0);
 
     auto M = 0.0;
     for (auto i = 0; i < getNNuclei(); i++) {
-        const auto &nuc = getNucleus(i);
+        const auto &nuc = getNuclei()[i];
         const auto &r_i = nuc.getCoord();
         const auto m_i = nuc.getElement().getMass();
-        for (auto d = 0; d < 3; d++) this->COM[d] += r_i[d] * m_i;
+        for (auto d = 0; d < 3; d++) COM[d] += r_i[d] * m_i;
         M += m_i;
     }
-    for (auto d = 0; d < 3; d++) this->COM[d] *= 1.0 / M;
+    for (auto d = 0; d < 3; d++) COM[d] *= 1.0 / M;
+    return COM;
 }
 
 /** @brief Compute nuclear center of charge */
-void Molecule::calcCenterOfCharge() {
-    this->COC.fill(0.0);
+Coord<3> Molecule::calcCenterOfCharge() const {
+    Coord<3> COC;
+    COC.fill(0.0);
 
     auto Z = 0.0;
     for (auto i = 0; i < getNNuclei(); i++) {
-        const auto &nuc = getNucleus(i);
+        const auto &nuc = getNuclei()[i];
         const auto &r_i = nuc.getCoord();
         const auto z_i = nuc.getElement().getZ();
-        for (auto d = 0; d < 3; d++) this->COC[d] += r_i[d] * z_i;
+        for (auto d = 0; d < 3; d++) COC[d] += r_i[d] * z_i;
         Z += z_i;
     }
-    for (auto d = 0; d < 3; d++) this->COC[d] *= 1.0 / Z;
+    for (auto d = 0; d < 3; d++) COC[d] *= 1.0 / Z;
+    return COC;
 }
 
 /** @brief Read nuclear coordinates from xyz file
@@ -339,7 +260,7 @@ void Molecule::printGeometry() const {
     auto oldPrec = Printer::setPrecision(5);
 
     for (auto i = 0; i < getNNuclei(); i++) {
-        const auto &nuc = getNucleus(i);
+        const auto &nuc = getNuclei()[i];
         const auto &coord = nuc.getCoord();
         std::stringstream symbol;
         symbol << nuc.getElement().getSymbol();
@@ -352,9 +273,10 @@ void Molecule::printGeometry() const {
     }
     Printer::printSeparator(0, '-');
     printout(0, " Center of mass: ");
-    printout(0, std::setw(14) << this->COM[0]);
-    printout(0, std::setw(14) << this->COM[1]);
-    printout(0, std::setw(14) << this->COM[2] << std::endl);
+    Coord<3> COM = calcCenterOfMass();
+    printout(0, std::setw(14) << COM[0]);
+    printout(0, std::setw(14) << COM[1]);
+    printout(0, std::setw(14) << COM[2] << std::endl);
     Printer::setPrecision(oldPrec);
     Printer::printSeparator(0, '=', 2);
 }
@@ -364,6 +286,10 @@ void Molecule::printGeometry() const {
  * Only properties that have been initialized will be printed.
  */
 void Molecule::printProperties() const {
+    const auto &Phi = getOrbitals();
+    const auto &F_mat = getFockMatrix();
+    orbital::print_eigenvalues(Phi, F_mat);
+
     if (this->energy != nullptr) println(0, *this->energy);
     if (this->dipole != nullptr) println(0, *this->dipole);
     if (this->geomderiv != nullptr) println(0, *this->geomderiv);

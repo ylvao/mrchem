@@ -14,17 +14,17 @@ using mrcpp::Timer;
 namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
-QMMomentum::QMMomentum(int d, DerivativeOperator<3> &D)
+QMMomentum::QMMomentum(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
         : QMOperator()
         , apply_dir(d)
-        , derivative(&D) {}
+        , derivative(D) {}
 
 Orbital QMMomentum::apply(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
     if (this->derivative == nullptr) MSG_ERROR("No derivative operator");
 
-    int dir = this->apply_dir;
-    DerivativeOperator<3> &D = *this->derivative;
+    auto dir = this->apply_dir;
+    auto &D = *this->derivative;
 
     Orbital out = inp.paramCopy();
 

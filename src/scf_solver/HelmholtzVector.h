@@ -46,8 +46,8 @@ public:
     DoubleMatrix getLambdaMatrix() const { return this->lambda.asDiagonal(); }
 
     OrbitalVector rotate(const ComplexMatrix &F_mat, OrbitalVector &Phi) const;
+    OrbitalVector apply(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const;
     OrbitalVector operator()(OrbitalVector &Phi) const;
-    OrbitalVector operator()(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const;
 
 private:
     double prec;         ///< Precision for construction and application of Helmholtz operators

@@ -38,6 +38,8 @@
 #include <string>
 #include <vector>
 
+#include "MRCPP/Printer"
+
 #include "Nucleus.h"
 #include "properties/DipoleMoment.h"
 #include "properties/GeometryDerivatives.h"
@@ -48,6 +50,7 @@
 #include "properties/SCFEnergy.h"
 #include "properties/SpinSpinCoupling.h"
 #include "properties/properties_fwd.h"
+#include "qmfunctions/Orbital.h"
 
 /** @class Molecule
  *
@@ -62,7 +65,7 @@ namespace mrchem {
 
 class Molecule final {
 public:
-    explicit Molecule(const Nuclei &nucs, int c = 0, int m = 1);
+    explicit Molecule(int c = 0, int m = 1);
     explicit Molecule(const std::string &coord_file, int c = 0, int m = 1);
     explicit Molecule(const std::vector<std::string> &coord_str, int c = 0, int m = 1);
     Molecule(const Molecule &mol) = delete;
@@ -73,27 +76,32 @@ public:
     int getNNuclei() const { return this->nuclei.size(); }
     int getNElectrons() const;
 
-    const mrcpp::Coord<3> &getCenterOfMass() const { return this->COM; }
-    const mrcpp::Coord<3> &getCenterOfCharge() const { return this->COC; }
+    void setCharge(int c) { this->charge = c; }
+    void setMultiplicity(int m) { this->multiplicity = m; }
 
-    Nuclei &getNuclei() { return this->nuclei; }
-    Nucleus &getNucleus(int i) { return this->nuclei[i]; }
-    const Nuclei &getNuclei() const { return this->nuclei; }
-    const Nucleus &getNucleus(int i) const { return this->nuclei[i]; }
+    mrcpp::Coord<3> calcCenterOfMass() const;
+    mrcpp::Coord<3> calcCenterOfCharge() const;
+
+    auto &getNuclei() { return this->nuclei; }
+    auto &getOrbitals() { return *this->orbitals_0; }
+    auto &getOrbitalsX() { return *this->orbitals_x; }
+    auto &getOrbitalsY() { return *this->orbitals_y; }
+    auto &getFockMatrix() { return this->fock_matrix; }
+
+    const auto &getNuclei() const { return this->nuclei; }
+    const auto &getOrbitals() const { return *this->orbitals_0; }
+    const auto &getOrbitalsX() const { return *this->orbitals_x; }
+    const auto &getOrbitalsY() const { return *this->orbitals_y; }
+    const auto &getFockMatrix() const { return this->fock_matrix; }
+
+    auto getOrbitals_p() const { return this->orbitals_0; }
+    auto getOrbitalsX_p() const { return this->orbitals_x; }
+    auto getOrbitalsY_p() const { return this->orbitals_y; }
 
     void printGeometry() const;
     void printProperties() const;
 
-    void initSCFEnergy();
-    void initDipoleMoment();
-    void initGeometryDerivatives();
-    void initMagnetizability();
-    void initQuadrupoleMoment();
-    void initNMRShielding(int k);
-    void initHyperFineCoupling(int k);
-    void initSpinSpinCoupling(int k, int l);
-    void initPolarizability(double omega);
-    void initOpticalRotation(double omega);
+    void initPerturbedOrbitals(bool dynamic);
 
     SCFEnergy &getSCFEnergy();
     DipoleMoment &getDipoleMoment();
@@ -107,27 +115,26 @@ public:
     OpticalRotation &getOpticalRotation(double omega);
 
 protected:
-    int charge;
-    int multiplicity;
-    Nuclei nuclei;
+    int charge{0};
+    int multiplicity{1};
+    Nuclei nuclei{};
+    ComplexMatrix fock_matrix{};
+
+    std::shared_ptr<OrbitalVector> orbitals_0{std::make_shared<OrbitalVector>()};
+    std::shared_ptr<OrbitalVector> orbitals_x{nullptr};
+    std::shared_ptr<OrbitalVector> orbitals_y{nullptr};
 
     // Properties
-    mrcpp::Coord<3> COM{};
-    mrcpp::Coord<3> COC{};
-    std::unique_ptr<SCFEnergy> energy{};
-    std::unique_ptr<DipoleMoment> dipole{};
-    std::unique_ptr<GeometryDerivatives> geomderiv{};
-    std::unique_ptr<Magnetizability> magnetizability{};
+    std::unique_ptr<SCFEnergy> energy{nullptr};
+    std::unique_ptr<DipoleMoment> dipole{nullptr};
+    std::unique_ptr<GeometryDerivatives> geomderiv{nullptr};
+    std::unique_ptr<Magnetizability> magnetizability{nullptr};
     std::vector<std::unique_ptr<Polarizability>> polarizability{};
     std::vector<std::unique_ptr<NMRShielding>> nmr{};
     std::vector<std::unique_ptr<HyperFineCoupling>> hfcc{};
     std::vector<std::vector<std::unique_ptr<SpinSpinCoupling>>> sscc{};
 
-    void calcCenterOfMass();
-    void calcCenterOfCharge();
-
     void initNuclearProperties(int nNucs);
-
     void readCoordinateFile(const std::string &file);
     void readCoordinateString(const std::vector<std::string> &coord_str);
 };

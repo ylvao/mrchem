@@ -17,28 +17,34 @@ namespace mrchem {
 
 class XCOperator final : public RankZeroTensorOperator {
 public:
-    XCOperator(mrdft::XCFunctional *F, OrbitalVector *Phi = nullptr)
-            : potential(new XCPotentialD1(F, Phi)) {
-        RankZeroTensorOperator &XC = (*this);
-        XC = *this->potential;
-    }
-    XCOperator(mrdft::XCFunctional *F, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y)
-            : potential(new XCPotentialD2(F, Phi, X, Y)) {
-        RankZeroTensorOperator &XC = (*this);
-        XC = *this->potential;
-    }
-    ~XCOperator() override {
-        if (this->potential != nullptr) delete this->potential;
-    }
+    XCOperator(std::shared_ptr<mrdft::XCFunctional> F, std::shared_ptr<OrbitalVector> Phi = nullptr) {
+        potential = std::make_shared<XCPotentialD1>(F, Phi);
 
-    double getEnergy() { return this->potential->getEnergy(); }
-    int getOrder() { return this->potential->getOrder(); }
-    void setupDensity(double prec = -1.0) { this->potential->setupDensity(prec); }
-    void setupPotential(double prec = -1.0) { this->potential->setupPotential(prec); }
-    mrcpp::FunctionTree<3> &getDensity(int spin) { return this->potential->getDensity(spin); }
+        // Invoke operator= to assign *this operator
+        RankZeroTensorOperator &XC = (*this);
+        XC = potential;
+    }
+    XCOperator(std::shared_ptr<mrdft::XCFunctional> F,
+               std::shared_ptr<OrbitalVector> Phi,
+               std::shared_ptr<OrbitalVector> X,
+               std::shared_ptr<OrbitalVector> Y) {
+        potential = std::make_shared<XCPotentialD2>(F, Phi, X, Y);
+
+        // Invoke operator= to assign *this operator
+        RankZeroTensorOperator &XC = (*this);
+        XC = potential;
+    }
+    ~XCOperator() override = default;
+
+    void setupDensity(double prec = -1.0) { potential->setupDensity(prec); }
+    void setupPotential(double prec = -1.0) { potential->setupPotential(prec); }
+
+    double getEnergy() { return potential->getEnergy(); }
+    mrcpp::FunctionTree<3> &getDensity(int spin) { return potential->getDensity(spin); }
+    std::shared_ptr<mrdft::XCFunctional> &getFunctional() { return potential->getFunctional(); }
 
 private:
-    XCPotential *potential;
+    std::shared_ptr<XCPotential> potential{nullptr};
 };
 
 } // namespace mrchem

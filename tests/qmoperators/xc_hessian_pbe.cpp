@@ -49,7 +49,16 @@ TEST_CASE("XCHessianPBE", "[xc_hessian_pbe]") {
     std::vector<int> ls;
     std::vector<int> ms;
 
-    OrbitalVector Phi;
+    auto Phi_p = std::make_shared<OrbitalVector>();
+    auto X_p = std::make_shared<OrbitalVector>();
+    auto fun_p = std::make_shared<mrdft::XCFunctional>(*MRA, false);
+    fun_p->setFunctional("PBE", 1.0);
+    fun_p->setUseGamma(true);
+    fun_p->setDensityCutoff(1.0e-10);
+    fun_p->evalSetup(MRDFT::Hessian);
+    XCOperator V(fun_p, Phi_p, X_p, X_p);
+
+    OrbitalVector &Phi = *Phi_p;
     ns.push_back(1);
     ls.push_back(0);
     ms.push_back(0);
@@ -71,7 +80,7 @@ TEST_CASE("XCHessianPBE", "[xc_hessian_pbe]") {
     std::vector<int> ls_x;
     std::vector<int> ms_x;
 
-    OrbitalVector Phi_x;
+    OrbitalVector &Phi_x = *X_p;
     ns_x.push_back(2);
     ls_x.push_back(0);
     ms_x.push_back(0);
@@ -96,13 +105,6 @@ TEST_CASE("XCHessianPBE", "[xc_hessian_pbe]") {
     E_P(0, 1) = -0.0234437207;
     E_P(1, 0) = -0.0234437207;
     E_P(1, 1) = 0.0061055193;
-
-    mrdft::XCFunctional fun(*MRA, false);
-    fun.setFunctional("PBE", 1.0);
-    fun.setUseGamma(true);
-    fun.setDensityCutoff(1.0e-10);
-    fun.evalSetup(MRDFT::Hessian);
-    XCOperator V(&fun, &Phi, &Phi_x, &Phi_x);
 
     V.setup(prec);
     V.setupDensity(prec);

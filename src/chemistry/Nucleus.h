@@ -78,9 +78,9 @@ private:
 class Nuclei : public std::vector<Nucleus> {
 public:
     void push_back(const Nucleus &nuc) { std::vector<Nucleus>::push_back(nuc); }
-    void push_back(const char *sym, const mrcpp::Coord<3> &r) {
+    void push_back(const std::string &atom, const mrcpp::Coord<3> &xyz) {
         PeriodicTable pt;
-        Nucleus nuc(pt.getElement(sym), r);
+        Nucleus nuc(pt.getElement(atom.c_str()), xyz);
         std::vector<Nucleus>::push_back(nuc);
     }
 };

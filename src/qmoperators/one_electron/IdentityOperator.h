@@ -10,7 +10,7 @@ public:
     QMIdentity()
             : QMOperator() {}
 
-protected:
+private:
     void setup(double prec) override { setApplyPrec(prec); }
     void clear() override { clearApplyPrec(); }
 
@@ -21,6 +21,9 @@ protected:
 class IdentityOperator final : public RankZeroTensorOperator {
 public:
     IdentityOperator() {
+        I = std::make_shared<QMIdentity>();
+
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &h = (*this);
         h = I;
     }
@@ -35,8 +38,8 @@ public:
     using RankZeroTensorOperator::operator();
     using RankZeroTensorOperator::dagger;
 
-protected:
-    QMIdentity I;
+private:
+    std::shared_ptr<QMIdentity> I;
 };
 
 } // namespace mrchem

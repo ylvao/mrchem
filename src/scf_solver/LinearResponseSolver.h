@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "SCF.h"
+#include "SCFSolver.h"
 
 /** @class LinearResponseSolver
  *
@@ -34,43 +34,22 @@
 namespace mrchem {
 
 class FockOperator;
-class Accelerator;
 
-class LinearResponseSolver final : public SCF {
+class LinearResponseSolver final : public SCFSolver {
 public:
-    LinearResponseSolver(Accelerator *k_x = nullptr, Accelerator *k_y = nullptr);
+    LinearResponseSolver(bool dyn, FockOperator &F_0, OrbitalVector &Phi_0, ComplexMatrix &F_mat_0);
+    ~LinearResponseSolver() override = default;
 
-    void setupUnperturbed(double prec, FockOperator *fock, OrbitalVector *Phi, ComplexMatrix *F);
-    void clearUnperturbed();
-
-    void setup(FockOperator *fock, OrbitalVector *X);
-    void setup(double omega, FockOperator *fock, OrbitalVector *X, OrbitalVector *Y);
-    void clear();
-
-    bool optimize();
+    bool optimize(double omega, FockOperator &F_1, OrbitalVector &X, OrbitalVector &Y);
 
 protected:
     bool dynamic{false};
-    double frequency{0.0};
 
-    FockOperator *fOper_0{nullptr};
-    FockOperator *fOper_1{nullptr};
-
-    ComplexMatrix *fMat_0{nullptr};
-    ComplexMatrix *fMat_x{nullptr};
-    ComplexMatrix *fMat_y{nullptr};
-
-    OrbitalVector *orbitals_0{nullptr};
-    OrbitalVector *orbitals_x{nullptr};
-    OrbitalVector *orbitals_y{nullptr};
-
-    Accelerator *kain_x;
-    Accelerator *kain_y;
-
-    OrbitalVector setupHelmholtzArguments(OrbitalVector &dPhi, const ComplexMatrix &M, bool adjoint);
+    FockOperator *f_oper_0{nullptr};
+    ComplexMatrix *f_mat_0{nullptr};
+    OrbitalVector *phi_0{nullptr};
 
     void printProperty() const;
-    double calcProperty();
 };
 
 } // namespace mrchem

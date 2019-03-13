@@ -17,34 +17,39 @@ namespace mrchem {
 
 class CoulombOperator final : public RankZeroTensorOperator {
 public:
-    CoulombOperator(mrcpp::PoissonOperator *P)
-            : potential(new CoulombPotential(P)) {
-        RankZeroTensorOperator &J = (*this);
-        J = *this->potential;
-    }
-    CoulombOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi)
-            : potential(new CoulombPotentialD1(P, Phi)) {
-        RankZeroTensorOperator &J = (*this);
-        J = *this->potential;
-    }
-    CoulombOperator(mrcpp::PoissonOperator *P, OrbitalVector *Phi, OrbitalVector *X, OrbitalVector *Y)
-            : potential(new CoulombPotentialD2(P, Phi, X, Y)) {
-        RankZeroTensorOperator &J = (*this);
-        J = *this->potential;
-    }
-    ~CoulombOperator() override {
-        if (this->potential != nullptr) delete this->potential;
-    }
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P) {
+        potential = std::make_shared<CoulombPotential>(P);
 
-    Density &getDensity() {
-        if (potential != nullptr) return this->potential->getDensity();
-        MSG_FATAL("Coulomb operator not properly initialized");
+        // Invoke operator= to assign *this operator
+        RankZeroTensorOperator &J = (*this);
+        J = potential;
     }
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi) {
+        potential = std::make_shared<CoulombPotentialD1>(P, Phi);
+
+        // Invoke operator= to assign *this operator
+        RankZeroTensorOperator &J = (*this);
+        J = potential;
+    }
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
+                    std::shared_ptr<OrbitalVector> Phi,
+                    std::shared_ptr<OrbitalVector> X,
+                    std::shared_ptr<OrbitalVector> Y) {
+        potential = std::make_shared<CoulombPotentialD2>(P, Phi, X, Y);
+
+        // Invoke operator= to assign *this operator
+        RankZeroTensorOperator &J = (*this);
+        J = potential;
+    }
+    ~CoulombOperator() override = default;
+
+    auto &getPoisson() { return this->potential->getPoisson(); }
+    auto &getDensity() { return this->potential->getDensity(); }
 
     ComplexDouble trace(OrbitalVector &Phi) { return 0.5 * RankZeroTensorOperator::trace(Phi); }
 
 private:
-    CoulombPotential *potential;
+    std::shared_ptr<CoulombPotential> potential{nullptr};
 };
 
 } // namespace mrchem

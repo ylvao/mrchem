@@ -7,10 +7,10 @@
 using mrcpp::Printer;
 using mrcpp::Timer;
 
-namespace mrchem {
+using PoissonOperator = mrcpp::PoissonOperator;
+using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
 
-CoulombPotentialD1::CoulombPotentialD1(mrcpp::PoissonOperator *P, OrbitalVector *Phi)
-        : CoulombPotential(P, Phi) {}
+namespace mrchem {
 
 /** @brief compute electron density
  *

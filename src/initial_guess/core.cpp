@@ -94,7 +94,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
 
     // Make Fock operator contributions
-    mrcpp::ABGVOperator<3> D(*MRA, 0.5, 0.5);
+    auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
     KineticOperator T(D);
     NuclearOperator V(mol.getNuclei(), prec);
 

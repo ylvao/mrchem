@@ -26,21 +26,23 @@ private:
 
 class NuclearOperator final : public RankZeroTensorOperator {
 public:
-    NuclearOperator(const Nuclei &nucs, double prec)
-            : r_m1(nucs, prec) {
+    NuclearOperator(const Nuclei &nucs, double prec) {
+        r_m1 = std::make_shared<NuclearPotential>(nucs, prec);
+
+        // Invoke operator= to assign *this operator
         RankZeroTensorOperator &v = (*this);
         v = r_m1;
     }
 
-    Nuclei &getNuclei() { return this->r_m1.getNuclei(); }
-    const Nuclei &getNuclei() const { return this->r_m1.getNuclei(); }
+    Nuclei &getNuclei() { return this->r_m1->getNuclei(); }
+    const Nuclei &getNuclei() const { return this->r_m1->getNuclei(); }
 
     double trace(const Nuclei &nucs);
 
     using RankZeroTensorOperator::trace;
 
 private:
-    NuclearPotential r_m1;
+    std::shared_ptr<NuclearPotential> r_m1{nullptr};
 };
 
 } // namespace mrchem
