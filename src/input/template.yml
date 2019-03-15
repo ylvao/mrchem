@@ -1,0 +1,460 @@
+keywords:
+  - keyword: rel_prec
+    type: float
+    default: -1.0
+    predicates:
+      - '1.0e-12 < value < 1.0'
+    documentation: |
+      Overall relative precision in the calculation.
+  - keyword: nuc_prec
+    type: float
+    default: -1.0
+    predicates:
+      - '1.0e-12 < value < 1.0'
+    documentation: |
+      Precision used in the smoothing and projection of the nuclear potential.
+  - keyword: abs_prec
+    type: float
+    predicates:
+      - '1.0e-12 < value < 1.0'
+    documentation: |
+      Overall absolute precision in the calculation.
+  - keyword: est_norm
+    type: float
+    default: 1.0
+    predicates:
+      - '1.0 <= value < 1.0e12'
+    documentation: |
+      Norm used in translation from abs_prec to rel_prec.
+  - keyword: energy_unit
+    type: str
+    predicates:
+      - "value == 'au' or value == 'kcal' or value == 'kJ'"
+    documentation: |
+      Unit used in the translation from abs_prec to rel_prec.
+  - keyword: printlevel
+    type: int
+    default: 0
+    predicates:
+      - '0 <= value'
+    documentation: |
+      Level of detail in the written output
+  - keyword: teletype
+    type: bool
+    default: false
+    documentation: |
+      Write output to file called mrchem-{mpi-rank}.out.
+sections:
+  - section: mpi
+    documentation: |
+      Define MPI related parameters.
+    keywords:
+      - keyword: numerically_exact
+        type: bool
+        default: false
+        documentation: |
+          This will use MPI algorithms that guarantees that the output is
+          invariant wrt the number of MPI processes.
+      - keyword: shared_memory_size
+        type: int
+        default: 10000
+        documentation: |
+          Size (MB) of the MPI shared memory blocks of each shared function.
+      - keyword: share_nuclear_potential
+        type: bool
+        default: false
+        documentation: |
+          This will use MPI shared memory for the nuclear potential.
+      - keyword: share_coulomb_density
+        type: bool
+        default: false
+        documentation: |
+          This will use MPI shared memory for the Coulomb density.
+      - keyword: share_coulomb_potential
+        type: bool
+        default: false
+        documentation: |
+          This will use MPI shared memory for the Coulomb potential.
+      - keyword: share_xc_density
+        type: bool
+        default: false
+        documentation: |
+          This will use MPI shared memory for the exchange-correlation density.
+      - keyword: share_xc_potential
+        type: bool
+        default: false
+        documentation: |
+          This will use MPI shared memory for the exchange-correlation potential.
+  - section: mra
+    documentation: |
+      Define polynomial basis and computational domain.
+    keywords:
+      - keyword: order
+        type: int
+        predicates:
+          - '1 < value < 20'
+        documentation: |
+          Polynomial order of multiwavelet basis.
+      - keyword: basis_type
+        type: str
+        default: 'interpolating'
+        predicates:
+          - "value == 'interpolating' or value == 'legendre'"
+        documentation: |
+          Polynomial type of multiwavelet basis.
+      - keyword: min_scale
+        type: int
+        default: 0
+        predicates:
+          - '-32 < value < 32'
+        documentation: |
+          Root scale of multiresolution analysis. Size of root boxes is 2^{-min_scale}.
+      - keyword: max_scale
+        type: int
+        default: 20
+        predicates:
+          - '-32 < value < 32'
+        documentation: |
+          Maximum refinement scale of multiresolution analysis.
+      - keyword: boxes
+        type: List[int]
+        default: [1,1,1]
+        predicates:
+          - '0 < value[0] < 8'
+          - '0 < value[1] < 8'
+          - '0 < value[2] < 8'
+        documentation: |
+          Number of root boxes.
+      - keyword: corner
+        type: List[int]
+        default: [0,0,0]
+        documentation: |
+          Translation of the first root box.
+      - keyword: center_of_mass
+        type: bool
+        default: false
+        documentation: |
+          Set gauge origin to center of mass.
+      - keyword: center_of_charge
+        type: bool
+        default: false
+        documentation: |
+          Set gauge origin to center of charge.
+      - keyword: gauge_origin
+        type: List[float]
+        default: [0.0, 0.0, 0.0]
+        documentation: |
+          Gauge origin.
+  - section: derivatives
+    documentation: |
+      Define various derivative operators used in the code.
+    keywords:
+      - keyword: kinetic
+        type: str
+        documentation: |
+          Derivative used in kinetic operator.
+      - keyword: h_orb
+        type: str
+        documentation: |
+          Derivative used in magnetic dipole operator.
+      - keyword: h_pso
+        type: str
+        documentation: |
+          Derivative used in paramagnetic spin-orbit operator.
+      - keyword: dft
+        type: str
+        documentation: |
+          Derivative used in exchange-correlation operator.
+  - section: molecule
+    documentation: |
+      Define molecule.
+    keywords:
+      - keyword: charge
+        type: int
+        default: 0
+        documentation: |
+          Total charge of molecule. 
+      - keyword: multiplicity
+        type: int
+        default: 1
+        documentation: |
+          Spin multiplicity of molecule. 
+      - keyword: angstrom
+        type: bool
+        default: false
+        documentation: |
+          Coordinates given in angstrom rather than bohr.
+      - keyword: coords
+        type: str
+        documentation: |
+          Coordinates in xyz format.
+  - section: wavefunction
+    documentation: |
+      Define the wavefunction method.
+    keywords:
+      - keyword: method
+        type: str
+        documentation: |
+          Wavefunction method (Hartree-Fock or DFT).
+      - keyword: restricted
+        type: bool
+        default: true
+        documentation: |
+          Use spin restricted wavefunction.
+  - section: dft
+    documentation: |
+      Define the exchange-correlation functional in case of DFT.
+    keywords:
+      - keyword: spin
+        type: bool
+        default: false
+        documentation: |
+          Use spin separated density functionals.
+      - keyword: use_gamma
+        type: bool
+        default: false
+        documentation: |
+          Express functional derivative through the gradient invariant gamma.
+      - keyword: density_cutoff
+        type: float
+        default: 0.0
+        documentation: |
+          Hard cutoff for passing density values to XCFun.
+      - keyword: functionals
+        type: str
+        documentation: |
+          List of density functionals.
+  - section: properties
+    documentation: |
+      Provide a list of properties to compute.
+    keywords:
+      - keyword: scf_energy
+        type: bool
+        default: false
+        documentation: |
+          Compute SCF energy.
+      - keyword: dipole_moment
+        type: bool
+        default: false
+        documentation: |
+          Compute dipole moment.
+      - keyword: quadrupole_moment
+        type: bool
+        default: false
+        documentation: |
+          Compute quadrupole moment.
+      - keyword: geometry_derivative
+        type: bool
+        default: false
+        documentation: |
+          Compute geometric derivative.
+      - keyword: polarizability
+        type: bool
+        default: false
+        documentation: |
+          Compute polarizability tensor.
+      - keyword: hyperpolarizability
+        type: bool
+        default: false
+        documentation: |
+          Compute hyperpolarizability tensor.
+      - keyword: optical_rotation
+        type: bool
+        default: false
+        documentation: |
+          Compute optical rotation tensor.
+      - keyword: magnetizability
+        type: bool
+        default: false
+        documentation: |
+          Compute magnetizability tensor.
+      - keyword: nmr_shielding
+        type: bool
+        default: false
+        documentation: |
+          Compute NMR shielding tensors.
+      - keyword: spin_spin_coupling
+        type: bool
+        default: false
+        documentation: |
+          Compute spin-spin coupling tensors.
+      - keyword: hyperfine_coupling
+        type: bool
+        default: false
+        documentation: |
+          Compute hyperfine coupling tensors.
+  - section: externalfield
+    documentation: |
+      Define an external electromagnetic field.
+    keywords:
+      - keyword: electric_run
+        type: bool
+        default: false
+        documentation: |
+          Add external electric field.
+      - keyword: electric_field
+        type: List[float]
+        default: [0.0, 0.0, 0.0]
+        documentation: |
+          Strength of external electric field.
+      - keyword: magnetic_run
+        type: bool
+        default: false
+        documentation: |
+          Add external magnetic field.
+      - keyword: magnetic_field
+        type: List[float]
+        default: [0.0, 0.0, 0.0]
+        documentation: |
+          Strength of external magnetic field.
+  - section: polarizability
+    documentation: |
+      Give details regarding the polarizability calculation.
+    keywords:
+      - keyword: velocity
+        type: bool
+        default: false
+        documentation: |
+          Use velocity gauge in calculation of polarizability tensor.
+      - keyword: frequency
+        type: List[float]
+        default: []
+        documentation: |
+          List of external field frequencies.
+      - keyword: wavelength
+        type: List[float]
+        default: []
+        documentation: |
+          List of external field wavelengths.
+  - section: scf
+    documentation: |
+      Includes parameters related to the ground state SCF orbital optimization
+      (algorithm using explicit calculation of kinetic energy matrix).
+    keywords:
+      - keyword: run
+        type: bool
+        default: true
+        documentation: |
+          Run SCF solver.
+      - keyword: max_iter
+        type: int
+        default: -1
+        documentation: |
+          Maximum number of SCF iterations.
+      - keyword: kain
+        type: int
+        default: 0
+        documentation: |
+          Length of KAIN iterative history.
+      - keyword: rotation
+        type: int
+        default: 0
+        documentation: |
+          Number of iterations between each diagonalization/localization.
+      - keyword: canonical
+        type: bool
+        default: true
+        documentation: |
+          Use canonical or localized orbitals.
+      - keyword: orbital_thrs
+        type: float
+        documentation: |
+          Convergence threshold for orbtial residuals.
+      - keyword: property_thrs
+        type: float
+        documentation: |
+          Convergence threshold for SCF energy.
+      - keyword: orbital_prec
+        type: List[float]
+        default: [-1.0, -1.0]
+        documentation: |
+          Incremental precision in SCF iterations [initial, final]
+      - keyword: initial_guess
+        type: str
+        documentation: |
+          Type of initial guess.
+      - keyword: write_orbitals
+        type: bool
+        default: false
+        documentation: |
+          Write converged orbitals to disk.
+  - section: kineticfree
+    documentation: |
+      Includes parameters related to the ground state SCF optimization
+      (kinetic free algorithm).
+    keywords:
+      - keyword: run
+        type: bool
+        default: true
+        documentation: |
+          Run kinetic free SCF solver.
+      - keyword: max_iter
+        type: int
+        default: -1
+        documentation: |
+          Maximum number of SCF iterations.
+      - keyword: canonical
+        type: bool
+        default: true
+        documentation: |
+          Use canonical or localized orbitals.
+      - keyword: orbital_thrs
+        type: float
+        documentation: |
+          Convergence threshold for orbtial residuals.
+      - keyword: property_thrs
+        type: float
+        documentation: |
+          Convergence threshold for SCF energy.
+  - section: response
+    documentation: |
+      Includes parameters related to the response SCF optimization.
+    keywords:
+      - keyword: run
+        type: bool
+        default: true
+        documentation: |
+          Run response solver.
+      - keyword: max_iter
+        type: int
+        default: -1
+        documentation: |
+          Maximum number of response iterations.
+      - keyword: kain
+        type: int
+        default: 0
+        documentation: |
+          Length of KAIN iterative history.
+      - keyword: canonical
+        type: bool
+        default: true
+        documentation: |
+          Use canonical or localized orbitals.
+      - keyword: orbital_thrs
+        type: float
+        documentation: |
+          Convergence threshold for orbtial residuals.
+      - keyword: property_thrs
+        type: float
+        documentation: |
+          Convergence threshold for SCF energy.
+      - keyword: directions
+        type: List[int]
+        default: [1, 1, 1]
+        documentation: |
+          Incremental precision in SCF iterations [initial, final]
+      - keyword: orbital_prec
+        type: List[float]
+        default: [-1.0, -1.0]
+        documentation: |
+          Incremental precision in SCF iterations [initial, final]
+      - keyword: initial_guess
+        type: str
+        default: 'none'
+        documentation: |
+          Type of initial guess for response.
+      - keyword: write_orbitals
+        type: bool
+        default: false
+        documentation: |
+          Write converged perturbed orbitals to disk.
