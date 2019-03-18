@@ -35,6 +35,7 @@
 /*
  * \date Mars 18, 2019
  * edit vdW radius from  Allinger's MM3 set (doi:10.1016/S0166-1280(09)80008-0)
+ * in PCMSolver https://github.com/PCMSolver/pcmsolver
  */
 
 #include "MRCPP/Printer"
