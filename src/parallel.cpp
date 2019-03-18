@@ -39,7 +39,7 @@ void mpi::initialize() {
     omp_set_dynamic(0);
 
 #ifdef HAVE_MPI
-    MPI_Init();
+    MPI_Init(nullptr, nullptr);
 
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
