@@ -32,9 +32,9 @@
  *
  */
 
- /*
-  * \date Mars 18, 2019
-  * edit vdW radius from  Allinger's MM3 set (doi:10.1016/S0166-1280(09)80008-0)
+/*
+ * \date Mars 18, 2019
+ * edit vdW radius from  Allinger's MM3 set (doi:10.1016/S0166-1280(09)80008-0)
  */
 
 #include "MRCPP/Printer"
