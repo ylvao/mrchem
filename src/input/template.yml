@@ -15,19 +15,21 @@ keywords:
       Precision used in the smoothing and projection of the nuclear potential.
   - keyword: abs_prec
     type: float
+    default: -1.0
     predicates:
       - '1.0e-12 < value < 1.0'
     documentation: |
       Overall absolute precision in the calculation.
   - keyword: est_norm
     type: float
-    default: 1.0
+    default: -1.0
     predicates:
       - '1.0 <= value < 1.0e12'
     documentation: |
       Norm used in translation from abs_prec to rel_prec.
   - keyword: energy_unit
     type: str
+    default: 'au'
     predicates:
       - "value == 'au' or value == 'kcal' or value == 'kJ'"
     documentation: |
@@ -91,6 +93,7 @@ sections:
     keywords:
       - keyword: order
         type: int
+        default: -1
         predicates:
           - '1 < value < 20'
         documentation: |
@@ -151,18 +154,22 @@ sections:
     keywords:
       - keyword: kinetic
         type: str
+        default: 'abgv_55'
         documentation: |
           Derivative used in kinetic operator.
       - keyword: h_orb
         type: str
+        default: 'abgv_00'
         documentation: |
           Derivative used in magnetic dipole operator.
       - keyword: h_pso
         type: str
+        default: 'abgv_00'
         documentation: |
           Derivative used in paramagnetic spin-orbit operator.
       - keyword: dft
         type: str
+        default: 'abgv_00'
         documentation: |
           Derivative used in exchange-correlation operator.
   - section: molecule
@@ -222,6 +229,7 @@ sections:
           Hard cutoff for passing density values to XCFun.
       - keyword: functionals
         type: str
+        default: ''
         documentation: |
           List of density functionals.
   - section: properties
@@ -358,10 +366,12 @@ sections:
           Use canonical or localized orbitals.
       - keyword: orbital_thrs
         type: float
+        default: -1.0
         documentation: |
           Convergence threshold for orbtial residuals.
       - keyword: property_thrs
         type: float
+        default: -1.0
         documentation: |
           Convergence threshold for SCF energy.
       - keyword: orbital_prec
@@ -400,10 +410,12 @@ sections:
           Use canonical or localized orbitals.
       - keyword: orbital_thrs
         type: float
+        default: -1.0
         documentation: |
           Convergence threshold for orbtial residuals.
       - keyword: property_thrs
         type: float
+        default: -1.0
         documentation: |
           Convergence threshold for SCF energy.
   - section: response
@@ -432,10 +444,12 @@ sections:
           Use canonical or localized orbitals.
       - keyword: orbital_thrs
         type: float
+        default: -1.0
         documentation: |
           Convergence threshold for orbtial residuals.
       - keyword: property_thrs
         type: float
+        default: -1.0
         documentation: |
           Convergence threshold for SCF energy.
       - keyword: directions

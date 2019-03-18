@@ -132,6 +132,7 @@ void mrenv::print_header() {
     }
 
     Printer::printEnvironment();
+    MRA->print();
 }
 
 void mrenv::finalize(double wt) {

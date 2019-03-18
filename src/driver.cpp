@@ -41,6 +41,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
+#include "qmoperators/one_electron/ElectricFieldOperator.h"
 #include "qmoperators/one_electron/KineticOperator.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
 #include "qmoperators/two_electron/CoulombOperator.h"
@@ -169,6 +170,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
 
     auto success = true;
     auto scf_prec = json_scf["scf_prec"].get<double>();
+    auto localize = json_scf["localize"].get<bool>();
 
     const auto &json_fock = json_scf["fock_operator"].get<json>();
     FockOperator F;
@@ -188,7 +190,6 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto kain = json_solver["kain"].get<int>();
         auto max_iter = json_solver["max_iter"].get<int>();
         auto rotation = json_solver["rotation"].get<int>();
-        auto canonical = json_solver["canonical"].get<bool>();
         auto start_prec = json_solver["start_prec"].get<double>();
         auto final_prec = json_solver["final_prec"].get<double>();
         auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
@@ -198,7 +199,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
         solver.setRotation(rotation);
-        solver.setCanonical(canonical);
+        solver.setCanonical(not(localize));
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(F, Phi, F_mat);
@@ -206,6 +207,12 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         F.setup(scf_prec);
         F_mat = F(Phi, Phi);
         F.clear();
+
+        if (localize) {
+            orbital::localize(scf_prec, Phi, F_mat);
+        } else {
+            orbital::diagonalize(scf_prec, Phi, F_mat);
+        }
     }
 
     // Run EnergyOptimizer if present in input JSON
@@ -213,7 +220,6 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
     if (energy_solver_it != json_scf.end()) {
         const auto &json_solver = *energy_solver_it;
         auto max_iter = json_solver["max_iter"].get<int>();
-        auto canonical = json_solver["canonical"].get<bool>();
         auto start_prec = json_solver["start_prec"].get<double>();
         auto final_prec = json_solver["final_prec"].get<double>();
         auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
@@ -222,7 +228,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         EnergyOptimizer solver;
         solver.setMaxIterations(max_iter);
         solver.setRotation(1);
-        solver.setCanonical(canonical);
+        solver.setCanonical(not(localize));
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(F, Phi, F_mat);
@@ -259,8 +265,9 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     Printer::printSeparator(0, '=', 2);
 
     auto success = true;
-    auto rsp_prec = json_rsp["precision"].get<double>();
+    auto rsp_prec = json_rsp["rsp_prec"].get<double>();
     auto dynamic = json_rsp["dynamic"].get<bool>();
+    auto localize = json_rsp["localize"].get<bool>();
 
     mol.initPerturbedOrbitals(dynamic);
 
@@ -293,8 +300,7 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         auto kain = json_solver["kain"].get<int>();
         auto omega = json_solver["frequency"].get<double>();
         auto max_iter = json_solver["max_iter"].get<int>();
-        auto canonical = json_solver["canonical"].get<bool>();
-        auto directions = json_solver["directions"].get<std::array<bool, 3>>();
+        auto directions = json_solver["directions"].get<std::array<int, 3>>();
         auto start_prec = json_solver["start_prec"].get<double>();
         auto final_prec = json_solver["final_prec"].get<double>();
         auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
@@ -303,7 +309,7 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         LinearResponseSolver solver(dynamic, F_0, Phi, F_mat);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
-        solver.setCanonical(canonical);
+        solver.setCanonical(not(localize));
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
 
@@ -598,6 +604,16 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         } else {
             MSG_FATAL("Invalid perturbation order");
         }
+    }
+    ///////////////////////////////////////////////////////////
+    /////////////////   External Operator   ///////////////////
+    ///////////////////////////////////////////////////////////
+    auto json_external = json_fock.find("external_operator");
+    if (json_external != json_fock.end()) {
+        auto field = (*json_external)["electric_field"].get<std::array<double, 3>>();
+        auto r_O = (*json_external)["origin"].get<Coord<3>>();
+        auto V_ext = std::make_shared<ElectricFieldOperator>(field, r_O);
+        F.getExtOperator() = V_ext;
     }
     F.build(exx);
 }

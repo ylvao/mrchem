@@ -45,6 +45,7 @@ from parselglossy.exceptions import SpecificationError, ValidationError
 from parselglossy.read_yaml import read_yaml_file
 from parselglossy.utils import JSONDict
 from parselglossy.validate import check_predicates_node, validate_node
+from periodictable import PeriodicTable as PT
 
 
 def main():
@@ -53,14 +54,17 @@ def main():
     # Parse command line
     executable, dryrun, printlevel, inp_file_cmd = parse_cmdline()
 
-    input_file = this_path / inp_file_cmd
+    input_file = Path(inp_file_cmd)
     user_dict = read_getkw_file(input_file)
 
-    template_file = '@PROJECT_SOURCE_DIR@/src/input/template.yml'
+    template_file = Path('@PROJECT_SOURCE_DIR@/src/input/template.yml')
     template_dict = read_yaml_file(template_file)
 
     # checks everything except predicates
     user_dict = validate_node(user_dict, template_dict)
+
+    # set precision defaults
+    verify_prec(user_dict)
 
     # now that all keywords have some value, we can check predicates
     check_predicates_node(user_dict, user_dict, template_dict)
@@ -77,7 +81,6 @@ def main():
     if not dryrun:
         cmd = executable + ' ' + xfile
         p = subprocess.call(cmd, shell=True)
-        sts = os.waitpid(p.pid, 0)[1]
 
 def read_getkw_file(file_name: Path) -> JSONDict:
     contents = ''
@@ -132,6 +135,59 @@ def parse_cmdline():
 
     return executable, dryrun, printlevel, inp_file
 
+def verify_prec(user_dict):
+  # Overall precision parameters
+  if user_dict["rel_prec"] < 0.0:
+    if user_dict["est_norm"] < 0.0:
+      coords = user_dict["molecule"]["coords"]
+      est_au = estimate_energy(coords)
+      if user_dict["energy_unit"] == 'eV':
+        user_dict["est_norm"] = 27.2 * est_au
+      elif user_dict["energy_unit"] == 'kcal':
+        user_dict["est_norm"] = 627.5 * est_au
+      elif user_dict["energy_unit"] == 'kJ':
+        user_dict["est_norm"] = 2625.5 * est_au
+      else:
+        user_dict["est_norm"] = est_au
+      print("\nPrecision is set by energy estimate Z^(5/2)")
+    user_dict["rel_prec"] = 10 * user_dict["abs_prec"] / user_dict["est_norm"]
+    print("   est_norm  ", user_dict["est_norm"])
+    print("   abs_prec  ", user_dict["abs_prec"])
+    print("   rel_prec  ", user_dict["rel_prec"])
+
+  if user_dict["est_norm"] < 0.0:
+    user_dict["est_norm"] = 1.0
+
+  if user_dict["abs_prec"] < 0.0:
+    user_dict["abs_prec"] = user_dict["rel_prec"]
+
+  if user_dict["nuc_prec"] < 0.0:
+    user_dict["nuc_prec"] = user_dict["rel_prec"]
+
+  # Set polynomial order based on precision
+  if user_dict["mra"]["order"] < 0:
+    prec = user_dict["rel_prec"]
+    user_dict["mra"]["order"] = int(math.ceil(-1.5 * math.log10(prec)))
+
+  # SCF precisions and thresholds
+  if user_dict["scf"]["orbital_prec"][1] < 0.0:
+    user_dict["scf"]["orbital_prec"][1] = user_dict["rel_prec"]
+  if user_dict["scf"]["orbital_prec"][0] < 0.0:
+    user_dict["scf"]["orbital_prec"][0] = user_dict["scf"]["orbital_prec"][1]
+  if user_dict["scf"]["orbital_thrs"] < 0.0 and user_dict["scf"]["property_thrs"] < 0.0:
+    user_dict["scf"]["property_thrs"] = user_dict["rel_prec"] / 10
+    user_dict["scf"]["orbital_thrs"] = math.sqrt(user_dict["scf"]["property_thrs"])
+
+  if user_dict["kineticfree"]["orbital_thrs"] < 0.0 and user_dict["kineticfree"]["property_thrs"] < 0.0:
+    user_dict["kineticfree"]["property_thrs"] = user_dict["rel_prec"] / 10
+    user_dict["kineticfree"]["orbital_thrs"] = math.sqrt(user_dict["kineticfree"]["property_thrs"])
+
+  if user_dict["response"]["orbital_prec"][1] < 0.0:
+    user_dict["response"]["orbital_prec"][1] = user_dict["rel_prec"]
+  if user_dict["response"]["orbital_prec"][0] < 0.0:
+    user_dict["response"]["orbital_prec"][0] = user_dict["response"]["orbital_prec"][1]
+
+
 def translate_input(user_dict):
   program_dict = {}
   write_mpi(program_dict, user_dict);
@@ -140,7 +196,7 @@ def translate_input(user_dict):
   write_molecule(program_dict, user_dict);
   write_initial_guess(program_dict, user_dict);
   write_scf_calculation(program_dict, user_dict);
-  #write_rsp_calculations(program_dict, user_dict);
+  write_rsp_calculations(program_dict, user_dict);
 
   return program_dict
 
@@ -189,7 +245,6 @@ def write_molecule(program_dict, user_dict):
   program_dict["molecule"] = {
     "charge": user_dict["molecule"]["charge"],
     "multiplicity": user_dict["molecule"]["multiplicity"],
-    "angstrom": False,
     "coords": coords_dict
   }
 
@@ -197,17 +252,19 @@ def write_molecule(program_dict, user_dict):
 def write_initial_guess(program_dict, user_dict):
   guess_str = user_dict["scf"]["initial_guess"]
   method = guess_str.split('_')[0]
-  zeta_str = guess_str.split('_')[1]
-  if zeta_str == 'sz':
-    zeta = 1
-  elif zeta_str == 'dz':
-    zeta = 2
-  elif zeta_str == 'tz':
-    zeta = 3
-  elif zeta_str == 'qz':
-    zeta = 4
-  else:
-    print("Invalid zeta:" + guess_suffix)
+  zeta = 0
+  if method == 'sad' or method == 'core':
+    zeta_str = guess_str.split('_')[1]
+    if zeta_str == 'sz':
+      zeta = 1
+    elif zeta_str == 'dz':
+      zeta = 2
+    elif zeta_str == 'tz':
+      zeta = 3
+    elif zeta_str == 'qz':
+      zeta = 4
+    else:
+      print("Invalid zeta:" + guess_suffix)
 
   program_dict["initial_guess"] = {
     "guess_prec": user_dict["rel_prec"],
@@ -216,12 +273,16 @@ def write_initial_guess(program_dict, user_dict):
     "zeta": zeta,
     "start_orbitals": "orbitals/phi",
     "final_orbitals": "orbitals/phi",
+    "file_basis": "initial_guess/mrchem.bas",
+    "file_moa": "initial_guess/mrchem.moa",
+    "file_mob": "initial_guess/mrchem.mob",
     "write_orbitals": False
   }
 
 def write_scf_calculation(program_dict, user_dict):
   scf_dict = {
     "scf_prec": user_dict["rel_prec"],
+    "localize": not user_dict["scf"]["canonical"],
     "final_orbitals": "orbitals/phi",
     "write_orbitals": user_dict["scf"]["write_orbitals"],
   }
@@ -235,15 +296,22 @@ def write_scf_calculation(program_dict, user_dict):
     scf_dict["properties"] = prop_dict
 
   if user_dict["scf"]["run"]:
-    scf_dict["orbital_solver"]: {
+    scf_dict["orbital_solver"] = {
       "kain": user_dict["scf"]["kain"],
       "max_iter": user_dict["scf"]["max_iter"],
       "rotation": user_dict["scf"]["rotation"],
-      "canonical": user_dict["scf"]["canonical"],
       "start_prec": user_dict["scf"]["orbital_prec"][0],
       "final_prec": user_dict["scf"]["orbital_prec"][1],
       "orbital_thrs": user_dict["scf"]["orbital_thrs"],
       "property_thrs": user_dict["scf"]["property_thrs"]
+    }
+  if user_dict["kineticfree"]["run"]:
+    scf_dict["energy_solver"] = {
+      "max_iter": user_dict["kineticfree"]["max_iter"],
+      "start_prec": user_dict["rel_prec"],
+      "final_prec": user_dict["rel_prec"],
+      "orbital_thrs": user_dict["kineticfree"]["orbital_thrs"],
+      "property_thrs": user_dict["kineticfree"]["property_thrs"]
     }
 
   fock_dict = {
@@ -265,9 +333,9 @@ def write_scf_calculation(program_dict, user_dict):
     }
   if user_dict["wavefunction"]["method"] == "hf":
     fock_dict["exchange_operator"] = {
+      "screen": False,
       "poisson_prec": user_dict["rel_prec"]
     }
-
 
   if user_dict["wavefunction"]["method"] == "dft":
     func_raw = user_dict["dft"]["functionals"]
@@ -299,24 +367,180 @@ def write_scf_calculation(program_dict, user_dict):
     }
     if exx:
       fock_dict["exchange_operator"] = {
+        "screen": False,
         "poisson_prec": user_dict["rel_prec"]
       }
+  if user_dict["externalfield"]["electric_run"]:
+    fock_dict["external_operator"] = {
+      "electric_field": user_dict["externalfield"]["electric_field"],
+      "origin": user_dict["mra"]["gauge_origin"]
+    }
+  if user_dict["externalfield"]["magnetic_run"]:
+    fock_dict["external_operator"] = {
+      "magnetic_field": user_dict["externalfield"]["magnetic_field"],
+      "origin": user_dict["mra"]["gauge_origin"]
+    }
 
   scf_dict["fock_operator"] = fock_dict
   program_dict["scf_calculation"] = scf_dict
+
+def write_rsp_calculations(program_dict, user_dict):
+  program_dict["rsp_calculations"] = []
+
+  if user_dict["properties"]["polarizability"]:
+    for omega in user_dict["polarizability"]["frequency"]:
+      print("Polarizability omega: " + str(omega))
+      rsp_dict = {
+        "rsp_prec": user_dict["rel_prec"],
+        "localize": not user_dict["response"]["canonical"],
+        "dynamic": (omega > 1.0e-12),
+        "final_orbitals": "orbitals/phi_x",
+        "write_orbitals": user_dict["response"]["write_orbitals"],
+        "perturbation": {
+          "operator": "h_e_dip",
+          "origin": user_dict["mra"]["gauge_origin"]
+        }
+      }
+      prop_dict = {
+       "polarizability": {
+          "setup_prec": user_dict["rel_prec"],
+          "origin": user_dict["mra"]["gauge_origin"]
+        }
+      }
+      rsp_dict["properties"] = prop_dict
+
+      if user_dict["response"]["run"]:
+        rsp_dict["rsp_solver"] = {
+          "frequency": omega,
+          "kain": user_dict["response"]["kain"],
+          "max_iter": user_dict["response"]["max_iter"],
+          "start_prec": user_dict["response"]["orbital_prec"][0],
+          "final_prec": user_dict["response"]["orbital_prec"][1],
+          "directions": user_dict["response"]["directions"],
+          "orbital_thrs": user_dict["response"]["orbital_thrs"],
+          "property_thrs": user_dict["response"]["property_thrs"]
+        }
+
+      fock_0_dict = {
+        "kinetic_operator": {
+          "derivative": user_dict["derivatives"]["kinetic"]
+        },
+        "nuclear_operator": {
+          "proj_prec": user_dict["nuc_prec"],
+          "smooth_prec": user_dict["nuc_prec"],
+          "shared_memory": user_dict["mpi"]["share_nuclear_potential"]
+        }
+      }
+      if (user_dict["wavefunction"]["method"] == "hartree" or
+          user_dict["wavefunction"]["method"] == "hf" or
+          user_dict["wavefunction"]["method"] == "dft"):
+        fock_0_dict["coulomb_operator"] = {
+          "poisson_prec": user_dict["rel_prec"],
+          "shared_memory": user_dict["mpi"]["share_coulomb_potential"]
+        }
+      if user_dict["wavefunction"]["method"] == "hf":
+        fock_0_dict["exchange_operator"] = {
+          "screen": False,
+          "poisson_prec": user_dict["rel_prec"]
+        }
+
+      if user_dict["wavefunction"]["method"] == "dft":
+        func_raw = user_dict["dft"]["functionals"]
+        func_dict = []
+        exx = False
+        for line in func_raw.split('\n'):
+          sp = line.split()
+          if len(sp) > 0:
+            func = sp[0].lower()
+            coef = [1.0]
+            if len(sp) > 1:
+              coef = list(map(float, sp[1:]))
+            func_dict.append({
+              "name": func,
+              "coef": coef[0]
+            })
+            if func == "exx":
+              exx = True
+        fock_0_dict["xc_operator"] = {
+          "grid_prec": user_dict["rel_prec"],
+          "shared_memory": user_dict["mpi"]["share_xc_potential"],
+          "xc_functional": {
+            "spin": user_dict["dft"]["spin"],
+            "gamma": user_dict["dft"]["use_gamma"],
+            "cutoff": user_dict["dft"]["density_cutoff"],
+            "derivative": user_dict["derivatives"]["dft"],
+            "functionals": func_dict
+          }
+        }
+        if exx:
+          fock_0_dict["exchange_operator"] = {
+            "screen": False,
+            "poisson_prec": user_dict["rel_prec"]
+          }
+      fock_1_dict = {}
+      if (user_dict["wavefunction"]["method"] == "hartree" or
+          user_dict["wavefunction"]["method"] == "hf" or
+          user_dict["wavefunction"]["method"] == "dft"):
+        fock_1_dict["coulomb_operator"] = {
+          "poisson_prec": user_dict["rel_prec"],
+          "shared_memory": user_dict["mpi"]["share_coulomb_potential"]
+        }
+      if user_dict["wavefunction"]["method"] == "hf":
+        fock_1_dict["exchange_operator"] = {
+          "screen": False,
+          "poisson_prec": user_dict["rel_prec"]
+        }
+
+      if user_dict["wavefunction"]["method"] == "dft":
+        func_raw = user_dict["dft"]["functionals"]
+        func_dict = []
+        exx = False
+        for line in func_raw.split('\n'):
+          sp = line.split()
+          if len(sp) > 0:
+            func = sp[0].lower()
+            coef = [1.0]
+            if len(sp) > 1:
+              coef = list(map(float, sp[1:]))
+            func_dict.append({
+              "name": func,
+              "coef": coef[0]
+            })
+            if func == "exx":
+              exx = True
+        fock_1_dict["xc_operator"] = {
+          "grid_prec": user_dict["rel_prec"],
+          "shared_memory": user_dict["mpi"]["share_xc_potential"],
+          "xc_functional": {
+            "spin": user_dict["dft"]["spin"],
+            "gamma": user_dict["dft"]["use_gamma"],
+            "cutoff": user_dict["dft"]["density_cutoff"],
+            "derivative": user_dict["derivatives"]["dft"],
+            "functionals": func_dict
+          }
+        }
+        if exx:
+          fock_1_dict["exchange_operator"] = {
+            "screen": False,
+            "poisson_prec": user_dict["rel_prec"]
+          }
+
+        rsp_dict["fock_operator_0"] = fock_0_dict
+        rsp_dict["fock_operator_1"] = fock_1_dict
+        program_dict["rsp_calculations"].append(rsp_dict)
 
 # Estimate total energy of a moleucule as the sum of the nuclear charges
 # to the power Z^(5/2). This is to get an order of magnitude estimate that
 # is used to set the precision parameter in mrchem in case of abs_prec.
 def estimate_energy(coords):
-    est_en = 0.0
-    for line in coords:
-        sp = line.split()
-        elm = sp[0].lower()
-        Z = PT[elm].Z
-        est_en += pow(Z, 2.5)
-    return est_en
-
+  est_en = 0.0
+  for line in coords.split('\n'):
+    sp = line.split()
+    if len(sp) > 0:
+      elm = sp[0].lower()
+      Z = PT[elm].Z
+      est_en += pow(Z, 2.5)
+  return est_en
 
 if __name__ == '__main__':
     main()
