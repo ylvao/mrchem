@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "13776b3f3597181defa76ac68b74eb6b72747989f162af5519e804fc336aad31"
+            "sha256": "91ba1e652e4c0bd4198db065bf2ddff1d1c45260406ea2618be17865155c7b9b"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -16,7 +16,7 @@
     "default": {
         "parselglossy": {
             "git": "https://github.com/dev-cafe/parselglossy.git",
-            "ref": "b21646dd6417f52c7d11e27be9c9121752d7bccb"
+            "ref": "b28084a6ca692dd1cecc2e07a229f20d1630e162"
         },
         "pyparsing": {
             "hashes": [
@@ -243,11 +243,11 @@
         },
         "sphinx": {
             "hashes": [
-                "sha256:230af939a2f678ab4f2a0a948c3b24a822a0d280821859caaefb750ef7413003",
-                "sha256:835c701420102a0a71ba2ed54a5bada2da6fd01263bf6dc8c5c80c798e27709c"
+                "sha256:821df39e44b8127043e09b80a312ff0fdb45fe88e10b1515b8c8b9652322df34",
+                "sha256:bc3714ad839a265ef08fa6ad3b990bb884e64401a75e4980549bd9ef5e649aa7"
             ],
             "index": "pypi",
-            "version": "==2.0.0b1"
+            "version": "==2.0.0b2"
         },
         "sphinx-rtd-theme": {
             "hashes": [
