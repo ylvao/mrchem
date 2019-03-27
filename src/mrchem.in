@@ -40,11 +40,7 @@ from pathlib import Path
 sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
 sys.path.append('@PROJECT_SOURCE_DIR@/src/chemistry')
 
-from parselglossy.grammars import getkw
-from parselglossy.exceptions import SpecificationError, ValidationError
-from parselglossy.read_yaml import read_yaml_file
-from parselglossy.utils import JSONDict
-from parselglossy.validate import check_predicates_node, validate_node
+from parselglossy.api import parse
 from periodictable import PeriodicTable as PT
 
 
@@ -54,20 +50,14 @@ def main():
     # Parse command line
     executable, dryrun, printlevel, inp_file_cmd = parse_cmdline()
 
-    input_file = Path(inp_file_cmd)
-    user_dict = read_getkw_file(input_file)
+    in_path = Path(inp_file_cmd)
+    tmpl_path = Path('@PROJECT_SOURCE_DIR@/src/input/template.yml')
 
-    template_file = Path('@PROJECT_SOURCE_DIR@/src/input/template.yml')
-    template_dict = read_yaml_file(template_file)
+    # read user input file (JSONDict <- getkw file)
+    user_dict = parse(infile=in_path, template=tmpl_path, grammar='getkw')
 
-    # checks everything except predicates
-    user_dict = validate_node(user_dict, template_dict)
-
-    # set precision defaults
+    # run user defined verification (JSONDict <- JSONDict)
     verify_prec(user_dict)
-
-    # now that all keywords have some value, we can check predicates
-    check_predicates_node(user_dict, user_dict, template_dict)
 
     # now that all keywords have sensible values,
     # we can translate user input into program input
@@ -81,13 +71,6 @@ def main():
     if not dryrun:
         cmd = executable + ' ' + xfile
         p = subprocess.call(cmd, shell=True)
-
-def read_getkw_file(file_name: Path) -> JSONDict:
-    contents = ''
-    with file_name.open('r') as f:
-        contents = f.read()
-    grammar = getkw.grammar()
-    return grammar.parseString(contents.lower()).asDict()
 
 def parse_cmdline():
     usage = "usage: %prog [options] [config] inp_file"
@@ -139,7 +122,7 @@ def verify_prec(user_dict):
   # Overall precision parameters
   if user_dict["rel_prec"] < 0.0:
     if user_dict["est_norm"] < 0.0:
-      coords = user_dict["molecule"]["coords"]
+      coords = user_dict["Molecule"]["coords"]
       est_au = estimate_energy(coords)
       if user_dict["energy_unit"] == 'eV':
         user_dict["est_norm"] = 27.2 * est_au
@@ -165,27 +148,27 @@ def verify_prec(user_dict):
     user_dict["nuc_prec"] = user_dict["rel_prec"]
 
   # Set polynomial order based on precision
-  if user_dict["mra"]["order"] < 0:
+  if user_dict["MRA"]["order"] < 0:
     prec = user_dict["rel_prec"]
-    user_dict["mra"]["order"] = int(math.ceil(-1.5 * math.log10(prec)))
+    user_dict["MRA"]["order"] = int(math.ceil(-1.5 * math.log10(prec)))
 
   # SCF precisions and thresholds
-  if user_dict["scf"]["orbital_prec"][1] < 0.0:
-    user_dict["scf"]["orbital_prec"][1] = user_dict["rel_prec"]
-  if user_dict["scf"]["orbital_prec"][0] < 0.0:
-    user_dict["scf"]["orbital_prec"][0] = user_dict["scf"]["orbital_prec"][1]
-  if user_dict["scf"]["orbital_thrs"] < 0.0 and user_dict["scf"]["property_thrs"] < 0.0:
-    user_dict["scf"]["property_thrs"] = user_dict["rel_prec"] / 10
-    user_dict["scf"]["orbital_thrs"] = math.sqrt(user_dict["scf"]["property_thrs"])
+  if user_dict["SCF"]["orbital_prec"][1] < 0.0:
+    user_dict["SCF"]["orbital_prec"][1] = user_dict["rel_prec"]
+  if user_dict["SCF"]["orbital_prec"][0] < 0.0:
+    user_dict["SCF"]["orbital_prec"][0] = user_dict["SCF"]["orbital_prec"][1]
+  if user_dict["SCF"]["orbital_thrs"] < 0.0 and user_dict["SCF"]["property_thrs"] < 0.0:
+    user_dict["SCF"]["property_thrs"] = user_dict["rel_prec"] / 10
+    user_dict["SCF"]["orbital_thrs"] = math.sqrt(user_dict["SCF"]["property_thrs"])
 
-  if user_dict["kineticfree"]["orbital_thrs"] < 0.0 and user_dict["kineticfree"]["property_thrs"] < 0.0:
-    user_dict["kineticfree"]["property_thrs"] = user_dict["rel_prec"] / 10
-    user_dict["kineticfree"]["orbital_thrs"] = math.sqrt(user_dict["kineticfree"]["property_thrs"])
+  if user_dict["KineticFree"]["orbital_thrs"] < 0.0 and user_dict["KineticFree"]["property_thrs"] < 0.0:
+    user_dict["KineticFree"]["property_thrs"] = user_dict["rel_prec"] / 10
+    user_dict["KineticFree"]["orbital_thrs"] = math.sqrt(user_dict["KineticFree"]["property_thrs"])
 
-  if user_dict["response"]["orbital_prec"][1] < 0.0:
-    user_dict["response"]["orbital_prec"][1] = user_dict["rel_prec"]
-  if user_dict["response"]["orbital_prec"][0] < 0.0:
-    user_dict["response"]["orbital_prec"][0] = user_dict["response"]["orbital_prec"][1]
+  if user_dict["Response"]["orbital_prec"][1] < 0.0:
+    user_dict["Response"]["orbital_prec"][1] = user_dict["rel_prec"]
+  if user_dict["Response"]["orbital_prec"][0] < 0.0:
+    user_dict["Response"]["orbital_prec"][0] = user_dict["Response"]["orbital_prec"][1]
 
 
 def translate_input(user_dict):
@@ -202,18 +185,18 @@ def translate_input(user_dict):
 
 def write_mpi(program_dict, user_dict):
   program_dict["mpi"] = {
-    "numerically_exact": user_dict["mpi"]["numerically_exact"],
-    "shared_memory_size": user_dict["mpi"]["shared_memory_size"]
+    "numerically_exact": user_dict["MPI"]["numerically_exact"],
+    "shared_memory_size": user_dict["MPI"]["shared_memory_size"]
   }
 
 def write_mra(program_dict, user_dict):
   program_dict["mra"] = {
-    "basis_type": user_dict["mra"]["basis_type"][0],
-    "order": user_dict["mra"]["order"],
-    "boxes": user_dict["mra"]["boxes"],
-    "corner": user_dict["mra"]["corner"],
-    "min_scale": user_dict["mra"]["min_scale"],
-    "max_scale": user_dict["mra"]["max_scale"],
+    "basis_type": user_dict["MRA"]["basis_type"][0].lower(),
+    "order": user_dict["MRA"]["order"],
+    "boxes": user_dict["MRA"]["boxes"],
+    "corner": user_dict["MRA"]["corner"],
+    "min_scale": user_dict["MRA"]["min_scale"],
+    "max_scale": user_dict["MRA"]["max_scale"],
     "scaling_factor": [1.0, 1.0, 1.0]
   }
 
@@ -227,9 +210,9 @@ def write_printer(program_dict, user_dict):
 
 def write_molecule(program_dict, user_dict):
   AA = 1.0
-  if user_dict["molecule"]["angstrom"]:
+  if user_dict["Molecule"]["angstrom"]:
       AA = 1.889725989
-  coords_raw = user_dict["molecule"]["coords"]
+  coords_raw = user_dict["Molecule"]["coords"]
   coords_dict = []
   for line in coords_raw.split('\n'):
     sp = line.split()
@@ -243,14 +226,14 @@ def write_molecule(program_dict, user_dict):
       })
 
   program_dict["molecule"] = {
-    "charge": user_dict["molecule"]["charge"],
-    "multiplicity": user_dict["molecule"]["multiplicity"],
+    "charge": user_dict["Molecule"]["charge"],
+    "multiplicity": user_dict["Molecule"]["multiplicity"],
     "coords": coords_dict
   }
 
 
 def write_initial_guess(program_dict, user_dict):
-  guess_str = user_dict["scf"]["initial_guess"]
+  guess_str = user_dict["SCF"]["initial_guess"].lower()
   method = guess_str.split('_')[0]
   zeta = 0
   if method == 'sad' or method == 'core':
@@ -268,7 +251,7 @@ def write_initial_guess(program_dict, user_dict):
 
   program_dict["initial_guess"] = {
     "guess_prec": user_dict["rel_prec"],
-    "restricted": user_dict["wavefunction"]["restricted"],
+    "restricted": user_dict["WaveFunction"]["restricted"],
     "method": method,
     "zeta": zeta,
     "start_orbitals": "orbitals/phi",
@@ -282,63 +265,63 @@ def write_initial_guess(program_dict, user_dict):
 def write_scf_calculation(program_dict, user_dict):
   scf_dict = {
     "scf_prec": user_dict["rel_prec"],
-    "localize": not user_dict["scf"]["canonical"],
+    "localize": not user_dict["SCF"]["canonical"],
     "final_orbitals": "orbitals/phi",
-    "write_orbitals": user_dict["scf"]["write_orbitals"],
+    "write_orbitals": user_dict["SCF"]["write_orbitals"],
   }
   prop_dict = {
    "dipole_moment": {
       "setup_prec": user_dict["rel_prec"],
-      "origin": user_dict["mra"]["gauge_origin"]
+      "origin": user_dict["MRA"]["gauge_origin"]
     }
   }
-  if user_dict["properties"]["dipole_moment"]:
+  if user_dict["Properties"]["dipole_moment"]:
     scf_dict["properties"] = prop_dict
 
-  if user_dict["scf"]["run"]:
+  if user_dict["SCF"]["run"]:
     scf_dict["orbital_solver"] = {
-      "kain": user_dict["scf"]["kain"],
-      "max_iter": user_dict["scf"]["max_iter"],
-      "rotation": user_dict["scf"]["rotation"],
-      "start_prec": user_dict["scf"]["orbital_prec"][0],
-      "final_prec": user_dict["scf"]["orbital_prec"][1],
-      "orbital_thrs": user_dict["scf"]["orbital_thrs"],
-      "property_thrs": user_dict["scf"]["property_thrs"]
+      "kain": user_dict["SCF"]["kain"],
+      "max_iter": user_dict["SCF"]["max_iter"],
+      "rotation": user_dict["SCF"]["rotation"],
+      "start_prec": user_dict["SCF"]["orbital_prec"][0],
+      "final_prec": user_dict["SCF"]["orbital_prec"][1],
+      "orbital_thrs": user_dict["SCF"]["orbital_thrs"],
+      "property_thrs": user_dict["SCF"]["property_thrs"]
     }
-  if user_dict["kineticfree"]["run"]:
+  if user_dict["KineticFree"]["run"]:
     scf_dict["energy_solver"] = {
-      "max_iter": user_dict["kineticfree"]["max_iter"],
+      "max_iter": user_dict["KineticFree"]["max_iter"],
       "start_prec": user_dict["rel_prec"],
       "final_prec": user_dict["rel_prec"],
-      "orbital_thrs": user_dict["kineticfree"]["orbital_thrs"],
-      "property_thrs": user_dict["kineticfree"]["property_thrs"]
+      "orbital_thrs": user_dict["KineticFree"]["orbital_thrs"],
+      "property_thrs": user_dict["KineticFree"]["property_thrs"]
     }
 
   fock_dict = {
     "kinetic_operator": {
-      "derivative": user_dict["derivatives"]["kinetic"]
+      "derivative": user_dict["Derivatives"]["kinetic"]
     },
     "nuclear_operator": {
       "proj_prec": user_dict["nuc_prec"],
       "smooth_prec": user_dict["nuc_prec"],
-      "shared_memory": user_dict["mpi"]["share_nuclear_potential"]
+      "shared_memory": user_dict["MPI"]["share_nuclear_potential"]
     }
   }
-  if (user_dict["wavefunction"]["method"] == "hartree" or
-      user_dict["wavefunction"]["method"] == "hf" or
-      user_dict["wavefunction"]["method"] == "dft"):
+  if (user_dict["WaveFunction"]["method"].lower() == "hartree" or
+      user_dict["WaveFunction"]["method"].lower() == "hf" or
+      user_dict["WaveFunction"]["method"].lower() == "dft"):
     fock_dict["coulomb_operator"] = {
       "poisson_prec": user_dict["rel_prec"],
-      "shared_memory": user_dict["mpi"]["share_coulomb_potential"]
+      "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
     }
-  if user_dict["wavefunction"]["method"] == "hf":
+  if user_dict["WaveFunction"]["method"].lower() == "hf":
     fock_dict["exchange_operator"] = {
       "screen": False,
       "poisson_prec": user_dict["rel_prec"]
     }
 
-  if user_dict["wavefunction"]["method"] == "dft":
-    func_raw = user_dict["dft"]["functionals"]
+  if user_dict["WaveFunction"]["method"].lower() == "dft":
+    func_raw = user_dict["DFT"]["functionals"]
     func_dict = []
     exx = False
     for line in func_raw.split('\n'):
@@ -356,12 +339,12 @@ def write_scf_calculation(program_dict, user_dict):
           exx = True
     fock_dict["xc_operator"] = {
       "grid_prec": user_dict["rel_prec"],
-      "shared_memory": user_dict["mpi"]["share_xc_potential"],
+      "shared_memory": user_dict["MPI"]["share_xc_potential"],
       "xc_functional": {
-        "spin": user_dict["dft"]["spin"],
-        "gamma": user_dict["dft"]["use_gamma"],
-        "cutoff": user_dict["dft"]["density_cutoff"],
-        "derivative": user_dict["derivatives"]["dft"],
+        "spin": user_dict["DFT"]["spin"],
+        "gamma": user_dict["DFT"]["use_gamma"],
+        "cutoff": user_dict["DFT"]["density_cutoff"],
+        "derivative": user_dict["Derivatives"]["dft"],
         "functionals": func_dict
       }
     }
@@ -370,15 +353,15 @@ def write_scf_calculation(program_dict, user_dict):
         "screen": False,
         "poisson_prec": user_dict["rel_prec"]
       }
-  if user_dict["externalfield"]["electric_run"]:
+  if user_dict["ExternalField"]["electric_run"]:
     fock_dict["external_operator"] = {
-      "electric_field": user_dict["externalfield"]["electric_field"],
-      "origin": user_dict["mra"]["gauge_origin"]
+      "electric_field": user_dict["ExternalField"]["electric_field"],
+      "origin": user_dict["MRA"]["gauge_origin"]
     }
-  if user_dict["externalfield"]["magnetic_run"]:
+  if user_dict["ExternalField"]["magnetic_run"]:
     fock_dict["external_operator"] = {
-      "magnetic_field": user_dict["externalfield"]["magnetic_field"],
-      "origin": user_dict["mra"]["gauge_origin"]
+      "magnetic_field": user_dict["ExternalField"]["magnetic_field"],
+      "origin": user_dict["MRA"]["gauge_origin"]
     }
 
   scf_dict["fock_operator"] = fock_dict
@@ -387,65 +370,64 @@ def write_scf_calculation(program_dict, user_dict):
 def write_rsp_calculations(program_dict, user_dict):
   program_dict["rsp_calculations"] = []
 
-  if user_dict["properties"]["polarizability"]:
-    for omega in user_dict["polarizability"]["frequency"]:
-      print("Polarizability omega: " + str(omega))
+  if user_dict["Properties"]["polarizability"]:
+    for omega in user_dict["Polarizability"]["frequency"]:
       rsp_dict = {
         "rsp_prec": user_dict["rel_prec"],
-        "localize": not user_dict["response"]["canonical"],
+        "localize": not user_dict["Response"]["canonical"],
         "dynamic": (omega > 1.0e-12),
         "final_orbitals": "orbitals/phi_x",
-        "write_orbitals": user_dict["response"]["write_orbitals"],
+        "write_orbitals": user_dict["Response"]["write_orbitals"],
         "perturbation": {
           "operator": "h_e_dip",
-          "origin": user_dict["mra"]["gauge_origin"]
+          "origin": user_dict["MRA"]["gauge_origin"]
         }
       }
       prop_dict = {
        "polarizability": {
           "setup_prec": user_dict["rel_prec"],
-          "origin": user_dict["mra"]["gauge_origin"]
+          "origin": user_dict["MRA"]["gauge_origin"]
         }
       }
       rsp_dict["properties"] = prop_dict
 
-      if user_dict["response"]["run"]:
+      if user_dict["Response"]["run"]:
         rsp_dict["rsp_solver"] = {
           "frequency": omega,
-          "kain": user_dict["response"]["kain"],
-          "max_iter": user_dict["response"]["max_iter"],
-          "start_prec": user_dict["response"]["orbital_prec"][0],
-          "final_prec": user_dict["response"]["orbital_prec"][1],
-          "directions": user_dict["response"]["directions"],
-          "orbital_thrs": user_dict["response"]["orbital_thrs"],
-          "property_thrs": user_dict["response"]["property_thrs"]
+          "kain": user_dict["Response"]["kain"],
+          "max_iter": user_dict["Response"]["max_iter"],
+          "start_prec": user_dict["Response"]["orbital_prec"][0],
+          "final_prec": user_dict["Response"]["orbital_prec"][1],
+          "directions": user_dict["Response"]["directions"],
+          "orbital_thrs": user_dict["Response"]["orbital_thrs"],
+          "property_thrs": user_dict["Response"]["property_thrs"]
         }
 
       fock_0_dict = {
         "kinetic_operator": {
-          "derivative": user_dict["derivatives"]["kinetic"]
+          "derivative": user_dict["Derivatives"]["kinetic"]
         },
         "nuclear_operator": {
           "proj_prec": user_dict["nuc_prec"],
           "smooth_prec": user_dict["nuc_prec"],
-          "shared_memory": user_dict["mpi"]["share_nuclear_potential"]
+          "shared_memory": user_dict["MPI"]["share_nuclear_potential"]
         }
       }
-      if (user_dict["wavefunction"]["method"] == "hartree" or
-          user_dict["wavefunction"]["method"] == "hf" or
-          user_dict["wavefunction"]["method"] == "dft"):
+      if (user_dict["WaveFunction"]["method"].lower() == "hartree" or
+          user_dict["WaveFunction"]["method"].lower() == "hf" or
+          user_dict["WaveFunction"]["method"].lower() == "dft"):
         fock_0_dict["coulomb_operator"] = {
           "poisson_prec": user_dict["rel_prec"],
-          "shared_memory": user_dict["mpi"]["share_coulomb_potential"]
+          "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
         }
-      if user_dict["wavefunction"]["method"] == "hf":
+      if user_dict["WaveFunction"]["method"].lower() == "hf":
         fock_0_dict["exchange_operator"] = {
           "screen": False,
           "poisson_prec": user_dict["rel_prec"]
         }
 
-      if user_dict["wavefunction"]["method"] == "dft":
-        func_raw = user_dict["dft"]["functionals"]
+      if user_dict["WaveFunction"]["method"].lower() == "dft":
+        func_raw = user_dict["DFT"]["functionals"]
         func_dict = []
         exx = False
         for line in func_raw.split('\n'):
@@ -463,12 +445,12 @@ def write_rsp_calculations(program_dict, user_dict):
               exx = True
         fock_0_dict["xc_operator"] = {
           "grid_prec": user_dict["rel_prec"],
-          "shared_memory": user_dict["mpi"]["share_xc_potential"],
+          "shared_memory": user_dict["MPI"]["share_xc_potential"],
           "xc_functional": {
-            "spin": user_dict["dft"]["spin"],
-            "gamma": user_dict["dft"]["use_gamma"],
-            "cutoff": user_dict["dft"]["density_cutoff"],
-            "derivative": user_dict["derivatives"]["dft"],
+            "spin": user_dict["DFT"]["spin"],
+            "gamma": user_dict["DFT"]["use_gamma"],
+            "cutoff": user_dict["DFT"]["density_cutoff"],
+            "derivative": user_dict["Derivatives"]["dft"],
             "functionals": func_dict
           }
         }
@@ -478,21 +460,21 @@ def write_rsp_calculations(program_dict, user_dict):
             "poisson_prec": user_dict["rel_prec"]
           }
       fock_1_dict = {}
-      if (user_dict["wavefunction"]["method"] == "hartree" or
-          user_dict["wavefunction"]["method"] == "hf" or
-          user_dict["wavefunction"]["method"] == "dft"):
+      if (user_dict["WaveFunction"]["method"].lower() == "hartree" or
+          user_dict["WaveFunction"]["method"].lower() == "hf" or
+          user_dict["WaveFunction"]["method"].lower() == "dft"):
         fock_1_dict["coulomb_operator"] = {
           "poisson_prec": user_dict["rel_prec"],
-          "shared_memory": user_dict["mpi"]["share_coulomb_potential"]
+          "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
         }
-      if user_dict["wavefunction"]["method"] == "hf":
+      if user_dict["WaveFunction"]["method"].lower() == "hf":
         fock_1_dict["exchange_operator"] = {
           "screen": False,
           "poisson_prec": user_dict["rel_prec"]
         }
 
-      if user_dict["wavefunction"]["method"] == "dft":
-        func_raw = user_dict["dft"]["functionals"]
+      if user_dict["WaveFunction"]["method"].lower() == "dft":
+        func_raw = user_dict["DFT"]["functionals"]
         func_dict = []
         exx = False
         for line in func_raw.split('\n'):
@@ -510,12 +492,12 @@ def write_rsp_calculations(program_dict, user_dict):
               exx = True
         fock_1_dict["xc_operator"] = {
           "grid_prec": user_dict["rel_prec"],
-          "shared_memory": user_dict["mpi"]["share_xc_potential"],
+          "shared_memory": user_dict["MPI"]["share_xc_potential"],
           "xc_functional": {
-            "spin": user_dict["dft"]["spin"],
-            "gamma": user_dict["dft"]["use_gamma"],
-            "cutoff": user_dict["dft"]["density_cutoff"],
-            "derivative": user_dict["derivatives"]["dft"],
+            "spin": user_dict["DFT"]["spin"],
+            "gamma": user_dict["DFT"]["use_gamma"],
+            "cutoff": user_dict["DFT"]["density_cutoff"],
+            "derivative": user_dict["Derivatives"]["dft"],
             "functionals": func_dict
           }
         }
