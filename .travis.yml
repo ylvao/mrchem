@@ -17,7 +17,6 @@ matrix:
             - g++
             - gcc
             - lcov
-            - libboost-all-dev
             - libpython3.5-dev
             - python3.5-dev
       env:
@@ -46,7 +45,6 @@ matrix:
         apt:
           packages:
             - clang
-            - libboost-all-dev
             - libpython3.5-dev
             - python3.5-dev
             - clang-format
