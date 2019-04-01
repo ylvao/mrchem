@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-parselglossy = { git='https://github.com/dev-cafe/parselglossy.git', ref='b28084a6ca692dd1cecc2e07a229f20d1630e162' }
+parselglossy = "==0.3.0"
 pyparsing = "*"
 runtest = "*"
 

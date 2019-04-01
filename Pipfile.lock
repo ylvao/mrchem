@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "91ba1e652e4c0bd4198db065bf2ddff1d1c45260406ea2618be17865155c7b9b"
+            "sha256": "be745a1eca2e05b419fc3284621249d5d3332fcb853381eb238fbc25e05612f2"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,9 +14,19 @@
         ]
     },
     "default": {
+        "click": {
+            "hashes": [
+                "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13",
+                "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
+            ],
+            "version": "==7.0"
+        },
         "parselglossy": {
-            "git": "https://github.com/dev-cafe/parselglossy.git",
-            "ref": "b28084a6ca692dd1cecc2e07a229f20d1630e162"
+            "hashes": [
+                "sha256:d6521a5ed1cc2fafd69b6f20507eeb46cd0dea30860f21d475187c7706285a91"
+            ],
+            "index": "pypi",
+            "version": "==0.3.0"
         },
         "pyparsing": {
             "hashes": [
@@ -25,6 +35,22 @@
             ],
             "index": "pypi",
             "version": "==2.3.1"
+        },
+        "pyyaml": {
+            "hashes": [
+                "sha256:1adecc22f88d38052fb787d959f003811ca858b799590a5eaa70e63dca50308c",
+                "sha256:436bc774ecf7c103814098159fbb84c2715d25980175292c648f2da143909f95",
+                "sha256:460a5a4248763f6f37ea225d19d5c205677d8d525f6a83357ca622ed541830c2",
+                "sha256:5a22a9c84653debfbf198d02fe592c176ea548cccce47553f35f466e15cf2fd4",
+                "sha256:7a5d3f26b89d688db27822343dfa25c599627bc92093e788956372285c6298ad",
+                "sha256:9372b04a02080752d9e6f990179a4ab840227c6e2ce15b95e1278456664cf2ba",
+                "sha256:a5dcbebee834eaddf3fa7366316b880ff4062e4bcc9787b78c7fbb4a26ff2dd1",
+                "sha256:aee5bab92a176e7cd034e57f46e9df9a9862a71f8f37cad167c6fc74c65f5b4e",
+                "sha256:c51f642898c0bacd335fc119da60baae0824f2cde95b0330b56c0553439f0673",
+                "sha256:c68ea4d3ba1705da1e0d85da6684ac657912679a649e8868bd850d2c299cce13",
+                "sha256:e23d0cc5299223dcc37885dae624f382297717e459ea24053709675a976a3e19"
+            ],
+            "version": "==5.1"
         },
         "runtest": {
             "hashes": [
@@ -209,7 +235,6 @@
                 "sha256:c68ea4d3ba1705da1e0d85da6684ac657912679a649e8868bd850d2c299cce13",
                 "sha256:e23d0cc5299223dcc37885dae624f382297717e459ea24053709675a976a3e19"
             ],
-            "index": "pypi",
             "version": "==5.1"
         },
         "recommonmark": {
@@ -243,11 +268,11 @@
         },
         "sphinx": {
             "hashes": [
-                "sha256:821df39e44b8127043e09b80a312ff0fdb45fe88e10b1515b8c8b9652322df34",
-                "sha256:bc3714ad839a265ef08fa6ad3b990bb884e64401a75e4980549bd9ef5e649aa7"
+                "sha256:5a54f9132766c8ffdd4021de4d0ef8afeb93235569d64b617612e60070332583",
+                "sha256:91b29c8e98d18ed474bb92777e7af31931fae96e625b8f1bc595c67fb641c46d"
             ],
             "index": "pypi",
-            "version": "==2.0.0b2"
+            "version": "==2.0.0"
         },
         "sphinx-rtd-theme": {
             "hashes": [
