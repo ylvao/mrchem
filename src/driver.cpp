@@ -95,6 +95,10 @@ RankOneTensorOperator<3> get_perturbation(const json &input);
 DerivativeOperator_p get_derivative(const std::string &name);
 } // namespace driver
 
+/** @brief Initialize a molecule from input
+ *
+ * This function expects the "molecule" subsection of the input.
+ */
 void driver::init_molecule(const json &json_mol, Molecule &mol) {
     Printer::printHeader(0, "Molecule input");
     println(0, json_mol.dump(2));
@@ -116,6 +120,16 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
     mol.printGeometry();
 }
 
+/** @brief Run initial guess calculation for the orbitals
+ *
+ * This function will update the ground state orbitals and the Fock
+ * matrix of the molecule, based on the chosen initial guess method.
+ * The orbital vector is initialized with the appropriate particle
+ * number and spin. The Fock matrix is initialized to the zero matrix
+ * of the appropriate size.
+ *
+ * This function expects the "initial_guess" subsection of the input.
+ */
 bool driver::run_guess(const json &json_guess, Molecule &mol) {
     Printer::printHeader(0, "Initial guess input");
     println(0, json_guess.dump(2));
@@ -163,6 +177,17 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
     return true;
 }
 
+/** @brief Run ground-state SCF calculation
+ *
+ * This function will update the ground state orbitals and the Fock
+ * matrix of the molecule based on the chosen electronic structure
+ * method. The resulting orbitals will be either diagonalized or
+ * localized at exit. Returns true if the calculation converges.
+ *
+ * After convergence the requested ground-state properties are computed.
+ *
+ * This function expects the "scf_calculation" subsection of the input.
+ */
 bool driver::run_scf(const json &json_scf, Molecule &mol) {
     Printer::printHeader(0, "SCF input");
     println(0, json_scf.dump(2));
@@ -259,6 +284,19 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
     return success;
 }
 
+/** @brief Run linear response SCF calculation
+ *
+ * This function will update the perturbed orbitals of the molecule
+ * based on the chosen electronic structure method and perturbation
+ * operator. Each response calculation corresponds to one particular
+ * perturbation operator (could be a vector operator with several
+ * components). Returns true if the calculation converges.
+ *
+ * After convergence the requested linear response properties are computed.
+ *
+ * This function expects a single subsection entry in the "rsp_calculations"
+ * vector of the input.
+ */
 bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     Printer::printHeader(0, "Response input");
     println(0, json_rsp.dump(2));
@@ -342,6 +380,12 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     return success;
 }
 
+/** @brief Compute ground-state properties
+ *
+ * This function expects the "properties" subsection of the "scf_calculation"
+ * input section, and will compute all properties which are present in this input.
+ * This includes the diamagnetic contributions to the magnetic response properties.
+ */
 void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
@@ -466,6 +510,11 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     }
 }
 
+/** @brief Compute linear response properties
+ *
+ * This function expects the "properties" subsection of the "rsp_calculations"
+ * input section, and will compute all properties which are present in this input.
+ */
 void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, double omega) {
     auto &Phi = mol.getOrbitals();
     auto &X = mol.getOrbitalsX();
@@ -508,6 +557,12 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
     }
 }
 
+/** @brief Build Fock operator based on input parameters
+ *
+ * This function expects the "fock_operator" subsection of input, and will
+ * construct all operator which are present in this input. Option to set
+ * perturbation order of the operators.
+ */
 void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOperator &F, int order) {
     auto &nuclei = mol.getNuclei();
     auto Phi_p = mol.getOrbitals_p();
@@ -618,6 +673,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
     F.build(exx);
 }
 
+/** @brief Construct perturbation operator based on input keyword */
 RankOneTensorOperator<3> driver::get_perturbation(const json &json_pert) {
     RankOneTensorOperator<3> h_1;
     auto pert_oper = json_pert["operator"].get<std::string>();
@@ -634,6 +690,7 @@ RankOneTensorOperator<3> driver::get_perturbation(const json &json_pert) {
     return h_1;
 }
 
+/** @brief Construct derivative operator based on input keyword */
 DerivativeOperator_p driver::get_derivative(const std::string &name) {
     DerivativeOperator_p D = nullptr;
     if (name == "abgv_00") {
