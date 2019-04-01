@@ -48,7 +48,7 @@ def main():
     this_path = Path(__file__).parent
 
     # Parse command line
-    executable, dryrun, printlevel, inp_file_cmd = parse_cmdline()
+    executable, dryrun, inp_file_cmd = parse_cmdline()
 
     in_path = Path(inp_file_cmd)
     tmpl_path = Path('@PROJECT_SOURCE_DIR@/src/input/template.yml')
@@ -74,7 +74,7 @@ def main():
 
 def parse_cmdline():
     usage = "usage: %prog [options] [config] inp_file"
-    version = "0.0.1"
+    version = "@PROGRAM_VERSION@"
     cmdln = optparse.OptionParser(
         usage=usage, version="%prog {0}".format(version))
     cmdln.add_option(
@@ -85,27 +85,18 @@ def parse_cmdline():
         default=False,
         help='Only process input')
     cmdln.add_option(
-        '-p',
-        '--print',
-        action='store',
-        dest='printlevel',
-        type='int',
-        default=0,
-        help='print level')
-    cmdln.add_option(
         '-x',
         '--executable',
         action='store',
         dest='executable',
         type='string',
-        default='/home/stig/src/mrchem-stig/install-json/bin/mrchem.x',
+        default='@MRCHEM_EXECUTABLE@',
         help='set executable name')
 
     opts, args = cmdln.parse_args()
 
     executable = opts.executable
     dryrun = opts.dryrun
-    printlevel = int(opts.printlevel)
 
     if (len(args) == 0):
         cmdln.error('Not input file passed!')
@@ -116,7 +107,7 @@ def parse_cmdline():
         cmdln.error('incorrect number of files')
         sys.exit(0)
 
-    return executable, dryrun, printlevel, inp_file
+    return executable, dryrun, inp_file
 
 def verify_prec(user_dict):
   # Overall precision parameters
@@ -180,7 +171,6 @@ def translate_input(user_dict):
   write_initial_guess(program_dict, user_dict);
   write_scf_calculation(program_dict, user_dict);
   write_rsp_calculations(program_dict, user_dict);
-
   return program_dict
 
 def write_mpi(program_dict, user_dict):

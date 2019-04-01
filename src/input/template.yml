@@ -23,7 +23,7 @@ keywords:
     type: str
     default: 'au'
     predicates:
-      - "value == 'au' or value == 'kcal' or value == 'kJ'"
+      - value in ['au', 'kcal', 'kJ']
     docstring: |
       Unit used in the translation from abs_prec to rel_prec.
   - name: printlevel
@@ -92,7 +92,7 @@ sections:
         type: str
         default: 'interpolating'
         predicates:
-          - "value[0].lower() == 'i' or value[0].lower() == 'l'"
+          - value[0].lower() in ['i', 'l']
         docstring: |
           Polynomial type of multiwavelet basis.
       - name: min_scale
@@ -219,7 +219,7 @@ sections:
           Hard cutoff for passing density values to XCFun.
       - name: functionals
         type: str
-        default: ''
+        default: ' '
         docstring: |
           List of density functionals.
   - name: Properties
