@@ -115,11 +115,11 @@ def verify_prec(user_dict):
     if user_dict["est_norm"] < 0.0:
       coords = user_dict["Molecule"]["coords"]
       est_au = estimate_energy(coords)
-      if user_dict["energy_unit"] == 'eV':
+      if user_dict["energy_unit"].lower() == 'ev':
         user_dict["est_norm"] = 27.2 * est_au
-      elif user_dict["energy_unit"] == 'kcal':
+      elif user_dict["energy_unit"].lower() == 'kcal':
         user_dict["est_norm"] = 627.5 * est_au
-      elif user_dict["energy_unit"] == 'kJ':
+      elif user_dict["energy_unit"].lower() == 'kj':
         user_dict["est_norm"] = 2625.5 * est_au
       else:
         user_dict["est_norm"] = est_au
