@@ -403,11 +403,11 @@ def verify_top(top):
             if mol.get('coords').is_set():
                 coords = mol.get('coords').get()
                 est_au = estimate_energy(coords)
-                if top['energy_unit'][0] == 'eV':
+                if top['energy_unit'][0] == 'ev':
                     top['est_norm'][0] = 27.2 * est_au
                 elif top['energy_unit'][0] == 'kcal':
                     top['est_norm'][0] = 627.5 * est_au
-                elif top['energy_unit'][0] == 'kJ':
+                elif top['energy_unit'][0] == 'kj':
                     top['est_norm'][0] = 2625.5 * est_au
                 else:
                     top['est_norm'][0] = est_au
