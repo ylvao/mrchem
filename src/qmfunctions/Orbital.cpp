@@ -200,14 +200,17 @@ char Orbital::printSpin() const {
 
 /** @brief Pretty output of orbital meta data */
 std::ostream &Orbital::print(std::ostream &o) const {
-    int oldprec = mrcpp::Printer::setPrecision(12);
+    int prec = mrcpp::Printer::getPrecision();
+    std::stringstream o_norm, o_error;
+    o_norm << std::setprecision(2 * prec) << std::fixed << this->norm();
+    o_error << std::setprecision(prec) << std::scientific << this->error();
+
     o << std::setw(6) << this->rankID();
-    o << std::setw(25) << this->norm();
-    o << std::setw(5) << this->printSpin();
+    o << std::setw(19) << o_norm.str();
+    o << std::setw(8) << this->printSpin();
     o << std::setw(4) << this->occ();
-    mrcpp::Printer::setPrecision(5);
-    o << std::setw(15) << this->error();
-    mrcpp::Printer::setPrecision(oldprec);
+    o << std::setw(17) << o_error.str();
+
     return o;
 }
 

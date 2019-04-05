@@ -64,6 +64,18 @@ void project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol
 } // namespace initial_guess
 
 OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
+    std::string restr_str = "false";
+    if (restricted) restr_str = "true";
+    Printer::printSeparator(0, '-');
+    println(0, " Method         : Diagonalize Hamiltonian matrix");
+    println(0, " Precision      : " << prec);
+    println(0, " Restricted     : " << restr_str);
+    println(0, " Hamiltonian    : Superposition of Atomic Densities (SAD)");
+    println(0, " Functional     : LDA (SVWN5)");
+    println(0, " AO basis       : Hydrogenic orbitals");
+    println(0, " Zeta quality   : " << zeta);
+    Printer::printSeparator(0, '-', 2);
+
     // Figure out number of occupied orbitals
     int mult = mol.getMultiplicity(); // multiplicity
     int Ne = mol.getNElectrons();     // total electrons
@@ -201,11 +213,12 @@ OrbitalVector initial_guess::sad::rotate_orbitals(double prec, ComplexMatrix &U,
 
 void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol) {
     Timer timer;
-    Printer::printHeader(0, "Projecting Gaussian-type density");
-    println(0, " Nr  Element                                 Rho_i");
+    Printer::printHeader(0, "Projecting GTO density");
+    println(0, "    N    Atom          Nuclear charge          Rho_K");
     Printer::printSeparator(0, '-');
 
-    double crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
+    auto print_prec = Printer::getPrecision();
+    auto crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
 
     std::string sad_path = SAD_BASIS_DIR;
 
@@ -213,26 +226,29 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
     rho_loc.alloc(NUMBER::Real);
     rho_loc.real().setZero();
 
-    int oldprec = Printer::setPrecision(15);
     const Nuclei &nucs = mol.getNuclei();
     for (int k = 0; k < nucs.size(); k++) {
         if (mpi::orb_rank != k % mpi::orb_size) continue;
 
         const std::string &sym = nucs[k].getElement().getSymbol();
-        std::stringstream bas;
-        std::stringstream dens;
-        bas << sad_path << sym << ".bas";
-        dens << sad_path << sym << ".dens";
+        std::stringstream o_bas, o_dens;
+        o_bas << sad_path << sym << ".bas";
+        o_dens << sad_path << sym << ".dens";
 
-        Density rho_k = initial_guess::gto::project_density(prec, nucs[k], bas.str(), dens.str());
-        printout(0, std::setw(3) << k);
+        Density rho_k = initial_guess::gto::project_density(prec, nucs[k], o_bas.str(), o_dens.str());
+
+        std::stringstream o_nuc, o_rho;
+        o_nuc << std::setprecision(2 * print_prec) << std::fixed << nucs[k].getCharge();
+        o_rho << std::setprecision(2 * print_prec) << std::fixed << rho_k.integrate().real();
+
+        printout(0, std::setw(5) << k);
         printout(0, std::setw(7) << sym);
-        printout(0, std::setw(49) << rho_k.integrate().real() << "\n");
+        printout(0, std::setw(25) << o_nuc.str());
+        printout(0, std::setw(22) << o_rho.str() << std::endl);
 
         rho_loc.add(1.0, rho_k);
         rho_loc.crop(crop_prec);
     }
-    Printer::setPrecision(oldprec);
 
     density::allreduce_density(prec, rho_tot, rho_loc);
 

@@ -136,15 +136,23 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
  * This function expects the "initial_guess" subsection of the input.
  */
 bool driver::run_guess(const json &json_guess, Molecule &mol) {
-    Printer::printHeader(0, "Initial guess input");
-    println(0, json_guess.dump(2));
-    Printer::printSeparator(0, '=', 2);
+    println(0, "                                                            ");
+    println(0, "************************************************************");
+    println(0, "***                                                      ***");
+    println(0, "***               Running Initial Guess                  ***");
+    println(0, "***                                                      ***");
+    println(0, "************************************************************");
+    println(0, "                                                            ");
+    println(0, "                                                            ");
 
     auto &Phi = mol.getOrbitals();
     auto &F_mat = mol.getFockMatrix();
 
     auto method = json_guess["method"].get<std::string>();
     if (method == "mw") {
+        Printer::printSeparator(0, '-');
+        println(0, " Method         : Reading orbitals from file (MW)");
+        Printer::printSeparator(0, '-', 2);
         auto start_orbs = json_guess["start_orbitals"].get<std::string>();
         Phi = orbital::load_orbitals(start_orbs);
     } else if (method == "core") {
@@ -172,12 +180,13 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
         MSG_ERROR("Invalid initial guess");
         return false;
     }
-
-    F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
+    orbital::print(Phi);
 
     auto write_orbs = json_guess["write_orbitals"].get<bool>();
     auto final_orbs = json_guess["final_orbitals"].get<std::string>();
     if (write_orbs) orbital::save_orbitals(Phi, final_orbs);
+
+    F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
 
     return true;
 }

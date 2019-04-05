@@ -88,6 +88,17 @@ int PT[29][2] = {
  *
  */
 OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
+    std::string restr_str = "false";
+    if (restricted) restr_str = "true";
+    Printer::printSeparator(0, '-');
+    println(0, " Method         : Diagonalize Hamiltonian matrix");
+    println(0, " Precision      : " << prec);
+    println(0, " Restricted     : " << restr_str);
+    println(0, " Hamiltonian    : Core");
+    println(0, " AO basis       : Hydrogenic orbitals");
+    println(0, " Zeta quality   : " << zeta);
+    Printer::printSeparator(0, '-', 2);
+
     int mult = mol.getMultiplicity(); // multiplicity
     int Ne = mol.getNElectrons();     // total electrons
     int Nd = Ne - (mult - 1);         // doubly occupied
@@ -168,7 +179,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     Printer::printDouble(0, "Rotate orbitals", t3.getWallTime(), 5);
 
     t_diag.stop();
-    Printer::printFooter(0, t_diag, 1);
+    Printer::printFooter(0, t_diag, 2);
 
     return Psi;
 }
@@ -194,8 +205,9 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
  *
  */
 OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, int spin, int zeta) {
+    auto print_prec = Printer::getPrecision();
     Printer::printHeader(0, "Projecting Hydrogen AOs");
-    println(0, "    N    Atom   Label                     SquareNorm");
+    println(0, "    n    Atom   Label                          SquareNorm");
     Printer::printSeparator(0, '-');
 
     Timer timer;
@@ -228,11 +240,13 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
                 Phi.back().setRankID(Phi.size() % mpi::orb_size);
                 if (mpi::my_orb(Phi.back())) qmfunction::project(Phi.back(), h_func, NUMBER::Real, prec);
 
-                printout(0, std::setw(5) << Phi.size());
+                std::stringstream o_norm;
+                o_norm << std::setprecision(2 * print_prec) << std::fixed << Phi.back().squaredNorm();
+
+                printout(0, std::setw(5) << Phi.size() - 1);
                 printout(0, std::setw(6) << nuc.getElement().getSymbol() << i + 1);
                 printout(0, std::setw(6) << n << label[l]);
-                printout(0, std::setw(40) << Phi.back().squaredNorm());
-                printout(0, std::endl);
+                printout(0, std::setw(40) << o_norm.str() << std::endl);
 
                 if (++nAO >= minAO) minAOReached = true;
             }

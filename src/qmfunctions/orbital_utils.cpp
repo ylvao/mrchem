@@ -264,14 +264,25 @@ OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
  * vector are saved.
  */
 void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix, int n_orbs) {
+    Timer timer;
+    Printer::printHeader(0, "Writing orbitals");
+    println(0, " File name      : " << file);
+    println(0, " File suffix    : " << suffix);
+    Printer::printSeparator(0, '-');
     if (n_orbs < 0) n_orbs = Phi.size();
     if (n_orbs > Phi.size()) MSG_ERROR("Index out of bounds");
     for (int i = 0; i < n_orbs; i++) {
         if (not mpi::my_orb(Phi[i])) continue; // only save own orbitals
+        Timer t1;
         std::stringstream orbname;
         orbname << file << "_" << suffix << i;
         Phi[i].saveOrbital(orbname.str());
+        auto n = Phi[i].getNNodes(NUMBER::Total);
+        t1.stop();
+        Printer::printTree(0, "'" + orbname.str() + "'", n, t1.getWallTime());
     }
+    timer.stop();
+    Printer::printFooter(0, timer, 2);
 }
 
 /** @brief Read orbitals from disk
@@ -285,9 +296,15 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const s
  * the prefix name will be read.
  */
 OrbitalVector orbital::load_orbitals(const std::string &file, const std::string &suffix, int n_orbs) {
+    Timer timer;
+    Printer::printHeader(0, "Reading orbitals");
+    println(0, " File name      : " << file);
+    println(0, " File suffix    : " << suffix);
+    Printer::printSeparator(0, '-');
     OrbitalVector Phi;
     for (int i = 0; true; i++) {
         if (n_orbs > 0 and i >= n_orbs) break;
+        Timer t1;
         Orbital phi_i;
         std::stringstream orbname;
         orbname << file << "_" << suffix << i;
@@ -296,7 +313,10 @@ OrbitalVector orbital::load_orbitals(const std::string &file, const std::string 
         if (phi_i.hasReal() or phi_i.hasImag()) {
             phi_i.setRankID(i % mpi::orb_size);
             Phi.push_back(phi_i);
+            auto n = phi_i.getNNodes(NUMBER::Total);
             if (not mpi::my_orb(phi_i)) phi_i.free(NUMBER::Total);
+            t1.stop();
+            Printer::printTree(0, "'" + orbname.str() + "'", n, t1.getWallTime());
         } else {
             break;
         }
@@ -308,6 +328,8 @@ OrbitalVector orbital::load_orbitals(const std::string &file, const std::string 
     }
     mpi::allreduce_vector(errors, mpi::comm_orb);
     orbital::set_errors(Phi, errors);
+    timer.stop();
+    Printer::printFooter(0, timer, 2);
     return Phi;
 }
 
@@ -836,9 +858,9 @@ void orbital::print(const OrbitalVector &Phi) {
     printout(0, std::setw(4) << size_occupied(Phi) << " occupied  ");
     printout(0, std::setw(4) << get_electron_number(Phi) << " electrons\n");
     printout(0, "------------------------------------------------------------\n");
-    printout(0, "   n  RankID           Norm          Spin Occ      Error    \n");
+    printout(0, "    n  RankID        Norm          Spin Occ        Error    \n");
     printout(0, "------------------------------------------------------------\n");
-    for (int i = 0; i < Phi.size(); i++) println(0, std::setw(4) << i << Phi[i]);
+    for (int i = 0; i < Phi.size(); i++) println(0, std::setw(5) << i << Phi[i]);
     printout(0, "============================================================\n\n\n");
 }
 
@@ -846,7 +868,7 @@ void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F
     if (Phi.size() == 0) return;
     if (F_mat.cols() != Phi.size()) MSG_FATAL("Invalid Fock matrix");
     Printer::printHeader(0, "Orbital energies");
-    println(0, "   Nr  Spin  Occ                               Epsilon      ");
+    println(0, "    n  Spin  Occ                               Epsilon      ");
     Printer::printSeparator(0, '-');
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F_mat.cols());
     es.compute(F_mat);
