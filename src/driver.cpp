@@ -100,9 +100,14 @@ DerivativeOperator_p get_derivative(const std::string &name);
  * This function expects the "molecule" subsection of the input.
  */
 void driver::init_molecule(const json &json_mol, Molecule &mol) {
-    Printer::printHeader(0, "Molecule input");
-    println(0, json_mol.dump(2));
-    Printer::printSeparator(0, '=', 2);
+    println(0, "                                                            ");
+    println(0, "************************************************************");
+    println(0, "***                                                      ***");
+    println(0, "***               Initializing Molecule                  ***");
+    println(0, "***                                                      ***");
+    println(0, "************************************************************");
+    println(0, "                                                            ");
+    println(0, "                                                            ");
 
     auto charge = json_mol["charge"].get<int>();
     auto multiplicity = json_mol["multiplicity"].get<int>();

@@ -223,7 +223,8 @@ void Molecule::printGeometry() const {
     auto prec = Printer::getPrecision();
 
     Printer::printHeader(0, "Molecule");
-    println(0, "   Nr    Element           x             y             z    ");
+    println(0, "         Charge :" << std::setw(14) << getCharge());
+    println(0, "   Multiplicity :" << std::setw(14) << getMultiplicity());
     Printer::printSeparator(0, '-');
     for (auto i = 0; i < getNNuclei(); i++) {
         const auto &nuc = getNuclei()[i];
@@ -233,7 +234,7 @@ void Molecule::printGeometry() const {
         o_sym << nuc.getElement().getSymbol();
         o_sym << "  ";
 
-        printout(0, std::setw(5) << i + 1 << "        ");
+        printout(0, std::setw(5) << i << "        ");
         printout(0, o_sym.str()[0] << o_sym.str()[1] << " :");
         printout(0, coord_str << std::endl);
     }
