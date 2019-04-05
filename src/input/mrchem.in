@@ -191,12 +191,7 @@ def write_mra(program_dict, user_dict):
   }
 
 def write_printer(program_dict, user_dict):
-  program_dict["printer"] = {
-    "filename": "mrchem",
-    "printprec": 15,
-    "printlevel": user_dict["printlevel"],
-    "teletype": user_dict["teletype"]
-  }
+  program_dict["printer"] = user_dict["Printer"]
 
 def write_molecule(program_dict, user_dict):
   AA = 1.0

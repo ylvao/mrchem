@@ -54,16 +54,16 @@ void mrenv::initialize(const json &input) {
 
 void mrenv::init_printer(const json &json_print) {
     // Initialize printing
-    auto printlevel = json_print["printlevel"].get<int>();
-    auto printprec = json_print["printprec"].get<int>();
-    auto teletype = json_print["teletype"].get<bool>();
-    auto fname = json_print["filename"].get<std::string>();
-    if (teletype) {
-        Printer::init(printlevel, mpi::orb_rank, mpi::orb_size, fname.c_str());
+    auto print_level = json_print["print_level"].get<int>();
+    auto print_prec = json_print["print_prec"].get<int>();
+    auto mpi_print = json_print["mpi_print"].get<bool>();
+    auto fname = json_print["file_name"].get<std::string>();
+    if (mpi_print) {
+        Printer::init(print_level, mpi::orb_rank, mpi::orb_size, fname.c_str());
     } else {
-        Printer::init(printlevel, mpi::orb_rank, mpi::orb_size);
+        Printer::init(print_level, mpi::orb_rank, mpi::orb_size);
     }
-    Printer::setPrecision(printprec);
+    Printer::setPrecision(print_prec);
 }
 
 void mrenv::init_mra(const json &json_mra) {
