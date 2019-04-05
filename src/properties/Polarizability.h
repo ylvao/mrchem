@@ -26,6 +26,7 @@
 #pragma once
 
 #include "mrchem.h"
+#include "utils/math_utils.h"
 
 namespace mrchem {
 
@@ -34,42 +35,51 @@ class Polarizability final {
 public:
     explicit Polarizability(double w = 0.0) : frequency(w) {}
 
+    mrcpp::Coord<3> &getOrigin() { return this->origin; }
+    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
+
     double getFrequency() const { return this->frequency; }
     DoubleMatrix &getTensor() { return this->tensor; }
     const DoubleMatrix &getTensor() const { return this->tensor; }
 
     friend std::ostream& operator<<(std::ostream &o, const Polarizability &pol) {
-        auto w_au = pol.getFrequency();
+        auto prec = mrcpp::Printer::getPrecision();
         auto iso_au = pol.getTensor().trace() / 3.0;
         auto iso_si = iso_au * 0.0; // Luca: FIX THIS
 
-        auto oldPrec = mrcpp::Printer::setPrecision(10);
-        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
-        o << "                                                            " << std::endl;
+        std::string origin_str = math_utils::coord_to_string(prec, 14, pol.getOrigin());
+
+        std::stringstream o_omega;
+        o_omega << std::setw(27) << std::setprecision(prec) << std::fixed << pol.getFrequency();
+
+        std::stringstream o_iso_au, o_iso_si;
+        o_iso_au << std::setw(27) << std::setprecision(prec) << std::fixed << iso_au;
+        o_iso_si << std::setw(27) << std::setprecision(prec) << std::fixed << iso_si;
+
+        std::string pol_str_0 = math_utils::vector_to_string(prec, 14, pol.getTensor().row(0));
+        std::string pol_str_1 = math_utils::vector_to_string(prec, 14, pol.getTensor().row(1));
+        std::string pol_str_2 = math_utils::vector_to_string(prec, 14, pol.getTensor().row(2));
+
         o << "============================================================" << std::endl;
-        o << "                   Polarizability tensor                    " << std::endl;
+        o << "                      Polarizability                        " << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Frequency:        (au)      " << std::setw(30) << w_au       << std::endl;
-        o << "                                                            " << std::endl;
+        o << "      Frequency :          (au) " << o_omega.str()            << std::endl;
+        o << "            r_O :" << origin_str                              << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Isotropic average (au)      " << std::setw(30) << iso_au     << std::endl;
-        o << " Isotropic average (SI)      TO BE FIXED                    " << std::endl;
-        o << "                                                            " << std::endl;
-        o << "-------------------------- Tensor --------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<             pol.getTensor().format(clean_format)               << std::endl;
-        o << "                                                            " << std::endl;
+        o << "   Total tensor :" << pol_str_0                               << std::endl;
+        o << "                :" << pol_str_1                               << std::endl;
+        o << "                :" << pol_str_2                               << std::endl;
+        o << "   Iso. average :          (au) " << o_iso_au.str()           << std::endl;
+        o << "                :          (SI)                 TO BE FIXED " << std::endl;
         o << "============================================================" << std::endl;
         o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
 
         return o;
     }
 
 private:
     double frequency;
+    mrcpp::Coord<3> origin{};
     DoubleMatrix tensor{DoubleMatrix::Zero(3,3)};
 };
 // clang-format on

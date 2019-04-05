@@ -26,12 +26,16 @@
 #pragma once
 
 #include "mrchem.h"
+#include "utils/math_utils.h"
 
 namespace mrchem {
 
 // clang-format off
 class DipoleMoment final {
 public:
+    mrcpp::Coord<3> &getOrigin() { return this->origin; }
+    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
+
     DoubleVector getTensor() const { return getNuclear() + getElectronic(); }
     DoubleVector &getNuclear() { return this->nuc_tensor; }
     DoubleVector &getElectronic() { return this->el_tensor; }
@@ -39,39 +43,39 @@ public:
     const DoubleVector &getElectronic() const { return this->el_tensor; }
 
     friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dip) {
+        auto prec = mrcpp::Printer::getPrecision();
         auto length_au = dip.getTensor().norm();
         auto length_db = length_au * PHYSCONST::Debye;
 
-        auto oldPrec = mrcpp::Printer::setPrecision(10);
-        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
-        o << "                                                            " << std::endl;
+        std::string origin_str = math_utils::coord_to_string(prec, 14, dip.getOrigin());
+
+        std::stringstream o_au, o_db;
+        o_au << std::setw(27) << std::setprecision(prec) << std::fixed << length_au;
+        o_db << std::setw(27) << std::setprecision(prec) << std::fixed << length_db;
+
+        std::string el_str = math_utils::vector_to_string(prec, 14, dip.getElectronic());
+        std::string nuc_str = math_utils::vector_to_string(prec, 14, dip.getNuclear());
+        std::string tot_str = math_utils::vector_to_string(prec, 14, dip.getTensor());
+
         o << "============================================================" << std::endl;
         o << "                         Dipole moment                      " << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Length of vector:   (au)    " << std::setw(30) << length_au  << std::endl;
-        o << "                     (Debye) " << std::setw(30) << length_db  << std::endl;
-        o << "                                                            " << std::endl;
-        o << "-------------------------- Total ---------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<    dip.getTensor().transpose().format(clean_format)            << std::endl;
-        o << "                                                            " << std::endl;
-        o << "------------------------- Nuclear --------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<    dip.getNuclear().transpose().format(clean_format)           << std::endl;
-        o << "                                                            " << std::endl;
-        o << "------------------------ Electronic ------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<    dip.getElectronic().transpose().format(clean_format)        << std::endl;
-        o << "                                                            " << std::endl;
+        o << "            r_O :" << origin_str                              << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "     Electronic :" << el_str                                  << std::endl;
+        o << "        Nuclear :" << nuc_str                                 << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "   Total vector :" << tot_str                                 << std::endl;
+        o << "      Magnitude :          (au) " << o_au.str()               << std::endl;
+        o << "                :       (Debye) " << o_db.str()               << std::endl;
         o << "============================================================" << std::endl;
         o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
 
         return o;
     }
 
 private:
+    mrcpp::Coord<3> origin{};
     DoubleVector nuc_tensor{DoubleVector::Zero(3)};
     DoubleVector el_tensor{DoubleVector::Zero(3)};
 };

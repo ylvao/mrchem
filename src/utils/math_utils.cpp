@@ -56,6 +56,31 @@ void print_matrix(int level, const DoubleMatrix &M, const std::string &name, int
     mrcpp::Printer::setPrecision(oldPrec);
 }
 
+std::string coord_to_string(int prec, int width, const mrcpp::Coord<3> &coord) {
+    std::stringstream o;
+    o << std::setw(width) << std::setprecision(prec) << std::fixed << coord[0];
+    o << std::setw(width) << std::setprecision(prec) << std::fixed << coord[1];
+    o << std::setw(width) << std::setprecision(prec) << std::fixed << coord[2];
+    return o.str();
+}
+
+std::string vector_to_string(int prec, int width, const DoubleVector &vec) {
+    std::stringstream o;
+    for (int i = 0; i < vec.size(); i++) o << std::setw(width) << std::setprecision(prec) << std::fixed << vec(i);
+    return o.str();
+}
+
+std::string matrix_to_string(int prec, int width, const DoubleMatrix &mat) {
+    std::stringstream o;
+    for (int i = 0; i < mat.rows(); i++) {
+        for (int j = 0; j < mat.cols(); j++) {
+            o << std::setw(width) << std::setprecision(prec) << std::fixed << mat(i, j);
+        }
+        if (i != mat.rows()) o << std::endl;
+    }
+    return o.str();
+}
+
 /** @brief Read Eigen matrix from file
  *
  * @param file: file name

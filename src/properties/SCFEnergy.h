@@ -58,41 +58,48 @@ public:
     double getExchangeEnergy() const { return this->E_x; }
 
     friend std::ostream& operator<<(std::ostream &o, const SCFEnergy &en) {
-        auto E_au   = en.E_nuc + en.E_el;
-        auto E_kJ   = E_au * PHYSCONST::kJ;
-        auto E_kcal = E_au * PHYSCONST::kcal;
-        auto E_eV   = E_au * PHYSCONST::eV;
+        auto E_au = en.E_nuc + en.E_el;
+        auto prec = mrcpp::Printer::getPrecision();
 
-        auto oldPrec = mrcpp::Printer::setPrecision(15);
-        o << "                                                            " << std::endl;
+        std::stringstream o_kin, o_en, o_ee, o_x, o_xc, o_xe, o_xn;
+        o_kin << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_kin;
+        o_en << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_en;
+        o_ee << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_ee;
+        o_x << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_x;
+        o_xc << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_xc;
+        o_xe << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_ext;
+        o_xn << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_nex;
+
+        std::stringstream o_el, o_nuc;
+        o_el << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_el;
+        o_nuc << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_nuc;
+
+        std::stringstream o_au, o_ev, o_kj, o_kcal;
+        o_au << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au;
+        o_ev << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au * PHYSCONST::eV;
+        o_kj << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au * PHYSCONST::kJ;
+        o_kcal << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au * PHYSCONST::kcal;
+
         o << "============================================================" << std::endl;
-        o << "                         SCF Energy                         " << std::endl;
+        o << "                         SCF energy                         " << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Sum orbital energy:          " << std::setw(29) << en.E_orb  << std::endl;
-        o << " Kinetic energy:              " << std::setw(29) << en.E_kin  << std::endl;
-        o << " E-N energy:                  " << std::setw(29) << en.E_en   << std::endl;
-        o << " Coulomb energy:              " << std::setw(29) << en.E_ee   << std::endl;
-        o << " Exchange energy:             " << std::setw(29) << en.E_x    << std::endl;
-        o << " X-C energy:                  " << std::setw(29) << en.E_xc   << std::endl;
-        o << " El. external field energy:   " << std::setw(29) << en.E_ext  << std::endl;
-        o << " Nuc. external field energy:  " << std::setw(29) << en.E_nex  << std::endl;
-        o << "                                                            " << std::endl;
+        o << "        Kinetic :          (au) " << o_kin.str()              << std::endl;
+        o << "            E-N :          (au) " << o_en.str()               << std::endl;
+        o << "        Coulomb :          (au) " << o_ee.str()               << std::endl;
+        o << "       Exchange :          (au) " << o_x.str()                << std::endl;
+        o << "            X-C :          (au) " << o_xc.str()               << std::endl;
+        o << " Ext. field (E) :          (au) " << o_xe.str()               << std::endl;
+        o << " Ext. field (N) :          (au) " << o_xn.str()               << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Electronic energy:           " << std::setw(29) << en.E_el   << std::endl;
-        o << " Nuclear energy:              " << std::setw(29) << en.E_nuc  << std::endl;
-        o << "                                                            " << std::endl;
+        o << "     Electronic :          (au) " << o_el.str()               << std::endl;
+        o << "        Nuclear :          (au) " << o_nuc.str()              << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Total energy       (au)      " << std::setw(29) << E_au      << std::endl;
-        o << "                    (kJ/mol)  " << std::setw(29) << E_kJ      << std::endl;
-        o << "                    (kcal/mol)" << std::setw(29) << E_kcal    << std::endl;
-        o << "                    (eV)      " << std::setw(29) << E_eV      << std::endl;
-        o << "                                                            " << std::endl;
+        o << "   Total energy :          (au) "  << o_au.str()              << std::endl;
+        o << "                :    (kcal/mol) "  << o_kcal.str()            << std::endl;
+        o << "                :      (kJ/mol) "  << o_kj.str()              << std::endl;
+        o << "                :          (eV) "  << o_ev.str()              << std::endl;
         o << "============================================================" << std::endl;
         o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
 
         return o;
     }

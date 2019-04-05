@@ -122,7 +122,7 @@ Magnetizability &Molecule::getMagnetizability() {
 /** @brief Return property NMRShielding */
 NMRShielding &Molecule::getNMRShielding(int k) {
     if (nmr.size() == 0) initNuclearProperties(getNNuclei());
-    if (nmr[k] == nullptr) nmr[k] = std::make_unique<NMRShielding>(nuclei[k]);
+    if (nmr[k] == nullptr) nmr[k] = std::make_unique<NMRShielding>(k, nuclei[k]);
     return *nmr[k];
 }
 
@@ -254,30 +254,27 @@ void Molecule::readCoordinateString(const std::vector<std::string> &coord_str) {
 
 /** @brief Pretty output of molecular geometry */
 void Molecule::printGeometry() const {
-    Printer::printHeader(0, "Molecule");
-    println(0, " Nr  Element             x             y             z      ");
-    Printer::printSeparator(0, '-');
-    auto oldPrec = Printer::setPrecision(5);
+    auto prec = Printer::getPrecision();
 
+    Printer::printHeader(0, "Molecule");
+    println(0, "   Nr    Element           x             y             z    ");
+    Printer::printSeparator(0, '-');
     for (auto i = 0; i < getNNuclei(); i++) {
         const auto &nuc = getNuclei()[i];
-        const auto &coord = nuc.getCoord();
-        std::stringstream symbol;
-        symbol << nuc.getElement().getSymbol();
-        symbol << "  ";
-        printout(0, std::setw(3) << i + 1 << "     ");
-        printout(0, symbol.str()[0] << symbol.str()[1]);
-        printout(0, std::setw(21) << coord[0]);
-        printout(0, std::setw(14) << coord[1]);
-        printout(0, std::setw(14) << coord[2] << std::endl);
+
+        std::string coord_str = math_utils::coord_to_string(prec, 14, nuc.getCoord());
+        std::stringstream o_sym;
+        o_sym << nuc.getElement().getSymbol();
+        o_sym << "  ";
+
+        printout(0, std::setw(5) << i + 1 << "        ");
+        printout(0, o_sym.str()[0] << o_sym.str()[1] << " :");
+        printout(0, coord_str << std::endl);
     }
     Printer::printSeparator(0, '-');
-    printout(0, " Center of mass: ");
     Coord<3> COM = calcCenterOfMass();
-    printout(0, std::setw(14) << COM[0]);
-    printout(0, std::setw(14) << COM[1]);
-    printout(0, std::setw(14) << COM[2] << std::endl);
-    Printer::setPrecision(oldPrec);
+    std::string com_str = math_utils::coord_to_string(prec, 14, COM);
+    println(0, " Center of mass :" << com_str);
     Printer::printSeparator(0, '=', 2);
 }
 

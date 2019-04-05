@@ -401,6 +401,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
         Timer timer;
         H_E_dip h(r_O);
         h.setup(prec);
+        mu.getOrigin() = r_O;
         mu.getNuclear() = h.trace(nuclei).real();
         mu.getElectronic() = h.trace(Phi).real();
         h.clear();
@@ -477,12 +478,13 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
         auto prec = (*json_mag)["setup_prec"].get<double>();
         auto r_O = (*json_mag)["origin"].get<Coord<3>>();
 
-        Magnetizability &eta = mol.getMagnetizability();
+        Magnetizability &khi = mol.getMagnetizability();
 
         Timer timer;
         H_BB_dia h(r_O);
         h.setup(prec);
-        eta.getDiamagnetic() = -h.trace(Phi).real();
+        khi.getOrigin() = r_O;
+        khi.getDiamagnetic() = -h.trace(Phi).real();
         h.clear();
         timer.stop();
         Printer::printFooter(0, timer, 2);
@@ -502,6 +504,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
 
             H_BM_dia h(r_O, r_K);
             h.setup(prec);
+            sigma_k.getOrigin() = r_O;
             sigma_k.getDiamagnetic() = h.trace(Phi).real();
             h.clear();
         }
@@ -545,12 +548,12 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
         auto pert_diff = (*json_mag)["derivative"].get<std::string>();
         auto D = driver::get_derivative(pert_diff);
 
-        Magnetizability &eta = mol.getMagnetizability();
+        Magnetizability &khi = mol.getMagnetizability();
 
         Timer timer;
         H_B_dip h(D, r_O);
         h.setup(prec);
-        eta.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
+        khi.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
         timer.stop();
         Printer::printFooter(0, timer, 2);
@@ -705,6 +708,20 @@ DerivativeOperator_p driver::get_derivative(const std::string &name) {
         MSG_ERROR("Invalid derivative operator");
     }
     return D;
+}
+
+void driver::print_properties(const Molecule &mol) {
+    println(0, "                                                            ");
+    println(0, "************************************************************");
+    println(0, "***                                                      ***");
+    println(0, "***                Printing Properties                   ***");
+    println(0, "***                                                      ***");
+    println(0, "************************************************************");
+    println(0, "                                                            ");
+    println(0, "                                                            ");
+
+    mol.printGeometry();
+    mol.printProperties();
 }
 
 } // namespace mrchem

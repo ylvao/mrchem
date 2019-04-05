@@ -32,6 +32,9 @@ namespace mrchem {
 // clang-format off
 class Magnetizability final {
 public:
+    mrcpp::Coord<3> &getOrigin() { return this->origin; }
+    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
+
     DoubleMatrix getTensor() const { return getDiamagnetic() + getParamagnetic(); }
     DoubleMatrix &getDiamagnetic() { return this->dia_tensor; }
     DoubleMatrix &getParamagnetic() { return this->para_tensor; }
@@ -39,54 +42,66 @@ public:
     const DoubleMatrix &getParamagnetic() const { return this->para_tensor; }
 
     friend std::ostream& operator<<(std::ostream &o, const Magnetizability &mag) {
-        auto w_au = 0.0;  // Only static magnetizability
+        auto prec = mrcpp::Printer::getPrecision();
         auto isoDMau = mag.getDiamagnetic().trace() / 3.0;
         auto isoPMau = mag.getParamagnetic().trace() / 3.0;
         auto isoTMau = isoDMau + isoPMau;
 
-        auto isoDMsi = isoDMau * PHYSCONST::JT_m2; // SI units (J/T^2 10^{-30})
-        auto isoPMsi = isoPMau * PHYSCONST::JT_m2; // SI units (J/T^2 10^{-30})
-        auto isoTMsi = isoTMau * PHYSCONST::JT_m2; // SI units (J/T^2 10^{-30})
+        std::string origin_str = math_utils::coord_to_string(prec, 14, mag.getOrigin());
 
-        auto oldPrec = mrcpp::Printer::setPrecision(10);
-        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
-        o << "                                                            " << std::endl;
+        std::stringstream o_tot_au, o_dia_au, o_para_au;
+        o_tot_au << std::setw(27) << std::setprecision(prec) << std::fixed << isoTMau;
+        o_dia_au << std::setw(27) << std::setprecision(prec) << std::fixed << isoDMau;
+        o_para_au << std::setw(27) << std::setprecision(prec) << std::fixed << isoPMau;
+
+        // SI units (J/T^2 10^{-30})
+        std::stringstream o_tot_si, o_dia_si, o_para_si;
+        o_tot_si << std::setw(27) << std::setprecision(prec) << std::fixed << isoTMau * PHYSCONST::JT_m2;
+        o_dia_si << std::setw(27) << std::setprecision(prec) << std::fixed << isoDMau * PHYSCONST::JT_m2;
+        o_para_si << std::setw(27) << std::setprecision(prec) << std::fixed << isoPMau * PHYSCONST::JT_m2;
+
+        std::string dia_str_0 = math_utils::vector_to_string(prec, 14, mag.getDiamagnetic().row(0));
+        std::string dia_str_1 = math_utils::vector_to_string(prec, 14, mag.getDiamagnetic().row(1));
+        std::string dia_str_2 = math_utils::vector_to_string(prec, 14, mag.getDiamagnetic().row(2));
+
+        std::string para_str_0 = math_utils::vector_to_string(prec, 14, mag.getParamagnetic().row(0));
+        std::string para_str_1 = math_utils::vector_to_string(prec, 14, mag.getParamagnetic().row(1));
+        std::string para_str_2 = math_utils::vector_to_string(prec, 14, mag.getParamagnetic().row(2));
+
+        std::string tot_str_0 = math_utils::vector_to_string(prec, 14, mag.getTensor().row(0));
+        std::string tot_str_1 = math_utils::vector_to_string(prec, 14, mag.getTensor().row(1));
+        std::string tot_str_2 = math_utils::vector_to_string(prec, 14, mag.getTensor().row(2));
+
         o << "============================================================" << std::endl;
-        o << "                   Magnetizability tensor                   " << std::endl;
+        o << "                      Magnetizability                       " << std::endl;
         o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Frequency:       (au)       " << std::setw(30) << w_au       << std::endl;
-        o << "                                                            " << std::endl;
-        o << "-------------------- Isotropic averages --------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Total            (au)       " << std::setw(30) << isoTMau    << std::endl;
-        o << " Diamagnetic      (au)       " << std::setw(30) << isoDMau    << std::endl;
-        o << " Paramagnetic     (au)       " << std::setw(30) << isoPMau    << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Total            (SI)       " << std::setw(30) << isoTMsi    << std::endl;
-        o << " Diamagnetic      (SI)       " << std::setw(30) << isoDMsi    << std::endl;
-        o << " Paramagnetic     (SI)       " << std::setw(30) << isoPMsi    << std::endl;
-        o << "                                                            " << std::endl;
-        o << "-------------------------- Total ---------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<                mag.getTensor().format(clean_format)            << std::endl;
-        o << "                                                            " << std::endl;
-        o << "----------------------- Diamagnetic ------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<                mag.getDiamagnetic().format(clean_format)       << std::endl;
-        o << "                                                            " << std::endl;
-        o << "----------------------- Paramagnetic -----------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<                mag.getParamagnetic().format(clean_format)      << std::endl;
-        o << "                                                            " << std::endl;
+        o << "            r_O :" << origin_str                              << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "   Total tensor :" << tot_str_0                               << std::endl;
+        o << "                :" << tot_str_1                               << std::endl;
+        o << "                :" << tot_str_2                               << std::endl;
+        o << "   Iso. average :          (au) " << o_tot_au.str()           << std::endl;
+        o << "                :          (SI) " << o_tot_si.str()           << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "    Diamagnetic :" << dia_str_0                               << std::endl;
+        o << "                :" << dia_str_1                               << std::endl;
+        o << "                :" << dia_str_2                               << std::endl;
+        o << "   Dia. average :          (au) " << o_dia_au.str()           << std::endl;
+        o << "                :          (SI) " << o_dia_si.str()           << std::endl;
+        o << "------------------------------------------------------------" << std::endl;
+        o << "   Paramagnetic :" << para_str_0                              << std::endl;
+        o << "                :" << para_str_1                              << std::endl;
+        o << "                :" << para_str_2                              << std::endl;
+        o << "  Para. average :          (au) " << o_para_au.str()          << std::endl;
+        o << "                :          (SI) " << o_para_si.str()          << std::endl;
         o << "============================================================" << std::endl;
         o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
 
         return o;
     }
 
 private:
+    mrcpp::Coord<3> origin{};
     DoubleMatrix dia_tensor{DoubleMatrix::Zero(3,3)};
     DoubleMatrix para_tensor{DoubleMatrix::Zero(3,3)};
 };

@@ -845,23 +845,30 @@ void orbital::print(const OrbitalVector &Phi) {
 void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F_mat) {
     if (Phi.size() == 0) return;
     if (F_mat.cols() != Phi.size()) MSG_FATAL("Invalid Fock matrix");
-    int oldprec = Printer::setPrecision(5);
     Printer::printHeader(0, "Orbital energies");
-    println(0, "    n  spin  occ                            epsilon  ");
+    println(0, "   Nr  Spin  Occ                               Epsilon      ");
     Printer::printSeparator(0, '-');
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F_mat.cols());
     es.compute(F_mat);
 
-    Printer::setPrecision(15);
+    auto sum_eps = 0.0;
+    auto prec = Printer::getPrecision();
     DoubleVector epsilon = es.eigenvalues();
     for (int i = 0; i < epsilon.size(); i++) {
+        std::stringstream o_eps;
+        o_eps << std::setw(27) << std::setprecision(2 * prec) << std::fixed << epsilon(i);
+
         printout(0, std::setw(5) << i);
         printout(0, std::setw(5) << Phi[i].printSpin());
         printout(0, std::setw(5) << Phi[i].occ());
-        printout(0, std::setw(44) << epsilon(i) << std::endl);
+        printout(0, " :          (au) " << o_eps.str() << std::endl);
+        sum_eps += Phi[i].occ() * epsilon(i);
     }
+    Printer::printSeparator(0, '-');
+    std::stringstream o_sum;
+    o_sum << std::setw(27) << std::setprecision(2 * prec) << std::fixed << sum_eps;
+    println(0, "   Sum occupied :          (au) " << o_sum.str());
     Printer::printSeparator(0, '=', 2);
-    Printer::setPrecision(oldprec);
 }
 
 /** @brief Prints statistics about the size of orbitals in an OrbitalVector

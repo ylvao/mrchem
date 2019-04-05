@@ -43,8 +43,7 @@ int main(int argc, char **argv) {
         for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
     }
 
-    mol.printGeometry();
-    mol.printProperties();
+    driver::print_properties(mol);
 
     timer.stop();
     mrenv::finalize(timer.getWallTime());
