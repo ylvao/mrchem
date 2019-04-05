@@ -73,12 +73,7 @@ Molecule::Molecule(const std::vector<std::string> &coord_str, int c, int m)
 }
 
 void Molecule::initNuclearProperties(int nNucs) {
-    for (auto k = 0; k < nNucs; k++) {
-        nmr.push_back(nullptr);
-        hfcc.push_back(nullptr);
-        sscc.push_back(std::vector<std::unique_ptr<SpinSpinCoupling>>{});
-        for (auto l = 0; l < nNucs; l++) sscc[k].push_back(nullptr);
-    }
+    for (auto k = 0; k < nNucs; k++) nmr.push_back(nullptr);
 }
 
 void Molecule::initPerturbedOrbitals(bool dynamic) {
@@ -103,16 +98,6 @@ DipoleMoment &Molecule::getDipoleMoment() {
     return *dipole;
 }
 
-/** @brief Return property QuadrupoleMoment */
-QuadrupoleMoment &Molecule::getQuadrupoleMoment() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-/** @brief Return property GeometryDerivatives */
-GeometryDerivatives &Molecule::getGeometryDerivatives() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 /** @brief Return property Magnetizability */
 Magnetizability &Molecule::getMagnetizability() {
     if (magnetizability == nullptr) magnetizability = std::make_unique<Magnetizability>();
@@ -124,20 +109,6 @@ NMRShielding &Molecule::getNMRShielding(int k) {
     if (nmr.size() == 0) initNuclearProperties(getNNuclei());
     if (nmr[k] == nullptr) nmr[k] = std::make_unique<NMRShielding>(k, nuclei[k]);
     return *nmr[k];
-}
-
-/** @brief Return property HyperFineCoupling */
-HyperFineCoupling &Molecule::getHyperFineCoupling(int k) {
-    if (hfcc.size() == 0) initNuclearProperties(getNNuclei());
-    if (hfcc[k] == nullptr) hfcc[k] = std::make_unique<HyperFineCoupling>(nuclei[k]);
-    return *hfcc[k];
-}
-
-/** @brief Return property SpinSpinCoupling */
-SpinSpinCoupling &Molecule::getSpinSpinCoupling(int k, int l) {
-    if (sscc.size() == 0) initNuclearProperties(getNNuclei());
-    if (sscc[k][l] == nullptr) sscc[k][l] = std::make_unique<SpinSpinCoupling>(nuclei[k], nuclei[l]);
-    return *sscc[k][l];
 }
 
 /** @brief Return property Polarizability */
@@ -155,11 +126,6 @@ Polarizability &Molecule::getPolarizability(double omega) {
         idx = polarizability.size() - 1;
     }
     return *polarizability[idx];
-}
-
-/** @brief Return property OpticalRotation */
-OpticalRotation &Molecule::getOpticalRotation(double omega) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 /** @brief Return number of electrons */
@@ -289,21 +255,12 @@ void Molecule::printProperties() const {
 
     if (this->energy != nullptr) println(0, *this->energy);
     if (this->dipole != nullptr) println(0, *this->dipole);
-    if (this->geomderiv != nullptr) println(0, *this->geomderiv);
     if (this->magnetizability != nullptr) println(0, *this->magnetizability);
     for (auto &pol : this->polarizability) {
         if (pol != nullptr) println(0, *pol);
     }
     for (auto &nmr_k : this->nmr) {
         if (nmr_k != nullptr) println(0, *nmr_k);
-    }
-    for (auto &hfcc_k : this->hfcc) {
-        if (hfcc_k != nullptr) println(0, *hfcc_k);
-    }
-    for (auto &sscc_k : this->sscc) {
-        for (auto &sscc_kl : sscc_k) {
-            if (sscc_kl != nullptr) println(0, *sscc_kl);
-        }
     }
 }
 
