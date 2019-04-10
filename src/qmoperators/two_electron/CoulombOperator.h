@@ -17,15 +17,17 @@ namespace mrchem {
 
 class CoulombOperator final : public RankZeroTensorOperator {
 public:
-    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P) {
-        potential = std::make_shared<CoulombPotential>(P);
+    explicit CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, bool mpi_share = false) {
+        potential = std::make_shared<CoulombPotential>(P, nullptr, mpi_share);
 
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &J = (*this);
         J = potential;
     }
-    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi) {
-        potential = std::make_shared<CoulombPotentialD1>(P, Phi);
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
+                    std::shared_ptr<OrbitalVector> Phi,
+                    bool mpi_share = false) {
+        potential = std::make_shared<CoulombPotentialD1>(P, Phi, mpi_share);
 
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &J = (*this);
@@ -34,8 +36,9 @@ public:
     CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
                     std::shared_ptr<OrbitalVector> Phi,
                     std::shared_ptr<OrbitalVector> X,
-                    std::shared_ptr<OrbitalVector> Y) {
-        potential = std::make_shared<CoulombPotentialD2>(P, Phi, X, Y);
+                    std::shared_ptr<OrbitalVector> Y,
+                    bool mpi_share = false) {
+        potential = std::make_shared<CoulombPotentialD2>(P, Phi, X, Y, mpi_share);
 
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &J = (*this);

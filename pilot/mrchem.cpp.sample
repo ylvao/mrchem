@@ -2,13 +2,11 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-#include "getkw/Getkw.hpp"
 
 #include "mrenv.h"
 #include "mrchem.h"
 #include "parallel.h"
 
-Getkw mrchem::Input;
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
 using namespace mrcpp;

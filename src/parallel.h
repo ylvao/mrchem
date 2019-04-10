@@ -17,11 +17,6 @@ extern int n_threads;
 
 namespace mpi {
 extern bool numerically_exact;
-extern bool share_nuc_pot;
-extern bool share_coul_dens;
-extern bool share_coul_pot;
-extern bool share_xc_dens;
-extern bool share_xc_pot;
 extern int shared_memory_size;
 
 extern int orb_rank;
@@ -34,7 +29,7 @@ extern MPI_Comm comm_orb;
 extern MPI_Comm comm_share;
 extern MPI_Comm comm_sh_group;
 
-void initialize(int argc, char **argv);
+void initialize();
 void finalize();
 void barrier(MPI_Comm comm);
 

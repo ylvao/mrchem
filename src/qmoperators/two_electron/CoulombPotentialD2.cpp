@@ -13,8 +13,12 @@ using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 
-CoulombPotentialD2::CoulombPotentialD2(PoissonOperator_p P, OrbitalVector_p Phi, OrbitalVector_p X, OrbitalVector_p Y)
-        : CoulombPotential(P, Phi)
+CoulombPotentialD2::CoulombPotentialD2(PoissonOperator_p P,
+                                       OrbitalVector_p Phi,
+                                       OrbitalVector_p X,
+                                       OrbitalVector_p Y,
+                                       bool mpi_share)
+        : CoulombPotential(P, Phi, mpi_share)
         , orbitals_x(X)
         , orbitals_y(Y) {}
 

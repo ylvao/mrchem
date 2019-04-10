@@ -17,9 +17,6 @@ matrix:
             - g++
             - gcc
             - lcov
-            - libboost-all-dev
-            - libpython3.5-dev
-            - python3.5-dev
       env:
         - BUILD_TYPE='release'
         - CXX_COMPILER='g++'
@@ -46,9 +43,6 @@ matrix:
         apt:
           packages:
             - clang
-            - libboost-all-dev
-            - libpython3.5-dev
-            - python3.5-dev
             - clang-format
       env:
         - BUILD_TYPE='release'
@@ -64,8 +58,6 @@ env:
     - PYTHONIOENCODING=UTF-8
     - OMP_NUM_THREADS=2
     - CMAKE_VERSION="3.12.4"
-    # Invalidate PYENV_ROOT
-    - PYENV_ROOT=$HOME/fuffa
 
 cache:
   timeout: 1000
@@ -83,7 +75,8 @@ install:
   - export PATH=$HOME/Deps/cmake/$CMAKE_VERSION/bin${PATH:+:$PATH}
   - ./.ci/eigen.sh
   - pip install --user pipenv --upgrade
-  - pipenv install --python="/usr/bin/python3.5"
+  - pipenv install --three
+  - pipenv run python --version
 
 before_script:
   - test -n $CC && unset CC

@@ -1,5 +1,6 @@
 # <<< Build MRChem library >>>
 add_library(mrchem
+  driver.cpp
   parallel.cpp
   mrenv.cpp
   )
@@ -12,7 +13,7 @@ target_include_directories(mrchem
   )
 
 list(APPEND _public_headers
-  SCFDriver.h
+  driver.h
   mrchem.h
   mrenv.h
   parallel.h
@@ -32,7 +33,7 @@ target_link_libraries(mrchem
     Eigen3::Eigen
     MRCPP::mrcpp
     XCFun::xcfun
-    getkw::getkw
+    nlohmann_json::nlohmann_json
   )
 
 set_target_properties(mrchem
@@ -64,8 +65,6 @@ install(
 add_executable(mrchem.x mrchem.cpp)
 
 target_sources(mrchem.x
-  PRIVATE
-    SCFDriver.cpp
   PUBLIC
     $<BUILD_INTERFACE:$<JOIN:${CMAKE_CURRENT_LIST_DIR}/,${_public_headers}>>
   )
@@ -83,8 +82,8 @@ target_link_libraries(mrchem.x
   PRIVATE
     mrchem
     MRCPP::mrcpp
-    getkw::getkw
     XCFun::xcfun
+    nlohmann_json::nlohmann_json
   )
 
 # RPATH fixing
@@ -113,26 +112,5 @@ install(
     COMPONENT bin
   )
 
-# <<< Build initial guess executables >>>
 add_subdirectory(initial_guess)
-
-set(MRCHEM_EXECUTABLE ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/mrchem.x)
-# configure into CMakeFiles directory, because it must be in a different directory
-# since file(COPY) does rename files
-configure_file(mrchem.in ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mrchem @ONLY)
-# now copy the temporary into the final destination, setting the permissions
-file(
-  COPY ${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/mrchem
-  DESTINATION ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
-  FILE_PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  )
-
-install(
-  PROGRAMS
-    ${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/mrchem
-  DESTINATION
-    ${CMAKE_INSTALL_BINDIR}
-  )
+add_subdirectory(input)

@@ -8,7 +8,7 @@ namespace mrchem {
 
 class NuclearPotential final : public QMPotential {
 public:
-    NuclearPotential(const Nuclei &nucs, double prec);
+    NuclearPotential(const Nuclei &nucs, double proj_prec, double smooth_prec = -1.0, bool mpi_share = false);
     ~NuclearPotential() override { free(NUMBER::Total); }
 
     void setup(double prec) override { setApplyPrec(prec); }
@@ -26,8 +26,8 @@ private:
 
 class NuclearOperator final : public RankZeroTensorOperator {
 public:
-    NuclearOperator(const Nuclei &nucs, double prec) {
-        r_m1 = std::make_shared<NuclearPotential>(nucs, prec);
+    NuclearOperator(const Nuclei &nucs, double proj_prec, double smooth_prec = -1.0, bool mpi_share = false) {
+        r_m1 = std::make_shared<NuclearPotential>(nucs, proj_prec, smooth_prec, mpi_share);
 
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &v = (*this);

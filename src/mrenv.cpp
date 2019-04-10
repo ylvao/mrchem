@@ -1,21 +1,25 @@
-#include "MRCPP/MWFunctions"
 #include "MRCPP/Printer"
-#include "MRCPP/Timer"
-#include "getkw/Getkw.hpp"
 
-#include <algorithm>
+#include <fstream>
 
 #include "mrchem.h"
 #include "mrenv.h"
 #include "parallel.h"
 
-using namespace std;
-using namespace mrcpp;
-using namespace mrchem;
+using json = nlohmann::json;
+using Printer = mrcpp::Printer;
+
+namespace mrchem {
 
 namespace mrenv {
+void init_printer(const json &json_print);
+void init_mra(const json &json_mra);
+void init_mpi(const json &json_mpi);
+void print_header();
+void print_footer(double wt);
+} // namespace mrenv
 
-void initialize(int argc, char **argv) {
+json mrenv::fetch_input(int argc, char **argv) {
     const char *infile = nullptr;
     if (argc == 1) {
         infile = "STDIN";
@@ -25,59 +29,82 @@ void initialize(int argc, char **argv) {
         MSG_ERROR("Ivalid number of arguments!");
     }
 
-    // Initialize input
-    input = Getkw(infile, false, true);
+    // Read JSON input
+    json input;
+    std::ifstream ifs(infile, std::ios_base::in);
+    ifs >> input;
+    ifs.close();
 
+    return input;
+}
+
+void mrenv::initialize(const json &input) {
+    auto json_print = input.find("printer");
+    auto json_mra = input.find("mra");
+    auto json_mpi = input.find("mpi");
+
+    if (json_mra == input.end()) MSG_FATAL("Missing MRA input!");
+
+    if (json_print != input.end()) mrenv::init_printer(*json_print);
+    if (json_mra != input.end()) mrenv::init_mra(*json_mra);
+    if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
+
+    mrenv::print_header();
+}
+
+void mrenv::init_printer(const json &json_print) {
     // Initialize printing
-    int printlevel = input.get<int>("printlevel");
-    bool teletype = input.get<bool>("teletype");
+    auto printlevel = json_print["printlevel"].get<int>();
+    auto printprec = json_print["printprec"].get<int>();
+    auto teletype = json_print["teletype"].get<bool>();
+    auto fname = json_print["filename"].get<std::string>();
     if (teletype) {
-        Printer::init(printlevel, mpi::orb_rank, mpi::orb_size, "mrchem");
+        Printer::init(printlevel, mpi::orb_rank, mpi::orb_size, fname.c_str());
     } else {
         Printer::init(printlevel, mpi::orb_rank, mpi::orb_size);
     }
-    Printer::setPrecision(15);
+    Printer::setPrecision(printprec);
+}
 
-    mpi::numerically_exact = input.get<bool>("mpi.numerically_exact");
-    mpi::share_nuc_pot = input.get<bool>("mpi.share_nuclear_potential");
-    mpi::share_coul_dens = input.get<bool>("mpi.share_coulomb_density");
-    mpi::share_coul_pot = input.get<bool>("mpi.share_coulomb_potential");
-    mpi::share_xc_dens = input.get<bool>("mpi.share_xc_density");
-    mpi::share_xc_pot = input.get<bool>("mpi.share_xc_potential");
-    mpi::shared_memory_size = input.get<int>("mpi.shared_memory_size");
-
+void mrenv::init_mra(const json &json_mra) {
     // Initialize world box
-    int min_scale = input.get<int>("mra.min_scale");
-    int max_scale = input.get<int>("mra.max_scale");
-    vector<int> corner = input.getIntVec("mra.corner");
-    vector<int> boxes = input.getIntVec("mra.boxes");
-    std::array<int, 3> c_idx;
-    std::array<int, 3> n_bxs;
-    std::copy_n(corner.begin(), 3, c_idx.begin());
-    std::copy_n(boxes.begin(), 3, n_bxs.begin());
-    BoundingBox<3> world(min_scale, c_idx, n_bxs);
+    auto min_scale = json_mra["min_scale"].get<int>();
+    auto max_scale = json_mra["max_scale"].get<int>();
+    auto corner = json_mra["corner"].get<std::array<int, 3>>();
+    auto boxes = json_mra["boxes"].get<std::array<int, 3>>();
+    auto sfac = json_mra["scaling_factor"].get<std::array<double, 3>>();
+    mrcpp::BoundingBox<3> world(min_scale, corner, boxes, sfac);
 
     // Initialize scaling basis
-    int order = input.get<int>("mra.order");
-    string btype = input.get<string>("mra.basis_type");
+    auto order = json_mra["order"].get<int>();
+    auto btype = json_mra["basis_type"].get<std::string>();
 
-    int max_depth = max_scale - min_scale;
-    if (min_scale < MinScale) MSG_FATAL("Root scale too large");
-    if (max_scale > MaxScale) MSG_FATAL("Max scale too large");
-    if (max_depth > MaxDepth) MSG_FATAL("Max depth too large");
+    auto max_depth = max_scale - min_scale;
+    if (min_scale < mrcpp::MinScale) MSG_FATAL("Root scale too large");
+    if (max_scale > mrcpp::MaxScale) MSG_FATAL("Max scale too large");
+    if (max_depth > mrcpp::MaxDepth) MSG_FATAL("Max depth too large");
 
     // Initialize global MRA
     if (btype == "i") {
-        InterpolatingBasis basis(order);
-        MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
+        mrcpp::InterpolatingBasis basis(order);
+        MRA = new mrcpp::MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else if (btype == "l") {
-        LegendreBasis basis(order);
-        MRA = new MultiResolutionAnalysis<3>(world, basis, max_depth);
+        mrcpp::LegendreBasis basis(order);
+        MRA = new mrcpp::MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else {
         MSG_FATAL("Invalid basis type!");
     }
+}
 
-    println(0, endl << endl);
+void mrenv::init_mpi(const json &json_mpi) {
+    auto exact = json_mpi["numerically_exact"].get<bool>();
+    auto memory_size = json_mpi["shared_memory_size"].get<int>();
+    mpi::numerically_exact = exact;
+    mpi::shared_memory_size = memory_size;
+}
+
+void mrenv::print_header() {
+    println(0, std::endl << std::endl);
     println(0, "************************************************************");
     println(0, "***     __  __ ____   ____ _                             ***");
     println(0, "***    |  \\/  |  _ \\ / ___| |__   ___ _ __ ___           ***");
@@ -92,7 +119,7 @@ void initialize(int argc, char **argv) {
     println(0, "***    Peter Wind       <peter.wind@uit.no>              ***");
     println(0, "***                                                      ***");
     println(0, "************************************************************");
-    println(0, endl);
+    println(0, std::endl);
 
     if (mpi::orb_size > 1 or omp::n_threads > 1) {
         println(0, "+++ Parallel execution: ");
@@ -101,23 +128,20 @@ void initialize(int argc, char **argv) {
         println(0, "  Total used CPUs         : " << mpi::orb_size * omp::n_threads);
         println(0, "");
     } else {
-        println(0, "+++ Serial execution" << endl);
+        println(0, "+++ Serial execution" << std::endl);
     }
 
     Printer::printEnvironment();
-
-    int oldprec = Printer::setPrecision(6);
     MRA->print();
-    Printer::setPrecision(oldprec);
 }
 
-void finalize(double wt) {
+void mrenv::finalize(double wt) {
     // Delete global MRA
     if (MRA != nullptr) delete MRA;
     MRA = nullptr;
 
-    Printer::setPrecision(6);
-    println(0, endl);
+    auto oldprec = Printer::setPrecision(6);
+    println(0, std::endl);
     println(0, "************************************************************");
     println(0, "***                                                      ***");
     println(0, "***                    Exiting MRChem                    ***");
@@ -125,7 +149,8 @@ void finalize(double wt) {
     println(0, "***               Wall time: " << wt << "                ***");
     println(0, "***                                                      ***");
     println(0, "************************************************************");
-    println(0, endl);
+    println(0, std::endl);
+    Printer::setPrecision(oldprec);
 }
 
-} // namespace mrenv
+} // namespace mrchem

@@ -46,4 +46,3 @@ SCF {
   canonical = false               # Use canonical of localized orbitals
   initial_guess = GTO             # Type of initial guess: none, mw, gto
 }
-

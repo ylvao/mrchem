@@ -28,8 +28,8 @@ namespace mrchem {
  * Then the functional is set up for subsequent calculations, fixing some internals of
  * xcfun when F.evalSetup is invoked.
  */
-XCPotentialD1::XCPotentialD1(XCFunctional_p F, OrbitalVector_p Phi)
-        : XCPotential(F, Phi) {}
+XCPotentialD1::XCPotentialD1(XCFunctional_p F, OrbitalVector_p Phi, bool mpi_shared)
+        : XCPotential(F, Phi, mpi_shared) {}
 
 /** @brief Prepare the operator for application
  *
