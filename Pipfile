@@ -4,8 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-parselglossy = "==0.3.0"
-pyparsing = "*"
+parselglossy = "*"
 runtest = "*"
 
 [dev-packages]
