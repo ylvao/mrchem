@@ -80,12 +80,10 @@ int get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes);
 bool orbital_vector_is_sane(const OrbitalVector &Phi);
 
 void set_spins(OrbitalVector &Phi, const IntVector &spins);
-void set_errors(OrbitalVector &Phi, const DoubleVector &errors);
 void set_occupancies(OrbitalVector &Phi, const IntVector &occ);
 
 IntVector get_spins(const OrbitalVector &Phi);
 IntVector get_occupancies(const OrbitalVector &Phi);
-DoubleVector get_errors(const OrbitalVector &Phi);
 DoubleVector get_norms(const OrbitalVector &Phi);
 DoubleVector get_squared_norms(const OrbitalVector &Phi);
 ComplexVector get_integrals(const OrbitalVector &Phi);

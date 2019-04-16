@@ -321,13 +321,6 @@ OrbitalVector orbital::load_orbitals(const std::string &file, const std::string 
             break;
         }
     }
-    // distribute errors
-    DoubleVector errors = DoubleVector::Zero(Phi.size());
-    for (int i = 0; i < Phi.size(); i++) {
-        if (mpi::my_orb(Phi[i])) errors(i) = Phi[i].error();
-    }
-    mpi::allreduce_vector(errors, mpi::comm_orb);
-    orbital::set_errors(Phi, errors);
     timer.stop();
     Printer::printFooter(0, timer, 2);
     return Phi;
@@ -718,14 +711,6 @@ int orbital::get_n_nodes(const OrbitalVector &Phi) {
     return nNodes;
 }
 
-/** @brief Returns a vector containing the orbital errors */
-DoubleVector orbital::get_errors(const OrbitalVector &Phi) {
-    int nOrbs = Phi.size();
-    DoubleVector errors = DoubleVector::Zero(nOrbs);
-    for (int i = 0; i < nOrbs; i++) errors(i) = Phi[i].error();
-    return errors;
-}
-
 /** @brief Returns the size of the coefficients of all nodes in the vector in kBytes */
 int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
     int nOrbs = Phi.size();
@@ -739,16 +724,6 @@ int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
         }
     }
     return totsize;
-}
-
-/** @brief Assign errors to each orbital.
- *
- * Length of input vector must match the number of orbitals in the set.
- *
- */
-void orbital::set_errors(OrbitalVector &Phi, const DoubleVector &errors) {
-    if (Phi.size() != errors.size()) MSG_ERROR("Size mismatch");
-    for (int i = 0; i < Phi.size(); i++) Phi[i].setError(errors(i));
 }
 
 /** @brief Returns a vector containing the orbital spins */
@@ -858,7 +833,7 @@ void orbital::print(const OrbitalVector &Phi) {
     printout(0, std::setw(4) << size_occupied(Phi) << " occupied  ");
     printout(0, std::setw(4) << get_electron_number(Phi) << " electrons\n");
     printout(0, "------------------------------------------------------------\n");
-    printout(0, "    n  RankID        Norm          Spin Occ        Error    \n");
+    printout(0, "    n  Spin  Occ          RankID               Norm         \n");
     printout(0, "------------------------------------------------------------\n");
     for (int i = 0; i < Phi.size(); i++) println(0, std::setw(5) << i << Phi[i]);
     printout(0, "============================================================\n\n\n");

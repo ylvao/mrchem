@@ -39,7 +39,7 @@ namespace mrchem {
  */
 Orbital::Orbital()
         : QMFunction(false)
-        , orb_data({-1, 0, 0, 1.0}) {}
+        , orb_data({-1, 0, 0}) {}
 
 /** @brief Constructor
  *
@@ -51,7 +51,7 @@ Orbital::Orbital()
  */
 Orbital::Orbital(int spin, int occ, int rank)
         : QMFunction(false)
-        , orb_data({rank, spin, occ, 1.0}) {
+        , orb_data({rank, spin, occ}) {
     if (this->spin() < 0) INVALID_ARG_ABORT;
     if (this->occ() < 0) {
         if (this->spin() == SPIN::Paired) this->orb_data.occ = 2;
@@ -201,15 +201,13 @@ char Orbital::printSpin() const {
 /** @brief Pretty output of orbital meta data */
 std::ostream &Orbital::print(std::ostream &o) const {
     int prec = mrcpp::Printer::getPrecision();
-    std::stringstream o_norm, o_error;
+    std::stringstream o_norm;
     o_norm << std::setprecision(2 * prec) << std::fixed << this->norm();
-    o_error << std::setprecision(prec) << std::scientific << this->error();
 
-    o << std::setw(6) << this->rankID();
-    o << std::setw(19) << o_norm.str();
-    o << std::setw(8) << this->printSpin();
-    o << std::setw(4) << this->occ();
-    o << std::setw(17) << o_error.str();
+    o << std::setw(5) << this->printSpin();
+    o << std::setw(5) << this->occ();
+    o << std::setw(15) << this->rankID();
+    o << std::setw(29) << o_norm.str();
 
     return o;
 }
