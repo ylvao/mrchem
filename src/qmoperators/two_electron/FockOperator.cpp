@@ -124,6 +124,9 @@ void FockOperator::rotate(const ComplexMatrix &U) {
  * by tracing the Fock matrix and subtracting all other contributions.
  */
 SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
+    Printer::printHeader(0, "Calculating SCF energy");
+    Timer timer;
+
     double E_nuc = 0.0; // Nuclear repulsion
     double E_el = 0.0;  // Electronic energy
     double E_orb = 0.0; // Orbital energy
@@ -164,6 +167,18 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
     double E_orbxc2 = E_orb - E_xc2;
     E_kin = E_orbxc2 - 2.0 * E_eex - E_en - E_ext;
     E_el = E_orbxc2 - E_eex + E_xc;
+
+    std::stringstream o_el, o_nuc, o_tot;
+    auto pprec = mrcpp::Printer::getPrecision();
+    o_el << std::setw(27) << std::setprecision(2 * pprec) << std::fixed << E_el;
+    o_nuc << std::setw(27) << std::setprecision(2 * pprec) << std::fixed << E_nuc;
+    o_tot << std::setw(27) << std::setprecision(2 * pprec) << std::fixed << E_el + E_nuc;
+    println(0, " Nuclear                   (au) " << o_nuc.str());
+    println(0, " Electronic                (au) " << o_el.str());
+    Printer::printSeparator(0, '-');
+    println(0, " Total energy              (au) " << o_tot.str());
+    timer.stop();
+    Printer::printFooter(0, timer, 2);
 
     return SCFEnergy{E_nuc, E_el, E_orb, E_kin, E_en, E_ee, E_xc, E_x, E_nex, E_ext};
 }

@@ -127,8 +127,7 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
 
             // Prepare for next iteration
             X_n = orbital::add(1.0, X_n, 1.0, dX_n);
-            orbital::set_errors(X_n, errors_x);
-            printOrbitals(orbital::get_norms(X_n), X_n, 0);
+            printOrbitals(orbital::get_norms(X_n), errors_x, X_n, 1);
         }
 
         if (dynamic) { // Iterate Y orbitals
@@ -157,8 +156,7 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
 
             // Prepare for next iteration
             Y_n = orbital::add(1.0, Y_n, 1.0, dY_n);
-            orbital::set_errors(Y_n, errors_y);
-            printOrbitals(orbital::get_norms(Y_n), Y_n, 0);
+            printOrbitals(orbital::get_norms(Y_n), errors_y, Y_n, 1);
         }
 
         // Compute property
@@ -173,7 +171,7 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
         err_o = std::max(errors_x.maxCoeff(), errors_y.maxCoeff());
         err_t = std::sqrt(errors_x.dot(errors_x) + errors_y.dot(errors_y));
         converged = checkConvergence(err_o, err_p);
-        this->orbError.push_back(err_t);
+        this->error.push_back(err_t);
 
         // Finalize SCF cycle
         timer.stop();

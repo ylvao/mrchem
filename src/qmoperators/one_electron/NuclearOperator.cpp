@@ -32,31 +32,29 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     if (smooth_prec < 0.0) smooth_prec = proj_prec;
 
     int oldprec = Printer::setPrecision(5);
-    Printer::printHeader(0, "Setting up nuclear potential");
-    println(0, " Nr  Element         Charge        Precision     Smoothing ");
+    Printer::printHeader(0, "Building nuclear potential");
+    println(0, "    N    Atom        Charge        Precision     Smoothing ");
     Printer::printSeparator(0, '-');
 
     NuclearFunction loc_func;
 
     double c = 0.00435 * smooth_prec;
-    for (int i = 0; i < nucs.size(); i++) {
-        const Nucleus &nuc = nucs[i];
+    for (int k = 0; k < nucs.size(); k++) {
+        const Nucleus &nuc = nucs[k];
         double Z = nuc.getCharge();
         double Z_5 = std::pow(Z, 5.0);
         double smooth = std::pow(c / Z_5, 1.0 / 3.0);
 
         // All projection must be done on grand master in order to be exact
-        int proj_rank = (mpi::numerically_exact) ? 0 : i % mpi::orb_size;
+        int proj_rank = (mpi::numerically_exact) ? 0 : k % mpi::orb_size;
 
         this->func.push_back(nuc, smooth);
         if (mpi::orb_rank == proj_rank) loc_func.push_back(nuc, smooth);
 
-        std::stringstream symbol;
-        symbol << nuc.getElement().getSymbol();
-        symbol << "  ";
-        printout(0, std::setw(3) << i + 1 << "     ");
-        printout(0, symbol.str()[0] << symbol.str()[1]);
-        printout(0, std::setw(21) << Z);
+        const std::string &sym = nuc.getElement().getSymbol();
+        printout(0, std::setw(5) << k);
+        printout(0, std::setw(7) << sym);
+        printout(0, std::setw(19) << Z);
         printout(0, std::setw(14) << smooth_prec);
         printout(0, std::setw(14) << smooth << std::endl);
     }
@@ -126,11 +124,11 @@ double NuclearOperator::trace(const Nuclei &nucs) {
     MSG_WARN("This routine has never been tested!");
     int nNucs = nucs.size();
     double E_nuc = 0.0;
-    for (int i = 0; i < nNucs; i++) {
-        const Nucleus &nuc_i = nucs[i];
-        double Z_i = nuc_i.getCharge();
-        const mrcpp::Coord<3> &R_i = nuc_i.getCoord();
-        E_nuc += Z_i * this->r_m1->evalf(R_i);
+    for (int k = 0; k < nNucs; k++) {
+        const Nucleus &nuc_k = nucs[k];
+        double Z_k = nuc_k.getCharge();
+        const mrcpp::Coord<3> &R_k = nuc_k.getCoord();
+        E_nuc += Z_k * this->r_m1->evalf(R_k);
     }
     return E_nuc;
 }

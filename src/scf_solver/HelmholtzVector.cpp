@@ -69,7 +69,7 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
     Printer::printHeader(0, "Applying Helmholtz operators");
     int oldprec = Printer::setPrecision(5);
 
-    println(0, " Orb    RealNorm   Nodes     ImagNorm   Nodes     Timing");
+    println(0, "  n     RealNorm   Nodes     ImagNorm   Nodes     Timing");
     Printer::printSeparator(0, '-');
 
     OrbitalVector out = orbital::param_copy(Phi);

@@ -71,7 +71,7 @@ OrbitalVector initial_guess::gto::setup(double prec,
     Printer::printSeparator(0, '-');
     println(0, " Method         : Reading Gaussian-type MOs");
     println(0, " Precision      : " << prec);
-    println(0, " Restricted     : true");
+    println(0, " Restricted     : True");
     println(0, " Basis file     : " << bas_file);
     println(0, " MO file        : " << mo_file);
     Printer::printSeparator(0, '-', 2);
@@ -112,7 +112,7 @@ OrbitalVector initial_guess::gto::setup(double prec,
     Printer::printSeparator(0, '-');
     println(0, " Method         : Reading Gaussian-type MOs");
     println(0, " Precision      : " << prec);
-    println(0, " Restricted     : false");
+    println(0, " Restricted     : False");
     println(0, " Basis file     : " << bas_file);
     println(0, " MO alpha file  : " << moa_file);
     println(0, " MO beta file   : " << mob_file);

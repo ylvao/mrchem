@@ -203,93 +203,105 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
  * This function expects the "scf_calculation" subsection of the input.
  */
 bool driver::run_scf(const json &json_scf, Molecule &mol) {
-    Printer::printHeader(0, "SCF input");
-    println(0, json_scf.dump(2));
-    Printer::printSeparator(0, '=', 2);
-
-    auto success = true;
-    auto scf_prec = json_scf["scf_prec"].get<double>();
-    auto localize = json_scf["localize"].get<bool>();
+    println(0, "                                                            ");
+    println(0, "************************************************************");
+    println(0, "***                                                      ***");
+    println(0, "***              Running Ground State SCF                ***");
+    println(0, "***                                                      ***");
+    println(0, "************************************************************");
+    println(0, "                                                            ");
+    println(0, "                                                            ");
 
     const auto &json_fock = json_scf["fock_operator"].get<json>();
     FockOperator F;
     driver::build_fock_operator(json_fock, mol, F, 0);
 
-    ///////////////////////////////////////////////////////////
-    /////////////////   Running SCF Solver  ///////////////////
-    ///////////////////////////////////////////////////////////
-
+    auto success = true;
     auto &Phi = mol.getOrbitals();
     auto &F_mat = mol.getFockMatrix();
 
+    // Calc inital energy if present in input JSON
+    auto single_energy = json_scf.find("single_energy");
+    if (single_energy != json_scf.end()) {
+        auto prec = (*single_energy)["prec"].get<double>();
+        auto localize = (*single_energy)["localize"].get<bool>();
+
+        std::string loc_str = "Off";
+        if (localize) loc_str = "On";
+        Printer::printSeparator(0, '-');
+        auto oldprec = Printer::setPrecision(5);
+        println(0, " Method             : Compute Single Energy");
+        println(0, " Precision          : " << prec);
+        println(0, " Localization       : " << loc_str);
+        Printer::setPrecision(oldprec);
+        Printer::printSeparator(0, '-', 2);
+
+        F.setup(prec);
+        F_mat = F(Phi, Phi);
+        mol.getSCFEnergy() = F.trace(Phi, F_mat);
+        F.clear();
+
+        if (localize) {
+            orbital::localize(prec, Phi, F_mat);
+        } else {
+            orbital::diagonalize(prec, Phi, F_mat);
+        }
+    }
+
     // Run OrbitalOptimizer if present in input JSON
-    auto orbital_solver_it = json_scf.find("orbital_solver");
-    if (orbital_solver_it != json_scf.end()) {
-        const auto &json_solver = *orbital_solver_it;
-        auto kain = json_solver["kain"].get<int>();
-        auto max_iter = json_solver["max_iter"].get<int>();
-        auto rotation = json_solver["rotation"].get<int>();
-        auto start_prec = json_solver["start_prec"].get<double>();
-        auto final_prec = json_solver["final_prec"].get<double>();
-        auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
-        auto property_thrs = json_solver["property_thrs"].get<double>();
+    auto orbital_solver = json_scf.find("orbital_solver");
+    if (orbital_solver != json_scf.end()) {
+        auto kain = (*orbital_solver)["kain"].get<int>();
+        auto max_iter = (*orbital_solver)["max_iter"].get<int>();
+        auto rotation = (*orbital_solver)["rotation"].get<int>();
+        auto localize = (*orbital_solver)["localize"].get<bool>();
+        auto start_prec = (*orbital_solver)["start_prec"].get<double>();
+        auto final_prec = (*orbital_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*orbital_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*orbital_solver)["property_thrs"].get<double>();
 
         OrbitalOptimizer solver;
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
         solver.setRotation(rotation);
-        solver.setCanonical(not(localize));
+        solver.setLocalize(localize);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
-        success = solver.optimize(F, Phi, F_mat);
-    } else {
-        F.setup(scf_prec);
-        F_mat = F(Phi, Phi);
-        F.clear();
+        success = solver.optimize(mol, F);
 
         if (localize) {
-            orbital::localize(scf_prec, Phi, F_mat);
+            orbital::localize(final_prec, Phi, F_mat);
         } else {
-            orbital::diagonalize(scf_prec, Phi, F_mat);
+            orbital::diagonalize(final_prec, Phi, F_mat);
         }
     }
 
     // Run EnergyOptimizer if present in input JSON
-    auto energy_solver_it = json_scf.find("energy_solver");
-    if (energy_solver_it != json_scf.end()) {
-        const auto &json_solver = *energy_solver_it;
-        auto max_iter = json_solver["max_iter"].get<int>();
-        auto start_prec = json_solver["start_prec"].get<double>();
-        auto final_prec = json_solver["final_prec"].get<double>();
-        auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
-        auto property_thrs = json_solver["property_thrs"].get<double>();
+    auto energy_solver = json_scf.find("energy_solver");
+    if (energy_solver != json_scf.end()) {
+        auto max_iter = (*energy_solver)["max_iter"].get<int>();
+        auto localize = (*energy_solver)["localize"].get<bool>();
+        auto start_prec = (*energy_solver)["start_prec"].get<double>();
+        auto final_prec = (*energy_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*energy_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*energy_solver)["property_thrs"].get<double>();
 
         EnergyOptimizer solver;
         solver.setMaxIterations(max_iter);
         solver.setRotation(1);
-        solver.setCanonical(not(localize));
+        solver.setLocalize(localize);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
-        success = solver.optimize(F, Phi, F_mat);
+        success = solver.optimize(mol, F);
+
+        if (localize) {
+            orbital::localize(final_prec, Phi, F_mat);
+        } else {
+            orbital::diagonalize(final_prec, Phi, F_mat);
+        }
     }
 
-    ///////////////////////////////////////////////////////////
-    ///////////////   Computing Properties   //////////////////
-    ///////////////////////////////////////////////////////////
-
-    F.setup(scf_prec);
-    Printer::printHeader(0, "Calculating SCF energy");
-    Timer timer;
-    SCFEnergy &energy = mol.getSCFEnergy();
-    energy = F.trace(Phi, F_mat);
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
-    F.clear();
-
     if (success) {
-        const auto &json_prop = json_scf["properties"].get<json>();
-        driver::calc_scf_properties(json_prop, mol);
-
         auto final_orbs = json_scf["final_orbitals"].get<std::string>();
         auto write_orbs = json_scf["write_orbitals"].get<bool>();
         if (write_orbs) orbital::save_orbitals(Phi, final_orbs);
@@ -361,7 +373,7 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         LinearResponseSolver solver(dynamic, F_0, Phi, F_mat);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
-        solver.setCanonical(not(localize));
+        solver.setLocalize(localize);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
 
@@ -401,6 +413,15 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
  * This includes the diamagnetic contributions to the magnetic response properties.
  */
 void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
+    println(0, "                                                            ");
+    println(0, "************************************************************");
+    println(0, "***                                                      ***");
+    println(0, "***           Computing Ground State Properties          ***");
+    println(0, "***                                                      ***");
+    println(0, "************************************************************");
+    println(0, "                                                            ");
+    println(0, "                                                            ");
+
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
 

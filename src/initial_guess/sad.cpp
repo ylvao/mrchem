@@ -64,8 +64,8 @@ void project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol
 } // namespace initial_guess
 
 OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
-    std::string restr_str = "false";
-    if (restricted) restr_str = "true";
+    std::string restr_str = "False";
+    if (restricted) restr_str = "True";
     Printer::printSeparator(0, '-');
     println(0, " Method         : Diagonalize Hamiltonian matrix");
     println(0, " Precision      : " << prec);

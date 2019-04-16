@@ -365,9 +365,9 @@ sections:
         default: 0
         docstring: |
           Number of iterations between each diagonalization/localization.
-      - name: canonical
+      - name: localize
         type: bool
-        default: true
+        default: false
         docstring: |
           Use canonical or localized orbitals.
       - name: orbital_thrs
@@ -409,9 +409,9 @@ sections:
         default: -1
         docstring: |
           Maximum number of SCF iterations.
-      - name: canonical
+      - name: localize
         type: bool
-        default: true
+        default: false
         docstring: |
           Use canonical or localized orbitals.
       - name: orbital_thrs
@@ -443,9 +443,9 @@ sections:
         default: 0
         docstring: |
           Length of KAIN iterative history.
-      - name: canonical
+      - name: localize
         type: bool
-        default: true
+        default: false
         docstring: |
           Use canonical or localized orbitals.
       - name: orbital_thrs

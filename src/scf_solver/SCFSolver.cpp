@@ -61,7 +61,7 @@ void SCFSolver::setOrbitalPrec(double init, double final) {
 
 /** @brief Reset accumulated data */
 void SCFSolver::reset() {
-    this->orbError.clear();
+    this->error.clear();
     this->property.clear();
     this->orbPrec[0] = this->orbPrec[1];
 }
@@ -107,12 +107,12 @@ bool SCFSolver::checkConvergence(double err_o, double err_p) const {
  *
  * @param nIter: current iteration number
  *
- * This check is based on the "canonical" and "rotation" parameters, where the latter
+ * This check is based on the "localize" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
 bool SCFSolver::needLocalization(int nIter) const {
     bool loc = false;
-    if (this->canonical) {
+    if (not this->localize) {
         loc = false;
     } else if (nIter <= 2) {
         loc = true;
@@ -128,12 +128,12 @@ bool SCFSolver::needLocalization(int nIter) const {
  *
  * @param nIter: current iteration number
  *
- * This check is based on the "canonical" and "rotation" parameters, where the latter
+ * This check is based on the "localize" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
 bool SCFSolver::needDiagonalization(int nIter) const {
     bool diag = false;
-    if (not this->canonical) {
+    if (this->localize) {
         diag = false;
     } else if (nIter <= 2) {
         diag = true;
@@ -190,18 +190,21 @@ void SCFSolver::printUpdate(const std::string &name, double P, double dP) const 
  * @param Phi: orbital vector
  * @param flag: interpret epsilon as energy or norm
  */
-void SCFSolver::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &Phi, int flag) const {
+void SCFSolver::printOrbitals(const DoubleVector &epsilon,
+                              const DoubleVector &errors,
+                              const OrbitalVector &Phi,
+                              int flag) const {
     Printer::printHeader(0, "Orbitals");
-    if (flag == 0) println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
-    if (flag == 1) println(0, " Orb    Norm          Error         nNodes  Spin  Occ  Done ");
+    if (flag == 0) println(0, "  n     F(i,i)        Error         nNodes  Spin  Occ  Done ");
+    if (flag == 1) println(0, "  n     Norm          Error         nNodes  Spin  Occ  Done ");
     Printer::printSeparator(0, '-');
     int oldprec = Printer::setPrecision(5);
     bool tot_conv = true;
     for (int i = 0; i < Phi.size(); i++) {
-        bool converged = (Phi[i].error() < this->orbThrs) ? true : false;
+        bool converged = (errors(i) < this->orbThrs) ? true : false;
         printout(0, std::setw(3) << i);
         printout(0, " " << std::setw(13) << epsilon(i));
-        printout(0, " " << std::setw(13) << Phi[i].error());
+        printout(0, " " << std::setw(13) << errors(i));
         printout(0, " " << std::setw(10) << Phi[i].getNNodes(NUMBER::Total));
         printout(0, std::setw(5) << Phi[i].printSpin());
         printout(0, std::setw(5) << Phi[i].occ());
@@ -209,9 +212,7 @@ void SCFSolver::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &
         if (not converged) tot_conv = false;
     }
 
-    DoubleVector errors = orbital::get_errors(Phi);
     double tot_error = std::sqrt(errors.dot(errors));
-
     Printer::printSeparator(0, '-');
     printout(0, " Total error:                    ");
     printout(0, std::setw(19) << tot_error << "  ");
@@ -227,29 +228,30 @@ void SCFSolver::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &
  * Prints convergence in both orbitals and property.
  */
 void SCFSolver::printConvergence(bool converged) const {
-    int iter = this->orbError.size();
-    int oldPrec = Printer::getPrecision();
+    int iter = this->error.size();
+    auto print_prec = Printer::getPrecision();
     Printer::printHeader(0, "Convergence rate");
-    println(0, "Iter    OrbError       Property                   Update  ");
+    println(0, "  Iter     OrbError            Property          Update");
     Printer::printSeparator(0, '-');
     for (int i = 0; i < iter; i++) {
         double prop_i = this->property[i];
         double propDiff = getUpdate(this->property, i + 1, true);
-        printout(0, std::setw(3) << i + 1);
-        Printer::setPrecision(5);
-        printout(0, std::setw(15) << this->orbError[i]);
-        Printer::setPrecision(15);
-        printout(0, std::setw(26) << prop_i);
-        Printer::setPrecision(5);
-        printout(0, std::setw(15) << propDiff);
-        printout(0, std::endl);
+
+        std::stringstream o_err, o_prop, o_update;
+        o_err << std::setprecision(print_prec) << std::scientific << this->error[i];
+        o_prop << std::setprecision(2 * print_prec) << std::fixed << prop_i;
+        o_update << std::setprecision(print_prec) << std::scientific << propDiff;
+
+        printout(0, std::setw(5) << i);
+        printout(0, std::setw(16) << o_err.str());
+        printout(0, std::setw(22) << o_prop.str());
+        printout(0, std::setw(16) << o_update.str() << std::endl);
     }
-    Printer::setPrecision(oldPrec);
     Printer::printSeparator(0, '-');
     if (converged) {
-        println(0, "                      SCF converged!!!                      ");
+        println(0, std::setw(33) << "SCF converged in " << iter - 1 << " iterations!");
     } else {
-        println(0, "                   SCF did NOT converge!!!                  ");
+        println(0, std::setw(42) << "SCF did NOT converge!!!");
     }
     Printer::printSeparator(0, '=', 2);
 }

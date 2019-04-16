@@ -29,6 +29,8 @@
 #include "EnergyOptimizer.h"
 #include "HelmholtzVector.h"
 
+#include "chemistry/Molecule.h"
+
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
@@ -62,17 +64,24 @@ namespace mrchem {
  *
  * Post SCF: diagonalize/localize orbitals
  */
-bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexMatrix &F_mat_n) {
-    double orb_prec = this->orbPrec[0];
-    double err_o = orbital::get_errors(Phi_n).maxCoeff();
-    double err_t = 1.0;
+bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
+    printParameters("Optimize Energy (Kinetic Free)");
+
+    SCFEnergy &E_n = mol.getSCFEnergy();
+    OrbitalVector &Phi_n = mol.getOrbitals();
+    ComplexMatrix &F_mat_n = mol.getFockMatrix();
+
+    DoubleVector errors = DoubleVector::Ones(Phi_n.size());
+    double err_o = errors.maxCoeff();
+    double err_t = errors.norm();
     double err_p = 1.0;
 
-    if (this->canonical) {
-        orbital::diagonalize(orb_prec, Phi_n, F_mat_n);
-    } else {
-        orbital::localize(orb_prec, Phi_n, F_mat_n);
-    }
+    this->error.push_back(err_t);
+    this->energy.push_back(E_n);
+    this->property.push_back(E_n.getTotalEnergy());
+
+    double orb_prec = this->orbPrec[0];
+    F_n.setup(orb_prec);
 
     int nIter = 0;
     bool converged = false;
@@ -81,11 +90,6 @@ bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexM
         Timer timer;
         printCycleHeader(nIter);
         orb_prec = adjustPrecision(err_o);
-
-        // Compute electronic energy
-        F_n.setup(orb_prec);
-        double E = calcProperty(F_n, Phi_n, F_mat_n);
-        this->property.push_back(E);
 
         // Apply Helmholtz operator
         HelmholtzVector H(orb_prec, F_mat_n.real().diagonal());
@@ -97,12 +101,11 @@ bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexM
         OrbitalVector dPhi_n = orbital::add(1.0, Phi_np1, -1.0, Phi_n);
 
         // Compute errors
-        DoubleVector errors = orbital::get_norms(dPhi_n);
+        errors = orbital::get_norms(dPhi_n);
         err_o = errors.maxCoeff();
         err_t = errors.norm();
         err_p = calcPropertyError();
         converged = checkConvergence(err_o, err_p);
-        this->orbError.push_back(err_t);
 
         // Compute Fock matrix
         ComplexMatrix dS_1 = orbital::calc_overlap_matrix(dPhi_n, Phi_n);
@@ -126,21 +129,24 @@ bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexM
         F_mat_n = U_mat * F_mat_sym * U_mat.adjoint();
         Phi_np1.clear();
 
-        orbital::set_errors(Phi_n, errors);
+        // Compute energy
+        F_n.setup(orb_prec);
+        E_n = F_n.trace(Phi_n, F_mat_n);
+
+        // Collect convergence data
+        this->error.push_back(err_t);
+        this->energy.push_back(E_n);
+        this->property.push_back(E_n.getTotalEnergy());
 
         timer.stop();
-        printOrbitals(F_mat_n.real().diagonal(), Phi_n, 0);
+        printOrbitals(F_mat_n.real().diagonal(), errors, Phi_n, 0);
         printProperty();
         printCycleFooter(timer.getWallTime());
 
         if (converged) break;
     }
 
-    if (this->canonical) {
-        orbital::diagonalize(orb_prec, Phi_n, F_mat_n);
-    } else {
-        orbital::localize(orb_prec, Phi_n, F_mat_n);
-    }
+    F_n.clear();
 
     printConvergence(converged);
     reset();

@@ -50,7 +50,7 @@ public:
 
     void setHistory(int hist) { this->history = hist; }
     void setRotation(int iter) { this->rotation = iter; }
-    void setCanonical(bool can) { this->canonical = can; }
+    void setLocalize(bool loc) { this->localize = loc; }
     void setThreshold(double orb, double prop);
     void setOrbitalPrec(double init, double final);
     void setMaxIterations(int m_iter) { this->maxIter = m_iter; }
@@ -59,12 +59,12 @@ protected:
     int history{0};                      ///< Maximum length of KAIN history
     int maxIter{-1};                     ///< Maximum number of iterations
     int rotation{0};                     ///< Number of iterations between localization/diagonalization
-    bool canonical{true};                ///< Use localized or canonical orbitals
+    bool localize{false};                ///< Use localized or canonical orbitals
     double orbThrs{-1.0};                ///< Convergence threshold for norm of orbital update
     double propThrs{-1.0};               ///< Convergence threshold for property
     double orbPrec[3]{-1.0, -1.0, -1.0}; ///< Dynamic precision: [current_prec, start_prec, end_prec]
 
-    std::vector<double> orbError; ///< Convergence orbital error
+    std::vector<double> error;    ///< Convergence orbital error
     std::vector<double> property; ///< Convergence property error
 
     virtual void reset();
@@ -78,10 +78,13 @@ protected:
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
     void printUpdate(const std::string &name, double P, double dP) const;
 
-    void printOrbitals(const DoubleVector &epsilon, const OrbitalVector &Phi, int flag) const;
     void printConvergence(bool converged) const;
     void printCycleHeader(int nIter) const;
     void printCycleFooter(double t) const;
+    void printOrbitals(const DoubleVector &epsilon,
+                       const DoubleVector &errors,
+                       const OrbitalVector &Phi,
+                       int flag) const;
 };
 
 } // namespace mrchem
