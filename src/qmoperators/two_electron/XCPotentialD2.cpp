@@ -155,4 +155,21 @@ void XCPotentialD2::syncGrids() {
     }
 }
 
+void XCPotentialD2::syncGrids() {
+    if (this->functional->isSpinSeparated()) {
+        FunctionTree<3> &rho1 = this->getDensity(DENSITY::DensityType::Alpha, 0);
+        FunctionTree<3> &rho2 = this->getDensity(DENSITY::DensityType::Alpha, 1);
+        FunctionTree<3> &rho3 = this->getDensity(DENSITY::DensityType::Beta, 0);
+        FunctionTree<3> &rho4 = this->getDensity(DENSITY::DensityType::Beta, 1);
+        while (mrcpp::refine_grid(rho1, rho2)) {};
+        while (mrcpp::refine_grid(rho2, rho3)) {};
+        while (mrcpp::refine_grid(rho3, rho4)) {};
+        while (mrcpp::refine_grid(rho4, rho1)) {};
+    } else {
+        FunctionTree<3> &rho1 = this->getDensity(DENSITY::DensityType::Total, 0);
+        FunctionTree<3> &rho2 = this->getDensity(DENSITY::DensityType::Total, 1);
+        while (mrcpp::refine_grid(rho1, rho2)) {};
+        while (mrcpp::refine_grid(rho2, rho1)) {};
+    }
+}
 } // namespace mrchem
