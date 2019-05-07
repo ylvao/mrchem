@@ -66,11 +66,11 @@ HelmholtzVector::HelmholtzVector(double pr, const DoubleVector &l)
  */
 OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
     Timer t_tot;
-    Printer::printHeader(0, "Applying Helmholtz operators");
+    mrcpp::print::header(0, "Applying Helmholtz operators");
     int oldprec = Printer::setPrecision(5);
 
     println(0, "  n     RealNorm   Nodes     ImagNorm   Nodes     Timing");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
 
     OrbitalVector out = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
@@ -94,11 +94,9 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
         printout(0, " " << std::setw(5) << rNodes);
         printout(0, " " << std::setw(14) << iNorm);
         printout(0, " " << std::setw(5) << iNodes);
-        printout(0, std::setw(14) << t_i.getWallTime() << std::endl);
+        printout(0, std::setw(14) << t_i.elapsed() << std::endl);
     }
-
-    t_tot.stop();
-    Printer::printFooter(0, t_tot, 2);
+    mrcpp::print::footer(0, t_tot, 2);
     Printer::setPrecision(oldprec);
     return out;
 }
@@ -114,16 +112,14 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
  */
 OrbitalVector HelmholtzVector::rotate(const ComplexMatrix &F_mat, OrbitalVector &Phi) const {
     Timer t_tot;
-    Printer::printHeader(0, "Rotating Helmholtz argument");
+    mrcpp::print::header(0, "Rotating Helmholtz argument");
     ComplexMatrix L_mat = getLambdaMatrix();
 
     Timer rot_t;
     OrbitalVector Psi = orbital::rotate(L_mat - F_mat, Phi);
-    rot_t.stop();
-    Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
+    mrcpp::print::time(0, "Rotating orbitals", rot_t);
 
-    t_tot.stop();
-    Printer::printFooter(0, t_tot, 2);
+    mrcpp::print::footer(0, t_tot, 2);
     return Psi;
 }
 
@@ -141,13 +137,13 @@ OrbitalVector HelmholtzVector::rotate(const ComplexMatrix &F_mat, OrbitalVector 
  */
 OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const {
     Timer t_tot;
-    Printer::printHeader(0, "Applying Helmholtz operators");
+    mrcpp::print::header(0, "Applying Helmholtz operators");
     int oldprec = Printer::setPrecision(5);
 
-    if (Phi.size() != Psi.size()) MSG_FATAL("OrbitalVector size mismatch");
+    if (Phi.size() != Psi.size()) MSG_ABORT("OrbitalVector size mismatch");
 
     println(0, " Orb    RealNorm   Nodes     ImagNorm   Nodes     Timing");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
 
     OrbitalVector out = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
@@ -173,11 +169,9 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
         printout(0, " " << std::setw(5) << rNodes);
         printout(0, " " << std::setw(14) << iNorm);
         printout(0, " " << std::setw(5) << iNodes);
-        printout(0, std::setw(14) << t_i.getWallTime() << std::endl);
+        printout(0, std::setw(14) << t_i.elapsed() << std::endl);
     }
-
-    t_tot.stop();
-    Printer::printFooter(0, t_tot, 2);
+    mrcpp::print::footer(0, t_tot, 2);
     Printer::setPrecision(oldprec);
     return out;
 }
@@ -191,7 +185,7 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
  */
 Orbital HelmholtzVector::apply(int i, Orbital &phi) const {
     ComplexDouble mu_i = std::sqrt(-2.0 * this->lambda(i));
-    if (std::abs(mu_i.imag()) > mrcpp::MachineZero) MSG_FATAL("Mu cannot be complex");
+    if (std::abs(mu_i.imag()) > mrcpp::MachineZero) MSG_ABORT("Mu cannot be complex");
     mrcpp::HelmholtzOperator H(*MRA, mu_i.real(), this->prec);
 
     Orbital out = phi.paramCopy();

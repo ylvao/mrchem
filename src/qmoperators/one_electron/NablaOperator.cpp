@@ -5,6 +5,7 @@
 #include "NablaOperator.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::DerivativeOperator;
 using mrcpp::FunctionTree;
@@ -12,7 +13,6 @@ using mrcpp::Printer;
 using mrcpp::Timer;
 
 namespace mrchem {
-extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 QMNabla::QMNabla(int d, std::shared_ptr<DerivativeOperator<3>> D)
         : QMOperator()
@@ -40,11 +40,7 @@ Orbital QMNabla::apply(Orbital inp) {
         mrcpp::apply(out.imag(), D, inp.imag(), dir);
         if (inp.conjugate()) out.imag().rescale(-1.0);
     }
-    timer.stop();
-
-    int n = out.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "Applied QMNabla", n, t);
+    print_utils::qmfunction(1, "Applied QMNabla", out, timer);
 
     return out;
 }

@@ -151,7 +151,7 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         timer.stop();
         printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        printCycleFooter(timer.getWallTime());
+        printCycleFooter(timer.elapsed());
 
         if (converged) break;
     }

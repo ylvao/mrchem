@@ -315,12 +315,12 @@ ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi, OrbitalVector &X
  * expansion to the input orbital.
  */
 Orbital RankZeroTensorOperator::applyOperTerm(int n, Orbital inp) {
-    if (n >= this->oper_exp.size()) MSG_FATAL("Invalid oper term");
+    if (n >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
     if (not mpi::my_orb(inp)) return inp.paramCopy();
 
     Orbital out = inp;
     for (auto O_nm : this->oper_exp[n]) {
-        if (O_nm == nullptr) MSG_FATAL("Invalid oper term");
+        if (O_nm == nullptr) MSG_ABORT("Invalid oper term");
         out = O_nm->apply(out);
     }
     return out;

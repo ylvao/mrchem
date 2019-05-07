@@ -5,7 +5,7 @@
 #include "chemistry/chemistry_utils.h"
 #include "parallel.h"
 #include "qmfunctions/qmfunction_utils.h"
-#include "utils/math_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -28,13 +28,13 @@ namespace mrchem {
  */
 NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double smooth_prec, bool mpi_share)
         : QMPotential(1, mpi_share) {
-    if (proj_prec < 0.0) MSG_FATAL("Negative projection precision");
+    if (proj_prec < 0.0) MSG_ABORT("Negative projection precision");
     if (smooth_prec < 0.0) smooth_prec = proj_prec;
 
     int oldprec = Printer::setPrecision(5);
-    Printer::printHeader(0, "Building nuclear potential");
-    println(0, "    N    Atom        Charge        Precision     Smoothing ");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::header(0, "Building nuclear potential");
+    println(0, "    N   Atom            Charge      Precision    Smoothing ");
+    mrcpp::print::separator(0, '-');
 
     NuclearFunction loc_func;
 
@@ -51,12 +51,11 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
         this->func.push_back(nuc, smooth);
         if (mpi::orb_rank == proj_rank) loc_func.push_back(nuc, smooth);
 
-        const std::string &sym = nuc.getElement().getSymbol();
-        printout(0, std::setw(5) << k);
-        printout(0, std::setw(7) << sym);
-        printout(0, std::setw(19) << Z);
-        printout(0, std::setw(14) << smooth_prec);
-        printout(0, std::setw(14) << smooth << std::endl);
+        std::stringstream o_sym;
+        o_sym << std::setw(4) << k;
+        o_sym << std::setw(6) << nuc.getElement().getSymbol();
+        std::array<double, 3> array{Z, smooth_prec, smooth};
+        print_utils::coord(0, o_sym.str(), array, 5, true);
     }
 
     Timer t_tot;
@@ -65,20 +64,21 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     int Z_tot = chemistry::get_total_charge(nucs);
     double abs_prec = proj_prec / Z_tot;
 
-    Timer t_loc;
     QMFunction V_loc(false);
+
+    Timer t_loc;
     qmfunction::project(V_loc, loc_func, NUMBER::Real, abs_prec);
     t_loc.stop();
-    Printer::printSeparator(0, '-');
-    Printer::printTree(0, "Nuclear potential", V_loc.getNNodes(NUMBER::Total), t_loc.getWallTime());
 
     Timer t_com;
     allreducePotential(abs_prec, V_loc);
     t_com.stop();
-    Printer::printTree(0, "Allreduce potential", this->getNNodes(NUMBER::Total), t_com.getWallTime());
 
     t_tot.stop();
-    Printer::printFooter(0, t_tot, 2);
+    mrcpp::print::separator(0, '-');
+    print_utils::qmfunction(0, "Local potential", V_loc, t_loc);
+    print_utils::qmfunction(0, "Allreduce", V_loc, t_com);
+    mrcpp::print::footer(0, t_tot, 2);
     Printer::setPrecision(oldprec);
 }
 

@@ -21,7 +21,7 @@ namespace mrchem {
  */
 ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     Timer timer;
-    Printer::printHeader(1, "Compute Kinetic Matrix Elements");
+    mrcpp::print::header(1, "Compute Kinetic Matrix Elements");
 
     RankZeroTensorOperator &p_x = this->p[0];
     RankZeroTensorOperator &p_y = this->p[1];
@@ -42,9 +42,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             OrbitalVector dKet = p_x(ket);
             T_x = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        timer.stop();
-        double t = timer.getWallTime();
-        Printer::printDouble(1, "T_x", t, 5);
+        mrcpp::print::time(1, "T_x", timer);
     }
     {
         Timer timer;
@@ -56,9 +54,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             OrbitalVector dKet = p_y(ket);
             T_y = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        timer.stop();
-        double t = timer.getWallTime();
-        Printer::printDouble(1, "T_y", t, 5);
+        mrcpp::print::time(1, "T_y", timer);
     }
     {
         Timer timer;
@@ -70,12 +66,9 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             OrbitalVector dKet = p_z(ket);
             T_z = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        timer.stop();
-        double t = timer.getWallTime();
-        Printer::printDouble(1, "T_z", t, 5);
+        mrcpp::print::time(1, "T_z", timer);
     }
-    timer.stop();
-    Printer::printFooter(1, timer, 2);
+    mrcpp::print::footer(1, timer, 2);
 
     return 0.5 * (T_x + T_y + T_z);
 }

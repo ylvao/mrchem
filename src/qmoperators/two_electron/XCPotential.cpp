@@ -6,6 +6,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::FunctionTree;
 using mrcpp::Printer;
@@ -29,18 +30,16 @@ void XCPotential::setupDensity(double prec) {
         Density rho_a(false);
         rho_a.setReal(&func_a);
         density::compute(prec, rho_a, Phi, DENSITY::Alpha);
+        print_utils::qmfunction(0, "XC alpha density", rho_a, time_a);
         rho_a.setReal(nullptr);
-        time_a.stop();
-        Printer::printTree(0, "XC alpha density", func_a.getNNodes(), time_a.getWallTime());
 
         Timer time_b;
         FunctionTree<3> &func_b = this->getDensity(DENSITY::Beta);
         Density rho_b(false);
         rho_b.setReal(&func_b);
         density::compute(prec, rho_b, Phi, DENSITY::Beta);
+        print_utils::qmfunction(0, "XC beta density", rho_b, time_b);
         rho_b.setReal(nullptr);
-        time_b.stop();
-        Printer::printTree(0, "XC beta density", func_b.getNNodes(), time_b.getWallTime());
 
         // Extend to union grid
         while (mrcpp::refine_grid(func_a, func_b)) {}
@@ -51,9 +50,8 @@ void XCPotential::setupDensity(double prec) {
         Density rho_t(false);
         rho_t.setReal(&func_t);
         density::compute(prec, rho_t, Phi, DENSITY::Total);
+        print_utils::qmfunction(0, "XC total density", rho_t, time_t);
         rho_t.setReal(nullptr);
-        time_t.stop();
-        Printer::printTree(0, "XC total density", func_t.getNNodes(), time_t.getWallTime());
     }
 }
 
@@ -61,7 +59,7 @@ mrcpp::FunctionTree<3> &XCPotential::getDensity(int spin) {
     if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
     if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
     if (spin == DENSITY::Beta) return this->functional->getDensity(mrdft::DensityType::Beta);
-    MSG_FATAL("Invalid density type");
+    MSG_ABORT("Invalid density type");
 }
 
 // NOTE AFTER DISCUSSION WITH STIG: Need to move stuff that is

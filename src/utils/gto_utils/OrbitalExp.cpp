@@ -124,7 +124,7 @@ void OrbitalExp::transformToSpherical() {
             n++;
         } else if (l == 2) {
             for (int i = 0; i < 5; i++) {
-                if (this->orbitals[n + i]->size() != 1) { MSG_FATAL("Cannot handle contracted d orbitals"); }
+                if (this->orbitals[n + i]->size() != 1) { MSG_ABORT("Cannot handle contracted d orbitals"); }
             }
             Gaussian<3> &xx = this->orbitals[n + 0]->getFunc(0);
             Gaussian<3> &xy = this->orbitals[n + 1]->getFunc(0);
@@ -176,7 +176,7 @@ void OrbitalExp::transformToSpherical() {
             }
             n += 6;
         } else {
-            MSG_FATAL("Only s, p, and d orbitals are supported");
+            MSG_ABORT("Only s, p, and d orbitals are supported");
         }
     }
     for (int i = 0; i < nOrbs; i++) {
@@ -202,7 +202,7 @@ int OrbitalExp::getAngularMomentum(int n) const {
         if (l < 0) {
             l = iL;
         } else if (iL != l) {
-            MSG_FATAL("Orbital is not pure angular momentum function");
+            MSG_ABORT("Orbital is not pure angular momentum function");
         }
     }
     return l;

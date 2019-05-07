@@ -181,7 +181,7 @@ Coord<3> Molecule::calcCenterOfCharge() const {
  */
 void Molecule::readCoordinateFile(const std::string &coord_file) {
     std::ifstream ifs(coord_file.c_str());
-    if (not ifs) MSG_FATAL("Failed to open coordinate file: " << coord_file);
+    if (not ifs) MSG_ABORT("Failed to open coordinate file: " << coord_file);
 
     int nNuclei;
     Coord<3> coord;
@@ -222,27 +222,22 @@ void Molecule::readCoordinateString(const std::vector<std::string> &coord_str) {
 void Molecule::printGeometry() const {
     auto prec = Printer::getPrecision();
 
-    Printer::printHeader(0, "Molecule");
-    println(0, "         Charge :" << std::setw(14) << getCharge());
-    println(0, "   Multiplicity :" << std::setw(14) << getMultiplicity());
-    Printer::printSeparator(0, '-');
+    mrcpp::print::header(0, "Molecule");
+    println(0, "    N   Atom                 x            y            z ");
+    mrcpp::print::separator(0, '-');
     for (auto i = 0; i < getNNuclei(); i++) {
         const auto &nuc = getNuclei()[i];
-
-        std::string coord_str = math_utils::coord_to_string(prec, 14, nuc.getCoord());
         std::stringstream o_sym;
-        o_sym << nuc.getElement().getSymbol();
-        o_sym << "  ";
-
-        printout(0, std::setw(5) << i << "        ");
-        printout(0, o_sym.str()[0] << o_sym.str()[1] << " :");
-        printout(0, coord_str << std::endl);
+        o_sym << std::setw(4) << i;
+        o_sym << std::setw(6) << nuc.getElement().getSymbol();
+        print_utils::coord(0, o_sym.str(), nuc.getCoord(), prec, false);
     }
-    Printer::printSeparator(0, '-');
-    Coord<3> COM = calcCenterOfMass();
-    std::string com_str = math_utils::coord_to_string(prec, 14, COM);
-    println(0, " Center of mass :" << com_str);
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '-');
+    auto COM = calcCenterOfMass();
+    print_utils::coord(0, "Center of mass", COM, prec, false);
+    println(0, " Multiplicity       " << std::setw(13) << getMultiplicity());
+    println(0, " Charge             " << std::setw(13) << getCharge());
+    mrcpp::print::separator(0, '=', 2);
 }
 
 /** @brief Pretty output of molecular properties
@@ -254,14 +249,14 @@ void Molecule::printProperties() const {
     const auto &F_mat = getFockMatrix();
     orbital::print_eigenvalues(Phi, F_mat);
 
-    if (this->energy != nullptr) println(0, *this->energy);
-    if (this->dipole != nullptr) println(0, *this->dipole);
-    if (this->magnetizability != nullptr) println(0, *this->magnetizability);
+    if (this->energy != nullptr) this->energy->print();
+    if (this->dipole != nullptr) this->dipole->print();
+    if (this->magnetizability != nullptr) this->magnetizability->print();
     for (auto &pol : this->polarizability) {
-        if (pol != nullptr) println(0, *pol);
+        if (pol != nullptr) pol->print();
     }
     for (auto &nmr_k : this->nmr) {
-        if (nmr_k != nullptr) println(0, *nmr_k);
+        if (nmr_k != nullptr) nmr_k->print();
     }
 }
 

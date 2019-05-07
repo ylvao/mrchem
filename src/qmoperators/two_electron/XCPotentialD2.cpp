@@ -8,6 +8,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::ABGVOperator;
 using mrcpp::DerivativeOperator;
@@ -44,9 +45,9 @@ XCPotentialD2::XCPotentialD2(XCFunctional_p F,
 
 XCPotentialD2::~XCPotentialD2() {
     mrcpp::clear(this->potentials, true);
-    if (this->pertDensity_t != nullptr) MSG_FATAL("Operator not properly cleared");
-    if (this->pertDensity_a != nullptr) MSG_FATAL("Operator not properly cleared");
-    if (this->pertDensity_b != nullptr) MSG_FATAL("Operator not properly cleared");
+    if (this->pertDensity_t != nullptr) MSG_ABORT("Operator not properly cleared");
+    if (this->pertDensity_a != nullptr) MSG_ABORT("Operator not properly cleared");
+    if (this->pertDensity_b != nullptr) MSG_ABORT("Operator not properly cleared");
 }
 
 /** @brief Prepare the operator for application
@@ -96,13 +97,11 @@ void XCPotentialD2::setupPerturbedDensity(double prec) {
         Density &dRho_b = *this->pertDensity_b;
         Timer time_a;
         density::compute(prec, dRho_a, Phi, X, Y, DENSITY::Alpha);
-        time_a.stop();
-        Printer::printTree(0, "XC perturbed alpha density", dRho_a.getNNodes(NUMBER::Total), time_a.getWallTime());
+        print_utils::qmfunction(0, "XC pert alpha density", dRho_a, time_a);
 
         Timer time_b;
         density::compute(prec, dRho_b, Phi, X, Y, DENSITY::Beta);
-        time_b.stop();
-        Printer::printTree(0, "XC perturbed beta density", dRho_b.getNNodes(NUMBER::Total), time_b.getWallTime());
+        print_utils::qmfunction(0, "XC pert beta density", dRho_b, time_b);
 
         // Extend to union grid
         while (mrcpp::refine_grid(dRho_a.real(), dRho_b.real())) {}
@@ -112,8 +111,7 @@ void XCPotentialD2::setupPerturbedDensity(double prec) {
         Density &dRho_t = *this->pertDensity_t;
         Timer time_t;
         density::compute(prec, dRho_t, Phi, X, Y, DENSITY::Total);
-        time_t.stop();
-        Printer::printTree(0, "XC perturbed total density", dRho_t.getNNodes(NUMBER::Total), time_t.getWallTime());
+        print_utils::qmfunction(0, "XC pert total density", dRho_t, time_t);
     }
 }
 

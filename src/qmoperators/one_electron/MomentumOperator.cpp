@@ -5,6 +5,7 @@
 #include "MomentumOperator.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::DerivativeOperator;
 using mrcpp::FunctionTree;
@@ -12,7 +13,6 @@ using mrcpp::Printer;
 using mrcpp::Timer;
 
 namespace mrchem {
-extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 QMMomentum::QMMomentum(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
         : QMOperator()
@@ -41,11 +41,7 @@ Orbital QMMomentum::apply(Orbital inp) {
         mrcpp::apply(out.imag(), D, inp.real(), dir);
         out.imag().rescale(-1.0);
     }
-    timer.stop();
-
-    int n = out.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "Applied QMMomentum", n, t);
+    print_utils::qmfunction(1, "Applied QMMomentum", out, timer);
 
     return out;
 }

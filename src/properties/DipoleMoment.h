@@ -26,7 +26,7 @@
 #pragma once
 
 #include "mrchem.h"
-#include "utils/math_utils.h"
+#include "utils/print_utils.h"
 
 namespace mrchem {
 
@@ -42,36 +42,21 @@ public:
     const DoubleVector &getNuclear() const { return this->nuc_tensor; }
     const DoubleVector &getElectronic() const { return this->el_tensor; }
 
-    friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dip) {
-        auto prec = mrcpp::Printer::getPrecision();
-        auto length_au = dip.getTensor().norm();
+    void print() const {
+        auto length_au = getTensor().norm();
         auto length_db = length_au * PHYSCONST::Debye;
 
-        std::string origin_str = math_utils::coord_to_string(prec, 14, dip.getOrigin());
-
-        std::stringstream o_au, o_db;
-        o_au << std::setw(27) << std::setprecision(prec) << std::fixed << length_au;
-        o_db << std::setw(27) << std::setprecision(prec) << std::fixed << length_db;
-
-        std::string el_str = math_utils::vector_to_string(prec, 14, dip.getElectronic());
-        std::string nuc_str = math_utils::vector_to_string(prec, 14, dip.getNuclear());
-        std::string tot_str = math_utils::vector_to_string(prec, 14, dip.getTensor());
-
-        o << "============================================================" << std::endl;
-        o << "                         Dipole moment                      " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "            r_O :" << origin_str                              << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "     Electronic :" << el_str                                  << std::endl;
-        o << "        Nuclear :" << nuc_str                                 << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "   Total vector :" << tot_str                                 << std::endl;
-        o << "      Magnitude :          (au) " << o_au.str()               << std::endl;
-        o << "                :       (Debye) " << o_db.str()               << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-
-        return o;
+        auto prec = mrcpp::Printer::getPrecision();
+        mrcpp::print::header(0, "Dipole Moment");
+        print_utils::coord(0, "Origin", getOrigin(), prec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::vector(0, "Electronic", getElectronic(), prec, false);
+        print_utils::vector(0, "Nuclear", getNuclear(), prec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::vector(0, "Total vector", getTensor(), prec, false);
+        print_utils::scalar(0, "Magnitude", "(au)", length_au, prec, false);
+        print_utils::scalar(0, "         ", "(Debye)", length_db, prec, false);
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:

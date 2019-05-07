@@ -26,7 +26,7 @@
 #pragma once
 
 #include "mrchem.h"
-#include "utils/math_utils.h"
+#include "utils/print_utils.h"
 
 namespace mrchem {
 
@@ -42,39 +42,19 @@ public:
     DoubleMatrix &getTensor() { return this->tensor; }
     const DoubleMatrix &getTensor() const { return this->tensor; }
 
-    friend std::ostream& operator<<(std::ostream &o, const Polarizability &pol) {
-        auto prec = mrcpp::Printer::getPrecision();
-        auto iso_au = pol.getTensor().trace() / 3.0;
+    void print() const {
+        auto iso_au = getTensor().trace() / 3.0;
         auto iso_si = iso_au * 0.0; // Luca: FIX THIS
 
-        std::string origin_str = math_utils::coord_to_string(prec, 14, pol.getOrigin());
-
-        std::stringstream o_omega;
-        o_omega << std::setw(27) << std::setprecision(prec) << std::fixed << pol.getFrequency();
-
-        std::stringstream o_iso_au, o_iso_si;
-        o_iso_au << std::setw(27) << std::setprecision(prec) << std::fixed << iso_au;
-        o_iso_si << std::setw(27) << std::setprecision(prec) << std::fixed << iso_si;
-
-        std::string pol_str_0 = math_utils::vector_to_string(prec, 14, pol.getTensor().row(0));
-        std::string pol_str_1 = math_utils::vector_to_string(prec, 14, pol.getTensor().row(1));
-        std::string pol_str_2 = math_utils::vector_to_string(prec, 14, pol.getTensor().row(2));
-
-        o << "============================================================" << std::endl;
-        o << "                      Polarizability                        " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "      Frequency :          (au) " << o_omega.str()            << std::endl;
-        o << "            r_O :" << origin_str                              << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "   Total tensor :" << pol_str_0                               << std::endl;
-        o << "                :" << pol_str_1                               << std::endl;
-        o << "                :" << pol_str_2                               << std::endl;
-        o << "   Iso. average :          (au) " << o_iso_au.str()           << std::endl;
-        o << "                :          (SI)                 TO BE FIXED " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-
-        return o;
+        auto prec = mrcpp::Printer::getPrecision();
+        mrcpp::print::header(0, "Polarizability");
+        print_utils::scalar(0, "Frequency", "(au)", getFrequency(), prec, false);
+        print_utils::coord(0, "Origin", getOrigin(), prec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Total tensor", getTensor(), prec, false);
+        print_utils::scalar(0, "Iso. average", "(au)", iso_au, prec, false);
+        print_utils::scalar(0, "            ", "(SI)", iso_si, prec, false);
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:

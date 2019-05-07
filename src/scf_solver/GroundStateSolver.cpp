@@ -68,19 +68,19 @@ void GroundStateSolver::printProperty() const {
     double N_0 = scf_0.getNuclearEnergy();
     double N_1 = scf_1.getNuclearEnergy();
 
-    Printer::printHeader(0, "                    Energy                 Update      Done ");
+    mrcpp::print::header(0, "                    Energy                 Update      Done ");
     printUpdate(" Orbital    ", phi_1, phi_1 - phi_0);
     printUpdate(" Kinetic    ", T_1, T_1 - T_0);
     printUpdate(" N-E        ", V_1, V_1 - V_0);
     printUpdate(" Coulomb    ", J_1, J_1 - J_0);
     printUpdate(" Exchange   ", K_1, K_1 - K_0);
     printUpdate(" X-C        ", XC_1, XC_1 - XC_0);
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     printUpdate(" Electronic ", E_1, E_1 - E_0);
     printUpdate(" Nuclear    ", N_1, N_1 - N_0);
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0));
-    Printer::printSeparator(0, '=');
+    mrcpp::print::separator(0, '=');
 }
 
 void GroundStateSolver::printParameters(const std::string &method) const {
@@ -144,17 +144,17 @@ void GroundStateSolver::printParameters(const std::string &method) const {
     std::stringstream o_prec_1;
     o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
 
-    Printer::printSeparator(0, '-');
-    println(0, " Method               : " << method);
-    println(0, " Max iterations       : " << o_iter.str());
-    println(0, " KAIN solver          : " << o_kain.str());
-    println(0, " Localization         : " << o_loc.str());
-    println(0, " Diagonalization      : " << o_diag.str());
-    println(0, " Start precision      : " << o_prec_0.str());
-    println(0, " Final precision      : " << o_prec_1.str());
-    println(0, " Energy threshold     : " << o_thrs_p.str());
-    println(0, " Orbital threshold    : " << o_thrs_o.str());
-    Printer::printSeparator(0, '-', 2);
+    mrcpp::print::separator(0, '-');
+    println(0, " Method            : " << method);
+    println(0, " Max iterations    : " << o_iter.str());
+    println(0, " KAIN solver       : " << o_kain.str());
+    println(0, " Localization      : " << o_loc.str());
+    println(0, " Diagonalization   : " << o_diag.str());
+    println(0, " Start precision   : " << o_prec_0.str());
+    println(0, " Final precision   : " << o_prec_1.str());
+    println(0, " Energy threshold  : " << o_thrs_p.str());
+    println(0, " Orbital threshold : " << o_thrs_o.str());
+    mrcpp::print::separator(0, '-', 2);
 }
 
 /** @brief Reset accumulated data */

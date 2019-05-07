@@ -79,12 +79,12 @@ double SCFSolver::adjustPrecision(double error) {
     this->orbPrec[0] = std::min(10.0 * error * error, this->orbPrec[0]);
     this->orbPrec[0] = std::max(this->orbPrec[0], this->orbPrec[2]);
 
-    Printer::printSeparator(0, '=');
-    Printer::printDouble(0, "Current precision", this->orbPrec[0], 5);
-    Printer::printSeparator(0, '-');
-    Printer::printDouble(0, "Orbital threshold", this->orbThrs, 5);
-    Printer::printDouble(0, "Property threshold", this->propThrs, 5);
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '=');
+    mrcpp::print::value(0, "Current precision", this->orbPrec[0], "", 5);
+    mrcpp::print::separator(0, '-');
+    mrcpp::print::value(0, "Orbital threshold", this->orbThrs, "", 5);
+    mrcpp::print::value(0, "Property threshold", this->propThrs, "", 5);
+    mrcpp::print::separator(0, '=', 2);
     return this->orbPrec[0];
 }
 
@@ -194,10 +194,10 @@ void SCFSolver::printOrbitals(const DoubleVector &epsilon,
                               const DoubleVector &errors,
                               const OrbitalVector &Phi,
                               int flag) const {
-    Printer::printHeader(0, "Orbitals");
+    mrcpp::print::header(0, "Orbitals");
     if (flag == 0) println(0, "  n     F(i,i)        Error         nNodes  Spin  Occ  Done ");
     if (flag == 1) println(0, "  n     Norm          Error         nNodes  Spin  Occ  Done ");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     int oldprec = Printer::setPrecision(5);
     bool tot_conv = true;
     for (int i = 0; i < Phi.size(); i++) {
@@ -213,11 +213,11 @@ void SCFSolver::printOrbitals(const DoubleVector &epsilon,
     }
 
     double tot_error = std::sqrt(errors.dot(errors));
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     printout(0, " Total error:                    ");
     printout(0, std::setw(19) << tot_error << "  ");
     printout(0, std::setw(3) << tot_conv << std::endl);
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '=', 2);
     Printer::setPrecision(oldprec);
 }
 
@@ -230,9 +230,9 @@ void SCFSolver::printOrbitals(const DoubleVector &epsilon,
 void SCFSolver::printConvergence(bool converged) const {
     int iter = this->error.size();
     auto print_prec = Printer::getPrecision();
-    Printer::printHeader(0, "Convergence rate");
+    mrcpp::print::header(0, "Convergence rate");
     println(0, "  Iter     OrbError            Property          Update");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     for (int i = 0; i < iter; i++) {
         double prop_i = this->property[i];
         double propDiff = getUpdate(this->property, i + 1, true);
@@ -247,13 +247,13 @@ void SCFSolver::printConvergence(bool converged) const {
         printout(0, std::setw(22) << o_prop.str());
         printout(0, std::setw(16) << o_update.str() << std::endl);
     }
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     if (converged) {
         println(0, std::setw(33) << "SCF converged in " << iter - 1 << " iterations!");
     } else {
         println(0, std::setw(42) << "SCF did NOT converge!!!");
     }
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '=', 2);
 }
 
 /** @brief Pretty printing of SCF cycle header

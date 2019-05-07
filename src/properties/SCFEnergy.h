@@ -26,6 +26,7 @@
 #pragma once
 
 #include "mrchem.h"
+#include "utils/print_utils.h"
 
 /** @class SCFEnergy
  *
@@ -57,51 +58,30 @@ public:
     double getExchangeCorrelationEnergy() const { return this->E_xc; }
     double getExchangeEnergy() const { return this->E_x; }
 
-    friend std::ostream& operator<<(std::ostream &o, const SCFEnergy &en) {
-        auto E_au = en.E_nuc + en.E_el;
-        auto prec = mrcpp::Printer::getPrecision();
+    void print() const {
+        auto E_au = E_nuc + E_el;
+        auto E_eV = E_au * PHYSCONST::eV;
+        auto E_kJ = E_au * PHYSCONST::kJ;
+        auto E_kcal = E_au * PHYSCONST::kcal;
 
-        std::stringstream o_kin, o_en, o_ee, o_x, o_xc, o_xe, o_xn;
-        o_kin << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_kin;
-        o_en << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_en;
-        o_ee << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_ee;
-        o_x << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_x;
-        o_xc << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_xc;
-        o_xe << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_ext;
-        o_xn << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_nex;
-
-        std::stringstream o_el, o_nuc;
-        o_el << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_el;
-        o_nuc << std::setw(27) << std::setprecision(2*prec) << std::fixed << en.E_nuc;
-
-        std::stringstream o_au, o_ev, o_kj, o_kcal;
-        o_au << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au;
-        o_ev << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au * PHYSCONST::eV;
-        o_kj << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au * PHYSCONST::kJ;
-        o_kcal << std::setw(27) << std::setprecision(2*prec) << std::scientific << E_au * PHYSCONST::kcal;
-
-        o << "============================================================" << std::endl;
-        o << "                         SCF energy                         " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "        Kinetic :          (au) " << o_kin.str()              << std::endl;
-        o << "            E-N :          (au) " << o_en.str()               << std::endl;
-        o << "        Coulomb :          (au) " << o_ee.str()               << std::endl;
-        o << "       Exchange :          (au) " << o_x.str()                << std::endl;
-        o << "            X-C :          (au) " << o_xc.str()               << std::endl;
-        o << " Ext. field (E) :          (au) " << o_xe.str()               << std::endl;
-        o << " Ext. field (N) :          (au) " << o_xn.str()               << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "     Electronic :          (au) " << o_el.str()               << std::endl;
-        o << "        Nuclear :          (au) " << o_nuc.str()              << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "   Total energy :          (au) "  << o_au.str()              << std::endl;
-        o << "                :    (kcal/mol) "  << o_kcal.str()            << std::endl;
-        o << "                :      (kJ/mol) "  << o_kj.str()              << std::endl;
-        o << "                :          (eV) "  << o_ev.str()              << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-
-        return o;
+        auto pprec = 2 * mrcpp::Printer::getPrecision();
+        mrcpp::print::header(0, "SCF energy");
+        mrcpp::print::value(0, "Kinetic energy   ", E_kin,  "(au)", pprec, false);
+        mrcpp::print::value(0, "E-N energy       ", E_en,   "(au)", pprec, false);
+        mrcpp::print::value(0, "Coulomb energy   ", E_ee,   "(au)", pprec, false);
+        mrcpp::print::value(0, "Exchange energy  ", E_x,    "(au)", pprec, false);
+        mrcpp::print::value(0, "X-C energy       ", E_xc,   "(au)", pprec, false);
+        mrcpp::print::value(0, "Ext. field (el)  ", E_ext,  "(au)", pprec, false);
+        mrcpp::print::value(0, "Ext. field (nuc) ", E_nex,  "(au)", pprec, false);
+        mrcpp::print::separator(0, '-');
+        mrcpp::print::value(0, "Electronic energy", E_el,   "(au)", pprec, false);
+        mrcpp::print::value(0, "Nuclear energy   ", E_nuc,  "(au)", pprec, false);
+        mrcpp::print::separator(0, '-');
+        mrcpp::print::value(0, "Total energy     ", E_au,   "(au)", pprec, true);
+        mrcpp::print::value(0, "                 ", E_kcal, "(kcal/mol)", pprec, true);
+        mrcpp::print::value(0, "                 ", E_kJ,   "(kJ/mol)", pprec, true);
+        mrcpp::print::value(0, "                 ", E_eV,   "(eV)", pprec, true);
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:

@@ -80,7 +80,7 @@ double NuclearGradientFunction::du_dr(double r1) const {
               - 1.0/(3.0*mrcpp::root_pi)
               * (2.0*r1*std::exp(-r2) + 128.0*r1*std::exp(-4.0*r2));
     } else {
-        MSG_FATAL("Negative radius");
+        MSG_ABORT("Negative radius");
     }
     return out;
 }

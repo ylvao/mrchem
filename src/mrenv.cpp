@@ -43,7 +43,7 @@ void mrenv::initialize(const json &input) {
     auto json_mra = input.find("mra");
     auto json_mpi = input.find("mpi");
 
-    if (json_mra == input.end()) MSG_FATAL("Missing MRA input!");
+    if (json_mra == input.end()) MSG_ABORT("Missing MRA input!");
 
     if (json_print != input.end()) mrenv::init_printer(*json_print);
     if (json_mra != input.end()) mrenv::init_mra(*json_mra);
@@ -64,6 +64,7 @@ void mrenv::init_printer(const json &json_print) {
         Printer::init(print_level, mpi::orb_rank, mpi::orb_size);
     }
     Printer::setPrecision(print_prec);
+    Printer::setWidth(60);
 }
 
 void mrenv::init_mra(const json &json_mra) {
@@ -80,9 +81,9 @@ void mrenv::init_mra(const json &json_mra) {
     auto btype = json_mra["basis_type"].get<std::string>();
 
     auto max_depth = max_scale - min_scale;
-    if (min_scale < mrcpp::MinScale) MSG_FATAL("Root scale too large");
-    if (max_scale > mrcpp::MaxScale) MSG_FATAL("Max scale too large");
-    if (max_depth > mrcpp::MaxDepth) MSG_FATAL("Max depth too large");
+    if (min_scale < mrcpp::MinScale) MSG_ABORT("Root scale too large");
+    if (max_scale > mrcpp::MaxScale) MSG_ABORT("Max scale too large");
+    if (max_depth > mrcpp::MaxDepth) MSG_ABORT("Max depth too large");
 
     // Initialize global MRA
     if (btype == "i") {
@@ -92,7 +93,7 @@ void mrenv::init_mra(const json &json_mra) {
         mrcpp::LegendreBasis basis(order);
         MRA = new mrcpp::MultiResolutionAnalysis<3>(world, basis, max_depth);
     } else {
-        MSG_FATAL("Invalid basis type!");
+        MSG_ABORT("Invalid basis type!");
     }
 }
 
@@ -131,7 +132,7 @@ void mrenv::print_header() {
         println(0, "+++ Serial execution" << std::endl);
     }
 
-    Printer::printEnvironment();
+    mrcpp::print::environment(0);
     MRA->print();
 }
 

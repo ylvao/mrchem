@@ -3,6 +3,7 @@
 
 #include "PositionOperator.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -25,11 +26,7 @@ void PositionPotential::setup(double prec) {
 
     Timer timer;
     qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-    timer.stop();
-
-    int n = V.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "PositionPotential", n, t);
+    print_utils::qmfunction(1, "PositionPotential", V, timer);
 }
 
 void PositionPotential::clear() {

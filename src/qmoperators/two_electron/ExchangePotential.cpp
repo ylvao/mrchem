@@ -8,6 +8,7 @@
 #include "qmfunctions/OrbitalIterator.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -158,11 +159,7 @@ Orbital ExchangePotential::calcExchange(Orbital phi_p) {
     // compute ex_p = sum_i c_i*phi_iip
     Orbital ex_p = phi_p.paramCopy();
     qmfunction::linear_combination(ex_p, coef_vec, func_vec, -1.0);
-
-    timer.stop();
-    double n = ex_p.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "Applied exchange", n, t);
+    print_utils::qmfunction(1, "Applied exchange", ex_p, timer);
 
     return ex_p;
 }
@@ -224,19 +221,18 @@ void ExchangePotential::setupInternal(double prec) {
         ex_rcv.free(NUMBER::Total);
     }
 
-    int n = 0;
     // Collect info from the calculation
     for (int i = 0; i < Phi.size(); i++) {
         if (mpi::my_orb(Phi[i])) this->tot_norms(i) = Ex[i].norm();
-        n += Ex[i].getNNodes(NUMBER::Total);
     }
 
     mpi::allreduce_vector(this->tot_norms, mpi::comm_orb);  // to be checked
     mpi::allreduce_matrix(this->part_norms, mpi::comm_orb); // to be checked
 
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printTree(0, "Hartree-Fock exchange", n, t);
+    auto n = orbital::get_n_nodes(Ex);
+    auto m = orbital::get_size_nodes(Ex);
+    auto t = timer.elapsed();
+    mrcpp::print::tree(0, "Hartree-Fock exchange", n, m, t);
 }
 
 /** @brief Computes the diagonal part of the internal exchange potential
@@ -293,9 +289,9 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
     OrbitalVector &Phi = *this->orbitals;
     OrbitalVector &Ex = this->exchange;
 
-    if (i == j) MSG_FATAL("Cannot handle diagonal term");
-    if (Ex.size() != Phi.size()) MSG_FATAL("Size mismatch");
-    if (phi_i.hasImag() or phi_j.hasImag()) MSG_FATAL("Orbitals must be real");
+    if (i == j) MSG_ABORT("Cannot handle diagonal term");
+    if (Ex.size() != Phi.size()) MSG_ABORT("Size mismatch");
+    if (phi_i.hasImag() or phi_j.hasImag()) MSG_ABORT("Orbitals must be real");
 
     double i_fac = getSpinFactor(phi_i, phi_j);
     double j_fac = getSpinFactor(phi_j, phi_i);
@@ -322,7 +318,7 @@ void ExchangePotential::calcInternal(int i, int j, Orbital &phi_i, Orbital &phi_
         mrcpp::apply(prec, V_ij.real(), P, phi_ij.real());
     }
     if (phi_ij.hasImag()) {
-        MSG_FATAL("Orbitals must be real");
+        MSG_ABORT("Orbitals must be real");
         V_ij.alloc(NUMBER::Imag);
         mrcpp::apply(prec, V_ij.imag(), P, phi_ij.imag());
     }

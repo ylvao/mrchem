@@ -143,16 +143,16 @@ bool XCFunctional::hasDensity() const {
 FunctionTree<3> &XCFunctional::getDensity(DensityType type) {
     switch (type) {
         case DensityType::Total:
-            if (rho_t == nullptr) MSG_FATAL("Total density not allocated");
+            if (rho_t == nullptr) MSG_ABORT("Total density not allocated");
             return *rho_t;
         case DensityType::Alpha:
-            if (rho_a == nullptr) MSG_FATAL("Alpha density not allocated");
+            if (rho_a == nullptr) MSG_ABORT("Alpha density not allocated");
             return *rho_a;
         case DensityType::Beta:
-            if (rho_b == nullptr) MSG_FATAL("Beta density not allocated");
+            if (rho_b == nullptr) MSG_ABORT("Beta density not allocated");
             return *rho_b;
         default:
-            MSG_FATAL("Invalid density type");
+            MSG_ABORT("Invalid density type");
             break;
     }
 }
@@ -198,12 +198,12 @@ void XCFunctional::buildGrid(double Z, const mrcpp::Coord<3> &R) {
     for (int i = 0; i < 5; i++) {
         mrcpp::GaussFunc<3> gauss(std::pow(Z, i), 1.0, R);
         if (isSpinSeparated()) {
-            if (rho_a == nullptr) MSG_FATAL("Uninitialized alpha density");
-            if (rho_b == nullptr) MSG_FATAL("Uninitialized beta density");
+            if (rho_a == nullptr) MSG_ABORT("Uninitialized alpha density");
+            if (rho_b == nullptr) MSG_ABORT("Uninitialized beta density");
             mrcpp::build_grid(*rho_a, gauss);
             mrcpp::build_grid(*rho_b, gauss);
         } else {
-            if (rho_t == nullptr) MSG_FATAL("Uninitialized total density");
+            if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
             mrcpp::build_grid(*rho_t, gauss);
         }
     }
@@ -223,15 +223,15 @@ void XCFunctional::pruneGrid(double prec, bool abs_prec) {
 
     double scale = 1.0;
     if (isSpinSeparated()) {
-        if (rho_a == nullptr) MSG_FATAL("Uninitialized alpha density");
-        if (rho_b == nullptr) MSG_FATAL("Uninitialized beta density");
+        if (rho_a == nullptr) MSG_ABORT("Uninitialized alpha density");
+        if (rho_b == nullptr) MSG_ABORT("Uninitialized beta density");
         if (abs_prec) scale = rho_a->integrate() + rho_b->integrate();
         rho_a->crop(prec / scale, 1.0, false);
         rho_b->crop(prec / scale, 1.0, false);
         mrcpp::refine_grid(*rho_a, *rho_b);
         mrcpp::refine_grid(*rho_b, *rho_a);
     } else {
-        if (rho_t == nullptr) MSG_FATAL("Uninitialized total density");
+        if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
         if (abs_prec) scale = rho_t->integrate();
         rho_t->crop(prec / scale, 1.0, false);
     }
@@ -251,8 +251,8 @@ void XCFunctional::refineGrid(double prec, bool abs_prec) {
 
     double scale = 1.0;
     if (isSpinSeparated()) {
-        if (rho_a == nullptr) MSG_FATAL("Uninitialized alpha density");
-        if (rho_b == nullptr) MSG_FATAL("Uninitialized beta density");
+        if (rho_a == nullptr) MSG_ABORT("Uninitialized alpha density");
+        if (rho_b == nullptr) MSG_ABORT("Uninitialized beta density");
         if (abs_prec) scale = rho_a->integrate() + rho_b->integrate();
         mrcpp::refine_grid(*rho_a, prec / scale);
         mrcpp::refine_grid(*rho_b, prec / scale);
@@ -265,7 +265,7 @@ void XCFunctional::refineGrid(double prec, bool abs_prec) {
             nNodes = nAlpha + nBeta;
         }
     } else {
-        if (rho_t == nullptr) MSG_FATAL("Uninitialized total density");
+        if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
         if (abs_prec) scale = rho_t->integrate();
         mrcpp::refine_grid(*rho_t, prec / scale);
     }
@@ -370,13 +370,13 @@ void XCFunctional::setupXCInput() {
 int XCFunctional::setupXCInputDensity() {
     int nUsed = 0;
     if (isSpinSeparated()) {
-        if (rho_a == nullptr) MSG_FATAL("Invalid alpha density");
-        if (rho_b == nullptr) MSG_FATAL("Invalid beta density");
+        if (rho_a == nullptr) MSG_ABORT("Invalid alpha density");
+        if (rho_b == nullptr) MSG_ABORT("Invalid beta density");
         xcInput.push_back(std::make_tuple(1.0, rho_a));
         xcInput.push_back(std::make_tuple(1.0, rho_b));
         nUsed = 2;
     } else {
-        if (rho_t == nullptr) MSG_FATAL("Invalid total density");
+        if (rho_t == nullptr) MSG_ABORT("Invalid total density");
         xcInput.push_back(std::make_tuple(1.0, rho_t));
         nUsed = 1;
     }
@@ -457,8 +457,10 @@ void XCFunctional::evaluate() {
         mrcpp::get_func(xcOutput, i).calcSquareNorm();
     }
 
-    timer.stop();
-    Printer::printTree(0, "XC evaluate xcfun", mrcpp::sum_nodes(xcOutput), timer.getWallTime());
+    auto n = mrcpp::get_n_nodes(xcOutput);
+    auto m = mrcpp::get_size_nodes(xcOutput);
+    auto t = timer.elapsed();
+    mrcpp::print::tree(0, "XC evaluate xcfun", n, m, t);
     printout(2, std::endl);
 }
 
@@ -592,8 +594,7 @@ double XCFunctional::calcEnergy() {
     Timer timer;
     FunctionTree<3> &E_dens = mrcpp::get_func(xcOutput, 0);
     double energy = E_dens.integrate();
-    timer.stop();
-    Printer::printTree(0, "XC energy", E_dens.getNNodes(), timer.getWallTime());
+    mrcpp::print::tree(0, "XC energy", E_dens, timer);
     return energy;
 }
 
@@ -612,12 +613,13 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
     } else if (isGGA()) {
         calcPotentialGGA(xc_pot);
     } else {
-        MSG_FATAL("Invalid functional type");
+        MSG_ABORT("Invalid functional type");
     }
-    timer.stop();
-    int n = mrcpp::sum_nodes(xc_pot);
-    double t = timer.getWallTime();
-    Printer::printTree(0, "XC potential", n, t);
+    auto n = mrcpp::get_n_nodes(xc_pot);
+    auto m = mrcpp::get_size_nodes(xc_pot);
+    auto t = timer.elapsed();
+    mrcpp::print::tree(0, "XC potential", n, m, t);
+
     return xc_pot;
 }
 
@@ -868,16 +870,14 @@ FunctionTree<3> *XCFunctional::calcGradDotPotDensVec(FunctionTree<3> &V, Functio
         mrcpp::copy_grid(*Vrho, rho_d);
         mrcpp::multiply(-1.0, *Vrho, 1.0, V, rho_d);
         vec.push_back(std::make_tuple(1.0, Vrho));
-        timer.stop();
-        Printer::printTree(2, "Multiply", Vrho->getNNodes(), timer.getWallTime());
+        mrcpp::print::tree(2, "Multiply", *Vrho, timer);
     }
 
     Timer timer;
     auto *result = new FunctionTree<3>(MRA);
     mrcpp::divergence(*result, *derivative, vec);
     mrcpp::clear(vec, true);
-    timer.stop();
-    Printer::printTree(2, "Gradient", result->getNNodes(), timer.getWallTime());
+    mrcpp::print::tree(2, "Divergence", *result, timer);
     return result;
 }
 

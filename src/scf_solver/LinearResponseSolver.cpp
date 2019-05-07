@@ -176,7 +176,7 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
         // Finalize SCF cycle
         timer.stop();
         printProperty();
-        printCycleFooter(timer.getWallTime());
+        printCycleFooter(timer.elapsed());
 
         if (converged) break;
     }
@@ -193,9 +193,9 @@ void LinearResponseSolver::printProperty() const {
     int iter = this->property.size();
     if (iter > 1) prop_0 = this->property[iter - 2];
     if (iter > 0) prop_1 = this->property[iter - 1];
-    Printer::printHeader(0, "                    Value                  Update      Done ");
+    mrcpp::print::header(0, "                    Value                  Update      Done ");
     printUpdate(" Property   ", prop_1, prop_1 - prop_0);
-    Printer::printSeparator(0, '=');
+    mrcpp::print::separator(0, '=');
 }
 
 } // namespace mrchem

@@ -90,19 +90,19 @@ int PT[29][2] = {
 OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
     std::string restr_str = "False";
     if (restricted) restr_str = "True";
-    Printer::printSeparator(0, '-');
-    println(0, " Method         : Diagonalize Hamiltonian matrix");
-    println(0, " Precision      : " << prec);
-    println(0, " Restricted     : " << restr_str);
-    println(0, " Hamiltonian    : Core");
-    println(0, " AO basis       : Hydrogenic orbitals");
-    println(0, " Zeta quality   : " << zeta);
-    Printer::printSeparator(0, '-', 2);
+    mrcpp::print::separator(0, '-');
+    println(0, " Method            : Diagonalize Hamiltonian matrix");
+    println(0, " Precision         : " << prec);
+    println(0, " Restricted        : " << restr_str);
+    println(0, " Hamiltonian       : Core");
+    println(0, " AO basis          : Hydrogenic orbitals");
+    println(0, " Zeta quality      : " << zeta);
+    mrcpp::print::separator(0, '-', 2);
 
     int mult = mol.getMultiplicity(); // multiplicity
     int Ne = mol.getNElectrons();     // total electrons
     int Nd = Ne - (mult - 1);         // doubly occupied
-    if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
+    if (Nd % 2 != 0) MSG_ABORT("Invalid multiplicity");
 
     // Make Fock operator contributions
     auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
@@ -115,7 +115,8 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
 
     // Compute Hamiltonian matrix
     Timer t_diag;
-    Printer::printHeader(0, "Diagonalize Core-Hamiltonian matrix");
+    mrcpp::print::header(0, "Diagonalize Core-Hamiltonian matrix");
+
     Timer t1;
     T.setup(prec);
     V.setup(prec);
@@ -124,8 +125,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     ComplexMatrix F = S_m12.transpose() * (t + v) * S_m12;
     V.clear();
     T.clear();
-    t1.stop();
-    Printer::printDouble(0, "Compute Fock matrix", t1.getWallTime(), 5);
+    mrcpp::print::time(0, "Compute Fock matrix", t1);
 
     // Diagonalize Hamiltonian matrix
     Timer t2;
@@ -133,8 +133,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     es.compute(F);
     ComplexMatrix ei_vec = es.eigenvectors();
     ComplexMatrix U = ei_vec.transpose() * S_m12;
-    t2.stop();
-    Printer::printDouble(0, "Diagonalize Fock matrix", t2.getWallTime(), 5);
+    mrcpp::print::time(0, "Diagonalize Fock matrix", t2);
 
     // Need to convert to QMFunctions for linear_combination
     QMFunctionVector funcs;
@@ -144,7 +143,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     Timer t3;
     OrbitalVector Psi;
     if (restricted) {
-        if (mult != 1) MSG_FATAL("Restricted open-shell not available");
+        if (mult != 1) MSG_ABORT("Restricted open-shell not available");
 
         int Np = Nd / 2; // paired orbitals
         for (int i = 0; i < Np; i++) {
@@ -175,11 +174,8 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
 
         Psi = orbital::adjoin(Psi_a, Psi_b);
     }
-    t3.stop();
-    Printer::printDouble(0, "Rotate orbitals", t3.getWallTime(), 5);
-
-    t_diag.stop();
-    Printer::printFooter(0, t_diag, 2);
+    mrcpp::print::time(0, "Rotate orbitals", t3);
+    mrcpp::print::footer(0, t_diag, 2);
 
     return Psi;
 }
@@ -206,9 +202,9 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
  */
 OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, int spin, int zeta) {
     auto print_prec = Printer::getPrecision();
-    Printer::printHeader(0, "Projecting Hydrogen AOs");
+    mrcpp::print::header(0, "Projecting Hydrogen AOs");
     println(0, "    n    Atom   Label                          Norm");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
 
     Timer timer;
     OrbitalVector Phi;
@@ -253,8 +249,7 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
             nShell++;
         }
     }
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
+    mrcpp::print::footer(0, timer, 2);
     return Phi;
 }
 

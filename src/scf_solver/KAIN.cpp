@@ -51,7 +51,7 @@ namespace mrchem {
 void KAIN::setupLinearSystem() {
     Timer timer;
     int nHistory = this->orbitals.size() - 1;
-    if (nHistory < 1) MSG_FATAL("Not enough history to setup system of equations");
+    if (nHistory < 1) MSG_ABORT("Not enough history to setup system of equations");
 
     std::vector<DoubleMatrix> A_matrices;
     std::vector<DoubleVector> b_vectors;
@@ -64,17 +64,17 @@ void KAIN::setupLinearSystem() {
         Orbital &phi_m = this->orbitals[nHistory][n];
         Orbital &fPhi_m = this->dOrbitals[nHistory][n];
         if (mpi::my_orb(phi_m)) {
-            if (not mpi::my_orb(fPhi_m)) MSG_FATAL("MPI rank mismatch: fPhi_m");
+            if (not mpi::my_orb(fPhi_m)) MSG_ABORT("MPI rank mismatch: fPhi_m");
 
             for (int i = 0; i < nHistory; i++) {
                 Orbital &phi_i = this->orbitals[i][n];
-                if (not mpi::my_orb(phi_i)) MSG_FATAL("MPI rank mismatch: phi_i");
+                if (not mpi::my_orb(phi_i)) MSG_ABORT("MPI rank mismatch: phi_i");
                 Orbital dPhi_im = phi_m.paramCopy();
                 qmfunction::add(dPhi_im, 1.0, phi_i, -1.0, phi_m, -1.0);
 
                 for (int j = 0; j < nHistory; j++) {
                     Orbital &fPhi_j = this->dOrbitals[j][n];
-                    if (not mpi::my_orb(fPhi_j)) MSG_FATAL("MPI rank mismatch: fPhi_j");
+                    if (not mpi::my_orb(fPhi_j)) MSG_ABORT("MPI rank mismatch: fPhi_j");
                     Orbital dfPhi_jm = fPhi_m.paramCopy();
                     qmfunction::add(dfPhi_jm, 1.0, fPhi_j, -1.0, fPhi_m, -1.0);
 
@@ -119,10 +119,7 @@ void KAIN::setupLinearSystem() {
     }
 
     sortLinearSystem(A_matrices, b_vectors);
-
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Setup linear system", t, 5);
+    mrcpp::print::time(0, "Setup linear system", timer);
 }
 
 /** @brief Compute the next step for orbitals and orbital updates
@@ -162,12 +159,12 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
 
                 partCoefs(0) = 1.0;
                 Orbital &phi_j = this->orbitals[j][n];
-                if (not mpi::my_orb(phi_j)) MSG_FATAL("MPI rank mismatch: phi_j");
+                if (not mpi::my_orb(phi_j)) MSG_ABORT("MPI rank mismatch: phi_j");
                 partOrbs.push_back(phi_j);
 
                 partCoefs(1) = 1.0;
                 Orbital &fPhi_j = this->dOrbitals[j][n];
-                if (not mpi::my_orb(fPhi_j)) MSG_FATAL("MPI rank mismatch: fPhi_j");
+                if (not mpi::my_orb(fPhi_j)) MSG_ABORT("MPI rank mismatch: fPhi_j");
                 partOrbs.push_back(fPhi_j);
 
                 partCoefs(2) = -1.0;
@@ -216,9 +213,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
         *F = X_m;
         *dF = fockStep;
     }
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Expand solution", t, 5);
+    mrcpp::print::time(0, "Expand solution", timer);
 }
 
 } // namespace mrchem

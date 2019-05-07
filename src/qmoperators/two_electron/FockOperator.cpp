@@ -80,15 +80,15 @@ void FockOperator::build(double exx) {
  */
 void FockOperator::setup(double prec) {
     Timer timer;
-    Printer::printHeader(0, "Setting up Fock operator");
-    Printer::printDouble(0, "Precision", prec, 5);
-    Printer::printSeparator(0, '-');
+    mrcpp::print::header(0, "Setting up Fock operator");
+    mrcpp::print::value(0, "Precision", prec, "(rel)", 5);
+    mrcpp::print::separator(0, '-');
     this->kinetic().setup(prec);
     this->potential().setup(prec);
     this->perturbation().setup(prec);
     if (this->ex != nullptr) this->ex->setupInternal(prec);
     timer.stop();
-    Printer::printFooter(0, timer, 2);
+    mrcpp::print::footer(0, timer, 2);
 }
 
 /** @brief clear operator after application
@@ -124,7 +124,7 @@ void FockOperator::rotate(const ComplexMatrix &U) {
  * by tracing the Fock matrix and subtracting all other contributions.
  */
 SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
-    Printer::printHeader(0, "Calculating SCF energy");
+    mrcpp::print::header(0, "Calculating SCF energy");
     Timer timer;
 
     double E_nuc = 0.0; // Nuclear repulsion
@@ -168,24 +168,19 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
     E_kin = E_orbxc2 - 2.0 * E_eex - E_en - E_ext;
     E_el = E_orbxc2 - E_eex + E_xc;
 
-    std::stringstream o_el, o_nuc, o_tot;
-    auto pprec = mrcpp::Printer::getPrecision();
-    o_el << std::setw(27) << std::setprecision(2 * pprec) << std::fixed << E_el;
-    o_nuc << std::setw(27) << std::setprecision(2 * pprec) << std::fixed << E_nuc;
-    o_tot << std::setw(27) << std::setprecision(2 * pprec) << std::fixed << E_el + E_nuc;
-    println(0, " Nuclear                   (au) " << o_nuc.str());
-    println(0, " Electronic                (au) " << o_el.str());
-    Printer::printSeparator(0, '-');
-    println(0, " Total energy              (au) " << o_tot.str());
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
+    auto pprec = 2 * mrcpp::Printer::getPrecision();
+    mrcpp::print::value(0, "Nuclear energy", E_nuc, "(au)", pprec, false);
+    mrcpp::print::value(0, "Electronic energy", E_el, "(au)", pprec, false);
+    mrcpp::print::separator(0, '-');
+    mrcpp::print::value(0, "Total energy", E_nuc + E_el, "(au)", pprec, false);
+    mrcpp::print::footer(0, timer, 2);
 
     return SCFEnergy{E_nuc, E_el, E_orb, E_kin, E_en, E_ee, E_xc, E_x, E_nex, E_ext};
 }
 
 ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     Timer t_tot;
-    Printer::printHeader(0, "Calculating Fock matrix");
+    mrcpp::print::header(0, "Calculating Fock matrix");
 
     auto t = this->getKineticOperator();
     auto v = this->potential();
@@ -193,17 +188,14 @@ ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     Timer t_kin;
     ComplexMatrix T = ComplexMatrix::Zero(bra.size(), ket.size());
     if (t != nullptr) T += (*t)(bra, ket);
-    t_kin.stop();
-    Printer::printDouble(0, "Kinetic part", t_kin.getWallTime());
+    mrcpp::print::time(0, "Kinetic part", t_kin);
 
     Timer t_pot;
     ComplexMatrix V = ComplexMatrix::Zero(bra.size(), ket.size());
     if (v.size() > 0) V += v(bra, ket);
-    t_pot.stop();
-    Printer::printDouble(0, "Potential part", t_pot.getWallTime());
+    mrcpp::print::time(0, "Potential part", t_pot);
 
-    t_tot.stop();
-    Printer::printFooter(0, t_tot, 2);
+    mrcpp::print::footer(0, t_tot, 2);
     return T + V;
 }
 

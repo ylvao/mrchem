@@ -27,6 +27,8 @@
 
 #include "mrchem.h"
 
+#include "utils/print_utils.h"
+
 namespace mrchem {
 
 // clang-format off
@@ -45,60 +47,31 @@ public:
     const DoubleMatrix &getDiamagnetic() const { return this->dia_tensor; }
     const DoubleMatrix &getParamagnetic() const { return this->para_tensor; }
 
-    friend std::ostream& operator<<(std::ostream &o, const NMRShielding &nmr) {
-        auto prec = mrcpp::Printer::getPrecision();
-        auto isoDSppm = nmr.getDiamagnetic().trace() / 3.0;
-        auto isoPSppm = nmr.getParamagnetic().trace() / 3.0;
-        auto isoTSppm = isoDSppm + isoPSppm;
-
-        std::stringstream o_tot_ppm, o_dia_ppm, o_para_ppm;
-        o_tot_ppm << std::setw(27) << std::setprecision(prec) << std::fixed << isoTSppm;
-        o_dia_ppm << std::setw(27) << std::setprecision(prec) << std::fixed << isoDSppm;
-        o_para_ppm << std::setw(27) << std::setprecision(prec) << std::fixed << isoPSppm;
-
-        std::string dia_str_0 = math_utils::vector_to_string(prec, 14, nmr.getDiamagnetic().row(0));
-        std::string dia_str_1 = math_utils::vector_to_string(prec, 14, nmr.getDiamagnetic().row(1));
-        std::string dia_str_2 = math_utils::vector_to_string(prec, 14, nmr.getDiamagnetic().row(2));
-
-        std::string para_str_0 = math_utils::vector_to_string(prec, 14, nmr.getParamagnetic().row(0));
-        std::string para_str_1 = math_utils::vector_to_string(prec, 14, nmr.getParamagnetic().row(1));
-        std::string para_str_2 = math_utils::vector_to_string(prec, 14, nmr.getParamagnetic().row(2));
-
-        std::string tot_str_0 = math_utils::vector_to_string(prec, 14, nmr.getTensor().row(0));
-        std::string tot_str_1 = math_utils::vector_to_string(prec, 14, nmr.getTensor().row(1));
-        std::string tot_str_2 = math_utils::vector_to_string(prec, 14, nmr.getTensor().row(2));
+    void print() const {
+        auto iso_ppm_d = getDiamagnetic().trace() / 3.0;
+        auto iso_ppm_p = getParamagnetic().trace() / 3.0;
+        auto iso_ppm_t = iso_ppm_d + iso_ppm_p;
 
         std::stringstream o_nucleus;
-        o_nucleus << std::setw(14) << nmr.getK() << std::setw(14) << nmr.getNucleus().getElement().getSymbol();
+        o_nucleus << " Nucleus ";
+        o_nucleus << std::setw(24) << getK();
+        o_nucleus << std::setw(13) << getNucleus().getElement().getSymbol();
 
-        const auto &coord = nmr.getNucleus().getCoord();
-        std::string coord_str = math_utils::coord_to_string(prec, 14, coord);
-        std::string origin_str = math_utils::coord_to_string(prec, 14, nmr.getOrigin());
-
-        o << "============================================================" << std::endl;
-        o << "                       NMR shielding                        " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "        Nucleus :" << o_nucleus.str()                         << std::endl;
-        o << "            r_K :" << coord_str                               << std::endl;
-        o << "            r_O :" << origin_str                              << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "   Total tensor :" << tot_str_0                               << std::endl;
-        o << "                :" << tot_str_1                               << std::endl;
-        o << "                :" << tot_str_2                               << std::endl;
-        o << "   Iso. average :         (ppm) " << o_tot_ppm.str()          << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "    Diamagnetic :" << dia_str_0                               << std::endl;
-        o << "                :" << dia_str_1                               << std::endl;
-        o << "                :" << dia_str_2                               << std::endl;
-        o << "   Dia. average :         (ppm) " << o_dia_ppm.str()          << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "   Paramagnetic :" << para_str_0                              << std::endl;
-        o << "                :" << para_str_1                              << std::endl;
-        o << "                :" << para_str_2                              << std::endl;
-        o << "  Para. average :         (ppm) " << o_para_ppm.str()         << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-        return o;
+        auto prec = mrcpp::Printer::getPrecision();
+        mrcpp::print::header(0, "NMR shielding");
+        println(0, o_nucleus.str());
+        print_utils::coord(0, "r_K", getNucleus().getCoord(), prec, false);
+        print_utils::coord(0, "r_O", getOrigin(), prec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Total tensor", getTensor(), prec, false);
+        print_utils::scalar(0, "Iso. average", "(ppm)", iso_ppm_t, prec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Diamagnetic ", getDiamagnetic(), prec, false);
+        print_utils::scalar(0, "Iso. average", "(ppm)", iso_ppm_d, prec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Paramagnetic", getParamagnetic(), prec, false);
+        print_utils::scalar(0, "Iso. average", "(ppm)", iso_ppm_d, prec, false);
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:

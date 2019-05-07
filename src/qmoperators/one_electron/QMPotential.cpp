@@ -3,6 +3,7 @@
 
 #include "QMPotential.h"
 #include "qmfunctions/Orbital.h"
+#include "utils/print_utils.h"
 
 using mrcpp::FunctionTree;
 using mrcpp::FunctionTreeVector;
@@ -50,11 +51,7 @@ Orbital QMPotential::apply(Orbital inp) {
     Orbital out = inp.paramCopy();
     calcRealPart(out, inp, false);
     calcImagPart(out, inp, false);
-    timer.stop();
-
-    int n = out.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "Applied QM potential", n, t);
+    print_utils::qmfunction(1, "Applied QM potential", out, timer);
 
     return out;
 }
@@ -73,11 +70,7 @@ Orbital QMPotential::dagger(Orbital inp) {
     Orbital out = inp.paramCopy();
     calcRealPart(out, inp, true);
     calcImagPart(out, inp, true);
-    timer.stop();
-
-    int n = out.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "Applied QM adjoint potential", n, t);
+    print_utils::qmfunction(1, "Applied QM adjoint potential", out, timer);
 
     return out;
 }
@@ -94,8 +87,8 @@ void QMPotential::calcRealPart(Orbital &out, Orbital &inp, bool dagger) {
     int adap = this->adap_build;
     double prec = this->apply_prec;
 
-    if (out.hasReal()) MSG_FATAL("Output not empty");
-    if (out.isShared()) MSG_FATAL("Cannot share this function");
+    if (out.hasReal()) MSG_ABORT("Output not empty");
+    if (out.isShared()) MSG_ABORT("Cannot share this function");
 
     QMFunction &V = *this;
     if (V.hasReal() and inp.hasReal()) {
@@ -130,8 +123,8 @@ void QMPotential::calcImagPart(Orbital &out, Orbital &inp, bool dagger) {
     int adap = this->adap_build;
     double prec = this->apply_prec;
 
-    if (out.hasImag()) MSG_FATAL("Output not empty");
-    if (out.isShared()) MSG_FATAL("Cannot share this function");
+    if (out.hasImag()) MSG_ABORT("Output not empty");
+    if (out.isShared()) MSG_ABORT("Cannot share this function");
 
     QMFunction &V = *this;
     if (V.hasReal() and inp.hasImag()) {

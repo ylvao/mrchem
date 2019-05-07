@@ -6,6 +6,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -96,11 +97,7 @@ void CoulombPotential::setupGlobalPotential(double prec) {
     V.alloc(NUMBER::Real);
     if (need_to_apply) mrcpp::apply(abs_prec, V.real(), P, rho.real());
     mpi::share_function(V, 0, 22445, mpi::comm_share);
-    timer.stop();
-
-    int n = V.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(0, "Coulomb potential", n, t);
+    print_utils::qmfunction(0, "Coulomb potential", V, timer);
 }
 
 /** @brief compute Coulomb potential
@@ -124,11 +121,7 @@ QMFunction CoulombPotential::setupLocalPotential(double prec) {
     QMFunction V(false);
     V.alloc(NUMBER::Real);
     mrcpp::apply(abs_prec, V.real(), P, rho.real());
-    timer.stop();
-
-    int n = V.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(0, "Coulomb potential", n, t);
+    print_utils::qmfunction(0, "Coulomb potential", V, timer);
 
     return V;
 }
@@ -163,8 +156,7 @@ void CoulombPotential::allreducePotential(double prec, QMFunction &V_loc) {
         mrcpp::copy_grid(V_tot.real(), V_loc.real());
         mrcpp::copy_func(V_tot.real(), V_loc.real());
     }
-    t_com.stop();
-    Printer::printTree(0, "Allreduce potential", V_tot.getNNodes(NUMBER::Total), t_com.getWallTime());
+    print_utils::qmfunction(0, "Allreduce Coulomb", V_tot, t_com);
 }
 
 } // namespace mrchem
