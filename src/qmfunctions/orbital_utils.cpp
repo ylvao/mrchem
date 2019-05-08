@@ -801,17 +801,56 @@ int orbital::start_index(const OrbitalVector &Phi, int spin) {
 }
 
 void orbital::print(const OrbitalVector &Phi) {
-    Printer::setScientific();
-    printout(0, "============================================================\n");
-    printout(0, " OrbitalVector:");
-    printout(0, std::setw(4) << Phi.size() << " orbitals  ");
-    printout(0, std::setw(4) << size_occupied(Phi) << " occupied  ");
-    printout(0, std::setw(4) << get_electron_number(Phi) << " electrons\n");
-    printout(0, "------------------------------------------------------------\n");
-    printout(0, "    n  Spin  Occ          RankID               Norm         \n");
-    printout(0, "------------------------------------------------------------\n");
-    for (int i = 0; i < Phi.size(); i++) println(0, std::setw(5) << i << Phi[i]);
-    printout(0, "============================================================\n\n\n");
+    auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth();
+    auto w1 = 5;
+    auto w2 = 8;
+    auto w3 = w0 / 6;
+    auto w4 = (w0 - 1) - (3 * w1 + 2 * w2 + w3);
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w1) << "Occ";
+    o_head << std::setw(w1) << "Spin";
+    o_head << std::setw(w2) << "RankID";
+    o_head << std::setw(w2) << "Nodes";
+    o_head << std::setw(w3) << "MB";
+    o_head << std::setw(w4) << "Norm";
+
+    mrcpp::print::header(0, "OrbitalVector");
+    println(0, o_head.str());
+    mrcpp::print::separator(0, '-');
+    auto tot_nodes = 0;
+    auto tot_mem = 0.0;
+    for (int i = 0; i < Phi.size(); i++) {
+        auto nodes_i = Phi[i].getNNodes(NUMBER::Total);
+        auto mem_i = Phi[i].getSizeNodes(NUMBER::Total) / 1024.0;
+        tot_nodes += nodes_i;
+        tot_mem += mem_i;
+        std::stringstream o_row;
+        o_row << std::setw(w1) << i;
+        o_row << std::setw(w1) << Phi[i].occ();
+        o_row << std::setw(w1) << Phi[i].printSpin();
+        o_row << std::setw(w2) << Phi[i].rankID();
+        o_row << std::setw(w2) << nodes_i;
+        o_row << std::setw(w3) << std::setprecision(2) << std::fixed << mem_i;
+        o_row << std::setw(w4) << std::setprecision(2 * pprec) << std::scientific << Phi[i].norm();
+        println(0, o_row.str());
+    }
+    auto N_o = Phi.size();
+    auto N_e = orbital::get_electron_number(Phi);
+    auto N_a = orbital::size_alpha(Phi) + orbital::size_paired(Phi);
+    auto N_b = orbital::size_beta(Phi) + orbital::size_paired(Phi);
+
+    mrcpp::print::separator(0, '-');
+    mrcpp::print::value(0, "Total memory ", tot_mem, "(MB)", 2, false);
+    mrcpp::print::value(0, "Total nodes ", tot_nodes, "", 0, false);
+    mrcpp::print::separator(0, '-');
+    mrcpp::print::value(0, "N orbitals  ", N_o, "", 0, false);
+    mrcpp::print::value(0, "N electrons ", N_e, "", 0, false);
+    mrcpp::print::value(0, "N alpha     ", N_a, "", 0, false);
+    mrcpp::print::value(0, "N beta      ", N_b, "", 0, false);
+    mrcpp::print::separator(0, '=', 2);
 }
 
 void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F_mat) {
@@ -820,8 +859,6 @@ void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F
 
     auto pprec = Printer::getPrecision();
     mrcpp::print::header(0, "Orbital energies");
-    println(0, "     n  Spin  Occ                              Epsilon");
-    mrcpp::print::separator(0, '-');
 
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F_mat.cols());
     es.compute(F_mat);
@@ -830,14 +867,14 @@ void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F
     DoubleVector epsilon = es.eigenvalues();
     for (int i = 0; i < epsilon.size(); i++) {
         std::stringstream o_txt;
-        o_txt << std::setw(5) << i;
-        o_txt << std::setw(5) << Phi[i].printSpin();
-        o_txt << std::setw(5) << Phi[i].occ();
-        mrcpp::print::value(0, o_txt.str(), epsilon(i), "(au)", 2 * pprec, false);
+        o_txt << std::setw(4) << i;
+        o_txt << std::setw(7) << Phi[i].printSpin();
+        o_txt << std::setw(7) << Phi[i].occ();
+        print_utils::scalar(0, o_txt.str(), epsilon(i), "(au)", 2 * pprec);
         sum_eps += Phi[i].occ() * epsilon(i);
     }
     mrcpp::print::separator(0, '-');
-    mrcpp::print::value(0, "Sum occupied", sum_eps, "(au)", 2 * pprec, false);
+    print_utils::scalar(0, "Sum occupied", sum_eps, "(au)", 2 * pprec);
     mrcpp::print::separator(0, '=', 2);
 }
 

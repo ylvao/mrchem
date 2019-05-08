@@ -38,76 +38,120 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
-void print_utils::qmfunction(int level, const std::string &txt, const QMFunction &func, mrcpp::Timer &timer) {
-    auto nodes = func.getNNodes(NUMBER::Total);
-    auto memory = func.getSizeNodes(NUMBER::Total);
-    auto time = timer.elapsed();
-    mrcpp::print::tree(level, txt, nodes, memory, time);
+void print_utils::headline(int level, const std::string &txt) {
+    auto pwidth = Printer::getWidth();
+    auto txt_width = txt.size();
+    auto pre_spaces = (pwidth - 6 - txt_width) / 2;
+    auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
+    std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
+    std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
+
+    mrcpp::print::separator(level, ' ');
+    mrcpp::print::separator(level, '*');
+    println(level, pre_str << std::string(txt_width, ' ') << post_str);
+    println(level, pre_str << txt << post_str);
+    println(level, pre_str << std::string(txt_width, ' ') << post_str);
+    mrcpp::print::separator(level, '*');
+    mrcpp::print::separator(level, ' ');
+    mrcpp::print::separator(level, ' ');
+}
+
+void print_utils::text(int level, const std::string &txt, const std::string &val) {
+    int w0 = Printer::getWidth() - 2;
+    int w1 = w0 * 2 / 9;
+    int w2 = w0 - 3 * w1;
+    int w3 = w2 - (txt.size() + 1);
+
+    std::stringstream o;
+    o << " " << txt << std::string(w3, ' ') << ": " << val;
+    println(level, o.str());
 }
 
 void print_utils::coord(int level, const std::string &txt, const mrcpp::Coord<3> &val, int p, bool s) {
+    if (p < 0) p = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 2;
+    int w1 = w0 * 2 / 9;
+    int w2 = w0 - 3 * w1;
+    int w3 = w2 - (txt.size() + 1);
+
     std::stringstream o;
-    o << " ";
-    for (int i = 0; i < txt.size(); i++) o << txt[i];
-    for (int i = txt.size(); i < 19; i++) o << " ";
+    o << " " << txt << std::string(w3, ' ') << ":";
     if (s) {
-        for (auto r : val) o << std::setw(13) << std::setprecision(p) << std::scientific << r;
+        for (auto r : val) o << std::setw(w1) << std::setprecision(p) << std::scientific << r;
     } else {
-        for (auto r : val) o << std::setw(13) << std::setprecision(p) << std::fixed << r;
+        for (auto r : val) o << std::setw(w1) << std::setprecision(p) << std::fixed << r;
     }
     println(level, o.str());
 }
 
-void print_utils::scalar(int level, const std::string &txt, const std::string &unit, double val, int p, bool s) {
+void print_utils::scalar(int level, const std::string &txt, double val, const std::string &unit, int p, bool s) {
+    if (p < 0) p = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 2;
+    int w1 = w0 * 2 / 9;
+    int w2 = w0 - 3 * w1;
+    int w3 = w2 - (txt.size() + 1);
+
     std::stringstream o;
-    o << " ";
-    for (int i = 0; i < txt.size(); i++) o << txt[i];
-    for (int i = txt.size(); i < 30; i++) o << " ";
-    for (int i = 0; i < unit.size(); i++) o << unit[i];
-    for (int i = unit.size(); i < 8; i++) o << " ";
+    o << " " << txt << std::string(w3, ' ') << ":";
+    o << std::setw(w1) << unit;
     if (s) {
-        o << std::setw(20) << std::setprecision(p) << std::scientific << val;
+        o << std::setw(2 * w1) << std::setprecision(p) << std::scientific << val;
     } else {
-        o << std::setw(20) << std::setprecision(p) << std::fixed << val;
+        o << std::setw(2 * w1) << std::setprecision(p) << std::fixed << val;
     }
     println(level, o.str());
 }
 
 void print_utils::vector(int level, const std::string &txt, const DoubleVector &val, int p, bool s) {
+    if (p < 0) p = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 2;
+    int w1 = w0 * 2 / 9;
+    int w2 = w0 - 3 * w1;
+    int w3 = w2 - (txt.size() + 1);
+
     std::stringstream o;
-    o << " ";
-    for (int i = 0; i < txt.size(); i++) o << txt[i];
-    for (int i = txt.size(); i < 19; i++) o << " ";
+    o << " " << txt << std::string(w3, ' ') << ":";
     for (int i = 0; i < val.size(); i++) {
         if (s) {
-            o << std::setw(13) << std::setprecision(p) << std::scientific << val(i);
+            o << std::setw(w1) << std::setprecision(p) << std::scientific << val(i);
         } else {
-            o << std::setw(13) << std::setprecision(p) << std::fixed << val(i);
+            o << std::setw(w1) << std::setprecision(p) << std::fixed << val(i);
         }
     }
     println(level, o.str());
 }
 
 void print_utils::matrix(int level, const std::string &txt, const DoubleMatrix &val, int p, bool s) {
+    if (p < 0) p = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 2;
+    int w1 = w0 * 2 / 9;
+    int w2 = w0 - 3 * w1;
+    int w3 = w2 - (txt.size() + 1);
+
     std::stringstream o;
     for (int i = 0; i < val.rows(); i++) {
-        o << " ";
         if (i == 0) {
-            for (int i = 0; i < txt.size(); i++) o << txt[i];
-            for (int i = txt.size(); i < 19; i++) o << " ";
+            o << " " << txt << std::string(w3, ' ') << ":";
         } else {
-            for (int i = 0; i < 19; i++) o << " ";
+            o << " " << std::string(w2, ' ') << ":";
         }
         for (int j = 0; j < val.cols(); j++) {
             if (s) {
-                o << std::setw(13) << std::setprecision(p) << std::scientific << val(i, j);
+                o << std::setw(w1) << std::setprecision(p) << std::scientific << val(i, j);
             } else {
-                o << std::setw(13) << std::setprecision(p) << std::fixed << val(i, j);
+                o << std::setw(w1) << std::setprecision(p) << std::fixed << val(i, j);
             }
         }
         o << std::endl;
     }
-    println(level, o.str());
+    printout(level, o.str());
+}
+
+void print_utils::qmfunction(int level, const std::string &txt, const QMFunction &func, mrcpp::Timer &timer) {
+    auto nodes = func.getNNodes(NUMBER::Total);
+    auto memory = func.getSizeNodes(NUMBER::Total);
+    auto time = timer.elapsed();
+    mrcpp::print::tree(level, txt, nodes, memory, time);
 }
 
 } // namespace mrchem

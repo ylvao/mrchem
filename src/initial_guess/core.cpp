@@ -88,15 +88,16 @@ int PT[29][2] = {
  *
  */
 OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
-    std::string restr_str = "False";
-    if (restricted) restr_str = "True";
+    std::stringstream o_prec, o_zeta;
+    o_prec << std::setprecision(5) << std::scientific << prec;
+    o_zeta << zeta;
     mrcpp::print::separator(0, '-');
-    println(0, " Method            : Diagonalize Hamiltonian matrix");
-    println(0, " Precision         : " << prec);
-    println(0, " Restricted        : " << restr_str);
-    println(0, " Hamiltonian       : Core");
-    println(0, " AO basis          : Hydrogenic orbitals");
-    println(0, " Zeta quality      : " << zeta);
+    print_utils::text(0, "Method      ", "Diagonalize Hamiltonian matrix");
+    print_utils::text(0, "Precision   ", o_prec.str());
+    print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
+    print_utils::text(0, "Hamiltonian ", "Core");
+    print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
+    print_utils::text(0, "Zeta quality", o_zeta.str());
     mrcpp::print::separator(0, '-', 2);
 
     int mult = mol.getMultiplicity(); // multiplicity
@@ -201,16 +202,11 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
  *
  */
 OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, int spin, int zeta) {
-    auto print_prec = Printer::getPrecision();
     mrcpp::print::header(0, "Projecting Hydrogen AOs");
-    println(0, "    n    Atom   Label                          Norm");
-    mrcpp::print::separator(0, '-');
+    const char label[10] = "spdfg";
 
     Timer timer;
     OrbitalVector Phi;
-
-    const char label[10] = "spdfg";
-
     for (int i = 0; i < nucs.size(); i++) {
         const Nucleus &nuc = nucs[i];
         int minAO = std::ceil(nuc.getElement().getZ() / 2.0);
@@ -230,19 +226,18 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
             if (zetaReached >= zeta) break;
 
             for (int m = 0; m < M; m++) {
+                Timer t_i;
                 HydrogenFunction h_func(n, l, m, Z, R);
 
                 Phi.push_back(Orbital(spin));
                 Phi.back().setRankID(Phi.size() % mpi::orb_size);
                 if (mpi::my_orb(Phi.back())) qmfunction::project(Phi.back(), h_func, NUMBER::Real, prec);
 
-                std::stringstream o_norm;
-                o_norm << std::setprecision(2 * print_prec) << std::fixed << Phi.back().norm();
-
-                printout(0, std::setw(5) << Phi.size() - 1);
-                printout(0, std::setw(6) << nuc.getElement().getSymbol() << i + 1);
-                printout(0, std::setw(6) << n << label[l]);
-                printout(0, std::setw(40) << o_norm.str() << std::endl);
+                std::stringstream o_txt;
+                o_txt << std::setw(4) << Phi.size() - 1;
+                o_txt << std::setw(8) << nuc.getElement().getSymbol();
+                o_txt << std::setw(4) << n << label[l];
+                print_utils::qmfunction(0, o_txt.str(), Phi.back(), t_i);
 
                 if (++nAO >= minAO) minAOReached = true;
             }

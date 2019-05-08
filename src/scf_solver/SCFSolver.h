@@ -76,15 +76,12 @@ protected:
     double adjustPrecision(double error);
 
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
-    void printUpdate(const std::string &name, double P, double dP) const;
+    void printUpdate(const std::string &txt, double P, double dP, double thrs) const;
 
     void printConvergence(bool converged) const;
     void printCycleHeader(int nIter) const;
     void printCycleFooter(double t) const;
-    void printOrbitals(const DoubleVector &epsilon,
-                       const DoubleVector &errors,
-                       const OrbitalVector &Phi,
-                       int flag) const;
+    void printOrbitals(const DoubleVector &norms, const DoubleVector &errors, const OrbitalVector &Phi, int flag) const;
 };
 
 } // namespace mrchem

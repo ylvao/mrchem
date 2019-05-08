@@ -39,21 +39,25 @@ public:
     const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
 
     double getFrequency() const { return this->frequency; }
+    double getWavelength() const { return 0.0; }
     DoubleMatrix &getTensor() { return this->tensor; }
     const DoubleMatrix &getTensor() const { return this->tensor; }
 
     void print() const {
+        auto w_au = getFrequency();
+        auto w_cm = PHYSCONST::cm_m1 * w_au;
+        auto dynamic = (w_au > mrcpp::MachineZero);
+        auto l_nm = (dynamic) ? (1.0e7 / w_cm) : 0.0;
         auto iso_au = getTensor().trace() / 3.0;
-        auto iso_si = iso_au * 0.0; // Luca: FIX THIS
 
-        auto prec = mrcpp::Printer::getPrecision();
         mrcpp::print::header(0, "Polarizability");
-        print_utils::scalar(0, "Frequency", "(au)", getFrequency(), prec, false);
-        print_utils::coord(0, "Origin", getOrigin(), prec, false);
+        if (dynamic) print_utils::scalar(0, "Wavelength", l_nm, "(nm)");
+        print_utils::scalar(0, "Frequency", w_au, "(au)");
+        print_utils::scalar(0, "         ", w_cm, "(cm-1)");
+        print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Total tensor", getTensor(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(au)", iso_au, prec, false);
-        print_utils::scalar(0, "            ", "(SI)", iso_si, prec, false);
+        print_utils::matrix(0, "Total tensor", getTensor());
+        print_utils::scalar(0, "Isotropic average", iso_au, "(au)");
         mrcpp::print::separator(0, '=', 2);
     }
 

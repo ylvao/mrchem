@@ -194,7 +194,7 @@ void LinearResponseSolver::printProperty() const {
     if (iter > 1) prop_0 = this->property[iter - 2];
     if (iter > 0) prop_1 = this->property[iter - 1];
     mrcpp::print::header(0, "                    Value                  Update      Done ");
-    printUpdate(" Property   ", prop_1, prop_1 - prop_0);
+    printUpdate("Property", prop_1, prop_1 - prop_0, this->propThrs);
     mrcpp::print::separator(0, '=');
 }
 

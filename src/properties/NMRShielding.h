@@ -52,25 +52,19 @@ public:
         auto iso_ppm_p = getParamagnetic().trace() / 3.0;
         auto iso_ppm_t = iso_ppm_d + iso_ppm_p;
 
-        std::stringstream o_nucleus;
-        o_nucleus << " Nucleus ";
-        o_nucleus << std::setw(24) << getK();
-        o_nucleus << std::setw(13) << getNucleus().getElement().getSymbol();
-
-        auto prec = mrcpp::Printer::getPrecision();
         mrcpp::print::header(0, "NMR shielding");
-        println(0, o_nucleus.str());
-        print_utils::coord(0, "r_K", getNucleus().getCoord(), prec, false);
-        print_utils::coord(0, "r_O", getOrigin(), prec, false);
+        print_utils::scalar(0, "Nucleus K", getK(), getNucleus().getElement().getSymbol(), 0);
+        print_utils::coord(0, "r_K", getNucleus().getCoord());
+        print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Total tensor", getTensor(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(ppm)", iso_ppm_t, prec, false);
+        print_utils::matrix(0, "Total tensor", getTensor());
+        print_utils::scalar(0, "Isotropic average", iso_ppm_t, "(ppm)");
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Diamagnetic ", getDiamagnetic(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(ppm)", iso_ppm_d, prec, false);
+        print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
+        print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Paramagnetic", getParamagnetic(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(ppm)", iso_ppm_d, prec, false);
+        print_utils::matrix(0, "Paramagnetic", getParamagnetic(), -1);
+        print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
         mrcpp::print::separator(0, '=', 2);
     }
 

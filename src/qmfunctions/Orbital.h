@@ -77,7 +77,6 @@ public:
     void loadOrbital(const std::string &file);
 
     char printSpin() const;
-    friend std::ostream &operator<<(std::ostream &o, Orbital orb) { return orb.print(o); }
 
 private:
     OrbitalData orb_data;

@@ -198,18 +198,4 @@ char Orbital::printSpin() const {
     return sp;
 }
 
-/** @brief Pretty output of orbital meta data */
-std::ostream &Orbital::print(std::ostream &o) const {
-    int prec = mrcpp::Printer::getPrecision();
-    std::stringstream o_norm;
-    o_norm << std::setprecision(2 * prec) << std::fixed << this->norm();
-
-    o << std::setw(5) << this->printSpin();
-    o << std::setw(5) << this->occ();
-    o << std::setw(15) << this->rankID();
-    o << std::setw(29) << o_norm.str();
-
-    return o;
-}
-
 } // namespace mrchem

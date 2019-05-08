@@ -31,9 +31,23 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     if (proj_prec < 0.0) MSG_ABORT("Negative projection precision");
     if (smooth_prec < 0.0) smooth_prec = proj_prec;
 
-    int oldprec = Printer::setPrecision(5);
+    int pprec = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 1;
+    int w1 = 5;
+    int w2 = 8;
+    int w3 = 2 * w0 / 9;
+    int w4 = w0 - w1 - w2 - 3 * w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "N";
+    o_head << std::setw(w2) << "Atom";
+    o_head << std::string(w4, ' ');
+    o_head << std::setw(w3) << "Charge";
+    o_head << std::setw(w3) << "Precision";
+    o_head << std::setw(w3) << "Smoothing";
+
     mrcpp::print::header(0, "Building nuclear potential");
-    println(0, "    N   Atom            Charge      Precision    Smoothing ");
+    println(0, o_head.str());
     mrcpp::print::separator(0, '-');
 
     NuclearFunction loc_func;
@@ -51,11 +65,14 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
         this->func.push_back(nuc, smooth);
         if (mpi::orb_rank == proj_rank) loc_func.push_back(nuc, smooth);
 
-        std::stringstream o_sym;
-        o_sym << std::setw(4) << k;
-        o_sym << std::setw(6) << nuc.getElement().getSymbol();
-        std::array<double, 3> array{Z, smooth_prec, smooth};
-        print_utils::coord(0, o_sym.str(), array, 5, true);
+        std::stringstream o_row;
+        o_row << std::setw(w1) << k;
+        o_row << std::setw(w2) << nuc.getElement().getSymbol();
+        o_row << std::string(w4, ' ');
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << Z;
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth_prec;
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth;
+        println(0, o_row.str());
     }
 
     Timer t_tot;
@@ -77,9 +94,8 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     t_tot.stop();
     mrcpp::print::separator(0, '-');
     print_utils::qmfunction(0, "Local potential", V_loc, t_loc);
-    print_utils::qmfunction(0, "Allreduce", V_loc, t_com);
+    print_utils::qmfunction(0, "Allreduce potential", V_loc, t_com);
     mrcpp::print::footer(0, t_tot, 2);
-    Printer::setPrecision(oldprec);
 }
 
 void NuclearPotential::allreducePotential(double prec, QMFunction &V_loc) {

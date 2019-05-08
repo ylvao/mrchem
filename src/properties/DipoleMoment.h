@@ -43,19 +43,28 @@ public:
     const DoubleVector &getElectronic() const { return this->el_tensor; }
 
     void print() const {
-        auto length_au = getTensor().norm();
-        auto length_db = length_au * PHYSCONST::Debye;
+        auto el_au = getElectronic().norm();
+        auto nuc_au = getNuclear().norm();
+        auto tot_au = getTensor().norm();
 
-        auto prec = mrcpp::Printer::getPrecision();
+        auto el_db = el_au * PHYSCONST::Debye;
+        auto nuc_db = nuc_au * PHYSCONST::Debye;
+        auto tot_db = tot_au * PHYSCONST::Debye;
+
         mrcpp::print::header(0, "Dipole Moment");
-        print_utils::coord(0, "Origin", getOrigin(), prec, false);
+        print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
-        print_utils::vector(0, "Electronic", getElectronic(), prec, false);
-        print_utils::vector(0, "Nuclear", getNuclear(), prec, false);
+        print_utils::vector(0, "Electronic vector", getElectronic());
+        print_utils::scalar(0, "Magnitude", el_au, "(au)");
+        print_utils::scalar(0, "         ", el_db, "(Debye)");
         mrcpp::print::separator(0, '-');
-        print_utils::vector(0, "Total vector", getTensor(), prec, false);
-        print_utils::scalar(0, "Magnitude", "(au)", length_au, prec, false);
-        print_utils::scalar(0, "         ", "(Debye)", length_db, prec, false);
+        print_utils::vector(0, "Nuclear vector", getNuclear());
+        print_utils::scalar(0, "Magnitude", nuc_au, "(au)");
+        print_utils::scalar(0, "         ", nuc_db, "(Debye)");
+        mrcpp::print::separator(0, '-');
+        print_utils::vector(0, "Total vector", getTensor());
+        print_utils::scalar(0, "Magnitude", tot_au, "(au)");
+        print_utils::scalar(0, "         ", tot_db, "(Debye)");
         mrcpp::print::separator(0, '=', 2);
     }
 

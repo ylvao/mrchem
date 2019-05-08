@@ -68,12 +68,14 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const Molecule &mol,
                                         const std::string &bas_file,
                                         const std::string &mo_file) {
+    std::stringstream o_prec;
+    o_prec << std::setprecision(5) << std::scientific << prec;
     mrcpp::print::separator(0, '-');
-    println(0, " Method            : Reading Gaussian-type MOs");
-    println(0, " Precision         : " << prec);
-    println(0, " Restricted        : True");
-    println(0, " Basis file        : " << bas_file);
-    println(0, " MO file           : " << mo_file);
+    print_utils::text(0, "Method     ", "Reading Gaussian-type MOs");
+    print_utils::text(0, "Precision  ", o_prec.str());
+    print_utils::text(0, "Restricted ", "True");
+    print_utils::text(0, "Basis file ", bas_file);
+    print_utils::text(0, "MO file    ", mo_file);
     mrcpp::print::separator(0, '-', 2);
 
     // Figure out number of occupied orbitals
@@ -109,13 +111,15 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const std::string &bas_file,
                                         const std::string &moa_file,
                                         const std::string &mob_file) {
+    std::stringstream o_prec;
+    o_prec << std::setprecision(5) << std::scientific << prec;
     mrcpp::print::separator(0, '-');
-    println(0, " Method         : Reading Gaussian-type MOs");
-    println(0, " Precision      : " << prec);
-    println(0, " Restricted     : False");
-    println(0, " Basis file     : " << bas_file);
-    println(0, " MO alpha file  : " << moa_file);
-    println(0, " MO beta file   : " << mob_file);
+    print_utils::text(0, "Method        ", "Reading Gaussian-type MOs");
+    print_utils::text(0, "Precision     ", o_prec.str());
+    print_utils::text(0, "Restricted    ", "False");
+    print_utils::text(0, "Basis file    ", bas_file);
+    print_utils::text(0, "MO alpha file ", moa_file);
+    print_utils::text(0, "MO beta file  ", mob_file);
     mrcpp::print::separator(0, '-', 2);
 
     // Figure out number of occupied orbitals
@@ -153,11 +157,9 @@ OrbitalVector initial_guess::gto::project_mo(double prec,
                                              const std::string &mo_file,
                                              int spin,
                                              int N) {
-    auto print_prec = Printer::getPrecision();
-    mrcpp::print::header(0, "Setting up Gaussian-type MOs");
-    println(0, "    n   Spin   Occ                             SquareNorm");
-    mrcpp::print::separator(0, '-');
     Timer timer;
+    int pprec = Printer::getPrecision();
+    mrcpp::print::header(0, "Setting up Gaussian-type MOs");
 
     // Setup AO basis
     gto_utils::Intgrl intgrl(bas_file);
@@ -173,21 +175,18 @@ OrbitalVector initial_guess::gto::project_mo(double prec,
     mpi::distribute(Phi);
 
     for (int i = 0; i < N; i++) {
+        Timer t_i;
         if (mpi::my_orb(Phi[i])) {
             GaussExp<3> mo_i = gto_exp.getMO(i, MO.transpose());
             Phi[i].alloc(NUMBER::Real);
             mrcpp::project(prec, Phi[i].real(), mo_i);
         }
-        std::stringstream o_norm;
-        o_norm << std::setprecision(2 * print_prec) << std::fixed << Phi[i].norm();
-
-        printout(0, std::setw(5) << i);
-        printout(0, std::setw(6) << Phi[i].printSpin());
-        printout(0, std::setw(6) << Phi[i].occ());
-        printout(0, std::setw(42) << o_norm.str() << std::endl);
+        std::stringstream o_txt;
+        o_txt << std::setw(4) << i;
+        o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << Phi[i].norm();
+        print_utils::qmfunction(0, o_txt.str(), Phi[i], t_i);
     }
     mpi::barrier(mpi::comm_orb);
-    timer.stop();
     mrcpp::print::footer(0, timer, 2);
 
     return Phi;

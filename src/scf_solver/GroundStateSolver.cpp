@@ -68,18 +68,33 @@ void GroundStateSolver::printProperty() const {
     double N_0 = scf_0.getNuclearEnergy();
     double N_1 = scf_1.getNuclearEnergy();
 
-    mrcpp::print::header(0, "                    Energy                 Update      Done ");
-    printUpdate(" Orbital    ", phi_1, phi_1 - phi_0);
-    printUpdate(" Kinetic    ", T_1, T_1 - T_0);
-    printUpdate(" N-E        ", V_1, V_1 - V_0);
-    printUpdate(" Coulomb    ", J_1, J_1 - J_0);
-    printUpdate(" Exchange   ", K_1, K_1 - K_0);
-    printUpdate(" X-C        ", XC_1, XC_1 - XC_0);
+    int w0 = (Printer::getWidth() - 1);
+    int w1 = 20;
+    int w2 = w0 / 3;
+    int w3 = 8;
+    int w4 = w0 - w1 - w2 - w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << " ";
+    o_head << std::setw(w2) << "Energy";
+    o_head << std::setw(w4) << "Update";
+    o_head << std::setw(w3) << "Done";
+
+    mrcpp::print::separator(0, '=');
+    println(0, o_head.str());
     mrcpp::print::separator(0, '-');
-    printUpdate(" Electronic ", E_1, E_1 - E_0);
-    printUpdate(" Nuclear    ", N_1, N_1 - N_0);
+
+    printUpdate(" Orbital    ", phi_1, phi_1 - phi_0, this->propThrs);
+    printUpdate(" Kinetic    ", T_1, T_1 - T_0, this->propThrs);
+    printUpdate(" N-E        ", V_1, V_1 - V_0, this->propThrs);
+    printUpdate(" Coulomb    ", J_1, J_1 - J_0, this->propThrs);
+    printUpdate(" Exchange   ", K_1, K_1 - K_0, this->propThrs);
+    printUpdate(" X-C        ", XC_1, XC_1 - XC_0, this->propThrs);
     mrcpp::print::separator(0, '-');
-    printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0));
+    printUpdate(" Electronic ", E_1, E_1 - E_0, this->propThrs);
+    printUpdate(" Nuclear    ", N_1, N_1 - N_0, this->propThrs);
+    mrcpp::print::separator(0, '-');
+    printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0), this->propThrs);
     mrcpp::print::separator(0, '=');
 }
 
@@ -138,22 +153,20 @@ void GroundStateSolver::printParameters(const std::string &method) const {
         o_thrs_o << std::setprecision(5) << std::scientific << this->orbThrs;
     }
 
-    std::stringstream o_prec_0;
+    std::stringstream o_prec_0, o_prec_1;
     o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[1];
-
-    std::stringstream o_prec_1;
     o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
 
     mrcpp::print::separator(0, '-');
-    println(0, " Method            : " << method);
-    println(0, " Max iterations    : " << o_iter.str());
-    println(0, " KAIN solver       : " << o_kain.str());
-    println(0, " Localization      : " << o_loc.str());
-    println(0, " Diagonalization   : " << o_diag.str());
-    println(0, " Start precision   : " << o_prec_0.str());
-    println(0, " Final precision   : " << o_prec_1.str());
-    println(0, " Energy threshold  : " << o_thrs_p.str());
-    println(0, " Orbital threshold : " << o_thrs_o.str());
+    print_utils::text(0, "Method           ", method);
+    print_utils::text(0, "Max iterations   ", o_iter.str());
+    print_utils::text(0, "KAIN solver      ", o_kain.str());
+    print_utils::text(0, "Localization     ", o_loc.str());
+    print_utils::text(0, "Diagonalization  ", o_diag.str());
+    print_utils::text(0, "Start precision  ", o_prec_0.str());
+    print_utils::text(0, "Final precision  ", o_prec_1.str());
+    print_utils::text(0, "Energy threshold ", o_thrs_p.str());
+    print_utils::text(0, "Orbital threshold", o_thrs_o.str());
     mrcpp::print::separator(0, '-', 2);
 }
 

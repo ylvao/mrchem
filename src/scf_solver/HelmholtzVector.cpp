@@ -33,6 +33,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmoperators/RankZeroTensorOperator.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -65,13 +66,10 @@ HelmholtzVector::HelmholtzVector(double pr, const DoubleVector &l)
  *      local orbitals are computed.
  */
 OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
-    Timer t_tot;
     mrcpp::print::header(0, "Applying Helmholtz operators");
-    int oldprec = Printer::setPrecision(5);
 
-    println(0, "  n     RealNorm   Nodes     ImagNorm   Nodes     Timing");
-    mrcpp::print::separator(0, '-');
-
+    Timer t_tot;
+    int pprec = Printer::getPrecision();
     OrbitalVector out = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(out[i])) continue;
@@ -79,25 +77,13 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
         Timer t_i;
         out[i] = apply(i, Phi[i]);
         out[i].rescale(-1.0 / (2.0 * MATHCONST::pi));
-        t_i.stop();
 
-        int rNodes = out[i].getNNodes(NUMBER::Real);
-        int iNodes = out[i].getNNodes(NUMBER::Imag);
-        double rNorm = 0.0;
-        double iNorm = 0.0;
-        if (out[i].hasReal()) rNorm = std::sqrt(out[i].real().getSquareNorm());
-        if (out[i].hasImag()) iNorm = std::sqrt(out[i].imag().getSquareNorm());
-
-        Printer::setPrecision(5);
-        printout(0, std::setw(3) << i);
-        printout(0, " " << std::setw(14) << rNorm);
-        printout(0, " " << std::setw(5) << rNodes);
-        printout(0, " " << std::setw(14) << iNorm);
-        printout(0, " " << std::setw(5) << iNodes);
-        printout(0, std::setw(14) << t_i.elapsed() << std::endl);
+        std::stringstream o_txt;
+        o_txt << std::setw(4) << i;
+        o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << out[i].norm();
+        print_utils::qmfunction(0, o_txt.str(), out[i], t_i);
     }
     mrcpp::print::footer(0, t_tot, 2);
-    Printer::setPrecision(oldprec);
     return out;
 }
 
@@ -136,15 +122,11 @@ OrbitalVector HelmholtzVector::rotate(const ComplexMatrix &F_mat, OrbitalVector 
  *      local orbitals are computed.
  */
 OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const {
-    Timer t_tot;
     mrcpp::print::header(0, "Applying Helmholtz operators");
-    int oldprec = Printer::setPrecision(5);
-
     if (Phi.size() != Psi.size()) MSG_ABORT("OrbitalVector size mismatch");
 
-    println(0, " Orb    RealNorm   Nodes     ImagNorm   Nodes     Timing");
-    mrcpp::print::separator(0, '-');
-
+    Timer t_tot;
+    int pprec = Printer::getPrecision();
     OrbitalVector out = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(out[i])) continue;
@@ -154,25 +136,13 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
         Vphi_i.add(1.0, Psi[i]);
         Vphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
         out[i] = apply(i, Vphi_i);
-        t_i.stop();
 
-        int rNodes = out[i].getNNodes(NUMBER::Real);
-        int iNodes = out[i].getNNodes(NUMBER::Imag);
-        double rNorm = 0.0;
-        double iNorm = 0.0;
-        if (out[i].hasReal()) rNorm = std::sqrt(out[i].real().getSquareNorm());
-        if (out[i].hasImag()) iNorm = std::sqrt(out[i].imag().getSquareNorm());
-
-        Printer::setPrecision(5);
-        printout(0, std::setw(3) << i);
-        printout(0, " " << std::setw(14) << rNorm);
-        printout(0, " " << std::setw(5) << rNodes);
-        printout(0, " " << std::setw(14) << iNorm);
-        printout(0, " " << std::setw(5) << iNodes);
-        printout(0, std::setw(14) << t_i.elapsed() << std::endl);
+        std::stringstream o_txt;
+        o_txt << std::setw(4) << i;
+        o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << out[i].norm();
+        print_utils::qmfunction(0, o_txt.str(), out[i], t_i);
     }
     mrcpp::print::footer(0, t_tot, 2);
-    Printer::setPrecision(oldprec);
     return out;
 }
 

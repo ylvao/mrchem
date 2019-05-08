@@ -100,14 +100,7 @@ DerivativeOperator_p get_derivative(const std::string &name);
  * This function expects the "molecule" subsection of the input.
  */
 void driver::init_molecule(const json &json_mol, Molecule &mol) {
-    println(0, "                                                            ");
-    println(0, "************************************************************");
-    println(0, "***                                                      ***");
-    println(0, "***               Initializing Molecule                  ***");
-    println(0, "***                                                      ***");
-    println(0, "************************************************************");
-    println(0, "                                                            ");
-    println(0, "                                                            ");
+    print_utils::headline(0, "Initializing Molecule");
 
     auto charge = json_mol["charge"].get<int>();
     auto multiplicity = json_mol["multiplicity"].get<int>();
@@ -136,14 +129,7 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
  * This function expects the "initial_guess" subsection of the input.
  */
 bool driver::run_guess(const json &json_guess, Molecule &mol) {
-    println(0, "                                                            ");
-    println(0, "************************************************************");
-    println(0, "***                                                      ***");
-    println(0, "***               Running Initial Guess                  ***");
-    println(0, "***                                                      ***");
-    println(0, "************************************************************");
-    println(0, "                                                            ");
-    println(0, "                                                            ");
+    print_utils::headline(0, "Running Initial Guess");
 
     auto &Phi = mol.getOrbitals();
     auto &F_mat = mol.getFockMatrix();
@@ -151,7 +137,7 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
     auto method = json_guess["method"].get<std::string>();
     if (method == "mw") {
         mrcpp::print::separator(0, '-');
-        println(0, " Method            : Reading orbitals from file (MW)");
+        print_utils::text(0, "Method", "Reading orbitals from file (MW)");
         mrcpp::print::separator(0, '-', 2);
         auto start_orbs = json_guess["start_orbitals"].get<std::string>();
         Phi = orbital::load_orbitals(start_orbs);
@@ -203,14 +189,7 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
  * This function expects the "scf_calculation" subsection of the input.
  */
 bool driver::run_scf(const json &json_scf, Molecule &mol) {
-    println(0, "                                                            ");
-    println(0, "************************************************************");
-    println(0, "***                                                      ***");
-    println(0, "***              Running Ground State SCF                ***");
-    println(0, "***                                                      ***");
-    println(0, "************************************************************");
-    println(0, "                                                            ");
-    println(0, "                                                            ");
+    print_utils::headline(0, "Running Ground State SCF");
 
     const auto &json_fock = json_scf["fock_operator"].get<json>();
     FockOperator F;
@@ -226,14 +205,12 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto prec = (*single_energy)["prec"].get<double>();
         auto localize = (*single_energy)["localize"].get<bool>();
 
-        std::string loc_str = "Off";
-        if (localize) loc_str = "On";
+        std::stringstream o_prec;
+        o_prec << std::setprecision(5) << std::scientific << prec;
         mrcpp::print::separator(0, '-');
-        auto oldprec = Printer::setPrecision(5);
-        println(0, " Method            : Compute Single Energy");
-        println(0, " Precision         : " << prec);
-        println(0, " Localization      : " << loc_str);
-        Printer::setPrecision(oldprec);
+        print_utils::text(0, "Method", "Compute Single Energy");
+        print_utils::text(0, "Precision", o_prec.str());
+        print_utils::text(0, "Localization", (localize) ? "On" : "Off");
         mrcpp::print::separator(0, '-', 2);
 
         F.setup(prec);
@@ -416,14 +393,7 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
  * This includes the diamagnetic contributions to the magnetic response properties.
  */
 void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
-    println(0, "                                                            ");
-    println(0, "************************************************************");
-    println(0, "***                                                      ***");
-    println(0, "***           Computing Ground State Properties          ***");
-    println(0, "***                                                      ***");
-    println(0, "************************************************************");
-    println(0, "                                                            ");
-    println(0, "                                                            ");
+    print_utils::headline(0, "Computing Ground State Properties");
 
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
@@ -753,15 +723,7 @@ DerivativeOperator_p driver::get_derivative(const std::string &name) {
 }
 
 void driver::print_properties(const Molecule &mol) {
-    println(0, "                                                            ");
-    println(0, "************************************************************");
-    println(0, "***                                                      ***");
-    println(0, "***                Printing Properties                   ***");
-    println(0, "***                                                      ***");
-    println(0, "************************************************************");
-    println(0, "                                                            ");
-    println(0, "                                                            ");
-
+    print_utils::headline(0, "Printing Properties");
     mol.printGeometry();
     mol.printProperties();
 }

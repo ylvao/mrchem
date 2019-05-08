@@ -64,16 +64,17 @@ void project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol
 } // namespace initial_guess
 
 OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool restricted, int zeta) {
-    std::string restr_str = "False";
-    if (restricted) restr_str = "True";
+    std::stringstream o_prec, o_zeta;
+    o_prec << std::setprecision(5) << std::scientific << prec;
+    o_zeta << zeta;
     mrcpp::print::separator(0, '-');
-    println(0, " Method            : Diagonalize Hamiltonian matrix");
-    println(0, " Precision         : " << prec);
-    println(0, " Restricted        : " << restr_str);
-    println(0, " Hamiltonian       : Superposition of Atomic Densities (SAD)");
-    println(0, " Functional        : LDA (SVWN5)");
-    println(0, " AO basis          : Hydrogenic orbitals");
-    println(0, " Zeta quality      : " << zeta);
+    print_utils::text(0, "Method      ", "Diagonalize Hamiltonian matrix");
+    print_utils::text(0, "Precision   ", o_prec.str());
+    print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
+    print_utils::text(0, "Hamiltonian ", "Superposition of Atomic Densities (SAD)");
+    print_utils::text(0, "Functional  ", "LDA (SWVN5)");
+    print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
+    print_utils::text(0, "Zeta quality", o_zeta.str());
     mrcpp::print::separator(0, '-', 2);
 
     // Figure out number of occupied orbitals
@@ -208,20 +209,36 @@ OrbitalVector initial_guess::sad::rotate_orbitals(double prec, ComplexMatrix &U,
 }
 
 void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol) {
-    Timer timer;
+    int pprec = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 1;
+    int w1 = 5;
+    int w2 = 8;
+    int w3 = w0 / 3;
+    int w4 = w0 - (w1 + w2 + 2 * w3);
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "N";
+    o_head << std::setw(w2) << "Atom";
+    o_head << std::setw(w4) << " ";
+    o_head << std::setw(w3) << "Nuclear charge";
+    o_head << std::setw(w3) << "Electron charge";
+
     mrcpp::print::header(0, "Projecting GTO density");
-    println(0, "    N    Atom          Nuclear charge          Rho_K");
+    println(0, o_head.str());
     mrcpp::print::separator(0, '-');
 
-    auto print_prec = Printer::getPrecision();
     auto crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
-
     std::string sad_path = SAD_BASIS_DIR;
 
+    Timer timer;
     Density rho_loc(false);
     rho_loc.alloc(NUMBER::Real);
     rho_loc.real().setZero();
 
+    auto tot_nuc = 0.0;
+    auto tot_rho = 0.0;
+
+    Timer t_loc;
     const Nuclei &nucs = mol.getNuclei();
     for (int k = 0; k < nucs.size(); k++) {
         if (mpi::orb_rank != k % mpi::orb_size) continue;
@@ -232,21 +249,39 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
         o_dens << sad_path << sym << ".dens";
 
         Density rho_k = initial_guess::gto::project_density(prec, nucs[k], o_bas.str(), o_dens.str());
-
-        std::stringstream o_nuc, o_rho;
-        o_nuc << std::setprecision(2 * print_prec) << std::fixed << nucs[k].getCharge();
-        o_rho << std::setprecision(2 * print_prec) << std::fixed << rho_k.integrate().real();
-
-        printout(0, std::setw(5) << k);
-        printout(0, std::setw(7) << sym);
-        printout(0, std::setw(25) << o_nuc.str());
-        printout(0, std::setw(22) << o_rho.str() << std::endl);
-
         rho_loc.add(1.0, rho_k);
         rho_loc.crop(crop_prec);
-    }
 
+        auto nuc_charge = nucs[k].getCharge();
+        auto rho_charge = rho_k.integrate().real();
+        tot_nuc += nuc_charge;
+        tot_rho += rho_charge;
+
+        std::stringstream o_row;
+        o_row << std::setw(w1) << k;
+        o_row << std::setw(w2) << sym;
+        o_row << std::setw(w4) << " ";
+        o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << nuc_charge;
+        o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << rho_charge;
+        println(0, o_row.str());
+    }
+    t_loc.stop();
+
+    Timer t_com;
     density::allreduce_density(prec, rho_tot, rho_loc);
+    t_com.stop();
+
+    std::stringstream o_row;
+    o_row << " Total charge";
+    o_row << std::string(w1 + w2 + w4 - 13, ' ');
+    o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << tot_nuc;
+    o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << tot_rho;
+
+    mrcpp::print::separator(0, '-');
+    println(0, o_row.str());
+    mrcpp::print::separator(0, '-');
+    print_utils::qmfunction(0, "Local density", rho_loc, t_loc);
+    print_utils::qmfunction(0, "Allreduce density", rho_tot, t_com);
     mrcpp::print::footer(0, timer, 2);
 }
 

@@ -53,21 +53,20 @@ public:
         auto iso_si_d = iso_au_d * PHYSCONST::JT_m2;
         auto iso_si_p = iso_au_p * PHYSCONST::JT_m2;
 
-        auto prec = mrcpp::Printer::getPrecision();
         mrcpp::print::header(0, "Magnetizability");
-        print_utils::coord(0, "Origin", getOrigin(), prec, false);
+        print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Total tensor", getTensor(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(au)", iso_au_t, prec, false);
-        print_utils::scalar(0, "            ", "(SI)", iso_si_t, prec, false);
+        print_utils::matrix(0, "Total tensor", getTensor());
+        print_utils::scalar(0, "Isotropic average", iso_au_t, "(au)");
+        print_utils::scalar(0, "                 ", iso_si_t, "(SI)");
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Diamagnetic ", getDiamagnetic(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(au)", iso_au_d, prec, false);
-        print_utils::scalar(0, "            ", "(SI)", iso_si_d, prec, false);
+        print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
+        print_utils::scalar(0, "Isotropic average", iso_au_d, "(au)");
+        print_utils::scalar(0, "                 ", iso_si_d, "(SI)");
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Paramagnetic", getParamagnetic(), prec, false);
-        print_utils::scalar(0, "Iso. average", "(au)", iso_au_p, prec, false);
-        print_utils::scalar(0, "            ", "(SI)", iso_si_p, prec, false);
+        print_utils::matrix(0, "Paramagnetic", getParamagnetic());
+        print_utils::scalar(0, "Isotropic average", iso_au_p, "(au)");
+        print_utils::scalar(0, "                 ", iso_si_p, "(SI)");
         mrcpp::print::separator(0, '=', 2);
     }
 

@@ -66,21 +66,21 @@ public:
 
         auto pprec = 2 * mrcpp::Printer::getPrecision();
         mrcpp::print::header(0, "SCF energy");
-        mrcpp::print::value(0, "Kinetic energy   ", E_kin,  "(au)", pprec, false);
-        mrcpp::print::value(0, "E-N energy       ", E_en,   "(au)", pprec, false);
-        mrcpp::print::value(0, "Coulomb energy   ", E_ee,   "(au)", pprec, false);
-        mrcpp::print::value(0, "Exchange energy  ", E_x,    "(au)", pprec, false);
-        mrcpp::print::value(0, "X-C energy       ", E_xc,   "(au)", pprec, false);
-        mrcpp::print::value(0, "Ext. field (el)  ", E_ext,  "(au)", pprec, false);
-        mrcpp::print::value(0, "Ext. field (nuc) ", E_nex,  "(au)", pprec, false);
+        print_utils::scalar(0, "Kinetic energy   ", E_kin,  "(au)", pprec, false);
+        print_utils::scalar(0, "E-N energy       ", E_en,   "(au)", pprec, false);
+        print_utils::scalar(0, "Coulomb energy   ", E_ee,   "(au)", pprec, false);
+        print_utils::scalar(0, "Exchange energy  ", E_x,    "(au)", pprec, false);
+        print_utils::scalar(0, "X-C energy       ", E_xc,   "(au)", pprec, false);
+        print_utils::scalar(0, "Ext. field (el)  ", E_ext,  "(au)", pprec, false);
+        print_utils::scalar(0, "Ext. field (nuc) ", E_nex,  "(au)", pprec, false);
         mrcpp::print::separator(0, '-');
-        mrcpp::print::value(0, "Electronic energy", E_el,   "(au)", pprec, false);
-        mrcpp::print::value(0, "Nuclear energy   ", E_nuc,  "(au)", pprec, false);
+        print_utils::scalar(0, "Electronic energy", E_el,   "(au)", pprec, false);
+        print_utils::scalar(0, "Nuclear energy   ", E_nuc,  "(au)", pprec, false);
         mrcpp::print::separator(0, '-');
-        mrcpp::print::value(0, "Total energy     ", E_au,   "(au)", pprec, true);
-        mrcpp::print::value(0, "                 ", E_kcal, "(kcal/mol)", pprec, true);
-        mrcpp::print::value(0, "                 ", E_kJ,   "(kJ/mol)", pprec, true);
-        mrcpp::print::value(0, "                 ", E_eV,   "(eV)", pprec, true);
+        print_utils::scalar(0, "Total energy     ", E_au,   "(au)", pprec, true);
+        print_utils::scalar(0, "                 ", E_kcal, "(kcal/mol)", pprec, true);
+        print_utils::scalar(0, "                 ", E_kJ,   "(kJ/mol)", pprec, true);
+        print_utils::scalar(0, "                 ", E_eV,   "(eV)", pprec, true);
         mrcpp::print::separator(0, '=', 2);
     }
 
