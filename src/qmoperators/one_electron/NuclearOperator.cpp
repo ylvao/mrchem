@@ -46,9 +46,9 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     o_head << std::setw(w3) << "Precision";
     o_head << std::setw(w3) << "Smoothing";
 
-    mrcpp::print::header(0, "Building nuclear potential");
-    println(0, o_head.str());
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::header(1, "Building nuclear potential");
+    println(1, o_head.str());
+    mrcpp::print::separator(1, '-');
 
     NuclearFunction loc_func;
 
@@ -72,7 +72,7 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
         o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << Z;
         o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth_prec;
         o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth;
-        println(0, o_row.str());
+        println(1, o_row.str());
     }
 
     Timer t_tot;
@@ -92,10 +92,10 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     t_com.stop();
 
     t_tot.stop();
-    mrcpp::print::separator(0, '-');
-    print_utils::qmfunction(0, "Local potential", V_loc, t_loc);
-    print_utils::qmfunction(0, "Allreduce potential", V_loc, t_com);
-    mrcpp::print::footer(0, t_tot, 2);
+    mrcpp::print::separator(1, '-');
+    print_utils::qmfunction(1, "Local potential", V_loc, t_loc);
+    print_utils::qmfunction(1, "Allreduce potential", V_loc, t_com);
+    mrcpp::print::footer(1, t_tot, 2);
 }
 
 void NuclearPotential::allreducePotential(double prec, QMFunction &V_loc) {

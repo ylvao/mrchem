@@ -80,9 +80,9 @@ void GroundStateSolver::printProperty() const {
     o_head << std::setw(w4) << "Update";
     o_head << std::setw(w3) << "Done";
 
-    mrcpp::print::separator(0, '=');
-    println(0, o_head.str());
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::separator(1, '=');
+    println(1, o_head.str());
+    mrcpp::print::separator(1, '-');
 
     printUpdate(" Orbital    ", phi_1, phi_1 - phi_0, this->propThrs);
     printUpdate(" Kinetic    ", T_1, T_1 - T_0, this->propThrs);
@@ -90,15 +90,15 @@ void GroundStateSolver::printProperty() const {
     printUpdate(" Coulomb    ", J_1, J_1 - J_0, this->propThrs);
     printUpdate(" Exchange   ", K_1, K_1 - K_0, this->propThrs);
     printUpdate(" X-C        ", XC_1, XC_1 - XC_0, this->propThrs);
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::separator(1, '-');
     printUpdate(" Electronic ", E_1, E_1 - E_0, this->propThrs);
     printUpdate(" Nuclear    ", N_1, N_1 - N_0, this->propThrs);
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::separator(1, '-');
     printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0), this->propThrs);
-    mrcpp::print::separator(0, '=');
+    mrcpp::print::separator(1, '=');
 }
 
-void GroundStateSolver::printParameters(const std::string &method) const {
+void GroundStateSolver::printParameters(const std::string &calculation) const {
     std::stringstream o_iter;
     if (this->maxIter > 0) {
         o_iter << this->maxIter;
@@ -158,7 +158,8 @@ void GroundStateSolver::printParameters(const std::string &method) const {
     o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
 
     mrcpp::print::separator(0, '-');
-    print_utils::text(0, "Method           ", method);
+    print_utils::text(0, "Calculation      ", calculation);
+    print_utils::text(0, "Method           ", this->methodName);
     print_utils::text(0, "Max iterations   ", o_iter.str());
     print_utils::text(0, "KAIN solver      ", o_kain.str());
     print_utils::text(0, "Localization     ", o_loc.str());

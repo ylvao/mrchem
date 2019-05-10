@@ -70,7 +70,7 @@ namespace mrchem {
  * Post SCF: diagonalize/localize orbitals
  */
 bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
-    printParameters("Optimize Molecular Orbitals");
+    printParameters("Optimize molecular orbitals");
 
     KAIN kain(this->history);
     SCFEnergy &E_n = mol.getSCFEnergy();
@@ -85,6 +85,12 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
     this->error.push_back(err_t);
     this->energy.push_back(E_n);
     this->property.push_back(E_n.getTotalEnergy());
+
+    auto plevel = Printer::getPrintLevel();
+    if (plevel < 1) {
+        printConvergenceHeader();
+        printConvergenceRow(0);
+    }
 
     double orb_prec = this->orbPrec[0];
     F.setup(orb_prec);
@@ -149,6 +155,7 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
 
         // Finalize SCF cycle
         timer.stop();
+        if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
         printCycleFooter(timer.elapsed());

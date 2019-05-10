@@ -68,7 +68,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     o_prec << std::setprecision(5) << std::scientific << prec;
     o_zeta << zeta;
     mrcpp::print::separator(0, '-');
-    print_utils::text(0, "Method      ", "Diagonalize Hamiltonian matrix");
+    print_utils::text(0, "Calculation ", "Diagonalize Hamiltonian matrix");
     print_utils::text(0, "Precision   ", o_prec.str());
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
     print_utils::text(0, "Hamiltonian ", "Superposition of Atomic Densities (SAD)");
@@ -125,14 +125,14 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     // Project AO basis of hydrogen functions
     OrbitalVector Phi = initial_guess::core::project_ao(prec, mol.getNuclei(), SPIN::Paired, zeta);
 
-    mrcpp::print::header(0, "Setting up Fock operator");
+    mrcpp::print::header(1, "Setting up Fock operator");
     Timer t_fock;
     T.setup(prec);
     V.setup(prec);
-    mrcpp::print::footer(0, t_fock, 2);
+    mrcpp::print::footer(1, t_fock, 2);
 
     // Compute Fock matrix
-    mrcpp::print::header(0, "Diagonalize Fock matrix");
+    mrcpp::print::header(1, "Diagonalize Fock matrix");
     Timer t_diag;
     OrbitalVector Psi;
     if (restricted) {
@@ -154,7 +154,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     }
     T.clear();
     V.clear();
-    mrcpp::print::footer(0, t_diag, 2);
+    mrcpp::print::footer(1, t_diag, 2);
 
     return Psi;
 }
@@ -168,14 +168,14 @@ ComplexMatrix initial_guess::sad::diagonalize_fock(KineticOperator &T,
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
     ComplexMatrix f_tilde = T(Phi, Phi) + V(Phi, Phi);
     ComplexMatrix f = S_m12.adjoint() * f_tilde * S_m12;
-    mrcpp::print::time(0, "Compute Fock matrix", t1);
+    mrcpp::print::time(1, "Compute Fock matrix", t1);
 
     Timer t2;
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(f.cols());
     es.compute(f);
     ComplexMatrix ei_vec = es.eigenvectors();
     ComplexMatrix U = ei_vec.transpose() * S_m12;
-    mrcpp::print::time(0, "Diagonalize Fock matrix", t2);
+    mrcpp::print::time(1, "Diagonalize Fock matrix", t2);
 
     return U;
 }
@@ -204,7 +204,7 @@ OrbitalVector initial_guess::sad::rotate_orbitals(double prec, ComplexMatrix &U,
             Psi[i].crop(prec);
         }
     }
-    mrcpp::print::time(0, "Rotate orbitals", timer);
+    mrcpp::print::time(1, "Rotate orbitals", timer);
     return Psi;
 }
 
@@ -223,9 +223,9 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
     o_head << std::setw(w3) << "Nuclear charge";
     o_head << std::setw(w3) << "Electron charge";
 
-    mrcpp::print::header(0, "Projecting GTO density");
-    println(0, o_head.str());
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::header(1, "Projecting GTO density");
+    println(1, o_head.str());
+    mrcpp::print::separator(1, '-');
 
     auto crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
     std::string sad_path = SAD_BASIS_DIR;
@@ -263,7 +263,7 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
         o_row << std::setw(w4) << " ";
         o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << nuc_charge;
         o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << rho_charge;
-        println(0, o_row.str());
+        println(1, o_row.str());
     }
     t_loc.stop();
 
@@ -277,12 +277,12 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
     o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << tot_nuc;
     o_row << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << tot_rho;
 
-    mrcpp::print::separator(0, '-');
-    println(0, o_row.str());
-    mrcpp::print::separator(0, '-');
-    print_utils::qmfunction(0, "Local density", rho_loc, t_loc);
-    print_utils::qmfunction(0, "Allreduce density", rho_tot, t_com);
-    mrcpp::print::footer(0, timer, 2);
+    mrcpp::print::separator(1, '-');
+    println(1, o_row.str());
+    mrcpp::print::separator(1, '-');
+    print_utils::qmfunction(1, "Local density", rho_loc, t_loc);
+    print_utils::qmfunction(1, "Allreduce density", rho_tot, t_com);
+    mrcpp::print::footer(1, timer, 2);
 }
 
 } // namespace mrchem

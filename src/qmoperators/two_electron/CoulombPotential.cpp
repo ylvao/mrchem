@@ -97,7 +97,7 @@ void CoulombPotential::setupGlobalPotential(double prec) {
     V.alloc(NUMBER::Real);
     if (need_to_apply) mrcpp::apply(abs_prec, V.real(), P, rho.real());
     mpi::share_function(V, 0, 22445, mpi::comm_share);
-    print_utils::qmfunction(0, "Coulomb potential", V, timer);
+    print_utils::qmfunction(1, "Coulomb potential", V, timer);
 }
 
 /** @brief compute Coulomb potential
@@ -121,7 +121,7 @@ QMFunction CoulombPotential::setupLocalPotential(double prec) {
     QMFunction V(false);
     V.alloc(NUMBER::Real);
     mrcpp::apply(abs_prec, V.real(), P, rho.real());
-    print_utils::qmfunction(0, "Coulomb potential", V, timer);
+    print_utils::qmfunction(1, "Coulomb potential", V, timer);
 
     return V;
 }
@@ -156,7 +156,7 @@ void CoulombPotential::allreducePotential(double prec, QMFunction &V_loc) {
         mrcpp::copy_grid(V_tot.real(), V_loc.real());
         mrcpp::copy_func(V_tot.real(), V_loc.real());
     }
-    print_utils::qmfunction(0, "Allreduce Coulomb", V_tot, t_com);
+    print_utils::qmfunction(1, "Allreduce Coulomb", V_tot, t_com);
 }
 
 } // namespace mrchem

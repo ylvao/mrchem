@@ -54,6 +54,7 @@ public:
     void setThreshold(double orb, double prop);
     void setOrbitalPrec(double init, double final);
     void setMaxIterations(int m_iter) { this->maxIter = m_iter; }
+    void setMethodName(const std::string &name) { this->methodName = name; }
 
 protected:
     int history{0};                      ///< Maximum length of KAIN history
@@ -63,6 +64,7 @@ protected:
     double orbThrs{-1.0};                ///< Convergence threshold for norm of orbital update
     double propThrs{-1.0};               ///< Convergence threshold for property
     double orbPrec[3]{-1.0, -1.0, -1.0}; ///< Dynamic precision: [current_prec, start_prec, end_prec]
+    std::string methodName;              ///< Name of electronic structure method to appear in output
 
     std::vector<double> error;    ///< Convergence orbital error
     std::vector<double> property; ///< Convergence property error
@@ -79,6 +81,8 @@ protected:
     void printUpdate(const std::string &txt, double P, double dP, double thrs) const;
 
     void printConvergence(bool converged) const;
+    void printConvergenceHeader() const;
+    void printConvergenceRow(int i) const;
     void printCycleHeader(int nIter) const;
     void printCycleFooter(double t) const;
     void printOrbitals(const DoubleVector &norms, const DoubleVector &errors, const OrbitalVector &Phi, int flag) const;

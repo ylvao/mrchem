@@ -220,19 +220,35 @@ void Molecule::readCoordinateString(const std::vector<std::string> &coord_str) {
 
 /** @brief Pretty output of molecular geometry */
 void Molecule::printGeometry() const {
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = 5;
+    auto w2 = 8;
+    auto w3 = 2 * w0 / 9;
+    auto w4 = w0 - w1 - w2 - 3 * w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "N";
+    o_head << std::setw(w2) << "Atom";
+    o_head << std::string(w4 - 1, ' ') << ':';
+    o_head << std::setw(w3) << "x";
+    o_head << std::setw(w3) << "y";
+    o_head << std::setw(w3) << "z";
+
     mrcpp::print::header(0, "Molecule");
+    print_utils::scalar(0, "Charge", getCharge(), "", 0);
+    print_utils::scalar(0, "Multiplicity", getMultiplicity(), "", 0);
+    mrcpp::print::separator(0, '-');
+    println(0, o_head.str());
+    mrcpp::print::separator(0, '-');
     for (auto i = 0; i < getNNuclei(); i++) {
         const auto &nuc = getNuclei()[i];
         std::stringstream o_sym;
-        o_sym << std::setw(4) << i;
-        o_sym << std::setw(9) << nuc.getElement().getSymbol();
+        o_sym << std::setw(w1 - 1) << i;
+        o_sym << std::setw(w2) << nuc.getElement().getSymbol();
         print_utils::coord(0, o_sym.str(), nuc.getCoord());
     }
     mrcpp::print::separator(0, '-');
     print_utils::coord(0, "Center of mass", calcCenterOfMass());
-    mrcpp::print::separator(0, '-');
-    print_utils::scalar(0, "Multiplicity", getMultiplicity(), "", 0);
-    print_utils::scalar(0, "Charge", getCharge(), "", 0);
     mrcpp::print::separator(0, '=', 2);
 }
 

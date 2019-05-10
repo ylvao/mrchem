@@ -354,7 +354,7 @@ void XCFunctional::clear() {
  */
 void XCFunctional::setupXCInput() {
     if (xcInput.size() != 0) MSG_ERROR("XC input not empty");
-    println(2, "Preprocessing");
+    println(1, "Preprocessing");
 
     int nInp = getInputLength();
     int nUsed = setupXCInputDensity();
@@ -436,7 +436,7 @@ void XCFunctional::evaluate() {
     if (xcOutput.size() == 0) MSG_ERROR("XC output not initialized");
 
     Timer timer;
-    println(2, "Evaluating");
+    println(1, "Evaluating");
 
     int nInp = getInputLength();
     int nOut = getOutputLength();
@@ -460,8 +460,8 @@ void XCFunctional::evaluate() {
     auto n = mrcpp::get_n_nodes(xcOutput);
     auto m = mrcpp::get_size_nodes(xcOutput);
     auto t = timer.elapsed();
-    mrcpp::print::tree(0, "XC evaluate xcfun", n, m, t);
-    printout(2, std::endl);
+    mrcpp::print::tree(1, "XC evaluate xcfun", n, m, t);
+    printout(1, std::endl);
 }
 
 /** \brief Evaluates XC functional and derivatives
@@ -594,7 +594,7 @@ double XCFunctional::calcEnergy() {
     Timer timer;
     FunctionTree<3> &E_dens = mrcpp::get_func(xcOutput, 0);
     double energy = E_dens.integrate();
-    mrcpp::print::tree(0, "XC energy", E_dens, timer);
+    mrcpp::print::tree(1, "XC energy", E_dens, timer);
     return energy;
 }
 
@@ -618,7 +618,7 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
     auto n = mrcpp::get_n_nodes(xc_pot);
     auto m = mrcpp::get_size_nodes(xc_pot);
     auto t = timer.elapsed();
-    mrcpp::print::tree(0, "XC potential", n, m, t);
+    mrcpp::print::tree(1, "XC potential", n, m, t);
 
     return xc_pot;
 }
@@ -870,14 +870,14 @@ FunctionTree<3> *XCFunctional::calcGradDotPotDensVec(FunctionTree<3> &V, Functio
         mrcpp::copy_grid(*Vrho, rho_d);
         mrcpp::multiply(-1.0, *Vrho, 1.0, V, rho_d);
         vec.push_back(std::make_tuple(1.0, Vrho));
-        mrcpp::print::tree(2, "Multiply", *Vrho, timer);
+        mrcpp::print::tree(1, "Multiply", *Vrho, timer);
     }
 
     Timer timer;
     auto *result = new FunctionTree<3>(MRA);
     mrcpp::divergence(*result, *derivative, vec);
     mrcpp::clear(vec, true);
-    mrcpp::print::tree(2, "Divergence", *result, timer);
+    mrcpp::print::tree(1, "Divergence", *result, timer);
     return result;
 }
 

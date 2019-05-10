@@ -2,9 +2,12 @@
 
 #include <fstream>
 
+#include "XCFun/xcfun.h"
+
 #include "mrchem.h"
 #include "mrenv.h"
 #include "parallel.h"
+#include "utils/print_utils.h"
 
 using json = nlohmann::json;
 using Printer = mrcpp::Printer;
@@ -133,20 +136,12 @@ void mrenv::print_header() {
     println(0, pre_str << "Luca Frediani      <luca.frediani@uit.no>    " << post_str);
     println(0, pre_str << "Peter Wind         <peter.wind@uit.no>       " << post_str);
     println(0, pre_str << "                                             " << post_str);
-    mrcpp::print::separator(0, '*');
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, ' ');
-
-    if (mpi::orb_size > 1 or omp::n_threads > 1) {
-        println(0, "+++ Parallel execution: ");
-        println(0, "  MPI hosts available     : " << mpi::orb_size);
-        println(0, "  Threads/host            : " << omp::n_threads);
-        println(0, "  Total used CPUs         : " << mpi::orb_size * omp::n_threads);
-        println(0, "");
-    } else {
-        println(0, "+++ Serial execution" << std::endl);
-    }
-
+    mrcpp::print::separator(0, '*', 1);
+    println(0, xcfun_splash());
+    mrcpp::print::separator(0, '-', 1);
+    print_utils::scalar(0, "MPI processes", mpi::orb_size, "", 0, false);
+    print_utils::scalar(0, "OpenMP threads", omp::n_threads, "", 0, false);
+    print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
     mrcpp::print::environment(0);
     MRA->print();
 }

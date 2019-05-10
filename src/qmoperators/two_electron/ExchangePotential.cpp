@@ -232,7 +232,7 @@ void ExchangePotential::setupInternal(double prec) {
     auto n = orbital::get_n_nodes(Ex);
     auto m = orbital::get_size_nodes(Ex);
     auto t = timer.elapsed();
-    mrcpp::print::tree(0, "Hartree-Fock exchange", n, m, t);
+    mrcpp::print::tree(1, "Hartree-Fock exchange", n, m, t);
 }
 
 /** @brief Computes the diagonal part of the internal exchange potential

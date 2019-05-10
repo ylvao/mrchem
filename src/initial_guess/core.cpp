@@ -92,7 +92,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     o_prec << std::setprecision(5) << std::scientific << prec;
     o_zeta << zeta;
     mrcpp::print::separator(0, '-');
-    print_utils::text(0, "Method      ", "Diagonalize Hamiltonian matrix");
+    print_utils::text(0, "Calculation ", "Diagonalize Hamiltonian matrix");
     print_utils::text(0, "Precision   ", o_prec.str());
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
     print_utils::text(0, "Hamiltonian ", "Core");
@@ -116,7 +116,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
 
     // Compute Hamiltonian matrix
     Timer t_diag;
-    mrcpp::print::header(0, "Diagonalize Core-Hamiltonian matrix");
+    mrcpp::print::header(1, "Diagonalize Core-Hamiltonian matrix");
 
     Timer t1;
     T.setup(prec);
@@ -126,7 +126,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     ComplexMatrix F = S_m12.transpose() * (t + v) * S_m12;
     V.clear();
     T.clear();
-    mrcpp::print::time(0, "Compute Fock matrix", t1);
+    mrcpp::print::time(1, "Compute Fock matrix", t1);
 
     // Diagonalize Hamiltonian matrix
     Timer t2;
@@ -134,7 +134,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     es.compute(F);
     ComplexMatrix ei_vec = es.eigenvectors();
     ComplexMatrix U = ei_vec.transpose() * S_m12;
-    mrcpp::print::time(0, "Diagonalize Fock matrix", t2);
+    mrcpp::print::time(1, "Diagonalize Fock matrix", t2);
 
     // Need to convert to QMFunctions for linear_combination
     QMFunctionVector funcs;
@@ -175,8 +175,8 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
 
         Psi = orbital::adjoin(Psi_a, Psi_b);
     }
-    mrcpp::print::time(0, "Rotate orbitals", t3);
-    mrcpp::print::footer(0, t_diag, 2);
+    mrcpp::print::time(1, "Rotate orbitals", t3);
+    mrcpp::print::footer(1, t_diag, 2);
 
     return Psi;
 }
@@ -202,7 +202,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
  *
  */
 OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, int spin, int zeta) {
-    mrcpp::print::header(0, "Projecting Hydrogen AOs");
+    mrcpp::print::header(1, "Projecting Hydrogen AOs");
     const char label[10] = "spdfg";
 
     Timer timer;
@@ -237,14 +237,14 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
                 o_txt << std::setw(4) << Phi.size() - 1;
                 o_txt << std::setw(8) << nuc.getElement().getSymbol();
                 o_txt << std::setw(4) << n << label[l];
-                print_utils::qmfunction(0, o_txt.str(), Phi.back(), t_i);
+                print_utils::qmfunction(1, o_txt.str(), Phi.back(), t_i);
 
                 if (++nAO >= minAO) minAOReached = true;
             }
             nShell++;
         }
     }
-    mrcpp::print::footer(0, timer, 2);
+    mrcpp::print::footer(1, timer, 2);
     return Phi;
 }
 

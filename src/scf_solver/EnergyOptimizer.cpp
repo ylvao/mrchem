@@ -65,7 +65,7 @@ namespace mrchem {
  * Post SCF: diagonalize/localize orbitals
  */
 bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
-    printParameters("Optimize Energy (Kinetic Free)");
+    printParameters("Optimize energy (kinetic free)");
 
     SCFEnergy &E_n = mol.getSCFEnergy();
     OrbitalVector &Phi_n = mol.getOrbitals();
@@ -80,6 +80,11 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
     this->energy.push_back(E_n);
     this->property.push_back(E_n.getTotalEnergy());
 
+    auto plevel = Printer::getPrintLevel();
+    if (plevel < 1) {
+        printConvergenceHeader();
+        printConvergenceRow(0);
+    }
     double orb_prec = this->orbPrec[0];
     F_n.setup(orb_prec);
 
@@ -139,13 +144,13 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
         this->property.push_back(E_n.getTotalEnergy());
 
         timer.stop();
+        if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat_n.real().diagonal(), errors, Phi_n, 0);
         printProperty();
         printCycleFooter(timer.elapsed());
 
         if (converged) break;
     }
-
     F_n.clear();
 
     printConvergence(converged);
@@ -174,7 +179,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
                                                     OrbitalVector &Phi_np1,
                                                     OrbitalVector &Phi_n,
                                                     OrbitalVector &dPhi_n) {
-    mrcpp::print::header(0, "Computing Fock matrix update");
+    mrcpp::print::header(1, "Computing Fock matrix update");
 
     Timer timer;
     auto v_n = F_n.getNuclearOperator();
@@ -186,7 +191,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     { // Nuclear potential matrix is computed explicitly
         Timer timer;
         dV_mat_n = (*v_n)(Phi_np1, dPhi_n);
-        mrcpp::print::time(0, "Nuclear potential matrix", timer);
+        mrcpp::print::time(1, "Nuclear potential matrix", timer);
     }
 
     ComplexMatrix W_mat_n;
@@ -195,7 +200,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
         FockOperator W_n(nullptr, nullptr, j_n, k_n, xc_n);
         W_n.build();
         W_mat_n = W_n(Phi_np1, Phi_n);
-        mrcpp::print::time(0, "Fock matrix n", timer);
+        mrcpp::print::time(1, "Fock matrix n", timer);
     }
 
     { // The n+1 Fock operator needs orthonormalized orbitals
@@ -206,7 +211,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     auto Phi_p = std::make_shared<OrbitalVector>();
     *Phi_p = Phi_np1;
 
-    mrcpp::print::separator(0, ' ');
+    mrcpp::print::separator(1, ' ');
     double exx = 1.0;
     std::shared_ptr<CoulombOperator> j_np1{nullptr};
     std::shared_ptr<ExchangeOperator> k_np1{nullptr};
@@ -225,7 +230,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
         xc_np1->setup(prec);
         exx = xc_n->getFunctional()->amountEXX();
     }
-    mrcpp::print::separator(0, ' ');
+    mrcpp::print::separator(1, ' ');
 
     ComplexMatrix W_mat_np1;
     { // Computing potential matrix excluding nuclear part
@@ -237,7 +242,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
         ComplexMatrix W_mat_2 = W_np1(Phi_n, dPhi_n);
         W_mat_np1 = W_mat_1 + W_mat_2 + W_mat_2.transpose();
 
-        mrcpp::print::time(0, "Fock matrix n+1", timer);
+        mrcpp::print::time(1, "Fock matrix n+1", timer);
     }
     if (j_np1 != nullptr) j_np1->clear();
     if (k_np1 != nullptr) k_np1->clear();
@@ -248,7 +253,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
 
     // Adding up the pieces
     ComplexMatrix dF_mat_n = dV_mat_n + W_mat_np1 - W_mat_n;
-    mrcpp::print::footer(0, timer, 2);
+    mrcpp::print::footer(1, timer, 2);
 
     return dF_mat_n;
 }

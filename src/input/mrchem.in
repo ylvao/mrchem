@@ -261,12 +261,22 @@ def write_scf_calculation(program_dict, user_dict):
   if user_dict["Properties"]["dipole_moment"]:
     scf_dict["properties"] = prop_dict
 
+  method_name = ''
+  if (user_dict["WaveFunction"]["method"].lower() == "hartree"):
+    method_name = 'Hartree'
+  if (user_dict["WaveFunction"]["method"].lower() == "hf"):
+    method_name = 'Hartree-Fock'
+  if (user_dict["WaveFunction"]["method"].lower() == "dft"):
+    method_name = 'DFT'
+
   if user_dict["SCF"]["run"]:
-    scf_dict["single_energy"] = {
+    scf_dict["initial_energy"] = {
+      "method_name": method_name,
       "localize": user_dict["SCF"]["localize"],
       "prec": user_dict["SCF"]["orbital_prec"][0],
     }
     scf_dict["orbital_solver"] = {
+      "method_name": method_name,
       "kain": user_dict["SCF"]["kain"],
       "max_iter": user_dict["SCF"]["max_iter"],
       "rotation": user_dict["SCF"]["rotation"],
@@ -277,12 +287,14 @@ def write_scf_calculation(program_dict, user_dict):
       "property_thrs": user_dict["SCF"]["property_thrs"]
     }
   else:
-    scf_dict["single_energy"] = {
+    scf_dict["initial_energy"] = {
+      "method_name": method_name,
       "localize": user_dict["SCF"]["localize"],
       "prec": user_dict["SCF"]["orbital_prec"][1],
     }
   if user_dict["KineticFree"]["run"]:
     scf_dict["energy_solver"] = {
+      "method_name": method_name,
       "max_iter": user_dict["KineticFree"]["max_iter"],
       "localize": user_dict["KineticFree"]["localize"],
       "start_prec": user_dict["rel_prec"],

@@ -97,11 +97,11 @@ void XCPotentialD2::setupPerturbedDensity(double prec) {
         Density &dRho_b = *this->pertDensity_b;
         Timer time_a;
         density::compute(prec, dRho_a, Phi, X, Y, DENSITY::Alpha);
-        print_utils::qmfunction(0, "XC pert alpha density", dRho_a, time_a);
+        print_utils::qmfunction(1, "XC pert alpha density", dRho_a, time_a);
 
         Timer time_b;
         density::compute(prec, dRho_b, Phi, X, Y, DENSITY::Beta);
-        print_utils::qmfunction(0, "XC pert beta density", dRho_b, time_b);
+        print_utils::qmfunction(1, "XC pert beta density", dRho_b, time_b);
 
         // Extend to union grid
         while (mrcpp::refine_grid(dRho_a.real(), dRho_b.real())) {}
@@ -111,7 +111,7 @@ void XCPotentialD2::setupPerturbedDensity(double prec) {
         Density &dRho_t = *this->pertDensity_t;
         Timer time_t;
         density::compute(prec, dRho_t, Phi, X, Y, DENSITY::Total);
-        print_utils::qmfunction(0, "XC pert total density", dRho_t, time_t);
+        print_utils::qmfunction(1, "XC pert total density", dRho_t, time_t);
     }
 }
 

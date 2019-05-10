@@ -79,12 +79,12 @@ double SCFSolver::adjustPrecision(double error) {
     this->orbPrec[0] = std::min(10.0 * error * error, this->orbPrec[0]);
     this->orbPrec[0] = std::max(this->orbPrec[0], this->orbPrec[2]);
 
-    mrcpp::print::separator(0, '=');
-    mrcpp::print::value(0, "Current precision", this->orbPrec[0], "", 5);
-    mrcpp::print::separator(0, '-');
-    mrcpp::print::value(0, "Orbital threshold", this->orbThrs, "", 5);
-    mrcpp::print::value(0, "Property threshold", this->propThrs, "", 5);
-    mrcpp::print::separator(0, '=', 2);
+    mrcpp::print::separator(1, '=');
+    mrcpp::print::value(1, "Current precision", this->orbPrec[0], "", 5);
+    mrcpp::print::separator(1, '-');
+    mrcpp::print::value(1, "Orbital threshold", this->orbThrs, "", 5);
+    mrcpp::print::value(1, "Property threshold", this->propThrs, "", 5);
+    mrcpp::print::separator(1, '=', 2);
     return this->orbPrec[0];
 }
 
@@ -185,10 +185,10 @@ void SCFSolver::printUpdate(const std::string &txt, double P, double dP, double 
 
     std::stringstream o_row;
     o_row << txt << std::string(w1 - txt.size(), ' ');
-    o_row << std::setw(w2) << std::setprecision(2 * pprec) << std::scientific << P;
+    o_row << std::setw(w2) << std::setprecision(2 * pprec) << std::fixed << P;
     o_row << std::setw(w4) << std::setprecision(pprec) << std::scientific << dP;
     o_row << std::setw(w3) << done;
-    println(0, o_row.str());
+    println(1, o_row.str());
 }
 
 /** @brief Pretty printing of orbitals with energies
@@ -219,9 +219,9 @@ void SCFSolver::printOrbitals(const DoubleVector &norms,
     o_head << std::setw(w6) << "Residual";
     o_head << std::setw(w5) << "Done";
 
-    mrcpp::print::separator(0, '=');
-    println(0, o_head.str());
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::separator(1, '=');
+    println(1, o_head.str());
+    mrcpp::print::separator(1, '-');
 
     bool conv_tot = true;
     for (int i = 0; i < Phi.size(); i++) {
@@ -230,16 +230,52 @@ void SCFSolver::printOrbitals(const DoubleVector &norms,
         o_row << std::setw(w1) << i;
         o_row << std::setw(w2) << Phi[i].printSpin();
         o_row << std::setw(w3) << Phi[i].getNNodes(NUMBER::Total);
-        o_row << std::setw(w4) << std::setprecision(2 * pprec) << std::scientific << norms(i);
+        o_row << std::setw(w4) << std::setprecision(2 * pprec) << std::fixed << norms(i);
         o_row << std::setw(w6) << std::setprecision(pprec) << std::scientific << errors(i);
         o_row << std::setw(w5) << conv_i;
-        println(0, o_row.str());
+        println(1, o_row.str());
         if (not conv_i) conv_tot = false;
     }
+    mrcpp::print::separator(1, '-');
+    printout(1, std::setw(w1 + w2 + w3 + w4 + w6) << std::setprecision(pprec) << std::scientific << errors.norm());
+    printout(1, std::setw(w5) << conv_tot << std::endl);
+    mrcpp::print::separator(1, '=', 2);
+}
+
+void SCFSolver::printConvergenceHeader() const {
+    int w0 = Printer::getWidth() - 1;
+    int w1 = 5;
+    int w2 = 3 * w0 / 10;
+    int w3 = w0 - w1 - 2 * w2;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "Iter";
+    o_head << std::setw(w2) << "MO residual";
+    o_head << std::setw(w3) << "Property";
+    o_head << std::setw(w2) << "Update";
+
+    mrcpp::print::separator(0, '=');
+    println(0, o_head.str());
     mrcpp::print::separator(0, '-');
-    printout(0, std::setw(w1 + w2 + w3 + w4 + w6) << std::setprecision(pprec) << std::scientific << errors.norm());
-    printout(0, std::setw(w5) << conv_tot << std::endl);
-    mrcpp::print::separator(0, '=', 2);
+}
+
+void SCFSolver::printConvergenceRow(int i) const {
+    auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = 5;
+    auto w2 = 3 * w0 / 10;
+    auto w3 = w0 - w1 - 2 * w2;
+
+    auto residual = this->error[i];
+    auto property = this->property[i];
+    auto update = getUpdate(this->property, i + 1, true);
+
+    std::stringstream o_txt;
+    o_txt << std::setw(w1) << i;
+    o_txt << std::setw(w2) << std::setprecision(pprec) << std::scientific << residual;
+    o_txt << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << property;
+    o_txt << std::setw(w2) << std::setprecision(pprec) << std::scientific << update;
+    println(0, o_txt.str());
 }
 
 /** @brief Pretty printing of convergence pattern
@@ -249,41 +285,21 @@ void SCFSolver::printOrbitals(const DoubleVector &norms,
  * Prints convergence in both orbitals and property.
  */
 void SCFSolver::printConvergence(bool converged) const {
-    int pprec = Printer::getPrecision();
-    int w0 = (Printer::getWidth() - 1);
-    int w1 = 5;
-    int w2 = 3 * w0 / 10;
-    int w3 = w0 - w1 - 2 * w2;
-    int w4 = (w0 - 30) / 2;
-    int w5 = (w0 - 25) / 2;
+    auto plevel = Printer::getPrintLevel();
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = (w0 - 30) / 2;
+    auto w2 = (w0 - 25) / 2;
 
-    std::stringstream o_head;
-    o_head << std::setw(w1) << "Iter";
-    o_head << std::setw(w2) << "OrbError";
-    o_head << std::setw(w3) << "Property";
-    o_head << std::setw(w2) << "Update";
-
-    mrcpp::print::separator(0, '=');
-    println(0, o_head.str());
-    mrcpp::print::separator(0, '-');
-
-    int iter = this->error.size();
-    for (int i = 0; i < iter; i++) {
-        double prop_i = this->property[i];
-        double propDiff = getUpdate(this->property, i + 1, true);
-
-        std::stringstream o_txt;
-        o_txt << std::setw(w1) << i;
-        o_txt << std::setw(w2) << std::setprecision(pprec) << std::scientific << this->error[i];
-        o_txt << std::setw(w3) << std::setprecision(2 * pprec) << std::scientific << prop_i;
-        o_txt << std::setw(w2) << std::setprecision(pprec) << std::scientific << propDiff;
-        println(0, o_txt.str());
+    auto nIter = this->error.size();
+    if (plevel > 0) {
+        printConvergenceHeader();
+        for (int i = 0; i < nIter; i++) printConvergenceRow(i);
     }
     mrcpp::print::separator(0, '-');
     if (converged) {
-        println(0, std::string(w4, ' ') << "SCF converged in " << iter - 1 << " iterations!");
+        println(0, std::string(w1, ' ') << "SCF converged in " << nIter - 1 << " iterations!");
     } else {
-        println(0, std::string(w5, ' ') << "SCF did NOT converge!!!");
+        println(0, std::string(w2, ' ') << "SCF did NOT converge!!!");
     }
     mrcpp::print::separator(0, '=', 2);
 }
@@ -303,9 +319,9 @@ void SCFSolver::printCycleHeader(int nIter) const {
     o_header << " SCF cycle " << std::setw(3) << nIter << " ";
     for (auto i = 0; i < post_width; i++) o_header << "#";
 
-    mrcpp::print::separator(0, ' ', 2);
-    println(0, o_header.str());
-    mrcpp::print::separator(0, ' ', 1);
+    mrcpp::print::separator(1, ' ', 2);
+    println(1, o_header.str());
+    mrcpp::print::separator(1, ' ', 1);
 }
 
 /** @brief Pretty printing of SCF cycle footer
@@ -323,9 +339,9 @@ void SCFSolver::printCycleFooter(double t) const {
     o_footer << " Wall time: " << std::setprecision(5) << std::scientific << t << " ";
     for (auto i = 0; i < post_width; i++) o_footer << "#";
 
-    mrcpp::print::separator(0, ' ', 1);
-    println(0, o_footer.str());
-    mrcpp::print::separator(0, ' ', 2);
+    mrcpp::print::separator(1, ' ', 1);
+    println(1, o_footer.str());
+    mrcpp::print::separator(1, ' ', 2);
 }
 
 } // namespace mrchem
