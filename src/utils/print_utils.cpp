@@ -133,7 +133,7 @@ void print_utils::matrix(int level, const std::string &txt, const DoubleMatrix &
         if (i == 0) {
             o << " " << txt << std::string(w3, ' ') << ":";
         } else {
-            o << " " << std::string(w2, ' ') << ":";
+            o << " " << std::string(w2 - 1, ' ') << ":";
         }
         for (int j = 0; j < val.cols(); j++) {
             if (s) {

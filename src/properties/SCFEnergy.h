@@ -65,7 +65,7 @@ public:
         auto E_kcal = E_au * PHYSCONST::kcal;
 
         auto pprec = 2 * mrcpp::Printer::getPrecision();
-        mrcpp::print::header(0, "SCF Energy");
+        mrcpp::print::header(0, "Molecular Energy");
         print_utils::scalar(0, "Kinetic energy   ", E_kin,  "(au)", pprec, false);
         print_utils::scalar(0, "E-N energy       ", E_en,   "(au)", pprec, false);
         print_utils::scalar(0, "Coulomb energy   ", E_ee,   "(au)", pprec, false);

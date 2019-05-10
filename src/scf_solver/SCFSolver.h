@@ -72,19 +72,17 @@ protected:
     virtual void reset();
 
     bool checkConvergence(double err_o, double err_p) const;
-    bool needLocalization(int nIter) const;
-    bool needDiagonalization(int nIter) const;
+    bool needLocalization(int nIter, bool converged) const;
+    bool needDiagonalization(int nIter, bool converged) const;
 
     double adjustPrecision(double error);
 
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
-    void printUpdate(const std::string &txt, double P, double dP, double thrs) const;
+    void printUpdate(int plevel, const std::string &txt, double P, double dP, double thrs) const;
 
     void printConvergence(bool converged) const;
     void printConvergenceHeader() const;
     void printConvergenceRow(int i) const;
-    void printCycleHeader(int nIter) const;
-    void printCycleFooter(double t) const;
     void printOrbitals(const DoubleVector &norms, const DoubleVector &errors, const OrbitalVector &Phi, int flag) const;
 };
 

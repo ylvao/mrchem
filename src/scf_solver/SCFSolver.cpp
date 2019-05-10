@@ -79,12 +79,12 @@ double SCFSolver::adjustPrecision(double error) {
     this->orbPrec[0] = std::min(10.0 * error * error, this->orbPrec[0]);
     this->orbPrec[0] = std::max(this->orbPrec[0], this->orbPrec[2]);
 
-    mrcpp::print::separator(1, '=');
+    mrcpp::print::separator(2, '=');
     mrcpp::print::value(1, "Current precision", this->orbPrec[0], "", 5);
     mrcpp::print::separator(1, '-');
-    mrcpp::print::value(1, "Orbital threshold", this->orbThrs, "", 5);
-    mrcpp::print::value(1, "Property threshold", this->propThrs, "", 5);
-    mrcpp::print::separator(1, '=', 2);
+    mrcpp::print::value(2, "Orbital threshold", this->orbThrs, "", 5);
+    mrcpp::print::value(2, "Property threshold", this->propThrs, "", 5);
+    mrcpp::print::separator(2, '=', 2);
     return this->orbPrec[0];
 }
 
@@ -110,11 +110,11 @@ bool SCFSolver::checkConvergence(double err_o, double err_p) const {
  * This check is based on the "localize" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
-bool SCFSolver::needLocalization(int nIter) const {
+bool SCFSolver::needLocalization(int nIter, bool converged) const {
     bool loc = false;
     if (not this->localize) {
         loc = false;
-    } else if (nIter <= 2) {
+    } else if (nIter <= 2 or converged) {
         loc = true;
     } else if (this->rotation == 0) {
         loc = false;
@@ -131,11 +131,11 @@ bool SCFSolver::needLocalization(int nIter) const {
  * This check is based on the "localize" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
-bool SCFSolver::needDiagonalization(int nIter) const {
+bool SCFSolver::needDiagonalization(int nIter, bool converged) const {
     bool diag = false;
     if (this->localize) {
         diag = false;
-    } else if (nIter <= 2) {
+    } else if (nIter <= 2 or converged) {
         diag = true;
     } else if (this->rotation == 0) {
         diag = false;
@@ -171,7 +171,7 @@ double SCFSolver::getUpdate(const std::vector<double> &vec, int i, bool absPrec)
  *
  * Adds convergence status based on the property threshold.
  */
-void SCFSolver::printUpdate(const std::string &txt, double P, double dP, double thrs) const {
+void SCFSolver::printUpdate(int plevel, const std::string &txt, double P, double dP, double thrs) const {
     int pprec = Printer::getPrecision();
     int w0 = (Printer::getWidth() - 1);
     int w1 = 20;
@@ -188,7 +188,7 @@ void SCFSolver::printUpdate(const std::string &txt, double P, double dP, double 
     o_row << std::setw(w2) << std::setprecision(2 * pprec) << std::fixed << P;
     o_row << std::setw(w4) << std::setprecision(pprec) << std::scientific << dP;
     o_row << std::setw(w3) << done;
-    println(1, o_row.str());
+    println(plevel, o_row.str());
 }
 
 /** @brief Pretty printing of orbitals with energies
@@ -219,13 +219,13 @@ void SCFSolver::printOrbitals(const DoubleVector &norms,
     o_head << std::setw(w6) << "Residual";
     o_head << std::setw(w5) << "Done";
 
-    mrcpp::print::separator(1, '=');
-    println(1, o_head.str());
-    mrcpp::print::separator(1, '-');
+    mrcpp::print::separator(2, '=');
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
 
     bool conv_tot = true;
     for (int i = 0; i < Phi.size(); i++) {
-        bool conv_i = (errors(i) < this->orbThrs);
+        bool conv_i = (errors(i) < this->orbThrs) or (this->orbThrs < 0.0);
         std::stringstream o_row;
         o_row << std::setw(w1) << i;
         o_row << std::setw(w2) << Phi[i].printSpin();
@@ -233,13 +233,14 @@ void SCFSolver::printOrbitals(const DoubleVector &norms,
         o_row << std::setw(w4) << std::setprecision(2 * pprec) << std::fixed << norms(i);
         o_row << std::setw(w6) << std::setprecision(pprec) << std::scientific << errors(i);
         o_row << std::setw(w5) << conv_i;
-        println(1, o_row.str());
+        println(2, o_row.str());
         if (not conv_i) conv_tot = false;
     }
     mrcpp::print::separator(1, '-');
-    printout(1, std::setw(w1 + w2 + w3 + w4 + w6) << std::setprecision(pprec) << std::scientific << errors.norm());
+    printout(1, " Total residual" << std::string(w1 + w2 + w3 - 15, ' '));
+    printout(1, std::setw(w4 + w6) << std::setprecision(pprec) << std::scientific << errors.norm());
     printout(1, std::setw(w5) << conv_tot << std::endl);
-    mrcpp::print::separator(1, '=', 2);
+    mrcpp::print::separator(2, '=', 2);
 }
 
 void SCFSolver::printConvergenceHeader() const {
@@ -302,46 +303,6 @@ void SCFSolver::printConvergence(bool converged) const {
         println(0, std::string(w2, ' ') << "SCF did NOT converge!!!");
     }
     mrcpp::print::separator(0, '=', 2);
-}
-
-/** @brief Pretty printing of SCF cycle header
- *
- * @param nIter: current iteration number
- */
-void SCFSolver::printCycleHeader(int nIter) const {
-    auto txt_width = 15;
-    auto line_width = Printer::getWidth();
-    auto pre_width = (line_width - txt_width) / 2;
-    auto post_width = line_width - txt_width - pre_width;
-
-    std::stringstream o_header;
-    for (auto i = 0; i < pre_width; i++) o_header << "#";
-    o_header << " SCF cycle " << std::setw(3) << nIter << " ";
-    for (auto i = 0; i < post_width; i++) o_header << "#";
-
-    mrcpp::print::separator(1, ' ', 2);
-    println(1, o_header.str());
-    mrcpp::print::separator(1, ' ', 1);
-}
-
-/** @brief Pretty printing of SCF cycle footer
- *
- * @param t: timing for SCF cycle
- */
-void SCFSolver::printCycleFooter(double t) const {
-    auto txt_width = 24;
-    auto line_width = Printer::getWidth();
-    auto pre_width = (line_width - txt_width) / 2;
-    auto post_width = line_width - txt_width - pre_width;
-
-    std::stringstream o_footer;
-    for (auto i = 0; i < pre_width; i++) o_footer << "#";
-    o_footer << " Wall time: " << std::setprecision(5) << std::scientific << t << " ";
-    for (auto i = 0; i < post_width; i++) o_footer << "#";
-
-    mrcpp::print::separator(1, ' ', 1);
-    println(1, o_footer.str());
-    mrcpp::print::separator(1, ' ', 2);
 }
 
 } // namespace mrchem

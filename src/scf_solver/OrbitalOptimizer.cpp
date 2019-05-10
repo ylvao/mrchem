@@ -92,16 +92,17 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         printConvergenceRow(0);
     }
 
-    double orb_prec = this->orbPrec[0];
-    F.setup(orb_prec);
-
     int nIter = 0;
     bool converged = false;
     while (nIter++ < this->maxIter or this->maxIter < 0) {
+        std::stringstream o_header;
+        o_header << "SCF cycle " << nIter;
+        mrcpp::print::header(1, o_header.str());
+
         // Initialize SCF cycle
-        Timer timer;
-        printCycleHeader(nIter);
-        orb_prec = adjustPrecision(err_o);
+        Timer t_lap;
+        double orb_prec = adjustPrecision(err_o);
+        if (nIter < 2) F.setup(orb_prec);
 
         // Apply Helmholtz operator
         HelmholtzVector H(orb_prec, F_mat.real().diagonal());
@@ -138,11 +139,11 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         E_n = F.trace(Phi_n, F_mat);
 
         // Rotate orbitals
-        if (needLocalization(nIter)) {
+        if (needLocalization(nIter, converged)) {
             ComplexMatrix U_mat = orbital::localize(orb_prec, Phi_n, F_mat);
             F.rotate(U_mat);
             kain.clear();
-        } else if (needDiagonalization(nIter)) {
+        } else if (needDiagonalization(nIter, converged)) {
             ComplexMatrix U_mat = orbital::diagonalize(orb_prec, Phi_n, F_mat);
             F.rotate(U_mat);
             kain.clear();
@@ -154,16 +155,14 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         this->property.push_back(E_n.getTotalEnergy());
 
         // Finalize SCF cycle
-        timer.stop();
         if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        printCycleFooter(timer.elapsed());
+        mrcpp::print::footer(1, t_lap, 2);
 
         if (converged) break;
     }
 
-    kain.clear();
     F.clear();
 
     printConvergence(converged);

@@ -91,14 +91,18 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     std::stringstream o_prec, o_zeta;
     o_prec << std::setprecision(5) << std::scientific << prec;
     o_zeta << zeta;
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation ", "Diagonalize Hamiltonian matrix");
     print_utils::text(0, "Precision   ", o_prec.str());
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
     print_utils::text(0, "Hamiltonian ", "Core");
     print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
     print_utils::text(0, "Zeta quality", o_zeta.str());
-    mrcpp::print::separator(0, '-', 2);
+    mrcpp::print::separator(0, '~', 2);
+
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    if (plevel == 1) mrcpp::print::header(1, "Core-Hamiltonian Initial Guess");
 
     int mult = mol.getMultiplicity(); // multiplicity
     int Ne = mol.getNElectrons();     // total electrons
@@ -106,42 +110,48 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     if (Nd % 2 != 0) MSG_ABORT("Invalid multiplicity");
 
     // Make Fock operator contributions
+    t_lap.start();
     auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
     KineticOperator T(D_p);
     NuclearOperator V(mol.getNuclei(), prec);
+    if (plevel == 1) mrcpp::print::time(1, "Projecting nuclear potential", t_lap);
 
     // Project AO basis of hydrogen functions
+    t_lap.start();
     OrbitalVector Phi = initial_guess::core::project_ao(prec, mol.getNuclei(), SPIN::Paired, zeta);
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
+    if (plevel == 1) mrcpp::print::time(1, "Projecting Hydrogen AOs", t_lap);
 
     // Compute Hamiltonian matrix
     Timer t_diag;
-    mrcpp::print::header(1, "Diagonalize Core-Hamiltonian matrix");
+    mrcpp::print::header(2, "Diagonalize Core-Hamiltonian matrix");
 
-    Timer t1;
+    t_lap.start();
     T.setup(prec);
     V.setup(prec);
+    mrcpp::print::time(1, "Setting up Fock operator", t_lap);
+    t_lap.start();
     ComplexMatrix t = T(Phi, Phi);
     ComplexMatrix v = V(Phi, Phi);
     ComplexMatrix F = S_m12.transpose() * (t + v) * S_m12;
     V.clear();
     T.clear();
-    mrcpp::print::time(1, "Compute Fock matrix", t1);
+    mrcpp::print::time(1, "Computing Fock matrix", t_lap);
 
     // Diagonalize Hamiltonian matrix
-    Timer t2;
+    t_lap.start();
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F.cols());
     es.compute(F);
     ComplexMatrix ei_vec = es.eigenvectors();
     ComplexMatrix U = ei_vec.transpose() * S_m12;
-    mrcpp::print::time(1, "Diagonalize Fock matrix", t2);
+    mrcpp::print::time(1, "Diagonalizing Fock matrix", t_lap);
 
     // Need to convert to QMFunctions for linear_combination
     QMFunctionVector funcs;
     for (auto &phi_i : Phi) funcs.push_back(phi_i);
 
     // Rotate orbitals and fill electrons by Aufbau
-    Timer t3;
+    t_lap.start();
     OrbitalVector Psi;
     if (restricted) {
         if (mult != 1) MSG_ABORT("Restricted open-shell not available");
@@ -175,8 +185,9 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
 
         Psi = orbital::adjoin(Psi_a, Psi_b);
     }
-    mrcpp::print::time(1, "Rotate orbitals", t3);
-    mrcpp::print::footer(1, t_diag, 2);
+    mrcpp::print::time(1, "Rotating orbitals", t_lap);
+    mrcpp::print::footer(2, t_diag, 2);
+    if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 
     return Psi;
 }
@@ -202,10 +213,10 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
  *
  */
 OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, int spin, int zeta) {
-    mrcpp::print::header(1, "Projecting Hydrogen AOs");
+    mrcpp::print::header(2, "Projecting Hydrogen AOs");
     const char label[10] = "spdfg";
 
-    Timer timer;
+    Timer t_tot;
     OrbitalVector Phi;
     for (int i = 0; i < nucs.size(); i++) {
         const Nucleus &nuc = nucs[i];
@@ -237,14 +248,14 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
                 o_txt << std::setw(4) << Phi.size() - 1;
                 o_txt << std::setw(8) << nuc.getElement().getSymbol();
                 o_txt << std::setw(4) << n << label[l];
-                print_utils::qmfunction(1, o_txt.str(), Phi.back(), t_i);
+                print_utils::qmfunction(2, o_txt.str(), Phi.back(), t_i);
 
                 if (++nAO >= minAO) minAOReached = true;
             }
             nShell++;
         }
     }
-    mrcpp::print::footer(1, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
     return Phi;
 }
 

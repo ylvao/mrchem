@@ -137,10 +137,10 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
     auto method = json_guess["method"].get<std::string>();
     if (method == "mw") {
         auto start_orbs = json_guess["start_orbitals"].get<std::string>();
-        mrcpp::print::separator(0, '-');
+        mrcpp::print::separator(0, '~');
         print_utils::text(0, "Calculation ", "Read orbitals from file (MW)");
         print_utils::text(0, "File name   ", start_orbs);
-        mrcpp::print::separator(0, '-', 2);
+        mrcpp::print::separator(0, '~', 2);
         Phi = orbital::load_orbitals(start_orbs);
     } else if (method == "core") {
         auto guess_prec = json_guess["guess_prec"].get<double>();
@@ -209,13 +209,16 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
 
         std::stringstream o_prec;
         o_prec << std::setprecision(5) << std::scientific << prec;
-        mrcpp::print::separator(0, '-');
+        mrcpp::print::separator(0, '~');
         print_utils::text(0, "Calculation", "Compute initial energy");
         print_utils::text(0, "Method", method);
         print_utils::text(0, "Precision", o_prec.str());
         print_utils::text(0, "Localization", (localize) ? "On" : "Off");
-        mrcpp::print::separator(0, '-', 2);
+        mrcpp::print::separator(0, '~', 2);
 
+        Timer timer;
+        auto plevel = Printer::getPrintLevel();
+        if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Energy");
         F.setup(prec);
         F_mat = F(Phi, Phi);
         mol.getSCFEnergy() = F.trace(Phi, F_mat);
@@ -226,6 +229,8 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         } else {
             orbital::diagonalize(prec, Phi, F_mat);
         }
+        if (plevel == 1) mrcpp::print::footer(1, timer, 2);
+
         mol.getSCFEnergy().print();
     }
 
@@ -251,12 +256,6 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(mol, F);
-
-        if (localize) {
-            orbital::localize(final_prec, Phi, F_mat);
-        } else {
-            orbital::diagonalize(final_prec, Phi, F_mat);
-        }
     }
 
     // Run EnergyOptimizer if present in input JSON
@@ -278,12 +277,6 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(mol, F);
-
-        if (localize) {
-            orbital::localize(final_prec, Phi, F_mat);
-        } else {
-            orbital::diagonalize(final_prec, Phi, F_mat);
-        }
     }
 
     if (success) {
@@ -401,18 +394,21 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
  * This includes the diamagnetic contributions to the magnetic response properties.
  */
 void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
     print_utils::headline(1, "Computing Ground State Properties");
+    if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Properties");
 
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
 
     auto json_dipole = json_prop.find("dipole_moment");
     if (json_dipole != json_prop.end()) {
-        mrcpp::print::header(1, "Calculating dipole moment");
+        t_lap.start();
+        mrcpp::print::header(2, "Dipole moment");
         auto prec = (*json_dipole)["setup_prec"].get<double>();
         auto r_O = (*json_dipole)["origin"].get<Coord<3>>();
 
-        Timer timer;
         DipoleMoment &mu = mol.getDipoleMoment();
         mu.getOrigin() = r_O;
 
@@ -420,13 +416,14 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
         h.setup(prec);
         Timer t1;
         mu.getNuclear() = h.trace(nuclei).real();
-        mrcpp::print::time(1, "Nuclear contribution", t1);
+        mrcpp::print::time(2, "Nuclear contribution", t1);
         Timer t2;
         mu.getElectronic() = h.trace(Phi).real();
-        mrcpp::print::time(1, "Electronic contribution", t2);
+        mrcpp::print::time(2, "Electronic contribution", t2);
         h.clear();
 
-        mrcpp::print::footer(1, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
     }
 
     auto json_quadrupole = json_prop.find("quadrupole_moment");
@@ -436,88 +433,34 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     if (json_hyperpolarizability != json_prop.end()) MSG_ERROR("Hyperpolarizability not implemented");
 
     auto json_gradient = json_prop.find("nuclear_gradient");
-    if (json_gradient != json_prop.end()) {
-        MSG_ERROR("Nuclear gradient not implemented");
-        /*
-        mrcpp::print::header(0, "Calculating geometry derivatives");
-        auto prec = json_input["grad_prec"].get<double>();
-        auto smooth = json_input["grad_smooth"].get<double>();
-
-        Timer timer;
-        DoubleMatrix &nuc = mol.getGeometryDerivatives().getNuclear();
-        DoubleMatrix &el = mol.getGeometryDerivatives().getElectronic();
-        DoubleVector vecsum = DoubleVector::Zero(3);
-        DoubleVector torque = DoubleVector::Zero(3);
-
-        for (int k = 0; k < nuclei.size(); k++) {
-            const Nucleus &nuc_k = nuclei[k];
-            double Z_k = nuc_k.getCharge();
-            const Coord<3> &R_k = nuc_k.getCoord();
-            // Nuclear part
-            for (int l = 0; l < nuclei.size(); l++) {
-                if (l == k) continue;
-                const Nucleus &nuc_l = nuclei[l];
-                double Z_l = nuc_l.getCharge();
-                const mrcpp::Coord<3> &R_l = nuc_l.getCoord();
-                double R_kl = std::pow(math_utils::calc_distance(R_k, R_l), 3.0);
-                nuc(k, 0) -= Z_k * Z_l * (R_k[0] - R_l[0]) / R_kl;
-                nuc(k, 1) -= Z_k * Z_l * (R_k[1] - R_l[1]) / R_kl;
-                nuc(k, 2) -= Z_k * Z_l * (R_k[2] - R_l[2]) / R_kl;
-            }
-            // Electronic part
-            NuclearGradientOperator r_rm3(nuc_k, smooth);
-            r_rm3.setup(prec);
-            el.row(k) = r_rm3.trace(Phi).real();
-            r_rm3.clear();
-
-            // Total force
-            vecsum += el.row(k);
-            vecsum += nuc.row(k);
-
-            // Total torque
-            torque[0] += R_k[1] * (el(k, 2) + nuc(k, 2)) - R_k[2] * (el(k, 1) + nuc(k, 1));
-            torque[1] += R_k[2] * (el(k, 0) + nuc(k, 0)) - R_k[0] * (el(k, 2) + nuc(k, 2));
-            torque[2] += R_k[0] * (el(k, 1) + nuc(k, 1)) - R_k[1] * (el(k, 0) + nuc(k, 0));
-        }
-        println(0, "nuclear part    ");
-        println(0, nuc);
-        println(0, "electronic part ");
-        println(0, el);
-        println(0, "Total force acting on nuclei");
-        println(0, vecsum.transpose());
-        println(0, "Torque acting on nuclei");
-        println(0, torque.transpose());
-        timer.stop();
-        mrcpp::print::footer(0, timer, 2);
-    */
-    }
+    if (json_gradient != json_prop.end()) MSG_ERROR("Nuclear gradient not implemented");
 
     auto json_mag = json_prop.find("magnetizability");
     if (json_mag != json_prop.end()) {
-        mrcpp::print::header(1, "Calculating diamagnetic magnetizability");
+        t_lap.start();
+        mrcpp::print::header(2, "Magnetizability (dia)");
         auto prec = (*json_mag)["setup_prec"].get<double>();
         auto r_O = (*json_mag)["origin"].get<Coord<3>>();
 
         Magnetizability &khi = mol.getMagnetizability();
 
-        Timer timer;
         H_BB_dia h(r_O);
         h.setup(prec);
         khi.getOrigin() = r_O;
         khi.getDiamagnetic() = -h.trace(Phi).real();
         h.clear();
-        timer.stop();
-        mrcpp::print::footer(1, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Magnetizability (dia)", t_lap);
     }
 
     auto json_nmr = json_prop.find("nmr_shielding");
     if (json_nmr != json_prop.end()) {
-        mrcpp::print::header(1, "Calculating diamagnetic NMR shielding");
+        t_lap.start();
+        mrcpp::print::header(2, "NMR shielding (dia)");
         auto prec = (*json_nmr)["setup_prec"].get<double>();
         auto r_O = (*json_nmr)["origin"].get<Coord<3>>();
         auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
 
-        Timer timer;
         for (int k = 0; k < nucleus_k.size(); k++) {
             NMRShielding &sigma_k = mol.getNMRShielding(nucleus_k[k]);
             const auto &r_K = sigma_k.getNucleus().getCoord();
@@ -528,9 +471,10 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
             sigma_k.getDiamagnetic() = h.trace(Phi).real();
             h.clear();
         }
-        timer.stop();
-        mrcpp::print::footer(1, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "NMR shielding (dia)", t_lap);
     }
+    if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Compute linear response properties

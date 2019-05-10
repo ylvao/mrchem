@@ -49,7 +49,7 @@ namespace mrchem {
  * are later collected to single entities.
  */
 void KAIN::setupLinearSystem() {
-    Timer timer;
+    Timer t_tot;
     int nHistory = this->orbitals.size() - 1;
     if (nHistory < 1) MSG_ABORT("Not enough history to setup system of equations");
 
@@ -119,7 +119,7 @@ void KAIN::setupLinearSystem() {
     }
 
     sortLinearSystem(A_matrices, b_vectors);
-    mrcpp::print::time(1, "Setup linear system", timer);
+    mrcpp::print::time(2, "Setup linear system", t_tot);
 }
 
 /** @brief Compute the next step for orbitals and orbital updates
@@ -130,7 +130,7 @@ void KAIN::setupLinearSystem() {
  * \f$ \delta x^n = f(x^n) + \sum_{j=1}^m c_j[(x^j-x^n)+(f(x^j)-f(x^n))]\f$
  */
 void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatrix *F, ComplexMatrix *dF) {
-    Timer timer;
+    Timer t_tot;
     int nHistory = this->orbitals.size() - 1;
     int nOrbitals = this->orbitals[nHistory].size();
 
@@ -213,7 +213,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
         *F = X_m;
         *dF = fockStep;
     }
-    mrcpp::print::time(1, "Expand solution", timer);
+    mrcpp::print::time(2, "Expand solution", t_tot);
 }
 
 } // namespace mrchem

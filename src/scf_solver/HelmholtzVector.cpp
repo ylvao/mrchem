@@ -66,24 +66,26 @@ HelmholtzVector::HelmholtzVector(double pr, const DoubleVector &l)
  *      local orbitals are computed.
  */
 OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
-    mrcpp::print::header(1, "Applying Helmholtz operators");
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Applying Helmholtz operators");
 
-    Timer t_tot;
     int pprec = Printer::getPrecision();
     OrbitalVector out = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(out[i])) continue;
 
-        Timer t_i;
+        t_lap.start();
         out[i] = apply(i, Phi[i]);
         out[i].rescale(-1.0 / (2.0 * MATHCONST::pi));
 
         std::stringstream o_txt;
         o_txt << std::setw(4) << i;
         o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << out[i].norm();
-        print_utils::qmfunction(1, o_txt.str(), out[i], t_i);
+        print_utils::qmfunction(2, o_txt.str(), out[i], t_lap);
     }
-    mrcpp::print::footer(1, t_tot, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Applying Helmholtz operators", t_tot);
     return out;
 }
 
@@ -98,14 +100,13 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
  */
 OrbitalVector HelmholtzVector::rotate(const ComplexMatrix &F_mat, OrbitalVector &Phi) const {
     Timer t_tot;
-    mrcpp::print::header(1, "Rotating Helmholtz argument");
+    mrcpp::print::header(2, "Rotating Helmholtz argument");
     ComplexMatrix L_mat = getLambdaMatrix();
 
-    Timer rot_t;
     OrbitalVector Psi = orbital::rotate(L_mat - F_mat, Phi);
-    mrcpp::print::time(1, "Rotating orbitals", rot_t);
+    mrcpp::print::time(1, "Rotating Helmholtz argument", t_tot);
 
-    mrcpp::print::footer(1, t_tot, 2);
+    mrcpp::print::footer(2, t_tot, 2);
     return Psi;
 }
 
@@ -122,16 +123,17 @@ OrbitalVector HelmholtzVector::rotate(const ComplexMatrix &F_mat, OrbitalVector 
  *      local orbitals are computed.
  */
 OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &Phi, OrbitalVector &Psi) const {
-    mrcpp::print::header(1, "Applying Helmholtz operators");
+    Timer t_tot, t_lap;
+    auto pprec = Printer::getPrecision();
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Applying Helmholtz operators");
     if (Phi.size() != Psi.size()) MSG_ABORT("OrbitalVector size mismatch");
 
-    Timer t_tot;
-    int pprec = Printer::getPrecision();
     OrbitalVector out = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(out[i])) continue;
 
-        Timer t_i;
+        t_lap.start();
         Orbital Vphi_i = V(Phi[i]);
         Vphi_i.add(1.0, Psi[i]);
         Vphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
@@ -140,9 +142,10 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
         std::stringstream o_txt;
         o_txt << std::setw(4) << i;
         o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << out[i].norm();
-        print_utils::qmfunction(1, o_txt.str(), out[i], t_i);
+        print_utils::qmfunction(2, o_txt.str(), out[i], t_lap);
     }
-    mrcpp::print::footer(1, t_tot, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Applying Helmholtz operators", t_tot);
     return out;
 }
 

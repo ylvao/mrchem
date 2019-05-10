@@ -41,7 +41,7 @@ Orbital QMMomentum::apply(Orbital inp) {
         mrcpp::apply(out.imag(), D, inp.real(), dir);
         out.imag().rescale(-1.0);
     }
-    print_utils::qmfunction(1, "Applied QMMomentum", out, timer);
+    print_utils::qmfunction(2, "Applied QMMomentum", out, timer);
 
     return out;
 }

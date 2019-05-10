@@ -80,22 +80,22 @@ void GroundStateSolver::printProperty() const {
     o_head << std::setw(w4) << "Update";
     o_head << std::setw(w3) << "Done";
 
-    mrcpp::print::separator(1, '=');
-    println(1, o_head.str());
-    mrcpp::print::separator(1, '-');
+    mrcpp::print::separator(2, '=');
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
 
-    printUpdate(" Orbital    ", phi_1, phi_1 - phi_0, this->propThrs);
-    printUpdate(" Kinetic    ", T_1, T_1 - T_0, this->propThrs);
-    printUpdate(" N-E        ", V_1, V_1 - V_0, this->propThrs);
-    printUpdate(" Coulomb    ", J_1, J_1 - J_0, this->propThrs);
-    printUpdate(" Exchange   ", K_1, K_1 - K_0, this->propThrs);
-    printUpdate(" X-C        ", XC_1, XC_1 - XC_0, this->propThrs);
-    mrcpp::print::separator(1, '-');
-    printUpdate(" Electronic ", E_1, E_1 - E_0, this->propThrs);
-    printUpdate(" Nuclear    ", N_1, N_1 - N_0, this->propThrs);
-    mrcpp::print::separator(1, '-');
-    printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0), this->propThrs);
-    mrcpp::print::separator(1, '=');
+    printUpdate(2, " Orbital energy  ", phi_1, phi_1 - phi_0, this->propThrs);
+    printUpdate(2, " Kinetic energy  ", T_1, T_1 - T_0, this->propThrs);
+    printUpdate(2, " N-E energy      ", V_1, V_1 - V_0, this->propThrs);
+    printUpdate(2, " Coulomb energy  ", J_1, J_1 - J_0, this->propThrs);
+    printUpdate(2, " Exchange energy ", K_1, K_1 - K_0, this->propThrs);
+    printUpdate(2, " X-C energy      ", XC_1, XC_1 - XC_0, this->propThrs);
+    mrcpp::print::separator(2, '-');
+    printUpdate(2, " Electronic energy", E_1, E_1 - E_0, this->propThrs);
+    printUpdate(2, " Nuclear energy   ", N_1, N_1 - N_0, this->propThrs);
+    mrcpp::print::separator(2, '-');
+    printUpdate(1, " Total energy     ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0), this->propThrs);
+    mrcpp::print::separator(2, '=');
 }
 
 void GroundStateSolver::printParameters(const std::string &calculation) const {
@@ -157,7 +157,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[1];
     o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
 
-    mrcpp::print::separator(0, '-');
+    mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation      ", calculation);
     print_utils::text(0, "Method           ", this->methodName);
     print_utils::text(0, "Max iterations   ", o_iter.str());
@@ -168,7 +168,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     print_utils::text(0, "Final precision  ", o_prec_1.str());
     print_utils::text(0, "Energy threshold ", o_thrs_p.str());
     print_utils::text(0, "Orbital threshold", o_thrs_o.str());
-    mrcpp::print::separator(0, '-', 2);
+    mrcpp::print::separator(0, '~', 2);
 }
 
 /** @brief Reset accumulated data */

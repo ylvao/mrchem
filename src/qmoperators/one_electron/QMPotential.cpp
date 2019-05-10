@@ -51,7 +51,7 @@ Orbital QMPotential::apply(Orbital inp) {
     Orbital out = inp.paramCopy();
     calcRealPart(out, inp, false);
     calcImagPart(out, inp, false);
-    print_utils::qmfunction(1, "Applied QM potential", out, timer);
+    print_utils::qmfunction(2, "Applied QM potential", out, timer);
 
     return out;
 }
@@ -70,7 +70,7 @@ Orbital QMPotential::dagger(Orbital inp) {
     Orbital out = inp.paramCopy();
     calcRealPart(out, inp, true);
     calcImagPart(out, inp, true);
-    print_utils::qmfunction(1, "Applied QM adjoint potential", out, timer);
+    print_utils::qmfunction(2, "Applied QM adjoint potential", out, timer);
 
     return out;
 }

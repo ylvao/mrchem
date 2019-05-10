@@ -93,9 +93,12 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
     int nIter = 0;
     bool converged = false;
     while (nIter++ < this->maxIter or this->maxIter < 0) {
+        std::stringstream o_header;
+        o_header << "SCF cycle " << nIter;
+        mrcpp::print::header(1, o_header.str());
+
         // Initialize SCF cycle
-        Timer timer;
-        printCycleHeader(nIter);
+        Timer t_lap;
         orb_prec = adjustPrecision(err_o);
 
         // Setup perturbed Fock operator (including V_1)
@@ -174,9 +177,8 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
         this->error.push_back(err_t);
 
         // Finalize SCF cycle
-        timer.stop();
         printProperty();
-        printCycleFooter(timer.elapsed());
+        mrcpp::print::footer(1, t_lap, 2);
 
         if (converged) break;
     }
@@ -194,7 +196,7 @@ void LinearResponseSolver::printProperty() const {
     if (iter > 1) prop_0 = this->property[iter - 2];
     if (iter > 0) prop_1 = this->property[iter - 1];
     mrcpp::print::header(0, "                    Value                  Update      Done ");
-    printUpdate("Property", prop_1, prop_1 - prop_0, this->propThrs);
+    printUpdate(0, "Property", prop_1, prop_1 - prop_0, this->propThrs);
     mrcpp::print::separator(0, '=');
 }
 

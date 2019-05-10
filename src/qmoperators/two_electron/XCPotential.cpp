@@ -30,7 +30,7 @@ void XCPotential::setupDensity(double prec) {
         Density rho_a(false);
         rho_a.setReal(&func_a);
         density::compute(prec, rho_a, Phi, DENSITY::Alpha);
-        print_utils::qmfunction(1, "XC alpha density", rho_a, time_a);
+        print_utils::qmfunction(2, "XC alpha density", rho_a, time_a);
         rho_a.setReal(nullptr);
 
         Timer time_b;
@@ -38,7 +38,7 @@ void XCPotential::setupDensity(double prec) {
         Density rho_b(false);
         rho_b.setReal(&func_b);
         density::compute(prec, rho_b, Phi, DENSITY::Beta);
-        print_utils::qmfunction(1, "XC beta density", rho_b, time_b);
+        print_utils::qmfunction(2, "XC beta density", rho_b, time_b);
         rho_b.setReal(nullptr);
 
         // Extend to union grid
@@ -50,7 +50,7 @@ void XCPotential::setupDensity(double prec) {
         Density rho_t(false);
         rho_t.setReal(&func_t);
         density::compute(prec, rho_t, Phi, DENSITY::Total);
-        print_utils::qmfunction(1, "XC total density", rho_t, time_t);
+        print_utils::qmfunction(2, "XC total density", rho_t, time_t);
         rho_t.setReal(nullptr);
     }
 }

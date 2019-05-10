@@ -266,11 +266,11 @@ OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
  * vector are saved.
  */
 void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix, int n_orbs) {
-    Timer timer;
-    mrcpp::print::header(1, "Writing orbitals");
-    println(1, " File name         : " << file);
-    println(1, " File suffix       : " << suffix);
-    mrcpp::print::separator(1, '-');
+    Timer t_tot;
+    mrcpp::print::header(2, "Writing orbitals");
+    println(2, " File name         : " << file);
+    println(2, " File suffix       : " << suffix);
+    mrcpp::print::separator(2, '-');
     if (n_orbs < 0) n_orbs = Phi.size();
     if (n_orbs > Phi.size()) MSG_ERROR("Index out of bounds");
     for (int i = 0; i < n_orbs; i++) {
@@ -279,9 +279,9 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const s
         std::stringstream orbname;
         orbname << file << "_" << suffix << i;
         Phi[i].saveOrbital(orbname.str());
-        print_utils::qmfunction(1, "'" + orbname.str() + "'", Phi[i], t1);
+        print_utils::qmfunction(2, "'" + orbname.str() + "'", Phi[i], t1);
     }
-    mrcpp::print::footer(1, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
 }
 
 /** @brief Read orbitals from disk
@@ -295,11 +295,11 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const s
  * the prefix name will be read.
  */
 OrbitalVector orbital::load_orbitals(const std::string &file, const std::string &suffix, int n_orbs) {
-    Timer timer;
-    mrcpp::print::header(1, "Reading orbitals");
-    println(1, " File name         : " << file);
-    println(1, " File suffix       : " << suffix);
-    mrcpp::print::separator(1, '-');
+    Timer t_tot;
+    mrcpp::print::header(2, "Reading orbitals");
+    println(2, " File name         : " << file);
+    println(2, " File suffix       : " << suffix);
+    mrcpp::print::separator(2, '-');
     OrbitalVector Phi;
     for (int i = 0; true; i++) {
         if (n_orbs > 0 and i >= n_orbs) break;
@@ -312,13 +312,13 @@ OrbitalVector orbital::load_orbitals(const std::string &file, const std::string 
         if (phi_i.hasReal() or phi_i.hasImag()) {
             phi_i.setRankID(i % mpi::orb_size);
             Phi.push_back(phi_i);
-            print_utils::qmfunction(1, "'" + orbname.str() + "'", phi_i, t1);
+            print_utils::qmfunction(2, "'" + orbname.str() + "'", phi_i, t1);
             if (not mpi::my_orb(phi_i)) phi_i.free(NUMBER::Total);
         } else {
             break;
         }
     }
-    mrcpp::print::footer(1, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
     return Phi;
 }
 
@@ -460,8 +460,9 @@ ComplexMatrix orbital::calc_lowdin_matrix(OrbitalVector &Phi) {
 }
 
 ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
+    Timer t_tot;
+    auto plevel = Printer::getPrintLevel();
     mrcpp::print::header(1, "Localizing orbitals");
-    Timer timer;
     if (not orbital_vector_is_sane(Phi)) {
         orbital::print(Phi);
         MSG_ABORT("Orbital vector is not sane");
@@ -477,7 +478,8 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &
 
     // Transform Fock matrix
     F = U * F * U.adjoint();
-    mrcpp::print::footer(1, timer, 2);
+    mrcpp::print::footer(1, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Localizing orbitals", t_tot);
 
     return U;
 }
@@ -549,13 +551,14 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
  * The transformation matrix is returned.
  */
 ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
-    mrcpp::print::header(1, "Digonalizing Fock matrix");
-    Timer timer;
+    Timer t_tot;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Digonalizing Fock matrix");
 
     Timer orth_t;
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
     F = S_m12.transpose() * F * S_m12;
-    mrcpp::print::time(1, "Computing Lowdin matrix", orth_t);
+    mrcpp::print::time(2, "Computing Lowdin matrix", orth_t);
 
     Timer diag_t;
     ComplexMatrix U = ComplexMatrix::Zero(F.rows(), F.cols());
@@ -566,13 +569,14 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
     if (na > 0) math_utils::diagonalize_block(F, U, np, na);
     if (nb > 0) math_utils::diagonalize_block(F, U, np + na, nb);
     U = U * S_m12;
-    mrcpp::print::time(1, "Diagonalizing matrix", diag_t);
+    mrcpp::print::time(2, "Diagonalizing matrix", diag_t);
 
     Timer rot_t;
     Phi = orbital::rotate(U, Phi, prec);
-    mrcpp::print::time(1, "Rotating orbitals", rot_t);
+    mrcpp::print::time(2, "Rotating orbitals", rot_t);
 
-    mrcpp::print::footer(1, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Diagonalizing Fock matrix", t_tot);
     return U;
 }
 
@@ -584,20 +588,22 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
  * Orbitals are rotated in place, and the transformation matrix is returned.
  */
 ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
-    mrcpp::print::header(1, "Lowdin orthonormalization");
-    Timer timer;
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Lowdin orthonormalization");
 
-    Timer orth_t;
+    t_lap.start();
     ComplexMatrix U = orbital::calc_lowdin_matrix(Phi);
-    mrcpp::print::time(1, "Computing Lowdin matrix", orth_t);
+    mrcpp::print::time(2, "Computing Lowdin matrix", t_lap);
 
-    Timer rot_t;
+    t_lap.start();
     Phi = orbital::rotate(U, Phi, prec);
-    mrcpp::print::time(1, "Rotating orbitals", rot_t);
+    mrcpp::print::time(2, "Rotating orbitals", t_lap);
 
     // Transform Fock matrix
     F = U * F * U.adjoint();
-    mrcpp::print::footer(1, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Lowdin orthonormalization", t_tot);
 
     return U;
 }
@@ -838,9 +844,9 @@ void orbital::print(const OrbitalVector &Phi) {
         print_utils::scalar(0, o_txt.str(), Phi[i].norm(), "", 2 * pprec, true);
     }
 
-    mrcpp::print::separator(1, '-');
-    print_utils::scalar(1, "Total MO memory ", memory, "(MB)", 2, false);
-    print_utils::scalar(1, "Total MO nodes ", nodes, "(N)", 0, false);
+    mrcpp::print::separator(2, '-');
+    print_utils::scalar(2, "Total MO memory ", memory, "(MB)", 2, false);
+    print_utils::scalar(2, "Total MO nodes ", nodes, "(N)", 0, false);
     mrcpp::print::separator(0, '=', 2);
 }
 
