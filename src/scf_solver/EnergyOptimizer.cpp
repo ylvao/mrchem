@@ -91,7 +91,8 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
     while (nIter++ < this->maxIter or this->maxIter < 0) {
         std::stringstream o_header;
         o_header << "SCF cycle " << nIter;
-        mrcpp::print::header(1, o_header.str(), 0);
+        mrcpp::print::header(1, o_header.str(), 0, '#');
+        mrcpp::print::separator(2, ' ', 1);
 
         // Initialize SCF cycle
         Timer t_lap;
@@ -156,7 +157,8 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
         if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat_n.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        mrcpp::print::footer(1, t_lap, 2);
+        mrcpp::print::separator(2, ' ', 1);
+        mrcpp::print::footer(1, t_lap, 3, '#');
 
         if (converged) break;
     }
@@ -197,61 +199,74 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     auto k_n = F_n.getExchangeOperator();
     auto xc_n = F_n.getXCOperator();
 
+    auto exx = 1.0;
+    if (xc_n != nullptr) exx = xc_n->getFunctional()->amountEXX();
+
     ComplexMatrix dV_mat_n;
     { // Nuclear potential matrix is computed explicitly
         t_lap.start();
         dV_mat_n = (*v_n)(Phi_np1, dPhi_n);
         mrcpp::print::time(2, "Nuclear potential matrix", t_lap);
+        mrcpp::print::separator(2, '-');
     }
 
-    ComplexMatrix W_mat_n;
+    ComplexMatrix W_mat_n = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
     { // Computing two-electron part of Fock matrix
         t_lap.start();
-        FockOperator W_n(nullptr, nullptr, j_n, k_n, xc_n);
-        W_n.build();
-        W_mat_n = W_n(Phi_np1, Phi_n);
+        if (j_n != nullptr) W_mat_n += (*j_n)(Phi_np1, Phi_n);
+        if (k_n != nullptr) W_mat_n += exx * (*k_n)(Phi_np1, Phi_n);
+        if (xc_n != nullptr) W_mat_n += (*xc_n)(Phi_np1, Phi_n);
         mrcpp::print::time(2, "Fock matrix n", t_lap);
+        mrcpp::print::separator(2, '-');
     }
 
     { // The n+1 Fock operator needs orthonormalized orbitals
+        t_lap.start();
         ComplexMatrix U_mat = orbital::calc_lowdin_matrix(Phi_np1);
         Phi_np1 = orbital::rotate(U_mat, Phi_np1, prec);
+        mrcpp::print::time(1, "Orthonormalize n+1", t_lap);
+        mrcpp::print::separator(2, '-');
     }
 
-    auto Phi_p = std::make_shared<OrbitalVector>();
-    *Phi_p = Phi_np1;
-
-    mrcpp::print::separator(2, ' ');
-    double exx = 1.0;
     std::shared_ptr<CoulombOperator> j_np1{nullptr};
     std::shared_ptr<ExchangeOperator> k_np1{nullptr};
     std::shared_ptr<XCOperator> xc_np1{nullptr};
-    if (j_n != nullptr) {
-        j_np1 = std::make_shared<CoulombOperator>(j_n->getPoisson(), Phi_p);
-        j_np1->setup(prec);
+    { // Setup Fock operator n+1
+        t_lap.start();
+        auto Phi_p = std::make_shared<OrbitalVector>();
+        *Phi_p = Phi_np1;
+
+        if (j_n != nullptr) {
+            j_np1 = std::make_shared<CoulombOperator>(j_n->getPoisson(), Phi_p);
+            j_np1->setup(prec);
+        }
+        if (k_n != nullptr) {
+            // Do not setup internal exchange, it must be applied on the fly anyway
+            k_np1 = std::make_shared<ExchangeOperator>(k_n->getPoisson(), Phi_p);
+            k_np1->setup(prec);
+        }
+        if (xc_n != nullptr) {
+            xc_np1 = std::make_shared<XCOperator>(xc_n->getFunctional(), Phi_p);
+            xc_np1->setup(prec);
+        }
+        mrcpp::print::time(2, "Fock operator n+1", t_lap);
+        mrcpp::print::separator(2, '-');
     }
-    if (k_n != nullptr) {
-        // Do not setup internal exchange, it must be applied on the fly anyway
-        k_np1 = std::make_shared<ExchangeOperator>(k_n->getPoisson(), Phi_p);
-        k_np1->setup(prec);
-    }
-    if (xc_n != nullptr) {
-        xc_np1 = std::make_shared<XCOperator>(xc_n->getFunctional(), Phi_p);
-        xc_np1->setup(prec);
-        exx = xc_n->getFunctional()->amountEXX();
-    }
-    mrcpp::print::separator(2, ' ');
 
     ComplexMatrix W_mat_np1;
     { // Computing potential matrix excluding nuclear part
         t_lap.start();
-        FockOperator W_np1(nullptr, nullptr, j_np1, k_np1, xc_np1);
-        W_np1.build(exx);
+        ComplexMatrix W_mat_1 = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
+        if (j_np1 != nullptr) W_mat_1 += (*j_np1)(Phi_n, Phi_n);
+        if (k_np1 != nullptr) W_mat_1 += exx * (*k_np1)(Phi_n, Phi_n);
+        if (xc_np1 != nullptr) W_mat_1 += (*xc_np1)(Phi_n, Phi_n);
 
-        ComplexMatrix W_mat_1 = W_np1(Phi_n, Phi_n);
-        ComplexMatrix W_mat_2 = W_np1(Phi_n, dPhi_n);
+        ComplexMatrix W_mat_2 = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
+        if (j_np1 != nullptr) W_mat_2 += (*j_np1)(Phi_n, dPhi_n);
+        if (k_np1 != nullptr) W_mat_2 += exx * (*k_np1)(Phi_n, dPhi_n);
+        if (xc_np1 != nullptr) W_mat_2 += (*xc_np1)(Phi_n, dPhi_n);
+
         W_mat_np1 = W_mat_1 + W_mat_2 + W_mat_2.transpose();
-
         mrcpp::print::time(2, "Fock matrix n+1", t_lap);
     }
     if (j_np1 != nullptr) j_np1->clear();

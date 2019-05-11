@@ -56,10 +56,6 @@ public:
         mrcpp::print::header(0, "Magnetizability");
         print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Total tensor", getTensor());
-        print_utils::scalar(0, "Isotropic average", iso_au_t, "(au)");
-        print_utils::scalar(0, "                 ", iso_si_t, "(SI)");
-        mrcpp::print::separator(0, '-');
         print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
         print_utils::scalar(0, "Isotropic average", iso_au_d, "(au)");
         print_utils::scalar(0, "                 ", iso_si_d, "(SI)");
@@ -67,6 +63,10 @@ public:
         print_utils::matrix(0, "Paramagnetic", getParamagnetic());
         print_utils::scalar(0, "Isotropic average", iso_au_p, "(au)");
         print_utils::scalar(0, "                 ", iso_si_p, "(SI)");
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Total tensor", getTensor());
+        print_utils::scalar(0, "Isotropic average", iso_au_t, "(au)");
+        print_utils::scalar(0, "                 ", iso_si_t, "(SI)");
         mrcpp::print::separator(0, '=', 2);
     }
 

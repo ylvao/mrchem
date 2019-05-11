@@ -20,9 +20,6 @@ namespace mrchem {
  * of symmetry and getting away with only first-derivative operators.
  */
 ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
-    Timer timer;
-    mrcpp::print::header(2, "Compute Kinetic Matrix Elements");
-
     RankZeroTensorOperator &p_x = this->p[0];
     RankZeroTensorOperator &p_y = this->p[1];
     RankZeroTensorOperator &p_z = this->p[2];
@@ -34,41 +31,61 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
     ComplexMatrix T_z = ComplexMatrix::Zero(Ni, Nj);
     {
         Timer timer;
+        int nNodes = 0, sNodes = 0;
         if (&bra == &ket) {
             OrbitalVector dKet = p_x(ket);
+            nNodes += orbital::get_n_nodes(dKet);
+            sNodes += orbital::get_size_nodes(dKet);
             T_x = orbital::calc_overlap_matrix(dKet);
         } else {
             OrbitalVector dBra = p_x(bra);
             OrbitalVector dKet = p_x(ket);
+            nNodes += orbital::get_n_nodes(dBra);
+            nNodes += orbital::get_n_nodes(dKet);
+            sNodes += orbital::get_size_nodes(dBra);
+            sNodes += orbital::get_size_nodes(dKet);
             T_x = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        mrcpp::print::time(2, "T_x", timer);
+        mrcpp::print::tree(2, "<dx i|dx j>", nNodes, sNodes, timer.elapsed());
     }
     {
         Timer timer;
+        int nNodes = 0, sNodes = 0;
         if (&bra == &ket) {
             OrbitalVector dKet = p_y(ket);
+            nNodes += orbital::get_n_nodes(dKet);
+            sNodes += orbital::get_size_nodes(dKet);
             T_y = orbital::calc_overlap_matrix(dKet);
         } else {
             OrbitalVector dBra = p_y(bra);
             OrbitalVector dKet = p_y(ket);
+            nNodes += orbital::get_n_nodes(dBra);
+            nNodes += orbital::get_n_nodes(dKet);
+            sNodes += orbital::get_size_nodes(dBra);
+            sNodes += orbital::get_size_nodes(dKet);
             T_y = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        mrcpp::print::time(2, "T_y", timer);
+        mrcpp::print::tree(2, "<dy i|dy j>", nNodes, sNodes, timer.elapsed());
     }
     {
         Timer timer;
+        int nNodes = 0, sNodes = 0;
         if (&bra == &ket) {
             OrbitalVector dKet = p_z(ket);
+            nNodes += orbital::get_n_nodes(dKet);
+            sNodes += orbital::get_size_nodes(dKet);
             T_z = orbital::calc_overlap_matrix(dKet);
         } else {
             OrbitalVector dBra = p_z(bra);
             OrbitalVector dKet = p_z(ket);
+            nNodes += orbital::get_n_nodes(dBra);
+            nNodes += orbital::get_n_nodes(dKet);
+            sNodes += orbital::get_size_nodes(dBra);
+            sNodes += orbital::get_size_nodes(dKet);
             T_z = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        mrcpp::print::time(2, "T_z", timer);
+        mrcpp::print::tree(2, "<dz i|dz j>", nNodes, sNodes, timer.elapsed());
     }
-    mrcpp::print::footer(2, timer, 2);
 
     return 0.5 * (T_x + T_y + T_z);
 }

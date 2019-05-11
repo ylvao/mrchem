@@ -57,14 +57,14 @@ public:
         print_utils::coord(0, "r_K", getNucleus().getCoord());
         print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
-        print_utils::matrix(0, "Total tensor", getTensor());
-        print_utils::scalar(0, "Isotropic average", iso_ppm_t, "(ppm)");
-        mrcpp::print::separator(0, '-');
         print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
         print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
         mrcpp::print::separator(0, '-');
         print_utils::matrix(0, "Paramagnetic", getParamagnetic(), -1);
         print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Total tensor", getTensor());
+        print_utils::scalar(0, "Isotropic average", iso_ppm_t, "(ppm)");
         mrcpp::print::separator(0, '=', 2);
     }
 

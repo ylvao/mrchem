@@ -268,8 +268,8 @@ OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
 void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix, int n_orbs) {
     Timer t_tot;
     mrcpp::print::header(2, "Writing orbitals");
-    println(2, " File name         : " << file);
-    println(2, " File suffix       : " << suffix);
+    print_utils::text(2, "File name", file);
+    print_utils::text(2, "File suffix", suffix);
     mrcpp::print::separator(2, '-');
     if (n_orbs < 0) n_orbs = Phi.size();
     if (n_orbs > Phi.size()) MSG_ERROR("Index out of bounds");
@@ -297,8 +297,8 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const s
 OrbitalVector orbital::load_orbitals(const std::string &file, const std::string &suffix, int n_orbs) {
     Timer t_tot;
     mrcpp::print::header(2, "Reading orbitals");
-    println(2, " File name         : " << file);
-    println(2, " File suffix       : " << suffix);
+    print_utils::text(2, "File name", file);
+    print_utils::text(2, "File suffix", suffix);
     mrcpp::print::separator(2, '-');
     OrbitalVector Phi;
     for (int i = 0; true; i++) {
@@ -845,8 +845,8 @@ void orbital::print(const OrbitalVector &Phi) {
     }
 
     mrcpp::print::separator(2, '-');
+    print_utils::scalar(2, "Total MO nodes ", nodes, "", 0, false);
     print_utils::scalar(2, "Total MO memory ", memory, "(MB)", 2, false);
-    print_utils::scalar(2, "Total MO nodes ", nodes, "(N)", 0, false);
     mrcpp::print::separator(0, '=', 2);
 }
 
@@ -854,8 +854,26 @@ void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F
     if (Phi.size() == 0) return;
     if (F_mat.cols() != Phi.size()) MSG_ABORT("Invalid Fock matrix");
 
-    Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F_mat.cols());
-    es.compute(F_mat);
+    // First compute eigenvalues without rotating the orbitals
+    DoubleVector epsilon = DoubleVector::Zero(Phi.size());
+    int np = orbital::size_paired(Phi);
+    int na = orbital::size_alpha(Phi);
+    int nb = orbital::size_beta(Phi);
+    if (np > 0) {
+        Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(np);
+        es.compute(F_mat.block(0, 0, np, np));
+        epsilon.segment(0, np) = es.eigenvalues();
+    }
+    if (na > 0) {
+        Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(na);
+        es.compute(F_mat.block(np, np, na, na));
+        epsilon.segment(np, na) = es.eigenvalues();
+    }
+    if (nb > 0) {
+        Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(nb);
+        es.compute(F_mat.block(np + na, np + na, nb, nb));
+        epsilon.segment(np + na, nb) = es.eigenvalues();
+    }
 
     auto pprec = Printer::getPrecision();
     auto w0 = Printer::getWidth() - 1;
@@ -875,7 +893,6 @@ void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F
     mrcpp::print::separator(0, '-');
 
     auto sum_eps = 0.0;
-    DoubleVector epsilon = es.eigenvalues();
     for (int i = 0; i < epsilon.size(); i++) {
         std::stringstream o_txt;
         o_txt << std::setw(w1 - 1) << i;

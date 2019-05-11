@@ -129,7 +129,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     t_lap.start();
     T.setup(prec);
     V.setup(prec);
-    mrcpp::print::time(1, "Setting up Fock operator", t_lap);
+    mrcpp::print::time(1, "Building Fock operator", t_lap);
     t_lap.start();
     ComplexMatrix t = T(Phi, Phi);
     ComplexMatrix v = V(Phi, Phi);
@@ -213,10 +213,27 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
  *
  */
 OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, int spin, int zeta) {
+    Timer t_tot;
+    auto w0 = Printer::getWidth() - 2;
+    auto w1 = 5;
+    auto w2 = 7;
+    auto w3 = w0 * 2 / 9;
+    auto w4 = w0 - w1 - w2 - 3 * w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w4) << "Atom";
+    o_head << std::setw(w2) << "Label";
+    o_head << std::setw(w3 + 1) << "Nodes";
+    o_head << std::setw(w3) << "Size";
+    o_head << std::setw(w3) << "Time";
+
     mrcpp::print::header(2, "Projecting Hydrogen AOs");
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
+
     const char label[10] = "spdfg";
 
-    Timer t_tot;
     OrbitalVector Phi;
     for (int i = 0; i < nucs.size(); i++) {
         const Nucleus &nuc = nucs[i];
@@ -245,9 +262,9 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
                 if (mpi::my_orb(Phi.back())) qmfunction::project(Phi.back(), h_func, NUMBER::Real, prec);
 
                 std::stringstream o_txt;
-                o_txt << std::setw(4) << Phi.size() - 1;
-                o_txt << std::setw(8) << nuc.getElement().getSymbol();
-                o_txt << std::setw(4) << n << label[l];
+                o_txt << std::setw(w1 - 1) << Phi.size() - 1;
+                o_txt << std::setw(w4) << nuc.getElement().getSymbol();
+                o_txt << std::setw(w2 - 1) << n << label[l];
                 print_utils::qmfunction(2, o_txt.str(), Phi.back(), t_i);
 
                 if (++nAO >= minAO) minAOReached = true;

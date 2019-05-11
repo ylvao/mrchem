@@ -126,7 +126,7 @@ void FockOperator::rotate(const ComplexMatrix &U) {
  * by tracing the Fock matrix and subtracting all other contributions.
  */
 SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
-    Timer t_tot, t_lap;
+    Timer t_tot;
     auto plevel = Printer::getPrintLevel();
     mrcpp::print::header(2, "Calculating molecular energy");
 
@@ -143,15 +143,12 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
     double E_nex = 0.0; // External field contribution to the nuclear energy
 
     // Orbital energies
-    t_lap.start();
     for (int i = 0; i < Phi.size(); i++) {
-        auto occ = (double)Phi[i].occ();
+        auto occ = static_cast<double>(Phi[i].occ());
         E_orb += occ * F(i, i).real();
     }
-    mrcpp::print::time(2, "Orbital energies", t_lap);
 
     // Nuclear part
-    t_lap.start();
     if (this->nuc != nullptr) {
         Nuclei &nucs = this->nuc->getNuclei();
         E_nuc = chemistry::compute_nuclear_repulsion(nucs);
@@ -160,35 +157,14 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
             E_nuc += E_nex;
         }
     }
-    mrcpp::print::time(2, "Nuclear-Nuclear", t_lap);
 
     // Electronic part
-    if (this->nuc != nullptr) {
-        t_lap.start();
-        E_en = this->nuc->trace(Phi).real();
-        mrcpp::print::time(2, "Nuclear-Electron", t_lap);
-    }
-    if (this->coul != nullptr) {
-        t_lap.start();
-        E_ee = this->coul->trace(Phi).real();
-        mrcpp::print::time(2, "Coulomb", t_lap);
-    }
-    if (this->ex != nullptr) {
-        t_lap.start();
-        E_x = -this->exact_exchange * this->ex->trace(Phi).real();
-        mrcpp::print::time(2, "Exchange", t_lap);
-    }
-    if (this->xc != nullptr) {
-        t_lap.start();
-        E_xc = this->xc->getEnergy();
-        E_xc2 = this->xc->trace(Phi).real();
-        mrcpp::print::time(2, "Exchange-Correlation", t_lap);
-    }
-    if (this->ext != nullptr) {
-        t_lap.start();
-        E_ext = this->ext->trace(Phi).real();
-        mrcpp::print::time(2, "External", t_lap);
-    }
+    if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
+    if (this->coul != nullptr) E_ee = this->coul->trace(Phi).real();
+    if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
+    if (this->xc != nullptr) E_xc = this->xc->getEnergy();
+    if (this->xc != nullptr) E_xc2 = this->xc->trace(Phi).real();
+    if (this->ext != nullptr) E_ext = this->ext->trace(Phi).real();
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Calculating molecular energy", t_tot);
 
@@ -200,22 +176,18 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
 }
 
 ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
-    Timer t_tot, t_lap;
+    Timer t_tot;
     auto plevel = Printer::getPrintLevel();
     mrcpp::print::header(2, "Calculating Fock matrix");
 
     auto t = this->getKineticOperator();
     auto v = this->potential();
 
-    t_lap.start();
     ComplexMatrix T = ComplexMatrix::Zero(bra.size(), ket.size());
     if (t != nullptr) T += (*t)(bra, ket);
-    mrcpp::print::time(2, "Kinetic part", t_lap);
 
-    t_lap.start();
     ComplexMatrix V = ComplexMatrix::Zero(bra.size(), ket.size());
     if (v.size() > 0) V += v(bra, ket);
-    mrcpp::print::time(2, "Potential part", t_lap);
 
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Calculating Fock matrix", t_tot);

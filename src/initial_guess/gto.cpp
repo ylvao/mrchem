@@ -85,12 +85,7 @@ OrbitalVector initial_guess::gto::setup(double prec,
     if (Nd % 2 != 0) MSG_ABORT("Invalid multiplicity");
     int Np = Nd / 2; // paired orbitals
 
-    Timer t_tot;
-    mrcpp::print::header(1, "GTO Initial Guess");
-    auto Phi = initial_guess::gto::project_mo(prec, bas_file, mo_file, SPIN::Paired, Np);
-    mrcpp::print::footer(1, t_tot, 2);
-
-    return Phi;
+    return initial_guess::gto::project_mo(prec, bas_file, mo_file, SPIN::Paired, Np);
 }
 
 /** @brief Produce an initial guess of orbitals
@@ -134,12 +129,8 @@ OrbitalVector initial_guess::gto::setup(double prec,
     int Na = Nd / 2 + (mult - 1); // alpha orbitals
     int Nb = Nd / 2;              // beta orbitals
 
-    Timer t_tot;
-    mrcpp::print::header(1, "GTO Initial Guess");
     auto Phi_a = initial_guess::gto::project_mo(prec, bas_file, moa_file, SPIN::Alpha, Na);
-    mrcpp::print::separator(1, '-');
     auto Phi_b = initial_guess::gto::project_mo(prec, bas_file, mob_file, SPIN::Beta, Nb);
-    mrcpp::print::footer(1, t_tot, 2);
 
     // Collect orbitals into one vector
     return orbital::adjoin(Phi_a, Phi_b);
@@ -164,26 +155,46 @@ OrbitalVector initial_guess::gto::project_mo(double prec,
                                              const std::string &mo_file,
                                              int spin,
                                              int N) {
+    Timer t_tot;
     auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth() - 2;
+    auto w1 = 5;
+    auto w2 = w0 * 2 / 9;
+    auto w3 = w0 - w1 - 3 * w2;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w3) << "Norm";
+    o_head << std::setw(w2 + 1) << "Nodes";
+    o_head << std::setw(w2) << "Size";
+    o_head << std::setw(w2) << "Time";
+
+    std::string title = "GTO Initial Guess";
+    if (spin == SPIN::Alpha) title += " (alpha)";
+    if (spin == SPIN::Beta) title += " (beta)";
+
+    mrcpp::print::header(1, title);
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
 
     // Setup AO basis
-    Timer t_lap;
+    Timer t1;
     gto_utils::Intgrl intgrl(bas_file);
     gto_utils::OrbitalExp gto_exp(intgrl);
     if (N < 0) N = gto_exp.size();
-    mrcpp::print::time(1, "Reading AO basis", t_lap);
+    t1.stop();
 
     // Read MO file (transpose)
-    t_lap.start();
+    Timer t2;
     DoubleMatrix MO = math_utils::read_matrix_file(mo_file);
     if (MO.cols() < N) MSG_ABORT("Size mismatch");
-    mrcpp::print::time(1, "Reading MO matrix", t_lap);
+    t2.stop();
 
+    Timer t3;
     OrbitalVector Phi;
     for (int i = 0; i < N; i++) Phi.push_back(Orbital(spin));
     mpi::distribute(Phi);
 
-    t_lap.start();
     for (int i = 0; i < N; i++) {
         Timer t_i;
         if (mpi::my_orb(Phi[i])) {
@@ -192,12 +203,16 @@ OrbitalVector initial_guess::gto::project_mo(double prec,
             mrcpp::project(prec, Phi[i].real(), mo_i);
         }
         std::stringstream o_txt;
-        o_txt << std::setw(4) << i;
-        o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << Phi[i].norm();
+        o_txt << std::setw(w1 - 1) << i;
+        o_txt << std::setw(w3) << std::setprecision(pprec) << std::scientific << Phi[i].norm();
         print_utils::qmfunction(2, o_txt.str(), Phi[i], t_i);
     }
     mpi::barrier(mpi::comm_orb);
-    mrcpp::print::time(1, "Projecting GTO MOs", t_lap);
+    mrcpp::print::separator(2, '-');
+    mrcpp::print::time(1, "Reading AO basis", t1);
+    mrcpp::print::time(1, "Reading MO matrix", t2);
+    mrcpp::print::time(1, "Projecting GTO MOs", t3);
+    mrcpp::print::footer(1, t_tot, 2);
     return Phi;
 }
 

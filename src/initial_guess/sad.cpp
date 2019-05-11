@@ -135,12 +135,12 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     OrbitalVector Phi = initial_guess::core::project_ao(prec, mol.getNuclei(), SPIN::Paired, zeta);
     if (plevel == 1) mrcpp::print::time(1, "Projecting Hydrogen AOs", t_lap);
 
-    mrcpp::print::header(2, "Setting up Fock operator");
+    mrcpp::print::header(2, "Building Fock operator");
     t_lap.start();
     T.setup(prec);
     V.setup(prec);
     mrcpp::print::footer(2, t_lap, 2);
-    if (plevel == 1) mrcpp::print::time(1, "Setting up Fock operator", t_lap);
+    if (plevel == 1) mrcpp::print::time(1, "Building Fock operator", t_lap);
 
     // Compute Fock matrix
     mrcpp::print::header(2, "Diagonalizing Fock matrix");
@@ -156,7 +156,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
         int Nb = Nd / 2;              // beta orbitals
         ComplexMatrix U_a = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Alpha);
         OrbitalVector Psi_a = initial_guess::sad::rotate_orbitals(prec, U_a, Phi, Na, SPIN::Alpha);
-
+        mrcpp::print::separator(2, '-');
         ComplexMatrix U_b = initial_guess::sad::diagonalize_fock(T, V, Phi, SPIN::Beta);
         OrbitalVector Psi_b = initial_guess::sad::rotate_orbitals(prec, U_b, Phi, Nb, SPIN::Beta);
 

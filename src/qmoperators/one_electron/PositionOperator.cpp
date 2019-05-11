@@ -26,7 +26,7 @@ void PositionPotential::setup(double prec) {
 
     Timer timer;
     qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-    print_utils::qmfunction(2, "PositionPotential", V, timer);
+    print_utils::qmfunction(3, "PositionPotential", V, timer);
 }
 
 void PositionPotential::clear() {

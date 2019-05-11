@@ -24,6 +24,7 @@
  */
 
 #include "MRCPP/Printer"
+#include "MRCPP/Timer"
 
 #include "parallel.h"
 
@@ -33,6 +34,7 @@
 #include "qmfunctions/qmfunction_utils.h"
 
 using QMOperator_p = std::shared_ptr<mrchem::QMOperator>;
+using mrcpp::Timer;
 
 namespace mrchem {
 extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
@@ -240,9 +242,11 @@ ComplexDouble RankZeroTensorOperator::dagger(Orbital bra, Orbital ket) {
  * the final result.
  */
 ComplexMatrix RankZeroTensorOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
+    Timer t1;
     RankZeroTensorOperator &O = *this;
     OrbitalVector Oket = O(ket);
     ComplexMatrix out = orbital::calc_overlap_matrix(bra, Oket);
+    mrcpp::print::tree(2, "<i|O|j>", orbital::get_n_nodes(Oket), orbital::get_size_nodes(Oket), t1.elapsed());
     return out;
 }
 
@@ -267,10 +271,12 @@ ComplexMatrix RankZeroTensorOperator::dagger(OrbitalVector &bra, OrbitalVector &
  * Includes a MPI reduction operation in case of distributed orbitals.
  */
 ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi) {
+    Timer t1;
     RankZeroTensorOperator &O = *this;
     OrbitalVector OPhi = O(Phi);
     ComplexVector eta = orbital::get_occupancies(Phi).cast<ComplexDouble>();
     ComplexVector phi_vec = orbital::dot(Phi, OPhi);
+    mrcpp::print::tree(2, "sum_i <i|O|i>", orbital::get_n_nodes(OPhi), orbital::get_size_nodes(OPhi), t1.elapsed());
     return eta.dot(phi_vec);
 }
 
@@ -293,7 +299,7 @@ ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi, OrbitalVector &X
         if (mpi::my_orb(Phi[i])) {
             if (not mpi::my_orb(X[i])) MSG_ERROR("MPI communication needed");
             if (not mpi::my_orb(Y[i])) MSG_ERROR("MPI communication needed");
-            auto eta_i = (double)Phi[i].occ();
+            auto eta_i = static_cast<double>(Phi[i].occ());
             ComplexDouble result_1 = O(Phi[i], X[i]);
             ComplexDouble result_2 = O(Y[i], Phi[i]);
             result += eta_i * (result_1 + result_2);

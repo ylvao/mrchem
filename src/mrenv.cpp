@@ -137,11 +137,13 @@ void mrenv::print_header() {
     println(0, pre_str << "Peter Wind         <peter.wind@uit.no>       " << post_str);
     println(0, pre_str << "                                             " << post_str);
     mrcpp::print::separator(0, '*', 1);
-    println(0, xcfun_splash());
     mrcpp::print::separator(0, '-', 1);
     print_utils::scalar(0, "MPI processes", mpi::orb_size, "", 0, false);
     print_utils::scalar(0, "OpenMP threads", omp::n_threads, "", 0, false);
     print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
+    mrcpp::print::separator(0, ' ');
+    mrcpp::print::separator(0, '-', 1);
+    printout(0, xcfun_splash());
     mrcpp::print::environment(0);
     MRA->print();
 }

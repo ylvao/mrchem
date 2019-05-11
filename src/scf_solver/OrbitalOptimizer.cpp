@@ -97,7 +97,8 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
     while (nIter++ < this->maxIter or this->maxIter < 0) {
         std::stringstream o_header;
         o_header << "SCF cycle " << nIter;
-        mrcpp::print::header(1, o_header.str());
+        mrcpp::print::header(1, o_header.str(), 0, '#');
+        mrcpp::print::separator(2, ' ', 1);
 
         // Initialize SCF cycle
         Timer t_lap;
@@ -158,7 +159,8 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        mrcpp::print::footer(1, t_lap, 2);
+        mrcpp::print::separator(2, ' ', 1);
+        mrcpp::print::footer(1, t_lap, 3, '#');
 
         if (converged) break;
     }

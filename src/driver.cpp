@@ -414,14 +414,9 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
 
         H_E_dip h(r_O);
         h.setup(prec);
-        Timer t1;
         mu.getNuclear() = h.trace(nuclei).real();
-        mrcpp::print::time(2, "Nuclear contribution", t1);
-        Timer t2;
         mu.getElectronic() = h.trace(Phi).real();
-        mrcpp::print::time(2, "Electronic contribution", t2);
         h.clear();
-
         mrcpp::print::footer(2, t_lap, 2);
         if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
     }
@@ -462,6 +457,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
         auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
 
         for (int k = 0; k < nucleus_k.size(); k++) {
+            if (k != 0) mrcpp::print::separator(2, '-');
             NMRShielding &sigma_k = mol.getNMRShielding(nucleus_k[k]);
             const auto &r_K = sigma_k.getNucleus().getCoord();
 

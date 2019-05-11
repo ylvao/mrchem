@@ -88,10 +88,10 @@ Orbital ExchangePotential::apply(Orbital inp) {
     }
     int i = testPreComputed(inp);
     if (i < 0) {
-        println(1, "On-the-fly exchange");
+        println(3, "On-the-fly exchange");
         return calcExchange(inp);
     } else {
-        println(1, "Precomputed exchange");
+        println(3, "Precomputed exchange");
         Orbital out = this->exchange[i].paramCopy();
         qmfunction::deep_copy(out, this->exchange[i]);
         return out;
@@ -159,7 +159,7 @@ Orbital ExchangePotential::calcExchange(Orbital phi_p) {
     // compute ex_p = sum_i c_i*phi_iip
     Orbital ex_p = phi_p.paramCopy();
     qmfunction::linear_combination(ex_p, coef_vec, func_vec, -1.0);
-    print_utils::qmfunction(1, "Applied exchange", ex_p, timer);
+    print_utils::qmfunction(3, "Applied exchange", ex_p, timer);
 
     return ex_p;
 }
@@ -232,7 +232,7 @@ void ExchangePotential::setupInternal(double prec) {
     auto n = orbital::get_n_nodes(Ex);
     auto m = orbital::get_size_nodes(Ex);
     auto t = timer.elapsed();
-    mrcpp::print::tree(1, "Hartree-Fock exchange", n, m, t);
+    mrcpp::print::tree(2, "Hartree-Fock exchange", n, m, t);
 }
 
 /** @brief Computes the diagonal part of the internal exchange potential
