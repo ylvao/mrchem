@@ -80,7 +80,6 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
     DoubleVector errors = DoubleVector::Ones(Phi_n.size());
     double err_o = errors.maxCoeff();
     double err_t = errors.norm();
-    double err_p = 1.0;
 
     this->error.push_back(err_t);
     this->energy.push_back(E_n);
@@ -125,8 +124,6 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         errors = orbital::get_norms(dPhi_n);
         err_o = errors.maxCoeff();
         err_t = errors.norm();
-        err_p = calcPropertyError();
-        converged = checkConvergence(err_o, err_p);
 
         // Update orbitals
         Phi_n = orbital::add(1.0, Phi_n, 1.0, dPhi_n);
@@ -139,6 +136,13 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         F_mat = F(Phi_n, Phi_n);
         E_n = F.trace(Phi_n, F_mat);
 
+        // Collect convergence data
+        this->error.push_back(err_t);
+        this->energy.push_back(E_n);
+        this->property.push_back(E_n.getTotalEnergy());
+        auto err_p = calcPropertyError();
+        converged = checkConvergence(err_o, err_p);
+
         // Rotate orbitals
         if (needLocalization(nIter, converged)) {
             ComplexMatrix U_mat = orbital::localize(orb_prec, Phi_n, F_mat);
@@ -150,17 +154,13 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
             kain.clear();
         }
 
-        // Collect convergence data
-        this->error.push_back(err_t);
-        this->energy.push_back(E_n);
-        this->property.push_back(E_n.getTotalEnergy());
-
         // Finalize SCF cycle
         if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
         mrcpp::print::separator(2, ' ', 1);
-        mrcpp::print::footer(1, t_lap, 3, '#');
+        mrcpp::print::footer(1, t_lap, 2, '#');
+        mrcpp::print::separator(2, ' ', 2);
 
         if (converged) break;
     }

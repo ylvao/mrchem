@@ -158,7 +158,8 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
         printOrbitals(F_mat_n.real().diagonal(), errors, Phi_n, 0);
         printProperty();
         mrcpp::print::separator(2, ' ', 1);
-        mrcpp::print::footer(1, t_lap, 3, '#');
+        mrcpp::print::footer(1, t_lap, 2, '#');
+        mrcpp::print::separator(2, ' ', 2);
 
         if (converged) break;
     }
