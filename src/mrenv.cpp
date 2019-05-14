@@ -60,9 +60,9 @@ void mrenv::init_printer(const json &json_print) {
     auto print_level = json_print["print_level"].get<int>();
     auto print_prec = json_print["print_prec"].get<int>();
     auto print_width = json_print["print_width"].get<int>();
-    auto mpi_print = json_print["mpi_print"].get<bool>();
+    auto print_mpi = json_print["print_mpi"].get<bool>();
     auto fname = json_print["file_name"].get<std::string>();
-    if (mpi_print) {
+    if (print_mpi) {
         Printer::init(print_level, mpi::orb_rank, mpi::orb_size, fname.c_str());
     } else {
         Printer::init(print_level, mpi::orb_rank, mpi::orb_size);

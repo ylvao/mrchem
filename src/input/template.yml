@@ -38,7 +38,7 @@ sections:
           - 'value >= 0'
         docstring: |
           Level of detail in the written output. Level 0 for production calculations.
-      - name: mpi_print
+      - name: print_mpi
         type: bool
         default: false
         docstring: |
