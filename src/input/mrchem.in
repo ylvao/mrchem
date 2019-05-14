@@ -70,7 +70,9 @@ def main():
 
     if not dryrun:
         cmd = executable + ' ' + xfile
-        p = subprocess.call(cmd, shell=True)
+        if program_dict["printer"]["print_input"]:
+            subprocess.call('cat ' + inp_file_cmd, shell=True)
+        subprocess.call(cmd, shell=True)
 
 def parse_cmdline():
     usage = "usage: %prog [options] [config] inp_file"

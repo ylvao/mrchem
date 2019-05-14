@@ -38,6 +38,11 @@ sections:
           - 'value >= 0'
         docstring: |
           Level of detail in the written output. Level 0 for production calculations.
+      - name: print_input
+        type: bool
+        default: false
+        docstring: |
+          Print the user input file at the start of the calculation.
       - name: print_mpi
         type: bool
         default: false
