@@ -18,6 +18,9 @@ public:
         h[0] = (coef * alpha_2) * delta * s[0];
         h[1] = (coef * alpha_2) * delta * s[1];
         h[2] = (coef * alpha_2) * delta * s[2];
+        h[0].name() = "h_M_fc[x]";
+        h[1].name() = "h_M_fc[y]";
+        h[2].name() = "h_M_fc[z]";
     }
 
 private:

@@ -29,6 +29,9 @@ public:
         h[0] = -1.0 * (*this)[0];
         h[1] = -1.0 * (*this)[1];
         h[2] = -1.0 * (*this)[2];
+        h[0].name() = "h_E_dip[x]";
+        h[1].name() = "h_E_dip[y]";
+        h[2].name() = "h_E_dip[z]";
     }
 
     /** @brief returns the nuclear contribution to the dipole moment

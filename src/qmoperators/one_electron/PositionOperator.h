@@ -28,6 +28,9 @@ public:
         r[0] = r_x;
         r[1] = r_y;
         r[2] = r_z;
+        r[0].name() = "r[x]";
+        r[1].name() = "r[y]";
+        r[2].name() = "r[z]";
     }
 
 protected:

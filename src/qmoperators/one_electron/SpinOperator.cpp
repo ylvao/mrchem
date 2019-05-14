@@ -30,7 +30,6 @@ Orbital QMSpin::apply(Orbital inp) {
             MSG_ABORT("Cannot apply spin operator on paired orbital");
     }
 
-    Timer timer;
     Orbital out = inp.paramCopy();
     qmfunction::deep_copy(out, inp);
     out.rescale(coef);
@@ -40,8 +39,6 @@ Orbital QMSpin::apply(Orbital inp) {
         if (inp.spin() == SPIN::Alpha) out.setSpin(SPIN::Beta);
         if (inp.spin() == SPIN::Beta) out.setSpin(SPIN::Alpha);
     }
-
-    print_utils::qmfunction(1, "Applied spin operator", out, timer);
 
     return out;
 }

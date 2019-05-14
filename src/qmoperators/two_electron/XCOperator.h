@@ -25,6 +25,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &XC = (*this);
         XC = potential;
+        XC.name() = "V_xc";
     }
     XCOperator(std::shared_ptr<mrdft::XCFunctional> F,
                std::shared_ptr<OrbitalVector> Phi,
@@ -36,6 +37,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &XC = (*this);
         XC = potential;
+        XC.name() = "V_xc";
     }
     ~XCOperator() override = default;
 

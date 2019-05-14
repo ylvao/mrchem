@@ -46,7 +46,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             sNodes += orbital::get_size_nodes(dKet);
             T_x = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        mrcpp::print::tree(2, "<dx i|dx j>", nNodes, sNodes, timer.elapsed());
+        mrcpp::print::tree(2, "<i|p[x]p[x]|j>", nNodes, sNodes, timer.elapsed());
     }
     {
         Timer timer;
@@ -65,7 +65,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             sNodes += orbital::get_size_nodes(dKet);
             T_y = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        mrcpp::print::tree(2, "<dy i|dy j>", nNodes, sNodes, timer.elapsed());
+        mrcpp::print::tree(2, "<i|p[y]p[y]|j>", nNodes, sNodes, timer.elapsed());
     }
     {
         Timer timer;
@@ -84,7 +84,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             sNodes += orbital::get_size_nodes(dKet);
             T_z = orbital::calc_overlap_matrix(dBra, dKet);
         }
-        mrcpp::print::tree(2, "<dz i|dz j>", nNodes, sNodes, timer.elapsed());
+        mrcpp::print::tree(2, "<i|p[z]p[z]|j>", nNodes, sNodes, timer.elapsed());
     }
 
     return 0.5 * (T_x + T_y + T_z);

@@ -32,6 +32,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/print_utils.h"
 
 using QMOperator_p = std::shared_ptr<mrchem::QMOperator>;
 using mrcpp::Timer;
@@ -93,6 +94,7 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator-=(QMOperator_p O) {
  */
 RankZeroTensorOperator &RankZeroTensorOperator::operator=(const RankZeroTensorOperator &O) {
     if (this != &O) {
+        this->name() = O.name();
         this->coef_exp = O.coef_exp;
         this->oper_exp = O.oper_exp;
     }
@@ -105,8 +107,15 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator=(const RankZeroTensorOp
  */
 RankZeroTensorOperator &RankZeroTensorOperator::operator+=(const RankZeroTensorOperator &O) {
     if (this != &O) {
+        if (this->size() == 0) {
+            this->name() = O.name();
+        } else {
+            this->name() += " + " + O.name();
+        }
         for (auto i : O.coef_exp) this->coef_exp.push_back(i);
         for (const auto &i : O.oper_exp) this->oper_exp.push_back(i);
+    } else {
+        MSG_ABORT("Cannot add self in place");
     }
     return *this;
 }
@@ -118,8 +127,15 @@ RankZeroTensorOperator &RankZeroTensorOperator::operator+=(const RankZeroTensorO
  */
 RankZeroTensorOperator &RankZeroTensorOperator::operator-=(const RankZeroTensorOperator &O) {
     if (this != &O) {
+        if (this->size() == 0) {
+            this->name() = O.name();
+        } else {
+            this->name() += " - " + O.name();
+        }
         for (auto i : O.coef_exp) this->coef_exp.push_back(-i);
         for (const auto &i : O.oper_exp) this->oper_exp.push_back(i);
+    } else {
+        MSG_ABORT("Cannot add self in place");
     }
     return *this;
 }
@@ -140,6 +156,7 @@ void RankZeroTensorOperator::setup(double prec) {
 /** @brief run clear on all operators in the expansion
  */
 void RankZeroTensorOperator::clear() {
+    this->name() = "O";
     for (auto &i : this->oper_exp) {
         for (int j = 0; j < i.size(); j++) { i[j]->clear(); }
     }
@@ -156,10 +173,11 @@ void RankZeroTensorOperator::clear() {
 Orbital RankZeroTensorOperator::operator()(Orbital inp) {
     if (not mpi::my_orb(inp)) return inp.paramCopy();
 
+    RankZeroTensorOperator &O = *this;
     QMFunctionVector func_vec;
     ComplexVector coef_vec = getCoefVector();
-    for (int n = 0; n < this->oper_exp.size(); n++) {
-        Orbital out_n = applyOperTerm(n, inp);
+    for (int n = 0; n < O.size(); n++) {
+        Orbital out_n = O.applyOperTerm(n, inp);
         func_vec.push_back(out_n);
     }
     Orbital out = inp.paramCopy();
@@ -187,9 +205,13 @@ Orbital RankZeroTensorOperator::dagger(Orbital inp) {
 OrbitalVector RankZeroTensorOperator::operator()(OrbitalVector &inp) {
     RankZeroTensorOperator &O = *this;
     OrbitalVector out;
-    for (const auto &i : inp) {
-        Orbital out_i = O(i);
+    for (auto i = 0; i < inp.size(); i++) {
+        Timer t1;
+        Orbital out_i = O(inp[i]);
         out.push_back(out_i);
+        std::stringstream o_name;
+        o_name << O.name() << "|" << i << ">";
+        print_utils::qmfunction(3, o_name.str(), out_i, t1);
     }
     return out;
 }
@@ -246,7 +268,9 @@ ComplexMatrix RankZeroTensorOperator::operator()(OrbitalVector &bra, OrbitalVect
     RankZeroTensorOperator &O = *this;
     OrbitalVector Oket = O(ket);
     ComplexMatrix out = orbital::calc_overlap_matrix(bra, Oket);
-    mrcpp::print::tree(2, "<i|O|j>", orbital::get_n_nodes(Oket), orbital::get_size_nodes(Oket), t1.elapsed());
+    std::stringstream o_name;
+    o_name << "<i|" << O.name() << "|j>";
+    mrcpp::print::tree(2, o_name.str(), orbital::get_n_nodes(Oket), orbital::get_size_nodes(Oket), t1.elapsed());
     return out;
 }
 
@@ -276,7 +300,9 @@ ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi) {
     OrbitalVector OPhi = O(Phi);
     ComplexVector eta = orbital::get_occupancies(Phi).cast<ComplexDouble>();
     ComplexVector phi_vec = orbital::dot(Phi, OPhi);
-    mrcpp::print::tree(2, "sum_i <i|O|i>", orbital::get_n_nodes(OPhi), orbital::get_size_nodes(OPhi), t1.elapsed());
+    std::stringstream o_name;
+    o_name << "Trace <i|" << O.name() << "|i>";
+    mrcpp::print::tree(2, o_name.str(), orbital::get_n_nodes(OPhi), orbital::get_size_nodes(OPhi), t1.elapsed());
     return eta.dot(phi_vec);
 }
 

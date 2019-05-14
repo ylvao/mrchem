@@ -32,6 +32,9 @@ public:
         p[0] = p_x;
         p[1] = p_y;
         p[2] = p_z;
+        p[0].name() = "p[x]";
+        p[1].name() = "p[y]";
+        p[2].name() = "p[z]";
     }
 
 private:

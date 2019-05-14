@@ -47,11 +47,9 @@ QMPotential::~QMPotential() {
 Orbital QMPotential::apply(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
-    Timer timer;
     Orbital out = inp.paramCopy();
     calcRealPart(out, inp, false);
     calcImagPart(out, inp, false);
-    print_utils::qmfunction(3, "Applied QM potential", out, timer);
 
     return out;
 }
@@ -66,11 +64,9 @@ Orbital QMPotential::apply(Orbital inp) {
 Orbital QMPotential::dagger(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
-    Timer timer;
     Orbital out = inp.paramCopy();
     calcRealPart(out, inp, true);
     calcImagPart(out, inp, true);
-    print_utils::qmfunction(3, "Applied QM adjoint potential", out, timer);
 
     return out;
 }

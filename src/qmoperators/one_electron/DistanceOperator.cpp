@@ -34,11 +34,9 @@ void DistancePotential::setup(double prec) {
         return std::pow(f_r, p);
     };
 
-    Timer timer;
     V.alloc(NUMBER::Real);
     mrcpp::build_grid(V.real(), this->func);
     mrcpp::project<3>(this->apply_prec, V.real(), f);
-    print_utils::qmfunction(3, "Distance potential", V, timer);
 }
 
 void DistancePotential::clear() {

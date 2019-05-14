@@ -28,7 +28,6 @@ Orbital QMNabla::apply(Orbital inp) {
 
     Orbital out = inp.paramCopy();
 
-    Timer timer;
     // Calc real part
     if (inp.hasReal()) {
         out.alloc(NUMBER::Real);
@@ -40,7 +39,6 @@ Orbital QMNabla::apply(Orbital inp) {
         mrcpp::apply(out.imag(), D, inp.imag(), dir);
         if (inp.conjugate()) out.imag().rescale(-1.0);
     }
-    print_utils::qmfunction(1, "Applied QMNabla", out, timer);
 
     return out;
 }

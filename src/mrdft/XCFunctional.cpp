@@ -354,7 +354,6 @@ void XCFunctional::clear() {
  */
 void XCFunctional::setupXCInput() {
     if (xcInput.size() != 0) MSG_ERROR("XC input not empty");
-    println(3, "Preprocessing");
 
     int nInp = getInputLength();
     int nUsed = setupXCInputDensity();
@@ -436,8 +435,6 @@ void XCFunctional::evaluate() {
     if (xcOutput.size() == 0) MSG_ERROR("XC output not initialized");
 
     Timer timer;
-    println(3, "Evaluating");
-
     int nInp = getInputLength();
     int nOut = getOutputLength();
 

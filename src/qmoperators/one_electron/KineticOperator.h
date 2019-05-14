@@ -23,6 +23,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &t = (*this);
         t = 0.5 * (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+        t.name() = "T";
     }
 
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);

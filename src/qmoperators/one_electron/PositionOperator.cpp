@@ -23,10 +23,7 @@ void PositionPotential::setup(double prec) {
     QMPotential &V = *this;
     if (V.hasReal()) MSG_ERROR("Potential not properly cleared");
     if (V.hasImag()) MSG_ERROR("Potential not properly cleared");
-
-    Timer timer;
     qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-    print_utils::qmfunction(3, "PositionPotential", V, timer);
 }
 
 void PositionPotential::clear() {

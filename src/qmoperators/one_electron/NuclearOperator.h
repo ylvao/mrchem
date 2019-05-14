@@ -32,6 +32,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &v = (*this);
         v = r_m1;
+        v.name() = "V_nuc";
     }
 
     Nuclei &getNuclei() { return this->r_m1->getNuclei(); }

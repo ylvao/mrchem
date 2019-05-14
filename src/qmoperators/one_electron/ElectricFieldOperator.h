@@ -34,6 +34,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &HEF = (*this);
         HEF = -f[0] * d_x - f[1] * d_y - f[2] * d_z;
+        HEF.name() = "E . mu_E";
     }
     ElectricFieldOperator(const Eigen::Vector3d &f, const mrcpp::Coord<3> &o)
             : field(f)
@@ -45,6 +46,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &HEF = (*this);
         HEF = -f[0] * d_x - f[1] * d_y - f[2] * d_z;
+        HEF.name() = "E . mu_E";
     }
 
     /** @brief returns the total nuclear contribution to the interaction

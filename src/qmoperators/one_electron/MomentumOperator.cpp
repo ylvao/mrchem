@@ -28,7 +28,6 @@ Orbital QMMomentum::apply(Orbital inp) {
 
     Orbital out = inp.paramCopy();
 
-    Timer timer;
     // Calc real part
     if (inp.hasImag()) {
         out.alloc(NUMBER::Real);
@@ -41,7 +40,6 @@ Orbital QMMomentum::apply(Orbital inp) {
         mrcpp::apply(out.imag(), D, inp.real(), dir);
         out.imag().rescale(-1.0);
     }
-    print_utils::qmfunction(3, "Applied QMMomentum", out, timer);
 
     return out;
 }

@@ -26,6 +26,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &h = (*this);
         h = I;
+        h.name() = "I";
     }
 
     ComplexDouble operator()(Orbital bra, Orbital ket);
