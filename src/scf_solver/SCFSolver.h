@@ -84,6 +84,7 @@ protected:
     void printConvergenceHeader() const;
     void printConvergenceRow(int i) const;
     void printOrbitals(const DoubleVector &norms, const DoubleVector &errors, const OrbitalVector &Phi, int flag) const;
+    void printMemory() const;
 };
 
 } // namespace mrchem

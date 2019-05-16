@@ -158,7 +158,7 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         if (plevel < 1) printConvergenceRow(nIter);
         printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        mrcpp::print::separator(2, ' ', 1);
+        printMemory();
         mrcpp::print::footer(1, t_lap, 2, '#');
         mrcpp::print::separator(2, ' ', 2);
 

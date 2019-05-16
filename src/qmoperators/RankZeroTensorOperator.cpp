@@ -156,7 +156,6 @@ void RankZeroTensorOperator::setup(double prec) {
 /** @brief run clear on all operators in the expansion
  */
 void RankZeroTensorOperator::clear() {
-    this->name() = "O";
     for (auto &i : this->oper_exp) {
         for (int j = 0; j < i.size(); j++) { i[j]->clear(); }
     }

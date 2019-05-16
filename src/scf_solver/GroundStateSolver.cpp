@@ -95,7 +95,7 @@ void GroundStateSolver::printProperty() const {
     printUpdate(2, " Nuclear energy   ", N_1, N_1 - N_0, this->propThrs);
     mrcpp::print::separator(2, '-');
     printUpdate(1, " Total energy     ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0), this->propThrs);
-    mrcpp::print::separator(2, '=');
+    mrcpp::print::separator(2, '=', 2);
 }
 
 void GroundStateSolver::printParameters(const std::string &calculation) const {

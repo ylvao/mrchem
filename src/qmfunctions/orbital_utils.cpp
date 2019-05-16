@@ -967,8 +967,8 @@ int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string &txt, 
         if (vecStats(4, i) < totMin) totMin = vecStats(4, i);
         vSum += vecStats(2, i);
     }
-    totMax *= 4.0 / (1024.0);
-    totMin *= 4.0 / (1024.0);
+    totMax /= 1024.0;
+    totMin /= 1024.0;
     printout(plevel, "Total orbvec " << static_cast<int>(vSum / 1024));
     printout(plevel, ", Av/MPI " << static_cast<int>(vSum / 1024 / mpi::orb_size));
     printout(plevel, ", Max/MPI " << static_cast<int>(ownSumMax / 1024));

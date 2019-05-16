@@ -25,6 +25,7 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include "MRCPP/utils/details.h"
 
 #include "SCFSolver.h"
 #include "qmfunctions/Orbital.h"
@@ -303,6 +304,31 @@ void SCFSolver::printConvergence(bool converged) const {
         println(0, std::string(w2, ' ') << "SCF did NOT converge!!!");
     }
     mrcpp::print::separator(0, '=', 2);
+}
+
+void SCFSolver::printMemory() const {
+    DoubleVector mem_vec = DoubleVector::Zero(mpi::orb_size);
+    mem_vec(mpi::orb_rank) = static_cast<double>(mrcpp::details::get_memory_usage());
+    mpi::allreduce_vector(mem_vec, mpi::comm_orb);
+
+    std::string mem_unit = "(kB)";
+    if (mem_vec.maxCoeff() > 512.0) {
+        mem_vec.array() /= 1024.0;
+        mem_unit = "(MB)";
+    }
+    if (mem_vec.maxCoeff() > 512.0) {
+        mem_vec.array() /= 1024.0;
+        mem_unit = "(GB)";
+    }
+
+    auto plevel = Printer::getPrintLevel();
+    if (plevel == 1) mrcpp::print::separator(1, '-');
+    mrcpp::print::header(2, "Memory usage");
+    mrcpp::print::value(1, "Total memory current process", mem_vec(mpi::orb_rank), mem_unit, 2, false);
+    mrcpp::print::value(2, "Maximum memory process", mem_vec.maxCoeff(), mem_unit, 2, false);
+    mrcpp::print::value(2, "Minimum memory process", mem_vec.minCoeff(), mem_unit, 2, false);
+    mrcpp::print::value(2, "Average memory process", mem_vec.mean(), mem_unit, 2, false);
+    mrcpp::print::separator(2, '=', 2);
 }
 
 } // namespace mrchem

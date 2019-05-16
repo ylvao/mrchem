@@ -88,10 +88,10 @@ Orbital ExchangePotential::apply(Orbital inp) {
     }
     int i = testPreComputed(inp);
     if (i < 0) {
-        println(3, "On-the-fly exchange");
+        println(4, "On-the-fly exchange");
         return calcExchange(inp);
     } else {
-        println(3, "Precomputed exchange");
+        println(4, "Precomputed exchange");
         Orbital out = this->exchange[i].paramCopy();
         qmfunction::deep_copy(out, this->exchange[i]);
         return out;
