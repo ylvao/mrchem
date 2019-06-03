@@ -215,7 +215,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     { // Computing two-electron part of Fock matrix
         t_lap.start();
         if (j_n != nullptr) W_mat_n += (*j_n)(Phi_np1, Phi_n);
-        if (k_n != nullptr) W_mat_n += exx * (*k_n)(Phi_np1, Phi_n);
+        if (k_n != nullptr) W_mat_n -= exx * (*k_n)(Phi_np1, Phi_n);
         if (xc_n != nullptr) W_mat_n += (*xc_n)(Phi_np1, Phi_n);
         mrcpp::print::time(2, "Fock matrix n", t_lap);
         mrcpp::print::separator(2, '-');
@@ -259,12 +259,12 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
         t_lap.start();
         ComplexMatrix W_mat_1 = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
         if (j_np1 != nullptr) W_mat_1 += (*j_np1)(Phi_n, Phi_n);
-        if (k_np1 != nullptr) W_mat_1 += exx * (*k_np1)(Phi_n, Phi_n);
+        if (k_np1 != nullptr) W_mat_1 -= exx * (*k_np1)(Phi_n, Phi_n);
         if (xc_np1 != nullptr) W_mat_1 += (*xc_np1)(Phi_n, Phi_n);
 
         ComplexMatrix W_mat_2 = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
         if (j_np1 != nullptr) W_mat_2 += (*j_np1)(Phi_n, dPhi_n);
-        if (k_np1 != nullptr) W_mat_2 += exx * (*k_np1)(Phi_n, dPhi_n);
+        if (k_np1 != nullptr) W_mat_2 -= exx * (*k_np1)(Phi_n, dPhi_n);
         if (xc_np1 != nullptr) W_mat_2 += (*xc_np1)(Phi_n, dPhi_n);
 
         W_mat_np1 = W_mat_1 + W_mat_2 + W_mat_2.transpose();
@@ -279,6 +279,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
 
     // Adding up the pieces
     ComplexMatrix dF_mat_n = dV_mat_n + W_mat_np1 - W_mat_n;
+
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Calculating Fock matrix update", t_tot);
 
