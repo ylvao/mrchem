@@ -127,18 +127,17 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
  */
 void Accelerator::push_back(OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatrix *F, ComplexMatrix *dF) {
     Timer t_tot;
-    int nHistory = this->orbitals.size();
-    bool historyIsFull = false;
-    if (nHistory >= this->maxHistory) { historyIsFull = true; }
+    auto nHistory = static_cast<int>(this->orbitals.size());
     if (F != nullptr) {
         if (dF == nullptr) MSG_ERROR("Need to give both F and dF");
         if (this->fock.size() != nHistory) MSG_ERROR("Size mismatch orbitals vs matrices");
     }
 
-    if (this->orbitals.size() > this->maxHistory - 1) this->orbitals.pop_front();
-    if (this->dOrbitals.size() > this->maxHistory - 1) this->dOrbitals.pop_front();
-    if (this->fock.size() > this->maxHistory - 1) this->fock.pop_front();
-    if (this->dFock.size() > this->maxHistory - 1) this->dFock.pop_front();
+    auto historyIsFull = (nHistory >= this->maxHistory) ? true : false;
+    if (historyIsFull and this->orbitals.size() > 0) this->orbitals.pop_front();
+    if (historyIsFull and this->dOrbitals.size() > 0) this->dOrbitals.pop_front();
+    if (historyIsFull and this->fock.size() > 0) this->fock.pop_front();
+    if (historyIsFull and this->dFock.size() > 0) this->dFock.pop_front();
 
     if (not verifyOverlap(Phi)) {
         println(2, " Clearing accelerator");
