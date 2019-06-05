@@ -29,6 +29,8 @@
 #include "EnergyOptimizer.h"
 #include "HelmholtzVector.h"
 
+#include "chemistry/Molecule.h"
+
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
@@ -62,30 +64,40 @@ namespace mrchem {
  *
  * Post SCF: diagonalize/localize orbitals
  */
-bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexMatrix &F_mat_n) {
-    double orb_prec = this->orbPrec[0];
-    double err_o = orbital::get_errors(Phi_n).maxCoeff();
-    double err_t = 1.0;
+bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
+    printParameters("Optimize energy (kinetic free)");
+
+    SCFEnergy &E_n = mol.getSCFEnergy();
+    OrbitalVector &Phi_n = mol.getOrbitals();
+    ComplexMatrix &F_mat_n = mol.getFockMatrix();
+
+    DoubleVector errors = DoubleVector::Ones(Phi_n.size());
+    double err_o = errors.maxCoeff();
+    double err_t = errors.norm();
     double err_p = 1.0;
 
-    if (this->canonical) {
-        orbital::diagonalize(orb_prec, Phi_n, F_mat_n);
-    } else {
-        orbital::localize(orb_prec, Phi_n, F_mat_n);
+    this->error.push_back(err_t);
+    this->energy.push_back(E_n);
+    this->property.push_back(E_n.getTotalEnergy());
+
+    auto plevel = Printer::getPrintLevel();
+    if (plevel < 1) {
+        printConvergenceHeader();
+        printConvergenceRow(0);
     }
 
     int nIter = 0;
     bool converged = false;
     while (nIter++ < this->maxIter or this->maxIter < 0) {
-        // Initialize SCF cycle
-        Timer timer;
-        printCycleHeader(nIter);
-        orb_prec = adjustPrecision(err_o);
+        std::stringstream o_header;
+        o_header << "SCF cycle " << nIter;
+        mrcpp::print::header(1, o_header.str(), 0, '#');
+        mrcpp::print::separator(2, ' ', 1);
 
-        // Compute electronic energy
-        F_n.setup(orb_prec);
-        double E = calcProperty(F_n, Phi_n, F_mat_n);
-        this->property.push_back(E);
+        // Initialize SCF cycle
+        Timer t_lap;
+        double orb_prec = adjustPrecision(err_o);
+        if (nIter < 2) F_n.setup(orb_prec);
 
         // Apply Helmholtz operator
         HelmholtzVector H(orb_prec, F_mat_n.real().diagonal());
@@ -97,12 +109,11 @@ bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexM
         OrbitalVector dPhi_n = orbital::add(1.0, Phi_np1, -1.0, Phi_n);
 
         // Compute errors
-        DoubleVector errors = orbital::get_norms(dPhi_n);
+        errors = orbital::get_norms(dPhi_n);
         err_o = errors.maxCoeff();
         err_t = errors.norm();
         err_p = calcPropertyError();
         converged = checkConvergence(err_o, err_p);
-        this->orbError.push_back(err_t);
 
         // Compute Fock matrix
         ComplexMatrix dS_1 = orbital::calc_overlap_matrix(dPhi_n, Phi_n);
@@ -126,21 +137,33 @@ bool EnergyOptimizer::optimize(FockOperator &F_n, OrbitalVector &Phi_n, ComplexM
         F_mat_n = U_mat * F_mat_sym * U_mat.adjoint();
         Phi_np1.clear();
 
-        orbital::set_errors(Phi_n, errors);
+        // Compute energy
+        F_n.setup(orb_prec);
+        E_n = F_n.trace(Phi_n, F_mat_n);
 
-        timer.stop();
-        printOrbitals(F_mat_n.real().diagonal(), Phi_n, 0);
+        if (converged) {
+            if (localize) {
+                orbital::localize(orb_prec, Phi_n, F_mat_n);
+            } else {
+                orbital::diagonalize(orb_prec, Phi_n, F_mat_n);
+            }
+        }
+
+        // Collect convergence data
+        this->error.push_back(err_t);
+        this->energy.push_back(E_n);
+        this->property.push_back(E_n.getTotalEnergy());
+
+        if (plevel < 1) printConvergenceRow(nIter);
+        printOrbitals(F_mat_n.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        printCycleFooter(timer.getWallTime());
+        mrcpp::print::separator(2, ' ', 1);
+        mrcpp::print::footer(1, t_lap, 2, '#');
+        mrcpp::print::separator(2, ' ', 2);
 
         if (converged) break;
     }
-
-    if (this->canonical) {
-        orbital::diagonalize(orb_prec, Phi_n, F_mat_n);
-    } else {
-        orbital::localize(orb_prec, Phi_n, F_mat_n);
-    }
+    F_n.clear();
 
     printConvergence(converged);
     reset();
@@ -168,76 +191,84 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
                                                     OrbitalVector &Phi_np1,
                                                     OrbitalVector &Phi_n,
                                                     OrbitalVector &dPhi_n) {
-    Printer::printHeader(0, "Computing Fock matrix update");
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Computing Fock matrix update");
 
-    Timer timer;
     auto v_n = F_n.getNuclearOperator();
     auto j_n = F_n.getCoulombOperator();
     auto k_n = F_n.getExchangeOperator();
     auto xc_n = F_n.getXCOperator();
 
+    auto exx = 1.0;
+    if (xc_n != nullptr) exx = xc_n->getFunctional()->amountEXX();
+
     ComplexMatrix dV_mat_n;
     { // Nuclear potential matrix is computed explicitly
-        Timer timer;
+        t_lap.start();
         dV_mat_n = (*v_n)(Phi_np1, dPhi_n);
-        timer.stop();
-        double t = timer.getWallTime();
-        Printer::printDouble(0, "Nuclear potential matrix", t, 5);
+        mrcpp::print::time(2, "Nuclear potential matrix", t_lap);
+        mrcpp::print::separator(2, '-');
     }
 
-    ComplexMatrix W_mat_n;
+    ComplexMatrix W_mat_n = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
     { // Computing two-electron part of Fock matrix
-        Timer timer;
-        FockOperator W_n(nullptr, nullptr, j_n, k_n, xc_n);
-        W_n.build();
-        W_mat_n = W_n(Phi_np1, Phi_n);
-        timer.stop();
-        double t = timer.getWallTime();
-        Printer::printDouble(0, "Fock matrix n", t, 5);
+        t_lap.start();
+        if (j_n != nullptr) W_mat_n += (*j_n)(Phi_np1, Phi_n);
+        if (k_n != nullptr) W_mat_n -= exx * (*k_n)(Phi_np1, Phi_n);
+        if (xc_n != nullptr) W_mat_n += (*xc_n)(Phi_np1, Phi_n);
+        mrcpp::print::time(2, "Fock matrix n", t_lap);
+        mrcpp::print::separator(2, '-');
     }
 
     { // The n+1 Fock operator needs orthonormalized orbitals
+        t_lap.start();
         ComplexMatrix U_mat = orbital::calc_lowdin_matrix(Phi_np1);
         Phi_np1 = orbital::rotate(U_mat, Phi_np1, prec);
+        mrcpp::print::time(1, "Orthonormalize n+1", t_lap);
+        mrcpp::print::separator(2, '-');
     }
 
-    auto Phi_p = std::make_shared<OrbitalVector>();
-    *Phi_p = Phi_np1;
-
-    println(0, "                                                            ");
-    double exx = 1.0;
     std::shared_ptr<CoulombOperator> j_np1{nullptr};
     std::shared_ptr<ExchangeOperator> k_np1{nullptr};
     std::shared_ptr<XCOperator> xc_np1{nullptr};
-    if (j_n != nullptr) {
-        j_np1 = std::make_shared<CoulombOperator>(j_n->getPoisson(), Phi_p);
-        j_np1->setup(prec);
+    { // Setup Fock operator n+1
+        t_lap.start();
+        auto Phi_p = std::make_shared<OrbitalVector>();
+        *Phi_p = Phi_np1;
+
+        if (j_n != nullptr) {
+            j_np1 = std::make_shared<CoulombOperator>(j_n->getPoisson(), Phi_p);
+            j_np1->setup(prec);
+        }
+        if (k_n != nullptr) {
+            // Do not setup internal exchange, it must be applied on the fly anyway
+            k_np1 = std::make_shared<ExchangeOperator>(k_n->getPoisson(), Phi_p);
+            k_np1->setup(prec);
+        }
+        if (xc_n != nullptr) {
+            xc_np1 = std::make_shared<XCOperator>(xc_n->getFunctional(), Phi_p);
+            xc_np1->setup(prec);
+        }
+        mrcpp::print::time(2, "Fock operator n+1", t_lap);
+        mrcpp::print::separator(2, '-');
     }
-    if (k_n != nullptr) {
-        // Do not setup internal exchange, it must be applied on the fly anyway
-        k_np1 = std::make_shared<ExchangeOperator>(k_n->getPoisson(), Phi_p);
-        k_np1->setup(prec);
-    }
-    if (xc_n != nullptr) {
-        xc_np1 = std::make_shared<XCOperator>(xc_n->getFunctional(), Phi_p);
-        xc_np1->setup(prec);
-        exx = xc_n->getFunctional()->amountEXX();
-    }
-    println(0, "                                                            ");
 
     ComplexMatrix W_mat_np1;
     { // Computing potential matrix excluding nuclear part
-        Timer timer;
-        FockOperator W_np1(nullptr, nullptr, j_np1, k_np1, xc_np1);
-        W_np1.build(exx);
+        t_lap.start();
+        ComplexMatrix W_mat_1 = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
+        if (j_np1 != nullptr) W_mat_1 += (*j_np1)(Phi_n, Phi_n);
+        if (k_np1 != nullptr) W_mat_1 -= exx * (*k_np1)(Phi_n, Phi_n);
+        if (xc_np1 != nullptr) W_mat_1 += (*xc_np1)(Phi_n, Phi_n);
 
-        ComplexMatrix W_mat_1 = W_np1(Phi_n, Phi_n);
-        ComplexMatrix W_mat_2 = W_np1(Phi_n, dPhi_n);
+        ComplexMatrix W_mat_2 = ComplexMatrix::Zero(Phi_n.size(), Phi_n.size());
+        if (j_np1 != nullptr) W_mat_2 += (*j_np1)(Phi_n, dPhi_n);
+        if (k_np1 != nullptr) W_mat_2 -= exx * (*k_np1)(Phi_n, dPhi_n);
+        if (xc_np1 != nullptr) W_mat_2 += (*xc_np1)(Phi_n, dPhi_n);
+
         W_mat_np1 = W_mat_1 + W_mat_2 + W_mat_2.transpose();
-
-        timer.stop();
-        double t = timer.getWallTime();
-        Printer::printDouble(0, "Fock matrix n+1", t, 5);
+        mrcpp::print::time(2, "Fock matrix n+1", t_lap);
     }
     if (j_np1 != nullptr) j_np1->clear();
     if (k_np1 != nullptr) k_np1->clear();
@@ -249,8 +280,9 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     // Adding up the pieces
     ComplexMatrix dF_mat_n = dV_mat_n + W_mat_np1 - W_mat_n;
 
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Calculating Fock matrix update", t_tot);
+
     return dF_mat_n;
 }
 

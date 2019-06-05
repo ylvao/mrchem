@@ -87,7 +87,7 @@ void Accelerator::clearLinearSystem() {
  * set or not.
  */
 void Accelerator::rotate(const ComplexMatrix &U, bool all) {
-    Timer timer;
+    Timer t_tot;
     int nOrbs = this->orbitals.size() - 1;
     int nFock = this->fock.size() - 1;
     if (all) {
@@ -108,10 +108,7 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
         F = U * F * U.transpose();
         dF = U * dF * U.transpose();
     }
-
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Rotating iterative subspace", t, 5);
+    mrcpp::print::time(2, "Rotating iterative subspace", t_tot);
 }
 
 /** @brief Update iterative history with the latest orbitals and updates
@@ -128,28 +125,22 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
  * input, the matrices are included in the subspace. If the length
  * of the history exceed maxHistory the oldest orbitals are discarded.
  */
-// clang-format off
-void Accelerator::push_back(OrbitalVector &Phi,
-                            OrbitalVector &dPhi,
-                            ComplexMatrix *F,
-                            ComplexMatrix *dF) {
-    // clang-format on
-    Timer timer;
-    int nHistory = this->orbitals.size();
-    bool historyIsFull = false;
-    if (nHistory >= this->maxHistory) { historyIsFull = true; }
+void Accelerator::push_back(OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatrix *F, ComplexMatrix *dF) {
+    Timer t_tot;
+    auto nHistory = static_cast<int>(this->orbitals.size());
     if (F != nullptr) {
-        if (dF == nullptr) { MSG_ERROR("Need to give both F and dF"); }
-        if (this->fock.size() != nHistory) { MSG_ERROR("Size mismatch orbitals vs matrices"); }
+        if (dF == nullptr) MSG_ERROR("Need to give both F and dF");
+        if (this->fock.size() != nHistory) MSG_ERROR("Size mismatch orbitals vs matrices");
     }
 
-    if (this->orbitals.size() > this->maxHistory - 1) this->orbitals.pop_front();
-    if (this->dOrbitals.size() > this->maxHistory - 1) this->dOrbitals.pop_front();
-    if (this->fock.size() > this->maxHistory - 1) this->fock.pop_front();
-    if (this->dFock.size() > this->maxHistory - 1) this->dFock.pop_front();
+    auto historyIsFull = (nHistory >= this->maxHistory) ? true : false;
+    if (historyIsFull and this->orbitals.size() > 0) this->orbitals.pop_front();
+    if (historyIsFull and this->dOrbitals.size() > 0) this->dOrbitals.pop_front();
+    if (historyIsFull and this->fock.size() > 0) this->fock.pop_front();
+    if (historyIsFull and this->dFock.size() > 0) this->dFock.pop_front();
 
     if (not verifyOverlap(Phi)) {
-        println(0, " Clearing accelerator");
+        println(2, " Clearing accelerator");
         this->clear();
     }
 
@@ -161,9 +152,7 @@ void Accelerator::push_back(OrbitalVector &Phi,
     Phi.clear();
     dPhi.clear();
 
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Push back orbitals", t, 5);
+    mrcpp::print::time(2, "Push back orbitals", t_tot);
 }
 
 /** @brief Verify that the orbital overlap between the two last iterations is positive.
@@ -183,11 +172,11 @@ bool Accelerator::verifyOverlap(OrbitalVector &Phi) {
             Orbital &phi_i = Phi[i];
             if (mpi::my_orb(phi_i)) {
                 Orbital &last_i = this->orbitals[nHistory][i];
-                if (not mpi::my_orb(last_i)) MSG_FATAL("MPI rank mismatch");
+                if (not mpi::my_orb(last_i)) MSG_ABORT("MPI rank mismatch");
                 double sqNorm = phi_i.squaredNorm();
                 ComplexDouble overlap = orbital::dot(phi_i, last_i);
                 if (std::abs(overlap) < 0.5 * sqNorm) {
-                    Printer::printDouble(0, "Overlap not verified ", std::abs(overlap));
+                    mrcpp::print::value(2, "Overlap not verified ", std::abs(overlap));
                     out(i) = 1;
                 }
             }
@@ -218,9 +207,10 @@ void Accelerator::accelerate(double prec,
                              OrbitalVector &dPhi,
                              ComplexMatrix *F,
                              ComplexMatrix *dF) {
-    Printer::printHeader(0, "Iterative subspace accelerator");
+    Timer t_tot;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Iterative subspace accelerator");
 
-    Timer timer;
     this->push_back(Phi, dPhi, F, dF);
 
     int nHistory = this->orbitals.size() - 1;
@@ -233,8 +223,9 @@ void Accelerator::accelerate(double prec,
         expandSolution(prec, Phi, dPhi, F, dF);
         clearLinearSystem();
     }
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
+    printSizeNodes();
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Iterative subspace accelerator", t_tot);
 }
 
 /** @brief Solve the linear system of equations
@@ -243,16 +234,14 @@ void Accelerator::accelerate(double prec,
  * coefficients \f$ c \f$ of the next step.
  */
 void Accelerator::solveLinearSystem() {
-    Timer timer;
+    Timer t_tot;
     this->c.clear();
     int N = this->A.size();
     for (int n = 0; n < N; n++) {
         DoubleVector tmpC = this->A[n].colPivHouseholderQr().solve(this->b[n]);
         this->c.push_back(tmpC);
     }
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Solve linear system", t, 5);
+    mrcpp::print::time(2, "Solve linear system", t_tot);
 }
 
 /** @brief Copy orbitals at the given point in history into the given set.
@@ -264,15 +253,12 @@ void Accelerator::solveLinearSystem() {
  * zero history input returns latest orbital set.
  */
 void Accelerator::copyOrbitals(OrbitalVector &Phi, int nHistory) {
-    Timer timer;
+    Timer t_tot;
     int totHistory = this->orbitals.size();
-    if (nHistory >= totHistory or nHistory < 0) { MSG_FATAL("Requested orbitals unavailable"); }
+    if (nHistory >= totHistory or nHistory < 0) MSG_ABORT("Requested orbitals unavailable");
     int n = totHistory - 1 - nHistory;
     Phi = orbital::deep_copy(this->orbitals[n]);
-
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Copy orbitals", t, 5);
+    mrcpp::print::time(2, "Copy orbitals", t_tot);
 }
 
 /** @brief Copy orbital updates at the given point in history into the given set.
@@ -283,15 +269,12 @@ void Accelerator::copyOrbitals(OrbitalVector &Phi, int nHistory) {
  * Input set is overwritten if it contains orbitals. Counts backwards,
  * zero history input returns latest orbital set. */
 void Accelerator::copyOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
-    Timer timer;
+    Timer t_tot;
     int totHistory = this->dOrbitals.size();
-    if (nHistory >= totHistory or nHistory < 0) { MSG_FATAL("Requested orbitals unavailable"); }
+    if (nHistory >= totHistory or nHistory < 0) MSG_ABORT("Requested orbitals unavailable");
     int n = totHistory - 1 - nHistory;
     dPhi = orbital::deep_copy(this->dOrbitals[n]);
-
-    timer.stop();
-    double t = timer.getWallTime();
-    Printer::printDouble(0, "Copy orbital updates", t, 5);
+    mrcpp::print::time(2, "Copy orbital updates", t_tot);
 }
 
 /** @brief Replaces the orbital set from a given point in history.
@@ -305,7 +288,7 @@ void Accelerator::replaceOrbitals(OrbitalVector &Phi, int nHistory) {
     NOT_IMPLEMENTED_ABORT;
     //    int totHistory = this->orbitals.size();
     //    if (nHistory >= totHistory or nHistory < 0) {
-    //        MSG_FATAL("Requested orbitals unavailable");
+    //        MSG_ABORT("Requested orbitals unavailable");
     //    }
     //    int n = totHistory - 1 - nHistory;
 
@@ -327,7 +310,7 @@ void Accelerator::replaceOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
     NOT_IMPLEMENTED_ABORT;
     //    int totHistory = this->dOrbitals.size();
     //    if (nHistory >= totHistory or nHistory < 0) {
-    //        MSG_FATAL("Requested orbitals unavailable");
+    //        MSG_ABORT("Requested orbitals unavailable");
     //    }
     //    int n = totHistory - 1 - nHistory;
 
@@ -347,10 +330,7 @@ void Accelerator::replaceOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
  * If orbitals are not separated these are added up to one final A matrix and
  * b vector, otherwise all individual entries are kept.
  */
-// clang-format off
-void Accelerator::sortLinearSystem(std::vector<DoubleMatrix> &A_matrices,
-                                   std::vector<DoubleVector> &b_vectors) {
-    // clang-format on
+void Accelerator::sortLinearSystem(std::vector<DoubleMatrix> &A_matrices, std::vector<DoubleVector> &b_vectors) {
     int nOrbs = b_vectors.size();
     int nHist = b_vectors[0].size();
 
@@ -376,19 +356,20 @@ void Accelerator::sortLinearSystem(std::vector<DoubleMatrix> &A_matrices,
 }
 
 /** @brief Prints the number of trees and nodes kept in the iterative history */
-int Accelerator::printTreeSizes() const {
-    int totNodes = 0;
-    int totTrees = 0;
-    for (const auto &orbital : this->orbitals) {
-        totTrees += orbital.size();
-        totNodes += orbital::get_n_nodes(orbital);
+void Accelerator::printSizeNodes() const {
+    int n = 0, m = 0;
+    for (const auto &orbs_i : this->orbitals) {
+        n += orbital::get_n_nodes(orbs_i);
+        m += orbital::get_size_nodes(orbs_i);
     }
-    for (const auto &dOrbital : this->dOrbitals) {
-        totTrees += dOrbital.size();
-        totNodes += orbital::get_n_nodes(dOrbital);
+    int dn = 0, dm = 0;
+    for (const auto &orbs_i : this->dOrbitals) {
+        dn += orbital::get_n_nodes(orbs_i);
+        dm += orbital::get_size_nodes(orbs_i);
     }
-    println(0, " Accelerator       " << std::setw(15) << totTrees << std::setw(25) << totNodes);
-    return totNodes;
+    mrcpp::print::separator(2, '-');
+    mrcpp::print::tree(2, "Orbital sizes", n, m, 0.0);
+    mrcpp::print::tree(2, "Update sizes", dn, dm, 0.0);
 }
 
 } // namespace mrchem

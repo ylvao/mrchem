@@ -68,14 +68,23 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const Molecule &mol,
                                         const std::string &bas_file,
                                         const std::string &mo_file) {
+    std::stringstream o_prec;
+    o_prec << std::setprecision(5) << std::scientific << prec;
+    mrcpp::print::separator(0, '~');
+    print_utils::text(0, "Calculation ", "Reading Gaussian-type MOs");
+    print_utils::text(0, "Precision   ", o_prec.str());
+    print_utils::text(0, "Restricted  ", "True");
+    print_utils::text(0, "Basis file  ", bas_file);
+    print_utils::text(0, "MO file     ", mo_file);
+    mrcpp::print::separator(0, '~', 2);
+
     // Figure out number of occupied orbitals
     int mult = mol.getMultiplicity(); // multiplicity
     int Ne = mol.getNElectrons();     // total electrons
     int Nd = Ne - (mult - 1);         // doubly occupied electrons
-    if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
+    if (Nd % 2 != 0) MSG_ABORT("Invalid multiplicity");
     int Np = Nd / 2; // paired orbitals
 
-    // Project GTO expansion
     return initial_guess::gto::project_mo(prec, bas_file, mo_file, SPIN::Paired, Np);
 }
 
@@ -101,17 +110,27 @@ OrbitalVector initial_guess::gto::setup(double prec,
                                         const std::string &bas_file,
                                         const std::string &moa_file,
                                         const std::string &mob_file) {
+    std::stringstream o_prec;
+    o_prec << std::setprecision(5) << std::scientific << prec;
+    mrcpp::print::separator(0, '~');
+    print_utils::text(0, "Calculation   ", "Reading Gaussian-type MOs");
+    print_utils::text(0, "Precision     ", o_prec.str());
+    print_utils::text(0, "Restricted    ", "False");
+    print_utils::text(0, "Basis file    ", bas_file);
+    print_utils::text(0, "MO alpha file ", moa_file);
+    print_utils::text(0, "MO beta file  ", mob_file);
+    mrcpp::print::separator(0, '~', 2);
+
     // Figure out number of occupied orbitals
     int mult = mol.getMultiplicity(); // multiplicity
     int Ne = mol.getNElectrons();     // total electrons
     int Nd = Ne - (mult - 1);         // paired electrons
-    if (Nd % 2 != 0) MSG_FATAL("Invalid multiplicity");
+    if (Nd % 2 != 0) MSG_ABORT("Invalid multiplicity");
     int Na = Nd / 2 + (mult - 1); // alpha orbitals
     int Nb = Nd / 2;              // beta orbitals
 
-    // Project orbitals
-    OrbitalVector Phi_a = initial_guess::gto::project_mo(prec, bas_file, moa_file, SPIN::Alpha, Na);
-    OrbitalVector Phi_b = initial_guess::gto::project_mo(prec, bas_file, mob_file, SPIN::Beta, Nb);
+    auto Phi_a = initial_guess::gto::project_mo(prec, bas_file, moa_file, SPIN::Alpha, Na);
+    auto Phi_b = initial_guess::gto::project_mo(prec, bas_file, mob_file, SPIN::Beta, Nb);
 
     // Collect orbitals into one vector
     return orbital::adjoin(Phi_a, Phi_b);
@@ -136,39 +155,64 @@ OrbitalVector initial_guess::gto::project_mo(double prec,
                                              const std::string &mo_file,
                                              int spin,
                                              int N) {
-    Printer::printHeader(0, "Setting up Gaussian-type MOs");
-    println(0, "    n  Spin  Occ                           SquareNorm");
-    Printer::printSeparator(0, '-');
-    Timer timer;
+    Timer t_tot;
+    auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth() - 2;
+    auto w1 = 5;
+    auto w2 = w0 * 2 / 9;
+    auto w3 = w0 - w1 - 3 * w2;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w3) << "Norm";
+    o_head << std::setw(w2 + 1) << "Nodes";
+    o_head << std::setw(w2) << "Size";
+    o_head << std::setw(w2) << "Time";
+
+    std::string title = "GTO Initial Guess";
+    if (spin == SPIN::Alpha) title += " (alpha)";
+    if (spin == SPIN::Beta) title += " (beta)";
+
+    mrcpp::print::header(1, title);
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
 
     // Setup AO basis
+    Timer t1;
     gto_utils::Intgrl intgrl(bas_file);
     gto_utils::OrbitalExp gto_exp(intgrl);
     if (N < 0) N = gto_exp.size();
+    t1.stop();
 
     // Read MO file (transpose)
+    Timer t2;
     DoubleMatrix MO = math_utils::read_matrix_file(mo_file);
-    if (MO.cols() < N) MSG_FATAL("Size mismatch");
+    if (MO.cols() < N) MSG_ABORT("Size mismatch");
+    t2.stop();
 
+    Timer t3;
     OrbitalVector Phi;
     for (int i = 0; i < N; i++) Phi.push_back(Orbital(spin));
     mpi::distribute(Phi);
 
     for (int i = 0; i < N; i++) {
+        Timer t_i;
         if (mpi::my_orb(Phi[i])) {
             GaussExp<3> mo_i = gto_exp.getMO(i, MO.transpose());
             Phi[i].alloc(NUMBER::Real);
             mrcpp::project(prec, Phi[i].real(), mo_i);
         }
-        printout(0, std::setw(5) << i);
-        printout(0, std::setw(5) << Phi[i].printSpin());
-        printout(0, std::setw(5) << Phi[i].occ());
-        printout(0, std::setw(44) << Phi[i].norm() << std::endl);
+        std::stringstream o_txt;
+        o_txt << std::setw(w1 - 1) << i;
+        o_txt << std::setw(w3) << std::setprecision(pprec) << std::scientific << Phi[i].norm();
+        print_utils::qmfunction(2, o_txt.str(), Phi[i], t_i);
     }
     mpi::barrier(mpi::comm_orb);
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
-
+    mrcpp::print::separator(2, '-');
+    mrcpp::print::time(1, "Reading AO basis", t1);
+    mrcpp::print::time(1, "Reading MO matrix", t2);
+    mrcpp::print::time(1, "Projecting GTO MOs", t3);
+    mrcpp::print::footer(1, t_tot, 2);
     return Phi;
 }
 
@@ -186,9 +230,9 @@ OrbitalVector initial_guess::gto::project_mo(double prec,
  *
  */
 OrbitalVector initial_guess::gto::project_ao(double prec, const std::string &bas_file, int spin, int N) {
-    Printer::printHeader(0, "Setting up Gaussian-type AOs");
-    println(0, "    n  Spin  Occ                           SquareNorm");
-    Printer::printSeparator(0, '-');
+    mrcpp::print::header(0, "Setting up Gaussian-type AOs");
+    println(1, "    n  Spin  Occ                           SquareNorm");
+    mrcpp::print::separator(0, '-');
     Timer timer;
 
     // Setup AO basis
@@ -209,7 +253,7 @@ OrbitalVector initial_guess::gto::project_ao(double prec, const std::string &bas
     }
     mpi::barrier(mpi::comm_orb);
     timer.stop();
-    Printer::printFooter(0, timer, 2);
+    mrcpp::print::footer(0, timer, 2);
 
     return Phi;
 }

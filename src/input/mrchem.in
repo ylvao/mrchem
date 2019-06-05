@@ -70,7 +70,9 @@ def main():
 
     if not dryrun:
         cmd = executable + ' ' + xfile
-        p = subprocess.call(cmd, shell=True)
+        if program_dict["printer"]["print_input"]:
+            subprocess.call('cat ' + inp_file_cmd, shell=True)
+        subprocess.call(cmd, shell=True)
 
 def parse_cmdline():
     usage = "usage: %prog [options] [config] inp_file"
@@ -191,12 +193,7 @@ def write_mra(program_dict, user_dict):
   }
 
 def write_printer(program_dict, user_dict):
-  program_dict["printer"] = {
-    "filename": "mrchem",
-    "printprec": 15,
-    "printlevel": user_dict["printlevel"],
-    "teletype": user_dict["teletype"]
-  }
+  program_dict["printer"] = user_dict["Printer"]
 
 def write_molecule(program_dict, user_dict):
   AA = 1.0
@@ -254,8 +251,6 @@ def write_initial_guess(program_dict, user_dict):
 
 def write_scf_calculation(program_dict, user_dict):
   scf_dict = {
-    "scf_prec": user_dict["rel_prec"],
-    "localize": not user_dict["SCF"]["canonical"],
     "final_orbitals": "orbitals/phi",
     "write_orbitals": user_dict["SCF"]["write_orbitals"],
   }
@@ -268,19 +263,42 @@ def write_scf_calculation(program_dict, user_dict):
   if user_dict["Properties"]["dipole_moment"]:
     scf_dict["properties"] = prop_dict
 
+  method_name = ''
+  if (user_dict["WaveFunction"]["method"].lower() == "hartree"):
+    method_name = 'Hartree'
+  if (user_dict["WaveFunction"]["method"].lower() == "hf"):
+    method_name = 'Hartree-Fock'
+  if (user_dict["WaveFunction"]["method"].lower() == "dft"):
+    method_name = 'DFT'
+
   if user_dict["SCF"]["run"]:
+    scf_dict["initial_energy"] = {
+      "method_name": method_name,
+      "localize": user_dict["SCF"]["localize"],
+      "prec": user_dict["SCF"]["orbital_prec"][0],
+    }
     scf_dict["orbital_solver"] = {
+      "method_name": method_name,
       "kain": user_dict["SCF"]["kain"],
       "max_iter": user_dict["SCF"]["max_iter"],
       "rotation": user_dict["SCF"]["rotation"],
+      "localize": user_dict["SCF"]["localize"],
       "start_prec": user_dict["SCF"]["orbital_prec"][0],
       "final_prec": user_dict["SCF"]["orbital_prec"][1],
       "orbital_thrs": user_dict["SCF"]["orbital_thrs"],
       "property_thrs": user_dict["SCF"]["property_thrs"]
     }
+  else:
+    scf_dict["initial_energy"] = {
+      "method_name": method_name,
+      "localize": user_dict["SCF"]["localize"],
+      "prec": user_dict["SCF"]["orbital_prec"][1],
+    }
   if user_dict["KineticFree"]["run"]:
     scf_dict["energy_solver"] = {
+      "method_name": method_name,
       "max_iter": user_dict["KineticFree"]["max_iter"],
+      "localize": user_dict["KineticFree"]["localize"],
       "start_prec": user_dict["rel_prec"],
       "final_prec": user_dict["rel_prec"],
       "orbital_thrs": user_dict["KineticFree"]["orbital_thrs"],
@@ -364,7 +382,7 @@ def write_rsp_calculations(program_dict, user_dict):
     for omega in user_dict["Polarizability"]["frequency"]:
       rsp_dict = {
         "rsp_prec": user_dict["rel_prec"],
-        "localize": not user_dict["Response"]["canonical"],
+        "localize": user_dict["Response"]["localize"],
         "dynamic": (omega > 1.0e-12),
         "final_orbitals": "orbitals/phi_x",
         "write_orbitals": user_dict["Response"]["write_orbitals"],

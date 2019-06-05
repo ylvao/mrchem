@@ -31,6 +31,9 @@ public:
         v[0] = x_rm3;
         v[1] = y_rm3;
         v[2] = z_rm3;
+        v[0].name() = "x/r^3";
+        v[1].name() = "y/r^3";
+        v[2].name() = "z/r^3";
     }
 
 private:

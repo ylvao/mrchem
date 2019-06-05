@@ -25,10 +25,12 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include "MRCPP/utils/details.h"
 
 #include "parallel.h"
 #include "utils/RRMaximizer.h"
 #include "utils/math_utils.h"
+#include "utils/print_utils.h"
 
 #include "Orbital.h"
 #include "OrbitalIterator.h"
@@ -72,7 +74,7 @@ ComplexDouble orbital::dot(Orbital bra, Orbital ket) {
  *
  */
 ComplexVector orbital::dot(OrbitalVector &Bra, OrbitalVector &Ket) {
-    if (Bra.size() != Ket.size()) MSG_FATAL("Size mismatch");
+    if (Bra.size() != Ket.size()) MSG_ABORT("Size mismatch");
 
     int N = Bra.size();
     ComplexVector result = ComplexVector::Zero(N);
@@ -142,7 +144,7 @@ OrbitalVector orbital::add(ComplexDouble a, OrbitalVector &Phi_a, ComplexDouble 
 
     OrbitalVector out = orbital::param_copy(Phi_a);
     for (int i = 0; i < Phi_a.size(); i++) {
-        if (Phi_a[i].rankID() != Phi_b[i].rankID()) MSG_FATAL("MPI rank mismatch");
+        if (Phi_a[i].rankID() != Phi_b[i].rankID()) MSG_ABORT("MPI rank mismatch");
         qmfunction::add(out[i], a, Phi_a[i], b, Phi_b[i], prec);
     }
     return out;
@@ -264,14 +266,22 @@ OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
  * vector are saved.
  */
 void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const std::string &suffix, int n_orbs) {
+    Timer t_tot;
+    mrcpp::print::header(2, "Writing orbitals");
+    print_utils::text(2, "File name", file);
+    print_utils::text(2, "File suffix", suffix);
+    mrcpp::print::separator(2, '-');
     if (n_orbs < 0) n_orbs = Phi.size();
     if (n_orbs > Phi.size()) MSG_ERROR("Index out of bounds");
     for (int i = 0; i < n_orbs; i++) {
         if (not mpi::my_orb(Phi[i])) continue; // only save own orbitals
+        Timer t1;
         std::stringstream orbname;
         orbname << file << "_" << suffix << i;
         Phi[i].saveOrbital(orbname.str());
+        print_utils::qmfunction(2, "'" + orbname.str() + "'", Phi[i], t1);
     }
+    mrcpp::print::footer(2, t_tot, 2);
 }
 
 /** @brief Read orbitals from disk
@@ -285,9 +295,15 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, const s
  * the prefix name will be read.
  */
 OrbitalVector orbital::load_orbitals(const std::string &file, const std::string &suffix, int n_orbs) {
+    Timer t_tot;
+    mrcpp::print::header(2, "Reading orbitals");
+    print_utils::text(2, "File name", file);
+    print_utils::text(2, "File suffix", suffix);
+    mrcpp::print::separator(2, '-');
     OrbitalVector Phi;
     for (int i = 0; true; i++) {
         if (n_orbs > 0 and i >= n_orbs) break;
+        Timer t1;
         Orbital phi_i;
         std::stringstream orbname;
         orbname << file << "_" << suffix << i;
@@ -296,18 +312,13 @@ OrbitalVector orbital::load_orbitals(const std::string &file, const std::string 
         if (phi_i.hasReal() or phi_i.hasImag()) {
             phi_i.setRankID(i % mpi::orb_size);
             Phi.push_back(phi_i);
+            print_utils::qmfunction(2, "'" + orbname.str() + "'", phi_i, t1);
             if (not mpi::my_orb(phi_i)) phi_i.free(NUMBER::Total);
         } else {
             break;
         }
     }
-    // distribute errors
-    DoubleVector errors = DoubleVector::Zero(Phi.size());
-    for (int i = 0; i < Phi.size(); i++) {
-        if (mpi::my_orb(Phi[i])) errors(i) = Phi[i].error();
-    }
-    mpi::allreduce_vector(errors, mpi::comm_orb);
-    orbital::set_errors(Phi, errors);
+    mrcpp::print::footer(2, t_tot, 2);
     return Phi;
 }
 
@@ -449,11 +460,12 @@ ComplexMatrix orbital::calc_lowdin_matrix(OrbitalVector &Phi) {
 }
 
 ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
-    Printer::printHeader(0, "Localizing orbitals");
-    Timer timer;
+    Timer t_tot;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(1, "Localizing orbitals");
     if (not orbital_vector_is_sane(Phi)) {
         orbital::print(Phi);
-        MSG_FATAL("Orbital vector is not sane");
+        MSG_ABORT("Orbital vector is not sane");
     }
     int nO = Phi.size();
     int nP = size_paired(Phi);
@@ -463,11 +475,11 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &
     if (nP > 0) U.block(0, 0, nP, nP) = localize(prec, Phi, SPIN::Paired);
     if (nA > 0) U.block(nP, nP, nA, nA) = localize(prec, Phi, SPIN::Alpha);
     if (nB > 0) U.block(nP + nA, nP + nA, nB, nB) = localize(prec, Phi, SPIN::Beta);
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
 
     // Transform Fock matrix
     F = U * F * U.adjoint();
+    mrcpp::print::footer(1, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Localizing orbitals", t_tot);
 
     return U;
 }
@@ -486,8 +498,7 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, int spin) {
     Timer rot_t;
     Phi_s = orbital::rotate(U, Phi_s, prec);
     Phi = orbital::adjoin(Phi, Phi_s);
-    rot_t.stop();
-    Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
+    mrcpp::print::time(1, "Rotating orbitals", rot_t);
     return U;
 }
 
@@ -505,30 +516,27 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
     ComplexMatrix U;
     int n_it = 0;
     if (Phi.size() > 1) {
-        Timer rmat;
+        Timer rmat_t;
         RRMaximizer rr(prec, Phi);
-        rmat.stop();
-        Printer::printDouble(0, "Computing position matrices", rmat.getWallTime(), 5);
+        mrcpp::print::time(1, "Computing position matrices", rmat_t);
 
         Timer rr_t;
         n_it = rr.maximize();
-        rr_t.stop();
-        Printer::printDouble(0, "Computing Foster-Boys matrix", rr_t.getWallTime(), 5);
+        mrcpp::print::time(1, "Computing Foster-Boys matrix", rr_t);
 
         if (n_it > 0) {
-            println(0, " Converged after iteration   " << std::setw(30) << n_it);
+            println(1, " Foster-Boys localization converged in " << n_it << " iterations!");
             U = rr.getTotalU().transpose().cast<ComplexDouble>();
         } else {
-            println(0, " Foster-Boys localization did not converge!");
+            println(1, " Foster-Boys localization did not converge!");
         }
     } else {
-        println(0, " Cannot localize less than two orbitals");
+        println(1, " Cannot localize less than two orbitals");
     }
     if (n_it <= 0) {
         Timer orth_t;
         U = orbital::calc_lowdin_matrix(Phi);
-        orth_t.stop();
-        Printer::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime(), 5);
+        mrcpp::print::time(1, "Computing Lowdin matrix", orth_t);
     }
     return U;
 }
@@ -543,14 +551,14 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
  * The transformation matrix is returned.
  */
 ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
-    Printer::printHeader(0, "Digonalizing Fock matrix");
-    Timer timer;
+    Timer t_tot;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Digonalizing Fock matrix");
 
     Timer orth_t;
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
     F = S_m12.transpose() * F * S_m12;
-    orth_t.stop();
-    Printer::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime(), 5);
+    mrcpp::print::time(2, "Computing Lowdin matrix", orth_t);
 
     Timer diag_t;
     ComplexMatrix U = ComplexMatrix::Zero(F.rows(), F.cols());
@@ -561,16 +569,14 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
     if (na > 0) math_utils::diagonalize_block(F, U, np, na);
     if (nb > 0) math_utils::diagonalize_block(F, U, np + na, nb);
     U = U * S_m12;
-    diag_t.stop();
-    Printer::printDouble(0, "Diagonalizing matrix", diag_t.getWallTime(), 5);
+    mrcpp::print::time(2, "Diagonalizing matrix", diag_t);
 
     Timer rot_t;
     Phi = orbital::rotate(U, Phi, prec);
-    rot_t.stop();
-    Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
+    mrcpp::print::time(2, "Rotating orbitals", rot_t);
 
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Diagonalizing Fock matrix", t_tot);
     return U;
 }
 
@@ -582,24 +588,22 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
  * Orbitals are rotated in place, and the transformation matrix is returned.
  */
 ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
-    Printer::printHeader(0, "Lowdin orthonormalization");
-    Timer timer;
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    mrcpp::print::header(2, "Lowdin orthonormalization");
 
-    Timer orth_t;
+    t_lap.start();
     ComplexMatrix U = orbital::calc_lowdin_matrix(Phi);
-    orth_t.stop();
-    Printer::printDouble(0, "Computing Lowdin matrix", orth_t.getWallTime(), 5);
+    mrcpp::print::time(2, "Computing Lowdin matrix", t_lap);
 
-    Timer rot_t;
+    t_lap.start();
     Phi = orbital::rotate(U, Phi, prec);
-    rot_t.stop();
-    Printer::printDouble(0, "Rotating orbitals", rot_t.getWallTime(), 5);
+    mrcpp::print::time(2, "Rotating orbitals", t_lap);
 
     // Transform Fock matrix
     F = U * F * U.adjoint();
-
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Lowdin orthonormalization", t_tot);
 
     return U;
 }
@@ -692,41 +696,15 @@ int orbital::get_electron_number(const OrbitalVector &Phi, int spin) {
 /** @brief Returns the total number of nodes in the vector */
 int orbital::get_n_nodes(const OrbitalVector &Phi) {
     int nNodes = 0;
-    for (auto &phi_i : Phi) nNodes += phi_i.getNNodes(NUMBER::Total);
+    for (const auto &phi_i : Phi) nNodes += phi_i.getNNodes(NUMBER::Total);
     return nNodes;
 }
 
-/** @brief Returns a vector containing the orbital errors */
-DoubleVector orbital::get_errors(const OrbitalVector &Phi) {
-    int nOrbs = Phi.size();
-    DoubleVector errors = DoubleVector::Zero(nOrbs);
-    for (int i = 0; i < nOrbs; i++) errors(i) = Phi[i].error();
-    return errors;
-}
-
 /** @brief Returns the size of the coefficients of all nodes in the vector in kBytes */
-int orbital::get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes) {
-    int nOrbs = Phi.size();
-    int totsize = 0;
-    for (int i = 0; i < nOrbs; i++) {
-        if (Phi[i].hasReal()) {
-            double fac = Phi[i].real().getKp1_d() * 8;                                  // number of coeff in one node
-            fac *= sizeof(double);                                                      // Number of Bytes in one node
-            sNodes[i] = static_cast<int>(fac / 1024 * Phi[i].getNNodes(NUMBER::Total)); // kBytes in one orbital
-            totsize += sNodes[i];
-        }
-    }
-    return totsize;
-}
-
-/** @brief Assign errors to each orbital.
- *
- * Length of input vector must match the number of orbitals in the set.
- *
- */
-void orbital::set_errors(OrbitalVector &Phi, const DoubleVector &errors) {
-    if (Phi.size() != errors.size()) MSG_ERROR("Size mismatch");
-    for (int i = 0; i < Phi.size(); i++) Phi[i].setError(errors(i));
+int orbital::get_size_nodes(const OrbitalVector &Phi) {
+    int tot_size = 0;
+    for (const auto &phi_i : Phi) tot_size += phi_i.getSizeNodes(NUMBER::Total);
+    return tot_size;
 }
 
 /** @brief Returns a vector containing the orbital spins */
@@ -829,39 +807,103 @@ int orbital::start_index(const OrbitalVector &Phi, int spin) {
 }
 
 void orbital::print(const OrbitalVector &Phi) {
-    Printer::setScientific();
-    printout(0, "============================================================\n");
-    printout(0, " OrbitalVector:");
-    printout(0, std::setw(4) << Phi.size() << " orbitals  ");
-    printout(0, std::setw(4) << size_occupied(Phi) << " occupied  ");
-    printout(0, std::setw(4) << get_electron_number(Phi) << " electrons\n");
-    printout(0, "------------------------------------------------------------\n");
-    printout(0, "   n  RankID           Norm          Spin Occ      Error    \n");
-    printout(0, "------------------------------------------------------------\n");
-    for (int i = 0; i < Phi.size(); i++) println(0, std::setw(4) << i << Phi[i]);
-    printout(0, "============================================================\n\n\n");
+    auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = 5;
+    auto w2 = 2 * w0 / 9;
+    auto w3 = w0 - 3 * w1 - 3 * w2;
+
+    auto N_e = orbital::get_electron_number(Phi);
+    auto N_a = orbital::size_alpha(Phi) + orbital::size_paired(Phi);
+    auto N_b = orbital::size_beta(Phi) + orbital::size_paired(Phi);
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w1) << "Occ";
+    o_head << std::setw(w1) << "Spin";
+    o_head << std::string(w3 - 1, ' ') << ':';
+    o_head << std::setw(3 * w2) << "Norm";
+
+    mrcpp::print::header(0, "Molecular Orbitals");
+    print_utils::scalar(0, "Alpha electrons ", N_a, "", 0, false);
+    print_utils::scalar(0, "Beta electrons  ", N_b, "", 0, false);
+    print_utils::scalar(0, "Total electrons ", N_e, "", 0, false);
+    mrcpp::print::separator(0, '-');
+    println(0, o_head.str());
+    mrcpp::print::separator(0, '-');
+
+    auto nodes = 0;
+    auto memory = 0.0;
+    for (int i = 0; i < Phi.size(); i++) {
+        nodes += Phi[i].getNNodes(NUMBER::Total);
+        memory += Phi[i].getSizeNodes(NUMBER::Total) / 1024.0;
+        std::stringstream o_txt;
+        o_txt << std::setw(w1 - 1) << i;
+        o_txt << std::setw(w1) << Phi[i].occ();
+        o_txt << std::setw(w1) << Phi[i].printSpin();
+        print_utils::scalar(0, o_txt.str(), Phi[i].norm(), "", 2 * pprec, true);
+    }
+
+    mrcpp::print::separator(2, '-');
+    print_utils::scalar(2, "Total MO nodes ", nodes, "", 0, false);
+    print_utils::scalar(2, "Total MO memory ", memory, "(MB)", 2, false);
+    mrcpp::print::separator(0, '=', 2);
 }
 
 void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F_mat) {
     if (Phi.size() == 0) return;
-    if (F_mat.cols() != Phi.size()) MSG_FATAL("Invalid Fock matrix");
-    int oldprec = Printer::setPrecision(5);
-    Printer::printHeader(0, "Orbital energies");
-    println(0, "    n  spin  occ                            epsilon  ");
-    Printer::printSeparator(0, '-');
-    Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F_mat.cols());
-    es.compute(F_mat);
+    if (F_mat.cols() != Phi.size()) MSG_ABORT("Invalid Fock matrix");
 
-    Printer::setPrecision(15);
-    DoubleVector epsilon = es.eigenvalues();
-    for (int i = 0; i < epsilon.size(); i++) {
-        printout(0, std::setw(5) << i);
-        printout(0, std::setw(5) << Phi[i].printSpin());
-        printout(0, std::setw(5) << Phi[i].occ());
-        printout(0, std::setw(44) << epsilon(i) << std::endl);
+    // First compute eigenvalues without rotating the orbitals
+    DoubleVector epsilon = DoubleVector::Zero(Phi.size());
+    int np = orbital::size_paired(Phi);
+    int na = orbital::size_alpha(Phi);
+    int nb = orbital::size_beta(Phi);
+    if (np > 0) {
+        Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(np);
+        es.compute(F_mat.block(0, 0, np, np));
+        epsilon.segment(0, np) = es.eigenvalues();
     }
-    Printer::printSeparator(0, '=', 2);
-    Printer::setPrecision(oldprec);
+    if (na > 0) {
+        Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(na);
+        es.compute(F_mat.block(np, np, na, na));
+        epsilon.segment(np, na) = es.eigenvalues();
+    }
+    if (nb > 0) {
+        Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(nb);
+        es.compute(F_mat.block(np + na, np + na, nb, nb));
+        epsilon.segment(np + na, nb) = es.eigenvalues();
+    }
+
+    auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = 5;
+    auto w2 = 2 * w0 / 9;
+    auto w3 = w0 - 3 * w1 - 3 * w2;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w1) << "Occ";
+    o_head << std::setw(w1) << "Spin";
+    o_head << std::string(w3 - 1, ' ') << ':';
+    o_head << std::setw(3 * w2) << "Epsilon";
+
+    mrcpp::print::header(0, "Orbital Energies");
+    println(0, o_head.str());
+    mrcpp::print::separator(0, '-');
+
+    auto sum_eps = 0.0;
+    for (int i = 0; i < epsilon.size(); i++) {
+        std::stringstream o_txt;
+        o_txt << std::setw(w1 - 1) << i;
+        o_txt << std::setw(w1) << Phi[i].occ();
+        o_txt << std::setw(w1) << Phi[i].printSpin();
+        print_utils::scalar(0, o_txt.str(), epsilon(i), "(au)", 2 * pprec);
+        sum_eps += Phi[i].occ() * epsilon(i);
+    }
+    mrcpp::print::separator(0, '-');
+    print_utils::scalar(0, "Sum occupied", sum_eps, "(au)", 2 * pprec);
+    mrcpp::print::separator(0, '=', 2);
 }
 
 /** @brief Prints statistics about the size of orbitals in an OrbitalVector
@@ -875,17 +917,18 @@ void orbital::print_eigenvalues(const OrbitalVector &Phi, const ComplexMatrix &F
  *
  */
 int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string &txt, bool all, int plevel) {
-    int nOrbs = Phi.size();
-    IntVector sNodes = IntVector::Zero(nOrbs);
-    get_size_nodes(Phi, sNodes);
     double nMax = 0.0, vMax = 0.0; // node max, vector max
     double nMin = 9.9e9, vMin = 9.9e9;
     double nSum = 0.0, vSum = 0.0;
     double nOwnOrbs = 0.0, ownSumMax = 0.0, ownSumMin = 9.9e9;
     double totMax = 0.0, totMin = 9.9e9;
     println(0, "OrbitalVector sizes statistics " << txt << " (MB)");
+
+    IntVector sNodes = IntVector::Zero(Phi.size());
+    for (int i = 0; i < Phi.size(); i++) sNodes[i] = Phi[i].getSizeNodes(NUMBER::Total);
+
     // stats for own orbitals
-    for (int i = 0; i < nOrbs; i++) {
+    for (int i = 0; i < Phi.size(); i++) {
         if (sNodes[i] > 0) {
             nOwnOrbs++;
             if (sNodes[i] > nMax) nMax = sNodes[i];
@@ -900,7 +943,7 @@ int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string &txt, 
     vecStats(1, mpi::orb_rank) = nMin;
     vecStats(2, mpi::orb_rank) = nSum;
     vecStats(3, mpi::orb_rank) = nOwnOrbs;
-    vecStats(4, mpi::orb_rank) = Printer::printMem("", true);
+    vecStats(4, mpi::orb_rank) = mrcpp::details::get_memory_usage();
 
     if (all) {
         mpi::allreduce_matrix(vecStats, mpi::comm_orb);
@@ -924,8 +967,8 @@ int orbital::print_size_nodes(const OrbitalVector &Phi, const std::string &txt, 
         if (vecStats(4, i) < totMin) totMin = vecStats(4, i);
         vSum += vecStats(2, i);
     }
-    totMax *= 4.0 / (1024.0);
-    totMin *= 4.0 / (1024.0);
+    totMax /= 1024.0;
+    totMin /= 1024.0;
     printout(plevel, "Total orbvec " << static_cast<int>(vSum / 1024));
     printout(plevel, ", Av/MPI " << static_cast<int>(vSum / 1024 / mpi::orb_size));
     printout(plevel, ", Max/MPI " << static_cast<int>(ownSumMax / 1024));

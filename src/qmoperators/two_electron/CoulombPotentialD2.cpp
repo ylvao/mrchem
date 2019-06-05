@@ -3,6 +3,7 @@
 
 #include "CoulombPotentialD2.h"
 #include "qmfunctions/density_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -35,10 +36,7 @@ void CoulombPotentialD2::setupGlobalDensity(double prec) {
 
     Timer timer;
     density::compute(prec, rho, Phi, X, Y, DENSITY::Total);
-    timer.stop();
-    double t = timer.getWallTime();
-    int n = rho.getNNodes(NUMBER::Total);
-    Printer::printTree(0, "Perturbed Coulomb density", n, t);
+    print_utils::qmfunction(2, "Perturbed Coulomb density", rho, timer);
 }
 
 void CoulombPotentialD2::setupLocalDensity(double prec) {
@@ -54,10 +52,7 @@ void CoulombPotentialD2::setupLocalDensity(double prec) {
 
     Timer timer;
     density::compute_local(prec, rho, Phi, X, Y, DENSITY::Total);
-    timer.stop();
-    double t = timer.getWallTime();
-    int n = rho.getNNodes(NUMBER::Total);
-    Printer::printTree(0, "Coulomb density", n, t);
+    print_utils::qmfunction(2, "Perturbed Coulomb density", rho, timer);
 }
 
 } // namespace mrchem

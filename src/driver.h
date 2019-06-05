@@ -35,6 +35,7 @@ void init_molecule(const nlohmann::json &input, Molecule &mol);
 bool run_guess(const nlohmann::json &input, Molecule &mol);
 bool run_scf(const nlohmann::json &input, Molecule &mol);
 bool run_rsp(const nlohmann::json &input, Molecule &mol);
+void print_properties(const Molecule &mol);
 
 } // namespace driver
 } // namespace mrchem

@@ -43,12 +43,14 @@
 
 namespace mrchem {
 
+class Molecule;
+
 class EnergyOptimizer final : public GroundStateSolver {
 public:
     EnergyOptimizer() = default;
     ~EnergyOptimizer() override = default;
 
-    bool optimize(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat);
+    bool optimize(Molecule &mol, FockOperator &F);
 
 private:
     ComplexMatrix calcFockMatrixUpdate(double prec,

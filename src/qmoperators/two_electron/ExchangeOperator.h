@@ -26,6 +26,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &K = (*this);
         K = exchange;
+        K.name() = "K";
     }
     ~ExchangeOperator() override = default;
 

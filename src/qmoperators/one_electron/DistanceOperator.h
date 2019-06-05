@@ -26,6 +26,9 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &v = (*this);
         v = r_pow;
+        std::stringstream o_name;
+        o_name << "r^{" << std::setprecision(1) << std::fixed << pow << "}";
+        v.name() = o_name.str();
     }
 
 private:

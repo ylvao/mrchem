@@ -8,14 +8,14 @@
 using mrcpp::GaussExp;
 
 #define GETLINE(X, S)                                                                                                  \
-    if (not getline(X, S)) MSG_FATAL("Unexpected end of file while reading basis sets!");
+    if (not getline(X, S)) MSG_ABORT("Unexpected end of file while reading basis sets!");
 
 namespace mrchem {
 namespace gto_utils {
 
 Intgrl::Intgrl(const std::string &file) {
     std::ifstream ifs(file.c_str());
-    if (not ifs) MSG_FATAL("Failed to open basis set file: " << file);
+    if (not ifs) MSG_ABORT("Failed to open basis set file: " << file);
     readIntgrlFile(ifs);
     ifs.close();
 }
@@ -79,7 +79,7 @@ void Intgrl::readAtomData(std::ifstream &ifs, int n_atoms, double z) {
 }
 
 void Intgrl::readContractionBlock(std::ifstream &ifs, AOBasis &bas, int l) {
-    if (l > 2) MSG_FATAL("Only s, p and d orbitals are currently supported");
+    if (l > 2) MSG_ABORT("Only s, p and d orbitals are currently supported");
     int nprim, nctr;
     ifs >> nprim;
     ifs >> nctr;

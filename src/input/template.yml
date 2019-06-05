@@ -26,19 +26,47 @@ keywords:
       - value in ['au', 'kcal', 'kJ']
     docstring: |
       Unit used in the translation from abs_prec to rel_prec.
-  - name: printlevel
-    type: int
-    default: 0
-    predicates:
-      - '0 <= value'
-    docstring: |
-      Level of detail in the written output
-  - name: teletype
-    type: bool
-    default: false
-    docstring: |
-      Write output to file called mrchem-{mpi-rank}.out.
 sections:
+  - name: Printer
+    docstring: |
+      Define variables for printed output.
+    keywords:
+      - name: print_level
+        type: int
+        default: 0
+        predicates:
+          - 'value >= 0'
+        docstring: |
+          Level of detail in the written output. Level 0 for production calculations.
+      - name: print_input
+        type: bool
+        default: false
+        docstring: |
+          Print the user input file at the start of the calculation.
+      - name: print_mpi
+        type: bool
+        default: false
+        docstring: |
+          Write separate output from each MPI to file called <file_name>-<mpi-rank>.out.
+      - name: file_name
+        type: str
+        default: 'mrchem'
+        docstring: |
+          Name of output file in MPI print.
+      - name: print_prec
+        type: int
+        default: 6
+        predicates:
+          - '0 < value < 10'
+        docstring: |
+          Number of digits in property output (energy with factor two).
+      - name: print_width
+        type: int
+        default: 70
+        predicates:
+          - '50 < value < 100'
+        docstring: |
+          Line width of printed output (in number of characters).
   - name: MPI
     docstring: |
       Define MPI related parameters.
@@ -349,9 +377,9 @@ sections:
         default: 0
         docstring: |
           Number of iterations between each diagonalization/localization.
-      - name: canonical
+      - name: localize
         type: bool
-        default: true
+        default: false
         docstring: |
           Use canonical or localized orbitals.
       - name: orbital_thrs
@@ -393,9 +421,9 @@ sections:
         default: -1
         docstring: |
           Maximum number of SCF iterations.
-      - name: canonical
+      - name: localize
         type: bool
-        default: true
+        default: false
         docstring: |
           Use canonical or localized orbitals.
       - name: orbital_thrs
@@ -427,9 +455,9 @@ sections:
         default: 0
         docstring: |
           Length of KAIN iterative history.
-      - name: canonical
+      - name: localize
         type: bool
-        default: true
+        default: false
         docstring: |
           Use canonical or localized orbitals.
       - name: orbital_thrs

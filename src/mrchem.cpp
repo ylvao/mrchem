@@ -42,12 +42,9 @@ int main(int argc, char **argv) {
     if (driver::run_scf(json_scf, mol)) {
         for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
     }
+    driver::print_properties(mol);
 
-    mol.printGeometry();
-    mol.printProperties();
-
-    timer.stop();
-    mrenv::finalize(timer.getWallTime());
+    mrenv::finalize(timer.elapsed());
     mpi::finalize();
     return 0;
 }

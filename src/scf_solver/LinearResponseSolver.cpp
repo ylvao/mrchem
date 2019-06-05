@@ -93,9 +93,12 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
     int nIter = 0;
     bool converged = false;
     while (nIter++ < this->maxIter or this->maxIter < 0) {
+        std::stringstream o_header;
+        o_header << "SCF cycle " << nIter;
+        mrcpp::print::header(1, o_header.str());
+
         // Initialize SCF cycle
-        Timer timer;
-        printCycleHeader(nIter);
+        Timer t_lap;
         orb_prec = adjustPrecision(err_o);
 
         // Setup perturbed Fock operator (including V_1)
@@ -127,8 +130,7 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
 
             // Prepare for next iteration
             X_n = orbital::add(1.0, X_n, 1.0, dX_n);
-            orbital::set_errors(X_n, errors_x);
-            printOrbitals(orbital::get_norms(X_n), X_n, 0);
+            printOrbitals(orbital::get_norms(X_n), errors_x, X_n, 1);
         }
 
         if (dynamic) { // Iterate Y orbitals
@@ -157,8 +159,7 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
 
             // Prepare for next iteration
             Y_n = orbital::add(1.0, Y_n, 1.0, dY_n);
-            orbital::set_errors(Y_n, errors_y);
-            printOrbitals(orbital::get_norms(Y_n), Y_n, 0);
+            printOrbitals(orbital::get_norms(Y_n), errors_y, Y_n, 1);
         }
 
         // Compute property
@@ -173,12 +174,11 @@ bool LinearResponseSolver::optimize(double omega, FockOperator &F_1, OrbitalVect
         err_o = std::max(errors_x.maxCoeff(), errors_y.maxCoeff());
         err_t = std::sqrt(errors_x.dot(errors_x) + errors_y.dot(errors_y));
         converged = checkConvergence(err_o, err_p);
-        this->orbError.push_back(err_t);
+        this->error.push_back(err_t);
 
         // Finalize SCF cycle
-        timer.stop();
         printProperty();
-        printCycleFooter(timer.getWallTime());
+        mrcpp::print::footer(1, t_lap, 2);
 
         if (converged) break;
     }
@@ -195,9 +195,9 @@ void LinearResponseSolver::printProperty() const {
     int iter = this->property.size();
     if (iter > 1) prop_0 = this->property[iter - 2];
     if (iter > 0) prop_1 = this->property[iter - 1];
-    Printer::printHeader(0, "                    Value                  Update      Done ");
-    printUpdate(" Property   ", prop_1, prop_1 - prop_0);
-    Printer::printSeparator(0, '=');
+    mrcpp::print::header(0, "                    Value                  Update      Done ");
+    printUpdate(0, "Property", prop_1, prop_1 - prop_0, this->propThrs);
+    mrcpp::print::separator(0, '=');
 }
 
 } // namespace mrchem

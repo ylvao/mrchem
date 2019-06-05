@@ -50,7 +50,7 @@ GaussExp<3> AOBasis::getAO(int n, const mrcpp::Coord<3> &center) const {
             m++;
         }
     }
-    MSG_FATAL("Something is terribly wrong");
+    MSG_ABORT("Something is terribly wrong");
 }
 
 GaussExp<3> AOBasis::getBasis(const mrcpp::Coord<3> &center) const {

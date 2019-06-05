@@ -31,6 +31,15 @@ public:
         h[2][0] = (alpha_2 / 2.0) * r_m3 * (o_z * k_x);
         h[2][1] = (alpha_2 / 2.0) * r_m3 * (o_z * k_y);
         h[2][2] = -(alpha_2 / 2.0) * r_m3 * (o_x * k_x + o_y * k_y);
+        h[0][0].name() = "h_BM_dia[x,x]";
+        h[0][1].name() = "h_BM_dia[x,y]";
+        h[0][2].name() = "h_BM_dia[x,z]";
+        h[1][0].name() = "h_BM_dia[y,x]";
+        h[1][1].name() = "h_BM_dia[y,y]";
+        h[1][2].name() = "h_BM_dia[y,z]";
+        h[2][0].name() = "h_BM_dia[z,x]";
+        h[2][1].name() = "h_BM_dia[z,y]";
+        h[2][2].name() = "h_BM_dia[z,z]";
     }
 
 private:

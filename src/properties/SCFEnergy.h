@@ -26,6 +26,7 @@
 #pragma once
 
 #include "mrchem.h"
+#include "utils/print_utils.h"
 
 /** @class SCFEnergy
  *
@@ -57,44 +58,30 @@ public:
     double getExchangeCorrelationEnergy() const { return this->E_xc; }
     double getExchangeEnergy() const { return this->E_x; }
 
-    friend std::ostream& operator<<(std::ostream &o, const SCFEnergy &en) {
-        auto E_au   = en.E_nuc + en.E_el;
-        auto E_kJ   = E_au * PHYSCONST::kJ;
+    void print() const {
+        auto E_au = E_nuc + E_el;
+        auto E_eV = E_au * PHYSCONST::eV;
+        auto E_kJ = E_au * PHYSCONST::kJ;
         auto E_kcal = E_au * PHYSCONST::kcal;
-        auto E_eV   = E_au * PHYSCONST::eV;
 
-        auto oldPrec = mrcpp::Printer::setPrecision(15);
-        o << "                                                            " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                         SCF Energy                         " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Sum orbital energy:          " << std::setw(29) << en.E_orb  << std::endl;
-        o << " Kinetic energy:              " << std::setw(29) << en.E_kin  << std::endl;
-        o << " E-N energy:                  " << std::setw(29) << en.E_en   << std::endl;
-        o << " Coulomb energy:              " << std::setw(29) << en.E_ee   << std::endl;
-        o << " Exchange energy:             " << std::setw(29) << en.E_x    << std::endl;
-        o << " X-C energy:                  " << std::setw(29) << en.E_xc   << std::endl;
-        o << " El. external field energy:   " << std::setw(29) << en.E_ext  << std::endl;
-        o << " Nuc. external field energy:  " << std::setw(29) << en.E_nex  << std::endl;
-        o << "                                                            " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Electronic energy:           " << std::setw(29) << en.E_el   << std::endl;
-        o << " Nuclear energy:              " << std::setw(29) << en.E_nuc  << std::endl;
-        o << "                                                            " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Total energy       (au)      " << std::setw(29) << E_au      << std::endl;
-        o << "                    (kJ/mol)  " << std::setw(29) << E_kJ      << std::endl;
-        o << "                    (kcal/mol)" << std::setw(29) << E_kcal    << std::endl;
-        o << "                    (eV)      " << std::setw(29) << E_eV      << std::endl;
-        o << "                                                            " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
-
-        return o;
+        auto pprec = 2 * mrcpp::Printer::getPrecision();
+        mrcpp::print::header(0, "Molecular Energy");
+        print_utils::scalar(0, "Kinetic energy   ", E_kin,  "(au)", pprec, false);
+        print_utils::scalar(0, "E-N energy       ", E_en,   "(au)", pprec, false);
+        print_utils::scalar(0, "Coulomb energy   ", E_ee,   "(au)", pprec, false);
+        print_utils::scalar(0, "Exchange energy  ", E_x,    "(au)", pprec, false);
+        print_utils::scalar(0, "X-C energy       ", E_xc,   "(au)", pprec, false);
+        print_utils::scalar(0, "Ext. field (el)  ", E_ext,  "(au)", pprec, false);
+        print_utils::scalar(0, "Ext. field (nuc) ", E_nex,  "(au)", pprec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::scalar(0, "Electronic energy", E_el,   "(au)", pprec, false);
+        print_utils::scalar(0, "Nuclear energy   ", E_nuc,  "(au)", pprec, false);
+        mrcpp::print::separator(0, '-');
+        print_utils::scalar(0, "Total energy     ", E_au,   "(au)", pprec, true);
+        print_utils::scalar(0, "                 ", E_kcal, "(kcal/mol)", pprec, true);
+        print_utils::scalar(0, "                 ", E_kJ,   "(kJ/mol)", pprec, true);
+        print_utils::scalar(0, "                 ", E_eV,   "(eV)", pprec, true);
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:

@@ -26,52 +26,50 @@
 #pragma once
 
 #include "mrchem.h"
+#include "utils/print_utils.h"
 
 namespace mrchem {
 
 // clang-format off
 class DipoleMoment final {
 public:
+    mrcpp::Coord<3> &getOrigin() { return this->origin; }
+    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
+
     DoubleVector getTensor() const { return getNuclear() + getElectronic(); }
     DoubleVector &getNuclear() { return this->nuc_tensor; }
     DoubleVector &getElectronic() { return this->el_tensor; }
     const DoubleVector &getNuclear() const { return this->nuc_tensor; }
     const DoubleVector &getElectronic() const { return this->el_tensor; }
 
-    friend std::ostream& operator<<(std::ostream &o, const DipoleMoment &dip) {
-        auto length_au = dip.getTensor().norm();
-        auto length_db = length_au * PHYSCONST::Debye;
+    void print() const {
+        auto el_au = getElectronic().norm();
+        auto nuc_au = getNuclear().norm();
+        auto tot_au = getTensor().norm();
 
-        auto oldPrec = mrcpp::Printer::setPrecision(10);
-        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
-        o << "                                                            " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                         Dipole moment                      " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Length of vector:   (au)    " << std::setw(30) << length_au  << std::endl;
-        o << "                     (Debye) " << std::setw(30) << length_db  << std::endl;
-        o << "                                                            " << std::endl;
-        o << "-------------------------- Total ---------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<    dip.getTensor().transpose().format(clean_format)            << std::endl;
-        o << "                                                            " << std::endl;
-        o << "------------------------- Nuclear --------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<    dip.getNuclear().transpose().format(clean_format)           << std::endl;
-        o << "                                                            " << std::endl;
-        o << "------------------------ Electronic ------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<    dip.getElectronic().transpose().format(clean_format)        << std::endl;
-        o << "                                                            " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
+        auto el_db = el_au * PHYSCONST::Debye;
+        auto nuc_db = nuc_au * PHYSCONST::Debye;
+        auto tot_db = tot_au * PHYSCONST::Debye;
 
-        return o;
+        mrcpp::print::header(0, "Dipole Moment");
+        print_utils::coord(0, "r_O", getOrigin());
+        mrcpp::print::separator(0, '-');
+        print_utils::vector(0, "Electronic vector", getElectronic());
+        print_utils::scalar(0, "Magnitude", el_au, "(au)");
+        print_utils::scalar(0, "         ", el_db, "(Debye)");
+        mrcpp::print::separator(0, '-');
+        print_utils::vector(0, "Nuclear vector", getNuclear());
+        print_utils::scalar(0, "Magnitude", nuc_au, "(au)");
+        print_utils::scalar(0, "         ", nuc_db, "(Debye)");
+        mrcpp::print::separator(0, '-');
+        print_utils::vector(0, "Total vector", getTensor());
+        print_utils::scalar(0, "Magnitude", tot_au, "(au)");
+        print_utils::scalar(0, "         ", tot_db, "(Debye)");
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:
+    mrcpp::Coord<3> origin{};
     DoubleVector nuc_tensor{DoubleVector::Zero(3)};
     DoubleVector el_tensor{DoubleVector::Zero(3)};
 };

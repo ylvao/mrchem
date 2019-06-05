@@ -27,7 +27,10 @@
 #include "MRCPP/Timer"
 
 #include "HelmholtzVector.h"
+#include "KAIN.h"
 #include "OrbitalOptimizer.h"
+
+#include "chemistry/Molecule.h"
 
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
@@ -66,38 +69,40 @@ namespace mrchem {
  *
  * Post SCF: diagonalize/localize orbitals
  */
-bool OrbitalOptimizer::optimize(FockOperator &F, OrbitalVector &Phi_n, ComplexMatrix &F_mat) {
-    double orb_prec = this->orbPrec[0];
-    double err_o = orbital::get_errors(Phi_n).maxCoeff();
-    double err_t = 1.0;
-    double err_p = 1.0;
+bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
+    printParameters("Optimize molecular orbitals");
 
     KAIN kain(this->history);
+    SCFEnergy &E_n = mol.getSCFEnergy();
+    OrbitalVector &Phi_n = mol.getOrbitals();
+    ComplexMatrix &F_mat = mol.getFockMatrix();
 
-    F.setup(orb_prec);
-    F_mat = F(Phi_n, Phi_n);
+    DoubleVector errors = DoubleVector::Ones(Phi_n.size());
+    double err_o = errors.maxCoeff();
+    double err_t = errors.norm();
+
+    this->error.push_back(err_t);
+    this->energy.push_back(E_n);
+    this->property.push_back(E_n.getTotalEnergy());
+
+    auto plevel = Printer::getPrintLevel();
+    if (plevel < 1) {
+        printConvergenceHeader();
+        printConvergenceRow(0);
+    }
 
     int nIter = 0;
     bool converged = false;
     while (nIter++ < this->maxIter or this->maxIter < 0) {
-        // Initialize SCF cycle
-        Timer timer;
-        printCycleHeader(nIter);
-        orb_prec = adjustPrecision(err_o);
+        std::stringstream o_header;
+        o_header << "SCF cycle " << nIter;
+        mrcpp::print::header(1, o_header.str(), 0, '#');
+        mrcpp::print::separator(2, ' ', 1);
 
-        // Rotate orbitals
-        if (needLocalization(nIter)) {
-            ComplexMatrix U_mat = orbital::localize(orb_prec, Phi_n, F_mat);
-            F.rotate(U_mat);
-            kain.clear();
-        } else if (needDiagonalization(nIter)) {
-            ComplexMatrix U_mat = orbital::diagonalize(orb_prec, Phi_n, F_mat);
-            F.rotate(U_mat);
-            kain.clear();
-        }
-        // Compute electronic energy
-        double E = calcProperty(F, Phi_n, F_mat);
-        this->property.push_back(E);
+        // Initialize SCF cycle
+        Timer t_lap;
+        double orb_prec = adjustPrecision(err_o);
+        if (nIter < 2) F.setup(orb_prec);
 
         // Apply Helmholtz operator
         HelmholtzVector H(orb_prec, F_mat.real().diagonal());
@@ -116,41 +121,51 @@ bool OrbitalOptimizer::optimize(FockOperator &F, OrbitalVector &Phi_n, ComplexMa
         kain.accelerate(orb_prec, Phi_n, dPhi_n);
 
         // Compute errors
-        DoubleVector errors = orbital::get_norms(dPhi_n);
+        errors = orbital::get_norms(dPhi_n);
         err_o = errors.maxCoeff();
         err_t = errors.norm();
-        err_p = calcPropertyError();
-        converged = checkConvergence(err_o, err_p);
-        this->orbError.push_back(err_t);
 
         // Update orbitals
         Phi_n = orbital::add(1.0, Phi_n, 1.0, dPhi_n);
         dPhi_n.clear();
 
         orbital::orthonormalize(orb_prec, Phi_n, F_mat);
-        orbital::set_errors(Phi_n, errors);
 
-        // Compute Fock matrix
+        // Compute Fock matrix and energy
         F.setup(orb_prec);
         F_mat = F(Phi_n, Phi_n);
+        E_n = F.trace(Phi_n, F_mat);
+
+        // Collect convergence data
+        this->error.push_back(err_t);
+        this->energy.push_back(E_n);
+        this->property.push_back(E_n.getTotalEnergy());
+        auto err_p = calcPropertyError();
+        converged = checkConvergence(err_o, err_p);
+
+        // Rotate orbitals
+        if (needLocalization(nIter, converged)) {
+            ComplexMatrix U_mat = orbital::localize(orb_prec, Phi_n, F_mat);
+            F.rotate(U_mat);
+            kain.clear();
+        } else if (needDiagonalization(nIter, converged)) {
+            ComplexMatrix U_mat = orbital::diagonalize(orb_prec, Phi_n, F_mat);
+            F.rotate(U_mat);
+            kain.clear();
+        }
 
         // Finalize SCF cycle
-        timer.stop();
-        printOrbitals(F_mat.real().diagonal(), Phi_n, 0);
+        if (plevel < 1) printConvergenceRow(nIter);
+        printOrbitals(F_mat.real().diagonal(), errors, Phi_n, 0);
         printProperty();
-        printCycleFooter(timer.getWallTime());
+        printMemory();
+        mrcpp::print::footer(1, t_lap, 2, '#');
+        mrcpp::print::separator(2, ' ', 2);
 
         if (converged) break;
     }
 
-    kain.clear();
     F.clear();
-
-    if (this->canonical) {
-        orbital::diagonalize(orb_prec, Phi_n, F_mat);
-    } else {
-        orbital::localize(orb_prec, Phi_n, F_mat);
-    }
 
     printConvergence(converged);
     reset();

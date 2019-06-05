@@ -17,6 +17,9 @@ public:
         h[0] = r_m3 * r[0];
         h[1] = r_m3 * r[1];
         h[2] = r_m3 * r[2];
+        h[0].name() = "x/r^3";
+        h[1].name() = "y/r^3";
+        h[2].name() = "z/r^3";
     }
 
 private:

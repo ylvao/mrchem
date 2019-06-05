@@ -42,14 +42,10 @@
 
 #include "Nucleus.h"
 #include "properties/DipoleMoment.h"
-#include "properties/GeometryDerivatives.h"
-#include "properties/HyperFineCoupling.h"
 #include "properties/Magnetizability.h"
 #include "properties/NMRShielding.h"
 #include "properties/Polarizability.h"
 #include "properties/SCFEnergy.h"
-#include "properties/SpinSpinCoupling.h"
-#include "properties/properties_fwd.h"
 #include "qmfunctions/Orbital.h"
 
 /** @class Molecule
@@ -105,14 +101,9 @@ public:
 
     SCFEnergy &getSCFEnergy();
     DipoleMoment &getDipoleMoment();
-    QuadrupoleMoment &getQuadrupoleMoment();
-    GeometryDerivatives &getGeometryDerivatives();
     Magnetizability &getMagnetizability();
     NMRShielding &getNMRShielding(int k);
-    HyperFineCoupling &getHyperFineCoupling(int k);
-    SpinSpinCoupling &getSpinSpinCoupling(int k, int l);
     Polarizability &getPolarizability(double omega);
-    OpticalRotation &getOpticalRotation(double omega);
 
 protected:
     int charge{0};
@@ -127,12 +118,9 @@ protected:
     // Properties
     std::unique_ptr<SCFEnergy> energy{nullptr};
     std::unique_ptr<DipoleMoment> dipole{nullptr};
-    std::unique_ptr<GeometryDerivatives> geomderiv{nullptr};
     std::unique_ptr<Magnetizability> magnetizability{nullptr};
     std::vector<std::unique_ptr<Polarizability>> polarizability{};
     std::vector<std::unique_ptr<NMRShielding>> nmr{};
-    std::vector<std::unique_ptr<HyperFineCoupling>> hfcc{};
-    std::vector<std::vector<std::unique_ptr<SpinSpinCoupling>>> sscc{};
 
     void initNuclearProperties(int nNucs);
     void readCoordinateFile(const std::string &file);

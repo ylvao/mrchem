@@ -1,8 +1,12 @@
 find_package(nlohmann_json 3.5.0 CONFIG QUIET)
 
 if(TARGET nlohmann_json::nlohmann_json)
-  get_property(_loc TARGET nlohmann_json::nlohmann_json PROPERTY LOCATION)
-  message(STATUS "Found nlohmann_json: ${nlohmann_json_INCLUDE_DIR} (found version ${nlohmann_json_VERSION})")
+  get_target_property(
+    _loc
+    nlohmann_json::nlohmann_json
+    INTERFACE_INCLUDE_DIRECTORIES
+  )
+  message(STATUS "Found nlohmann_json: ${_loc} (found version ${nlohmann_json_VERSION})")
 else()
   message(STATUS "Suitable nlohmann_json could not be located: downloading and building nlohmann_json instead.")
   include(FetchContent)                                                          

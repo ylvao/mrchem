@@ -18,6 +18,9 @@ public:
         h[0] = alpha_2 * r_m3 * l[0];
         h[1] = alpha_2 * r_m3 * l[1];
         h[2] = alpha_2 * r_m3 * l[2];
+        h[0].name() = "h_M_pso[x]";
+        h[1].name() = "h_M_pso[y]";
+        h[2].name() = "h_M_pso[z]";
     }
 
 private:

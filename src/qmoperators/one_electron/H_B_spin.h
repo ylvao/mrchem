@@ -15,6 +15,9 @@ public:
         h[0] = (-g_e / 2.0) * s[0];
         h[1] = (-g_e / 2.0) * s[1];
         h[2] = (-g_e / 2.0) * s[2];
+        h[0].name() = "h_B_spin[x]";
+        h[1].name() = "h_B_spin[y]";
+        h[2].name() = "h_B_spin[z]";
     }
 
 private:

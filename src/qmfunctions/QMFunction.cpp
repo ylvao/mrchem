@@ -55,22 +55,22 @@ QMFunction QMFunction::dagger() {
 }
 
 void QMFunction::setReal(mrcpp::FunctionTree<3> *tree) {
-    if (isShared()) MSG_FATAL("Cannot set in shared function");
+    if (isShared()) MSG_ABORT("Cannot set in shared function");
     this->func_ptr->re = tree;
 }
 
 void QMFunction::setImag(mrcpp::FunctionTree<3> *tree) {
-    if (isShared()) MSG_FATAL("Cannot set in shared function");
+    if (isShared()) MSG_ABORT("Cannot set in shared function");
     this->func_ptr->im = tree;
 }
 
 void QMFunction::alloc(int type) {
     if (type == NUMBER::Real or type == NUMBER::Total) {
-        if (hasReal()) MSG_FATAL("Real part already allocated");
+        if (hasReal()) MSG_ABORT("Real part already allocated");
         this->func_ptr->re = new mrcpp::FunctionTree<3>(*MRA, this->func_ptr->shared_mem);
     }
     if (type == NUMBER::Imag or type == NUMBER::Total) {
-        if (hasImag()) MSG_FATAL("Imaginary part already allocated");
+        if (hasImag()) MSG_ABORT("Imaginary part already allocated");
         this->func_ptr->im = new mrcpp::FunctionTree<3>(*MRA, this->func_ptr->shared_mem);
     }
 }
@@ -93,6 +93,17 @@ void QMFunction::free(int type) {
 FunctionData &QMFunction::getFunctionData() {
     this->func_ptr->flushFuncData();
     return this->func_ptr->func_data;
+}
+
+int QMFunction::getSizeNodes(int type) const {
+    int size_mb = 0; // Memory size in kB
+    if (type == NUMBER::Real or type == NUMBER::Total) {
+        if (hasReal()) size_mb += real().getSizeNodes();
+    }
+    if (type == NUMBER::Imag or type == NUMBER::Total) {
+        if (hasImag()) size_mb += imag().getSizeNodes();
+    }
+    return size_mb;
 }
 
 int QMFunction::getNNodes(int type) const {

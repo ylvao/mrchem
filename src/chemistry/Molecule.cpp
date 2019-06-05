@@ -73,12 +73,7 @@ Molecule::Molecule(const std::vector<std::string> &coord_str, int c, int m)
 }
 
 void Molecule::initNuclearProperties(int nNucs) {
-    for (auto k = 0; k < nNucs; k++) {
-        nmr.push_back(nullptr);
-        hfcc.push_back(nullptr);
-        sscc.push_back(std::vector<std::unique_ptr<SpinSpinCoupling>>{});
-        for (auto l = 0; l < nNucs; l++) sscc[k].push_back(nullptr);
-    }
+    for (auto k = 0; k < nNucs; k++) nmr.push_back(nullptr);
 }
 
 void Molecule::initPerturbedOrbitals(bool dynamic) {
@@ -103,16 +98,6 @@ DipoleMoment &Molecule::getDipoleMoment() {
     return *dipole;
 }
 
-/** @brief Return property QuadrupoleMoment */
-QuadrupoleMoment &Molecule::getQuadrupoleMoment() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
-/** @brief Return property GeometryDerivatives */
-GeometryDerivatives &Molecule::getGeometryDerivatives() {
-    NOT_IMPLEMENTED_ABORT;
-}
-
 /** @brief Return property Magnetizability */
 Magnetizability &Molecule::getMagnetizability() {
     if (magnetizability == nullptr) magnetizability = std::make_unique<Magnetizability>();
@@ -122,22 +107,8 @@ Magnetizability &Molecule::getMagnetizability() {
 /** @brief Return property NMRShielding */
 NMRShielding &Molecule::getNMRShielding(int k) {
     if (nmr.size() == 0) initNuclearProperties(getNNuclei());
-    if (nmr[k] == nullptr) nmr[k] = std::make_unique<NMRShielding>(nuclei[k]);
+    if (nmr[k] == nullptr) nmr[k] = std::make_unique<NMRShielding>(k, nuclei[k]);
     return *nmr[k];
-}
-
-/** @brief Return property HyperFineCoupling */
-HyperFineCoupling &Molecule::getHyperFineCoupling(int k) {
-    if (hfcc.size() == 0) initNuclearProperties(getNNuclei());
-    if (hfcc[k] == nullptr) hfcc[k] = std::make_unique<HyperFineCoupling>(nuclei[k]);
-    return *hfcc[k];
-}
-
-/** @brief Return property SpinSpinCoupling */
-SpinSpinCoupling &Molecule::getSpinSpinCoupling(int k, int l) {
-    if (sscc.size() == 0) initNuclearProperties(getNNuclei());
-    if (sscc[k][l] == nullptr) sscc[k][l] = std::make_unique<SpinSpinCoupling>(nuclei[k], nuclei[l]);
-    return *sscc[k][l];
 }
 
 /** @brief Return property Polarizability */
@@ -155,11 +126,6 @@ Polarizability &Molecule::getPolarizability(double omega) {
         idx = polarizability.size() - 1;
     }
     return *polarizability[idx];
-}
-
-/** @brief Return property OpticalRotation */
-OpticalRotation &Molecule::getOpticalRotation(double omega) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 /** @brief Return number of electrons */
@@ -215,7 +181,7 @@ Coord<3> Molecule::calcCenterOfCharge() const {
  */
 void Molecule::readCoordinateFile(const std::string &coord_file) {
     std::ifstream ifs(coord_file.c_str());
-    if (not ifs) MSG_FATAL("Failed to open coordinate file: " << coord_file);
+    if (not ifs) MSG_ABORT("Failed to open coordinate file: " << coord_file);
 
     int nNuclei;
     Coord<3> coord;
@@ -254,31 +220,36 @@ void Molecule::readCoordinateString(const std::vector<std::string> &coord_str) {
 
 /** @brief Pretty output of molecular geometry */
 void Molecule::printGeometry() const {
-    Printer::printHeader(0, "Molecule");
-    println(0, " Nr  Element             x             y             z      ");
-    Printer::printSeparator(0, '-');
-    auto oldPrec = Printer::setPrecision(5);
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = 5;
+    auto w2 = 8;
+    auto w3 = 2 * w0 / 9;
+    auto w4 = w0 - w1 - w2 - 3 * w3;
 
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "N";
+    o_head << std::setw(w2) << "Atom";
+    o_head << std::string(w4 - 1, ' ') << ':';
+    o_head << std::setw(w3) << "x";
+    o_head << std::setw(w3) << "y";
+    o_head << std::setw(w3) << "z";
+
+    mrcpp::print::header(0, "Molecule");
+    print_utils::scalar(0, "Charge", getCharge(), "", 0);
+    print_utils::scalar(0, "Multiplicity", getMultiplicity(), "", 0);
+    mrcpp::print::separator(0, '-');
+    println(0, o_head.str());
+    mrcpp::print::separator(0, '-');
     for (auto i = 0; i < getNNuclei(); i++) {
         const auto &nuc = getNuclei()[i];
-        const auto &coord = nuc.getCoord();
-        std::stringstream symbol;
-        symbol << nuc.getElement().getSymbol();
-        symbol << "  ";
-        printout(0, std::setw(3) << i + 1 << "     ");
-        printout(0, symbol.str()[0] << symbol.str()[1]);
-        printout(0, std::setw(21) << coord[0]);
-        printout(0, std::setw(14) << coord[1]);
-        printout(0, std::setw(14) << coord[2] << std::endl);
+        std::stringstream o_sym;
+        o_sym << std::setw(w1 - 1) << i;
+        o_sym << std::setw(w2) << nuc.getElement().getSymbol();
+        print_utils::coord(0, o_sym.str(), nuc.getCoord());
     }
-    Printer::printSeparator(0, '-');
-    printout(0, " Center of mass: ");
-    Coord<3> COM = calcCenterOfMass();
-    printout(0, std::setw(14) << COM[0]);
-    printout(0, std::setw(14) << COM[1]);
-    printout(0, std::setw(14) << COM[2] << std::endl);
-    Printer::setPrecision(oldPrec);
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '-');
+    print_utils::coord(0, "Center of mass", calcCenterOfMass());
+    mrcpp::print::separator(0, '=', 2);
 }
 
 /** @brief Pretty output of molecular properties
@@ -290,23 +261,14 @@ void Molecule::printProperties() const {
     const auto &F_mat = getFockMatrix();
     orbital::print_eigenvalues(Phi, F_mat);
 
-    if (this->energy != nullptr) println(0, *this->energy);
-    if (this->dipole != nullptr) println(0, *this->dipole);
-    if (this->geomderiv != nullptr) println(0, *this->geomderiv);
-    if (this->magnetizability != nullptr) println(0, *this->magnetizability);
+    if (this->energy != nullptr) this->energy->print();
+    if (this->dipole != nullptr) this->dipole->print();
+    if (this->magnetizability != nullptr) this->magnetizability->print();
     for (auto &pol : this->polarizability) {
-        if (pol != nullptr) println(0, *pol);
+        if (pol != nullptr) pol->print();
     }
     for (auto &nmr_k : this->nmr) {
-        if (nmr_k != nullptr) println(0, *nmr_k);
-    }
-    for (auto &hfcc_k : this->hfcc) {
-        if (hfcc_k != nullptr) println(0, *hfcc_k);
-    }
-    for (auto &sscc_k : this->sscc) {
-        for (auto &sscc_kl : sscc_k) {
-            if (sscc_kl != nullptr) println(0, *sscc_kl);
-        }
+        if (nmr_k != nullptr) nmr_k->print();
     }
 }
 

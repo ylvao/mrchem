@@ -76,16 +76,14 @@ int get_multiplicity(const OrbitalVector &Phi);
 int get_electron_number(const OrbitalVector &Phi, int spin = SPIN::Paired);
 int start_index(const OrbitalVector &Phi, int spin);
 int get_n_nodes(const OrbitalVector &Phi);
-int get_size_nodes(const OrbitalVector &Phi, IntVector &sNodes);
+int get_size_nodes(const OrbitalVector &Phi);
 bool orbital_vector_is_sane(const OrbitalVector &Phi);
 
 void set_spins(OrbitalVector &Phi, const IntVector &spins);
-void set_errors(OrbitalVector &Phi, const DoubleVector &errors);
 void set_occupancies(OrbitalVector &Phi, const IntVector &occ);
 
 IntVector get_spins(const OrbitalVector &Phi);
 IntVector get_occupancies(const OrbitalVector &Phi);
-DoubleVector get_errors(const OrbitalVector &Phi);
 DoubleVector get_norms(const OrbitalVector &Phi);
 DoubleVector get_squared_norms(const OrbitalVector &Phi);
 ComplexVector get_integrals(const OrbitalVector &Phi);

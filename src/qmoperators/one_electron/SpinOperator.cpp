@@ -4,6 +4,7 @@
 #include "SpinOperator.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -26,10 +27,9 @@ Orbital QMSpin::apply(Orbital inp) {
             if (this->D == 2) coef = ComplexDouble(-0.5, 0.0);
             break;
         default:
-            MSG_FATAL("Cannot apply spin operator on paired orbital");
+            MSG_ABORT("Cannot apply spin operator on paired orbital");
     }
 
-    Timer timer;
     Orbital out = inp.paramCopy();
     qmfunction::deep_copy(out, inp);
     out.rescale(coef);
@@ -39,11 +39,6 @@ Orbital QMSpin::apply(Orbital inp) {
         if (inp.spin() == SPIN::Alpha) out.setSpin(SPIN::Beta);
         if (inp.spin() == SPIN::Beta) out.setSpin(SPIN::Alpha);
     }
-
-    timer.stop();
-    int n = out.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(1, "Applied spin operator", n, t);
 
     return out;
 }

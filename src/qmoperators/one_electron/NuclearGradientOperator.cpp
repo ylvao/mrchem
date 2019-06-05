@@ -3,6 +3,7 @@
 
 #include "NuclearGradientOperator.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -20,11 +21,7 @@ void NuclearGradientPotential::setup(double prec) {
 
     Timer timer;
     qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-    timer.stop();
-
-    int n = V.getNNodes(NUMBER::Total);
-    double t = timer.getWallTime();
-    Printer::printTree(0, "Nuclear potential", n, t);
+    print_utils::qmfunction(0, "Nuclear potential", V, timer);
 }
 
 void NuclearGradientPotential::clear() {

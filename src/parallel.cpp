@@ -1,6 +1,4 @@
 #include "MRCPP/Printer"
-#include "MRCPP/Timer"
-#include "MRCPP/trees/FunctionNode.h"
 
 #include "parallel.h"
 #include "qmfunctions/ComplexFunction.h"
@@ -8,7 +6,6 @@
 #include "qmfunctions/Orbital.h"
 
 using mrcpp::Printer;
-using mrcpp::Timer;
 
 namespace mrchem {
 
@@ -253,7 +250,6 @@ void mpi::reduce_function(double prec, QMFunction &func, MPI_Comm comm) {
    4) repeat
  */
 #ifdef HAVE_MPI
-    Timer timer;
     int comm_size, comm_rank;
     MPI_Comm_rank(comm, &comm_rank);
     MPI_Comm_size(comm, &comm_size);
@@ -283,10 +279,7 @@ void mpi::reduce_function(double prec, QMFunction &func, MPI_Comm comm) {
         }
         fac *= 2;
     }
-
     MPI_Barrier(comm);
-    timer.stop();
-    Printer::printDouble(1, "Reduce log function", timer.getWallTime(), 5);
 #endif
 }
 
@@ -294,7 +287,6 @@ void mpi::reduce_function(double prec, QMFunction &func, MPI_Comm comm) {
 void mpi::broadcast_function(QMFunction &func, MPI_Comm comm) {
 /* use same strategy as a reduce, but in reverse order */
 #ifdef HAVE_MPI
-    Timer timer;
     int comm_size, comm_rank;
     MPI_Comm_rank(comm, &comm_rank);
     MPI_Comm_size(comm, &comm_size);
@@ -319,10 +311,7 @@ void mpi::broadcast_function(QMFunction &func, MPI_Comm comm) {
         }
         fac /= 2;
     }
-
     MPI_Barrier(comm);
-    timer.stop();
-    Printer::printDouble(1, "Broadcast function", timer.getWallTime(), 5);
 #endif
 }
 

@@ -29,6 +29,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &HMF = (*this);
         HMF = f[0] * d_x + f[1] * d_y + f[2] * d_z;
+        HMF.name() = "B . mu_B";
     }
 
     ComplexDouble trace(const Nuclei &nucs) { return 0.0; }

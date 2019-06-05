@@ -26,7 +26,6 @@
 #pragma once
 
 #include "GroundStateSolver.h"
-#include "KAIN.h"
 
 /** @class OrbitalOptimizer
  *
@@ -41,12 +40,14 @@
 
 namespace mrchem {
 
+class Molecule;
+
 class OrbitalOptimizer final : public GroundStateSolver {
 public:
     OrbitalOptimizer() = default;
     ~OrbitalOptimizer() override = default;
 
-    bool optimize(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat);
+    bool optimize(Molecule &mol, FockOperator &F);
 };
 
 } // namespace mrchem

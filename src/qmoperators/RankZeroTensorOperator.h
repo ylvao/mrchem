@@ -73,6 +73,8 @@ public:
     virtual ~RankZeroTensorOperator() {}
 
     int size() const { return this->oper_exp.size(); }
+    std::string &name() { return this->oper_name; }
+    const std::string &name() const { return this->oper_name; }
 
     void setup(double prec);
     void clear();
@@ -105,6 +107,7 @@ public:
     friend RankZeroTensorOperator operator-(RankZeroTensorOperator A, RankZeroTensorOperator B);
 
 protected:
+    std::string oper_name{"O"};
     std::vector<ComplexDouble> coef_exp;
     std::vector<QMOperatorVector> oper_exp;
 
@@ -114,6 +117,7 @@ protected:
 
 inline RankZeroTensorOperator operator*(ComplexDouble a, RankZeroTensorOperator A) {
     RankZeroTensorOperator out;
+    out.name() = A.name();
     for (int i = 0; i < A.oper_exp.size(); i++) {
         out.coef_exp.push_back(a * A.coef_exp[i]);
         out.oper_exp.push_back(A.oper_exp[i]);
@@ -123,6 +127,8 @@ inline RankZeroTensorOperator operator*(ComplexDouble a, RankZeroTensorOperator 
 
 inline RankZeroTensorOperator operator*(RankZeroTensorOperator A, RankZeroTensorOperator B) {
     RankZeroTensorOperator out;
+    out.name() = A.name() + " * " + B.name();
+
     int a_terms = A.oper_exp.size();
     int b_terms = B.oper_exp.size();
 
@@ -142,6 +148,7 @@ inline RankZeroTensorOperator operator*(RankZeroTensorOperator A, RankZeroTensor
 
 inline RankZeroTensorOperator operator+(RankZeroTensorOperator A, RankZeroTensorOperator B) {
     RankZeroTensorOperator out;
+    out.name() = A.name() + " + " + B.name();
     for (int i = 0; i < A.oper_exp.size(); i++) {
         out.coef_exp.push_back(A.coef_exp[i]);
         out.oper_exp.push_back(A.oper_exp[i]);
@@ -155,6 +162,7 @@ inline RankZeroTensorOperator operator+(RankZeroTensorOperator A, RankZeroTensor
 
 inline RankZeroTensorOperator operator-(RankZeroTensorOperator A, RankZeroTensorOperator B) {
     RankZeroTensorOperator out;
+    out.name() = A.name() + " - " + B.name();
     for (int i = 0; i < A.oper_exp.size(); i++) {
         out.coef_exp.push_back(A.coef_exp[i]);
         out.oper_exp.push_back(A.oper_exp[i]);

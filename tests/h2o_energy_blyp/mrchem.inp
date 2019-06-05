@@ -4,11 +4,6 @@ rel_prec = 1.0e-3                 # Overall relative precision
 
 MPI {
   numerically_exact = true
-  share_coulomb_density = true
-  share_coulomb_potential = true
-  share_nuclear_potential = true
-  share_xc_density = false
-  share_xc_potential = false
 }
 
 MRA {
@@ -43,6 +38,6 @@ Properties {
 
 SCF {
   run = false
-  canonical = false               # Use canonical of localized orbitals
+  localize = true                 # Use canonical of localized orbitals
   initial_guess = GTO             # Type of initial guess: none, mw, gto
 }

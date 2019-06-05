@@ -32,6 +32,9 @@ public:
         d[0] = d_x;
         d[1] = d_y;
         d[2] = d_z;
+        d[0].name() = "del[x]";
+        d[1].name() = "del[y]";
+        d[2].name() = "del[z]";
     }
 
 private:

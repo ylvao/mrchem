@@ -47,6 +47,7 @@ public:
     bool hasReal() const { return (this->func_ptr->re == nullptr) ? false : true; }
     bool hasImag() const { return (this->func_ptr->im == nullptr) ? false : true; }
 
+    int getSizeNodes(int type) const;
     int getNNodes(int type) const;
     FunctionData &getFunctionData();
 

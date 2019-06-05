@@ -27,14 +27,19 @@
 
 #include "mrchem.h"
 
+#include "utils/print_utils.h"
+
 namespace mrchem {
 
 // clang-format off
 class NMRShielding final {
 public:
-    explicit NMRShielding(const Nucleus &n) : nuc(n) {}
+    NMRShielding(int k, const Nucleus &n) : K(k), nuc(n) {}
 
-    const Nucleus& getNucleus() const { return this->nuc; }
+    int getK() const { return this->K; }
+    mrcpp::Coord<3> &getOrigin() { return this->origin; }
+    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
+    const Nucleus &getNucleus() const { return this->nuc; }
 
     DoubleMatrix getTensor() const { return getDiamagnetic() + getParamagnetic(); }
     DoubleMatrix &getDiamagnetic() { return this->dia_tensor; }
@@ -42,53 +47,31 @@ public:
     const DoubleMatrix &getDiamagnetic() const { return this->dia_tensor; }
     const DoubleMatrix &getParamagnetic() const { return this->para_tensor; }
 
-    friend std::ostream& operator<<(std::ostream &o, const NMRShielding &nmr) {
-        auto isoDSppm = nmr.getDiamagnetic().trace() / 3.0;
-        auto isoPSppm = nmr.getParamagnetic().trace() / 3.0;
-        auto isoTSppm = isoDSppm + isoPSppm;
+    void print() const {
+        auto iso_ppm_d = getDiamagnetic().trace() / 3.0;
+        auto iso_ppm_p = getParamagnetic().trace() / 3.0;
+        auto iso_ppm_t = iso_ppm_d + iso_ppm_p;
 
-        auto oldPrec = mrcpp::Printer::setPrecision(10);
-        Eigen::IOFormat clean_format(10, 0, ", ", "\n", " [", "] ");
-        o << "                                                            " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                    NMR shielding tensor                    " << std::endl;
-        o << "------------------------------------------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(5);
-        o << std::setw(3)  << nmr.getNucleus().getElement().getSymbol();
-        o << std::setw(26) << nmr.getNucleus().getCoord()[0];
-        o << std::setw(15) << nmr.getNucleus().getCoord()[1];
-        o << std::setw(15) << nmr.getNucleus().getCoord()[2];
-        o << std::endl;
-        mrcpp::Printer::setPrecision(10);
-        o << "                                                            " << std::endl;
-        o << "-------------------- Isotropic averages --------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o << " Total            (ppm)      " << std::setw(30) << isoTSppm   << std::endl;
-        o << " Diamagnetic      (ppm)      " << std::setw(30) << isoDSppm   << std::endl;
-        o << " Paramagnetic     (ppm)      " << std::setw(30) << isoPSppm   << std::endl;
-        o << "                                                            " << std::endl;
-        o << "-------------------------- Total ---------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<                nmr.getTensor().format(clean_format)            << std::endl;
-        o << "                                                            " << std::endl;
-        o << "----------------------- Diamagnetic ------------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<                nmr.getDiamagnetic().format(clean_format)       << std::endl;
-        o << "                                                            " << std::endl;
-        o << "----------------------- Paramagnetic -----------------------" << std::endl;
-        o << "                                                            " << std::endl;
-        o <<                nmr.getParamagnetic().format(clean_format)      << std::endl;
-        o << "                                                            " << std::endl;
-        o << "============================================================" << std::endl;
-        o << "                                                            " << std::endl;
-        mrcpp::Printer::setPrecision(oldPrec);
-
-        return o;
+        mrcpp::print::header(0, "NMR shielding");
+        print_utils::scalar(0, "Nucleus K", getK(), getNucleus().getElement().getSymbol(), 0);
+        print_utils::coord(0, "r_K", getNucleus().getCoord());
+        print_utils::coord(0, "r_O", getOrigin());
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
+        print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Paramagnetic", getParamagnetic(), -1);
+        print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Total tensor", getTensor());
+        print_utils::scalar(0, "Isotropic average", iso_ppm_t, "(ppm)");
+        mrcpp::print::separator(0, '=', 2);
     }
 
 private:
+    const int K;
     const Nucleus nuc;
+    mrcpp::Coord<3> origin{};
     DoubleMatrix dia_tensor{DoubleMatrix::Zero(3,3)};
     DoubleMatrix para_tensor{DoubleMatrix::Zero(3,3)};
 };

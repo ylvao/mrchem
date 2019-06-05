@@ -52,7 +52,6 @@ struct OrbitalData {
     int rank_id;
     int spin;
     int occ;
-    double error;
 };
 
 class Orbital final : public QMFunction {
@@ -68,19 +67,16 @@ public:
     void setOcc(int occ) { this->orb_data.occ = occ; }
     void setSpin(int spin) { this->orb_data.spin = spin; }
     void setRankID(int rank) { this->orb_data.rank_id = rank; }
-    void setError(double error) { this->orb_data.error = error; }
 
     int occ() const { return this->orb_data.occ; }
     int spin() const { return this->orb_data.spin; }
     int rankID() const { return this->orb_data.rank_id; }
-    double error() const { return this->orb_data.error; }
     OrbitalData &getOrbitalData() { return this->orb_data; }
 
     void saveOrbital(const std::string &file);
     void loadOrbital(const std::string &file);
 
     char printSpin() const;
-    friend std::ostream &operator<<(std::ostream &o, Orbital orb) { return orb.print(o); }
 
 private:
     OrbitalData orb_data;

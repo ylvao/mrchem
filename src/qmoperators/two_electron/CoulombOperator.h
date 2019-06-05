@@ -23,6 +23,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &J = (*this);
         J = potential;
+        J.name() = "J";
     }
     CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
                     std::shared_ptr<OrbitalVector> Phi,
@@ -32,6 +33,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &J = (*this);
         J = potential;
+        J.name() = "J";
     }
     CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
                     std::shared_ptr<OrbitalVector> Phi,
@@ -43,6 +45,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &J = (*this);
         J = potential;
+        J.name() = "J";
     }
     ~CoulombOperator() override = default;
 

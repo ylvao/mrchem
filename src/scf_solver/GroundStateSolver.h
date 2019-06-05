@@ -50,9 +50,9 @@ protected:
     std::vector<SCFEnergy> energy;
 
     void reset() override;
-    double calcProperty(FockOperator &F, OrbitalVector &Phi_n, ComplexMatrix &F_mat);
     double calcPropertyError() const;
     void printProperty() const;
+    void printParameters(const std::string &method) const;
 };
 
 } // namespace mrchem

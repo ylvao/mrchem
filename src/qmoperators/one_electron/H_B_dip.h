@@ -14,6 +14,9 @@ public:
         h[0] = 0.5 * l[0];
         h[1] = 0.5 * l[1];
         h[2] = 0.5 * l[2];
+        h[0].name() = "h_B_dip[x]";
+        h[1].name() = "h_B_dip[y]";
+        h[2].name() = "h_B_dip[z]";
     }
 
 private:

@@ -5,7 +5,7 @@
 #include "chemistry/chemistry_utils.h"
 #include "parallel.h"
 #include "qmfunctions/qmfunction_utils.h"
-#include "utils/math_utils.h"
+#include "utils/print_utils.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -28,37 +28,51 @@ namespace mrchem {
  */
 NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double smooth_prec, bool mpi_share)
         : QMPotential(1, mpi_share) {
-    if (proj_prec < 0.0) MSG_FATAL("Negative projection precision");
+    if (proj_prec < 0.0) MSG_ABORT("Negative projection precision");
     if (smooth_prec < 0.0) smooth_prec = proj_prec;
 
-    int oldprec = Printer::setPrecision(5);
-    Printer::printHeader(0, "Setting up nuclear potential");
-    println(0, " Nr  Element         Charge        Precision     Smoothing ");
-    Printer::printSeparator(0, '-');
+    int pprec = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 1;
+    int w1 = 5;
+    int w2 = 8;
+    int w3 = 2 * w0 / 9;
+    int w4 = w0 - w1 - w2 - 3 * w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "N";
+    o_head << std::setw(w2) << "Atom";
+    o_head << std::string(w4, ' ');
+    o_head << std::setw(w3) << "Charge";
+    o_head << std::setw(w3) << "Precision";
+    o_head << std::setw(w3) << "Smoothing";
+
+    mrcpp::print::header(2, "Projecting nuclear potential");
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
 
     NuclearFunction loc_func;
 
     double c = 0.00435 * smooth_prec;
-    for (int i = 0; i < nucs.size(); i++) {
-        const Nucleus &nuc = nucs[i];
+    for (int k = 0; k < nucs.size(); k++) {
+        const Nucleus &nuc = nucs[k];
         double Z = nuc.getCharge();
         double Z_5 = std::pow(Z, 5.0);
         double smooth = std::pow(c / Z_5, 1.0 / 3.0);
 
         // All projection must be done on grand master in order to be exact
-        int proj_rank = (mpi::numerically_exact) ? 0 : i % mpi::orb_size;
+        int proj_rank = (mpi::numerically_exact) ? 0 : k % mpi::orb_size;
 
         this->func.push_back(nuc, smooth);
         if (mpi::orb_rank == proj_rank) loc_func.push_back(nuc, smooth);
 
-        std::stringstream symbol;
-        symbol << nuc.getElement().getSymbol();
-        symbol << "  ";
-        printout(0, std::setw(3) << i + 1 << "     ");
-        printout(0, symbol.str()[0] << symbol.str()[1]);
-        printout(0, std::setw(21) << Z);
-        printout(0, std::setw(14) << smooth_prec);
-        printout(0, std::setw(14) << smooth << std::endl);
+        std::stringstream o_row;
+        o_row << std::setw(w1) << k;
+        o_row << std::setw(w2) << nuc.getElement().getSymbol();
+        o_row << std::string(w4, ' ');
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << Z;
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth_prec;
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth;
+        println(2, o_row.str());
     }
 
     Timer t_tot;
@@ -67,21 +81,21 @@ NuclearPotential::NuclearPotential(const Nuclei &nucs, double proj_prec, double 
     int Z_tot = chemistry::get_total_charge(nucs);
     double abs_prec = proj_prec / Z_tot;
 
-    Timer t_loc;
     QMFunction V_loc(false);
+
+    Timer t_loc;
     qmfunction::project(V_loc, loc_func, NUMBER::Real, abs_prec);
     t_loc.stop();
-    Printer::printSeparator(0, '-');
-    Printer::printTree(0, "Nuclear potential", V_loc.getNNodes(NUMBER::Total), t_loc.getWallTime());
 
     Timer t_com;
     allreducePotential(abs_prec, V_loc);
     t_com.stop();
-    Printer::printTree(0, "Allreduce potential", this->getNNodes(NUMBER::Total), t_com.getWallTime());
 
     t_tot.stop();
-    Printer::printFooter(0, t_tot, 2);
-    Printer::setPrecision(oldprec);
+    mrcpp::print::separator(2, '-');
+    print_utils::qmfunction(2, "Local potential", V_loc, t_loc);
+    print_utils::qmfunction(2, "Allreduce potential", V_loc, t_com);
+    mrcpp::print::footer(2, t_tot, 2);
 }
 
 void NuclearPotential::allreducePotential(double prec, QMFunction &V_loc) {
@@ -126,11 +140,11 @@ double NuclearOperator::trace(const Nuclei &nucs) {
     MSG_WARN("This routine has never been tested!");
     int nNucs = nucs.size();
     double E_nuc = 0.0;
-    for (int i = 0; i < nNucs; i++) {
-        const Nucleus &nuc_i = nucs[i];
-        double Z_i = nuc_i.getCharge();
-        const mrcpp::Coord<3> &R_i = nuc_i.getCoord();
-        E_nuc += Z_i * this->r_m1->evalf(R_i);
+    for (int k = 0; k < nNucs; k++) {
+        const Nucleus &nuc_k = nucs[k];
+        double Z_k = nuc_k.getCharge();
+        const mrcpp::Coord<3> &R_k = nuc_k.getCoord();
+        E_nuc += Z_k * this->r_m1->evalf(R_k);
     }
     return E_nuc;
 }

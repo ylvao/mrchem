@@ -38,29 +38,6 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
-/** @brief Computes the SCF energy by tracing the Fock operator
- *
- * Prints the current nuclear, electronic and total energies.
- */
-double GroundStateSolver::calcProperty(FockOperator &F, OrbitalVector &Phi, ComplexMatrix &F_mat) {
-    Printer::printHeader(0, "Calculating SCF energy");
-    Timer timer;
-
-    SCFEnergy E = F.trace(Phi, F_mat);
-    this->energy.push_back(E);
-
-    timer.stop();
-    int oldPrec = Printer::setPrecision(15);
-    println(0, " Nuclear energy              " << std::setw(30) << E.getNuclearEnergy());
-    println(0, " Electronic energy           " << std::setw(30) << E.getElectronicEnergy());
-    Printer::printSeparator(0, '-');
-    println(0, " Total energy                " << std::setw(30) << E.getTotalEnergy());
-    Printer::printFooter(0, timer, 2);
-    Printer::setPrecision(oldPrec);
-
-    return E.getTotalEnergy();
-}
-
 /** @brief Computes the SCF energy update from last iteration */
 double GroundStateSolver::calcPropertyError() const {
     int iter = this->property.size();
@@ -91,19 +68,107 @@ void GroundStateSolver::printProperty() const {
     double N_0 = scf_0.getNuclearEnergy();
     double N_1 = scf_1.getNuclearEnergy();
 
-    Printer::printHeader(0, "                    Energy                 Update      Done ");
-    printUpdate(" Orbital    ", phi_1, phi_1 - phi_0);
-    printUpdate(" Kinetic    ", T_1, T_1 - T_0);
-    printUpdate(" N-E        ", V_1, V_1 - V_0);
-    printUpdate(" Coulomb    ", J_1, J_1 - J_0);
-    printUpdate(" Exchange   ", K_1, K_1 - K_0);
-    printUpdate(" X-C        ", XC_1, XC_1 - XC_0);
-    Printer::printSeparator(0, '-');
-    printUpdate(" Electronic ", E_1, E_1 - E_0);
-    printUpdate(" Nuclear    ", N_1, N_1 - N_0);
-    Printer::printSeparator(0, '-');
-    printUpdate(" Total      ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0));
-    Printer::printSeparator(0, '=');
+    int w0 = (Printer::getWidth() - 1);
+    int w1 = 20;
+    int w2 = w0 / 3;
+    int w3 = 8;
+    int w4 = w0 - w1 - w2 - w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << " ";
+    o_head << std::setw(w2) << "Energy";
+    o_head << std::setw(w4) << "Update";
+    o_head << std::setw(w3) << "Done";
+
+    mrcpp::print::separator(2, '=');
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
+
+    printUpdate(2, " Orbital energy  ", phi_1, phi_1 - phi_0, this->propThrs);
+    printUpdate(2, " Kinetic energy  ", T_1, T_1 - T_0, this->propThrs);
+    printUpdate(2, " N-E energy      ", V_1, V_1 - V_0, this->propThrs);
+    printUpdate(2, " Coulomb energy  ", J_1, J_1 - J_0, this->propThrs);
+    printUpdate(2, " Exchange energy ", K_1, K_1 - K_0, this->propThrs);
+    printUpdate(2, " X-C energy      ", XC_1, XC_1 - XC_0, this->propThrs);
+    mrcpp::print::separator(2, '-');
+    printUpdate(2, " Electronic energy", E_1, E_1 - E_0, this->propThrs);
+    printUpdate(2, " Nuclear energy   ", N_1, N_1 - N_0, this->propThrs);
+    mrcpp::print::separator(2, '-');
+    printUpdate(1, " Total energy     ", E_1 + N_1, (E_1 + N_1) - (E_0 + N_0), this->propThrs);
+    mrcpp::print::separator(2, '=', 2);
+}
+
+void GroundStateSolver::printParameters(const std::string &calculation) const {
+    std::stringstream o_iter;
+    if (this->maxIter > 0) {
+        o_iter << this->maxIter;
+    } else {
+        o_iter << "Off";
+    }
+
+    std::stringstream o_kain;
+    if (this->history > 0) {
+        o_kain << this->history;
+    } else {
+        o_kain << "Off";
+    }
+
+    std::stringstream o_loc;
+    if (this->localize) {
+        if (this->rotation == 0) {
+            o_loc << "First two iterations";
+        } else if (this->rotation == 1) {
+            o_loc << "Every iteration";
+        } else {
+            o_loc << "Every " << this->rotation << " iterations";
+        }
+    } else {
+        o_loc << "Off";
+    }
+
+    std::stringstream o_diag;
+    if (not this->localize) {
+        if (this->rotation == 0) {
+            o_diag << "First two iterations";
+        } else if (this->rotation == 1) {
+            o_diag << "Every iteration";
+        } else {
+            o_diag << "Every " << this->rotation << " iterations";
+        }
+    } else {
+        o_diag << "Off";
+    }
+
+    std::stringstream o_thrs_p;
+    if (this->propThrs < 0.0) {
+        o_thrs_p << "Off";
+    } else {
+        o_thrs_p << std::setprecision(5) << std::scientific << this->propThrs;
+    }
+
+    std::stringstream o_thrs_o;
+    if (this->orbThrs < 0.0) {
+        o_thrs_o << "Off";
+    } else {
+        o_thrs_o << std::setprecision(5) << std::scientific << this->orbThrs;
+    }
+
+    std::stringstream o_prec_0, o_prec_1;
+    o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[1];
+    o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
+
+    mrcpp::print::separator(0, '~');
+    print_utils::text(0, "Calculation      ", calculation);
+    print_utils::text(0, "Method           ", this->methodName);
+    print_utils::text(0, "Max iterations   ", o_iter.str());
+    print_utils::text(0, "KAIN solver      ", o_kain.str());
+    print_utils::text(0, "Localization     ", o_loc.str());
+    print_utils::text(0, "Diagonalization  ", o_diag.str());
+    print_utils::text(0, "Start precision  ", o_prec_0.str());
+    print_utils::text(0, "Final precision  ", o_prec_1.str());
+    print_utils::text(0, "Energy threshold ", o_thrs_p.str());
+    print_utils::text(0, "Orbital threshold", o_thrs_o.str());
+    mrcpp::print::separator(0, '~', 2);
 }
 
 /** @brief Reset accumulated data */

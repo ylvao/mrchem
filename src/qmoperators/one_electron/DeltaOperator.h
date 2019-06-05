@@ -24,6 +24,7 @@ public:
         // Invoke operator= to assign *this operator
         RankZeroTensorOperator &d = (*this);
         d = delta;
+        d.name() = "delta";
     }
 
 private:

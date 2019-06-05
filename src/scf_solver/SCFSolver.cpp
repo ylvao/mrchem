@@ -25,6 +25,7 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include "MRCPP/utils/details.h"
 
 #include "SCFSolver.h"
 #include "qmfunctions/Orbital.h"
@@ -61,7 +62,7 @@ void SCFSolver::setOrbitalPrec(double init, double final) {
 
 /** @brief Reset accumulated data */
 void SCFSolver::reset() {
-    this->orbError.clear();
+    this->error.clear();
     this->property.clear();
     this->orbPrec[0] = this->orbPrec[1];
 }
@@ -79,12 +80,12 @@ double SCFSolver::adjustPrecision(double error) {
     this->orbPrec[0] = std::min(10.0 * error * error, this->orbPrec[0]);
     this->orbPrec[0] = std::max(this->orbPrec[0], this->orbPrec[2]);
 
-    Printer::printSeparator(0, '=');
-    Printer::printDouble(0, "Current precision", this->orbPrec[0], 5);
-    Printer::printSeparator(0, '-');
-    Printer::printDouble(0, "Orbital threshold", this->orbThrs, 5);
-    Printer::printDouble(0, "Property threshold", this->propThrs, 5);
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(2, '=');
+    mrcpp::print::value(1, "Current precision", this->orbPrec[0], "", 5);
+    mrcpp::print::separator(1, '-');
+    mrcpp::print::value(2, "Orbital threshold", this->orbThrs, "", 5);
+    mrcpp::print::value(2, "Property threshold", this->propThrs, "", 5);
+    mrcpp::print::separator(2, '=', 2);
     return this->orbPrec[0];
 }
 
@@ -107,14 +108,14 @@ bool SCFSolver::checkConvergence(double err_o, double err_p) const {
  *
  * @param nIter: current iteration number
  *
- * This check is based on the "canonical" and "rotation" parameters, where the latter
+ * This check is based on the "localize" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
-bool SCFSolver::needLocalization(int nIter) const {
+bool SCFSolver::needLocalization(int nIter, bool converged) const {
     bool loc = false;
-    if (this->canonical) {
+    if (not this->localize) {
         loc = false;
-    } else if (nIter <= 2) {
+    } else if (nIter <= 2 or converged) {
         loc = true;
     } else if (this->rotation == 0) {
         loc = false;
@@ -128,14 +129,14 @@ bool SCFSolver::needLocalization(int nIter) const {
  *
  * @param nIter: current iteration number
  *
- * This check is based on the "canonical" and "rotation" parameters, where the latter
+ * This check is based on the "localize" and "rotation" parameters, where the latter
  * tells how oftern (in terms of iterations) the orbitals should be rotated.
  */
-bool SCFSolver::needDiagonalization(int nIter) const {
+bool SCFSolver::needDiagonalization(int nIter, bool converged) const {
     bool diag = false;
-    if (not this->canonical) {
+    if (this->localize) {
         diag = false;
-    } else if (nIter <= 2) {
+    } else if (nIter <= 2 or converged) {
         diag = true;
     } else if (this->rotation == 0) {
         diag = false;
@@ -171,17 +172,24 @@ double SCFSolver::getUpdate(const std::vector<double> &vec, int i, bool absPrec)
  *
  * Adds convergence status based on the property threshold.
  */
-void SCFSolver::printUpdate(const std::string &name, double P, double dP) const {
-    int oldPrec = Printer::setPrecision(15);
+void SCFSolver::printUpdate(int plevel, const std::string &txt, double P, double dP, double thrs) const {
+    int pprec = Printer::getPrecision();
+    int w0 = (Printer::getWidth() - 1);
+    int w1 = 20;
+    int w2 = w0 / 3;
+    int w3 = 8;
+    int w4 = w0 - w1 - w2 - w3;
+
     double p = 1.0;
-    if (std::abs(P) > mrcpp::MachineZero) { p = P; }
-    bool done = (std::abs(dP / p) < this->propThrs) or this->propThrs < 0.0;
-    printout(0, name);
-    printout(0, std::setw(24) << P);
-    Printer::setPrecision(5);
-    printout(0, std::setw(16) << dP);
-    println(0, std::setw(5) << done);
-    Printer::setPrecision(oldPrec);
+    if (std::abs(P) > mrcpp::MachineZero) p = P;
+    bool done = (std::abs(dP / p) < thrs) or (thrs < 0.0);
+
+    std::stringstream o_row;
+    o_row << txt << std::string(w1 - txt.size(), ' ');
+    o_row << std::setw(w2) << std::setprecision(2 * pprec) << std::fixed << P;
+    o_row << std::setw(w4) << std::setprecision(pprec) << std::scientific << dP;
+    o_row << std::setw(w3) << done;
+    println(plevel, o_row.str());
 }
 
 /** @brief Pretty printing of orbitals with energies
@@ -190,34 +198,86 @@ void SCFSolver::printUpdate(const std::string &name, double P, double dP) const 
  * @param Phi: orbital vector
  * @param flag: interpret epsilon as energy or norm
  */
-void SCFSolver::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &Phi, int flag) const {
-    Printer::printHeader(0, "Orbitals");
-    if (flag == 0) println(0, " Orb    F(i,i)        Error         nNodes  Spin  Occ  Done ");
-    if (flag == 1) println(0, " Orb    Norm          Error         nNodes  Spin  Occ  Done ");
-    Printer::printSeparator(0, '-');
-    int oldprec = Printer::setPrecision(5);
-    bool tot_conv = true;
+void SCFSolver::printOrbitals(const DoubleVector &norms,
+                              const DoubleVector &errors,
+                              const OrbitalVector &Phi,
+                              int flag) const {
+    int pprec = Printer::getPrecision();
+    int w0 = (Printer::getWidth() - 1);
+    int w1 = 5;
+    int w2 = 7;
+    int w3 = 8;
+    int w4 = w0 / 3;
+    int w5 = 8;
+    int w6 = w0 - w1 - w2 - w3 - w4 - w5;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w2) << "Spin";
+    o_head << std::setw(w3) << "Nodes";
+    if (flag == 0) o_head << std::setw(w4) << "F(i,i)";
+    if (flag == 1) o_head << std::setw(w4) << "Norm";
+    o_head << std::setw(w6) << "Residual";
+    o_head << std::setw(w5) << "Done";
+
+    mrcpp::print::separator(2, '=');
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
+
+    bool conv_tot = true;
     for (int i = 0; i < Phi.size(); i++) {
-        bool converged = (Phi[i].error() < this->orbThrs) ? true : false;
-        printout(0, std::setw(3) << i);
-        printout(0, " " << std::setw(13) << epsilon(i));
-        printout(0, " " << std::setw(13) << Phi[i].error());
-        printout(0, " " << std::setw(10) << Phi[i].getNNodes(NUMBER::Total));
-        printout(0, std::setw(5) << Phi[i].printSpin());
-        printout(0, std::setw(5) << Phi[i].occ());
-        printout(0, std::setw(5) << converged << std::endl);
-        if (not converged) tot_conv = false;
+        bool conv_i = (errors(i) < this->orbThrs) or (this->orbThrs < 0.0);
+        std::stringstream o_row;
+        o_row << std::setw(w1) << i;
+        o_row << std::setw(w2) << Phi[i].printSpin();
+        o_row << std::setw(w3) << Phi[i].getNNodes(NUMBER::Total);
+        o_row << std::setw(w4) << std::setprecision(2 * pprec) << std::fixed << norms(i);
+        o_row << std::setw(w6) << std::setprecision(pprec) << std::scientific << errors(i);
+        o_row << std::setw(w5) << conv_i;
+        println(2, o_row.str());
+        if (not conv_i) conv_tot = false;
     }
+    mrcpp::print::separator(1, '-');
+    printout(1, " Total residual" << std::string(w1 + w2 + w3 - 15, ' '));
+    printout(1, std::setw(w4 + w6) << std::setprecision(pprec) << std::scientific << errors.norm());
+    printout(1, std::setw(w5) << conv_tot << std::endl);
+    mrcpp::print::separator(2, '=', 2);
+}
 
-    DoubleVector errors = orbital::get_errors(Phi);
-    double tot_error = std::sqrt(errors.dot(errors));
+void SCFSolver::printConvergenceHeader() const {
+    int w0 = Printer::getWidth() - 1;
+    int w1 = 5;
+    int w2 = 3 * w0 / 10;
+    int w3 = w0 - w1 - 2 * w2;
 
-    Printer::printSeparator(0, '-');
-    printout(0, " Total error:                    ");
-    printout(0, std::setw(19) << tot_error << "  ");
-    printout(0, std::setw(3) << tot_conv << std::endl);
-    Printer::printSeparator(0, '=', 2);
-    Printer::setPrecision(oldprec);
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "Iter";
+    o_head << std::setw(w2) << "MO residual";
+    o_head << std::setw(w3) << "Property";
+    o_head << std::setw(w2) << "Update";
+
+    mrcpp::print::separator(0, '=');
+    println(0, o_head.str());
+    mrcpp::print::separator(0, '-');
+}
+
+void SCFSolver::printConvergenceRow(int i) const {
+    auto pprec = Printer::getPrecision();
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = 5;
+    auto w2 = 3 * w0 / 10;
+    auto w3 = w0 - w1 - 2 * w2;
+
+    auto residual = this->error[i];
+    auto property = this->property[i];
+    auto update = getUpdate(this->property, i + 1, true);
+
+    std::stringstream o_txt;
+    o_txt << std::setw(w1) << i;
+    o_txt << std::setw(w2) << std::setprecision(pprec) << std::scientific << residual;
+    o_txt << std::setw(w3) << std::setprecision(2 * pprec) << std::fixed << property;
+    o_txt << std::setw(w2) << std::setprecision(pprec) << std::scientific << update;
+    println(0, o_txt.str());
 }
 
 /** @brief Pretty printing of convergence pattern
@@ -227,57 +287,48 @@ void SCFSolver::printOrbitals(const DoubleVector &epsilon, const OrbitalVector &
  * Prints convergence in both orbitals and property.
  */
 void SCFSolver::printConvergence(bool converged) const {
-    int iter = this->orbError.size();
-    int oldPrec = Printer::getPrecision();
-    Printer::printHeader(0, "Convergence rate");
-    println(0, "Iter    OrbError       Property                   Update  ");
-    Printer::printSeparator(0, '-');
-    for (int i = 0; i < iter; i++) {
-        double prop_i = this->property[i];
-        double propDiff = getUpdate(this->property, i + 1, true);
-        printout(0, std::setw(3) << i + 1);
-        Printer::setPrecision(5);
-        printout(0, std::setw(15) << this->orbError[i]);
-        Printer::setPrecision(15);
-        printout(0, std::setw(26) << prop_i);
-        Printer::setPrecision(5);
-        printout(0, std::setw(15) << propDiff);
-        printout(0, std::endl);
+    auto plevel = Printer::getPrintLevel();
+    auto w0 = Printer::getWidth() - 1;
+    auto w1 = (w0 - 30) / 2;
+    auto w2 = (w0 - 25) / 2;
+
+    auto nIter = this->error.size();
+    if (plevel > 0) {
+        printConvergenceHeader();
+        for (int i = 0; i < nIter; i++) printConvergenceRow(i);
     }
-    Printer::setPrecision(oldPrec);
-    Printer::printSeparator(0, '-');
+    mrcpp::print::separator(0, '-');
     if (converged) {
-        println(0, "                      SCF converged!!!                      ");
+        println(0, std::string(w1, ' ') << "SCF converged in " << nIter - 1 << " iterations!");
     } else {
-        println(0, "                   SCF did NOT converge!!!                  ");
+        println(0, std::string(w2, ' ') << "SCF did NOT converge!!!");
     }
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '=', 2);
 }
 
-/** @brief Pretty printing of SCF cycle header
- *
- * @param nIter: current iteration number
- */
-void SCFSolver::printCycleHeader(int nIter) const {
-    printout(0, std::endl << std::endl);
-    printout(0, "#######################");
-    printout(0, " SCF cycle " << std::setw(2) << nIter << " ");
-    printout(0, "#######################");
-    printout(0, std::endl << std::endl << std::endl);
-}
+void SCFSolver::printMemory() const {
+    DoubleVector mem_vec = DoubleVector::Zero(mpi::orb_size);
+    mem_vec(mpi::orb_rank) = static_cast<double>(mrcpp::details::get_memory_usage());
+    mpi::allreduce_vector(mem_vec, mpi::comm_orb);
 
-/** @brief Pretty printing of SCF cycle footer
- *
- * @param t: timing for SCF cycle
- */
-void SCFSolver::printCycleFooter(double t) const {
-    int oldPrec = Printer::setPrecision(5);
-    printout(0, std::endl << std::endl);
-    printout(0, "################");
-    printout(0, " Wall time: " << t << " sec ");
-    printout(0, "################");
-    printout(0, std::endl << std::endl << std::endl);
-    Printer::setPrecision(oldPrec);
+    std::string mem_unit = "(kB)";
+    if (mem_vec.maxCoeff() > 512.0) {
+        mem_vec.array() /= 1024.0;
+        mem_unit = "(MB)";
+    }
+    if (mem_vec.maxCoeff() > 512.0) {
+        mem_vec.array() /= 1024.0;
+        mem_unit = "(GB)";
+    }
+
+    auto plevel = Printer::getPrintLevel();
+    if (plevel == 1) mrcpp::print::separator(1, '-');
+    mrcpp::print::header(2, "Memory usage");
+    mrcpp::print::value(1, "Total memory current process", mem_vec(mpi::orb_rank), mem_unit, 2, false);
+    mrcpp::print::value(2, "Maximum memory process", mem_vec.maxCoeff(), mem_unit, 2, false);
+    mrcpp::print::value(2, "Minimum memory process", mem_vec.minCoeff(), mem_unit, 2, false);
+    mrcpp::print::value(2, "Average memory process", mem_vec.mean(), mem_unit, 2, false);
+    mrcpp::print::separator(2, '=', 2);
 }
 
 } // namespace mrchem

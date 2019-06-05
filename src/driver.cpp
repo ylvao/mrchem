@@ -100,9 +100,7 @@ DerivativeOperator_p get_derivative(const std::string &name);
  * This function expects the "molecule" subsection of the input.
  */
 void driver::init_molecule(const json &json_mol, Molecule &mol) {
-    Printer::printHeader(0, "Molecule input");
-    println(0, json_mol.dump(2));
-    Printer::printSeparator(0, '=', 2);
+    print_utils::headline(0, "Initializing Molecule");
 
     auto charge = json_mol["charge"].get<int>();
     auto multiplicity = json_mol["multiplicity"].get<int>();
@@ -131,9 +129,7 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
  * This function expects the "initial_guess" subsection of the input.
  */
 bool driver::run_guess(const json &json_guess, Molecule &mol) {
-    Printer::printHeader(0, "Initial guess input");
-    println(0, json_guess.dump(2));
-    Printer::printSeparator(0, '=', 2);
+    print_utils::headline(0, "Computing Initial Guess Wavefunction");
 
     auto &Phi = mol.getOrbitals();
     auto &F_mat = mol.getFockMatrix();
@@ -141,6 +137,10 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
     auto method = json_guess["method"].get<std::string>();
     if (method == "mw") {
         auto start_orbs = json_guess["start_orbitals"].get<std::string>();
+        mrcpp::print::separator(0, '~');
+        print_utils::text(0, "Calculation ", "Read orbitals from file (MW)");
+        print_utils::text(0, "File name   ", start_orbs);
+        mrcpp::print::separator(0, '~', 2);
         Phi = orbital::load_orbitals(start_orbs);
     } else if (method == "core") {
         auto guess_prec = json_guess["guess_prec"].get<double>();
@@ -167,12 +167,13 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
         MSG_ERROR("Invalid initial guess");
         return false;
     }
-
-    F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
+    orbital::print(Phi);
 
     auto write_orbs = json_guess["write_orbitals"].get<bool>();
     auto final_orbs = json_guess["final_orbitals"].get<std::string>();
     if (write_orbs) orbital::save_orbitals(Phi, final_orbs);
+
+    F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
 
     return true;
 }
@@ -189,96 +190,102 @@ bool driver::run_guess(const json &json_guess, Molecule &mol) {
  * This function expects the "scf_calculation" subsection of the input.
  */
 bool driver::run_scf(const json &json_scf, Molecule &mol) {
-    Printer::printHeader(0, "SCF input");
-    println(0, json_scf.dump(2));
-    Printer::printSeparator(0, '=', 2);
-
-    auto success = true;
-    auto scf_prec = json_scf["scf_prec"].get<double>();
-    auto localize = json_scf["localize"].get<bool>();
+    print_utils::headline(0, "Computing Ground State Wavefunction");
 
     const auto &json_fock = json_scf["fock_operator"].get<json>();
     FockOperator F;
     driver::build_fock_operator(json_fock, mol, F, 0);
 
-    ///////////////////////////////////////////////////////////
-    /////////////////   Running SCF Solver  ///////////////////
-    ///////////////////////////////////////////////////////////
-
+    auto success = true;
     auto &Phi = mol.getOrbitals();
     auto &F_mat = mol.getFockMatrix();
 
-    // Run OrbitalOptimizer if present in input JSON
-    auto orbital_solver_it = json_scf.find("orbital_solver");
-    if (orbital_solver_it != json_scf.end()) {
-        const auto &json_solver = *orbital_solver_it;
-        auto kain = json_solver["kain"].get<int>();
-        auto max_iter = json_solver["max_iter"].get<int>();
-        auto rotation = json_solver["rotation"].get<int>();
-        auto start_prec = json_solver["start_prec"].get<double>();
-        auto final_prec = json_solver["final_prec"].get<double>();
-        auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
-        auto property_thrs = json_solver["property_thrs"].get<double>();
+    // Calc inital energy if present in input JSON
+    auto initial_energy = json_scf.find("initial_energy");
+    if (initial_energy != json_scf.end()) {
+        auto prec = (*initial_energy)["prec"].get<double>();
+        auto localize = (*initial_energy)["localize"].get<bool>();
+        auto method = (*initial_energy)["method_name"].get<std::string>();
 
-        OrbitalOptimizer solver;
-        solver.setHistory(kain);
-        solver.setMaxIterations(max_iter);
-        solver.setRotation(rotation);
-        solver.setCanonical(not(localize));
-        solver.setOrbitalPrec(start_prec, final_prec);
-        solver.setThreshold(orbital_thrs, property_thrs);
-        success = solver.optimize(F, Phi, F_mat);
-    } else {
-        F.setup(scf_prec);
+        std::stringstream o_prec;
+        o_prec << std::setprecision(5) << std::scientific << prec;
+        mrcpp::print::separator(0, '~');
+        print_utils::text(0, "Calculation", "Compute initial energy");
+        print_utils::text(0, "Method", method);
+        print_utils::text(0, "Precision", o_prec.str());
+        print_utils::text(0, "Localization", (localize) ? "On" : "Off");
+        mrcpp::print::separator(0, '~', 2);
+
+        Timer timer;
+        auto plevel = Printer::getPrintLevel();
+        if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Energy");
+        F.setup(prec);
         F_mat = F(Phi, Phi);
+        mol.getSCFEnergy() = F.trace(Phi, F_mat);
         F.clear();
 
         if (localize) {
-            orbital::localize(scf_prec, Phi, F_mat);
+            orbital::localize(prec, Phi, F_mat);
         } else {
-            orbital::diagonalize(scf_prec, Phi, F_mat);
+            orbital::diagonalize(prec, Phi, F_mat);
         }
+        if (plevel == 1) mrcpp::print::footer(1, timer, 2);
+
+        mol.getSCFEnergy().print();
+    }
+
+    // Run OrbitalOptimizer if present in input JSON
+    auto orbital_solver = json_scf.find("orbital_solver");
+    if (orbital_solver != json_scf.end()) {
+        auto method = (*orbital_solver)["method_name"].get<std::string>();
+        auto kain = (*orbital_solver)["kain"].get<int>();
+        auto max_iter = (*orbital_solver)["max_iter"].get<int>();
+        auto rotation = (*orbital_solver)["rotation"].get<int>();
+        auto localize = (*orbital_solver)["localize"].get<bool>();
+        auto start_prec = (*orbital_solver)["start_prec"].get<double>();
+        auto final_prec = (*orbital_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*orbital_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*orbital_solver)["property_thrs"].get<double>();
+
+        OrbitalOptimizer solver;
+        solver.setMethodName(method);
+        solver.setHistory(kain);
+        solver.setMaxIterations(max_iter);
+        solver.setRotation(rotation);
+        solver.setLocalize(localize);
+        solver.setOrbitalPrec(start_prec, final_prec);
+        solver.setThreshold(orbital_thrs, property_thrs);
+        success = solver.optimize(mol, F);
     }
 
     // Run EnergyOptimizer if present in input JSON
-    auto energy_solver_it = json_scf.find("energy_solver");
-    if (energy_solver_it != json_scf.end()) {
-        const auto &json_solver = *energy_solver_it;
-        auto max_iter = json_solver["max_iter"].get<int>();
-        auto start_prec = json_solver["start_prec"].get<double>();
-        auto final_prec = json_solver["final_prec"].get<double>();
-        auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
-        auto property_thrs = json_solver["property_thrs"].get<double>();
+    auto energy_solver = json_scf.find("energy_solver");
+    if (energy_solver != json_scf.end()) {
+        auto method = (*orbital_solver)["method_name"].get<std::string>();
+        auto max_iter = (*energy_solver)["max_iter"].get<int>();
+        auto localize = (*energy_solver)["localize"].get<bool>();
+        auto start_prec = (*energy_solver)["start_prec"].get<double>();
+        auto final_prec = (*energy_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*energy_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*energy_solver)["property_thrs"].get<double>();
 
         EnergyOptimizer solver;
+        solver.setMethodName(method);
         solver.setMaxIterations(max_iter);
         solver.setRotation(1);
-        solver.setCanonical(not(localize));
+        solver.setLocalize(localize);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
-        success = solver.optimize(F, Phi, F_mat);
+        success = solver.optimize(mol, F);
     }
 
-    ///////////////////////////////////////////////////////////
-    ///////////////   Computing Properties   //////////////////
-    ///////////////////////////////////////////////////////////
-
-    F.setup(scf_prec);
-    Printer::printHeader(0, "Calculating SCF energy");
-    Timer timer;
-    SCFEnergy &energy = mol.getSCFEnergy();
-    energy = F.trace(Phi, F_mat);
-    timer.stop();
-    Printer::printFooter(0, timer, 2);
-    F.clear();
-
     if (success) {
-        const auto &json_prop = json_scf["properties"].get<json>();
-        driver::calc_scf_properties(json_prop, mol);
-
         auto final_orbs = json_scf["final_orbitals"].get<std::string>();
         auto write_orbs = json_scf["write_orbitals"].get<bool>();
         if (write_orbs) orbital::save_orbitals(Phi, final_orbs);
+
+        auto json_prop = json_scf["properties"].get<json>();
+        calc_scf_properties(json_prop, mol);
     }
 
     return success;
@@ -298,9 +305,9 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
  * vector of the input.
  */
 bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
-    Printer::printHeader(0, "Response input");
+    mrcpp::print::header(0, "Response input");
     println(0, json_rsp.dump(2));
-    Printer::printSeparator(0, '=', 2);
+    mrcpp::print::separator(0, '=', 2);
 
     auto success = true;
     auto rsp_prec = json_rsp["rsp_prec"].get<double>();
@@ -347,7 +354,7 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         LinearResponseSolver solver(dynamic, F_0, Phi, F_mat);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
-        solver.setCanonical(not(localize));
+        solver.setLocalize(localize);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
 
@@ -387,25 +394,31 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
  * This includes the diamagnetic contributions to the magnetic response properties.
  */
 void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    print_utils::headline(1, "Computing Ground State Properties");
+    if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Properties");
+
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
 
     auto json_dipole = json_prop.find("dipole_moment");
     if (json_dipole != json_prop.end()) {
-        Printer::printHeader(0, "Calculating dipole moment");
+        t_lap.start();
+        mrcpp::print::header(2, "Dipole moment");
         auto prec = (*json_dipole)["setup_prec"].get<double>();
         auto r_O = (*json_dipole)["origin"].get<Coord<3>>();
 
         DipoleMoment &mu = mol.getDipoleMoment();
+        mu.getOrigin() = r_O;
 
-        Timer timer;
         H_E_dip h(r_O);
         h.setup(prec);
         mu.getNuclear() = h.trace(nuclei).real();
         mu.getElectronic() = h.trace(Phi).real();
         h.clear();
-        timer.stop();
-        Printer::printFooter(0, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
     }
 
     auto json_quadrupole = json_prop.find("quadrupole_moment");
@@ -415,99 +428,49 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     if (json_hyperpolarizability != json_prop.end()) MSG_ERROR("Hyperpolarizability not implemented");
 
     auto json_gradient = json_prop.find("nuclear_gradient");
-    if (json_gradient != json_prop.end()) {
-        MSG_ERROR("Nuclear gradient not implemented");
-        /*
-        Printer::printHeader(0, "Calculating geometry derivatives");
-        auto prec = json_input["grad_prec"].get<double>();
-        auto smooth = json_input["grad_smooth"].get<double>();
-
-        Timer timer;
-        DoubleMatrix &nuc = mol.getGeometryDerivatives().getNuclear();
-        DoubleMatrix &el = mol.getGeometryDerivatives().getElectronic();
-        DoubleVector vecsum = DoubleVector::Zero(3);
-        DoubleVector torque = DoubleVector::Zero(3);
-
-        for (int k = 0; k < nuclei.size(); k++) {
-            const Nucleus &nuc_k = nuclei[k];
-            double Z_k = nuc_k.getCharge();
-            const Coord<3> &R_k = nuc_k.getCoord();
-            // Nuclear part
-            for (int l = 0; l < nuclei.size(); l++) {
-                if (l == k) continue;
-                const Nucleus &nuc_l = nuclei[l];
-                double Z_l = nuc_l.getCharge();
-                const mrcpp::Coord<3> &R_l = nuc_l.getCoord();
-                double R_kl = std::pow(math_utils::calc_distance(R_k, R_l), 3.0);
-                nuc(k, 0) -= Z_k * Z_l * (R_k[0] - R_l[0]) / R_kl;
-                nuc(k, 1) -= Z_k * Z_l * (R_k[1] - R_l[1]) / R_kl;
-                nuc(k, 2) -= Z_k * Z_l * (R_k[2] - R_l[2]) / R_kl;
-            }
-            // Electronic part
-            NuclearGradientOperator r_rm3(nuc_k, smooth);
-            r_rm3.setup(prec);
-            el.row(k) = r_rm3.trace(Phi).real();
-            r_rm3.clear();
-
-            // Total force
-            vecsum += el.row(k);
-            vecsum += nuc.row(k);
-
-            // Total torque
-            torque[0] += R_k[1] * (el(k, 2) + nuc(k, 2)) - R_k[2] * (el(k, 1) + nuc(k, 1));
-            torque[1] += R_k[2] * (el(k, 0) + nuc(k, 0)) - R_k[0] * (el(k, 2) + nuc(k, 2));
-            torque[2] += R_k[0] * (el(k, 1) + nuc(k, 1)) - R_k[1] * (el(k, 0) + nuc(k, 0));
-        }
-        println(0, "nuclear part    ");
-        println(0, nuc);
-        println(0, "electronic part ");
-        println(0, el);
-        println(0, "Total force acting on nuclei");
-        println(0, vecsum.transpose());
-        println(0, "Torque acting on nuclei");
-        println(0, torque.transpose());
-        timer.stop();
-        Printer::printFooter(0, timer, 2);
-    */
-    }
+    if (json_gradient != json_prop.end()) MSG_ERROR("Nuclear gradient not implemented");
 
     auto json_mag = json_prop.find("magnetizability");
     if (json_mag != json_prop.end()) {
-        Printer::printHeader(0, "Calculating diamagnetic magnetizability");
+        t_lap.start();
+        mrcpp::print::header(2, "Magnetizability (dia)");
         auto prec = (*json_mag)["setup_prec"].get<double>();
         auto r_O = (*json_mag)["origin"].get<Coord<3>>();
 
-        Magnetizability &eta = mol.getMagnetizability();
+        Magnetizability &khi = mol.getMagnetizability();
 
-        Timer timer;
         H_BB_dia h(r_O);
         h.setup(prec);
-        eta.getDiamagnetic() = -h.trace(Phi).real();
+        khi.getOrigin() = r_O;
+        khi.getDiamagnetic() = -h.trace(Phi).real();
         h.clear();
-        timer.stop();
-        Printer::printFooter(0, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Magnetizability (dia)", t_lap);
     }
 
     auto json_nmr = json_prop.find("nmr_shielding");
     if (json_nmr != json_prop.end()) {
-        Printer::printHeader(0, "Calculating diamagnetic NMR shielding");
+        t_lap.start();
+        mrcpp::print::header(2, "NMR shielding (dia)");
         auto prec = (*json_nmr)["setup_prec"].get<double>();
         auto r_O = (*json_nmr)["origin"].get<Coord<3>>();
         auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
 
-        Timer timer;
         for (int k = 0; k < nucleus_k.size(); k++) {
+            if (k != 0) mrcpp::print::separator(2, '-');
             NMRShielding &sigma_k = mol.getNMRShielding(nucleus_k[k]);
             const auto &r_K = sigma_k.getNucleus().getCoord();
 
             H_BM_dia h(r_O, r_K);
             h.setup(prec);
+            sigma_k.getOrigin() = r_O;
             sigma_k.getDiamagnetic() = h.trace(Phi).real();
             h.clear();
         }
-        timer.stop();
-        Printer::printFooter(0, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "NMR shielding (dia)", t_lap);
     }
+    if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Compute linear response properties
@@ -522,7 +485,7 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
 
     auto json_pol = json_prop.find("polarizability");
     if (json_pol != json_prop.end()) {
-        Printer::printHeader(0, "Calculating polarizability");
+        mrcpp::print::header(1, "Calculating polarizability");
         auto prec = (*json_pol)["setup_prec"].get<double>();
         auto r_O = (*json_pol)["origin"].get<Coord<3>>();
 
@@ -534,26 +497,26 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
         alpha.getTensor().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
         timer.stop();
-        Printer::printFooter(0, timer, 2);
+        mrcpp::print::footer(1, timer, 2);
     }
 
     auto json_mag = json_prop.find("magnetizability");
     if (json_mag != json_prop.end()) {
-        Printer::printHeader(0, "Calculating paramagnetic magnetizability");
+        mrcpp::print::header(1, "Calculating paramagnetic magnetizability");
         auto prec = (*json_mag)["setup_prec"].get<double>();
         auto r_O = (*json_mag)["origin"].get<Coord<3>>();
         auto pert_diff = (*json_mag)["derivative"].get<std::string>();
         auto D = driver::get_derivative(pert_diff);
 
-        Magnetizability &eta = mol.getMagnetizability();
+        Magnetizability &khi = mol.getMagnetizability();
 
         Timer timer;
         H_B_dip h(D, r_O);
         h.setup(prec);
-        eta.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
+        khi.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
         timer.stop();
-        Printer::printFooter(0, timer, 2);
+        mrcpp::print::footer(1, timer, 2);
     }
 }
 
@@ -605,7 +568,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
             auto J_p = std::make_shared<CoulombOperator>(P_p, Phi_p, X_p, Y_p, shared_memory);
             F.getCoulombOperator() = J_p;
         } else {
-            MSG_FATAL("Invalid perturbation order");
+            MSG_ABORT("Invalid perturbation order");
         }
     }
     ///////////////////////////////////////////////////////////
@@ -621,7 +584,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
             auto K_p = std::make_shared<ExchangeOperator>(P_p, Phi_p, screen_prec);
             F.getExchangeOperator() = K_p;
         } else {
-            MSG_FATAL("Invalid perturbation order");
+            MSG_ABORT("Invalid perturbation order");
         }
     }
     ///////////////////////////////////////////////////////////
@@ -657,7 +620,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
             auto XC_p = std::make_shared<XCOperator>(xcfun_p, Phi_p, X_p, Y_p, shared_memory);
             F.getXCOperator() = XC_p;
         } else {
-            MSG_FATAL("Invalid perturbation order");
+            MSG_ABORT("Invalid perturbation order");
         }
     }
     ///////////////////////////////////////////////////////////
@@ -705,6 +668,12 @@ DerivativeOperator_p driver::get_derivative(const std::string &name) {
         MSG_ERROR("Invalid derivative operator");
     }
     return D;
+}
+
+void driver::print_properties(const Molecule &mol) {
+    print_utils::headline(0, "Printing Molecular Properties");
+    mol.printGeometry();
+    mol.printProperties();
 }
 
 } // namespace mrchem

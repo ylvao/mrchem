@@ -56,11 +56,11 @@ const Element &PeriodicTable::getElement(const char *sym) const {
     } else {
         if (this->bySymbol.find(id) != this->bySymbol.end()) { return *this->bySymbol[id]; }
     }
-    MSG_FATAL("Invalid element: " << id);
+    MSG_ABORT("Invalid element: " << id);
 }
 
 const Element &PeriodicTable::getElement(int Z) const {
-    if (Z < 0 or Z > PeriodicTable::nElements) { MSG_FATAL("Invalid element number: " << Z); }
+    if (Z < 0 or Z > PeriodicTable::nElements) { MSG_ABORT("Invalid element number: " << Z); }
     return this->elements[Z];
 }
 // clang-format off

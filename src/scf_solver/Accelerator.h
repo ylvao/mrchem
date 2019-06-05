@@ -76,8 +76,7 @@ public:
     void replaceOrbitalUpdates(OrbitalVector &dPhi, int nHistory = 0);
 
     void rotate(const ComplexMatrix &U, bool all = true);
-
-    int printTreeSizes() const;
+    void printSizeNodes() const;
 
 protected:
     int minHistory;   ///< Accelerator is activated when history reaches this size
