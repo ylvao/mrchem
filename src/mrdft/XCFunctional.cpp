@@ -30,6 +30,7 @@
 #include "MRCPP/Timer"
 #include "MRCPP/operators/BSOperator.h"
 #include "MRCPP/trees/FunctionNode.h"
+#include "MRCPP/operators/BSOperator.h"
 #include "MRCPP/utils/Plotter.h"
 
 #include "XCFunctional.h"
@@ -244,7 +245,7 @@ XCFunctional::XCFunctional(mrcpp::MultiResolutionAnalysis<3> &mra, bool spin)
         , cutoff(-1.0)
         , functional(xc_new_functional())
         , derivative(nullptr) {
-    derivative = new mrcpp::ABGVOperator<3>(MRA, 0.0, 0.0);
+    derivative = new mrcpp::BSOperator<3>(MRA, 1);
 }
 
 /** @brief Destructor */
