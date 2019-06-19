@@ -3,8 +3,8 @@
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
-#include "mrenv.h"
 #include "mrchem.h"
+#include "mrenv.h"
 #include "parallel.h"
 
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     Timer timer;
 
     // Do your stuff here
-    
+
     timer.stop();
     double wt = timer.getWallTime();
 
@@ -27,4 +27,3 @@ int main(int argc, char **argv) {
     mpi::finalize();
     return 0;
 }
-
