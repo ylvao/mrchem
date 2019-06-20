@@ -1,0 +1,158 @@
+#!/usr/bin/env python
+
+#
+# MRChem, a numerical real-space code for molecular electronic structure
+# calculations within the self-consistent field (SCF) approximations of quantum
+# chemistry (Hartree-Fock and Density Functional Theory).
+# Copyright (C) 2019 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+#
+# This file is part of MRChem.
+#
+# MRChem is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# MRChem is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with MRChem.  If not, see <https://www.gnu.org/licenses/>.
+#
+# For information on the complete list of contributors to MRChem, see:
+# <https://mrchem.readthedocs.io/>
+#
+
+import json
+import math
+import optparse
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from io import StringIO
+from pathlib import Path
+
+# FIXME This will pick up modules when installed
+sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
+sys.path.append('@PROJECT_SOURCE_DIR@/src/chemistry')
+
+from parselglossy.api import parse
+from periodictable import PeriodicTable as PT
+
+
+def main():
+    this_path = Path(__file__).parent
+
+    # Parse command line
+    executable, dryrun, inp_file_cmd = parse_cmdline()
+
+    in_path = Path(inp_file_cmd)
+    tmpl_path = Path('@PROJECT_SOURCE_DIR@/pilot/template.yml')
+
+    # read user input file (JSONDict <- getkw file)
+    user_dict = parse(infile=in_path, template=tmpl_path, grammar='getkw')
+
+    # run user defined verification (JSONDict <- JSONDict)
+    verify_prec(user_dict)
+
+    # now that all keywords have sensible values,
+    # we can translate user input into program input
+    program_dict = translate_input(user_dict)
+
+    inp_name, ext_ext = os.path.splitext(inp_file_cmd)
+    xfile = inp_name + '.json'
+    with open(xfile, 'w') as fd:
+        fd.write(json.dumps(program_dict, indent=2))
+
+    if not dryrun:
+        cmd = executable + ' ' + xfile
+        if program_dict["printer"]["print_input"]:
+            subprocess.call('cat ' + inp_file_cmd, shell=True)
+        subprocess.call(cmd, shell=True)
+
+def parse_cmdline():
+    usage = "usage: %prog [options] [config] inp_file"
+    version = "@PROGRAM_VERSION@"
+    cmdln = optparse.OptionParser(
+        usage=usage, version="%prog {0}".format(version))
+    cmdln.add_option(
+        '-D',
+        '--dryrun',
+        action='store_true',
+        dest='dryrun',
+        default=False,
+        help='Only process input')
+    cmdln.add_option(
+        '-x',
+        '--executable',
+        action='store',
+        dest='executable',
+        type='string',
+        default='@MRCHEM_EXECUTABLE@',
+        help='set executable name')
+
+    opts, args = cmdln.parse_args()
+
+    executable = opts.executable
+    dryrun = opts.dryrun
+
+    if (len(args) == 0):
+        cmdln.error('Not input file passed!')
+        sys.exit(0)
+    elif (len(args) == 1):
+        inp_file = args[0]
+    else:
+        cmdln.error('incorrect number of files')
+        sys.exit(0)
+
+    return executable, dryrun, inp_file
+
+def verify_prec(user_dict):
+  # Overall precision parameters
+  if user_dict["est_norm"] < 0.0:
+    user_dict["est_norm"] = 1.0
+
+  if user_dict["abs_prec"] < 0.0:
+    user_dict["abs_prec"] = user_dict["rel_prec"]
+
+  if user_dict["nuc_prec"] < 0.0:
+    user_dict["nuc_prec"] = user_dict["rel_prec"]
+
+  # Set polynomial order based on precision
+  if user_dict["MRA"]["order"] < 0:
+    prec = user_dict["rel_prec"]
+    user_dict["MRA"]["order"] = int(math.ceil(-1.5 * math.log10(prec)))
+
+def translate_input(user_dict):
+  program_dict = {}
+  write_mpi(program_dict, user_dict);
+  write_mra(program_dict, user_dict);
+  write_printer(program_dict, user_dict);
+  return program_dict
+
+def write_mpi(program_dict, user_dict):
+  program_dict["mpi"] = {
+    "numerically_exact": user_dict["MPI"]["numerically_exact"],
+    "shared_memory_size": user_dict["MPI"]["shared_memory_size"]
+  }
+
+def write_mra(program_dict, user_dict):
+  program_dict["mra"] = {
+    "basis_type": user_dict["MRA"]["basis_type"][0].lower(),
+    "order": user_dict["MRA"]["order"],
+    "boxes": user_dict["MRA"]["boxes"],
+    "corner": user_dict["MRA"]["corner"],
+    "min_scale": user_dict["MRA"]["min_scale"],
+    "max_scale": user_dict["MRA"]["max_scale"],
+    "scaling_factor": [1.0, 1.0, 1.0]
+  }
+
+def write_printer(program_dict, user_dict):
+  program_dict["printer"] = user_dict["Printer"]
+
+if __name__ == '__main__':
+    main()

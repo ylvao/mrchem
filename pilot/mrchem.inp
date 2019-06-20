@@ -1,7 +1,14 @@
 # vim:syntax=sh:
 
 rel_prec = 1.0e-5                 # Overall relative precision
-printlevel = 0
+
+Printer {
+  print_level = 0
+  print_prec = 6
+  print_width = 70
+  print_mpi = false
+  print_input = false
+}
 
 MRA {
   order = 7                       # Polynomial order
