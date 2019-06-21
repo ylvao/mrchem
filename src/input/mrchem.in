@@ -47,6 +47,11 @@ from periodictable import PeriodicTable as PT
 def main():
     this_path = Path(__file__).parent
 
+    # create necessary directories
+    for d in ['orbitals', 'initial_guess', 'plots']:
+        if not os.path.exists(d):
+            os.mkdir(d)
+
     # Parse command line
     executable, dryrun, inp_file_cmd = parse_cmdline()
 
@@ -260,6 +265,13 @@ def write_scf_calculation(program_dict, user_dict):
       "origin": user_dict["MRA"]["gauge_origin"]
     }
   }
+
+  scf_dict["cube_plot"] = {
+      "density": user_dict["SCF"]["plot_density"],
+      "orbital": user_dict["SCF"]["plot_orbital"],
+      "plotter": user_dict["Plotter"]
+  }
+
   if user_dict["Properties"]["dipole_moment"]:
     scf_dict["properties"] = prop_dict
 

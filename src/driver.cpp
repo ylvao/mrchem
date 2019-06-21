@@ -36,9 +36,12 @@
 #include "initial_guess/gto.h"
 #include "initial_guess/sad.h"
 
+#include "utils/MolPlotter.h"
 #include "utils/math_utils.h"
 
+#include "qmfunctions/Density.h"
 #include "qmfunctions/Orbital.h"
+#include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 
 #include "qmoperators/one_electron/ElectricFieldOperator.h"
@@ -90,6 +93,8 @@ void build_fock_operator(const json &input, Molecule &mol, FockOperator &F, int 
 
 void calc_scf_properties(const json &input, Molecule &mol);
 void calc_rsp_properties(const json &input, Molecule &mol, int dir, double omega);
+
+void plot_scf_quantities(const json &input, Molecule &mol);
 
 RankOneTensorOperator<3> get_perturbation(const json &input);
 DerivativeOperator_p get_derivative(const std::string &name);
@@ -286,6 +291,9 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
 
         auto json_prop = json_scf["properties"].get<json>();
         calc_scf_properties(json_prop, mol);
+
+        auto json_plot = json_scf["cube_plot"].get<json>();
+        plot_scf_quantities(json_plot, mol);
     }
 
     return success;
@@ -385,6 +393,88 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     }
 
     return success;
+}
+
+/** @brief Plot ground-state quantities
+ *
+ * This function expects the "cube_plot" subsection of the
+ * "scf_calculation" input section.
+ */
+void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
+    Timer t_tot, t_lap;
+    print_utils::headline(1, "Plotting Ground State Quantities");
+    mrcpp::print::header(1, "CubePlot");
+
+    auto npts = json_plot["plotter"]["points"].get<std::array<int, 3>>();
+    auto O = json_plot["plotter"]["O"].get<mrcpp::Coord<3>>();
+    auto A = json_plot["plotter"]["A"].get<mrcpp::Coord<3>>();
+    auto B = json_plot["plotter"]["B"].get<mrcpp::Coord<3>>();
+    auto C = json_plot["plotter"]["C"].get<mrcpp::Coord<3>>();
+    auto dens_plot = json_plot["density"].get<bool>();
+    auto orb_idx = json_plot["orbital"].get<std::vector<int>>();
+
+    auto &Phi = mol.getOrbitals();
+    MolPlotter plt(mol, O);
+    plt.setRange(A, B, C);
+
+    if (dens_plot) {
+        Density rho(false);
+
+        t_lap.start();
+        std::string fname = "plots/rho_t";
+        density::compute(-1.0, rho, Phi, DENSITY::Total);
+        plt.cubePlot(npts, rho, fname);
+        rho.free(NUMBER::Total);
+        mrcpp::print::time(1, fname, t_lap);
+
+        if (orbital::size_singly(Phi) > 0) {
+            t_lap.start();
+            fname = "plots/rho_s";
+            density::compute(-1.0, rho, Phi, DENSITY::Spin);
+            plt.cubePlot(npts, rho, fname);
+            mrcpp::print::time(1, fname, t_lap);
+            rho.free(NUMBER::Total);
+
+            t_lap.start();
+            fname = "plots/rho_a";
+            density::compute(-1.0, rho, Phi, DENSITY::Alpha);
+            plt.cubePlot(npts, rho, fname);
+            mrcpp::print::time(1, fname, t_lap);
+            rho.free(NUMBER::Total);
+
+            t_lap.start();
+            fname = "plots/rho_b";
+            density::compute(-1.0, rho, Phi, DENSITY::Beta);
+            plt.cubePlot(npts, rho, fname);
+            rho.free(NUMBER::Total);
+            mrcpp::print::time(1, fname, t_lap);
+        }
+    }
+
+    // Plotting NO orbitals
+    if (orb_idx.size() == 0) return;
+
+    if (orb_idx[0] < 0) {
+        // Plotting ALL orbitals
+        for (auto i = 0; i < Phi.size(); i++) {
+            t_lap.start();
+            std::stringstream name;
+            name << "plots/phi_" << i;
+            plt.cubePlot(npts, Phi[i], name.str());
+            mrcpp::print::time(1, name.str(), t_lap);
+        }
+    } else {
+        // Plotting some orbitals
+        for (auto &i : orb_idx) {
+            t_lap.start();
+            std::stringstream name;
+            name << "plots/phi_" << i;
+            plt.cubePlot(npts, Phi[i], name.str());
+            mrcpp::print::time(1, name.str(), t_lap);
+        }
+    }
+
+    mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Compute ground-state properties
