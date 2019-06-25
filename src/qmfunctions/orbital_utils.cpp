@@ -462,7 +462,7 @@ ComplexMatrix orbital::calc_lowdin_matrix(OrbitalVector &Phi) {
 ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &F) {
     Timer t_tot;
     auto plevel = Printer::getPrintLevel();
-    mrcpp::print::header(1, "Localizing orbitals");
+    mrcpp::print::header(2, "Localizing orbitals");
     if (not orbital_vector_is_sane(Phi)) {
         orbital::print(Phi);
         MSG_ABORT("Orbital vector is not sane");
@@ -478,7 +478,7 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &
 
     // Transform Fock matrix
     F = U * F * U.adjoint();
-    mrcpp::print::footer(1, t_tot, 2);
+    mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Localizing orbitals", t_tot);
 
     return U;
@@ -498,7 +498,7 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, int spin) {
     Timer rot_t;
     Phi_s = orbital::rotate(U, Phi_s, prec);
     Phi = orbital::adjoin(Phi, Phi_s);
-    mrcpp::print::time(1, "Rotating orbitals", rot_t);
+    mrcpp::print::time(2, "Rotating orbitals", rot_t);
     return U;
 }
 
@@ -518,25 +518,25 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
     if (Phi.size() > 1) {
         Timer rmat_t;
         RRMaximizer rr(prec, Phi);
-        mrcpp::print::time(1, "Computing position matrices", rmat_t);
+        mrcpp::print::time(2, "Computing position matrices", rmat_t);
 
         Timer rr_t;
         n_it = rr.maximize();
-        mrcpp::print::time(1, "Computing Foster-Boys matrix", rr_t);
+        mrcpp::print::time(2, "Computing Foster-Boys matrix", rr_t);
 
         if (n_it > 0) {
-            println(1, " Foster-Boys localization converged in " << n_it << " iterations!");
+            println(2, " Foster-Boys localization converged in " << n_it << " iterations!");
             U = rr.getTotalU().transpose().cast<ComplexDouble>();
         } else {
-            println(1, " Foster-Boys localization did not converge!");
+            println(2, " Foster-Boys localization did not converge!");
         }
     } else {
-        println(1, " Cannot localize less than two orbitals");
+        println(2, " Cannot localize less than two orbitals");
     }
     if (n_it <= 0) {
         Timer orth_t;
         U = orbital::calc_lowdin_matrix(Phi);
-        mrcpp::print::time(1, "Computing Lowdin matrix", orth_t);
+        mrcpp::print::time(2, "Computing Lowdin matrix", orth_t);
     }
     return U;
 }
