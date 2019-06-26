@@ -72,7 +72,7 @@ protected:
             const auto &nuc = this->molecule->getNuclei()[i];
             const auto &coord = nuc.getCoord();
             auto Z = nuc.getCharge();
-            o << Z << "  0.0 " << coord[0] << "  " << coord[1] << "  " << coord[2] << std::endl;
+            o << static_cast<int>(Z) << Z << coord[0] << "  " << coord[1] << "  " << coord[2] << std::endl;
         }
 
         for (int n = 0; n < values.size(); n++) {
