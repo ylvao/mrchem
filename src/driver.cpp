@@ -457,6 +457,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
     if (orb_idx[0] < 0) {
         // Plotting ALL orbitals
         for (auto i = 0; i < Phi.size(); i++) {
+            if (not mpi::my_orb(Phi[i])) continue;
             t_lap.start();
             std::stringstream name;
             name << "plots/phi_" << i;
@@ -466,6 +467,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
     } else {
         // Plotting some orbitals
         for (auto &i : orb_idx) {
+            if (not mpi::my_orb(Phi[i])) continue;
             t_lap.start();
             std::stringstream name;
             name << "plots/phi_" << i;
