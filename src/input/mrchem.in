@@ -201,21 +201,42 @@ def write_printer(program_dict, user_dict):
   program_dict["printer"] = user_dict["Printer"]
 
 def write_molecule(program_dict, user_dict):
-  AA = 1.0
-  if user_dict["Molecule"]["angstrom"]:
-      AA = 1.889725989
+  # Translate into program syntax
   coords_raw = user_dict["Molecule"]["coords"]
   coords_dict = []
   for line in coords_raw.split('\n'):
     sp = line.split()
     if len(sp) > 0:
       atom = sp[0].lower()
-      x_a, y_a, z_a = list(map(float, sp[1:]))
-      xyz_b = [AA * x_a, AA * y_a, AA * z_a]
+      xyz = list(map(float, sp[1:]))
+      if len(xyz) != 3:
+        print("Invalid coordinate: " + atom.upper() + " " + str(xyz))
+        sys.exit(1)
       coords_dict.append({
         "atom": atom,
-        "xyz": xyz_b
+        "xyz": xyz
       })
+
+  # Convert angstrom -> bohr
+  if user_dict["Molecule"]["angstrom"]:
+    AA = 1.889725989
+    for coord in coords_dict:
+      coord["xyz"] = [AA * r for r in coord["xyz"]]
+
+  # Translate center of mass to origin
+  if user_dict["Molecule"]["translate"]:
+    # Calc center of mass
+    M = 0.0
+    CoM = [0.0, 0.0, 0.0]
+    for coord in coords_dict:
+      m = PT[coord["atom"]].mass
+      M += m
+      CoM = [m*r + o for r,o in zip(coord["xyz"], CoM)]
+    CoM = [x/M for x in CoM]
+
+    # Translate coords
+    for coord in coords_dict:
+      coord["xyz"] = [r - o for r,o in zip(coord["xyz"], CoM)]
 
   program_dict["molecule"] = {
     "charge": user_dict["Molecule"]["charge"],
