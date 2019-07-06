@@ -76,10 +76,9 @@ sections:
       - name: helmholtz_prec
         type: float
         default: "user['world_prec']"
-        predicates:
-          - '1.0e-10 < value < 1.0'
         docstring: |
           Precision parameter used in construction of Helmholtz operators.
+          Negative value means it will follow the dynamic precision in SCF.
   - name: Printer
     docstring: |
       Define variables for printed output.

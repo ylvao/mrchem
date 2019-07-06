@@ -251,6 +251,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto final_prec = (*orbital_solver)["final_prec"].get<double>();
         auto orbital_thrs = (*orbital_solver)["orbital_thrs"].get<double>();
         auto property_thrs = (*orbital_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*orbital_solver)["helmholtz_prec"].get<double>();
 
         OrbitalOptimizer solver;
         solver.setMethodName(method);
@@ -258,6 +259,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setMaxIterations(max_iter);
         solver.setRotation(rotation);
         solver.setLocalize(localize);
+        solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(mol, F);
@@ -273,12 +275,14 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto final_prec = (*energy_solver)["final_prec"].get<double>();
         auto orbital_thrs = (*energy_solver)["orbital_thrs"].get<double>();
         auto property_thrs = (*energy_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*energy_solver)["helmholtz_prec"].get<double>();
 
         EnergyOptimizer solver;
         solver.setMethodName(method);
         solver.setMaxIterations(max_iter);
         solver.setRotation(1);
         solver.setLocalize(localize);
+        solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(mol, F);

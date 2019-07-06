@@ -102,10 +102,11 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         // Initialize SCF cycle
         Timer t_lap;
         double orb_prec = adjustPrecision(err_o);
+        double helm_prec = getHelmholtzPrec();
         if (nIter < 2) F.setup(orb_prec);
 
         // Apply Helmholtz operator
-        HelmholtzVector H(orb_prec, F_mat.real().diagonal());
+        HelmholtzVector H(helm_prec, F_mat.real().diagonal());
         OrbitalVector Psi = H.rotate(F_mat, Phi_n);
         OrbitalVector Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
         Psi.clear();

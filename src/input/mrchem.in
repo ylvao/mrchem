@@ -294,7 +294,8 @@ def write_scf_calculation(program_dict, user_dict):
       "start_prec": user_dict["SCF"]["orbital_prec"][0],
       "final_prec": user_dict["SCF"]["orbital_prec"][1],
       "orbital_thrs": user_dict["SCF"]["orbital_thrs"],
-      "property_thrs": user_dict["SCF"]["property_thrs"]
+      "property_thrs": user_dict["SCF"]["property_thrs"],
+      "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
     }
   else:
     scf_dict["initial_energy"] = {
@@ -310,7 +311,8 @@ def write_scf_calculation(program_dict, user_dict):
       "start_prec": user_dict["world_prec"],
       "final_prec": user_dict["world_prec"],
       "orbital_thrs": user_dict["KineticFree"]["orbital_thrs"],
-      "property_thrs": user_dict["KineticFree"]["property_thrs"]
+      "property_thrs": user_dict["KineticFree"]["property_thrs"],
+      "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
     }
 
   fock_dict = {
@@ -417,7 +419,8 @@ def write_rsp_calculations(program_dict, user_dict):
           "final_prec": user_dict["Response"]["orbital_prec"][1],
           "directions": user_dict["Response"]["directions"],
           "orbital_thrs": user_dict["Response"]["orbital_thrs"],
-          "property_thrs": user_dict["Response"]["property_thrs"]
+          "property_thrs": user_dict["Response"]["property_thrs"],
+          "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
         }
 
       fock_0_dict = {
