@@ -15,14 +15,8 @@ $end
 }
 
 WaveFunction {
-  method = DFT                    # Wave function method (HF or DFT)
+  method = LDA                    # Wave function method (HF or DFT)
   restricted = false
-}
-
-DFT {
-$functionals
-LDA
-$end
 }
 
 Properties {

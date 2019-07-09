@@ -15,16 +15,8 @@ $end
 }
 
 WaveFunction {
-  method = DFT                    # Wave function method (HF or DFT)
+  method = PBE0                   # Wave function method (HF or DFT)
   restricted = false
-}
-
-DFT {
-$functionals
-EXX     0.25
-PBEX    0.75
-PBEC    1.00
-$end
 }
 
 Properties {
