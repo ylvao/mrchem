@@ -668,24 +668,9 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         }
     }
     ///////////////////////////////////////////////////////////
-    /////////////////   Exchange Operator   ///////////////////
-    ///////////////////////////////////////////////////////////
-    double exx = 1.0;
-    auto json_exchange = json_fock.find("exchange_operator");
-    if (json_exchange != json_fock.end()) {
-        auto poisson_prec = (*json_exchange)["poisson_prec"].get<double>();
-        auto screen_prec = (*json_exchange)["screen"].get<bool>();
-        auto P_p = std::make_shared<PoissonOperator>(*MRA, poisson_prec);
-        if (order == 0) {
-            auto K_p = std::make_shared<ExchangeOperator>(P_p, Phi_p, screen_prec);
-            F.getExchangeOperator() = K_p;
-        } else {
-            MSG_ABORT("Invalid perturbation order");
-        }
-    }
-    ///////////////////////////////////////////////////////////
     ////////////////////   XC Operator   //////////////////////
     ///////////////////////////////////////////////////////////
+    double exx = 1.0;
     auto json_xc = json_fock.find("xc_operator");
     if (json_xc != json_fock.end()) {
         auto grid_prec = (*json_xc)["grid_prec"].get<double>();
@@ -715,6 +700,21 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         } else if (order == 1) {
             auto XC_p = std::make_shared<XCOperator>(xcfun_p, Phi_p, X_p, Y_p, shared_memory);
             F.getXCOperator() = XC_p;
+        } else {
+            MSG_ABORT("Invalid perturbation order");
+        }
+    }
+    ///////////////////////////////////////////////////////////
+    /////////////////   Exchange Operator   ///////////////////
+    ///////////////////////////////////////////////////////////
+    auto json_exchange = json_fock.find("exchange_operator");
+    if (json_exchange != json_fock.end() and exx > mrcpp::MachineZero) {
+        auto poisson_prec = (*json_exchange)["poisson_prec"].get<double>();
+        auto screen_prec = (*json_exchange)["screen"].get<bool>();
+        auto P_p = std::make_shared<PoissonOperator>(*MRA, poisson_prec);
+        if (order == 0) {
+            auto K_p = std::make_shared<ExchangeOperator>(P_p, Phi_p, screen_prec);
+            F.getExchangeOperator() = K_p;
         } else {
             MSG_ABORT("Invalid perturbation order");
         }

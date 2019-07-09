@@ -72,7 +72,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     print_utils::text(0, "Precision   ", o_prec.str());
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
     print_utils::text(0, "Hamiltonian ", "Superposition of Atomic Densities (SAD)");
-    print_utils::text(0, "Functional  ", "LDA (SWVN5)");
+    print_utils::text(0, "Functional  ", "LDA (SVWN5)");
     print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
     print_utils::text(0, "Zeta quality", o_zeta.str());
     mrcpp::print::separator(0, '~', 2);
