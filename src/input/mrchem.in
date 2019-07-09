@@ -243,6 +243,11 @@ def write_initial_guess(program_dict, user_dict):
 
 def write_scf_calculation(program_dict, user_dict):
   # SCF precisions and thresholds
+  if user_dict["SCF"]["final_prec"] < 0.0:
+    user_dict["SCF"]["final_prec"] = user_dict["world_prec"]
+  if user_dict["SCF"]["start_prec"] < 0.0:
+    user_dict["SCF"]["start_prec"] = user_dict["SCF"]["final_prec"]
+
   if user_dict["SCF"]["orbital_thrs"] < 0.0 and user_dict["SCF"]["property_thrs"] < 0.0:
     user_dict["SCF"]["property_thrs"] = user_dict["world_prec"] / 10
     user_dict["SCF"]["orbital_thrs"] = math.sqrt(user_dict["SCF"]["property_thrs"])
@@ -283,7 +288,7 @@ def write_scf_calculation(program_dict, user_dict):
     scf_dict["initial_energy"] = {
       "method_name": method_name,
       "localize": user_dict["SCF"]["localize"],
-      "prec": user_dict["SCF"]["orbital_prec"][0],
+      "prec": user_dict["SCF"]["start_prec"],
     }
     scf_dict["orbital_solver"] = {
       "method_name": method_name,
@@ -291,8 +296,8 @@ def write_scf_calculation(program_dict, user_dict):
       "max_iter": user_dict["SCF"]["max_iter"],
       "rotation": user_dict["SCF"]["rotation"],
       "localize": user_dict["SCF"]["localize"],
-      "start_prec": user_dict["SCF"]["orbital_prec"][0],
-      "final_prec": user_dict["SCF"]["orbital_prec"][1],
+      "start_prec": user_dict["SCF"]["start_prec"],
+      "final_prec": user_dict["SCF"]["final_prec"],
       "orbital_thrs": user_dict["SCF"]["orbital_thrs"],
       "property_thrs": user_dict["SCF"]["property_thrs"],
       "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
@@ -301,7 +306,7 @@ def write_scf_calculation(program_dict, user_dict):
     scf_dict["initial_energy"] = {
       "method_name": method_name,
       "localize": user_dict["SCF"]["localize"],
-      "prec": user_dict["SCF"]["orbital_prec"][1],
+      "prec": user_dict["SCF"]["start_prec"],
     }
   if user_dict["KineticFree"]["run"]:
     scf_dict["energy_solver"] = {
@@ -415,8 +420,8 @@ def write_rsp_calculations(program_dict, user_dict):
           "frequency": omega,
           "kain": user_dict["Response"]["kain"],
           "max_iter": user_dict["Response"]["max_iter"],
-          "start_prec": user_dict["Response"]["orbital_prec"][0],
-          "final_prec": user_dict["Response"]["orbital_prec"][1],
+          "start_prec": user_dict["Response"]["start_prec"],
+          "final_prec": user_dict["Response"]["final_prec"],
           "directions": user_dict["Response"]["directions"],
           "orbital_thrs": user_dict["Response"]["orbital_thrs"],
           "property_thrs": user_dict["Response"]["property_thrs"],
