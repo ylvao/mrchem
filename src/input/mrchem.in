@@ -243,18 +243,24 @@ def write_initial_guess(program_dict, user_dict):
 
 def write_scf_calculation(program_dict, user_dict):
   # SCF precisions and thresholds
-  if user_dict["SCF"]["final_prec"] < 0.0:
-    user_dict["SCF"]["final_prec"] = user_dict["world_prec"]
-  if user_dict["SCF"]["start_prec"] < 0.0:
-    user_dict["SCF"]["start_prec"] = user_dict["SCF"]["final_prec"]
+  scf_start_prec = user_dict["SCF"]["start_prec"]
+  scf_final_prec = user_dict["SCF"]["final_prec"]
+  if scf_final_prec < 0.0:
+    scf_final_prec = user_dict["world_prec"]
+  if scf_start_prec < 0.0:
+    scf_start_prec = scf_final_prec
 
-  if user_dict["SCF"]["orbital_thrs"] < 0.0 and user_dict["SCF"]["property_thrs"] < 0.0:
-    user_dict["SCF"]["property_thrs"] = user_dict["world_prec"] / 10
-    user_dict["SCF"]["orbital_thrs"] = math.sqrt(user_dict["SCF"]["property_thrs"])
+  scf_orbital_thrs =  user_dict["SCF"]["orbital_thrs"]
+  scf_property_thrs =  user_dict["SCF"]["property_thrs"]
+  if scf_orbital_thrs < 0.0 and scf_property_thrs < 0.0:
+    scf_property_thrs = user_dict["world_prec"] / 10
+    scf_orbital_thrs = math.sqrt(scf_property_thrs)
 
-  if user_dict["KineticFree"]["orbital_thrs"] < 0.0 and user_dict["KineticFree"]["property_thrs"] < 0.0:
-    user_dict["KineticFree"]["property_thrs"] = user_dict["world_prec"] / 10
-    user_dict["KineticFree"]["orbital_thrs"] = math.sqrt(user_dict["KineticFree"]["property_thrs"])
+  kin_orbital_thrs =  user_dict["KineticFree"]["orbital_thrs"]
+  kin_property_thrs =  user_dict["KineticFree"]["property_thrs"]
+  if kin_orbital_thrs < 0.0 and kin_property_thrs < 0.0:
+    kin_property_thrs = user_dict["world_prec"] / 10
+    kin_orbital_thrs = math.sqrt(kin_property_thrs)
 
   scf_dict = {
     "final_orbitals": "orbitals/phi",
@@ -276,53 +282,13 @@ def write_scf_calculation(program_dict, user_dict):
   if user_dict["Properties"]["dipole_moment"]:
     scf_dict["properties"] = prop_dict
 
-  valid_funcs = [
-    'svwn3',
-    'svwn5',
-    'pbe',
-    'pbe0',
-    'bpw91',
-    'bp86',
-    'b3p86',
-    'b3p86-g',
-    'blyp',
-    'b3lyp',
-    'b3lyp-g',
-    'olyp',
-    'kt1',
-    'kt2',
-    'kt3'
-    ]
-
-  wf_method = user_dict["WaveFunction"]["method"].lower()
-  dft_funcs = user_dict["DFT"]["functionals"]
-  method_name = ''
-  if wf_method in ['core']:
-    method_name = 'Core Hamiltonian'
-  elif wf_method in ['hartree']:
-    method_name = 'Hartree'
-  elif wf_method in ['hf', 'hartree-fock', 'hartreefock']:
-    method_name = 'Hartree-Fock'
-    wf_method = 'hf'
-  elif wf_method in ['dft']:
-    method_name = 'DFT'
-  elif wf_method ['lda']:
-    method_name = 'DFT (SVWN5)'
-    dft_funcs = 'SVWN5'
-    wf_method = 'dft'
-  elif wf_method in valid_funcs:
-    method_name = 'DFT (' + wf_method.upper() + ')'
-    dft_funcs = wf_method.upper()
-    wf_method = 'dft'
-  else:
-    print("Invalid wavefunction method " + user_dict["WaveFunction"]["method"])
-    sys.exit(1)
+  method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
 
   if user_dict["SCF"]["run"]:
     scf_dict["initial_energy"] = {
       "method_name": method_name,
       "localize": user_dict["SCF"]["localize"],
-      "prec": user_dict["SCF"]["start_prec"],
+      "prec": scf_start_prec,
     }
     scf_dict["orbital_solver"] = {
       "method_name": method_name,
@@ -330,17 +296,17 @@ def write_scf_calculation(program_dict, user_dict):
       "max_iter": user_dict["SCF"]["max_iter"],
       "rotation": user_dict["SCF"]["rotation"],
       "localize": user_dict["SCF"]["localize"],
-      "start_prec": user_dict["SCF"]["start_prec"],
-      "final_prec": user_dict["SCF"]["final_prec"],
-      "orbital_thrs": user_dict["SCF"]["orbital_thrs"],
-      "property_thrs": user_dict["SCF"]["property_thrs"],
+      "start_prec": scf_start_prec,
+      "final_prec": scf_final_prec,
+      "orbital_thrs": scf_orbital_thrs,
+      "property_thrs": scf_property_thrs,
       "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
     }
   else:
     scf_dict["initial_energy"] = {
       "method_name": method_name,
       "localize": user_dict["SCF"]["localize"],
-      "prec": user_dict["SCF"]["start_prec"],
+      "prec": scf_start_prec,
     }
   if user_dict["KineticFree"]["run"]:
     scf_dict["energy_solver"] = {
@@ -349,8 +315,8 @@ def write_scf_calculation(program_dict, user_dict):
       "localize": user_dict["KineticFree"]["localize"],
       "start_prec": user_dict["world_prec"],
       "final_prec": user_dict["world_prec"],
-      "orbital_thrs": user_dict["KineticFree"]["orbital_thrs"],
-      "property_thrs": user_dict["KineticFree"]["property_thrs"],
+      "orbital_thrs": kin_orbital_thrs,
+      "property_thrs": kin_property_thrs,
       "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
     }
 
@@ -415,6 +381,20 @@ def write_scf_calculation(program_dict, user_dict):
   program_dict["scf_calculation"] = scf_dict
 
 def write_rsp_calculations(program_dict, user_dict):
+  # SCF precisions and thresholds
+  rsp_start_prec = user_dict["Response"]["start_prec"]
+  rsp_final_prec = user_dict["Response"]["final_prec"]
+  if rsp_final_prec < 0.0:
+    rsp_final_prec = user_dict["world_prec"]
+  if rsp_start_prec < 0.0:
+    rsp_start_prec = rsp_final_prec
+
+  rsp_orbital_thrs =  user_dict["Response"]["orbital_thrs"]
+  rsp_property_thrs =  user_dict["Response"]["property_thrs"]
+  if rsp_orbital_thrs < 0.0 and rsp_property_thrs < 0.0:
+    rsp_property_thrs = user_dict["world_prec"] / 10
+    rsp_orbital_thrs = user_dict["world_prec"] * 10
+
   program_dict["rsp_calculations"] = []
 
   if user_dict["Properties"]["polarizability"]:
@@ -443,13 +423,15 @@ def write_rsp_calculations(program_dict, user_dict):
           "frequency": omega,
           "kain": user_dict["Response"]["kain"],
           "max_iter": user_dict["Response"]["max_iter"],
-          "start_prec": user_dict["Response"]["start_prec"],
-          "final_prec": user_dict["Response"]["final_prec"],
+          "start_prec": rsp_start_prec,
+          "final_prec": rsp_final_prec,
           "directions": user_dict["Response"]["directions"],
-          "orbital_thrs": user_dict["Response"]["orbital_thrs"],
-          "property_thrs": user_dict["Response"]["property_thrs"],
+          "orbital_thrs": rsp_orbital_thrs,
+          "property_thrs": rsp_property_thrs,
           "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
         }
+
+      method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
 
       fock_0_dict = {
         "kinetic_operator": {
@@ -461,24 +443,19 @@ def write_rsp_calculations(program_dict, user_dict):
           "shared_memory": user_dict["MPI"]["share_nuclear_potential"]
         }
       }
-      if (user_dict["WaveFunction"]["method"].lower() == "hartree" or
-          user_dict["WaveFunction"]["method"].lower() == "hf" or
-          user_dict["WaveFunction"]["method"].lower() == "dft"):
+      if wf_method in ['hartree', 'hf', 'dft']:
         fock_0_dict["coulomb_operator"] = {
           "poisson_prec": user_dict["Precisions"]["poisson_prec"],
           "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
         }
-      if user_dict["WaveFunction"]["method"].lower() == "hf":
+      if wf_method in ['hf', 'dft']:
         fock_0_dict["exchange_operator"] = {
           "screen": False,
           "poisson_prec": user_dict["Precisions"]["poisson_prec"],
         }
-
-      if user_dict["WaveFunction"]["method"].lower() == "dft":
-        func_raw = user_dict["DFT"]["functionals"]
+      if wf_method in ['dft']:
         func_dict = []
-        exx = False
-        for line in func_raw.split('\n'):
+        for line in dft_funcs.split('\n'):
           sp = line.split()
           if len(sp) > 0:
             func = sp[0].lower()
@@ -489,8 +466,6 @@ def write_rsp_calculations(program_dict, user_dict):
               "name": func,
               "coef": coef[0]
             })
-            if func == "exx":
-              exx = True
         fock_0_dict["xc_operator"] = {
           "grid_prec": user_dict["Precisions"]["dft_prec"],
           "shared_memory": user_dict["MPI"]["share_xc_potential"],
@@ -502,30 +477,21 @@ def write_rsp_calculations(program_dict, user_dict):
             "functionals": func_dict
           }
         }
-        if exx:
-          fock_0_dict["exchange_operator"] = {
-            "screen": False,
-            "poisson_prec": user_dict["Precisions"]["poisson_prec"]
-          }
       fock_1_dict = {}
-      if (user_dict["WaveFunction"]["method"].lower() == "hartree" or
-          user_dict["WaveFunction"]["method"].lower() == "hf" or
-          user_dict["WaveFunction"]["method"].lower() == "dft"):
+      if wf_method in ['hartree', 'hf', 'dft']:
         fock_1_dict["coulomb_operator"] = {
           "poisson_prec": user_dict["Precisions"]["poisson_prec"],
           "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
         }
-      if user_dict["WaveFunction"]["method"].lower() == "hf":
+      if wf_method in ['hf', 'dft']:
         fock_1_dict["exchange_operator"] = {
           "screen": False,
           "poisson_prec": user_dict["Precisions"]["poisson_prec"],
         }
 
-      if user_dict["WaveFunction"]["method"].lower() == "dft":
-        func_raw = user_dict["DFT"]["functionals"]
+      if wf_method in ['dft']:
         func_dict = []
-        exx = False
-        for line in func_raw.split('\n'):
+        for line in dft_funcs.split('\n'):
           sp = line.split()
           if len(sp) > 0:
             func = sp[0].lower()
@@ -536,8 +502,6 @@ def write_rsp_calculations(program_dict, user_dict):
               "name": func,
               "coef": coef[0]
             })
-            if func == "exx":
-              exx = True
         fock_1_dict["xc_operator"] = {
           "grid_prec": user_dict["Precisions"]["dft_prec"],
           "shared_memory": user_dict["MPI"]["share_xc_potential"],
@@ -549,15 +513,56 @@ def write_rsp_calculations(program_dict, user_dict):
             "functionals": func_dict
           }
         }
-        if exx:
-          fock_1_dict["exchange_operator"] = {
-            "screen": False,
-            "poisson_prec": user_dict["Precisions"]["poisson_prec"],
-          }
 
         rsp_dict["fock_operator_0"] = fock_0_dict
         rsp_dict["fock_operator_1"] = fock_1_dict
         program_dict["rsp_calculations"].append(rsp_dict)
+
+def parse_wf_method(user_dict):
+  valid_funcs = [
+    'svwn3',
+    'svwn5',
+    'pbe',
+    'pbe0',
+    'bpw91',
+    'bp86',
+    'b3p86',
+    'b3p86-g',
+    'blyp',
+    'b3lyp',
+    'b3lyp-g',
+    'olyp',
+    'kt1',
+    'kt2',
+    'kt3'
+    ]
+
+  method_name = ''
+  wf_method = user_dict["WaveFunction"]["method"].lower()
+  dft_funcs = user_dict["DFT"]["functionals"].lower()
+  if wf_method in ['core']:
+    method_name = 'Core Hamiltonian'
+  elif wf_method in ['hartree']:
+    method_name = 'Hartree'
+  elif wf_method in ['hf', 'hartree-fock', 'hartreefock']:
+    method_name = 'Hartree-Fock'
+    wf_method = 'hf'
+  elif wf_method in ['dft']:
+    method_name = 'DFT'
+  elif wf_method in ['lda']:
+    method_name = 'DFT (SVWN5)'
+    dft_funcs = 'svwn5'
+    wf_method = 'dft'
+  elif wf_method in valid_funcs:
+    method_name = 'DFT (' + wf_method.upper() + ')'
+    dft_funcs = wf_method
+    wf_method = 'dft'
+  else:
+    print("Invalid wavefunction method " + user_dict["WaveFunction"]["method"])
+    sys.exit(1)
+
+  return method_name, wf_method, dft_funcs
+
 
 # Estimate total energy of a moleucule as the sum of the nuclear charges
 # to the power Z^(5/2). This is to get an order of magnitude estimate that
