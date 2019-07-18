@@ -59,13 +59,6 @@ sections:
           - '1.0e-10 < value < 1.0'
         docstring: |
           Precision parameter used in smoothing and projection of nuclear potential.
-      - name: dft_prec
-        type: float
-        default: "user['world_prec']"
-        predicates:
-          - '1.0e-10 < value < 1.0'
-        docstring: |
-          Precision parameter used in DFT grid.
       - name: poisson_prec
         type: float
         default: "user['world_prec']"
@@ -139,26 +132,11 @@ sections:
         default: false
         docstring: |
           This will use MPI shared memory for the nuclear potential.
-      - name: share_coulomb_density
-        type: bool
-        default: false
-        docstring: |
-          This will use MPI shared memory for the Coulomb density.
       - name: share_coulomb_potential
         type: bool
         default: false
         docstring: |
           This will use MPI shared memory for the Coulomb potential.
-      - name: share_xc_density
-        type: bool
-        default: false
-        docstring: |
-          This will use MPI shared memory for the exchange-correlation density.
-      - name: share_xc_potential
-        type: bool
-        default: false
-        docstring: |
-          This will use MPI shared memory for the exchange-correlation potential.
   - name: Basis
     docstring: |
       Define polynomial basis.
@@ -173,7 +151,7 @@ sections:
         type: str
         default: 'interpolating'
         predicates:
-          - value[0].lower() in ['i', 'l']
+          - "value[0].lower() in ['i', 'l']"
         docstring: |
           Polynomial type of multiwavelet basis.
   - name: Derivatives
@@ -185,21 +163,6 @@ sections:
         default: 'abgv_55'
         docstring: |
           Derivative used in kinetic operator.
-      - name: h_orb
-        type: str
-        default: 'abgv_00'
-        docstring: |
-          Derivative used in magnetic dipole operator.
-      - name: h_pso
-        type: str
-        default: 'abgv_00'
-        docstring: |
-          Derivative used in paramagnetic spin-orbit operator.
-      - name: dft
-        type: str
-        default: 'abgv_00'
-        docstring: |
-          Derivative used in exchange-correlation operator.
   - name: Molecule
     docstring: |
       Define molecule.
@@ -301,7 +264,7 @@ sections:
     keywords:
       - name: scf_energy
         type: bool
-        default: false
+        default: true
         docstring: |
           Compute SCF energy.
       - name: dipole_moment
@@ -309,94 +272,17 @@ sections:
         default: false
         docstring: |
           Compute dipole moment.
-      - name: quadrupole_moment
-        type: bool
-        default: false
-        docstring: |
-          Compute quadrupole moment.
-      - name: geometry_derivative
-        type: bool
-        default: false
-        docstring: |
-          Compute geometric derivative.
-      - name: polarizability
-        type: bool
-        default: false
-        docstring: |
-          Compute polarizability tensor.
-      - name: hyperpolarizability
-        type: bool
-        default: false
-        docstring: |
-          Compute hyperpolarizability tensor.
-      - name: optical_rotation
-        type: bool
-        default: false
-        docstring: |
-          Compute optical rotation tensor.
-      - name: magnetizability
-        type: bool
-        default: false
-        docstring: |
-          Compute magnetizability tensor.
-      - name: nmr_shielding
-        type: bool
-        default: false
-        docstring: |
-          Compute NMR shielding tensors.
-      - name: spin_spin_coupling
-        type: bool
-        default: false
-        docstring: |
-          Compute spin-spin coupling tensors.
-      - name: hyperfine_coupling
-        type: bool
-        default: false
-        docstring: |
-          Compute hyperfine coupling tensors.
-  - name: ExternalField
+  - name: ExternalFields
     docstring: |
-      Define an external electromagnetic field.
+      Define external electromagnetic fields.
     keywords:
-      - name: electric_run
-        type: bool
-        default: false
-        docstring: |
-          Add external electric field.
       - name: electric_field
         type: List[float]
-        default: [0.0, 0.0, 0.0]
+        default: []
+        predicates:
+          - 'len(value) == 0 or len(value) == 3'
         docstring: |
           Strength of external electric field.
-      - name: magnetic_run
-        type: bool
-        default: false
-        docstring: |
-          Add external magnetic field.
-      - name: magnetic_field
-        type: List[float]
-        default: [0.0, 0.0, 0.0]
-        docstring: |
-          Strength of external magnetic field.
-  - name: Polarizability
-    docstring: |
-      Give details regarding the polarizability calculation.
-    keywords:
-      - name: velocity
-        type: bool
-        default: false
-        docstring: |
-          Use velocity gauge in calculation of polarizability tensor.
-      - name: frequency
-        type: List[float]
-        default: []
-        docstring: |
-          List of external field frequencies.
-      - name: wavelength
-        type: List[float]
-        default: []
-        docstring: |
-          List of external field wavelengths.
   - name: SCF
     docstring: |
       Includes parameters related to the ground state SCF orbital optimization
@@ -533,62 +419,3 @@ sections:
         default: -1.0
         docstring: |
           Convergence threshold for SCF energy.
-  - name: Response
-    docstring: |
-      Includes parameters related to the response SCF optimization.
-    keywords:
-      - name: run
-        type: bool
-        default: true
-        docstring: |
-          Run response solver.
-      - name: max_iter
-        type: int
-        default: -1
-        docstring: |
-          Maximum number of response iterations.
-      - name: kain
-        type: int
-        default: 0
-        docstring: |
-          Length of KAIN iterative history.
-      - name: localize
-        type: bool
-        default: false
-        docstring: |
-          Use canonical or localized orbitals.
-      - name: orbital_thrs
-        type: float
-        default: -1.0
-        docstring: |
-          Convergence threshold for orbtial residuals.
-      - name: property_thrs
-        type: float
-        default: -1.0
-        docstring: |
-          Convergence threshold for SCF energy.
-      - name: directions
-        type: List[int]
-        default: [1, 1, 1]
-        docstring: |
-          In which Cartesian directions to run response solver.
-      - name: start_prec
-        type: float
-        default: -1.0
-        docstring: |
-          Incremental precision in SCF iterations, initial value.
-      - name: final_prec
-        type: float
-        default: -1.0
-        docstring: |
-          Incremental precision in SCF iterations, final value.
-      - name: initial_guess
-        type: str
-        default: 'none'
-        docstring: |
-          Type of initial guess for response.
-      - name: write_orbitals
-        type: bool
-        default: false
-        docstring: |
-          Write converged perturbed orbitals to disk.
