@@ -27,6 +27,39 @@ keywords:
     docstring: |
       Unit used in the translation from abs_prec to rel_prec.
 sections:
+  - name: Plotter
+    docstring: |
+      Cube plots of converged orbitals and densities.
+    keywords:
+      - name: points
+        type: List[int]
+        default: [20, 20, 20]
+        predicates:
+          - 'value[0] > 0'
+          - 'value[1] > 0'
+          - 'value[2] > 0'
+        docstring: |
+          Number of points in each direction on the cube grid.
+      - name: O
+        type: List[float]
+        default: [0.0, 0.0, 0.0]
+        docstring: |
+          Origin of cube plot.
+      - name: A
+        type: List[float]
+        default: [1.0, 0.0, 0.0]
+        docstring: |
+          First boundary vector for plot.
+      - name: B
+        type: List[float]
+        default: [0.0, 1.0, 0.0]
+        docstring: |
+          Second boundary vector for plot.
+      - name: C
+        type: List[float]
+        default: [0.0, 0.0, 1.0]
+        docstring: |
+          Third boundary vector for plot.
   - name: Printer
     docstring: |
       Define variables for printed output.
@@ -406,6 +439,16 @@ sections:
         default: false
         docstring: |
           Write converged orbitals to disk.
+      - name: plot_density
+        type: bool
+        default: false
+        docstring: |
+          Plot converged electron density. Including spin densities for open-shell.
+      - name: plot_orbital
+        type: List[int]
+        default: []
+        docstring: |
+          Plot converged molecular orbitals of given index. Negative first index plots all.
   - name: KineticFree
     docstring: |
       Includes parameters related to the ground state SCF optimization

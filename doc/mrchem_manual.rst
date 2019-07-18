@@ -295,6 +295,38 @@ using a small GTO basis set (basis and MO matrix input files must be provided)
 and "mw" means starting from a previous MRChem calculation (compatible orbitals
 must have been written to disk using the ``write_orbitals`` keyword).
 
+Plotter
+-------
+
+It is possible to get a 3D cube plot of the converged orbitals and density by
+setting the keywords ``plot_orbital`` and ``plot_density`` in the ``SCF``
+section. In addition the ``Plotter`` section must be specified in order to get
+correct plotting parameters. The functions are plotted in the volume spanned by
+the three vectors A, B and C, relative to the origin O. The following example
+will generate a 20x20x20 plot in the volume [-4,4]^3 of the density plus
+orbitals 1 and 2:
+
+.. code-block:: bash
+
+    Plotter {
+      points = [20, 20, 20]  # number of grid points
+      O = [-4.0,-4.0,-4.0]   # plot origin
+      A = [8.0, 0.0, 0.0]    # boundary vector
+      B = [0.0, 8.0, 0.0]    # boundary vector
+      C = [0.0, 0.0, 8.0]    # boundary vector
+    }
+
+    SCF {
+      plot_density = true    # plot converged density (including spin for open-shell)
+      plot_orbital = [1,2]   # plot converged 1 and 2 (negative idx plots all)
+    }
+
+The generated files (e.g. ``plots/phi_1_re.cube``) can be viewed directly in a
+web browser by `blob <https://github.com/densities/blob/>`_ , like this benzene
+orbital:
+
+.. image:: gfx/blob.png
+
 Example 1
 ---------
 

@@ -44,7 +44,8 @@ int main(int argc, char **argv) {
     }
     driver::print_properties(mol);
 
+    mpi::barrier(mpi::comm_orb);
     mrenv::finalize(timer.elapsed());
     mpi::finalize();
-    return 0;
+    return EXIT_SUCCESS;
 }
