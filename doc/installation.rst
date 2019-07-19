@@ -17,16 +17,16 @@ MRChem depends on some Python tools for its compilation and execution.
 More specifically, users will need Python:
 
 - for configuration using the script ``setup``.
-- to run the integration tests, using the ```runtest`` library <https://runtest.readthedocs.io/en/latest/>`_.
-- for input parsing and running calculations, using the ``mrchem`` script.
+- to run the integration tests, using `runtest <https://runtest.readthedocs.io/en/latest/>`_.
+- for input parsing, using `parselglossy  <https://github.com/dev-cafe/parselglossy>`_.
+- for running calculations, using the ``mrchem`` script.
 
 Developers will additionally need Python to build the documentation locally with
 Sphinx.
 
 We **strongly** suggest not to install these Python dependencies globally, but
-rather to use a local virtual environment.
-We provide both a ``Pipfile`` and a ``requirements.txt`` specifying the Python
-dependencies.
+rather to use a local virtual environment. We provide both a ``Pipfile`` and
+a ``requirements.txt`` specifying the Python dependencies.
 We recommend using `Pipenv <https://pipenv.readthedocs.io/en/latest/>`_, since
 it manages virtual environment and package installation seamlessly.
 After installing it with your package manager, run::
@@ -57,10 +57,11 @@ Stallo
 
 Using the Intel tool chain on Stallo::
 
-    $ module load CMake/3.11.4-GCCcore-7.3.0
-    $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
+    $ module load intel/2018b
+    $ module load Python/3.6.6-intel-2018b
     $ module load Eigen/3.3.5
-    $ module load intel/2017a
+    $ module load CMake/3.12.1-GCCcore-7.3.0
+    $ module load Git/2.8.1
 
 Fram
 ----
@@ -68,12 +69,14 @@ Fram
 Using the Intel tool chain on Fram::
 
     $ module load intel/2017a
+    $ module load Python/3.6.1-intel-2017a
     $ module load CMake/3.12.1
-    $ module load Boost/1.63.0-intel-2017a-Python-2.7.13
+    $ module load git/2.14.1-GCCcore-6.4.0
 
-Eigen is not available through the module system on Fram, so it must be
-installed manually by the user, see the `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_ home page or the
-``.ci/eigen.sh`` source file for details.
+Eigen is not available through the module system on Fram, but it will be
+download during the CMake configuration step. It can also be installed manually
+by the user, see the `Eigen3 <http://eigen.tuxfamily.org/index.php?title=Main_Page>`_
+home page or the ``.ci/eigen.sh`` source file for details.
 
 -------------------------------
 Obtaining and building the code
@@ -91,6 +94,7 @@ when configuring the project if they are not already installed.
 To build the code with only shared memory OpenMP parallelization::
 
     $ cd mrchem
+    $ pipenv install
     $ ./setup --prefix=<install-dir> --omp <build-dir>
     $ cd <build-dir>
     $ make
@@ -137,8 +141,8 @@ To run a couple of more involved integration tests::
     $ pipenv run ctest -L integration
 
 Note how we used Pipenv to run the integration tests. This ensures that the
-Python dependencies are satisfied in a virtual environment and available to
-``ctest``.
+Python dependencies (``parselglossy`` and ``runtest``) are satisfied in a
+virtual environment and available to ``ctest``.
 
 -------------------
 Running the program
@@ -149,23 +153,26 @@ A Python input parser will be provided along with the mrchem executable::
     $ build/bin/mrchem              // Python input parser
     $ build/bin/mrchem.x            // MRChem executable
 
-The input parser takes a single file argument (default ``mrchem.inp``),
-processes the input and calls the main executable. Output is written to stdout
-but can be redirected to an output file::
+The input parser takes a single file argument. It will process the `user_input`
+(usually ``mrchem.inp``) and generate a `program_input` file with a ``.json``
+extension (usually ``mrchem.json``), and pass it to the main MRChem executable.
+Output is written to ``stdout`` but can be redirected to an output file::
 
-    $ ./mrchem mrchem.inp > mrchem.out &
+    $ pipenv run ./mrchem mrchem.inp > mrchem.out &
 
-To run the program in OpenMP parallel use the environment variable
+Note again that the ``pipenv`` environment must be activated, either `once` by
+``pipenv shell`` or on `every` command using ``pipenv run``, see Python section
+above. To run the program in OpenMP parallel use the environment variable
 ``OMP_NUM_THREADS`` (``unset OMP_NUM_THREADS`` will give you all threads
 available, otherwise use ``export OMP_NUM_THREADS N``)::
 
     $ export OMP_NUM_THREADS 16
-    $ ./mrchem mrchem.inp
+    $ pipenv run mrchem mrchem.inp
 
 When you run the program in hybrid MPI/OpenMP parallel, you must run the input
 parser manually first with the dryrun ``-D`` option, before launching the main
 executable with ``mpirun`` (or equivalent). For 20 threads each on 5 MPI
 processes::
 
-    $ ./mrchem -D mrchem.inp
-    $ OMP_NUM_THREADS=20  mpirun -np 5 @mrchem.inp >mrchem.out &
+    $ pipenv run mrchem -D mrchem.inp
+    $ OMP_NUM_THREADS=20  mpirun -np 5 mrchem.x mrchem.json >mrchem.out &
