@@ -10,7 +10,7 @@ runtest = "*"
 [dev-packages]
 Pygments = "*"
 recommonmark = "*"
-Sphinx = "*"
+Sphinx = ">=2.0"
 sphinx_rtd_theme = "*"
 sphinxcontrib-bibtex = "*"
 breathe = "*"
