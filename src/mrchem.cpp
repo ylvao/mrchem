@@ -37,15 +37,20 @@ int main(int argc, char **argv) {
 
     Timer timer;
     Molecule mol;
-    driver::init_molecule(json_mol, mol);
-    driver::run_guess(json_guess, mol);
-    if (driver::run_scf(json_scf, mol)) {
-        for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
+    if(mpi::is_bankclient){
+        driver::init_molecule(json_mol, mol);
+        driver::run_guess(json_guess, mol);
+        if (driver::run_scf(json_scf, mol)) {
+            for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
+        }
+        driver::print_properties(mol);
+        if(mpi::grand_master()) mpi::orb_bank.close();
+        mpi::barrier(mpi::comm_orb);
+        mrenv::finalize(timer.elapsed());
+    }else{
+        mpi::orb_bank.open();
     }
-    driver::print_properties(mol);
 
-    mpi::barrier(mpi::comm_orb);
-    mrenv::finalize(timer.elapsed());
     mpi::finalize();
     return EXIT_SUCCESS;
 }

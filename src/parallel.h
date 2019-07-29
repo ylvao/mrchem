@@ -8,6 +8,7 @@
 
 #include "mrchem.h"
 #include "qmfunctions/qmfunction_fwd.h"
+#include "utils/Bank.h"
 
 namespace mrchem {
 
@@ -19,15 +20,23 @@ namespace mpi {
 extern bool numerically_exact;
 extern int shared_memory_size;
 
+extern int world_rank;
+extern int world_size;
 extern int orb_rank;
 extern int orb_size;
 extern int share_rank;
 extern int share_size;
 extern int sh_group_rank;
+extern int is_bank;
+extern int is_bankclient;
+extern int bankmaster;
 
 extern MPI_Comm comm_orb;
 extern MPI_Comm comm_share;
 extern MPI_Comm comm_sh_group;
+extern MPI_Comm comm_bank;
+
+extern Bank orb_bank;
 
 void initialize();
 void finalize();
@@ -41,7 +50,7 @@ void distribute(OrbitalVector &Phi);
 void free_foreign(OrbitalVector &Phi);
 OrbitalChunk get_my_chunk(OrbitalVector &Phi);
 
-void send_orbital(Orbital &orb, int dst, int tag);
+void send_orbital(Orbital &orb, int dst, int tag, MPI_Comm comm = mpi::comm_orb);
 void recv_orbital(Orbital &orb, int src, int tag);
 
 void send_function(QMFunction &func, int dst, int tag, MPI_Comm comm);

@@ -4,6 +4,7 @@
 #include "qmfunctions/ComplexFunction.h"
 #include "qmfunctions/Density.h"
 #include "qmfunctions/Orbital.h"
+#include "utils/Bank.h"
 
 using mrcpp::Printer;
 
@@ -20,15 +21,23 @@ namespace mpi {
 bool numerically_exact = false;
 int shared_memory_size = 1000;
 
+int world_size = 0;
+int world_rank = 1;
 int orb_rank = 0;
 int orb_size = 1;
 int share_rank = 0;
 int share_size = 1;
 int sh_group_rank = 0;
+int is_bank = 0;
+int is_bankclient = 1;
+int bankmaster;
 
 MPI_Comm comm_orb;
 MPI_Comm comm_share;
 MPI_Comm comm_sh_group;
+MPI_Comm comm_bank;
+
+Bank orb_bank;
 
 } // namespace mpi
 
@@ -47,14 +56,33 @@ void mpi::initialize() {
     // divide the world into groups
     // each group has its own group communicator definition
 
+   // define independent group of MPI processes, that are not part of comm_orb
+    // for now the new group does not include comm_share
+    comm_bank = MPI_COMM_WORLD;//clients and master
+    MPI_Comm comm_remainder;//clients only
+
+    int bank_size = 1; //size of new special group
+    bankmaster = world_size - 1;
+    if(world_rank <world_size-bank_size){
+        //everything which is left
+        is_bank = 0;
+        is_bankclient = 1;
+    } else {
+        //special group of bankmasters
+        is_bank = 1;
+        is_bankclient = 0;
+        if(bankmaster != world_rank)std::cout<<"ERROR bankmaster rank"<<std::endl;
+    }
+    MPI_Comm_split(MPI_COMM_WORLD, is_bankclient, world_rank, &comm_remainder);
+
     // split world into groups that can share memory
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm_share);
+    MPI_Comm_split_type(comm_remainder, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm_share);
 
     MPI_Comm_rank(comm_share, &share_rank);
     MPI_Comm_size(comm_share, &share_size);
 
     // define a rank of the group
-    MPI_Comm_split(MPI_COMM_WORLD, share_rank, world_rank, &comm_sh_group);
+    MPI_Comm_split(comm_remainder, share_rank, world_rank, &comm_sh_group);
     // mpiShRank is color (same color->in same group)
     // MPI_worldrank is key (orders rank within the groups)
 
@@ -63,12 +91,13 @@ void mpi::initialize() {
     MPI_Comm_rank(comm_sh_group, &sh_group_rank);
 
     orb_rank = share_rank + sh_group_rank * world_size;
-    MPI_Comm_split(MPI_COMM_WORLD, 0, orb_rank, &comm_orb);
+    MPI_Comm_split(comm_remainder, 0, orb_rank, &comm_orb);
     // 0 is color (same color->in same group)
     // mpiOrbRank is key (orders rank in the group)
 
     MPI_Comm_rank(comm_orb, &orb_rank);
     MPI_Comm_size(comm_orb, &orb_size);
+    std::cout<<"is_bank "<<is_bank<<" orbital rank "<<orb_rank<<" "<<" world rank "<<world_rank<<std::endl;
 #endif
 }
 
@@ -176,12 +205,12 @@ void mpi::allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm) {
 }
 
 // send an orbital with MPI, includes orbital meta data
-void mpi::send_orbital(Orbital &orb, int dst, int tag) {
+void mpi::send_orbital(Orbital &orb, int dst, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
-    mpi::send_function(orb, dst, tag, mpi::comm_orb);
+    mpi::send_function(orb, dst, tag, comm);
 
     OrbitalData &orbinfo = orb.getOrbitalData();
-    MPI_Send(&orbinfo, sizeof(OrbitalData), MPI_BYTE, dst, 0, mpi::comm_orb);
+    MPI_Send(&orbinfo, sizeof(OrbitalData), MPI_BYTE, dst, 0, comm);
 #endif
 }
 
@@ -202,9 +231,14 @@ void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
     if (func.isShared()) MSG_WARN("Sending a shared function is not recommended");
     FunctionData &funcinfo = func.getFunctionData();
     MPI_Send(&funcinfo, sizeof(FunctionData), MPI_BYTE, dst, 0, comm);
-
-    if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm, funcinfo.real_size);
-    if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm, funcinfo.imag_size);
+    if(comm!=comm_bank){
+        if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm, funcinfo.real_size);
+        if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm, funcinfo.imag_size);
+    } else {
+        //must not assume that receiver know the sizes
+        if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm);
+        if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm);
+    }
 #endif
 }
 
