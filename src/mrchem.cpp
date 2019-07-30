@@ -8,13 +8,15 @@
  * GPLv4
  *
  */
-
+#include "parallel.h"
 #include "MRCPP/Timer"
 
 #include "driver.h"
 #include "mrchem.h"
 #include "mrenv.h"
 #include "parallel.h"
+#include "utils/Bank.h"
+
 
 #include "chemistry/Molecule.h"
 
@@ -44,11 +46,11 @@ int main(int argc, char **argv) {
             for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
         }
         driver::print_properties(mol);
-        if(mpi::grand_master()) mpi::orb_bank.close();
+        if(mpi::grand_master()) orb_bank.close();
         mpi::barrier(mpi::comm_orb);
         mrenv::finalize(timer.elapsed());
     }else{
-        mpi::orb_bank.open();
+        orb_bank.open();
     }
 
     mpi::finalize();

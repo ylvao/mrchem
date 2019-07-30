@@ -37,6 +37,7 @@
 
 #include "qmoperators/two_electron/FockOperator.h"
 #include "parallel.h"
+#include "utils/Bank.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -85,7 +86,10 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
     //save orbitals in Bank
     for (int i = 0; i < Phi_n.size(); i++) {
         if (not mpi::my_orb(Phi_n[i])) continue; // only save own orbitals
-        mpi::orb_bank.put_orb(i, Phi_n[i]);
+        std::cout<<mpi::orb_rank<<" sending orb "<<std::endl;
+        orb_bank.put_orb(i, Phi_n[i]);
+        orb_bank.get_orb(i, Phi_n[i]);
+        std::cout<<mpi::orb_rank<<" received orb "<<std::endl;
     }
 
     this->error.push_back(err_t);
