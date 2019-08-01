@@ -29,7 +29,8 @@ extern int share_size;
 extern int sh_group_rank;
 extern int is_bank;
 extern int is_bankclient;
-extern int bankmaster;
+extern int bank_size;
+extern std::vector<int> bankmaster;
 
 extern MPI_Comm comm_orb;
 extern MPI_Comm comm_share;

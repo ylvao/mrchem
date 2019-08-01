@@ -34,6 +34,7 @@ public:
     OrbitalIterator(OrbitalVector &Phi, bool sym = false);
 
     bool next(int max_recv = -1);
+    bool bank_next(int max_recv = 1);
 
     int idx(int i) const { return (this->received_orbital_index)[i]; }
     Orbital &orbital(int i) { return (this->received_orbitals)[i]; }

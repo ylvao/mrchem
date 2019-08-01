@@ -28,6 +28,7 @@
 #include "Orbital.h"
 #include "OrbitalIterator.h"
 #include "parallel.h"
+#include "utils/Bank.h"
 
 namespace mrchem {
 
@@ -193,6 +194,52 @@ bool OrbitalIterator::next(int max_recv) {
             if (this->iter % 2 == 0) break; // must always exit after odd iterations in order to finish duties outside
         }
     }
+    return true;
+}
+
+// Receive all the orbitals from Bank
+bool OrbitalIterator::bank_next(int max_recv) {
+    mpi::free_foreign(*this->orbitals); // delete foreign orbitals
+    // NB: for now we completely delete orbitals at each iteration. Could reuse the memory in next iteration.
+    this->received_orbital_index.clear();
+    this->received_orbitals.clear();
+    this->rcv_step.clear();
+
+    if (this->iter >= this->orbitals->size()) {
+        // We have received all orbitals -> return
+        this->iter = 0;
+        return false;
+    }
+
+    int my_rank = mpi::orb_rank;
+    int max_rank = mpi::orb_size;
+    int received = 0;  // number of new received orbitals this call
+    int recv_size = 1; // number of orbitals to receive per iteration
+
+    if (this->iter == 0) {
+        // send all my orbitals to bank
+        for (int i = 0; i < this->orbitals->size(); i++) {
+            Orbital &phi_i = (*this->orbitals)[i];
+            if (not mpi::my_orb(phi_i)) continue;
+            orb_bank.put_orb(i, phi_i);
+        }
+    }
+
+    // receive
+    for (int i = 0; i < recv_size; i++) {
+        int tag = i;
+        int orb_ix = this->received_counter;
+        Orbital &phi_i = (*this->orbitals)[orb_ix];
+        orb_bank.get_orb(orb_ix, phi_i);
+        this->received_orbital_index.push_back(orb_ix);
+        this->received_orbitals.push_back(phi_i);
+        this->received_counter++; // total
+        received++;               // this call
+    }
+
+    // all orbitals to be processed during this iteration are ready. Start next iteration
+    this->iter++;
+
     return true;
 }
 

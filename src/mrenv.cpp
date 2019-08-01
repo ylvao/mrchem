@@ -138,7 +138,8 @@ void mrenv::print_header() {
     println(0, pre_str << "                                             " << post_str);
     mrcpp::print::separator(0, '*', 1);
     mrcpp::print::separator(0, '-', 1);
-    print_utils::scalar(0, "MPI processes", mpi::orb_size, "", 0, false);
+    print_utils::scalar(0, "MPI processes", mpi::world_size, "", 0, false);
+    print_utils::scalar(0, "of which used as bank", mpi::bank_size, "", 0, false);
     print_utils::scalar(0, "OpenMP threads", omp::n_threads, "", 0, false);
     print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
     mrcpp::print::separator(0, ' ');

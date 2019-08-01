@@ -30,7 +30,8 @@ int share_size = 1;
 int sh_group_rank = 0;
 int is_bank = 0;
 int is_bankclient = 1;
-int bankmaster;
+int bank_size;
+std::vector<int> bankmaster;
 
 MPI_Comm comm_orb;
 MPI_Comm comm_share;
@@ -54,19 +55,22 @@ void mpi::initialize() {
     // divide the world into groups
     // each group has its own group communicator definition
 
-   // define independent group of MPI processes, that are not part of comm_orb
+    // define independent group of MPI processes, that are not part of comm_orb
     // for now the new group does not include comm_share
-    comm_bank = MPI_COMM_WORLD;//clients and master
-    MPI_Comm comm_remainder;//clients only
+    comm_bank = MPI_COMM_WORLD; // clients and master
+    MPI_Comm comm_remainder;    // clients only
 
-    int bank_size = 1; //size of new special group
-    bankmaster = world_size - 1;
-    if(world_rank <world_size-bank_size){
-        //everything which is left
+    bank_size = 1; // size of new special group
+    bankmaster.resize(bank_size);
+    for (int i = 0; i < bank_size; i++) {
+        bankmaster[i] = world_size - i - 1; // rank of the bankmasters
+    }
+    if (world_rank < world_size - bank_size) {
+        // everything which is left
         is_bank = 0;
         is_bankclient = 1;
     } else {
-        //special group of bankmasters
+        // special group of bankmasters
         is_bank = 1;
         is_bankclient = 0;
     }
@@ -94,7 +98,8 @@ void mpi::initialize() {
 
     MPI_Comm_rank(comm_orb, &orb_rank);
     MPI_Comm_size(comm_orb, &orb_size);
-    std::cout<<"is_bank "<<is_bank<<" orbital rank "<<orb_rank<<" "<<" world rank "<<world_rank<<std::endl;
+    std::cout << "is_bank " << is_bank << " orbital rank " << orb_rank << " "
+              << " world rank " << world_rank << std::endl;
 #endif
 }
 
@@ -204,11 +209,11 @@ void mpi::allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm) {
 // send an orbital with MPI, includes orbital meta data
 void mpi::send_orbital(Orbital &orb, int dst, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
-    //std::cout<<mpi::orb_rank<<" sending function "<<tag<<std::endl;
+    // std::cout<<mpi::orb_rank<<" sending function "<<tag<<std::endl;
     mpi::send_function(orb, dst, tag, comm);
 
-    //std::cout<<mpi::orb_rank<<" sending orbinfo "<<tag<<std::endl;
-   OrbitalData &orbinfo = orb.getOrbitalData();
+    // std::cout<<mpi::orb_rank<<" sending orbinfo "<<tag<<std::endl;
+    OrbitalData &orbinfo = orb.getOrbitalData();
     MPI_Send(&orbinfo, sizeof(OrbitalData), MPI_BYTE, dst, 0, comm);
 #endif
 }
@@ -229,16 +234,16 @@ void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
     if (func.isShared()) MSG_WARN("Sending a shared function is not recommended");
     FunctionData &funcinfo = func.getFunctionData();
-    //std::cout<<mpi::orb_rank<<" sending functioninfo "<<sizeof(FunctionData)<<" to "<<dst<<std::endl;
+    // std::cout<<mpi::orb_rank<<" sending functioninfo "<<sizeof(FunctionData)<<" to "<<dst<<std::endl;
     MPI_Send(&funcinfo, sizeof(FunctionData), MPI_BYTE, dst, 0, comm);
     //    if(comm!=comm_bank){
-        if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm, funcinfo.real_size);
-        if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm, funcinfo.imag_size);
-    //    } else {
-    //        //must not assume that receiver know the sizes
-    //        if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm);
-    //        if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm);
-    //    }
+    if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm, funcinfo.real_size);
+    if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm, funcinfo.imag_size);
+        //    } else {
+        //        //must not assume that receiver know the sizes
+        //        if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm);
+        //        if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm);
+        //    }
 #endif
 }
 
@@ -249,9 +254,9 @@ void mpi::recv_function(QMFunction &func, int src, int tag, MPI_Comm comm) {
     MPI_Status status;
 
     FunctionData &funcinfo = func.getFunctionData();
-    //std::cout<<mpi::world_rank<<" receiving funcinfo from"<<src<<" "<<sizeof(FunctionData)<<std::endl;
+    // std::cout<<mpi::world_rank<<" receiving funcinfo from"<<src<<" "<<sizeof(FunctionData)<<std::endl;
     MPI_Recv(&funcinfo, sizeof(FunctionData), MPI_BYTE, src, 0, comm, &status);
-    //std::cout<<mpi::world_rank<<" received funcinfo"<<std::endl;
+    // std::cout<<mpi::world_rank<<" received funcinfo"<<std::endl;
     if (funcinfo.real_size > 0) {
         // We must have a tree defined for receiving nodes. Define one:
         if (not func.hasReal()) func.alloc(NUMBER::Real);

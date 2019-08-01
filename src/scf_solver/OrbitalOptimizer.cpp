@@ -25,6 +25,9 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include <chrono>
+#include <thread>
+#include <unistd.h>
 
 #include "HelmholtzVector.h"
 #include "KAIN.h"
@@ -35,8 +38,8 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
-#include "qmoperators/two_electron/FockOperator.h"
 #include "parallel.h"
+#include "qmoperators/two_electron/FockOperator.h"
 #include "utils/Bank.h"
 
 using mrcpp::Printer;
@@ -83,13 +86,19 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
     double err_o = errors.maxCoeff();
     double err_t = errors.norm();
 
-    //save orbitals in Bank
-    for (int i = 0; i < Phi_n.size(); i++) {
+    // save orbitals in Bank
+    for (int i = 0; i < 0; i++) {
         if (not mpi::my_orb(Phi_n[i])) continue; // only save own orbitals
-        std::cout<<mpi::orb_rank<<" sending orb "<<std::endl;
+        std::cout << mpi::orb_rank << " sending orb " << std::endl;
+        if (mpi::orb_rank == 3) std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        if (mpi::orb_rank == 2) usleep(2000000);
+        if (mpi::orb_rank == 1) usleep(3000000);
+        if (mpi::orb_rank == 0) usleep(4000000);
+
         orb_bank.put_orb(i, Phi_n[i]);
+        orb_bank.get_orb(0, Phi_n[i]);
         orb_bank.get_orb(i, Phi_n[i]);
-        std::cout<<mpi::orb_rank<<" received orb "<<std::endl;
+        std::cout << mpi::orb_rank << " received orb " << std::endl;
     }
 
     this->error.push_back(err_t);
