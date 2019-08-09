@@ -160,7 +160,7 @@ OrbitalVector orbital::rotate(const ComplexMatrix &U, OrbitalVector &Phi, double
     double inter_prec = (mpi::numerically_exact) ? -1.0 : prec;
     OrbitalVector out = orbital::param_copy(Phi);
     OrbitalIterator iter(Phi);
-    while (iter.bank_next(1)) {
+    while (iter.next()) {
         //  while (iter.next()) {
         for (int i = 0; i < out.size(); i++) {
             if (not mpi::my_orb(out[i])) continue;
@@ -371,7 +371,7 @@ void orbital::orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi) {
 
     // Orthogonalize MY orbitals with ALL input orbitals
     OrbitalIterator iter(Psi, false);
-    while (iter.bank_next()) {
+    while (iter.next()) {
         for (int i = 0; i < iter.get_size(); i++) {
             Orbital &psi_i = iter.orbital(i);
             for (auto &j : myPhi) {
@@ -391,8 +391,12 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
     // Receive ALL orbitals on the bra side, use only MY orbitals on the ket side
     // Computes the FULL columns associated with MY orbitals on the ket side
     OrbitalIterator iter(BraKet, true); // use symmetry
+    Timer timer;
     while (iter.next()) {
         for (int i = 0; i < iter.get_size(); i++) {
+            std::cout << i << " " << iter.idx(i) << " " << mpi::orb_rank << " got " << iter.get_size() << " orb in "
+                      << (int)(1000 * timer.elapsed()) << "ms" << std::endl;
+
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);
             for (auto &j : myKet) {
@@ -405,6 +409,7 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
                 }
             }
         }
+        timer.start();
     }
     // Assumes all MPIs have (only) computed their own columns of the matrix
     mpi::allreduce_matrix(S, mpi::comm_orb);
@@ -432,7 +437,7 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
     // Receive ALL orbitals on the bra side, use only MY orbitals on the ket side
     // Computes the FULL columns associated with MY orbitals on the ket side
     OrbitalIterator iter(Bra);
-    while (iter.bank_next()) {
+    while (iter.next()) {
         for (int i = 0; i < iter.get_size(); i++) {
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);

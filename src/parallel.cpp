@@ -60,7 +60,7 @@ void mpi::initialize() {
     comm_bank = MPI_COMM_WORLD; // clients and master
     MPI_Comm comm_remainder;    // clients only
 
-    bank_size = 1; // size of new special group
+    bank_size = 4; // size of new special group
     bankmaster.resize(bank_size);
     for (int i = 0; i < bank_size; i++) {
         bankmaster[i] = world_size - i - 1; // rank of the bankmasters
@@ -98,8 +98,8 @@ void mpi::initialize() {
 
     MPI_Comm_rank(comm_orb, &orb_rank);
     MPI_Comm_size(comm_orb, &orb_size);
-    std::cout << "is_bank " << is_bank << " orbital rank " << orb_rank << " "
-              << " world rank " << world_rank << std::endl;
+    std::cout << "is_bank " << is_bank << " orbital rank " << orb_rank << " of " << orb_size << " world rank "
+              << world_rank << std::endl;
 #endif
 }
 

@@ -8,15 +8,14 @@
  * GPLv4
  *
  */
-#include "parallel.h"
 #include "MRCPP/Timer"
+#include "parallel.h"
 
 #include "driver.h"
 #include "mrchem.h"
 #include "mrenv.h"
 #include "parallel.h"
 #include "utils/Bank.h"
-
 
 #include "chemistry/Molecule.h"
 
@@ -39,17 +38,20 @@ int main(int argc, char **argv) {
 
     Timer timer;
     Molecule mol;
-    if(mpi::is_bankclient){
+    if (mpi::is_bankclient) {
+        mrcpp::print::memory(2, "memusage before init_molecule");
         driver::init_molecule(json_mol, mol);
+        mrcpp::print::memory(2, "memusage before run_guess");
         driver::run_guess(json_guess, mol);
+        mrcpp::print::memory(2, "memusage before run_scf");
         if (driver::run_scf(json_scf, mol)) {
             for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
         }
         driver::print_properties(mol);
-        if(mpi::grand_master()) orb_bank.close();
+        if (mpi::grand_master()) orb_bank.close();
         mpi::barrier(mpi::comm_orb);
         mrenv::finalize(timer.elapsed());
-    }else{
+    } else {
         orb_bank.open();
     }
 

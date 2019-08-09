@@ -63,9 +63,9 @@ void mrenv::init_printer(const json &json_print) {
     auto print_mpi = json_print["print_mpi"].get<bool>();
     auto fname = json_print["file_name"].get<std::string>();
     if (print_mpi) {
-        Printer::init(print_level, mpi::orb_rank, mpi::orb_size, fname.c_str());
+        Printer::init(print_level, mpi::world_rank, mpi::world_size, fname.c_str());
     } else {
-        Printer::init(print_level, mpi::orb_rank, mpi::orb_size);
+        Printer::init(print_level, mpi::world_rank, mpi::world_size);
     }
     Printer::setPrecision(print_prec);
     Printer::setWidth(print_width);
@@ -140,6 +140,7 @@ void mrenv::print_header() {
     mrcpp::print::separator(0, '-', 1);
     print_utils::scalar(0, "MPI processes", mpi::world_size, "", 0, false);
     print_utils::scalar(0, "of which used as bank", mpi::bank_size, "", 0, false);
+    print_utils::scalar(0, "of which used for orb", mpi::orb_size, "", 0, false);
     print_utils::scalar(0, "OpenMP threads", omp::n_threads, "", 0, false);
     print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
     mrcpp::print::separator(0, ' ');
