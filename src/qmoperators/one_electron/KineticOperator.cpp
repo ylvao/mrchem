@@ -33,7 +33,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
     ComplexMatrix T_tot = ComplexMatrix::Zero(Ni, Nj);
     mrcpp::print::memory(2, "memusage Kinetic start");
 
-    if (true) {
+    if (false) {
         Timer timer;
         // 1) save all derivatives
         OrbitalVector dKet = p_x(ket);
@@ -304,7 +304,8 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             mrcpp::print::tree(2, "<i|p[z]p[z]|j>", nNodes, sNodes, timer.elapsed());
         }
 
-        if (mpi::orb_rank == 0) std::cout << "KINMATRIX orig " << std::endl << (0.5 * (T_x + T_y + T_z)) << std::endl;
+        // if (mpi::orb_rank == 0) std::cout << "KINMATRIX orig " << std::endl << (0.5 * (T_x + T_y + T_z)) <<
+        // std::endl;
         mrcpp::print::memory(2, "memusage Kinetic end2");
         return 0.5 * (T_x + T_y + T_z);
     }
