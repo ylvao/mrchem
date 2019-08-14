@@ -32,7 +32,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
     ComplexMatrix T_tot = ComplexMatrix::Zero(Ni, Nj);
 
     // we keep both methods for testing purposes
-    if (mpi::bank_size > 0) {
+    if (mpi::bank_size > 0 and false) {
         Timer timer;
         // 1) save all derivatives
         OrbitalVector dKet = p_x(ket);
