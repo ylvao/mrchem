@@ -26,8 +26,11 @@ using Timer = mrcpp::Timer;
 using namespace mrchem;
 
 int main(int argc, char **argv) {
-    mpi::initialize();
     const auto json_input = mrenv::fetch_input(argc, argv);
+
+    auto json_mpi = json_input.find("mpi");
+    if (json_mpi != json_input.end()) mrenv::init_mpi(*json_mpi); // needed to set mpi parameters
+    mpi::initialize();
 
     mrenv::initialize(json_input);
     const auto &json_mol = json_input["molecule"].get<json>();
@@ -38,11 +41,8 @@ int main(int argc, char **argv) {
     Timer timer;
     Molecule mol;
     if (mpi::is_bankclient) {
-        mrcpp::print::memory(2, "memusage before init_molecule");
         driver::init_molecule(json_mol, mol);
-        mrcpp::print::memory(2, "memusage before run_guess");
         driver::run_guess(json_guess, mol);
-        mrcpp::print::memory(2, "memusage before run_scf");
         if (driver::run_scf(json_scf, mol)) {
             for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
         }

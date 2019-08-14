@@ -97,7 +97,6 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
 
     int nIter = 0;
     bool converged = false;
-    mrcpp::print::memory(2, "memusage before opt loop");
     while (nIter++ < this->maxIter or this->maxIter < 0) {
         std::stringstream o_header;
         o_header << "SCF cycle " << nIter;

@@ -394,9 +394,6 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
     Timer timer;
     while (iter.next()) {
         for (int i = 0; i < iter.get_size(); i++) {
-            std::cout << i << " " << iter.idx(i) << " " << mpi::orb_rank << " got " << iter.get_size() << " orb in "
-                      << (int)(1000 * timer.elapsed()) << "ms" << std::endl;
-
             int idx_i = iter.idx(i);
             Orbital &bra_i = iter.orbital(i);
             for (auto &j : myKet) {

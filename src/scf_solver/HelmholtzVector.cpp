@@ -159,7 +159,6 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
     auto plevel = Printer::getPrintLevel();
     OrbitalVector out = orbital::param_copy(Phi);
     mrcpp::print::header(2, "Rotating Helmholtz argument and apply");
-
     // 1) Save all orbitals in Bank
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(Phi[i])) continue;

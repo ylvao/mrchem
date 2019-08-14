@@ -9,7 +9,6 @@
 
 #include "mrchem.h"
 #include "qmfunctions/qmfunction_fwd.h"
-//#include "utils/Bank.h"
 
 namespace mrchem {
 

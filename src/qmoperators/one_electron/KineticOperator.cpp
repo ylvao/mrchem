@@ -4,7 +4,6 @@
 #include "KineticOperator.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
-#include "utils/Bank.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -31,24 +30,23 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
     ComplexMatrix T_y = ComplexMatrix::Zero(Ni, Nj);
     ComplexMatrix T_z = ComplexMatrix::Zero(Ni, Nj);
     ComplexMatrix T_tot = ComplexMatrix::Zero(Ni, Nj);
-    mrcpp::print::memory(2, "memusage Kinetic start");
 
     // we keep both methods for testing purposes
     if (mpi::bank_size > 0) {
         Timer timer;
         // 1) save all derivatives
         OrbitalVector dKet = p_x(ket);
-        mrcpp::print::tree(2, "compute xderivatives ", 1, 1, timer.elapsed());
+        int nNodes = 0, sNodes = 0;
         mpi::barrier(mpi::comm_orb);
         for (int i = 0; i < bra.size(); i++) {
             if (not mpi::my_orb(bra[i])) continue;
             Orbital der = dKet[i];
             mpi::orb_bank.put_orb(i, der);
+            nNodes += der.getNNodes(NUMBER::Total);
+            sNodes += der.getSizeNodes(NUMBER::Total);
         }
-        mrcpp::print::tree(2, "save xderivatives ", 1, 1, timer.elapsed());
         // 2) symmetric dot product
         mpi::barrier(mpi::comm_orb);
-        mrcpp::print::tree(2, "barrier ", 1, 1, timer.elapsed());
         int shift = mpi::orb_rank;
         for (int ii = shift; ii < bra.size() + shift; ii++) {
             int i = ii % bra.size();
@@ -59,10 +57,8 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
                 Timer timer;
                 mpi::orb_bank.get_orb(i, deri);
             }
-            //            mrcpp::print::tree(2, "get orbi ", i, 1, timer.elapsed());
             for (int j = 0; j < ket.size(); j++) {
                 if (not mpi::my_orb(ket[j])) continue;
-                // if( (&bra == &ket) and (i>(Ni-1)/2+j or (i>=j-(Ni-1)/2 and i<j))) continue;
                 if ((&bra == &ket) and (i + j + (i > j)) % 2) continue;
                 Orbital derj;
                 if (&bra == &ket) {
@@ -70,18 +66,14 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
                 } else {
                     derj = p_z(ket[j]);
                 }
-                //                mrcpp::print::tree(2, "get bankj ", i, j, timer.elapsed());
-
                 T_x(i, j) = orbital::dot(deri, derj);
-                // mrcpp::print::tree(2, "get dot ", i, j, timer.elapsed());
                 if (&bra == &ket) T_x(j, i) = std::conj(T_x(i, j));
             }
-            mrcpp::print::tree(2, "j products ", i, 1, timer.elapsed());
         }
-        mrcpp::print::tree(2, "Tx ready ", 1, 1, timer.elapsed());
+        mrcpp::print::tree(2, "<i|p[x]p[x]|j>", nNodes, sNodes, timer.elapsed());
+        timer.start();
         mpi::barrier(mpi::comm_orb);
-        mrcpp::print::tree(2, "barrier ", 1, 1, timer.elapsed());
-
+        nNodes = 0, sNodes = 0;
         dKet = p_y(ket);
         mpi::barrier(mpi::comm_orb);
         for (int ii = shift; ii < bra.size() + shift; ii++) {
@@ -89,6 +81,8 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             if (not mpi::my_orb(bra[i])) continue;
             Orbital der = dKet[i];
             mpi::orb_bank.put_orb(i, der);
+            nNodes += der.getNNodes(NUMBER::Total);
+            sNodes += der.getSizeNodes(NUMBER::Total);
         }
         mpi::barrier(mpi::comm_orb);
         // 2) symmetric dot product
@@ -101,7 +95,6 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             }
             for (int j = 0; j < ket.size(); j++) {
                 if (not mpi::my_orb(ket[j])) continue;
-                //                if( (&bra == &ket) and (i>(Ni-1)/2+j or (i>=j-(Ni-1)/2 and i<j))) continue;
                 if ((&bra == &ket) and (i + j + (i > j)) % 2) continue;
                 Orbital derj;
                 if (&bra == &ket) {
@@ -109,18 +102,21 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
                 } else {
                     derj = p_z(ket[j]);
                 }
-                //       mrcpp::print::tree(2, "get bankj ", i, j, timer.elapsed());
                 T_y(i, j) = orbital::dot(deri, derj);
-                // mrcpp::print::tree(2, "get dot ", i, j, timer.elapsed());
                 if (&bra == &ket) T_y(j, i) = std::conj(T_y(i, j));
             }
         }
+        mrcpp::print::tree(2, "<i|p[y]p[y]|j>", nNodes, sNodes, timer.elapsed());
+        timer.start();
         dKet = p_z(ket);
         mpi::barrier(mpi::comm_orb);
+        nNodes = 0, sNodes = 0;
         for (int i = 0; i < bra.size(); i++) {
             if (not mpi::my_orb(bra[i])) continue;
             Orbital der = dKet[i];
             mpi::orb_bank.put_orb(i, der);
+            nNodes += der.getNNodes(NUMBER::Total);
+            sNodes += der.getSizeNodes(NUMBER::Total);
         }
         mpi::barrier(mpi::comm_orb);
         // 2) symmetric dot product
@@ -145,9 +141,10 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
                 if (&bra == &ket) T_z(j, i) = std::conj(T_z(i, j));
             }
         }
+        mrcpp::print::tree(2, "<i|p[z]p[z]|j>", nNodes, sNodes, timer.elapsed());
         T_tot = 0.5 * (T_x + T_y + T_z);
         mpi::allreduce_matrix(T_tot, mpi::comm_orb);
-        mrcpp::print::memory(2, "memusage Kinetic end1");
+        mpi::orb_bank.clear_all(mpi::orb_rank, mpi::comm_orb);
         return T_tot;
     } else {
         {
@@ -207,7 +204,6 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             }
             mrcpp::print::tree(2, "<i|p[z]p[z]|j>", nNodes, sNodes, timer.elapsed());
         }
-        mrcpp::print::memory(2, "memusage Kinetic end2");
         return 0.5 * (T_x + T_y + T_z);
     }
 }

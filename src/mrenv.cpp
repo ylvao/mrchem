@@ -50,7 +50,7 @@ void mrenv::initialize(const json &input) {
 
     if (json_print != input.end()) mrenv::init_printer(*json_print);
     if (json_mra != input.end()) mrenv::init_mra(*json_mra);
-    if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
+    //    if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
 
     mrenv::print_header();
 }
@@ -141,10 +141,13 @@ void mrenv::print_header() {
     mrcpp::print::separator(0, '*', 1);
     mrcpp::print::separator(0, '-', 1);
     print_utils::scalar(0, "MPI processes", mpi::world_size, "", 0, false);
-    print_utils::scalar(0, "of which used as bank", mpi::bank_size, "", 0, false);
-    print_utils::scalar(0, "of which used for orb", mpi::orb_size, "", 0, false);
+    if (mpi::bank_size > 0) print_utils::scalar(0, "of which used as bank", mpi::bank_size, "", 0, false);
     print_utils::scalar(0, "OpenMP threads", omp::n_threads, "", 0, false);
-    print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
+    if (mpi::bank_size > 0) {
+        print_utils::scalar(0, "Cores for orbitals", mpi::orb_size * omp::n_threads, "", 0, false);
+    } else {
+        print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
+    }
     mrcpp::print::separator(0, ' ');
     mrcpp::print::separator(0, '-', 1);
     printout(0, xcfun_splash());
