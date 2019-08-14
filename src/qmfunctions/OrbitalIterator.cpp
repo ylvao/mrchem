@@ -28,7 +28,6 @@
 #include "Orbital.h"
 #include "OrbitalIterator.h"
 #include "parallel.h"
-#include "utils/Bank.h"
 
 namespace mrchem {
 
@@ -221,7 +220,7 @@ bool OrbitalIterator::bank_next(int max_recv) {
         for (int i = 0; i < this->orbitals->size(); i++) {
             Orbital &phi_i = (*this->orbitals)[i];
             if (not mpi::my_orb(phi_i)) continue;
-            orb_bank.put_orb(i, phi_i);
+            mpi::orb_bank.put_orb(i, phi_i);
         }
     }
 
@@ -230,7 +229,7 @@ bool OrbitalIterator::bank_next(int max_recv) {
         int tag = i;
         int orb_ix = this->received_counter;
         Orbital &phi_i = (*this->orbitals)[orb_ix];
-        orb_bank.get_orb(orb_ix, phi_i);
+        mpi::orb_bank.get_orb(orb_ix, phi_i);
         this->received_orbital_index.push_back(orb_ix);
         this->received_orbitals.push_back(phi_i);
         this->received_counter++; // total

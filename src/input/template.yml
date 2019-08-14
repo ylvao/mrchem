@@ -140,6 +140,11 @@ sections:
         default: false
         docstring: |
           This will use MPI shared memory for the exchange-correlation potential.
+      - name: bank_size
+        type: int
+        default: 0
+        docstring: |
+          Number of MPI processes exclusively dedicated to manage orbital bank.
   - name: MRA
     docstring: |
       Define polynomial basis and computational domain.
@@ -231,12 +236,12 @@ sections:
         type: int
         default: 0
         docstring: |
-          Total charge of molecule. 
+          Total charge of molecule.
       - name: multiplicity
         type: int
         default: 1
         docstring: |
-          Spin multiplicity of molecule. 
+          Spin multiplicity of molecule.
       - name: angstrom
         type: bool
         default: false

@@ -40,7 +40,6 @@
 
 #include "parallel.h"
 #include "qmoperators/two_electron/FockOperator.h"
-#include "utils/Bank.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -113,14 +112,17 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         // Apply Helmholtz operator
         mrcpp::print::memory(2, "memusage before Helmholtz");
         HelmholtzVector H(orb_prec, F_mat.real().diagonal());
-        // OrbitalVector Psi = H.rotate(F_mat, Phi_n);
-        // OrbitalVector Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
-        // Psi.clear();
-        OrbitalVector Phi_np1 = H.rotate_apply(F.potential(), F_mat, Phi_n);
+        OrbitalVector Phi_np1;
+        if (mpi::bank_size > 0) {
+            // process one orbital at a time, using bank
+            Phi_np1 = H.rotate_apply(F.potential(), F_mat, Phi_n);
+        } else {
+            OrbitalVector Psi = H.rotate(F_mat, Phi_n);
+            Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
+            Psi.clear();
+        }
         mrcpp::print::memory(2, "memusage after Helmhlotz");
         F.clear();
-        // mpi::barrier(mpi::comm_orb);
-        // MSG_ABORT("ENDING");
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 
         // Compute orbital updates

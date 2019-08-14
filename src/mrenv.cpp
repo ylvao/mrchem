@@ -104,8 +104,10 @@ void mrenv::init_mra(const json &json_mra) {
 void mrenv::init_mpi(const json &json_mpi) {
     auto exact = json_mpi["numerically_exact"].get<bool>();
     auto memory_size = json_mpi["shared_memory_size"].get<int>();
+    auto bank_size_json = json_mpi["bank_size"].get<int>();
     mpi::numerically_exact = exact;
     mpi::shared_memory_size = memory_size;
+    mpi::bank_size = bank_size_json;
 }
 
 void mrenv::print_header() {

@@ -53,6 +53,7 @@ using QMFunctionVector = std::vector<QMFunction>;
 class Orbital;
 using OrbitalChunk = std::vector<std::tuple<int, Orbital>>;
 using OrbitalVector = std::vector<Orbital>;
+struct FunctionData;
 
 class Density;
 

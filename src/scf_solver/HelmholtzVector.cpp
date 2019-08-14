@@ -34,7 +34,6 @@
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/RankZeroTensorOperator.h"
-#include "utils/Bank.h"
 #include "utils/print_utils.h"
 
 using mrcpp::Printer;
@@ -164,7 +163,7 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
     // 1) Save all orbitals in Bank
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(Phi[i])) continue;
-        orb_bank.put_orb(i, Phi[i]);
+        mpi::orb_bank.put_orb(i, Phi[i]);
     }
     ComplexMatrix LmF_mat = getLambdaMatrix() - F_mat;
     OrbitalVector Psi = orbital::param_copy(Phi);
@@ -183,7 +182,7 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
             if (mpi::my_orb(Phi[j])) {
                 recv_j = Phi[j];
             } else {
-                orb_bank.get_orb(j, recv_j);
+                mpi::orb_bank.get_orb(j, recv_j);
             }
             tmp_i.add(LmF_mat(i, j), recv_j); // In place addition
             idx_j++;
