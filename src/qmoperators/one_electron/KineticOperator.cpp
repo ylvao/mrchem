@@ -38,11 +38,12 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
         // 1) save all derivatives
         OrbitalVector dKet = p_x(ket);
         mrcpp::print::tree(2, "compute xderivatives ", 1, 1, timer.elapsed());
+        mpi::barrier(mpi::comm_orb);
         for (int i = 0; i < bra.size(); i++) {
             if (not mpi::my_orb(bra[i])) continue;
             Orbital der = dKet[i];
             // std::cout<<i<<" size x derivative "<<der.getNNodes(0)<<std::endl;
-            orb_bank.put_orb(i + 1 * Ni, der);
+            orb_bank.put_orb(i, der);
         }
 
         mrcpp::print::tree(2, "save xderivatives ", 1, 1, timer.elapsed());
@@ -80,7 +81,9 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
         }
         mpi::barrier(mpi::comm_orb);
         */
-        for (int i = 0; i < bra.size(); i++) {
+        int shift = mpi::orb_rank;
+        for (int ii = shift; ii < bra.size() + shift; ii++) {
+            int i = ii % bra.size();
             Orbital deri;
             if (mpi::orb_rank == 0)
                 std::cout << i << " owner " << bra[i].rankID() << " " << (&bra == &ket) << std::endl;
@@ -89,7 +92,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
                 deri = dKet[i];
             } else {
                 Timer timer;
-                orb_bank.get_orb(i + Ni, deri);
+                orb_bank.get_orb(i, deri);
                 if (mpi::orb_rank == 0)
                     std::cout << i << " from bank  " << (int)(1000 * timer.elapsed()) << " " << deri.getNNodes(0)
                               << std::endl;
@@ -114,13 +117,17 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             mrcpp::print::tree(2, "j products ", i, 1, timer.elapsed());
         }
         mrcpp::print::tree(2, "Tx ready ", 1, 1, timer.elapsed());
+        mpi::barrier(mpi::comm_orb);
+        mrcpp::print::tree(2, "barrier ", 1, 1, timer.elapsed());
 
         dKet = p_y(ket);
-        for (int i = 0; i < bra.size(); i++) {
+        mpi::barrier(mpi::comm_orb);
+        for (int ii = shift; ii < bra.size() + shift; ii++) {
+            int i = ii % bra.size();
             if (not mpi::my_orb(bra[i])) continue;
             Orbital der = dKet[i];
             //            std::cout<<i<<" size y derivative "<<der.getNNodes(0)<<std::endl;
-            orb_bank.put_orb(i + 2 * Ni, der);
+            orb_bank.put_orb(i, der);
         }
         mpi::barrier(mpi::comm_orb);
         // 2) symmetric dot product
@@ -129,7 +136,7 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             if (mpi::my_orb(bra[i])) {
                 deri = dKet[i];
             } else {
-                orb_bank.get_orb(i + 2 * Ni, deri);
+                orb_bank.get_orb(i, deri);
             }
             for (int j = 0; j < ket.size(); j++) {
                 if (not mpi::my_orb(ket[j])) continue;
@@ -148,20 +155,22 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
             }
         }
         dKet = p_z(ket);
+        mpi::barrier(mpi::comm_orb);
         for (int i = 0; i < bra.size(); i++) {
             if (not mpi::my_orb(bra[i])) continue;
             Orbital der = dKet[i];
             // std::cout<<i<<" size z derivative "<<der.getNNodes(0)<<std::endl;
-            orb_bank.put_orb(i + 3 * Ni, der);
+            orb_bank.put_orb(i, der);
         }
         mpi::barrier(mpi::comm_orb);
         // 2) symmetric dot product
-        for (int i = 0; i < bra.size(); i++) {
+        for (int ii = shift; ii < bra.size() + shift; ii++) {
+            int i = ii % bra.size();
             Orbital deri;
             if (mpi::my_orb(bra[i])) {
                 deri = dKet[i];
             } else {
-                orb_bank.get_orb(i + 3 * Ni, deri);
+                orb_bank.get_orb(i, deri);
             }
             for (int j = 0; j < ket.size(); j++) {
                 if (not mpi::my_orb(ket[j])) continue;

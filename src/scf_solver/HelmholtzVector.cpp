@@ -166,9 +166,7 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
         if (not mpi::my_orb(Phi[i])) continue;
         orb_bank.put_orb(i, Phi[i]);
     }
-    // 2) Rotate one orbital at a time
     ComplexMatrix LmF_mat = getLambdaMatrix() - F_mat;
-    // if(mpi::orb_rank==0)std::cout<<LmF_mat<<std::endl;
     OrbitalVector Psi = orbital::param_copy(Phi);
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(Phi[i])) continue;
@@ -177,29 +175,20 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
         Orbital tmp_i = Phi[i].paramCopy();
         ComplexVector coef_vec(Phi.size());
         int idx_j = 0;
+        // 2) Rotate one orbital at a time
+        // Could also fetch several orbitals and use qmfunction::linear_combination, but that would use more memory
         for (int j = 0; j < Phi.size(); j++) {
-            // if (i==j) continue;
-            // std::cout<<i<<" "<<j<<" "<<mpi::orb_rank<<"idx_j  "<< idx_j<<std::endl;
             coef_vec[idx_j] = LmF_mat(i, j);
-            // std::cout<<i<<" "<<j<<" "<<mpi::orb_rank<<" LmF_mat "<< LmF_mat(i, j)<<std::endl;
-            // if(mpi::orb_rank==1 or mpi::orb_rank==2 or mpi::orb_rank==0)std::cout<<i<<" "<<j<<" "<<idx_j<<"
-            // "<<mpi::orb_rank<<" LmF_matAFTER "<< coef_vec[idx_j]<<std::endl; coef_vec.push_back(LmF_mat(i, idx_j);
+            Orbital recv_j;
             if (mpi::my_orb(Phi[j])) {
-                func_vec.push_back(Phi[j]);
+                recv_j = Phi[j];
             } else {
-                Orbital recv_j; // NB: must be declared inside block to get a new one for each j
                 orb_bank.get_orb(j, recv_j);
-                func_vec.push_back(recv_j);
             }
-            // The following line give a crash!! (message "unexpected disconnect completion event from [0:c21-3]"
-            // std::cout<<i<<" "<<j<<" Nnodes before crop "<<tmp_i.real().getNNodes()<<std::endl;
-            // tmp_i.crop(inter_prec);
-            // std::cout<<i<<" "<<j<<" Nnodes after crop "<<tmp_i.real().getNNodes()<<std::endl;
+            tmp_i.add(LmF_mat(i, j), recv_j); // In place addition
             idx_j++;
         }
-        qmfunction::linear_combination(tmp_i, coef_vec, func_vec, inter_prec);
         tmp_i.crop(inter_prec);
-        //        std::cout<<i<<" "<<i<<" Nnodes after sum "<<tmp_i.real().getNNodes()<<std::endl;
         // 3) Apply Helmholtz
         t_lap.start();
         Orbital Vphi_i = V(Phi[i]);
