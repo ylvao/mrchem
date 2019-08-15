@@ -42,7 +42,7 @@ Bank orb_bank;
 
 } // namespace mpi
 
-int const func_id_shift = 10000; // to ensure that orbitals and function do not collide
+int const id_shift = 1000000; // to ensure that nodes, orbitals and functions do not collide
 
 void mpi::initialize() {
     omp_set_dynamic(0);
@@ -100,11 +100,13 @@ void mpi::initialize() {
 
     MPI_Comm_rank(comm_orb, &orb_rank);
     MPI_Comm_size(comm_orb, &orb_size);
+
 #endif
 }
 
 void mpi::finalize() {
 #ifdef HAVE_MPI
+    if (bank_size > 0 and grand_master()) orb_bank.close();
     MPI_Finalize();
 #endif
 }
@@ -355,6 +357,7 @@ int Bank::open() {
     int deposit_size = sizeof(deposit);
     int n_chunks, ix;
     int message;
+    int datasize;
 
     deposits.resize(1); // we reserve 0, since it is the value returned for undefined key
     queue.resize(1);    // we reserve 0, since it is the value returned for undefined key
@@ -392,25 +395,51 @@ int Bank::open() {
                 if (message == GET_FUNCTION) {
                     mpi::send_function(*deposits[ix].orb, status.MPI_SOURCE, deposits[ix].id, mpi::comm_bank);
                 }
+                if (message == GET_DATA) {
+                    MPI_Send(deposits[ix].data,
+                             deposits[ix].datasize,
+                             MPI_DOUBLE,
+                             status.MPI_SOURCE,
+                             deposits[ix].id,
+                             mpi::comm_bank);
+                }
             }
         }
-        if (message == SAVE_ORBITAL or message == SAVE_FUNCTION) {
+        if (message == SAVE_ORBITAL or message == SAVE_FUNCTION or message == SAVE_DATA) {
             // make a new deposit
             if (id2ix[status.MPI_TAG]) {
-                ix = id2ix[status.MPI_TAG];
+                ix = id2ix[status.MPI_TAG]; // the deposit exist from before. Will be overwritten
+                if (message == SAVE_DATA and !deposits[ix].hasdata) {
+                    deposits[ix].data = new double[datasize];
+                    deposits[ix].hasdata = true;
+                }
             } else {
                 ix = deposits.size(); // NB: ix is now index of last element + 1
                 deposits.resize(ix + 1);
+                if (message == SAVE_ORBITAL or message == SAVE_FUNCTION) { deposits[ix].orb = new Orbital(0); }
+                if (message == SAVE_DATA) {
+                    deposits[ix].data = new double[datasize];
+                    deposits[ix].hasdata = true;
+                }
             }
-            deposits[ix].orb = new Orbital(0);
             deposits[ix].id = status.MPI_TAG;
             id2ix[deposits[ix].id] = ix;
             deposits[ix].source = status.MPI_SOURCE;
             if (message == SAVE_ORBITAL) {
-                mpi::recv_orbital(*deposits[ix].orb, deposits[ix].source, status.MPI_TAG, mpi::comm_bank);
+                mpi::recv_orbital(*deposits[ix].orb, deposits[ix].source, deposits[ix].id, mpi::comm_bank);
             }
             if (message == SAVE_FUNCTION) {
-                mpi::recv_function(*deposits[ix].orb, deposits[ix].source, status.MPI_TAG, mpi::comm_bank);
+                mpi::recv_function(*deposits[ix].orb, deposits[ix].source, deposits[ix].id, mpi::comm_bank);
+            }
+            if (message == SAVE_DATA) {
+                deposits[ix].datasize = datasize;
+                MPI_Recv(deposits[ix].data,
+                         datasize,
+                         MPI_DOUBLE,
+                         deposits[ix].source,
+                         deposits[ix].id,
+                         mpi::comm_bank,
+                         &status);
             }
             if (id2qu[deposits[ix].id] != 0) {
                 // someone is waiting for those data. Send to them
@@ -423,11 +452,28 @@ int Bank::open() {
                     if (message == SAVE_FUNCTION) {
                         mpi::send_function(*deposits[ix].orb, iqq, queue[iq].id, mpi::comm_bank);
                     }
+                    if (message == SAVE_DATA) {
+                        MPI_Send(deposits[ix].data, datasize, MPI_DOUBLE, iqq, queue[iq].id, mpi::comm_bank);
+                    }
                 }
                 queue.erase(queue.begin() + iq);
                 id2qu.erase(deposits[ix].id);
             }
         }
+        if (message == SET_DATASIZE) {
+            int datasize_new;
+            MPI_Recv(&datasize_new, 1, MPI_INTEGER, status.MPI_SOURCE, status.MPI_TAG, mpi::comm_bank, &status);
+            if (datasize_new != datasize) {
+                // make sure that all old data arrays are deleted
+                for (int ix = 1; ix < deposits.size(); ix++) {
+                    if (deposits[ix].hasdata) {
+                        delete deposits[ix].data;
+                        deposits[ix].hasdata = false;
+                    }
+                }
+            }
+        }
+        if (message == SAVE_DATA) {}
     }
 #endif
 }
@@ -436,7 +482,7 @@ int Bank::open() {
 int Bank::put_orb(int id, Orbital &orb) {
 #ifdef HAVE_MPI
     // for now we distribute according to id
-    if (id > func_id_shift) MSG_WARN("Bank id should be less than func_id_shift (10000)");
+    if (id > id_shift) MSG_WARN("Bank id should be less than id_shift (1000000)");
     MPI_Send(&SAVE_ORBITAL, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::send_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
@@ -455,7 +501,7 @@ int Bank::get_orb(int id, Orbital &orb) {
 int Bank::put_func(int id, QMFunction &func) {
 #ifdef HAVE_MPI
     // for now we distribute according to id
-    id += func_id_shift;
+    id += id_shift;
     MPI_Send(&SAVE_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::send_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
@@ -466,8 +512,38 @@ int Bank::get_func(int id, QMFunction &func) {
 #ifdef HAVE_MPI
     MPI_Status status;
     MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
-    id += func_id_shift;
+    id += id_shift;
     mpi::recv_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+#endif
+}
+
+// set the size of the data arrays (in size of doubles) to be sent/received later
+int Bank::set_datasize(int datasize) {
+#ifdef HAVE_MPI
+    for (int i = 0; i < mpi::bank_size; i++) {
+        MPI_Send(&SET_DATASIZE, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
+        MPI_Send(&datasize, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
+    }
+#endif
+}
+
+// save data in Bank with identity id . datasize MUST have been set already. NB:not tested
+int Bank::put_data(int id, int size, double *data) {
+#ifdef HAVE_MPI
+    // for now we distribute according to id
+    id += 2 * id_shift;
+    MPI_Send(&SAVE_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    MPI_Send(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+#endif
+}
+
+// get data with identity id
+int Bank::get_data(int id, int size, double *data) {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    id += 2 * id_shift;
+    MPI_Recv(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank, &status);
 #endif
 }
 

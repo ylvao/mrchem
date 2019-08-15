@@ -38,22 +38,22 @@ int main(int argc, char **argv) {
     const auto &json_scf = json_input["scf_calculation"].get<json>();
     const auto &json_rsps = json_input["rsp_calculations"].get<json>();
 
-    Timer timer;
-    Molecule mol;
-    if (mpi::is_bankclient) {
+    if (mpi::is_bank) {
+        // bank is open until end of program
+        mpi::orb_bank.open();
+    } else {
+
+        Timer timer;
+        Molecule mol;
         driver::init_molecule(json_mol, mol);
         driver::run_guess(json_guess, mol);
         if (driver::run_scf(json_scf, mol)) {
             for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
         }
         driver::print_properties(mol);
-        if (mpi::grand_master()) mpi::orb_bank.close();
         mpi::barrier(mpi::comm_orb);
         mrenv::finalize(timer.elapsed());
-    } else {
-        mpi::orb_bank.open();
     }
-
     mpi::finalize();
     return EXIT_SUCCESS;
 }

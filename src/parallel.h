@@ -70,6 +70,9 @@ void allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm);
 
 struct deposit {
     Orbital *orb;
+    double *data; // for pure data arrays
+    int datasize;
+    bool hasdata;
     int id;     // to identify what is deposited
     int source; // mpi rank from the source of the data
 };
@@ -91,6 +94,9 @@ public:
     int get_orb(int id, Orbital &orb);
     int put_func(int id, QMFunction &func);
     int get_func(int id, QMFunction &func);
+    int set_datasize(int datasize);
+    int put_data(int id, int size, double *data);
+    int get_data(int id, int size, double *data);
 
 private:
     int const CLOSE_BANK = 1;
@@ -99,6 +105,9 @@ private:
     int const SAVE_ORBITAL = 4;
     int const GET_FUNCTION = 5;
     int const SAVE_FUNCTION = 6;
+    int const SET_DATASIZE = 7;
+    int const GET_DATA = 8;
+    int const SAVE_DATA = 9;
     int clear_bank();
     std::map<int, int> id2ix;
     std::vector<deposit> deposits;

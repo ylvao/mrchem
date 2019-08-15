@@ -84,11 +84,8 @@ void FockOperator::setup(double prec) {
     mrcpp::print::header(2, "Building Fock operator");
     mrcpp::print::value(2, "Precision", prec, "(rel)", 5);
     mrcpp::print::separator(2, '-');
-    mrcpp::print::memory(2, "memusage before kinetic().setup");
     this->kinetic().setup(prec);
-    mrcpp::print::memory(2, "memusage before potential().setup");
     this->potential().setup(prec);
-    mrcpp::print::memory(2, "memusage before perturbation().setup");
     this->perturbation().setup(prec);
     if (this->ex != nullptr) this->ex->setupInternal(prec);
     t_tot.stop();
