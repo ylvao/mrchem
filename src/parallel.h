@@ -68,24 +68,10 @@ void allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm);
 
 } // namespace mpi
 
-struct BankFunctionData {
-    int real_size;
-    int imag_size;
-    bool is_shared;
-};
-
-struct BankOrbitalData {
-    int rank_id;
-    int spin;
-    int occ;
-};
-
 struct deposit {
     Orbital *orb;
-    BankFunctionData funcinfo; // Function info
-    BankOrbitalData orbinfo;   // Orbital info
-    int id;                    // to identify what is deposited
-    int source;                // mpi rank from the source of the data
+    int id;     // to identify what is deposited
+    int source; // mpi rank from the source of the data
 };
 
 struct queue_struct {
