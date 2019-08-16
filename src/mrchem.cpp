@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
     const auto json_input = mrenv::fetch_input(argc, argv);
 
     auto json_mpi = json_input.find("mpi");
-    if (json_mpi != json_input.end()) mrenv::init_mpi(*json_mpi); // needed to set mpi parameters
-    mpi::initialize();
+    // if (json_mpi != json_input.end()) mrenv::init_mpi(*json_mpi); // needed to set mpi parameters
+    // mpi::initialize();
 
     mrenv::initialize(json_input);
     const auto &json_mol = json_input["molecule"].get<json>();
@@ -38,22 +38,17 @@ int main(int argc, char **argv) {
     const auto &json_scf = json_input["scf_calculation"].get<json>();
     const auto &json_rsps = json_input["rsp_calculations"].get<json>();
 
-    if (mpi::is_bank) {
-        // bank is open until end of program
-        mpi::orb_bank.open();
-    } else {
-
-        Timer timer;
-        Molecule mol;
-        driver::init_molecule(json_mol, mol);
-        driver::run_guess(json_guess, mol);
-        if (driver::run_scf(json_scf, mol)) {
-            for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
-        }
-        driver::print_properties(mol);
-        mpi::barrier(mpi::comm_orb);
-        mrenv::finalize(timer.elapsed());
+    Timer timer;
+    Molecule mol;
+    driver::init_molecule(json_mol, mol);
+    driver::run_guess(json_guess, mol);
+    if (driver::run_scf(json_scf, mol)) {
+        for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
     }
+    driver::print_properties(mol);
+    mpi::barrier(mpi::comm_orb);
+    mrenv::finalize(timer.elapsed());
+
     mpi::finalize();
     return EXIT_SUCCESS;
 }

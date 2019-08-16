@@ -48,9 +48,9 @@ void mrenv::initialize(const json &input) {
 
     if (json_mra == input.end()) MSG_ABORT("Missing MRA input!");
 
-    if (json_print != input.end()) mrenv::init_printer(*json_print);
     if (json_mra != input.end()) mrenv::init_mra(*json_mra);
-    //    if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
+    if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
+    if (json_print != input.end()) mrenv::init_printer(*json_print);
 
     mrenv::print_header();
 }
@@ -108,6 +108,7 @@ void mrenv::init_mpi(const json &json_mpi) {
     mpi::numerically_exact = exact;
     mpi::shared_memory_size = memory_size;
     mpi::bank_size = bank_size_json;
+    mpi::initialize();
 }
 
 void mrenv::print_header() {

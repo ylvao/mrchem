@@ -100,7 +100,12 @@ void mpi::initialize() {
 
     MPI_Comm_rank(comm_orb, &orb_rank);
     MPI_Comm_size(comm_orb, &orb_size);
-
+    if (mpi::is_bank) {
+        // bank is open until end of program
+        mpi::orb_bank.open();
+        MPI_Finalize();
+        exit(EXIT_SUCCESS);
+    }
 #endif
 }
 
