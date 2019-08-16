@@ -108,7 +108,7 @@ void mrenv::init_mpi(const json &json_mpi) {
     mpi::numerically_exact = exact;
     mpi::shared_memory_size = memory_size;
     mpi::bank_size = bank_size_json;
-    mpi::initialize();
+    mpi::initialize(); // NB: must be after bank_size and init_mra but before init_printer and print_header
 }
 
 void mrenv::print_header() {
