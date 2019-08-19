@@ -367,9 +367,12 @@ int Bank::open() {
     deposits.resize(1); // we reserve 0, since it is the value returned for undefined key
     queue.resize(1);    // we reserve 0, since it is the value returned for undefined key
 
+    bool printinfo = false;
+
     // The bank never goes out of this loop as long as it receives a close signal!
     while (true) {
         MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, MPI_ANY_TAG, mpi::comm_bank, &status);
+        if (printinfo) std::cout << mpi::world_rank << " got message " << message << std::endl;
         if (message == CLOSE_BANK) {
             if (mpi::is_bankmaster) std::cout << "Bank is closing" << std::endl;
             this->clear_bank();
@@ -380,10 +383,11 @@ int Bank::open() {
             // send message that it is ready (value of message is not used)
             MPI_Send(&message, 1, MPI_INTEGER, status.MPI_SOURCE, 77, mpi::comm_bank);
         }
-        if (message == GET_ORBITAL or message == GET_FUNCTION) {
+        if (message == GET_ORBITAL or message == GET_FUNCTION or message == GET_DATA) {
             // withdrawal
             int ix = id2ix[status.MPI_TAG];
             if (ix == 0) {
+                if (printinfo) std::cout << mpi::world_rank << " queuing " << status.MPI_TAG << std::endl;
                 // the id does not exist. Put in queue and Wait until it is defined
                 if (id2qu[status.MPI_TAG] == 0) {
                     queue.push_back({status.MPI_TAG, {status.MPI_SOURCE}});
@@ -477,6 +481,7 @@ int Bank::open() {
                     }
                 }
             }
+            datasize = datasize_new;
         }
         if (message == SAVE_DATA) {}
     }
@@ -546,8 +551,8 @@ int Bank::put_data(int id, int size, double *data) {
 int Bank::get_data(int id, int size, double *data) {
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     id += 2 * id_shift;
+    MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     MPI_Recv(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank, &status);
 #endif
 }
