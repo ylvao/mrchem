@@ -179,7 +179,7 @@ MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order) {
         fill_output_mask(mask, start);
         break;
     default:
-        MSG_FATAL("Not implemented");
+        MSG_ABORT("Not implemented");
     }
     return mask;
 }
@@ -206,7 +206,7 @@ VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order) {
         }
         break;
     default:
-        MSG_FATAL("Not implemented");
+        MSG_ABORT("Not implemented");
     }
     return mask;
 }
@@ -751,7 +751,7 @@ void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_
 
     MatrixXi output_mask = build_output_mask(isLDA(), isSpinSeparated(), order);
     VectorXi density_mask = build_density_mask(isLDA(), isSpinSeparated(), order);
-    if(output_mask.cols() != density_mask.size()) MSG_FATAL("Inconsistent lengths");
+    if(output_mask.cols() != density_mask.size()) MSG_ABORT("Inconsistent lengths");
 
     VectorXd cont_i;
     VectorXd cont_ij;
