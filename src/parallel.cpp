@@ -521,8 +521,8 @@ int Bank::put_func(int id, QMFunction &func) {
 int Bank::get_func(int id, QMFunction &func) {
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     id += id_shift;
+    MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::recv_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
 }
