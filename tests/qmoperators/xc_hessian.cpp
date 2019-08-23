@@ -59,7 +59,6 @@ TEST_CASE("XCHessian", "[xc_hessian]") {
     fun_p->setNDensities(2);
     fun_p->allocateDensities();
     XCOperator V(fun_p, Phi_p, X_p, X_p);
-    V.setup(prec);
 
     OrbitalVector &Phi = *Phi_p;
     ns.push_back(1);
