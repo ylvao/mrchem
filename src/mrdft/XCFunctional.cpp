@@ -326,7 +326,6 @@ void XCFunctional::allocateDensities() {
             rho_t.push_back(std::make_tuple(1.0, temp_t));
         }
     }
-    
 }
 
 /** @brief Check whether the density vector has all required components
