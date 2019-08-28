@@ -36,6 +36,7 @@
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/density_utils.h"
+#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
@@ -84,7 +85,6 @@ TEST_CASE("XCOperatorBLYP", "[xc_operator_blyp]") {
     }
 
     // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
-
 
     DoubleMatrix E_P = DoubleMatrix::Zero(Phi.size(), Phi.size());
     E_P(0, 0) = -0.4632575525;

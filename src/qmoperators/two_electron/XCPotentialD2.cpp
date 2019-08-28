@@ -165,7 +165,7 @@ void XCPotentialD2::syncGrids() {
         int n2b = rho2.getNNodes();
         int n3b = rho3.getNNodes();
         int n4b = rho4.getNNodes();
-        std::cout << "Before " << n1b << " "  << n2b << " "  << n3b << " "  << n4b << std::endl;
+        std::cout << "Before " << n1b << " " << n2b << " " << n3b << " " << n4b << std::endl;
         while (mrcpp::refine_grid(rho1, rho2)) {};
         while (mrcpp::refine_grid(rho1, rho3)) {};
         while (mrcpp::refine_grid(rho1, rho4)) {};
@@ -176,7 +176,7 @@ void XCPotentialD2::syncGrids() {
         int n2a = rho2.getNNodes();
         int n3a = rho3.getNNodes();
         int n4a = rho4.getNNodes();
-        std::cout << "After  " << n1a << " "  << n2a << " "  << n3a << " "  << n4a << std::endl;
+        std::cout << "After  " << n1a << " " << n2a << " " << n3a << " " << n4a << std::endl;
     } else {
         FunctionTree<3> &rho1 = this->getDensity(DENSITY::DensityType::Total, 0);
         FunctionTree<3> &rho2 = this->getDensity(DENSITY::DensityType::Total, 1);
