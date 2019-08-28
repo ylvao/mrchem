@@ -379,6 +379,8 @@ void orbital::orthogonalize(double prec, OrbitalVector &Phi, OrbitalVector &Psi)
             }
         }
     }
+    mrcpp::print::footer(2, t_tot, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Orthogonalizing orbitals", t_tot);
 }
 
 ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
