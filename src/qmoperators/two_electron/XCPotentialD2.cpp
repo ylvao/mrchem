@@ -176,7 +176,7 @@ void XCPotentialD2::syncGrids() {
         int n2a = rho2.getNNodes();
         int n3a = rho3.getNNodes();
         int n4a = rho4.getNNodes();
-        std::cout << "After  " << n1a << " " << n2a << " " << n3a << " " << n4a << std::endl;
+        println(5, "After  " << n1a << " "  << n2a << " "  << n3a << " "  << n4a);
     } else {
         FunctionTree<3> &rho1 = this->getDensity(DENSITY::DensityType::Total, 0);
         FunctionTree<3> &rho2 = this->getDensity(DENSITY::DensityType::Total, 1);
@@ -184,4 +184,5 @@ void XCPotentialD2::syncGrids() {
         while (mrcpp::refine_grid(rho2, rho1)) {};
     }
 }
+
 } // namespace mrchem
