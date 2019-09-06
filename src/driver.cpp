@@ -251,6 +251,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto final_prec = (*orbital_solver)["final_prec"].get<double>();
         auto orbital_thrs = (*orbital_solver)["orbital_thrs"].get<double>();
         auto property_thrs = (*orbital_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*orbital_solver)["helmholtz_prec"].get<double>();
 
         OrbitalOptimizer solver;
         solver.setMethodName(method);
@@ -258,6 +259,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setMaxIterations(max_iter);
         solver.setRotation(rotation);
         solver.setLocalize(localize);
+        solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(mol, F);
@@ -273,12 +275,14 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto final_prec = (*energy_solver)["final_prec"].get<double>();
         auto orbital_thrs = (*energy_solver)["orbital_thrs"].get<double>();
         auto property_thrs = (*energy_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*energy_solver)["helmholtz_prec"].get<double>();
 
         EnergyOptimizer solver;
         solver.setMethodName(method);
         solver.setMaxIterations(max_iter);
         solver.setRotation(1);
         solver.setLocalize(localize);
+        solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
         success = solver.optimize(mol, F);
@@ -664,24 +668,9 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         }
     }
     ///////////////////////////////////////////////////////////
-    /////////////////   Exchange Operator   ///////////////////
-    ///////////////////////////////////////////////////////////
-    double exx = 1.0;
-    auto json_exchange = json_fock.find("exchange_operator");
-    if (json_exchange != json_fock.end()) {
-        auto poisson_prec = (*json_exchange)["poisson_prec"].get<double>();
-        auto screen_prec = (*json_exchange)["screen"].get<bool>();
-        auto P_p = std::make_shared<PoissonOperator>(*MRA, poisson_prec);
-        if (order == 0) {
-            auto K_p = std::make_shared<ExchangeOperator>(P_p, Phi_p, screen_prec);
-            F.getExchangeOperator() = K_p;
-        } else {
-            MSG_ABORT("Invalid perturbation order");
-        }
-    }
-    ///////////////////////////////////////////////////////////
     ////////////////////   XC Operator   //////////////////////
     ///////////////////////////////////////////////////////////
+    double exx = 1.0;
     auto json_xc = json_fock.find("xc_operator");
     if (json_xc != json_fock.end()) {
         auto grid_prec = (*json_xc)["grid_prec"].get<double>();
@@ -711,6 +700,21 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         } else if (order == 1) {
             auto XC_p = std::make_shared<XCOperator>(xcfun_p, Phi_p, X_p, Y_p, shared_memory);
             F.getXCOperator() = XC_p;
+        } else {
+            MSG_ABORT("Invalid perturbation order");
+        }
+    }
+    ///////////////////////////////////////////////////////////
+    /////////////////   Exchange Operator   ///////////////////
+    ///////////////////////////////////////////////////////////
+    auto json_exchange = json_fock.find("exchange_operator");
+    if (json_exchange != json_fock.end() and exx > mrcpp::MachineZero) {
+        auto poisson_prec = (*json_exchange)["poisson_prec"].get<double>();
+        auto screen_prec = (*json_exchange)["screen"].get<bool>();
+        auto P_p = std::make_shared<PoissonOperator>(*MRA, poisson_prec);
+        if (order == 0) {
+            auto K_p = std::make_shared<ExchangeOperator>(P_p, Phi_p, screen_prec);
+            F.getExchangeOperator() = K_p;
         } else {
             MSG_ABORT("Invalid perturbation order");
         }

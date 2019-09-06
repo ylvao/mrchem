@@ -53,6 +53,7 @@ public:
     void setLocalize(bool loc) { this->localize = loc; }
     void setThreshold(double orb, double prop);
     void setOrbitalPrec(double init, double final);
+    void setHelmholtzPrec(double prec) { this->helmPrec = prec; }
     void setMaxIterations(int m_iter) { this->maxIter = m_iter; }
     void setMethodName(const std::string &name) { this->methodName = name; }
 
@@ -63,6 +64,7 @@ protected:
     bool localize{false};                ///< Use localized or canonical orbitals
     double orbThrs{-1.0};                ///< Convergence threshold for norm of orbital update
     double propThrs{-1.0};               ///< Convergence threshold for property
+    double helmPrec{-1.0};               ///< Precision for construction of Helmholtz operators
     double orbPrec[3]{-1.0, -1.0, -1.0}; ///< Dynamic precision: [current_prec, start_prec, end_prec]
     std::string methodName;              ///< Name of electronic structure method to appear in output
 
@@ -76,6 +78,7 @@ protected:
     bool needDiagonalization(int nIter, bool converged) const;
 
     double adjustPrecision(double error);
+    double getHelmholtzPrec();
 
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
     void printUpdate(int plevel, const std::string &txt, double P, double dP, double thrs) const;

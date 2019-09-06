@@ -2,7 +2,9 @@ Pygments
 pyparsing
 breathe
 recommonmark
-sphinx
-sphinx-rtd-theme
+Sphinx>=2.0
+sphinx_rtd_theme
 sphinxcontrib-bibtex
 runtest
+pyyaml
+yapf
