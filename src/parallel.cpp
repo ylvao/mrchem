@@ -20,12 +20,12 @@ namespace mpi {
 bool numerically_exact = false;
 int shared_memory_size = 1000;
 
-int world_size = 0;
-int world_rank = 1;
-int orb_rank = 0;
+int world_size = 1;
+int world_rank = 0;
 int orb_size = 1;
-int share_rank = 0;
+int orb_rank = 0;
 int share_size = 1;
+int share_rank = 0;
 int sh_group_rank = 0;
 int is_bank = 0;
 int is_bankclient = 1;
