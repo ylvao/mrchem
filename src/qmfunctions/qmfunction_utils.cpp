@@ -59,6 +59,25 @@ ComplexDouble qmfunction::dot(QMFunction bra, QMFunction ket) {
     return ComplexDouble(real_part, imag_part);
 }
 
+
+/** @brief Compute <bra|ket> = int |bra^\dag(r)| * |ket(r)| dr.
+ *
+ */
+ComplexDouble qmfunction::node_norm_dot(QMFunction bra, QMFunction ket, bool exact) {
+    double rr(0.0), ri(0.0), ir(0.0), ii(0.0);
+    if (bra.hasReal() and ket.hasReal()) rr = mrcpp::node_norm_dot(bra.real(), ket.real(), exact);
+    if (bra.hasReal() and ket.hasImag()) ri = mrcpp::node_norm_dot(bra.real(), ket.imag(), exact);
+    if (bra.hasImag() and ket.hasReal()) ir = mrcpp::node_norm_dot(bra.imag(), ket.real(), exact);
+    if (bra.hasImag() and ket.hasImag()) ii = mrcpp::node_norm_dot(bra.imag(), ket.imag(), exact);
+
+    double bra_conj = (bra.conjugate()) ? -1.0 : 1.0;
+    double ket_conj = (ket.conjugate()) ? -1.0 : 1.0;
+
+    double real_part = rr + bra_conj * ket_conj * ii;
+    double imag_part = ket_conj * ri - bra_conj * ir;
+    return ComplexDouble(real_part, imag_part);
+}
+
 /** @brief Deep copy
  *
  * Returns a new function which is a full blueprint copy of the input function.

@@ -94,6 +94,15 @@ ComplexVector orbital::dot(OrbitalVector &Bra, OrbitalVector &Ket) {
     return result;
 }
 
+/** @brief Compute <bra|ket> = int |bra^\dag(r)| * |ket(r)| dr.
+ *
+ */
+ComplexDouble orbital::node_norm_dot(Orbital bra, Orbital ket, bool exact) {
+    if ((bra.spin() == SPIN::Alpha) and (ket.spin() == SPIN::Beta)) return 0.0;
+    if ((bra.spin() == SPIN::Beta) and (ket.spin() == SPIN::Alpha)) return 0.0;
+    return qmfunction::node_norm_dot(bra, ket, exact);
+}
+
 /** @brief Compare spin and occupancy of two orbitals
  *
  *  Returns true if orbital parameters are the same.
@@ -161,7 +170,6 @@ OrbitalVector orbital::rotate(const ComplexMatrix &U, OrbitalVector &Phi, double
     OrbitalVector out = orbital::param_copy(Phi);
     OrbitalIterator iter(Phi);
     while (iter.next()) {
-        //  while (iter.next()) {
         for (int i = 0; i < out.size(); i++) {
             if (not mpi::my_orb(out[i])) continue;
             ComplexVector coef_vec(iter.get_size());
@@ -449,6 +457,75 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
     mpi::allreduce_matrix(S, mpi::comm_orb);
     return S;
 }
+
+
+/** @brief Compute the overlap matrix of the absolute value of the functions S_ij = <|bra_i|||ket_j|>
+ *
+ * If exact is true, exact values are computed. If false only norm of nodes are muliplied, which
+ * gives an upper bound.
+ * The orbital are put pairwise in a common grid. Returned orbitals are unchanged.
+ */
+ComplexMatrix orbital::calc_norm_overlap_matrix(OrbitalVector &BraKet, bool exact) {
+    ComplexMatrix S = ComplexMatrix::Zero(BraKet.size(), BraKet.size());
+
+    // Get all ket orbitals belonging to this MPI
+    OrbitalChunk myKet = mpi::get_my_chunk(BraKet);
+
+    for (int i = 0; i < BraKet.size() and mpi::grand_master(); i++) {
+        Orbital bra_i = BraKet[i];
+        if (!mpi::my_orb(BraKet[i])) continue;
+        if (BraKet[i].hasImag()) {
+            MSG_WARN("overlap of complex orbitals will probably not give you what you expect");
+            break;
+        }
+    }
+
+    // Receive ALL orbitals on the bra side, use only MY orbitals on the ket side
+    // Computes the FULL columns associated with MY orbitals on the ket side
+    OrbitalIterator iter(BraKet, true); // use symmetry
+    Timer timer;
+    while (iter.next()) {
+        for (int i = 0; i < iter.get_size(); i++) {
+            int idx_i = iter.idx(i);
+            Orbital &bra_i = iter.orbital(i);
+            for (auto &j : myKet) {
+                int idx_j = std::get<0>(j);
+                Orbital &ket_j = std::get<1>(j);
+                if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
+                if (mpi::my_unique_orb(ket_j) or mpi::orb_rank == 0) {
+                    //make a deep copy of bra_i and ket_j (if my_orb)
+                    Orbital orbi = bra_i.paramCopy();
+                    qmfunction::deep_copy(orbi, bra_i);
+                    Orbital orbj = ket_j.paramCopy();
+                    if(mpi::my_orb(ket_j)){
+                        qmfunction::deep_copy(orbj, ket_j);
+                    } else {
+                        // no need to make a copy, as the orbital will be not be reused
+                        orbj = ket_j;
+                    }
+                    //redefine orbitals in a union grid
+                    int nn=1;
+                    while(nn>0) nn=mrcpp::refine_grid(orbj.real(), orbi.real());
+                    nn=1;
+                    while(nn>0) nn=mrcpp::refine_grid(orbi.real(), orbj.real());
+                    if(orbi.hasImag() or orbj.hasImag() ){
+                        nn=1;
+                        while(nn>0) nn=mrcpp::refine_grid(orbj.imag(), orbi.imag());
+                        nn=1;
+                        while(nn>0) nn=mrcpp::refine_grid(orbi.imag(), orbj.imag());
+                    }
+                    S(idx_i, idx_j) = orbital::node_norm_dot(orbi, orbj, exact);
+                    S(idx_j, idx_i) = std::conj(S(idx_i, idx_j));
+                }
+            }
+        }
+        timer.start();
+    }
+    // Assumes all MPIs have (only) computed their own part of the matrix
+    mpi::allreduce_matrix(S, mpi::comm_orb);
+    return S;
+}
+
 
 /** @brief Compute Löwdin orthonormalization matrix
  *
