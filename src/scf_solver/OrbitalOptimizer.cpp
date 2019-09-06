@@ -25,9 +25,6 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-#include <chrono>
-#include <thread>
-#include <unistd.h>
 
 #include "HelmholtzVector.h"
 #include "KAIN.h"
