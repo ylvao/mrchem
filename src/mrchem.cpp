@@ -28,10 +28,6 @@ using namespace mrchem;
 int main(int argc, char **argv) {
     const auto json_input = mrenv::fetch_input(argc, argv);
 
-    auto json_mpi = json_input.find("mpi");
-    // if (json_mpi != json_input.end()) mrenv::init_mpi(*json_mpi); // needed to set mpi parameters
-    // mpi::initialize();
-
     mrenv::initialize(json_input);
     const auto &json_mol = json_input["molecule"].get<json>();
     const auto &json_guess = json_input["initial_guess"].get<json>();

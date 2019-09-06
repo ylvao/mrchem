@@ -367,9 +367,12 @@ int Bank::open() {
     deposits.resize(1); // we reserve 0, since it is the value returned for undefined key
     queue.resize(1);    // we reserve 0, since it is the value returned for undefined key
 
+    bool printinfo = false;
+
     // The bank never goes out of this loop as long as it receives a close signal!
     while (true) {
         MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, MPI_ANY_TAG, mpi::comm_bank, &status);
+        if (printinfo) std::cout << mpi::world_rank << " got message " << message << std::endl;
         if (message == CLOSE_BANK) {
             if (mpi::is_bankmaster) std::cout << "Bank is closing" << std::endl;
             this->clear_bank();
@@ -380,10 +383,11 @@ int Bank::open() {
             // send message that it is ready (value of message is not used)
             MPI_Send(&message, 1, MPI_INTEGER, status.MPI_SOURCE, 77, mpi::comm_bank);
         }
-        if (message == GET_ORBITAL or message == GET_FUNCTION) {
+        if (message == GET_ORBITAL or message == GET_FUNCTION or message == GET_DATA) {
             // withdrawal
             int ix = id2ix[status.MPI_TAG];
             if (ix == 0) {
+                if (printinfo) std::cout << mpi::world_rank << " queuing " << status.MPI_TAG << std::endl;
                 // the id does not exist. Put in queue and Wait until it is defined
                 if (id2qu[status.MPI_TAG] == 0) {
                     queue.push_back({status.MPI_TAG, {status.MPI_SOURCE}});
@@ -477,8 +481,8 @@ int Bank::open() {
                     }
                 }
             }
+            datasize = datasize_new;
         }
-        if (message == SAVE_DATA) {}
     }
 #endif
 }
@@ -502,7 +506,7 @@ int Bank::get_orb(int id, Orbital &orb) {
 #endif
 }
 
-// save function in Bank with identity id . NB:not tested
+// save function in Bank with identity id
 int Bank::put_func(int id, QMFunction &func) {
 #ifdef HAVE_MPI
     // for now we distribute according to id
@@ -516,8 +520,8 @@ int Bank::put_func(int id, QMFunction &func) {
 int Bank::get_func(int id, QMFunction &func) {
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     id += id_shift;
+    MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::recv_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
 }
@@ -546,8 +550,8 @@ int Bank::put_data(int id, int size, double *data) {
 int Bank::get_data(int id, int size, double *data) {
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     id += 2 * id_shift;
+    MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     MPI_Recv(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank, &status);
 #endif
 }
@@ -563,15 +567,14 @@ int Bank::close() {
 
 // remove all deposits
 // NB:: collective call. All clients must call this
-int Bank::clear_all(int i, MPI_Comm comm) {
+int Bank::clear_all(int iclient, MPI_Comm comm) {
 #ifdef HAVE_MPI
     // 1) wait until all clients are ready
     mpi::barrier(comm);
     // master send signal to bank
-    if (i == 0) {
+    if (iclient == 0) {
         for (int i = 0; i < mpi::bank_size; i++) {
             MPI_Send(&CLEAR_BANK, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
-            ;
         }
         for (int i = 0; i < mpi::bank_size; i++) {
             // wait until Bank is finished and has sent signal
@@ -597,6 +600,7 @@ int Bank::clear_bank() {
 int Bank::clear(int ix) {
 #ifdef HAVE_MPI
     delete deposits[ix].orb;
+    delete deposits[ix].data;
 #endif
 }
 

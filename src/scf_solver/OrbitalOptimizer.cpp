@@ -109,7 +109,6 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         if (nIter < 2) F.setup(orb_prec);
 
         // Apply Helmholtz operator
-        mrcpp::print::memory(2, "memusage before Helmholtz");
         HelmholtzVector H(orb_prec, F_mat.real().diagonal());
         OrbitalVector Phi_np1;
         if (mpi::bank_size > 0) {
@@ -120,7 +119,6 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
             Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
             Psi.clear();
         }
-        mrcpp::print::memory(2, "memusage after Helmhlotz");
         F.clear();
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 
