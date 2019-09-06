@@ -59,7 +59,6 @@ ComplexDouble qmfunction::dot(QMFunction bra, QMFunction ket) {
     return ComplexDouble(real_part, imag_part);
 }
 
-
 /** @brief Compute <bra|ket> = int |bra^\dag(r)| * |ket(r)| dr.
  *
  */

@@ -458,7 +458,6 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
     return S;
 }
 
-
 /** @brief Compute the overlap matrix of the absolute value of the functions S_ij = <|bra_i|||ket_j|>
  *
  * If exact is true, exact values are computed. If false only norm of nodes are muliplied, which
@@ -493,26 +492,26 @@ ComplexMatrix orbital::calc_norm_overlap_matrix(OrbitalVector &BraKet, bool exac
                 Orbital &ket_j = std::get<1>(j);
                 if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
                 if (mpi::my_unique_orb(ket_j) or mpi::orb_rank == 0) {
-                    //make a deep copy of bra_i and ket_j (if my_orb)
+                    // make a deep copy of bra_i and ket_j (if my_orb)
                     Orbital orbi = bra_i.paramCopy();
                     qmfunction::deep_copy(orbi, bra_i);
                     Orbital orbj = ket_j.paramCopy();
-                    if(mpi::my_orb(ket_j)){
+                    if (mpi::my_orb(ket_j)) {
                         qmfunction::deep_copy(orbj, ket_j);
                     } else {
                         // no need to make a copy, as the orbital will be not be reused
                         orbj = ket_j;
                     }
-                    //redefine orbitals in a union grid
-                    int nn=1;
-                    while(nn>0) nn=mrcpp::refine_grid(orbj.real(), orbi.real());
-                    nn=1;
-                    while(nn>0) nn=mrcpp::refine_grid(orbi.real(), orbj.real());
-                    if(orbi.hasImag() or orbj.hasImag() ){
-                        nn=1;
-                        while(nn>0) nn=mrcpp::refine_grid(orbj.imag(), orbi.imag());
-                        nn=1;
-                        while(nn>0) nn=mrcpp::refine_grid(orbi.imag(), orbj.imag());
+                    // redefine orbitals in a union grid
+                    int nn = 1;
+                    while (nn > 0) nn = mrcpp::refine_grid(orbj.real(), orbi.real());
+                    nn = 1;
+                    while (nn > 0) nn = mrcpp::refine_grid(orbi.real(), orbj.real());
+                    if (orbi.hasImag() or orbj.hasImag()) {
+                        nn = 1;
+                        while (nn > 0) nn = mrcpp::refine_grid(orbj.imag(), orbi.imag());
+                        nn = 1;
+                        while (nn > 0) nn = mrcpp::refine_grid(orbi.imag(), orbj.imag());
                     }
                     S(idx_i, idx_j) = orbital::node_norm_dot(orbi, orbj, exact);
                     S(idx_j, idx_i) = std::conj(S(idx_i, idx_j));
@@ -525,7 +524,6 @@ ComplexMatrix orbital::calc_norm_overlap_matrix(OrbitalVector &BraKet, bool exac
     mpi::allreduce_matrix(S, mpi::comm_orb);
     return S;
 }
-
 
 /** @brief Compute Löwdin orthonormalization matrix
  *
