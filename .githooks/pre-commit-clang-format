@@ -69,7 +69,7 @@ fi
 # create a random filename to store our generated patch
 prefix="pre-commit-clang-format"
 TMPDIR="/tmp"
-Patch=`mktemp $TMPDIR/$prefix.patch.XXXXXX`
+patch=`mktemp $TMPDIR/$prefix.patch.XXXXXX`
 
 # clean up any older clang-format patches
 if $DELETE_OLD_PATCHES; then
