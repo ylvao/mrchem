@@ -555,15 +555,17 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
         t_lap.start();
         mrcpp::print::header(2, "Computing NMR shielding (dia)");
         auto prec = (*json_nmr)["setup_prec"].get<double>();
+        auto smooth = (*json_nmr)["smooth_prec"].get<double>();
         auto r_O = (*json_nmr)["origin"].get<Coord<3>>();
         auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
 
         for (int k = 0; k < nucleus_k.size(); k++) {
             if (k != 0) mrcpp::print::separator(2, '-');
             NMRShielding &sigma_k = mol.getNMRShielding(nucleus_k[k]);
-            const auto &r_K = sigma_k.getNucleus().getCoord();
+            auto nuc_k = sigma_k.getNucleus();
+            nuc_k.setCharge(1.0);
 
-            H_BM_dia h(r_O, r_K);
+            H_BM_dia h(r_O, nuc_k, smooth);
             h.setup(prec);
             sigma_k.getOrigin() = r_O;
             sigma_k.getDiamagnetic() = h.trace(Phi).real();
@@ -625,6 +627,32 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
         if (plevel == 1) mrcpp::print::time(1, "Magnetizability (para)", t_lap);
     }
 
+    auto json_nmr = json_prop.find("nmr_shielding");
+    if (json_nmr != json_prop.end()) {
+        t_lap.start();
+        mrcpp::print::header(2, "Computing NMR shielding (para)");
+        auto prec = (*json_nmr)["setup_prec"].get<double>();
+        auto smooth = (*json_nmr)["smooth_prec"].get<double>();
+        auto r_O = (*json_nmr)["origin"].get<Coord<3>>();
+        auto pert_diff = (*json_nmr)["derivative"].get<std::string>();
+        auto D = driver::get_derivative(pert_diff);
+
+        auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
+        for (int k = 0; k < nucleus_k.size(); k++) {
+            if (k != 0) mrcpp::print::separator(2, '-');
+            NMRShielding &sigma_k = mol.getNMRShielding(nucleus_k[k]);
+            auto nuc_k = sigma_k.getNucleus();
+            nuc_k.setCharge(1.0);
+
+            H_M_pso h(D, nuc_k, smooth);
+            h.setup(prec);
+            sigma_k.getOrigin() = r_O;
+            sigma_k.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
+            h.clear();
+        }
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "NMR shielding (para)", t_lap);
+    }
     if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 }
 
