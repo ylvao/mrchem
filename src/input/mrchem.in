@@ -287,7 +287,7 @@ def write_scf_calculation(program_dict, user_dict):
   if len(user_dict["Properties"]["nmr_shielding"]) > 0:
     prop_dict["nmr_shielding"] = {
       "setup_prec": user_dict["world_prec"],
-      "smooth_prec": 1.0e-1,
+      "smooth_prec": user_dict["world_prec"],
       "nucleus_k": user_dict["Properties"]["nmr_shielding"],
       "origin": [0.0, 0.0, 0.0]
     }
@@ -551,7 +551,7 @@ def write_rsp_calculations(program_dict, user_dict):
       if run_nmr:
         prop_dict["nmr_shielding"] = {
           "setup_prec": user_dict["world_prec"],
-          "smooth_prec": 1.0e-1,
+          "smooth_prec": user_dict["world_prec"],
           "derivative": user_dict["Derivatives"]["h_orb"],
           "nucleus_k": user_dict["Properties"]["nmr_shielding"],
           "origin": [0.0, 0.0, 0.0]
