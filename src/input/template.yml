@@ -345,10 +345,10 @@ sections:
         docstring: |
           Compute magnetizability tensor.
       - name: nmr_shielding
-        type: bool
-        default: false
+        type: List[int]
+        default: []
         docstring: |
-          Compute NMR shielding tensors.
+          List of nuclei to compute NMR shielding tensor. Negative value computes all nuclei.
       - name: spin_spin_coupling
         type: bool
         default: false
