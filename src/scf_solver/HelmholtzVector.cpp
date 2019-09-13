@@ -62,6 +62,9 @@ HelmholtzVector::HelmholtzVector(double pr, const DoubleVector &l)
  * in the OrbitalVector based on the corresponding lambda_i parameter in the
  * HelmholtzVector. Computes output as: out_i = H_i[phi_i]
  *
+ * NOTE: This version does not scale the apply precision by the norm of the
+ *       input orbitals, as does the apply(V, Phi, F) version below.
+ *
  * MPI: Output vector gets the same MPI distribution as input vector. Only
  *      local orbitals are computed.
  */
@@ -76,7 +79,7 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
         if (not mpi::my_orb(out[i])) continue;
 
         t_lap.start();
-        out[i] = apply(i, Phi[i]);
+        out[i] = apply(i, Phi[i], this->prec, this->prec);
         out[i].rescale(-1.0 / (2.0 * MATHCONST::pi));
 
         std::stringstream o_txt;
@@ -98,6 +101,8 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
  * Specialized version with smaller memory footprint since the full vector V*Phi
  * is never stored, but computed on the fly.
  *
+ * NOTE: This version scales the apply precision by the norm of the input orbitals.
+ *
  * MPI: Output vector gets the same MPI distribution as input vector. Only
  *      local orbitals are computed.
  */
@@ -112,11 +117,15 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
     for (int i = 0; i < Phi.size(); i++) {
         if (not mpi::my_orb(out[i])) continue;
 
+        double build_prec = this->prec;
+        double apply_prec = this->prec;
+        if (Phi[i].norm() > 0.0) apply_prec /= Phi[i].norm();
+
         t_lap.start();
         Orbital Vphi_i = V(Phi[i]);
         Vphi_i.add(1.0, Psi[i]);
         Vphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
-        out[i] = apply(i, Vphi_i);
+        out[i] = apply(i, Vphi_i, build_prec, apply_prec);
 
         std::stringstream o_txt;
         o_txt << std::setw(4) << i;
@@ -135,21 +144,19 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
  *
  * Computes output as: out_i = H_i[phi_i]
  */
-Orbital HelmholtzVector::apply(int i, Orbital &phi) const {
+Orbital HelmholtzVector::apply(int i, Orbital &phi, double build_prec, double apply_prec) const {
     ComplexDouble mu_i = std::sqrt(-2.0 * this->lambda(i));
     if (std::abs(mu_i.imag()) > mrcpp::MachineZero) MSG_ABORT("Mu cannot be complex");
-    mrcpp::HelmholtzOperator H(*MRA, mu_i.real(), this->prec);
-
-    double abs_prec = this->prec / phi.norm();
+    mrcpp::HelmholtzOperator H(*MRA, mu_i.real(), build_prec);
 
     Orbital out = phi.paramCopy();
     if (phi.hasReal()) {
         out.alloc(NUMBER::Real);
-        mrcpp::apply(abs_prec, out.real(), H, phi.real());
+        mrcpp::apply(apply_prec, out.real(), H, phi.real());
     }
     if (phi.hasImag()) {
         out.alloc(NUMBER::Imag);
-        mrcpp::apply(abs_prec, out.imag(), H, phi.imag());
+        mrcpp::apply(apply_prec, out.imag(), H, phi.imag());
         if (phi.conjugate()) out.imag().rescale(-1.0);
     }
     return out;
