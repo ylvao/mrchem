@@ -375,6 +375,20 @@ ComplexDouble RankZeroTensorOperator::trace(OrbitalVector &Phi, OrbitalVector &X
     return eta.dot(x_vec + y_vec);
 }
 
+ComplexDouble RankZeroTensorOperator::trace(const Nuclei &nucs) {
+    Timer t1;
+    RankZeroTensorOperator &O = *this;
+    ComplexVector coef_vec = getCoefVector();
+    ComplexDouble out = 0.0;
+    for (int n = 0; n < O.size(); n++) out += coef_vec[n] * O.traceOperTerm(n, nucs);
+
+    std::stringstream o_name;
+    o_name << "Trace " << O.name() << "(nucs)";
+    mrcpp::print::tree(2, o_name.str(), 0, 0, t1.elapsed());
+
+    return out;
+}
+
 /** @brief apply a single term of the operator expansion
  *
  * @param n: which term to apply
@@ -408,4 +422,14 @@ Orbital RankZeroTensorOperator::daggerOperTerm(int n, Orbital inp) {
     return out;
 }
 
+ComplexDouble RankZeroTensorOperator::traceOperTerm(int n, const Nuclei &nucs) {
+    if (n >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
+
+    ComplexDouble out = 1.0;
+    for (auto O_nm : this->oper_exp[n]) {
+        if (O_nm == nullptr) MSG_ABORT("Invalid oper term");
+        out *= O_nm->trace(nucs);
+    }
+    return out;
+}
 } // namespace mrchem

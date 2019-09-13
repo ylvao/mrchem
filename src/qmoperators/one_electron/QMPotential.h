@@ -30,6 +30,8 @@ protected:
     Orbital apply(Orbital inp) override;
     Orbital dagger(Orbital inp) override;
 
+    ComplexDouble trace(const Nuclei &nucs) override;
+
     void calcRealPart(Orbital &out, Orbital &inp, bool dagger);
     void calcImagPart(Orbital &out, Orbital &inp, bool dagger);
 };

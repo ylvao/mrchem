@@ -93,6 +93,7 @@ public:
 
     ComplexDouble trace(OrbitalVector &Phi);
     ComplexDouble trace(OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y);
+    ComplexDouble trace(const Nuclei &nucs);
 
     RankZeroTensorOperator &operator=(std::shared_ptr<QMOperator> O);
     RankZeroTensorOperator &operator+=(std::shared_ptr<QMOperator> O);
@@ -113,6 +114,7 @@ protected:
 
     Orbital applyOperTerm(int n, Orbital inp);
     Orbital daggerOperTerm(int n, Orbital inp);
+    ComplexDouble traceOperTerm(int n, const Nuclei &nucs);
     ComplexVector getCoefVector() const;
 };
 
