@@ -184,8 +184,10 @@ def write_molecule(program_dict, user_dict):
       })
 
   # Convert angstrom -> bohr
+  origin = user_dict["Molecule"]["gauge_origin"]
   if user_dict["Molecule"]["angstrom"]:
     AA = 1.889725989
+    origin = [AA * r for r in origin]
     for coord in coords_dict:
       coord["xyz"] = [AA * r for r in coord["xyz"]]
 
@@ -198,7 +200,7 @@ def write_molecule(program_dict, user_dict):
       m = PT[coord["atom"]].mass
       M += m
       CoM = [m*r + o for r,o in zip(coord["xyz"], CoM)]
-    CoM = [x/M for x in CoM]
+    CoM = [x/M - o for x,o in zip(CoM, origin)]
 
     # Translate coords
     for coord in coords_dict:
@@ -207,6 +209,7 @@ def write_molecule(program_dict, user_dict):
   program_dict["molecule"] = {
     "charge": user_dict["Molecule"]["charge"],
     "multiplicity": user_dict["Molecule"]["multiplicity"],
+    "gauge_origin": origin,
     "coords": coords_dict
   }
 
@@ -276,21 +279,31 @@ def write_scf_calculation(program_dict, user_dict):
   prop_dict = {}
   if user_dict["Properties"]["dipole_moment"]:
     prop_dict["dipole_moment"] = {
-      "setup_prec": user_dict["world_prec"],
-      "origin": [0.0, 0.0, 0.0]
+      "operator": "h_e_dip",
+      "precision": user_dict["world_prec"],
+      "r_O": program_dict["molecule"]["gauge_origin"]
     }
   if user_dict["Properties"]["magnetizability"]:
     prop_dict["magnetizability"] = {
-      "setup_prec": user_dict["world_prec"],
-      "origin": [0.0, 0.0, 0.0]
+      "operator": "h_bb_dia",
+      "precision": user_dict["world_prec"],
+      "r_O": program_dict["molecule"]["gauge_origin"]
     }
-  if len(user_dict["Properties"]["nmr_shielding"]) > 0:
-    prop_dict["nmr_shielding"] = {
-      "setup_prec": user_dict["world_prec"],
-      "smooth_prec": user_dict["world_prec"],
-      "nucleus_k": user_dict["Properties"]["nmr_shielding"],
-      "origin": [0.0, 0.0, 0.0]
-    }
+  if user_dict["Properties"]["nmr_shielding"]:
+    nuc_vec = user_dict["NMRShielding"]["nucleus_k"]
+    prop_dict["nmr_shielding"] = []
+    all_nucs = (nuc_vec[0] < 0)
+    nuclei = program_dict["molecule"]["coords"]
+    for k in range(len(nuclei)):
+      if all_nucs or k in nuc_vec:
+        prop_dict["nmr_shielding"].append({
+          "nucleus_k": k,
+          "operator": "h_bm_dia",
+          "precision": user_dict["world_prec"],
+          "smoothing": user_dict["world_prec"],
+          "r_O": program_dict["molecule"]["gauge_origin"],
+          "r_K": nuclei[k]["xyz"]
+        })
   scf_dict["properties"] = prop_dict
 
   method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
@@ -380,7 +393,7 @@ def write_scf_calculation(program_dict, user_dict):
   if len(user_dict["ExternalFields"]["electric_field"]) > 0:
     fock_dict["external_operator"] = {
       "electric_field": user_dict["ExternalFields"]["electric_field"],
-      "origin": [0.0, 0.0, 0.0]
+      "r_O": program_dict["molecule"]["gauge_origin"]
     }
 
   scf_dict["fock_operator"] = fock_dict
@@ -413,13 +426,14 @@ def write_rsp_calculations(program_dict, user_dict):
         "write_orbitals": user_dict["Response"]["write_orbitals"],
         "perturbation": {
           "operator": "h_e_dip",
-          "origin": [0.0, 0.0, 0.0]
+          "r_O": program_dict["molecule"]["gauge_origin"]
         }
       }
       prop_dict = {
-       "polarizability": {
-          "setup_prec": user_dict["world_prec"],
-          "origin": [0.0, 0.0, 0.0]
+        "polarizability": {
+          "operator": "h_e_dip",
+          "precision": user_dict["world_prec"],
+          "r_O": program_dict["molecule"]["gauge_origin"]
         }
       }
       rsp_dict["properties"] = prop_dict
@@ -527,7 +541,7 @@ def write_rsp_calculations(program_dict, user_dict):
       program_dict["rsp_calculations"].append(rsp_dict)
 
   run_mag = user_dict["Properties"]["magnetizability"]
-  run_nmr = len(user_dict["Properties"]["nmr_shielding"]) > 0
+  run_nmr = user_dict["Properties"]["nmr_shielding"]
   if run_mag or run_nmr:
       rsp_dict = {
         "rsp_prec": user_dict["world_prec"],
@@ -537,25 +551,33 @@ def write_rsp_calculations(program_dict, user_dict):
         "write_orbitals": user_dict["Response"]["write_orbitals"],
         "perturbation": {
           "operator": "h_b_dip",
-          "derivative": user_dict["Derivatives"]["h_orb"],
-          "origin": [0.0, 0.0, 0.0]
+          "derivative": user_dict["Derivatives"]["h_b_dip"],
+          "r_O": program_dict["molecule"]["gauge_origin"]
         }
       }
       prop_dict = {}
       if run_mag:
         prop_dict["magnetizability"] = {
-          "setup_prec": user_dict["world_prec"],
-          "derivative": user_dict["Derivatives"]["h_orb"],
-          "origin": [0.0, 0.0, 0.0]
+          "operator": "h_b_dip",
+          "precision": user_dict["world_prec"],
+          "derivative": user_dict["Derivatives"]["h_b_dip"],
+          "r_O": program_dict["molecule"]["gauge_origin"]
         }
       if run_nmr:
-        prop_dict["nmr_shielding"] = {
-          "setup_prec": user_dict["world_prec"],
-          "smooth_prec": user_dict["world_prec"],
-          "derivative": user_dict["Derivatives"]["h_orb"],
-          "nucleus_k": user_dict["Properties"]["nmr_shielding"],
-          "origin": [0.0, 0.0, 0.0]
-        }
+        prop_dict["nmr_shielding"] = []
+        nuc_vec = user_dict["NMRShielding"]["nucleus_k"]
+        all_nucs = (nuc_vec[0] < 0)
+        nuclei = program_dict["molecule"]["coords"]
+        for k in range(len(nuclei)):
+          if all_nucs or k in nuc_vec:
+            prop_dict["nmr_shielding"].append({
+              "nucleus_k": k,
+              "operator": "h_m_pso",
+              "precision": user_dict["world_prec"],
+              "smoothing": user_dict["world_prec"],
+              "derivative": user_dict["Derivatives"]["h_b_dip"],
+              "r_K": nuclei[k]["xyz"]
+            })
       rsp_dict["properties"] = prop_dict
 
       method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
