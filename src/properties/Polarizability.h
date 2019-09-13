@@ -35,9 +35,6 @@ class Polarizability final {
 public:
     explicit Polarizability(double w = 0.0) : frequency(w) {}
 
-    mrcpp::Coord<3> &getOrigin() { return this->origin; }
-    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
-
     double getFrequency() const { return this->frequency; }
     double getWavelength() const { return 0.0; }
     DoubleMatrix &getTensor() { return this->tensor; }
@@ -54,7 +51,6 @@ public:
         if (dynamic) print_utils::scalar(0, "Wavelength", l_nm, "(nm)");
         print_utils::scalar(0, "Frequency", w_au, "(au)");
         print_utils::scalar(0, "         ", w_cm, "(cm-1)");
-        print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
         print_utils::matrix(0, "Total tensor", getTensor());
         print_utils::scalar(0, "Isotropic average", iso_au, "(au)");
@@ -63,7 +59,6 @@ public:
 
 private:
     double frequency;
-    mrcpp::Coord<3> origin{};
     DoubleMatrix tensor{DoubleMatrix::Zero(3,3)};
 };
 // clang-format on

@@ -37,8 +37,6 @@ public:
     NMRShielding(int k, const Nucleus &n) : K(k), nuc(n) {}
 
     int getK() const { return this->K; }
-    mrcpp::Coord<3> &getOrigin() { return this->origin; }
-    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
     const Nucleus &getNucleus() const { return this->nuc; }
 
     DoubleMatrix getTensor() const { return getDiamagnetic() + getParamagnetic(); }
@@ -54,8 +52,6 @@ public:
 
         mrcpp::print::header(0, "NMR shielding");
         print_utils::scalar(0, "Nucleus K", getK(), getNucleus().getElement().getSymbol(), 0);
-        print_utils::coord(0, "r_K", getNucleus().getCoord());
-        print_utils::coord(0, "r_O", getOrigin());
         mrcpp::print::separator(0, '-');
         print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
         print_utils::scalar(0, "Isotropic average", iso_ppm_d, "(ppm)");
@@ -71,7 +67,6 @@ public:
 private:
     const int K;
     const Nucleus nuc;
-    mrcpp::Coord<3> origin{};
     DoubleMatrix dia_tensor{DoubleMatrix::Zero(3,3)};
     DoubleMatrix para_tensor{DoubleMatrix::Zero(3,3)};
 };
