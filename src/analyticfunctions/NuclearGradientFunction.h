@@ -26,31 +26,27 @@
 #pragma once
 
 #include "MRCPP/MWFunctions"
-#include <array>
-
-#include "chemistry/Nucleus.h"
 
 namespace mrchem {
 
 class NuclearGradientFunction : public mrcpp::RepresentableFunction<3> {
 public:
-    NuclearGradientFunction(int d, const Nucleus &nuc, double c)
-            : dir(d)
-            , smooth(c)
-            , nucleus(nuc) {}
+    NuclearGradientFunction(int d, double z, const mrcpp::Coord<3> &r, double c)
+            : D(d)
+            , C(c)
+            , Z(z)
+            , R(r) {}
 
     double evalf(const mrcpp::Coord<3> &r) const override;
-
-    Nucleus &getNucleus() { return this->nucleus; }
-    const Nucleus &getNucleus() const { return this->nucleus; }
 
     bool isVisibleAtScale(int scale, int nQuadPts) const override;
     bool isZeroOnInterval(const double *a, const double *b) const override;
 
 protected:
-    int dir;
-    double smooth;
-    Nucleus nucleus;
+    int D;             ///< Cartesian direction
+    double C;          ///< Smmothing parameter
+    double Z;          ///< Nuclear charge
+    mrcpp::Coord<3> R; ///< Nuclear coordinate
 
     double du_dr(double r1) const;
 };

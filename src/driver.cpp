@@ -766,9 +766,7 @@ template <int I> RankOneTensorOperator<I> driver::get_operator(const json &json_
         auto smoothing = json_oper["smoothing"].get<double>();
         auto pert_diff = json_oper["derivative"].get<std::string>();
         auto D = driver::get_derivative(pert_diff);
-        PeriodicTable pt;
-        Nucleus nuc_K(pt.getElement("H"), r_K);
-        h = H_M_pso(D, nuc_K, smoothing);
+        h = H_M_pso(D, r_K, smoothing);
     } else {
         MSG_ERROR("Invalid operator: " << oper);
     }
@@ -785,9 +783,7 @@ template <int I, int J> RankTwoTensorOperator<I, J> driver::get_operator(const j
         auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
         auto r_K = json_oper["r_K"].get<mrcpp::Coord<3>>();
         auto smoothing = json_oper["smoothing"].get<double>();
-        PeriodicTable pt;
-        Nucleus nuc_K(pt.getElement("H"), r_K);
-        h = H_BM_dia(r_O, nuc_K, smoothing);
+        h = H_BM_dia(r_O, r_K, smoothing);
     } else {
         MSG_ERROR("Invalid operator: " << oper);
     }
