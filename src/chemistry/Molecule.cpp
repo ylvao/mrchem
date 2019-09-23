@@ -98,6 +98,12 @@ DipoleMoment &Molecule::getDipoleMoment() {
     return *dipole;
 }
 
+/** @brief Return property QuadrupoleMoment */
+QuadrupoleMoment &Molecule::getQuadrupoleMoment() {
+    if (quadrupole == nullptr) quadrupole = std::make_unique<QuadrupoleMoment>();
+    return *quadrupole;
+}
+
 /** @brief Return property Magnetizability */
 Magnetizability &Molecule::getMagnetizability() {
     if (magnetizability == nullptr) magnetizability = std::make_unique<Magnetizability>();
@@ -264,6 +270,7 @@ void Molecule::printProperties() const {
 
     if (this->energy != nullptr) this->energy->print();
     if (this->dipole != nullptr) this->dipole->print();
+    if (this->quadrupole != nullptr) this->quadrupole->print();
     if (this->magnetizability != nullptr) this->magnetizability->print();
     for (auto &pol : this->polarizability) {
         if (pol != nullptr) pol->print();

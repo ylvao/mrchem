@@ -45,6 +45,7 @@
 #include "properties/Magnetizability.h"
 #include "properties/NMRShielding.h"
 #include "properties/Polarizability.h"
+#include "properties/QuadrupoleMoment.h"
 #include "properties/SCFEnergy.h"
 #include "qmfunctions/Orbital.h"
 
@@ -103,6 +104,7 @@ public:
 
     SCFEnergy &getSCFEnergy();
     DipoleMoment &getDipoleMoment();
+    QuadrupoleMoment &getQuadrupoleMoment();
     Magnetizability &getMagnetizability();
     NMRShielding &getNMRShielding(int k);
     Polarizability &getPolarizability(double omega);
@@ -121,6 +123,7 @@ protected:
     // Properties
     std::unique_ptr<SCFEnergy> energy{nullptr};
     std::unique_ptr<DipoleMoment> dipole{nullptr};
+    std::unique_ptr<QuadrupoleMoment> quadrupole{nullptr};
     std::unique_ptr<Magnetizability> magnetizability{nullptr};
     std::vector<std::unique_ptr<Polarizability>> polarizability{};
     std::vector<std::unique_ptr<NMRShielding>> nmr{};
