@@ -27,10 +27,15 @@ public:
 protected:
     int adap_build;
 
+    ComplexDouble evalf(const mrcpp::Coord<3> &r) const override {
+        ComplexDouble out(0.0, 0.0), i(0.0, 1.0);
+        if (this->hasReal()) out += this->real().evalf(r);
+        if (this->hasImag()) out += i * this->imag().evalf(r);
+        return out;
+    }
+
     Orbital apply(Orbital inp) override;
     Orbital dagger(Orbital inp) override;
-
-    ComplexDouble trace(const Nuclei &nucs) override;
 
     void calcRealPart(Orbital &out, Orbital &inp, bool dagger);
     void calcImagPart(Orbital &out, Orbital &inp, bool dagger);

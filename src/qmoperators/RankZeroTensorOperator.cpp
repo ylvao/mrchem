@@ -29,6 +29,7 @@
 #include "parallel.h"
 
 #include "RankZeroTensorOperator.h"
+#include "chemistry/Nucleus.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
@@ -425,10 +426,16 @@ Orbital RankZeroTensorOperator::daggerOperTerm(int n, Orbital inp) {
 ComplexDouble RankZeroTensorOperator::traceOperTerm(int n, const Nuclei &nucs) {
     if (n >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
 
-    ComplexDouble out = 1.0;
-    for (auto O_nm : this->oper_exp[n]) {
-        if (O_nm == nullptr) MSG_ABORT("Invalid oper term");
-        out *= O_nm->trace(nucs);
+    ComplexDouble out = 0.0;
+    for (const auto &nuc_k : nucs) {
+        auto Z = nuc_k.getCharge();
+        const auto &R = nuc_k.getCoord();
+        ComplexDouble V_r = 1.0;
+        for (auto O_nm : this->oper_exp[n]) {
+            if (O_nm == nullptr) MSG_ABORT("Invalid oper term");
+            V_r *= O_nm->evalf(R);
+        }
+        out += Z * V_r;
     }
     return out;
 }

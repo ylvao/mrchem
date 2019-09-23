@@ -84,10 +84,9 @@ protected:
     virtual void setup(double prec) = 0;
     virtual void clear() = 0;
 
+    virtual ComplexDouble evalf(const mrcpp::Coord<3> &r) const { NOT_REACHED_ABORT; }
     virtual Orbital apply(Orbital inp) = 0;
     virtual Orbital dagger(Orbital inp) = 0;
-
-    virtual ComplexDouble trace(const Nuclei &nucs) { return 0.0; }
 };
 
 } // namespace mrchem

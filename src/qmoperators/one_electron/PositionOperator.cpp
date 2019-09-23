@@ -2,6 +2,7 @@
 #include "MRCPP/Timer"
 
 #include "PositionOperator.h"
+#include "chemistry/Nucleus.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "utils/print_utils.h"
 
