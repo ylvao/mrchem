@@ -23,8 +23,6 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include <stdexcept>
-
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
@@ -33,6 +31,7 @@
 #include "MRCPP/utils/Plotter.h"
 
 #include "XCFunctional.h"
+#include "xc_utils.h"
 
 using mrcpp::DerivativeOperator;
 using mrcpp::FunctionNode;
@@ -46,92 +45,6 @@ using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
-
-static int xc_iteration = 0;
-
-namespace {
-MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order);
-VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order);
-void fill_output_mask(MatrixXi &mask, int start);
-
-MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order) {
-    int start = 2;
-    bool is_gga = not is_lda;
-    MatrixXi mask(1, 1);
-    mask << 1;
-    switch (order) {
-        case 0:
-            break;
-        case 1:
-            if (is_lda and is_spin_sep) {
-                mask.resize(2, 1);
-                mask << 1, 2;
-            } else if (is_gga and not is_spin_sep) {
-                mask.resize(4, 1);
-                mask << 1, 2, 3, 4;
-            } else if (is_gga and is_spin_sep) {
-                mask.resize(8, 1);
-                mask << 1, 2, 3, 4, 5, 6, 7, 8;
-            }
-            break;
-        case 2:
-            if (is_lda and is_spin_sep) {
-                start = 3;
-                mask.resize(2, 2);
-            } else if (is_gga and not is_spin_sep) {
-                start = 5;
-                mask.resize(4, 4);
-            } else if (is_gga and is_spin_sep) {
-                start = 9;
-                mask.resize(8, 8);
-            }
-            fill_output_mask(mask, start);
-            break;
-        default:
-            MSG_ABORT("Not implemented");
-    }
-    return mask;
-}
-
-VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order) {
-    bool is_gga = not is_lda;
-    VectorXi mask(1);
-    switch (order) {
-        case 0:
-        case 1:
-            mask(0) = -1;
-            break;
-        case 2:
-            mask(0) = 0;
-            if (is_lda and is_spin_sep) {
-                mask.resize(2);
-                mask << 0, 1;
-            } else if (is_gga and not is_spin_sep) {
-                mask.resize(4);
-                mask << 0, 1, 2, 3;
-            } else if (is_gga and is_spin_sep) {
-                mask.resize(8);
-                mask << 0, 1, 2, 3, 4, 5, 6, 7;
-            }
-            break;
-        default:
-            MSG_ABORT("Not implemented");
-    }
-    return mask;
-}
-
-void fill_output_mask(MatrixXi &mask, int value) {
-    for (int i = 0; i < mask.rows(); i++) {
-        mask(i, i) = value;
-        value++;
-        for (int j = i + 1; j < mask.cols(); j++) {
-            mask(i, j) = value;
-            mask(j, i) = value;
-            value++;
-        }
-    }
-}
-} // namespace
 
 namespace mrdft {
 
@@ -649,8 +562,8 @@ void XCFunctional::evaluate() {
 
 void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_data, MatrixXd &con_data) {
 
-    MatrixXi output_mask = build_output_mask(isLDA(), isSpinSeparated(), order);
-    VectorXi density_mask = build_density_mask(isLDA(), isSpinSeparated(), order);
+    MatrixXi output_mask = xc_utils::build_output_mask(isLDA(), isSpinSeparated(), order);
+    VectorXi density_mask = xc_utils::build_density_mask(isLDA(), isSpinSeparated(), order);
     if (output_mask.cols() != density_mask.size()) MSG_ABORT("Inconsistent lengths");
 
     VectorXd cont_i;
