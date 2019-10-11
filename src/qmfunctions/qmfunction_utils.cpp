@@ -86,14 +86,14 @@ ComplexDouble qmfunction::node_norm_dot(QMFunction bra, QMFunction ket, bool exa
 void qmfunction::deep_copy(QMFunction &out, QMFunction &inp) {
     bool need_to_copy = not(out.isShared()) or mpi::share_master();
     if (inp.hasReal()) {
-        out.alloc(NUMBER::Real);
+        if (not out.hasReal()) out.alloc(NUMBER::Real);
         if (need_to_copy) {
             mrcpp::copy_grid(out.real(), inp.real());
             mrcpp::copy_func(out.real(), inp.real());
         }
     }
     if (inp.hasImag()) {
-        out.alloc(NUMBER::Imag);
+        if (not out.hasImag()) out.alloc(NUMBER::Imag);
         if (need_to_copy) {
             mrcpp::copy_grid(out.imag(), inp.imag());
             mrcpp::copy_func(out.imag(), inp.imag());
