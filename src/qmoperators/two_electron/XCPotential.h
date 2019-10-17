@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mrdft/XCFunctional.h"
+#include "mrdft/MRDFT.h"
 #include "qmoperators/one_electron/QMPotential.h"
 
 /**
@@ -29,36 +29,35 @@ namespace mrchem {
 
 class XCPotential : public QMPotential {
 public:
-    explicit XCPotential(std::shared_ptr<mrdft::XCFunctional> F,
+    explicit XCPotential(std::unique_ptr<mrdft::MRDFT> &F,
                          std::shared_ptr<OrbitalVector> Phi = nullptr,
                          bool mpi_shared = false)
             : QMPotential(1, mpi_shared)
             , energy(0.0)
             , orbitals(Phi)
-            , functional(F) {}
+            , mrdft(std::move(F)) {}
     ~XCPotential() override = default;
 
     friend class XCOperator;
 
 protected:
-    double energy;                                   ///< XC energy
-    std::shared_ptr<OrbitalVector> orbitals;         ///< External set of orbitals used to build the density
-    std::shared_ptr<mrdft::XCFunctional> functional; ///< External XC functional to be used
-    mrcpp::FunctionTreeVector<3> potentials;         ///< XC Potential functions collected in a vector
+    double energy;                           ///< XC energy
+    std::vector<Density> densities;          ///< XC densities (total or alpha/beta)
+    mrcpp::FunctionTreeVector<3> potentials; ///< XC Potential functions collected in a vector
+    std::shared_ptr<OrbitalVector> orbitals; ///< External set of orbitals used to build the density
+    std::unique_ptr<mrdft::MRDFT> mrdft;     ///< External XC functional to be used
 
-    int getOrder() const { return this->functional->getOrder(); }
     double getEnergy() const { return this->energy; }
-    mrcpp::FunctionTree<3> &getDensity(DensityType spin, int index = 0);
+    Density &getDensity(DENSITY::DensityType spin, int pert_idx);
     mrcpp::FunctionTree<3> &getPotential(int spin);
-    std::shared_ptr<mrdft::XCFunctional> getFunctional() const { return this->functional; }
+
+    void setup(double prec) override;
+    void clear() override;
+
+    virtual mrcpp::FunctionTreeVector<3> setupDensities(double prec, mrcpp::FunctionTree<3> &grid) = 0;
 
     Orbital apply(Orbital phi) override;
     Orbital dagger(Orbital phi) override;
-    void clear();
-
-    void buildDensity(OrbitalVector &Phi, DensityType spin, double prec = -1.0);
-    void setupDensity(double prec = -1.0);
-    virtual void setupPotential(double prec) {}
 };
 
 } // namespace mrchem

@@ -27,13 +27,12 @@ namespace mrchem {
 
 class XCPotentialD1 final : public XCPotential {
 public:
-    explicit XCPotentialD1(std::shared_ptr<mrdft::XCFunctional> F,
+    explicit XCPotentialD1(std::unique_ptr<mrdft::MRDFT> &F,
                            std::shared_ptr<OrbitalVector> Phi = nullptr,
                            bool mpi_shared = false);
 
 private:
-    void setup(double prec) override;
-    void setupPotential(double prec);
+    mrcpp::FunctionTreeVector<3> setupDensities(double prec, mrcpp::FunctionTree<3> &grid) override;
 };
 
 } // namespace mrchem

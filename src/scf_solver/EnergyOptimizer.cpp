@@ -211,7 +211,8 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     auto xc_n = F_n.getXCOperator();
 
     auto exx = 1.0;
-    if (xc_n != nullptr) exx = xc_n->getFunctional()->amountEXX();
+    if (xc_n != nullptr) NOT_IMPLEMENTED_ABORT
+    // if (xc_n != nullptr) exx = xc_n->getFunctional()->amountEXX();
 
     ComplexMatrix dV_mat_n;
     { // Nuclear potential matrix is computed explicitly
@@ -257,7 +258,8 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
             k_np1->setup(prec);
         }
         if (xc_n != nullptr) {
-            xc_np1 = std::make_shared<XCOperator>(xc_n->getFunctional(), Phi_p);
+            NOT_IMPLEMENTED_ABORT;
+            // xc_np1 = std::make_shared<XCOperator>(xc_n->getFunctional(), Phi_p);
             xc_np1->setup(prec);
         }
         mrcpp::print::time(2, "Fock operator n+1", t_lap);

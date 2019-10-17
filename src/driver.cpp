@@ -66,15 +66,13 @@
 #include "scf_solver/LinearResponseSolver.h"
 #include "scf_solver/OrbitalOptimizer.h"
 
-#include "mrdft/XCFunctional.h"
+#include "mrdft/Factory.h"
 
 using mrcpp::ABGVOperator;
 using mrcpp::Coord;
 using mrcpp::PoissonOperator;
 using mrcpp::Printer;
 using mrcpp::Timer;
-
-using mrdft::XCFunctional;
 
 using nlohmann::json;
 
@@ -696,26 +694,26 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto xc_cutoff = json_xcfunc["cutoff"].get<double>();
         auto xc_diff = json_xcfunc["derivative"].get<std::string>();
         auto xc_funcs = json_xcfunc["functionals"].get<json>();
+        auto xc_order = order + 1;
 
-        int xc_order = order + 1;
-        auto xcfun_p = std::make_shared<XCFunctional>(*MRA, xc_spin);
+        mrdft::Factory xc_factory(*MRA);
+        xc_factory.setSpin(xc_spin);
+        xc_factory.setOrder(xc_order);
+        xc_factory.setUseGamma(xc_gamma);
+        xc_factory.setDensityCutoff(xc_cutoff);
         for (const auto &f : xc_funcs) {
             auto name = f["name"].get<std::string>();
             auto coef = f["coef"].get<double>();
-            xcfun_p->setFunctional(name, coef);
+            xc_factory.setFunctional(name, coef);
         }
-        xcfun_p->setUseGamma(xc_gamma);
-        xcfun_p->setDensityCutoff(xc_cutoff);
-        xcfun_p->setNDensities(xc_order); // Nr of dens is the same as xc_order
-        xcfun_p->evalSetup(xc_order);
-        xcfun_p->allocateDensities();
-        exx = xcfun_p->amountEXX();
+        auto mrdft_p = xc_factory.build();
+        exx = mrdft_p->functional().amountEXX();
 
         if (order == 0) {
-            auto XC_p = std::make_shared<XCOperator>(xcfun_p, Phi_p, shared_memory);
+            auto XC_p = std::make_shared<XCOperator>(mrdft_p, Phi_p, shared_memory);
             F.getXCOperator() = XC_p;
         } else if (order == 1) {
-            auto XC_p = std::make_shared<XCOperator>(xcfun_p, Phi_p, X_p, Y_p, shared_memory);
+            auto XC_p = std::make_shared<XCOperator>(mrdft_p, Phi_p, X_p, Y_p, shared_memory);
             F.getXCOperator() = XC_p;
         } else {
             MSG_ABORT("Invalid perturbation order");

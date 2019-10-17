@@ -47,6 +47,8 @@
 #include "qmoperators/two_electron/CoulombOperator.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
+#include "mrdft/Factory.h"
+
 using mrcpp::Printer;
 using mrcpp::Timer;
 
@@ -91,16 +93,16 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     t_lap.start();
     auto P_p = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
     auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
-    auto xcfun_p = std::make_shared<mrdft::XCFunctional>(*MRA, not(restricted));
-    xcfun_p->setFunctional("SLATERX");
-    xcfun_p->setFunctional("VWN5C");
-    xcfun_p->evalSetup(MRDFT::Gradient);
-    xcfun_p->setNDensities(1);
-    xcfun_p->allocateDensities();
+
+    mrdft::Factory xc_factory(*MRA);
+    xc_factory.setFunctional("SLATERX", 1.0);
+    xc_factory.setFunctional("SVWN5C", 1.0);
+    auto mrdft_p = xc_factory.build();
+
     KineticOperator T(D_p);
     NuclearOperator V_nuc(mol.getNuclei(), prec);
     CoulombOperator J(P_p);
-    XCOperator XC(xcfun_p);
+    XCOperator XC(mrdft_p);
     RankZeroTensorOperator V = V_nuc + J + XC;
     if (plevel == 1) mrcpp::print::time(1, "Projecting nuclear potential", t_lap);
 
@@ -110,24 +112,23 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     initial_guess::sad::project_atomic_densities(prec, rho_j, mol);
 
     // Compute XC density
-    if (restricted) {
-        mrcpp::FunctionTree<3> &rho_xc = XC.getDensity(DensityType::Total);
-        mrcpp::copy_grid(rho_xc, rho_j.real());
-        mrcpp::copy_func(rho_xc, rho_j.real());
+    Density &rho_xc = XC.getDensity(DENSITY::DensityType::Total);
+    qmfunction::deep_copy(rho_xc, rho_j);
+    /*
+    //if (restricted) {
+        Density &rho_xc = XC.getDensity(DENSITY::DensityType::Total);
+        qmfunction::deep_copy(rho_xc, rho_j);
     } else {
-        mrcpp::FunctionTree<3> &rho_a = XC.getDensity(DensityType::Alpha);
-        mrcpp::FunctionTree<3> &rho_b = XC.getDensity(DensityType::Beta);
-        mrcpp::add(prec, rho_a, 1.0, rho_j.real(), -1.0 * Nb / Ne, rho_j.real());
-        mrcpp::add(prec, rho_b, 1.0, rho_j.real(), -1.0 * Na / Ne, rho_j.real());
-
-        // Extend to union grid
-        int nNodes = 1;
-        while (nNodes > 0) {
-            int nAlpha = mrcpp::refine_grid(rho_a, rho_b);
-            int nBeta = mrcpp::refine_grid(rho_b, rho_a);
-            nNodes = nAlpha + nBeta;
-        }
+        Density &rho_a = XC.getDensity(DENSITY::DensityType::Alpha);
+        Density &rho_b = XC.getDensity(DENSITY::DensityType::Beta);
+        qmfunction::deep_copy(rho_a, rho_j);
+        qmfunction::deep_copy(rho_b, rho_j);
+        rho_a.rescale(1.0 - static_cast<double>(Nb) / Ne);
+        rho_b.rescale(1.0 - static_cast<double>(Na) / Ne);
+        println(0, "rho_a " << rho_a.integrate());
+        println(0, "rho_b " << rho_b.integrate());
     }
+    */
     if (plevel == 1) mrcpp::print::time(1, "Projecting GTO density", t_lap);
 
     // Project AO basis of hydrogen functions
