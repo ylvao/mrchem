@@ -23,23 +23,21 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Printer"
+#include <MRCPP/Printer>
+#include <MRCPP/trees/FunctionNode.h>
 
 #include "xc_utils.h"
 
-using Eigen::MatrixXd;
-using Eigen::MatrixXi;
-using Eigen::VectorXd;
-using Eigen::VectorXi;
+namespace mrdft {
 
-static int xc_iteration = 0;
+namespace xc_utils {
+void fill_output_mask(Eigen::MatrixXi &mask, int start);
+} // namespace xc_utils
 
-using namespace mrdft;
-
-MatrixXi xc_utils::build_output_mask(bool is_lda, bool is_spin_sep, int order) {
+Eigen::MatrixXi xc_utils::build_output_mask(bool is_lda, bool is_spin_sep, int order) {
     int start = 2;
     bool is_gga = not is_lda;
-    MatrixXi mask(1, 1);
+    Eigen::MatrixXi mask(1, 1);
     mask << 1;
     switch (order) {
         case 0:
@@ -75,9 +73,9 @@ MatrixXi xc_utils::build_output_mask(bool is_lda, bool is_spin_sep, int order) {
     return mask;
 }
 
-VectorXi xc_utils::build_density_mask(bool is_lda, bool is_spin_sep, int order) {
+Eigen::VectorXi xc_utils::build_density_mask(bool is_lda, bool is_spin_sep, int order) {
     bool is_gga = not is_lda;
-    VectorXi mask(1);
+    Eigen::VectorXi mask(1);
     switch (order) {
         case 0:
         case 1:
@@ -102,7 +100,7 @@ VectorXi xc_utils::build_density_mask(bool is_lda, bool is_spin_sep, int order) 
     return mask;
 }
 
-void xc_utils::fill_output_mask(MatrixXi &mask, int value) {
+void xc_utils::fill_output_mask(Eigen::MatrixXi &mask, int value) {
     for (int i = 0; i < mask.rows(); i++) {
         mask(i, i) = value;
         value++;
@@ -113,3 +111,63 @@ void xc_utils::fill_output_mask(MatrixXi &mask, int value) {
         }
     }
 }
+
+std::vector<mrcpp::FunctionNode<3> *> xc_utils::fetch_nodes(int n, mrcpp::FunctionTreeVector<3> &inp) {
+    std::vector<mrcpp::FunctionNode<3> *> nodes;
+    for (auto i = 0; i < inp.size(); i++) {
+        auto &iTree = mrcpp::get_func(inp, i);
+        auto &iNode = iTree.getEndFuncNode(n);
+        nodes.push_back(&iNode);
+    }
+    return nodes;
+}
+
+/** @brief Converts data from a FunctionNode to a matrix
+ *
+ * The FunctionNode(s) row data is packed into a matrix whose
+ * dimensions are the overall number of grid points (nCoefs) and the
+ * number of functions (nFuncs).
+ *
+ * parma[in] n the Index of the requested node
+ * param[in] nFuncs The number of functions
+ * param[in] trees The array of FunctionTree(s)
+ * param[in] data The matrix object
+ */
+Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &inp_nodes) {
+    Eigen::MatrixXd out_data;
+    auto nFuncs = inp_nodes.size();
+    if (nFuncs > 0) {
+        auto nCoefs = inp_nodes[0]->getNCoefs();
+        out_data = Eigen::MatrixXd::Zero(nCoefs, nFuncs);
+        for (auto i = 0; i < nFuncs; i++) {
+            auto &node = inp_nodes[i];
+            Eigen::VectorXd col_i;
+            node->getValues(col_i);
+            if (col_i.size() != nCoefs) MSG_ABORT("Size mismatch");
+            out_data.col(i) = col_i;
+        }
+    }
+    return out_data;
+}
+
+/** @brief Converts data from a matrix to a FunctionNode
+ *
+ * The matrix containing the output from xcfun is converted back to the corresponding FunctionNode(s). The matrix
+ * dimensions are the overall number of grid points (nCoefs) and the number of functions (nFuncs).
+ *
+ * parma[in] n the Index of the requested node
+ * param[in] nFuncs The number of functions
+ * param[in] trees The array of FunctionTree(s)
+ * param[in] data The matrix object
+ */
+void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Eigen::MatrixXd &out_data) {
+    auto nFuncs = out_nodes.size();
+    if (out_data.cols() != nFuncs) MSG_ERROR("Size mismatch");
+
+    for (auto i = 0; i < nFuncs; i++) {
+        auto &node = out_nodes[i];
+        node->setValues(out_data.col(i));
+    }
+}
+
+} // namespace mrdft

@@ -24,13 +24,18 @@
  */
 
 #include <Eigen/Core>
+#include <MRCPP/MWFunctions>
+#include <XCFun/xcfun.h>
 
 namespace mrdft {
 namespace xc_utils {
 
 Eigen::MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order);
 Eigen::VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order);
-void fill_output_mask(Eigen::MatrixXi &mask, int start);
+
+std::vector<mrcpp::FunctionNode<3> *> fetch_nodes(int n, mrcpp::FunctionTreeVector<3> &inp);
+Eigen::MatrixXd compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &inp_nodes);
+void expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Eigen::MatrixXd &out_data);
 
 } // namespace xc_utils
 } // namespace mrdft
