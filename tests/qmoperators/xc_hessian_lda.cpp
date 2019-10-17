@@ -31,10 +31,13 @@
 #include "parallel.h"
 
 #include "analyticfunctions/HydrogenFunction.h"
+#include "qmfunctions/Density.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/two_electron/XCOperator.h"
+
+#include "mrdft/Factory.h"
 
 using namespace mrchem;
 using namespace orbital;
@@ -51,14 +54,15 @@ TEST_CASE("XCHessianLDA", "[xc_hessian_lda]") {
 
     auto Phi_p = std::make_shared<OrbitalVector>();
     auto X_p = std::make_shared<OrbitalVector>();
-    auto fun_p = std::make_shared<mrdft::XCFunctional>(*MRA, false);
-    fun_p->setFunctional("LDA", 1.0);
-    fun_p->setUseGamma(true);
-    fun_p->setDensityCutoff(1.0e-10);
-    fun_p->evalSetup(MRDFT::Hessian);
-    fun_p->setNDensities(2);
-    fun_p->allocateDensities();
-    XCOperator V(fun_p, Phi_p, X_p, X_p);
+
+    mrdft::Factory xc_factory(*MRA);
+    xc_factory.setOrder(MRDFT::Hessian);
+    xc_factory.setUseGamma(true);
+    xc_factory.setFunctional("LDA", 1.0);
+    xc_factory.setDensityCutoff(1.0e-10);
+    auto mrdft_p = xc_factory.build();
+
+    XCOperator V(mrdft_p, Phi_p, X_p, X_p);
 
     OrbitalVector &Phi = *Phi_p;
     ns.push_back(1);
@@ -107,14 +111,6 @@ TEST_CASE("XCHessianLDA", "[xc_hessian_lda]") {
     E_P(0, 1) = -0.0226852770676;
     E_P(1, 0) = -0.0226852770676;
     E_P(1, 1) = 0.00549970397828;
-
-    mrdft::XCFunctional fun(*MRA, false);
-    fun.setFunctional("LDA", 1.0);
-    fun.setUseGamma(true);
-    fun.setDensityCutoff(1.0e-10);
-    fun.evalSetup(MRDFT::Hessian);
-    fun.setNDensities(2);
-    fun.allocateDensities();
 
     V.setup(prec);
     SECTION("apply") {
