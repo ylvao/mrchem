@@ -96,7 +96,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
 
     mrdft::Factory xc_factory(*MRA);
     xc_factory.setFunctional("SLATERX", 1.0);
-    xc_factory.setFunctional("SVWN5C", 1.0);
+    xc_factory.setFunctional("VWN5C", 1.0);
     auto mrdft_p = xc_factory.build();
 
     KineticOperator T(D_p);
