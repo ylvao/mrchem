@@ -95,6 +95,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
 
     mrdft::Factory xc_factory(*MRA);
+    xc_factory.setSpin(not(restricted));
     xc_factory.setFunctional("SLATERX", 1.0);
     xc_factory.setFunctional("VWN5C", 1.0);
     auto mrdft_p = xc_factory.build();
@@ -112,10 +113,7 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
     initial_guess::sad::project_atomic_densities(prec, rho_j, mol);
 
     // Compute XC density
-    Density &rho_xc = XC.getDensity(DENSITY::DensityType::Total);
-    qmfunction::deep_copy(rho_xc, rho_j);
-    /*
-    //if (restricted) {
+    if (restricted) {
         Density &rho_xc = XC.getDensity(DENSITY::DensityType::Total);
         qmfunction::deep_copy(rho_xc, rho_j);
     } else {
@@ -128,7 +126,6 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
         println(0, "rho_a " << rho_a.integrate());
         println(0, "rho_b " << rho_b.integrate());
     }
-    */
     if (plevel == 1) mrcpp::print::time(1, "Projecting GTO density", t_lap);
 
     // Project AO basis of hydrogen functions
