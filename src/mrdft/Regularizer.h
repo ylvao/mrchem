@@ -33,6 +33,8 @@ public:
             : cutoff(c) {}
     ~Regularizer() = default;
 
+    double getDensityCutoff() const { return cutoff; }
+
 private:
     double cutoff;
 };

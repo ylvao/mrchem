@@ -29,7 +29,7 @@
 
 namespace mrdft {
 
-Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
+Eigen::MatrixXd Functional::evaluate(double cutoff, Eigen::MatrixXd &inp) const {
     int nInp = xc_input_length(*xcfun);  // Input parameters to XCFun
     int nOut = xc_output_length(*xcfun); // Input parameters to XCFun
     int nPts = inp.rows();
@@ -40,9 +40,19 @@ Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
 
     Eigen::MatrixXd out = Eigen::MatrixXd::Zero(nPts, nOut);
     for (int i = 0; i < nPts; i++) {
+        bool calc = true;
         for (int j = 0; j < nInp; j++) iDat[j] = inp(i, j);
-        xc_eval(*xcfun, iDat, oDat);
-        for (int j = 0; j < nOut; j++) out(i, j) = oDat[j];
+        if (isSpin()) {
+            if (iDat[0] < cutoff and iDat[1] < cutoff) calc = false;
+        } else {
+            if (iDat[0] < cutoff) calc = false;
+        }
+        if (calc) {
+            xc_eval(*xcfun, iDat, oDat);
+            for (int j = 0; j < nOut; j++) out(i, j) = oDat[j];
+        } else {
+            for (int j = 0; j < nOut; j++) out(i, j) = 0.0;
+        }
     }
     return out;
 }

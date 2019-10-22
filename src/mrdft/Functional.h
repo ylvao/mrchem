@@ -63,7 +63,7 @@ protected:
     virtual int getCtrInputLength() const = 0;
     virtual int getCtrOutputLength() const = 0;
 
-    Eigen::MatrixXd evaluate(Eigen::MatrixXd &inp) const;
+    Eigen::MatrixXd evaluate(double cutoff, Eigen::MatrixXd &inp) const;
     Eigen::MatrixXd contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const;
 
     virtual void clear() = 0;
