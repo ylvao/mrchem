@@ -78,7 +78,7 @@ mrcpp::FunctionTreeVector<3> GGA::setupCtrInput() {
     mrcpp::FunctionTreeVector<3> out_vec;
     if (this->order == 2) {
         out_vec.push_back(this->rho[1]);
-        out_vec.insert(out_vec.end(), this->grad.begin(), this->grad.begin() + 3);
+        out_vec.insert(out_vec.end(), this->grad.begin() + 3, this->grad.begin() + 6);
     }
     return out_vec;
 }
