@@ -59,6 +59,7 @@
  *
  */
 
+namespace mrdft {
 
 class XCFunctional final {
 public:

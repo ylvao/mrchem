@@ -30,8 +30,6 @@
 #include "MRCPP/Timer"
 #include "MRCPP/operators/BSOperator.h"
 #include "MRCPP/trees/FunctionNode.h"
-#include "MRCPP/operators/BSOperator.h"
-#include "MRCPP/trees/FunctionNode.h"
 #include "MRCPP/utils/Plotter.h"
 
 #include "XCFunctional.h"
@@ -48,92 +46,6 @@ using Eigen::MatrixXd;
 using Eigen::MatrixXi;
 using Eigen::VectorXd;
 using Eigen::VectorXi;
-
-static int xc_iteration = 0;
-
-namespace {
-MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order);
-VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order);
-void fill_output_mask(MatrixXi &mask, int start);
-
-MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order) {
-    int start = 2;
-    bool is_gga = not is_lda;
-    MatrixXi mask(1, 1);
-    mask << 1;
-    switch (order) {
-        case 0:
-            break;
-        case 1:
-            if (is_lda and is_spin_sep) {
-                mask.resize(2, 1);
-                mask << 1, 2;
-            } else if (is_gga and not is_spin_sep) {
-                mask.resize(4, 1);
-                mask << 1, 2, 3, 4;
-            } else if (is_gga and is_spin_sep) {
-                mask.resize(8, 1);
-                mask << 1, 2, 3, 4, 5, 6, 7, 8;
-            }
-            break;
-        case 2:
-            if (is_lda and is_spin_sep) {
-                start = 3;
-                mask.resize(2, 2);
-            } else if (is_gga and not is_spin_sep) {
-                start = 5;
-                mask.resize(4, 4);
-            } else if (is_gga and is_spin_sep) {
-                start = 9;
-                mask.resize(8, 8);
-            }
-            fill_output_mask(mask, start);
-            break;
-        default:
-            MSG_ABORT("Not implemented");
-    }
-    return mask;
-}
-
-VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order) {
-    bool is_gga = not is_lda;
-    VectorXi mask(1);
-    switch (order) {
-        case 0:
-        case 1:
-            mask(0) = -1;
-            break;
-        case 2:
-            mask(0) = 0;
-            if (is_lda and is_spin_sep) {
-                mask.resize(2);
-                mask << 0, 1;
-            } else if (is_gga and not is_spin_sep) {
-                mask.resize(4);
-                mask << 0, 1, 2, 3;
-            } else if (is_gga and is_spin_sep) {
-                mask.resize(8);
-                mask << 0, 1, 2, 3, 4, 5, 6, 7;
-            }
-            break;
-        default:
-            MSG_ABORT("Not implemented");
-    }
-    return mask;
-}
-
-void fill_output_mask(MatrixXi &mask, int value) {
-    for (int i = 0; i < mask.rows(); i++) {
-        mask(i, i) = value;
-        value++;
-        for (int j = i + 1; j < mask.cols(); j++) {
-            mask(i, j) = value;
-            mask(j, i) = value;
-            value++;
-        }
-    }
-}
-} // namespace
 
 static int xc_iteration = 0;
 
@@ -702,12 +614,6 @@ void XCFunctional::evaluate() {
     int nFcs = nCon + 1;              // One extra function for the energy density
     int nPts = getNodeLength();       // Number of gridpoints in a node
 
-    int nInp = getInputLength();      // Input parameters to XCFun
-    int nOut = getOutputLength();     // Output parameters from XCFun
-    int nCon = getContractedLength(); // Contracted parameters to XCPotential
-    int nFcs = nCon + 1;              // One extra function for the energy density
-    int nPts = getNodeLength();       // Number of gridpoints in a node
-
 #pragma omp parallel firstprivate(nInp, nOut)
     {
         int nNodes = mrcpp::get_func(xcInput, 0).getNEndNodes();
@@ -739,38 +645,6 @@ void XCFunctional::evaluate() {
     auto m = mrcpp::get_size_nodes(xcOutput);
     auto t = timer.elapsed();
     mrcpp::print::tree(2, "XC evaluate xcfun", n, m, t);
-}
-
-void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_data, MatrixXd &con_data) {
-
-    MatrixXi output_mask = build_output_mask(isLDA(), isSpinSeparated(), order);
-    VectorXi density_mask = build_density_mask(isLDA(), isSpinSeparated(), order);
-    if (output_mask.cols() != density_mask.size()) MSG_ABORT("Inconsistent lengths");
-
-    VectorXd cont_i;
-    VectorXd cont_ij;
-    for (int i = 0; i < output_mask.rows(); i++) {
-        cont_i = VectorXd::Zero(n_points);
-        for (int j = 0; j < output_mask.cols(); j++) {
-            cont_ij = VectorXd::Zero(n_points);
-            int out_index = output_mask(i, j);
-            int den_index = density_mask(j);
-            // if(den_index >= 2) {  //WARNING: This HACK works for Open shell only
-            //        continue;
-            //} else if(den_index >= 0) {
-            if (den_index >= 0) {
-                FunctionTree<3> &dens_func = mrcpp::get_func(xcDensity, den_index);
-                FunctionNode<3> &dens_node = dens_func.getEndFuncNode(node_index);
-                VectorXd dens_i;
-                dens_node.getValues(dens_i);
-                cont_ij = out_data.col(out_index).array() * dens_i.array();
-            } else {
-                cont_ij = out_data.col(out_index);
-            }
-            cont_i += cont_ij;
-        }
-        con_data.col(i + 1) = cont_i; // The first column contains the energy functional
-    }
 }
 
 void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_data, MatrixXd &con_data) {
@@ -1047,29 +921,6 @@ int XCFunctional::getContractedLength() const {
     if (isLDA()) length = 1;            // only one function needed for LDA
     if (isGGA()) length = 4;            // four functions for LDA
     if (isSpinSeparated()) length *= 2; // twice as many for spin-separated functionals;
-    return length;
-}
-
-int XCFunctional::getDensityLength() const {
-    int length = -1;
-    if (this->order < 2) {
-        length = 0; // no contractions for order 0 or 1
-    } else if (order == 2) {
-        length = getContractedLength(); // same length as contracted fcns for order = 2
-    }
-    return length;
-}
-
-int XCFunctional::getNodeLength() {
-    FunctionTree<3> &tree = mrcpp::get_func(xcInput, 0);
-    return tree.getTDim() * tree.getKp1_d();
-}
-
-int XCFunctional::getContractedLength() const {
-    int length = -1;
-    if(isLDA()) length = 1; //only one function needed for LDA
-    if(isGGA()) length = 4; //four functions for LDA
-    if(isSpinSeparated()) length *= 2; //twice as many for spin-separated functionals;
     return length;
 }
 
