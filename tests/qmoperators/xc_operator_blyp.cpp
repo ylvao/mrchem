@@ -35,8 +35,6 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
-#include "qmfunctions/density_utils.h"
-#include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
