@@ -237,7 +237,6 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
         }
     }
 
-
     SECTION("orthogonalization") {
         OrbitalVector Phi;
         Phi.push_back(Orbital(SPIN::Beta));
@@ -280,8 +279,6 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
                 for (int j = 0; j < S.cols(); j++) { REQUIRE(std::abs(S(i, j)) < thrs); }
             }
         }
-
-
     }
 
     SECTION("orbital transformations") {
