@@ -41,7 +41,7 @@ using namespace orbital;
 
 namespace xc_hessian {
 
-TEST_CASE("XCHessian", "[xc_hessian]") {
+TEST_CASE("XCHessianLDA", "[xc_hessian_lda]") {
     const double prec = 1.0e-3;
     const double thrs = 1.0e-8;
 
