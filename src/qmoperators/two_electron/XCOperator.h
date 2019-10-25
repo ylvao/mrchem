@@ -46,7 +46,7 @@ public:
 
     double getEnergy() { return potential->getEnergy(); }
     int getOrder() { return potential->getOrder(); }
-    mrcpp::FunctionTree<3> &getDensity(DENSITY::DensityType spin) { return potential->getDensity(spin); }
+    mrcpp::FunctionTree<3> &getDensity(DensityType spin) { return potential->getDensity(spin); }
     std::shared_ptr<mrdft::XCFunctional> getFunctional() const { return potential->getFunctional(); }
 
 private:

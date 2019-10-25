@@ -35,7 +35,7 @@ void CoulombPotentialD2::setupGlobalDensity(double prec) {
     OrbitalVector &Y = *this->orbitals_y;
 
     Timer timer;
-    density::compute(prec, rho, Phi, X, Y, DENSITY::DensityType::Total);
+    density::compute(prec, rho, Phi, X, Y, DensityType::Total);
     print_utils::qmfunction(2, "Coulomb density", rho, timer);
 }
 
@@ -51,7 +51,7 @@ void CoulombPotentialD2::setupLocalDensity(double prec) {
     OrbitalVector &Y = *this->orbitals_y;
 
     Timer timer;
-    density::compute_local(prec, rho, Phi, X, Y, DENSITY::DensityType::Total);
+    density::compute_local(prec, rho, Phi, X, Y, DensityType::Total);
     print_utils::qmfunction(2, "Coulomb density", rho, timer);
 }
 

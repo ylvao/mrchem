@@ -41,11 +41,7 @@ private:
 
     void setup(double prec) override;
     void setupPotential(double prec) override;
-    void buildPerturbedDensity(double prec,
-                               OrbitalVector &Phi,
-                               OrbitalVector &X,
-                               OrbitalVector &Y,
-                               DENSITY::DensityType spin);
+    void buildPerturbedDensity(double prec, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, DensityType spin);
 
     void setupPerturbedDensity(double prec = -1.0);
     void syncGrids();

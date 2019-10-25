@@ -48,7 +48,7 @@ protected:
 
     int getOrder() const { return this->functional->getOrder(); }
     double getEnergy() const { return this->energy; }
-    mrcpp::FunctionTree<3> &getDensity(DENSITY::DensityType spin, int index = 0);
+    mrcpp::FunctionTree<3> &getDensity(DensityType spin, int index = 0);
     mrcpp::FunctionTree<3> &getPotential(int spin);
     std::shared_ptr<mrdft::XCFunctional> getFunctional() const { return this->functional; }
 
@@ -56,7 +56,7 @@ protected:
     Orbital dagger(Orbital phi) override;
     void clear();
 
-    void buildDensity(OrbitalVector &Phi, DENSITY::DensityType spin, double prec = -1.0);
+    void buildDensity(OrbitalVector &Phi, DensityType spin, double prec = -1.0);
     void setupDensity(double prec = -1.0);
     virtual void setupPotential(double prec) {}
 };

@@ -75,10 +75,10 @@ void XCPotentialD2::setupPerturbedDensity(double prec) {
     OrbitalVector &Y = *this->orbitals_y;
 
     if (this->functional->isSpinSeparated()) {
-        buildPerturbedDensity(prec, Phi, X, Y, DENSITY::DensityType::Alpha);
-        buildPerturbedDensity(prec, Phi, X, Y, DENSITY::DensityType::Beta);
+        buildPerturbedDensity(prec, Phi, X, Y, DensityType::Alpha);
+        buildPerturbedDensity(prec, Phi, X, Y, DensityType::Beta);
     } else {
-        buildPerturbedDensity(prec, Phi, X, Y, DENSITY::DensityType::Total);
+        buildPerturbedDensity(prec, Phi, X, Y, DensityType::Total);
     }
 }
 
@@ -86,7 +86,7 @@ void XCPotentialD2::buildPerturbedDensity(double prec,
                                           OrbitalVector &Phi,
                                           OrbitalVector &X,
                                           OrbitalVector &Y,
-                                          DENSITY::DensityType density_spin) {
+                                          DensityType density_spin) {
     Timer timer;
     FunctionTree<3> &rho = this->getDensity(density_spin, 0);
     FunctionTree<3> &rho_pert = this->getDensity(density_spin, 1);
@@ -128,10 +128,10 @@ void XCPotentialD2::setupPotential(double prec) {
 
 void XCPotentialD2::syncGrids() {
     if (this->functional->isSpinSeparated()) {
-        FunctionTree<3> &rho1 = this->getDensity(DENSITY::DensityType::Alpha, 0);
-        FunctionTree<3> &rho2 = this->getDensity(DENSITY::DensityType::Alpha, 1);
-        FunctionTree<3> &rho3 = this->getDensity(DENSITY::DensityType::Beta, 0);
-        FunctionTree<3> &rho4 = this->getDensity(DENSITY::DensityType::Beta, 1);
+        FunctionTree<3> &rho1 = this->getDensity(DensityType::Alpha, 0);
+        FunctionTree<3> &rho2 = this->getDensity(DensityType::Alpha, 1);
+        FunctionTree<3> &rho3 = this->getDensity(DensityType::Beta, 0);
+        FunctionTree<3> &rho4 = this->getDensity(DensityType::Beta, 1);
         int n1b = rho1.getNNodes();
         int n2b = rho2.getNNodes();
         int n3b = rho3.getNNodes();
@@ -149,8 +149,8 @@ void XCPotentialD2::syncGrids() {
         int n4a = rho4.getNNodes();
         println(5, "After  " << n1a << " " << n2a << " " << n3a << " " << n4a);
     } else {
-        FunctionTree<3> &rho1 = this->getDensity(DENSITY::DensityType::Total, 0);
-        FunctionTree<3> &rho2 = this->getDensity(DENSITY::DensityType::Total, 1);
+        FunctionTree<3> &rho1 = this->getDensity(DensityType::Total, 0);
+        FunctionTree<3> &rho2 = this->getDensity(DensityType::Total, 1);
         while (mrcpp::refine_grid(rho1, rho2)) {};
         while (mrcpp::refine_grid(rho2, rho1)) {};
     }

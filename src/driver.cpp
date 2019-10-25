@@ -433,7 +433,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
 
         t_lap.start();
         std::string fname = "plots/rho_t";
-        density::compute(-1.0, rho, Phi, DENSITY::DensityType::Total);
+        density::compute(-1.0, rho, Phi, DensityType::Total);
         plt.cubePlot(npts, rho, fname);
         rho.free(NUMBER::Total);
         mrcpp::print::time(1, fname, t_lap);
@@ -441,21 +441,21 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
         if (orbital::size_singly(Phi) > 0) {
             t_lap.start();
             fname = "plots/rho_s";
-            density::compute(-1.0, rho, Phi, DENSITY::DensityType::Spin);
+            density::compute(-1.0, rho, Phi, DensityType::Spin);
             plt.cubePlot(npts, rho, fname);
             mrcpp::print::time(1, fname, t_lap);
             rho.free(NUMBER::Total);
 
             t_lap.start();
             fname = "plots/rho_a";
-            density::compute(-1.0, rho, Phi, DENSITY::DensityType::Alpha);
+            density::compute(-1.0, rho, Phi, DensityType::Alpha);
             plt.cubePlot(npts, rho, fname);
             mrcpp::print::time(1, fname, t_lap);
             rho.free(NUMBER::Total);
 
             t_lap.start();
             fname = "plots/rho_b";
-            density::compute(-1.0, rho, Phi, DENSITY::DensityType::Beta);
+            density::compute(-1.0, rho, Phi, DensityType::Beta);
             plt.cubePlot(npts, rho, fname);
             rho.free(NUMBER::Total);
             mrcpp::print::time(1, fname, t_lap);
@@ -676,7 +676,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
             auto J_p = std::make_shared<CoulombOperator>(P_p, Phi_p, X_p, Y_p, shared_memory);
             F.getCoulombOperator() = J_p;
         } else {
-            MSG_ABORT("Invalid perturbation orde>r");
+            MSG_ABORT("Invalid perturbation order");
         }
     }
     ///////////////////////////////////////////////////////////

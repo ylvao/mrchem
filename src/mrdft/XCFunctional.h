@@ -70,9 +70,9 @@ public:
 
     bool hasDensity(int n_dens_a = 1) const;
     bool checkDensity(mrcpp::FunctionTreeVector<3> density, int n_dens = 1) const;
-    mrcpp::FunctionTreeVector<3> &getDensityVector(DENSITY::DensityType spin);
-    mrcpp::FunctionTree<3> &getDensity(DENSITY::DensityType type, int index = 0);
-    void setDensity(mrcpp::FunctionTree<3> &density, DENSITY::DensityType spin, int index = 0);
+    mrcpp::FunctionTreeVector<3> &getDensityVector(DensityType spin);
+    mrcpp::FunctionTree<3> &getDensity(DensityType type, int index = 0);
+    void setDensity(mrcpp::FunctionTree<3> &density, DensityType spin, int index = 0);
 
     int getNNodes() const;
     int getNPoints() const;

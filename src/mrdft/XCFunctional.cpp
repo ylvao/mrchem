@@ -265,13 +265,13 @@ bool XCFunctional::checkDensity(FunctionTreeVector<3> density, int n_dens) const
  * Returns a reference to the internal vector of density functions so that it can be
  * computed by the host program. This needs to be done before setup().
  */
-FunctionTreeVector<3> &XCFunctional::getDensityVector(DENSITY::DensityType type) {
+FunctionTreeVector<3> &XCFunctional::getDensityVector(DensityType type) {
     switch (type) {
-        case DENSITY::DensityType::Total:
+        case DensityType::Total:
             return rho_t;
-        case DENSITY::DensityType::Alpha:
+        case DensityType::Alpha:
             return rho_a;
-        case DENSITY::DensityType::Beta:
+        case DensityType::Beta:
             return rho_b;
         default:
             MSG_ABORT("Invalid density type");
@@ -286,13 +286,13 @@ FunctionTreeVector<3> &XCFunctional::getDensityVector(DENSITY::DensityType type)
  * Returns a reference to the internal vector of density functions so that it can be
  * computed by the host program. This needs to be done before setup().
  */
-FunctionTree<3> &XCFunctional::getDensity(DENSITY::DensityType type, int index) {
+FunctionTree<3> &XCFunctional::getDensity(DensityType type, int index) {
     FunctionTreeVector<3> dens_vec = getDensityVector(type);
     if (index >= dens_vec.size()) MSG_ABORT("Vector out of bounds");
     return mrcpp::get_func(dens_vec, index);
 }
 
-void XCFunctional::setDensity(FunctionTree<3> &density, DENSITY::DensityType spin, int index) {
+void XCFunctional::setDensity(FunctionTree<3> &density, DensityType spin, int index) {
     FunctionTreeVector<3> &dens_vec = getDensityVector(spin);
     if (dens_vec.size() != index) { MSG_ABORT("Index mismatch"); }
     dens_vec.push_back(std::make_tuple(1.0, &density));
@@ -428,12 +428,12 @@ void XCFunctional::setupGradient() {
     if (isLDA()) return;
     for (int i = 0; i < nDensities; i++) {
         if (isSpinSeparated()) {
-            FunctionTreeVector<3> temp_a = mrcpp::gradient(*derivative, getDensity(DENSITY::DensityType::Alpha, i));
-            FunctionTreeVector<3> temp_b = mrcpp::gradient(*derivative, getDensity(DENSITY::DensityType::Beta, i));
+            FunctionTreeVector<3> temp_a = mrcpp::gradient(*derivative, getDensity(DensityType::Alpha, i));
+            FunctionTreeVector<3> temp_b = mrcpp::gradient(*derivative, getDensity(DensityType::Beta, i));
             grad_a.insert(grad_a.end(), temp_a.begin(), temp_a.end());
             grad_b.insert(grad_b.end(), temp_b.begin(), temp_b.end());
         } else {
-            FunctionTreeVector<3> temp_t = mrcpp::gradient(*derivative, getDensity(DENSITY::DensityType::Total, i));
+            FunctionTreeVector<3> temp_t = mrcpp::gradient(*derivative, getDensity(DensityType::Total, i));
             grad_t.insert(grad_t.end(), temp_t.begin(), temp_t.end());
         }
     }

@@ -25,10 +25,10 @@ void XCPotential::setupDensity(double prec) {
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &Phi = *this->orbitals;
     if (this->functional->isSpinSeparated()) {
-        buildDensity(Phi, DENSITY::DensityType::Alpha, prec);
-        buildDensity(Phi, DENSITY::DensityType::Beta, prec);
-        FunctionTree<3> &func_a = this->getDensity(DENSITY::DensityType::Alpha);
-        FunctionTree<3> &func_b = this->getDensity(DENSITY::DensityType::Beta);
+        buildDensity(Phi, DensityType::Alpha, prec);
+        buildDensity(Phi, DensityType::Beta, prec);
+        FunctionTree<3> &func_a = this->getDensity(DensityType::Alpha);
+        FunctionTree<3> &func_b = this->getDensity(DensityType::Beta);
         println(5, static_cast<mrcpp::MWTree<3> &>(func_a));
         println(5, static_cast<mrcpp::MWTree<3> &>(func_b));
         while (mrcpp::refine_grid(func_a, func_b)) {}
@@ -36,7 +36,7 @@ void XCPotential::setupDensity(double prec) {
         println(5, static_cast<mrcpp::MWTree<3> &>(func_a));
         println(5, static_cast<mrcpp::MWTree<3> &>(func_b));
     } else {
-        buildDensity(Phi, DENSITY::DensityType::Total, prec);
+        buildDensity(Phi, DensityType::Total, prec);
     }
 }
 
@@ -47,7 +47,7 @@ void XCPotential::clear() {
     clearApplyPrec();
 }
 
-void XCPotential::buildDensity(OrbitalVector &Phi, DENSITY::DensityType spin, double prec) {
+void XCPotential::buildDensity(OrbitalVector &Phi, DensityType spin, double prec) {
     Timer timer;
     FunctionTree<3> &func = this->getDensity(spin);
     Density rho(false);
@@ -57,7 +57,7 @@ void XCPotential::buildDensity(OrbitalVector &Phi, DENSITY::DensityType spin, do
     rho.setReal(nullptr);
 }
 
-mrcpp::FunctionTree<3> &XCPotential::getDensity(DENSITY::DensityType spin, int index) {
+mrcpp::FunctionTree<3> &XCPotential::getDensity(DensityType spin, int index) {
     return this->functional->getDensity(spin, index);
 }
 
