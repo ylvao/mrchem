@@ -31,7 +31,9 @@
 #include "parallel.h"
 
 #include "analyticfunctions/HydrogenFunction.h"
+#include "qmfunctions/Density.h"
 #include "qmfunctions/Orbital.h"
+#include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/two_electron/XCOperator.h"
@@ -56,6 +58,8 @@ TEST_CASE("XCOperatorBLYP", "[xc_operator_blyp]") {
     fun_p->setUseGamma(false);
     fun_p->setDensityCutoff(1.0e-10);
     fun_p->evalSetup(1);
+    fun_p->setNDensities(1);
+    fun_p->allocateDensities();
     XCOperator V(fun_p, Phi_p);
 
     OrbitalVector &Phi = *Phi_p;

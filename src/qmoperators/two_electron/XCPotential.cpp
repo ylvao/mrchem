@@ -25,41 +25,103 @@ void XCPotential::setupDensity(double prec) {
     if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
     OrbitalVector &Phi = *this->orbitals;
     if (this->functional->isSpinSeparated()) {
-        Timer time_a;
-        FunctionTree<3> &func_a = this->getDensity(DENSITY::Alpha);
-        Density rho_a(false);
-        rho_a.setReal(&func_a);
-        density::compute(prec, rho_a, Phi, DENSITY::Alpha);
-        print_utils::qmfunction(2, "XC alpha density", rho_a, time_a);
-        rho_a.setReal(nullptr);
-
-        Timer time_b;
-        FunctionTree<3> &func_b = this->getDensity(DENSITY::Beta);
-        Density rho_b(false);
-        rho_b.setReal(&func_b);
-        density::compute(prec, rho_b, Phi, DENSITY::Beta);
-        print_utils::qmfunction(2, "XC beta density", rho_b, time_b);
-        rho_b.setReal(nullptr);
-
-        // Extend to union grid
+        buildDensity(Phi, DensityType::Alpha, prec);
+        buildDensity(Phi, DensityType::Beta, prec);
+        FunctionTree<3> &func_a = this->getDensity(DensityType::Alpha);
+        FunctionTree<3> &func_b = this->getDensity(DensityType::Beta);
+        println(5, static_cast<mrcpp::MWTree<3> &>(func_a));
+        println(5, static_cast<mrcpp::MWTree<3> &>(func_b));
         while (mrcpp::refine_grid(func_a, func_b)) {}
         while (mrcpp::refine_grid(func_b, func_a)) {}
+        println(5, static_cast<mrcpp::MWTree<3> &>(func_a));
+        println(5, static_cast<mrcpp::MWTree<3> &>(func_b));
     } else {
-        Timer time_t;
-        FunctionTree<3> &func_t = this->getDensity(DENSITY::Total);
-        Density rho_t(false);
-        rho_t.setReal(&func_t);
-        density::compute(prec, rho_t, Phi, DENSITY::Total);
-        print_utils::qmfunction(2, "XC total density", rho_t, time_t);
-        rho_t.setReal(nullptr);
+        buildDensity(Phi, DensityType::Total, prec);
     }
 }
 
-mrcpp::FunctionTree<3> &XCPotential::getDensity(int spin) {
-    if (spin == DENSITY::Total) return this->functional->getDensity(mrdft::DensityType::Total);
-    if (spin == DENSITY::Alpha) return this->functional->getDensity(mrdft::DensityType::Alpha);
-    if (spin == DENSITY::Beta) return this->functional->getDensity(mrdft::DensityType::Beta);
-    MSG_ABORT("Invalid density type");
+/** @brief Clears all data in the XCPotential object */
+void XCPotential::clear() {
+    this->energy = 0.0;
+    mrcpp::clear(this->potentials, true);
+    clearApplyPrec();
+}
+
+void XCPotential::buildDensity(OrbitalVector &Phi, DensityType spin, double prec) {
+    Timer timer;
+    FunctionTree<3> &func = this->getDensity(spin);
+    Density rho(false);
+    rho.setReal(&func);
+    density::compute(prec, rho, Phi, spin);
+    print_utils::qmfunction(2, "XC rho", rho, timer);
+    rho.setReal(nullptr);
+}
+
+mrcpp::FunctionTree<3> &XCPotential::getDensity(DensityType spin, int index) {
+    return this->functional->getDensity(spin, index);
+}
+
+/** @brief Return FunctionTree for the XC spin potential
+ *
+ * @param[in] type Which spin potential to return (alpha, beta or total)
+ */
+FunctionTree<3> &XCPotential::getPotential(int spin) {
+    bool spinFunctional = this->functional->isSpinSeparated();
+    int pot_idx = -1;
+    if (spinFunctional and spin == SPIN::Alpha) {
+        pot_idx = 0;
+    } else if (spinFunctional and spin == SPIN::Beta) {
+        pot_idx = 1;
+    } else if (not spinFunctional) {
+        pot_idx = 0;
+    } else {
+        NOT_IMPLEMENTED_ABORT;
+    }
+    return mrcpp::get_func(this->potentials, pot_idx);
+}
+
+/** @brief XCPotentialD1 application
+ *
+ * @param[in] phi Orbital to which the potential is applied
+ *
+ * The operator is applied by choosing the correct potential function
+ * which is then assigned to the real function part of the operator
+ * base-class before the base class function is called.
+ */
+Orbital XCPotential::apply(Orbital phi) {
+    QMPotential &V = *this;
+    if (V.hasImag()) MSG_ERROR("Imaginary part of XC potential non-zero");
+
+    FunctionTree<3> &pot = getPotential(phi.spin());
+    V.setReal(&pot);
+    Orbital Vphi = QMPotential::apply(phi);
+    V.setReal(nullptr);
+
+    if (phi.spin() == SPIN::Alpha) pot.setName("v_xc alpha");
+    if (phi.spin() == SPIN::Beta) pot.setName("v_xc beta");
+    println(5, static_cast<mrcpp::MWTree<3> &>(pot));
+    if (phi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(phi.real()));
+    if (Vphi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(Vphi.real()));
+
+    return Vphi;
+}
+
+Orbital XCPotential::dagger(Orbital phi) {
+    QMPotential &V = *this;
+    if (V.hasImag()) MSG_ERROR("Imaginary part of XC potential non-zero");
+
+    FunctionTree<3> &pot = getPotential(phi.spin());
+    V.setReal(&pot);
+    Orbital Vphi = QMPotential::dagger(phi);
+    V.setReal(nullptr);
+
+    if (phi.spin() == SPIN::Alpha) pot.setName("v_xc alpha");
+    if (phi.spin() == SPIN::Beta) pot.setName("v_xc beta");
+    println(5, static_cast<mrcpp::MWTree<3> &>(pot));
+    if (phi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(phi.real()));
+    if (Vphi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(Vphi.real()));
+
+    return Vphi;
 }
 
 // NOTE AFTER DISCUSSION WITH STIG: Need to move stuff that is
@@ -67,4 +129,5 @@ mrcpp::FunctionTree<3> &XCPotential::getDensity(int spin) {
 // functions, which only depend on the GS density are computed
 // once. Comment: still the grid for rho_1 is borrowed from rho_0 and
 // rho_0 should still be available.
+
 } // namespace mrchem

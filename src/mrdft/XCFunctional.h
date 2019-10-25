@@ -29,6 +29,7 @@
 
 #include "MRCPP/MWFunctions"
 #include "XCFun/xcfun.h"
+#include "mrenum.h"
 
 /**
  *  @class XCFunctional
@@ -43,8 +44,8 @@
  * compute the gradient invariants if and when necessary.
  *
  * The XCFunctional keeps track of the density grid, whose size is
- * controlled through the interface functions buildGrid(), pruneGrid()
- * and refineGrid(). The grid is kept _fixed_ for all internal calculations
+ * initially defined through the interface function buildGrid().
+ * The grid is kept _fixed_ for all internal calculations
  * within the module.
  *
  * Typical usage within one SCF cycle:
@@ -54,14 +55,11 @@
  * 3) evaluate()
  * 4) calcEnergy()
  * 5) calcPotential()
- * 6) refineGrid()
  * 7) clear()
  *
  */
 
 namespace mrdft {
-
-enum class DensityType { Total, Alpha, Beta };
 
 class XCFunctional final {
 public:
@@ -70,17 +68,21 @@ public:
     XCFunctional &operator=(const XCFunctional &func) = delete;
     ~XCFunctional();
 
-    bool hasDensity() const;
-    mrcpp::FunctionTree<3> &getDensity(DensityType type);
+    bool hasDensity(int n_dens_a = 1) const;
+    bool checkDensity(mrcpp::FunctionTreeVector<3> density, int n_dens = 1) const;
+    mrcpp::FunctionTreeVector<3> &getDensityVector(DensityType spin);
+    mrcpp::FunctionTree<3> &getDensity(DensityType type, int index = 0);
+    void setDensity(mrcpp::FunctionTree<3> &density, DensityType spin, int index = 0);
 
     int getNNodes() const;
     int getNPoints() const;
+    void allocateDensities();
 
     void buildGrid(double Z, const mrcpp::Coord<3> &R);
-    void pruneGrid(double prec, bool abs_prec = true);
-    void refineGrid(double prec, bool abs_prec = true);
-    void clearGrid();
+    void copyGrid(mrcpp::FunctionTreeVector<3> densities);
 
+    void setNDensities(int n) { this->nDensities = n; }
+    int getNDensities() { return this->nDensities; }
     void setDensityCutoff(double thrs) { this->cutoff = thrs; }
     void setFunctional(const std::string &name, double coef = 1.0);
 
@@ -108,8 +110,9 @@ public:
     double calcEnergy();
     mrcpp::FunctionTreeVector<3> calcPotential();
 
-protected:
+private:
     int order;
+    int nDensities;
     const bool spin_separated;                   ///< Spin polarization
     const mrcpp::MultiResolutionAnalysis<3> MRA; ///< Computational domain
 
@@ -119,48 +122,50 @@ protected:
     xc_functional functional;                 ///< The functional in the XCFun library (struct from xcfun library)
     mrcpp::DerivativeOperator<3> *derivative; ///< Derivative operator
 
-    mrcpp::FunctionTree<3> *rho_a;       ///< Alpha density
-    mrcpp::FunctionTree<3> *rho_b;       ///< Beta density
-    mrcpp::FunctionTree<3> *rho_t;       ///< Total density
-    mrcpp::FunctionTreeVector<3> grad_a; ///< Gradient of the alpha density
-    mrcpp::FunctionTreeVector<3> grad_b; ///< Gradient of the beta  density
-    mrcpp::FunctionTreeVector<3> grad_t; ///< Gradient of the total density
-    mrcpp::FunctionTreeVector<3> gamma;  ///< Gamma function(s) (three fcns for spin separated calculations)
+    mrcpp::FunctionTreeVector<3> rho_a;  ///< Alpha densities
+    mrcpp::FunctionTreeVector<3> rho_b;  ///< Beta densities
+    mrcpp::FunctionTreeVector<3> rho_t;  ///< Total densities
+    mrcpp::FunctionTreeVector<3> grad_a; ///< Gradient of the alpha densities
+    mrcpp::FunctionTreeVector<3> grad_b; ///< Gradient of the beta  densities
+    mrcpp::FunctionTreeVector<3> grad_t; ///< Gradient of the total densities
+    mrcpp::FunctionTreeVector<3> gamma;  ///< Gamma function(s)
 
-    mrcpp::FunctionTreeVector<3> xcInput;  ///< Bookkeeping array to feed XCFun
-    mrcpp::FunctionTreeVector<3> xcOutput; ///< Bookkeeping array returned by XCFun
+    mrcpp::FunctionTreeVector<3> xcInput;   ///< Bookkeeping array to feed XCFun
+    mrcpp::FunctionTreeVector<3> xcOutput;  ///< Bookkeeping array returned by XCFun
+    mrcpp::FunctionTreeVector<3> xcDensity; ///< Bookkeeping array with density variables
 
+    void clearGrid();
+    void clearGrid(mrcpp::FunctionTreeVector<3> densities);
     int getInputLength() const { return xc_input_length(this->functional); }
     int getOutputLength() const { return xc_output_length(this->functional); }
+    int getContractedLength() const;
+    int getDensityLength() const;
+    int getNodeLength();
 
+    void setupGradient();
+
+    void setup_partial();
+    void setup_partial(mrcpp::FunctionTree<3> &rho_a, mrcpp::FunctionTree<3> &rho_b);
+    void setup_partial(mrcpp::FunctionTree<3> &rho_t);
+    void setup_contracted();
     void setupXCInput();
     void setupXCOutput();
     int setupXCInputDensity();
     int setupXCInputGradient();
+    void setupXCDensityVariables();
 
     void evaluateBlock(Eigen::MatrixXd &inp, Eigen::MatrixXd &out) const;
     void compressNodeData(int n, int nFuncs, mrcpp::FunctionTreeVector<3> trees, Eigen::MatrixXd &data);
     void expandNodeData(int n, int nFuncs, mrcpp::FunctionTreeVector<3> trees, Eigen::MatrixXd &data);
+    void contractNodeData(int n, int n_coefs, Eigen::MatrixXd &out_data, Eigen::MatrixXd &con_data);
 
     void calcPotentialLDA(mrcpp::FunctionTreeVector<3> &potentials);
     void calcPotentialGGA(mrcpp::FunctionTreeVector<3> &potentials);
-    void calcGradientGGA(mrcpp::FunctionTreeVector<3> &potentials);
-    void calcHessianGGA(mrcpp::FunctionTreeVector<3> &potentials);
-    void calcHessianGGAgamma(mrcpp::FunctionTreeVector<3> &potentials);
-    void calcHessianGGAgrad(mrcpp::FunctionTreeVector<3> &potentials);
 
-    mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drho, mrcpp::FunctionTreeVector<3> &df_dgr);
-    mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drho,
-                                            mrcpp::FunctionTree<3> &df_dgamma,
-                                            mrcpp::FunctionTreeVector<3> grad_rho);
-    mrcpp::FunctionTree<3> *calcGradientGGA(mrcpp::FunctionTree<3> &df_drhoa,
-                                            mrcpp::FunctionTree<3> &df_dgaa,
-                                            mrcpp::FunctionTree<3> &df_dgab,
-                                            mrcpp::FunctionTreeVector<3> grad_rhoa,
-                                            mrcpp::FunctionTreeVector<3> grad_rhob);
+    mrcpp::FunctionTree<3> *calcPotentialGGA(mrcpp::FunctionTree<3> &df_drho, mrcpp::FunctionTreeVector<3> &df_dgr);
 
-    mrcpp::FunctionTree<3> *calcGradDotPotDensVec(mrcpp::FunctionTree<3> &V, mrcpp::FunctionTreeVector<3> &rho);
-    mrcpp::FunctionTree<3> *doubleDivergence(mrcpp::FunctionTreeVector<3> &df2dg2);
+    //    void plot_function_tree_vector(mrcpp::FunctionTreeVector<3> &functions, std::string prefix);
+    //    void refineGrid(double prec, bool abs_prec);
 };
 
 } // namespace mrdft

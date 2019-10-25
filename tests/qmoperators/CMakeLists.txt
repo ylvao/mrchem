@@ -7,9 +7,9 @@ target_sources(mrchem-tests
     ${CMAKE_CURRENT_SOURCE_DIR}/nuclear_operator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/coulomb_operator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/coulomb_hessian.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/xc_operator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/xc_operator_lda.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/xc_operator_blyp.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/xc_hessian.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/xc_hessian_lda.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/xc_hessian_pbe.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/electric_field_operator.cpp
   )
@@ -50,8 +50,8 @@ add_Catch_test(
   )
 
 add_Catch_test(
-  NAME xc_operator
-  LABELS "xc_operator"
+  NAME xc_operator_lda
+  LABELS "xc_operator_lda"
   )
 
 add_Catch_test(
@@ -60,8 +60,8 @@ add_Catch_test(
   )
 
 add_Catch_test(
-  NAME xc_hessian
-  LABELS "xc_hessian"
+  NAME xc_hessian_lda
+  LABELS "xc_hessian_lda"
   )
 
 add_Catch_test(

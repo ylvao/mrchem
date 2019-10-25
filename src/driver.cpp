@@ -317,9 +317,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
  * vector of the input.
  */
 bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
-    mrcpp::print::header(0, "Response input");
-    println(0, json_rsp.dump(2));
-    mrcpp::print::separator(0, '=', 2);
+    print_utils::headline(0, "Computing Linear Response Wavefunction");
 
     auto success = true;
     auto rsp_prec = json_rsp["rsp_prec"].get<double>();
@@ -335,9 +333,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     driver::build_fock_operator(json_fock_0, mol, F_0, 0);
     driver::build_fock_operator(json_fock_1, mol, F_1, 1);
 
-    F_1.getXCOperator()->setupDensity(rsp_prec);
-    F_1.getXCOperator()->setupPotential(rsp_prec);
-
     auto &F_mat = mol.getFockMatrix();
     auto &Phi = mol.getOrbitals();
     auto &X = mol.getOrbitalsX();
@@ -351,26 +346,35 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     /////////////////   Running RSP Solver  ///////////////////
     ///////////////////////////////////////////////////////////
 
-    auto rsp_solver_it = json_rsp.find("rsp_solver");
-    if (rsp_solver_it != json_rsp.end()) {
-        const auto &json_solver = json_rsp["rsp_solver"].get<json>();
-        auto kain = json_solver["kain"].get<int>();
-        auto omega = json_solver["frequency"].get<double>();
-        auto max_iter = json_solver["max_iter"].get<int>();
-        auto directions = json_solver["directions"].get<std::array<int, 3>>();
-        auto start_prec = json_solver["start_prec"].get<double>();
-        auto final_prec = json_solver["final_prec"].get<double>();
-        auto orbital_thrs = json_solver["orbital_thrs"].get<double>();
-        auto property_thrs = json_solver["property_thrs"].get<double>();
+    auto rsp_solver = json_rsp.find("rsp_solver");
+    if (rsp_solver != json_rsp.end()) {
+        auto method = (*rsp_solver)["method_name"].get<std::string>();
+        auto kain = (*rsp_solver)["kain"].get<int>();
+        auto omega = (*rsp_solver)["frequency"].get<double>();
+        auto max_iter = (*rsp_solver)["max_iter"].get<int>();
+        auto directions = (*rsp_solver)["directions"].get<std::array<int, 3>>();
+        auto start_prec = (*rsp_solver)["start_prec"].get<double>();
+        auto final_prec = (*rsp_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*rsp_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*rsp_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*rsp_solver)["helmholtz_prec"].get<double>();
+        auto orth_prec = (*rsp_solver)["orth_prec"].get<double>();
 
         LinearResponseSolver solver(dynamic, F_0, Phi, F_mat);
+        solver.setMethodName(method);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
         solver.setLocalize(localize);
+        solver.setOrthPrec(orth_prec);
+        solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, property_thrs);
 
+        auto plevel = mrcpp::Printer::getPrintLevel();
+        if (plevel == 1) mrcpp::Printer::setPrintLevel(0);
         F_0.setup(rsp_prec);
+        if (plevel == 1) mrcpp::Printer::setPrintLevel(1);
+
         for (int d = 0; d < 3; d++) {
             if (directions[d]) {
                 F_1.perturbation() = h_1[d];
@@ -406,8 +410,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
  */
 void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
     Timer t_tot, t_lap;
-    print_utils::headline(1, "Plotting Ground State Quantities");
-    mrcpp::print::header(1, "CubePlot");
 
     auto npts = json_plot["plotter"]["points"].get<std::array<int, 3>>();
     auto O = json_plot["plotter"]["O"].get<mrcpp::Coord<3>>();
@@ -416,6 +418,11 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
     auto C = json_plot["plotter"]["C"].get<mrcpp::Coord<3>>();
     auto dens_plot = json_plot["density"].get<bool>();
     auto orb_idx = json_plot["orbital"].get<std::vector<int>>();
+
+    if (dens_plot or orb_idx.size() > 0) {
+        print_utils::headline(1, "Plotting Ground State Quantities");
+        mrcpp::print::header(1, "CubePlot");
+    }
 
     auto &Phi = mol.getOrbitals();
     MolPlotter plt(mol, O);
@@ -426,7 +433,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
 
         t_lap.start();
         std::string fname = "plots/rho_t";
-        density::compute(-1.0, rho, Phi, DENSITY::Total);
+        density::compute(-1.0, rho, Phi, DensityType::Total);
         plt.cubePlot(npts, rho, fname);
         rho.free(NUMBER::Total);
         mrcpp::print::time(1, fname, t_lap);
@@ -434,21 +441,21 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
         if (orbital::size_singly(Phi) > 0) {
             t_lap.start();
             fname = "plots/rho_s";
-            density::compute(-1.0, rho, Phi, DENSITY::Spin);
+            density::compute(-1.0, rho, Phi, DensityType::Spin);
             plt.cubePlot(npts, rho, fname);
             mrcpp::print::time(1, fname, t_lap);
             rho.free(NUMBER::Total);
 
             t_lap.start();
             fname = "plots/rho_a";
-            density::compute(-1.0, rho, Phi, DENSITY::Alpha);
+            density::compute(-1.0, rho, Phi, DensityType::Alpha);
             plt.cubePlot(npts, rho, fname);
             mrcpp::print::time(1, fname, t_lap);
             rho.free(NUMBER::Total);
 
             t_lap.start();
             fname = "plots/rho_b";
-            density::compute(-1.0, rho, Phi, DENSITY::Beta);
+            density::compute(-1.0, rho, Phi, DensityType::Beta);
             plt.cubePlot(npts, rho, fname);
             rho.free(NUMBER::Total);
             mrcpp::print::time(1, fname, t_lap);
@@ -456,31 +463,31 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
     }
 
     // Plotting NO orbitals
-    if (orb_idx.size() == 0) return;
-
-    if (orb_idx[0] < 0) {
-        // Plotting ALL orbitals
-        for (auto i = 0; i < Phi.size(); i++) {
-            if (not mpi::my_orb(Phi[i])) continue;
-            t_lap.start();
-            std::stringstream name;
-            name << "plots/phi_" << i;
-            plt.cubePlot(npts, Phi[i], name.str());
-            mrcpp::print::time(1, name.str(), t_lap);
-        }
-    } else {
-        // Plotting some orbitals
-        for (auto &i : orb_idx) {
-            if (not mpi::my_orb(Phi[i])) continue;
-            t_lap.start();
-            std::stringstream name;
-            name << "plots/phi_" << i;
-            plt.cubePlot(npts, Phi[i], name.str());
-            mrcpp::print::time(1, name.str(), t_lap);
+    if (orb_idx.size() > 0) {
+        if (orb_idx[0] < 0) {
+            // Plotting ALL orbitals
+            for (auto i = 0; i < Phi.size(); i++) {
+                if (not mpi::my_orb(Phi[i])) continue;
+                t_lap.start();
+                std::stringstream name;
+                name << "plots/phi_" << i;
+                plt.cubePlot(npts, Phi[i], name.str());
+                mrcpp::print::time(1, name.str(), t_lap);
+            }
+        } else {
+            // Plotting some orbitals
+            for (auto &i : orb_idx) {
+                if (not mpi::my_orb(Phi[i])) continue;
+                t_lap.start();
+                std::stringstream name;
+                name << "plots/phi_" << i;
+                plt.cubePlot(npts, Phi[i], name.str());
+                mrcpp::print::time(1, name.str(), t_lap);
+            }
         }
     }
 
-    mrcpp::print::footer(1, t_tot, 2);
+    if (dens_plot or orb_idx.size() > 0) mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Compute ground-state properties
@@ -492,8 +499,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
 void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     Timer t_tot, t_lap;
     auto plevel = Printer::getPrintLevel();
-    print_utils::headline(1, "Computing Ground State Properties");
-    if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Properties");
+    if (plevel == 1) mrcpp::print::header(1, "Computing Ground State Properties");
 
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
@@ -501,7 +507,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     auto json_dipole = json_prop.find("dipole_moment");
     if (json_dipole != json_prop.end()) {
         t_lap.start();
-        mrcpp::print::header(2, "Dipole moment");
+        mrcpp::print::header(2, "Computing dipole moment");
         auto prec = (*json_dipole)["setup_prec"].get<double>();
         auto r_O = (*json_dipole)["origin"].get<Coord<3>>();
 
@@ -529,7 +535,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     auto json_mag = json_prop.find("magnetizability");
     if (json_mag != json_prop.end()) {
         t_lap.start();
-        mrcpp::print::header(2, "Magnetizability (dia)");
+        mrcpp::print::header(2, "Computing magnetizability (dia)");
         auto prec = (*json_mag)["setup_prec"].get<double>();
         auto r_O = (*json_mag)["origin"].get<Coord<3>>();
 
@@ -547,7 +553,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     auto json_nmr = json_prop.find("nmr_shielding");
     if (json_nmr != json_prop.end()) {
         t_lap.start();
-        mrcpp::print::header(2, "NMR shielding (dia)");
+        mrcpp::print::header(2, "Computing NMR shielding (dia)");
         auto prec = (*json_nmr)["setup_prec"].get<double>();
         auto r_O = (*json_nmr)["origin"].get<Coord<3>>();
         auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
@@ -575,30 +581,35 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
  * input section, and will compute all properties which are present in this input.
  */
 void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, double omega) {
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    if (plevel == 1) mrcpp::print::header(1, "Computing Linear Response Properties");
+
     auto &Phi = mol.getOrbitals();
     auto &X = mol.getOrbitalsX();
     auto &Y = mol.getOrbitalsY();
 
     auto json_pol = json_prop.find("polarizability");
     if (json_pol != json_prop.end()) {
-        mrcpp::print::header(1, "Calculating polarizability");
+        t_lap.start();
+        mrcpp::print::header(2, "Computing polarizability");
         auto prec = (*json_pol)["setup_prec"].get<double>();
         auto r_O = (*json_pol)["origin"].get<Coord<3>>();
 
         Polarizability &alpha = mol.getPolarizability(omega);
 
-        Timer timer;
         H_E_dip h(r_O);
         h.setup(prec);
         alpha.getTensor().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
-        timer.stop();
-        mrcpp::print::footer(1, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Polarizability", t_lap);
     }
 
     auto json_mag = json_prop.find("magnetizability");
     if (json_mag != json_prop.end()) {
-        mrcpp::print::header(1, "Calculating paramagnetic magnetizability");
+        t_lap.start();
+        mrcpp::print::header(2, "Computing magnetizability (para)");
         auto prec = (*json_mag)["setup_prec"].get<double>();
         auto r_O = (*json_mag)["origin"].get<Coord<3>>();
         auto pert_diff = (*json_mag)["derivative"].get<std::string>();
@@ -606,14 +617,15 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
 
         Magnetizability &khi = mol.getMagnetizability();
 
-        Timer timer;
         H_B_dip h(D, r_O);
         h.setup(prec);
         khi.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
-        timer.stop();
-        mrcpp::print::footer(1, timer, 2);
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Magnetizability (para)", t_lap);
     }
+
+    if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Build Fock operator based on input parameters
@@ -691,7 +703,9 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         }
         xcfun_p->setUseGamma(xc_gamma);
         xcfun_p->setDensityCutoff(xc_cutoff);
+        xcfun_p->setNDensities(xc_order); // Nr of dens is the same as xc_order
         xcfun_p->evalSetup(xc_order);
+        xcfun_p->allocateDensities();
         exx = xcfun_p->amountEXX();
 
         if (order == 0) {

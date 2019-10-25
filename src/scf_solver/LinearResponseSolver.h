@@ -41,15 +41,18 @@ public:
     ~LinearResponseSolver() override = default;
 
     bool optimize(double omega, FockOperator &F_1, OrbitalVector &X, OrbitalVector &Y);
+    void setOrthPrec(double prec) { this->orth_prec = prec; }
 
 protected:
     bool dynamic{false};
+    double orth_prec{mrcpp::MachineZero};
 
     FockOperator *f_oper_0{nullptr};
     ComplexMatrix *f_mat_0{nullptr};
     OrbitalVector *phi_0{nullptr};
 
     void printProperty() const;
+    void printParameters(double omega, const std::string &oper) const;
 };
 
 } // namespace mrchem

@@ -23,10 +23,14 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <stdexcept>
+
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include "MRCPP/operators/BSOperator.h"
 #include "MRCPP/trees/FunctionNode.h"
+#include "MRCPP/utils/Plotter.h"
 
 #include "XCFunctional.h"
 
@@ -34,11 +38,100 @@ using mrcpp::DerivativeOperator;
 using mrcpp::FunctionNode;
 using mrcpp::FunctionTree;
 using mrcpp::FunctionTreeVector;
+using mrcpp::Plotter;
 using mrcpp::Printer;
 using mrcpp::Timer;
 
 using Eigen::MatrixXd;
+using Eigen::MatrixXi;
 using Eigen::VectorXd;
+using Eigen::VectorXi;
+
+static int xc_iteration = 0;
+
+namespace {
+MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order);
+VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order);
+void fill_output_mask(MatrixXi &mask, int start);
+
+MatrixXi build_output_mask(bool is_lda, bool is_spin_sep, int order) {
+    int start = 2;
+    bool is_gga = not is_lda;
+    MatrixXi mask(1, 1);
+    mask << 1;
+    switch (order) {
+        case 0:
+            break;
+        case 1:
+            if (is_lda and is_spin_sep) {
+                mask.resize(2, 1);
+                mask << 1, 2;
+            } else if (is_gga and not is_spin_sep) {
+                mask.resize(4, 1);
+                mask << 1, 2, 3, 4;
+            } else if (is_gga and is_spin_sep) {
+                mask.resize(8, 1);
+                mask << 1, 2, 3, 4, 5, 6, 7, 8;
+            }
+            break;
+        case 2:
+            if (is_lda and is_spin_sep) {
+                start = 3;
+                mask.resize(2, 2);
+            } else if (is_gga and not is_spin_sep) {
+                start = 5;
+                mask.resize(4, 4);
+            } else if (is_gga and is_spin_sep) {
+                start = 9;
+                mask.resize(8, 8);
+            }
+            fill_output_mask(mask, start);
+            break;
+        default:
+            MSG_ABORT("Not implemented");
+    }
+    return mask;
+}
+
+VectorXi build_density_mask(bool is_lda, bool is_spin_sep, int order) {
+    bool is_gga = not is_lda;
+    VectorXi mask(1);
+    switch (order) {
+        case 0:
+        case 1:
+            mask(0) = -1;
+            break;
+        case 2:
+            mask(0) = 0;
+            if (is_lda and is_spin_sep) {
+                mask.resize(2);
+                mask << 0, 1;
+            } else if (is_gga and not is_spin_sep) {
+                mask.resize(4);
+                mask << 0, 1, 2, 3;
+            } else if (is_gga and is_spin_sep) {
+                mask.resize(8);
+                mask << 0, 1, 2, 3, 4, 5, 6, 7;
+            }
+            break;
+        default:
+            MSG_ABORT("Not implemented");
+    }
+    return mask;
+}
+
+void fill_output_mask(MatrixXi &mask, int value) {
+    for (int i = 0; i < mask.rows(); i++) {
+        mask(i, i) = value;
+        value++;
+        for (int j = i + 1; j < mask.cols(); j++) {
+            mask(i, j) = value;
+            mask(j, i) = value;
+            value++;
+        }
+    }
+}
+} // namespace
 
 namespace mrdft {
 
@@ -60,25 +153,16 @@ XCFunctional::XCFunctional(mrcpp::MultiResolutionAnalysis<3> &mra, bool spin)
         , use_gamma(false)
         , cutoff(-1.0)
         , functional(xc_new_functional())
-        , derivative(nullptr)
-        , rho_a(nullptr)
-        , rho_b(nullptr)
-        , rho_t(nullptr) {
+        , derivative(nullptr) {
     derivative = new mrcpp::ABGVOperator<3>(MRA, 0.0, 0.0);
-    if (isSpinSeparated()) {
-        rho_a = new FunctionTree<3>(MRA);
-        rho_b = new FunctionTree<3>(MRA);
-    } else {
-        rho_t = new FunctionTree<3>(MRA);
-    }
 }
 
 /** @brief Destructor */
 XCFunctional::~XCFunctional() {
     xc_free_functional(functional);
-    if (rho_a != nullptr) delete rho_a;
-    if (rho_b != nullptr) delete rho_b;
-    if (rho_t != nullptr) delete rho_t;
+    if (rho_a.size() > 0) mrcpp::clear(rho_a, true);
+    if (rho_b.size() > 0) mrcpp::clear(rho_b, true);
+    if (rho_t.size() > 0) mrcpp::clear(rho_t, true);
     if (derivative != nullptr) delete derivative;
 }
 
@@ -89,18 +173,18 @@ XCFunctional::~XCFunctional() {
  * Prepare the XCFun object for evaluation based on the chosen parameters.
  */
 void XCFunctional::evalSetup(int ord) {
+    unsigned int mode = 1;            //!< only partial derivative mode implemented
+    order = ord;                      //!< update the order parameter in the object
     unsigned int func_type = isGGA(); //!< only LDA and GGA supported for now
     unsigned int dens_type =
         1 + isSpinSeparated();  //!< only n (dens_type = 1) or alpha & beta (denst_type = 2) supported now.
-    unsigned int mode_type = 1; //!< only derivatives (neither potential nor contracted)
     unsigned int laplacian = 0; //!< no laplacian
     unsigned int kinetic = 0;   //!< no kinetic energy density
     unsigned int current = 0;   //!< no current density
     unsigned int exp_derivative = not useGamma(); //!< use gamma or explicit derivatives
-    order = ord;                                  //!< update the order parameter in the object
     if (isLDA())
         exp_derivative = 0; //!< fall back to gamma-type derivatives if LDA (bad hack: no der are actually needed here!)
-    xc_user_eval_setup(functional, order, func_type, dens_type, mode_type, laplacian, kinetic, current, exp_derivative);
+    xc_user_eval_setup(functional, order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
 }
 
 /** @brief Set density functional
@@ -118,17 +202,58 @@ void XCFunctional::setFunctional(const std::string &name, double coef) {
 
 /** @brief Check whether the density has been computed
  *
- * Checks if the required input densities has been computed and are valid
+ * Checks if the required input densities have been computed and are valid
  * function representations. For spin separated functionals both the alpha
  * and beta densities are tested, otherwise only the total density.
  */
-bool XCFunctional::hasDensity() const {
+bool XCFunctional::hasDensity(int n_dens) const {
     bool out = true;
     if (isSpinSeparated()) {
-        if (rho_a->getSquareNorm() < 0.0) out = false;
-        if (rho_b->getSquareNorm() < 0.0) out = false;
+        out = checkDensity(rho_a, n_dens);
+        out = checkDensity(rho_b, n_dens);
     } else {
-        if (rho_t->getSquareNorm() < 0.0) out = false;
+        out = checkDensity(rho_t, n_dens);
+    }
+    return out;
+}
+
+/** @brief Allocate the elements of the density vector arrays
+ *
+ * The density arrays which will contain the GS and the perturbed
+ * densities are allocated as empty FunctinTree objects. The pointers
+ * ae then stored in the corresponding FunctionTreeVector
+ */
+void XCFunctional::allocateDensities() {
+    for (int i = 0; i < nDensities; i++) {
+        if (isSpinSeparated()) {
+            FunctionTree<3> *temp_a = new FunctionTree<3>(MRA);
+            FunctionTree<3> *temp_b = new FunctionTree<3>(MRA);
+            rho_a.push_back(std::make_tuple(1.0, temp_a));
+            rho_b.push_back(std::make_tuple(1.0, temp_b));
+        } else {
+            FunctionTree<3> *temp_t = new FunctionTree<3>(MRA);
+            rho_t.push_back(std::make_tuple(1.0, temp_t));
+        }
+    }
+}
+
+/** @brief Check whether the density vector has all required components
+ *
+ * Checks if the required input densities have been computed and are
+ * valid function representations. The density vector shall contain a
+ * number of densities up to the requested order (or higher)
+ *
+ * LUCA: I envisage a possible problem here. We might want to
+ * initialize the functional with a higher order although that will
+ * not be used in reality.
+ *
+ */
+bool XCFunctional::checkDensity(FunctionTreeVector<3> density, int n_dens) const {
+    bool out = true;
+    if (density.size() < n_dens) out = false; // Not all required densities are present and we should make them
+    for (int i = 0; i < n_dens; i++) {
+        FunctionTree<3> &dens = mrcpp::get_func(density, i);
+        if (dens.getSquareNorm() < 0.0) out = false;
     }
     return out;
 }
@@ -137,34 +262,55 @@ bool XCFunctional::hasDensity() const {
  *
  * @param[in] type Which density to return (alpha, beta or total)
  *
- * Returns a reference to the internal density function so that it can be
+ * Returns a reference to the internal vector of density functions so that it can be
  * computed by the host program. This needs to be done before setup().
  */
-FunctionTree<3> &XCFunctional::getDensity(DensityType type) {
+FunctionTreeVector<3> &XCFunctional::getDensityVector(DensityType type) {
     switch (type) {
         case DensityType::Total:
-            if (rho_t == nullptr) MSG_ABORT("Total density not allocated");
-            return *rho_t;
+            return rho_t;
         case DensityType::Alpha:
-            if (rho_a == nullptr) MSG_ABORT("Alpha density not allocated");
-            return *rho_a;
+            return rho_a;
         case DensityType::Beta:
-            if (rho_b == nullptr) MSG_ABORT("Beta density not allocated");
-            return *rho_b;
+            return rho_b;
         default:
             MSG_ABORT("Invalid density type");
-            break;
     }
+    MSG_ABORT("Total density functions not properly initialized");
+}
+
+/** @brief Return FunctionTree for the input density
+ *
+ * @param[in] type Which density to return (alpha, beta or total)
+ *
+ * Returns a reference to the internal vector of density functions so that it can be
+ * computed by the host program. This needs to be done before setup().
+ */
+FunctionTree<3> &XCFunctional::getDensity(DensityType type, int index) {
+    FunctionTreeVector<3> dens_vec = getDensityVector(type);
+    if (index >= dens_vec.size()) MSG_ABORT("Vector out of bounds");
+    return mrcpp::get_func(dens_vec, index);
+}
+
+void XCFunctional::setDensity(FunctionTree<3> &density, DensityType spin, int index) {
+    FunctionTreeVector<3> &dens_vec = getDensityVector(spin);
+    if (dens_vec.size() != index) { MSG_ABORT("Index mismatch"); }
+    dens_vec.push_back(std::make_tuple(1.0, &density));
 }
 
 /** @brief Return the number of nodes in the density grid (including branch nodes)*/
 int XCFunctional::getNNodes() const {
     int nodes = 0;
     if (isSpinSeparated()) {
-        nodes = rho_a->getNNodes();
-        if (nodes != rho_b->getNNodes()) MSG_ERROR("Alpha and beta grids not equal");
+        const FunctionTree<3> &rho_gs_a = mrcpp::get_func(rho_a, 0);
+        const FunctionTree<3> &rho_gs_b = mrcpp::get_func(rho_b, 0);
+        nodes = rho_gs_a.getNNodes();
+        println(5, "nnodes " << rho_gs_a.getNNodes());
+        println(5, "nnodes " << rho_gs_b.getNNodes());
+        if (nodes != rho_gs_b.getNNodes()) MSG_ERROR("Alpha and beta grids not equal");
     } else {
-        nodes = rho_t->getNNodes();
+        const FunctionTree<3> &rho_gs_t = mrcpp::get_func(rho_t, 0);
+        nodes = rho_gs_t.getNNodes();
     }
     return nodes;
 }
@@ -174,12 +320,17 @@ int XCFunctional::getNPoints() const {
     int nodes = 0;
     int points = 0;
     if (isSpinSeparated()) {
-        nodes = rho_a->getNEndNodes();
-        points = rho_a->getTDim() * rho_a->getKp1_d();
-        if (nodes != rho_b->getNEndNodes()) MSG_ERROR("Alpha and beta grids not equal");
+        const FunctionTree<3> &rho_gs_a = mrcpp::get_func(rho_a, 0);
+        const FunctionTree<3> &rho_gs_b = mrcpp::get_func(rho_b, 0);
+        nodes = rho_gs_a.getNEndNodes();
+        points = rho_gs_a.getTDim() * rho_gs_a.getKp1_d();
+        println(5, "enodes  " << rho_gs_a.getNEndNodes());
+        println(5, "enodes  " << rho_gs_b.getNEndNodes());
+        if (nodes != rho_gs_b.getNEndNodes()) MSG_ERROR("Alpha and beta grids not equal");
     } else {
-        nodes = rho_t->getNEndNodes();
-        points = rho_t->getTDim() * rho_t->getKp1_d();
+        const FunctionTree<3> &rho_gs_t = mrcpp::get_func(rho_t, 0);
+        nodes = rho_gs_t.getNEndNodes();
+        points = rho_gs_t.getTDim() * rho_gs_t.getKp1_d();
     }
     return nodes * points;
 }
@@ -198,130 +349,94 @@ void XCFunctional::buildGrid(double Z, const mrcpp::Coord<3> &R) {
     for (int i = 0; i < 5; i++) {
         mrcpp::GaussFunc<3> gauss(std::pow(Z, i), 1.0, R);
         if (isSpinSeparated()) {
-            if (rho_a == nullptr) MSG_ABORT("Uninitialized alpha density");
-            if (rho_b == nullptr) MSG_ABORT("Uninitialized beta density");
-            mrcpp::build_grid(*rho_a, gauss);
-            mrcpp::build_grid(*rho_b, gauss);
+            FunctionTree<3> &rho_gs_a = mrcpp::get_func(rho_a, 0);
+            FunctionTree<3> &rho_gs_b = mrcpp::get_func(rho_b, 0);
+            mrcpp::build_grid(rho_gs_a, gauss);
+            mrcpp::build_grid(rho_gs_b, gauss);
+            copyGrid(rho_a);
+            copyGrid(rho_b);
         } else {
-            if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
-            mrcpp::build_grid(*rho_t, gauss);
+            FunctionTree<3> &rho_gs_t = mrcpp::get_func(rho_t, 0);
+            mrcpp::build_grid(rho_gs_t, gauss);
+            copyGrid(rho_t);
         }
     }
 }
 
-/** @brief Remove excess grid nodes based on precision
+/** @brief Copy the grid from the ground state densities to the perturbed ones
  *
- * @param[in] prec Requested precision
- * @param[in] abs_prec Use absolute or relative precision
- *
- * This will _remove_ from the density grid nodes that are found unnecessary
- * in order to reach the requested precision. The density must already have
- * been computed for this to take effect.
+ * In contracted mode XCFun needs pointwise information about all
+ * functions, therefore all grids must be identical to the ground
+ * state grid
  */
-void XCFunctional::pruneGrid(double prec, bool abs_prec) {
-    if (not hasDensity()) return;
-
-    double scale = 1.0;
-    if (isSpinSeparated()) {
-        if (rho_a == nullptr) MSG_ABORT("Uninitialized alpha density");
-        if (rho_b == nullptr) MSG_ABORT("Uninitialized beta density");
-        if (abs_prec) scale = rho_a->integrate() + rho_b->integrate();
-        rho_a->crop(prec / scale, 1.0, false);
-        rho_b->crop(prec / scale, 1.0, false);
-        mrcpp::refine_grid(*rho_a, *rho_b);
-        mrcpp::refine_grid(*rho_b, *rho_a);
-    } else {
-        if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
-        if (abs_prec) scale = rho_t->integrate();
-        rho_t->crop(prec / scale, 1.0, false);
+void XCFunctional::copyGrid(FunctionTreeVector<3> densities) {
+    mrcpp::FunctionTree<3> &rho0 = mrcpp::get_func(densities, 0);
+    for (int i = 1; i < densities.size(); i++) {
+        mrcpp::FunctionTree<3> &rho = mrcpp::get_func(densities, i);
+        mrcpp::build_grid(rho, rho0);
     }
 }
 
-/** @brief Add extra grid nodes based on precision
- *
- * @param[in] prec Requested precision
- * @param[in] abs_prec Use absolute or relative precision
- *
- * This will _add_ to the density grid extra nodes where the local error is found
- * to be unsatisfactory (it does _not_ guarantee that the new grid is sufficient).
- * The density must already have been computed for this to take effect.
- */
-void XCFunctional::refineGrid(double prec, bool abs_prec) {
-    if (not hasDensity()) return;
+/*
+  void XCFunctional::refineGrid(double prec, bool abs_prec) {
+  if (not hasDensity()) return;
 
-    double scale = 1.0;
-    if (isSpinSeparated()) {
-        if (rho_a == nullptr) MSG_ABORT("Uninitialized alpha density");
-        if (rho_b == nullptr) MSG_ABORT("Uninitialized beta density");
-        if (abs_prec) scale = rho_a->integrate() + rho_b->integrate();
-        mrcpp::refine_grid(*rho_a, prec / scale);
-        mrcpp::refine_grid(*rho_b, prec / scale);
+  double scale = 1.0;
+  if (isSpinSeparated()) {
+  if (rho_a.size() == 0) MSG_ABORT("Uninitialized alpha density");
+  if (rho_b.size() == 0) MSG_ABORT("Uninitialized beta density");
+  if (abs_prec) scale = rho_a[0]->integrate() + rho_b[0]->integrate();
+  mrcpp::refine_grid(rho_a, prec / scale);
+  mrcpp::refine_grid(rho_b, prec / scale);
 
-        // Extend to union grid
-        int nNodes = 1;
-        while (nNodes > 0) {
-            int nAlpha = mrcpp::refine_grid(*rho_a, *rho_b);
-            int nBeta = mrcpp::refine_grid(*rho_b, *rho_a);
-            nNodes = nAlpha + nBeta;
-        }
-    } else {
-        if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
-        if (abs_prec) scale = rho_t->integrate();
-        mrcpp::refine_grid(*rho_t, prec / scale);
-    }
-}
+  // Extend to union grid
+  int nNodes = 1;
+  while (nNodes > 0) {
+  int nAlpha = mrcpp::refine_grid(rho_a, rho_b);
+  int nBeta = mrcpp::refine_grid(rho_b, rho_a);
+  nNodes = nAlpha + nBeta;
+  }
+  } else {
+  if (rho_t == nullptr) MSG_ABORT("Uninitialized total density");
+  if (abs_prec) scale = rho_t->integrate();
+  mrcpp::refine_grid(*rho_t, prec / scale);
+  }
+  }
+*/
 
-/** @brief Remove all grid refinement
+/** @brief Remove all grid refinement for a given density vector
  *
  * This will _remove_ all existing grid refinement and leave only root nodes
  * in the density grids.
  */
-void XCFunctional::clearGrid() {
-    if (rho_a != nullptr) rho_a->clear();
-    if (rho_b != nullptr) rho_b->clear();
-    if (rho_t != nullptr) rho_t->clear();
+void XCFunctional::clearGrid(FunctionTreeVector<3> densities) {
+    for (int i = 0; i < densities.size(); i++) {
+        FunctionTree<3> &rho = mrcpp::get_func(densities, i);
+        rho.clear();
+    }
 }
 
-/** @brief Prepare for xcfun evaluation
- *
- * This computes the necessary input functions (gradients and gamma) and
- * constructs empty grids to hold the output functions of xcfun, and
- * collects them in the xcInput and xcOutput vectors, respectively.
- * Assumes that the density functions rho_t or rho_a/rho_b have already
- * been computed.
- */
 void XCFunctional::setup() {
-    if (isGGA()) {
-        if (isSpinSeparated()) {
-            grad_a = mrcpp::gradient(*derivative, *rho_a);
-            grad_b = mrcpp::gradient(*derivative, *rho_b);
-        } else {
-            grad_t = mrcpp::gradient(*derivative, *rho_t);
-        }
-    }
-    if (useGamma()) {
-        if (isSpinSeparated()) {
-            auto *gamma_aa = new FunctionTree<3>(MRA);
-            auto *gamma_ab = new FunctionTree<3>(MRA);
-            auto *gamma_bb = new FunctionTree<3>(MRA);
-            mrcpp::build_grid(*gamma_aa, *rho_a);
-            mrcpp::build_grid(*gamma_ab, *rho_a);
-            mrcpp::build_grid(*gamma_bb, *rho_a);
-            mrcpp::dot(-1.0, *gamma_aa, grad_a, grad_a);
-            mrcpp::dot(-1.0, *gamma_ab, grad_a, grad_b);
-            mrcpp::dot(-1.0, *gamma_bb, grad_b, grad_b);
-            gamma.push_back(std::make_tuple(1.0, gamma_aa));
-            gamma.push_back(std::make_tuple(1.0, gamma_ab));
-            gamma.push_back(std::make_tuple(1.0, gamma_bb));
-        } else {
-            auto *gamma_tt = new FunctionTree<3>(MRA);
-            mrcpp::build_grid(*gamma_tt, *rho_t);
-            mrcpp::dot(-1.0, *gamma_tt, grad_t, grad_t);
-            gamma.push_back(std::make_tuple(1.0, gamma_tt));
-        }
-    }
+    if (not hasDensity(order)) { MSG_ABORT("Not enough density functions initialized"); }
+    setupGradient();
     setupXCInput();
     setupXCOutput();
+    setupXCDensityVariables();
+}
+
+void XCFunctional::setupGradient() {
+    if (isLDA()) return;
+    for (int i = 0; i < nDensities; i++) {
+        if (isSpinSeparated()) {
+            FunctionTreeVector<3> temp_a = mrcpp::gradient(*derivative, getDensity(DensityType::Alpha, i));
+            FunctionTreeVector<3> temp_b = mrcpp::gradient(*derivative, getDensity(DensityType::Beta, i));
+            grad_a.insert(grad_a.end(), temp_a.begin(), temp_a.end());
+            grad_b.insert(grad_b.end(), temp_b.begin(), temp_b.end());
+        } else {
+            FunctionTreeVector<3> temp_t = mrcpp::gradient(*derivative, getDensity(DensityType::Total, i));
+            grad_t.insert(grad_t.end(), temp_t.begin(), temp_t.end());
+        }
+    }
 }
 
 /** @brief Cleanup after xcfun evaluation
@@ -333,17 +448,15 @@ void XCFunctional::setup() {
  */
 void XCFunctional::clear() {
     mrcpp::clear(xcInput, false);
+    mrcpp::clear(xcDensity, false);
     mrcpp::clear(xcOutput, true);
     mrcpp::clear(grad_a, true);
     mrcpp::clear(grad_b, true);
     mrcpp::clear(grad_t, true);
     mrcpp::clear(gamma, true);
-    clearGrid();
-
-    // Clear MW coefs but keep the grid
-    // if (rho_a != nullptr) mrcpp::clear_grid(*rho_a);
-    // if (rho_b != nullptr) mrcpp::clear_grid(*rho_b);
-    // if (rho_t != nullptr) mrcpp::clear_grid(*rho_t);
+    clearGrid(rho_a); // We want to keep empty the density trees
+    clearGrid(rho_b); // We want to keep empty the density trees
+    clearGrid(rho_t); // We want to keep empty the density trees
 }
 
 /** @brief Allocate input arrays for xcfun
@@ -362,6 +475,64 @@ void XCFunctional::setupXCInput() {
     if (nInp != nUsed) MSG_ERROR("Mismatch between used vs requested " << nUsed << " : " << nInp);
 }
 
+/** @brief Allocate input arrays for xcfun
+ *
+ * Based on the xcfun setup, the requested array of FunctionTrees(s)
+ * is allocared and its pointers assigned to the required input
+ * functions.
+ */
+void XCFunctional::setupXCDensityVariables() {
+    if (xcDensity.size() != 0) MSG_ERROR("XC density vars not empty");
+
+    int n_dens = getDensityLength();
+
+    if (getDensityLength() > 0) {
+        if (isSpinSeparated()) {
+            xcDensity.push_back(rho_a[1]);
+            xcDensity.push_back(rho_b[1]);
+        } else {
+            xcDensity.push_back(rho_t[1]);
+        }
+        if (isGGA()) {
+            if (isSpinSeparated()) {
+                xcDensity.insert(xcDensity.begin() + 2, grad_a.begin() + 3, grad_a.begin() + 6);
+                xcDensity.insert(xcDensity.begin() + 5, grad_b.begin() + 3, grad_b.begin() + 6);
+            } else {
+                xcDensity.insert(xcDensity.begin() + 1, grad_t.begin() + 3, grad_t.begin() + 6);
+            }
+        }
+    }
+    //	std::cout << "Plotting densities" << std::endl;
+    //	plot_function_tree_vector(xcDensity, "Dens_");
+
+    if (n_dens != xcDensity.size())
+        MSG_ABORT("Mismatch between used vs requested " << n_dens << " : " << xcDensity.size());
+}
+
+/*
+void XCFunctional::plot_function_tree_vector(FunctionTreeVector<3> &functions, std::string prefix) {
+
+    int nPts = 10000;                               // Number of points
+    double a[3] = { 0.0,  0.0, 16.0};               // Start point of plot
+        double b[3] = { 0.0, 16.0,  0.0};               // End point of plot
+    double o[3] = { 0.0, -8.0, -8.0};               // Origin of plot
+    mrcpp::Plotter<3> plot;                         // Plotter of 3D functions
+    plot.setNPoints(nPts);                          // Set number of points
+        plot.setRange(a, b, o);                         // Set plot range
+
+    for (int i = 0; i < functions.size(); i++) {
+        mrcpp::FunctionTree<3> &func = mrcpp::get_func(functions, i);
+        std::string name= prefix + std::to_string(i) + "_iter_" + std::to_string(xc_iteration);
+        std::cout << name << std::endl;
+        std::cout << func << std::endl;
+        plot.surfPlot(func, name);
+    }
+
+    xc_iteration++;
+
+}
+*/
+
 /** @brief Sets xcInput pointers for the density
  *
  * Returns the nr. of pointers used for sanity checking.
@@ -369,14 +540,14 @@ void XCFunctional::setupXCInput() {
 int XCFunctional::setupXCInputDensity() {
     int nUsed = 0;
     if (isSpinSeparated()) {
-        if (rho_a == nullptr) MSG_ABORT("Invalid alpha density");
-        if (rho_b == nullptr) MSG_ABORT("Invalid beta density");
-        xcInput.push_back(std::make_tuple(1.0, rho_a));
-        xcInput.push_back(std::make_tuple(1.0, rho_b));
+        if (rho_a.size() <= 0) MSG_ABORT("Invalid alpha density");
+        if (rho_b.size() <= 0) MSG_ABORT("Invalid beta density");
+        xcInput.push_back(rho_a[0]);
+        xcInput.push_back(rho_b[0]);
         nUsed = 2;
     } else {
-        if (rho_t == nullptr) MSG_ABORT("Invalid total density");
-        xcInput.push_back(std::make_tuple(1.0, rho_t));
+        if (rho_t.size() <= 0) MSG_ABORT("Invalid total density");
+        xcInput.push_back(rho_t[0]);
         nUsed = 1;
     }
     return nUsed;
@@ -388,17 +559,17 @@ int XCFunctional::setupXCInputDensity() {
  */
 int XCFunctional::setupXCInputGradient() {
     int nUsed = 0;
+    int nFetch = 3;
     if (useGamma()) {
-        xcInput.insert(xcInput.end(), gamma.begin(), gamma.end());
-        nUsed += gamma.size();
+        NOT_IMPLEMENTED_ABORT;
     } else {
         if (isSpinSeparated()) {
-            xcInput.insert(xcInput.end(), grad_a.begin(), grad_a.end());
-            xcInput.insert(xcInput.end(), grad_b.begin(), grad_b.end());
-            nUsed += grad_a.size() + grad_b.size();
+            xcInput.insert(xcInput.end(), grad_a.begin(), grad_a.begin() + nFetch);
+            xcInput.insert(xcInput.end(), grad_b.begin(), grad_b.begin() + nFetch);
+            nUsed += 2 * nFetch;
         } else {
-            xcInput.insert(xcInput.end(), grad_t.begin(), grad_t.end());
-            nUsed += grad_t.size();
+            xcInput.insert(xcInput.end(), grad_t.begin(), grad_t.begin() + nFetch);
+            nUsed += nFetch;
         }
     }
     return nUsed;
@@ -417,7 +588,7 @@ void XCFunctional::setupXCOutput() {
     // Fetch density grid to copy
     FunctionTree<3> &grid = mrcpp::get_func(xcInput, 0);
 
-    int nOut = getOutputLength();
+    int nOut = getContractedLength() + 1; // We always keep the functional as well
     for (int i = 0; i < nOut; i++) {
         auto *tmp = new FunctionTree<3>(MRA);
         mrcpp::copy_grid(*tmp, grid);
@@ -435,29 +606,77 @@ void XCFunctional::evaluate() {
     if (xcOutput.size() == 0) MSG_ERROR("XC output not initialized");
 
     Timer timer;
-    int nInp = getInputLength();
-    int nOut = getOutputLength();
+    println(5, "Evaluating");
+
+    int nInp = getInputLength();      // Input parameters to XCFun
+    int nOut = getOutputLength();     // Output parameters from XCFun
+    int nCon = getContractedLength(); // Contracted parameters to XCPotential
+    int nFcs = nCon + 1;              // One extra function for the energy density
+    int nPts = getNodeLength();       // Number of gridpoints in a node
 
 #pragma omp parallel firstprivate(nInp, nOut)
     {
         int nNodes = mrcpp::get_func(xcInput, 0).getNEndNodes();
 #pragma omp for schedule(guided)
-        for (int n = 0; n < nNodes; n++) {
-            MatrixXd inpData, outData;
-            compressNodeData(n, nInp, xcInput, inpData);
+        for (int n_idx = 0; n_idx < nNodes; n_idx++) {
+            MatrixXd inpData, outData, conData, denData;
+            inpData = MatrixXd::Zero(nPts, nInp);
+            outData = MatrixXd::Zero(nPts, nOut);
+            conData = MatrixXd::Zero(nPts, nFcs);
+            compressNodeData(n_idx, nInp, xcInput, inpData);
             evaluateBlock(inpData, outData);
-            expandNodeData(n, nOut, xcOutput, outData);
+            conData.col(0) = outData.col(0); // we always keep the energy functional
+            contractNodeData(n_idx, nPts, outData, conData);
+            expandNodeData(n_idx, nFcs, xcOutput, conData);
         }
     }
-    for (int i = 0; i < nOut; i++) {
-        mrcpp::get_func(xcOutput, i).mwTransform(mrcpp::BottomUp);
-        mrcpp::get_func(xcOutput, i).calcSquareNorm();
+    for (int i = 0; i < nFcs; i++) {
+        FunctionTree<3> &func = mrcpp::get_func(xcOutput, i);
+        func.mwTransform(mrcpp::BottomUp);
+        func.calcSquareNorm();
+        println(5, "Potential norm " << i << " " << func.getSquareNorm() << " nEndNodes " << func.getNEndNodes());
     }
 
+    for (int i = 0; i < xcInput.size(); i++) {
+        FunctionTree<3> &func = mrcpp::get_func(xcInput, i);
+        println(5, "Density norm " << i << " " << func.getSquareNorm() << " nEndNodes " << func.getNEndNodes());
+    }
     auto n = mrcpp::get_n_nodes(xcOutput);
     auto m = mrcpp::get_size_nodes(xcOutput);
     auto t = timer.elapsed();
     mrcpp::print::tree(2, "XC evaluate xcfun", n, m, t);
+}
+
+void XCFunctional::contractNodeData(int node_index, int n_points, MatrixXd &out_data, MatrixXd &con_data) {
+
+    MatrixXi output_mask = build_output_mask(isLDA(), isSpinSeparated(), order);
+    VectorXi density_mask = build_density_mask(isLDA(), isSpinSeparated(), order);
+    if (output_mask.cols() != density_mask.size()) MSG_ABORT("Inconsistent lengths");
+
+    VectorXd cont_i;
+    VectorXd cont_ij;
+    for (int i = 0; i < output_mask.rows(); i++) {
+        cont_i = VectorXd::Zero(n_points);
+        for (int j = 0; j < output_mask.cols(); j++) {
+            cont_ij = VectorXd::Zero(n_points);
+            int out_index = output_mask(i, j);
+            int den_index = density_mask(j);
+            // if(den_index >= 2) {  //WARNING: This HACK works for Open shell only
+            //        continue;
+            //} else if(den_index >= 0) {
+            if (den_index >= 0) {
+                FunctionTree<3> &dens_func = mrcpp::get_func(xcDensity, den_index);
+                FunctionNode<3> &dens_node = dens_func.getEndFuncNode(node_index);
+                VectorXd dens_i;
+                dens_node.getValues(dens_i);
+                cont_ij = out_data.col(out_index).array() * dens_i.array();
+            } else {
+                cont_ij = out_data.col(out_index);
+            }
+            cont_i += cont_ij;
+        }
+        con_data.col(i + 1) = cont_i; // The first column contains the energy functional
+    }
 }
 
 /** \brief Evaluates XC functional and derivatives
@@ -527,8 +746,14 @@ void XCFunctional::evaluateBlock(MatrixXd &inp, MatrixXd &out) const {
     double oDat[nOut];
 
     for (int i = 0; i < nPts; i++) {
-        if (inp(i, 0) > cutoff) {
-            for (int j = 0; j < nInp; j++) iDat[j] = inp(i, j);
+        bool calc = true;
+        for (int j = 0; j < nInp; j++) iDat[j] = inp(i, j);
+        if (this->isSpinSeparated()) {
+            if (iDat[0] < cutoff and iDat[1] < cutoff) calc = false;
+        } else {
+            if (iDat[0] < cutoff) calc = false;
+        }
+        if (calc) {
             xc_eval(functional, iDat, oDat);
             for (int j = 0; j < nOut; j++) out(i, j) = oDat[j];
         } else {
@@ -615,7 +840,8 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
     auto m = mrcpp::get_size_nodes(xc_pot);
     auto t = timer.elapsed();
     mrcpp::print::tree(2, "XC potential", n, m, t);
-
+    //	std::cout << "Plotting potentials" << std::endl;
+    //	plot_function_tree_vector(xc_pot, "Potential_");
     return xc_pot;
 }
 
@@ -625,34 +851,14 @@ FunctionTreeVector<3> XCFunctional::calcPotential() {
  * deep copied into the corresponding potential functions.
  */
 void XCFunctional::calcPotentialLDA(FunctionTreeVector<3> &potentials) {
-    int nPotentials = 1;
-    int nStart = this->order; // PROBLEM: if I use a higher order than necessary this wil fail miserably!
-    if (isSpinSeparated()) {
-        nPotentials = this->order + 1;
-        nStart = this->order * (this->order + 1) / 2;
-    }
+    int nPotentials = isSpinSeparated() ? 2 : 1;
+    int iStart = 1;
     for (int i = 0; i < nPotentials; i++) {
-        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, nStart + i);
+        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i + iStart);
         auto *pot = new FunctionTree<3>(MRA);
         mrcpp::copy_grid(*pot, out_i);
         mrcpp::copy_func(*pot, out_i);
         potentials.push_back(std::make_tuple(1.0, pot));
-    }
-}
-
-/** @brief Potential calculation for GGA functionals
- *
- */
-void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
-    switch (this->order) {
-        case 1:
-            calcGradientGGA(potentials);
-            break;
-        case 2:
-            calcHessianGGA(potentials);
-            break;
-        default:
-            NOT_IMPLEMENTED_ABORT;
     }
 }
 
@@ -662,144 +868,25 @@ void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
  * The method used depends on whether the functional is spin-separated
  * and whether explicit or gamma-type derivatives have been used in xcfun.
  */
-void XCFunctional::calcGradientGGA(FunctionTreeVector<3> &potentials) {
+void XCFunctional::calcPotentialGGA(FunctionTreeVector<3> &potentials) {
+    if (useGamma()) NOT_IMPLEMENTED_ABORT;
     FunctionTree<3> *pot;
     if (isSpinSeparated()) {
         FunctionTree<3> &df_da = mrcpp::get_func(xcOutput, 1);
         FunctionTree<3> &df_db = mrcpp::get_func(xcOutput, 2);
-        if (useGamma()) {
-            FunctionTree<3> &df_dgaa = mrcpp::get_func(xcOutput, 3);
-            FunctionTree<3> &df_dgab = mrcpp::get_func(xcOutput, 4);
-            FunctionTree<3> &df_dgbb = mrcpp::get_func(xcOutput, 5);
-            pot = calcGradientGGA(df_da, df_dgaa, df_dgab, grad_a, grad_b);
-            potentials.push_back(std::make_tuple(1.0, pot));
-            pot = calcGradientGGA(df_db, df_dgbb, df_dgab, grad_b, grad_a);
-            potentials.push_back(std::make_tuple(1.0, pot));
-        } else {
-            FunctionTreeVector<3> df_dga;
-            FunctionTreeVector<3> df_dgb;
-            df_dga.push_back(xcOutput[3]);
-            df_dga.push_back(xcOutput[4]);
-            df_dga.push_back(xcOutput[5]);
-            df_dgb.push_back(xcOutput[6]);
-            df_dgb.push_back(xcOutput[7]);
-            df_dgb.push_back(xcOutput[8]);
-            pot = calcGradientGGA(df_da, df_dga);
-            potentials.push_back(std::make_tuple(1.0, pot));
-            pot = calcGradientGGA(df_db, df_dgb);
-            potentials.push_back(std::make_tuple(1.0, pot));
-        }
+        FunctionTreeVector<3> df_dga(xcOutput.begin() + 3, xcOutput.begin() + 6);
+        FunctionTreeVector<3> df_dgb(xcOutput.begin() + 6, xcOutput.begin() + 9);
+        pot = calcPotentialGGA(df_da, df_dga);
+        potentials.push_back(std::make_tuple(1.0, pot));
+        pot = calcPotentialGGA(df_db, df_dgb);
+        potentials.push_back(std::make_tuple(1.0, pot));
     } else {
         FunctionTree<3> &df_dt = mrcpp::get_func(xcOutput, 1);
-        if (useGamma()) {
-            FunctionTree<3> &df_dgamma = mrcpp::get_func(xcOutput, 2);
-            pot = calcGradientGGA(df_dt, df_dgamma, grad_t);
-            potentials.push_back(std::make_tuple(1.0, pot));
-        } else {
-            FunctionTreeVector<3> df_dgt;
-            df_dgt.push_back(xcOutput[2]);
-            df_dgt.push_back(xcOutput[3]);
-            df_dgt.push_back(xcOutput[4]);
-            pot = calcGradientGGA(df_dt, df_dgt);
-            potentials.push_back(std::make_tuple(1.0, pot));
-        }
+        FunctionTreeVector<3> df_dgt(xcOutput.begin() + 2, xcOutput.begin() + 5);
+        pot = calcPotentialGGA(df_dt, df_dgt);
+        potentials.push_back(std::make_tuple(1.0, pot));
     }
     pot = nullptr;
-}
-
-void XCFunctional::calcHessianGGA(FunctionTreeVector<3> &potentials) {
-    if (isSpinSeparated()) NOT_IMPLEMENTED_ABORT;
-    if (useGamma()) {
-        calcHessianGGAgamma(potentials);
-    } else {
-        calcHessianGGAgrad(potentials);
-    }
-}
-
-void XCFunctional::calcHessianGGAgamma(FunctionTreeVector<3> &potentials) {
-    // 0 1    2    3      4       5
-    // f dfdr dfdg df2dr2 df2drdg df2dg2
-
-    for (int i = 2; i < 6; i++) {
-        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i);
-        auto *pot = new FunctionTree<3>(MRA);
-        mrcpp::copy_grid(*pot, out_i);
-        mrcpp::copy_func(*pot, out_i);
-        potentials.push_back(std::make_tuple(1.0, pot));
-    }
-}
-
-void XCFunctional::calcHessianGGAgrad(FunctionTreeVector<3> &potentials) {
-    // 0 1    2-4  5      6-8     9-14
-    // f dfdr dfdg df2dr2 df2drdg df2dg2
-
-    for (int i = 5; i < 15; i++) {
-        FunctionTree<3> &out_i = mrcpp::get_func(xcOutput, i);
-        auto *pot = new FunctionTree<3>(MRA);
-        mrcpp::copy_grid(*pot, out_i);
-        mrcpp::copy_func(*pot, out_i);
-        potentials.push_back(std::make_tuple(1.0, pot));
-    }
-}
-
-/** @brief XC potential calculation
- *
- * @param[in] df_drho Functional derivative wrt rho
- * @param[in] df_dgamma Functional_derivative wrt gamma
- * @param[in] grad_rho Gradient of rho
- *
- * Computes the XC potential for a non-spin separated functional and
- * gamma-type derivatives.
- */
-FunctionTree<3> *XCFunctional::calcGradientGGA(FunctionTree<3> &df_drho,
-                                               FunctionTree<3> &df_dgamma,
-                                               FunctionTreeVector<3> grad_rho) {
-    FunctionTreeVector<3> funcs;
-    funcs.push_back(std::make_tuple(1.0, &df_drho));
-
-    FunctionTree<3> *tmp = calcGradDotPotDensVec(df_dgamma, grad_rho);
-    funcs.push_back(std::make_tuple(-2.0, tmp));
-
-    auto *V = new FunctionTree<3>(MRA);
-    mrcpp::build_grid(*V, funcs);
-    mrcpp::add(-1.0, *V, funcs);
-    delete tmp;
-    return V;
-}
-
-/** @brief XC potential calculation
- *
- * @param[in] df_drhoa Functional derivative wrt rhoa
- * @param[in] df_dgaa  Functional_derivative wrt gamma_aa
- * @param[in] df_dgab  Functional_derivative wrt gamma_ab
- * @param[in] df_dgbb  Functional_derivative wrt gamma_bb
- * @param[in] grad_rhoa Gradient of rho_a
- * @param[in] grad_rhob Gradient of rho_b
- *
- * Computes the XC potential for a spin separated functional and
- * gamma-type derivatives. Can be used both for alpha and beta
- * potentials by permuting the spin parameter.
- */
-FunctionTree<3> *XCFunctional::calcGradientGGA(FunctionTree<3> &df_drhoa,
-                                               FunctionTree<3> &df_dgaa,
-                                               FunctionTree<3> &df_dgab,
-                                               FunctionTreeVector<3> grad_rhoa,
-                                               FunctionTreeVector<3> grad_rhob) {
-    FunctionTreeVector<3> funcs;
-    funcs.push_back(std::make_tuple(1.0, &df_drhoa));
-
-    FunctionTree<3> *tmp1 = calcGradDotPotDensVec(df_dgaa, grad_rhoa);
-    funcs.push_back(std::make_tuple(-2.0, tmp1));
-
-    FunctionTree<3> *tmp2 = calcGradDotPotDensVec(df_dgab, grad_rhob);
-    funcs.push_back(std::make_tuple(-1.0, tmp2));
-
-    auto *V = new FunctionTree<3>(MRA);
-    mrcpp::build_grid(*V, funcs);
-    mrcpp::add(-1.0, *V, funcs);
-    delete tmp1;
-    delete tmp2;
-    return V;
 }
 
 /** @brief XC potential calculation
@@ -809,7 +896,7 @@ FunctionTree<3> *XCFunctional::calcGradientGGA(FunctionTree<3> &df_drhoa,
  *
  * Computes the XC potential for explicit derivatives.
  */
-FunctionTree<3> *XCFunctional::calcGradientGGA(FunctionTree<3> &df_drho, FunctionTreeVector<3> &df_dgr) {
+FunctionTree<3> *XCFunctional::calcPotentialGGA(FunctionTree<3> &df_drho, FunctionTreeVector<3> &df_dgr) {
     FunctionTreeVector<3> funcs;
     funcs.push_back(std::make_tuple(1.0, &df_drho));
 
@@ -824,57 +911,27 @@ FunctionTree<3> *XCFunctional::calcGradientGGA(FunctionTree<3> &df_drho, Functio
     return V;
 }
 
-FunctionTree<3> *XCFunctional::doubleDivergence(FunctionTreeVector<3> &df2dg2) {
-    FunctionTreeVector<3> tmp;
-    tmp.push_back(df2dg2[0]); // xx
-    tmp.push_back(df2dg2[1]); // xy
-    tmp.push_back(df2dg2[2]); // xz
-    tmp.push_back(df2dg2[1]); // yx --> xy
-    tmp.push_back(df2dg2[3]); // yy
-    tmp.push_back(df2dg2[4]); // yz
-    tmp.push_back(df2dg2[2]); // zx --> xz
-    tmp.push_back(df2dg2[4]); // zy --> yz
-    tmp.push_back(df2dg2[5]); // zz
-    FunctionTreeVector<3> gradient;
-    for (int i = 0; i < 3; i++) {
-        auto *component = new FunctionTree<3>(MRA);
-        FunctionTreeVector<3> grad_comp(tmp.begin() + 3 * i, tmp.begin() + 3 * (i + 1));
-        mrcpp::build_grid(*component, grad_comp);
-        mrcpp::divergence(*component, *derivative, grad_comp);
-        gradient.push_back(std::make_tuple(1.0, component));
-    }
-    auto *output = new FunctionTree<3>(MRA);
-    mrcpp::build_grid(*output, gradient);
-    mrcpp::divergence(*output, *derivative, gradient);
-    mrcpp::clear(tmp, false);
-    mrcpp::clear(gradient, true);
-    return output;
+int XCFunctional::getNodeLength() {
+    FunctionTree<3> &tree = mrcpp::get_func(xcInput, 0);
+    return tree.getTDim() * tree.getKp1_d();
 }
 
-/** @brief Helper function to compute divergence of a vector field times a function
- *
- * @param[in] V Function (derivative of the functional wrt gamma)
- * @param[in] rho Vector field (density gradient)
- *
- */
-FunctionTree<3> *XCFunctional::calcGradDotPotDensVec(FunctionTree<3> &V, FunctionTreeVector<3> &rho) {
-    FunctionTreeVector<3> vec;
-    for (int d = 0; d < rho.size(); d++) {
-        Timer timer;
-        FunctionTree<3> &rho_d = mrcpp::get_func(rho, d);
-        auto *Vrho = new FunctionTree<3>(MRA);
-        mrcpp::copy_grid(*Vrho, rho_d);
-        mrcpp::multiply(-1.0, *Vrho, 1.0, V, rho_d);
-        vec.push_back(std::make_tuple(1.0, Vrho));
-        mrcpp::print::tree(2, "Multiply", *Vrho, timer);
-    }
+int XCFunctional::getContractedLength() const {
+    int length = -1;
+    if (isLDA()) length = 1;            // only one function needed for LDA
+    if (isGGA()) length = 4;            // four functions for LDA
+    if (isSpinSeparated()) length *= 2; // twice as many for spin-separated functionals;
+    return length;
+}
 
-    Timer timer;
-    auto *result = new FunctionTree<3>(MRA);
-    mrcpp::divergence(*result, *derivative, vec);
-    mrcpp::clear(vec, true);
-    mrcpp::print::tree(2, "Divergence", *result, timer);
-    return result;
+int XCFunctional::getDensityLength() const {
+    int length = -1;
+    if (this->order < 2) {
+        length = 0; // no contractions for order 0 or 1
+    } else if (order == 2) {
+        length = getContractedLength(); // same length as contracted fcns for order = 2
+    }
+    return length;
 }
 
 } // namespace mrdft
