@@ -20,12 +20,12 @@ namespace mpi {
 bool numerically_exact = false;
 int shared_memory_size = 1000;
 
-int world_size = 0;
-int world_rank = 1;
-int orb_rank = 0;
+int world_size = 1;
+int world_rank = 0;
 int orb_size = 1;
-int share_rank = 0;
+int orb_rank = 0;
 int share_size = 1;
+int share_rank = 0;
 int sh_group_rank = 0;
 int is_bank = 0;
 int is_bankclient = 1;
@@ -483,7 +483,6 @@ int Bank::open() {
             }
             datasize = datasize_new;
         }
-        if (message == SAVE_DATA) {}
     }
 #endif
 }
@@ -507,7 +506,7 @@ int Bank::get_orb(int id, Orbital &orb) {
 #endif
 }
 
-// save function in Bank with identity id . NB:not tested
+// save function in Bank with identity id
 int Bank::put_func(int id, QMFunction &func) {
 #ifdef HAVE_MPI
     // for now we distribute according to id
@@ -568,15 +567,14 @@ int Bank::close() {
 
 // remove all deposits
 // NB:: collective call. All clients must call this
-int Bank::clear_all(int i, MPI_Comm comm) {
+int Bank::clear_all(int iclient, MPI_Comm comm) {
 #ifdef HAVE_MPI
     // 1) wait until all clients are ready
     mpi::barrier(comm);
     // master send signal to bank
-    if (i == 0) {
+    if (iclient == 0) {
         for (int i = 0; i < mpi::bank_size; i++) {
             MPI_Send(&CLEAR_BANK, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
-            ;
         }
         for (int i = 0; i < mpi::bank_size; i++) {
             // wait until Bank is finished and has sent signal
@@ -602,6 +600,7 @@ int Bank::clear_bank() {
 int Bank::clear(int ix) {
 #ifdef HAVE_MPI
     delete deposits[ix].orb;
+    delete deposits[ix].data;
 #endif
 }
 

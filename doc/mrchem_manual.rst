@@ -1,98 +1,101 @@
-===================
-MRChem: User manual
-===================
-
 ---------------------
 The mrchem input file
 ---------------------
 
 The input file is organized in sections and keywords that can be of different
-type.
-Input reading is **case-insensitive**.
+type. Input keywords and sections are **case-sensitive**, while `values` are
+**case-insensitive**.
 
 .. code-block:: bash
 
-     Section {
-        keyword_1 = 1                       # int
-        keyword_2 = 3.14                    # double
-        keyword_3 = [1, 2, 3]               # int array
-        keyword_4 = foo                     # string
-        keyword_5 = true                    # bool
-     }
+    Section {
+       keyword_1 = 1                       # int
+       keyword_2 = 3.14                    # double
+       keyword_3 = [1, 2, 3]               # int array
+       keyword_4 = foo                     # string
+       keyword_5 = true                    # bool
+    }
+
+A  complete list of available input keywords can be found in the :ref:`Input
+parameters`.
 
 Top section
 -----------
 
-The main input section contain the single most important keyword:
-the relative precision :math:`\epsilon_{rel}` that will be guaranteed in the
-calculation. The top section is not specified by name, just write the keywords
-directly, e.g
+The main input section contain two keywords, the relative precision
+:math:`\epsilon_{rel}` that will be guaranteed in the calculation and the size
+of the computational domain. The top section is not specified by name, just
+write the keywords directly, e.g
 
 .. code-block:: bash
 
-    rel_prec = 1.0e-5                       # Overall relative precision
+    world_prec = 1.0e-5                       # Overall relative precision
+    world_size = 5                            # World size 2^world_size
 
 The relative precision sets an upper limit for the number of correct digits
 you are expected to get out of the computation (note that
 :math:`\epsilon_{rel}=10^{-6}` yields :math:`\mu` Ha accuracy for the hydrogen
-molecule, but only mHa accuracy for benzene). It is also possible to specify
-an `absolute` precision for the molecular energy by replacing ``rel_prec``
-with ``abs_prec``. This will provide e.g. mHa precision in the total energy
-regardless of the molecular size (this might get `very` expensive for large
-systems). In this case the magnitude of the energy is estimated as
+molecule, but only mHa accuracy for benzene).
 
-.. math:: \tilde{E} = \sum_i^{nuc} Z_i^{5/2}
+The computational domain is always symmetric around the origin, with `total`
+size given by the ``world_size`` parameter as :math:`[2^n]^3`, e.i.
+``world_size=5`` gives a domain of :math:`[-16,16]^3` atomic units (bohrs).
+Make sure that the world
+is large enough to allow the molecular density to reach zero on the boundary. 
+The ``world_size`` parameter can be left out, in which case the size will be
+estimated based on the molecular geometry.
 
-and the relative precision is set as
-
-.. math:: \epsilon_{rel} = \frac{\epsilon_{abs}}{\tilde{E}}
-
-With the ``abs_prec`` keyword one can also use kcal/mol or kJ/mol as energy
-unit instead of Hartree by setting the ``energy_unit`` keyword. The following
-will set ``rel_prec`` sufficiently high so that the energy can be computed
-within a kcal/mol
-
-.. code-block:: bash
-
-    abs_prec    = 1.0
-    energy_unit = kcal
-
-Note that ``rel_prec`` is the fundamental input parameter that is finally
-passed to the program, so if this is set explicitly in the input file, it will
-always have precedence.
+Precisions
+----------
 
 MRChem uses a smoothed nuclear potential to avoid numerical problems in
 connection with the :math:`Z/|r-R|` singularity. The smoothing is controlled by
 a single parameter ``nuc_prec`` that is related to the expected error in the
-energy due to the smoothing.
+energy due to the smoothing. There are also different precision parameters for
+the `construction` of the Poisson and Helmholtz integral operators.
 
 .. code-block:: bash
 
-    nuc_prec = 1.0e-6
+    Precisions {
+        nuc_prec = 1.0e-6
+        poisson_prec = 1.0e-6
+        helmholtz_prec = 1.0e-6
+    }
 
-If the ``nuc_prec`` keyword is left out it is set equal to ``rel_prec``.
+By default, all precision parameters follows ``world_prec``.
 
-A final keyword in the main input section that is usually used for debugging is
-the ``printlevel`` (should be zero for production calculations).
+Printer
+-------
 
-MRA
+The following are the most important Printer keywords:
+
+.. code-block:: bash
+
+    Printer {
+        print_level = 0       # Level of detail in the written output
+        print_input = true    # Print the input file at the start of the calculation
+    }
+
+Available print levels:
+
+- ``print_level=0`` prints mainly properties
+- ``print_level=1`` adds timings for individual steps
+- ``print_level=2`` adds memory and timing information on ``OrbitalVector`` level
+- ``print_level=3`` adds memory and timing information on ``Orbital`` level
+- ``print_level>10`` adds a *lot* more output from deep within MRCPP
+
+
+
+Basis
 -----
 
-The MultiResolution Analysis (MRA) input section defines the polynomial basis
-as well as the computational domain of the calculation (defaults shown except
-for ``order``, see below)
+This section defines the polynomial MultiWavelet basis
 
 .. code-block:: bash
 
-    MRA {
-        order          = 7                  # Polynomial order of MW basis
-        basis_type     = Interpolating      # Legendre or Interpolating
-        min_scale      = 0                  # Size of each root box 2^{-n}
-        max_scale      = 20                 # Maximum level of refinement 2^{-n}
-        boxes          = [ 1, 1, 1 ]        # Number of root boxes
-        corner         = [ 0, 0, 0]         # Translation of first root box
-        gauge_origin   = [0.0, 0.0, 0.0]    # Origin used in molecular properties
-        center_of_mass = false              # Use COM gauge origin
+    Basis {
+        type = Interpolating  # Legendre or Interpolating
+        order = 7             # Polynomial order of MW basis
     }
 
 The MW basis is defined by the polynomial order :math:`k`, and the type of
@@ -104,39 +107,31 @@ keyword is left out it will be set automatically according to
 
 .. math:: k=-1.5*log_{10}(\epsilon_{rel})
 
-The scale and translation of the root boxes are absolute, which means that the
-only way to get a symmetric world around the origin is to use two root ``boxes``
-in each direction and set ``corner`` at -1 (if this does not fit well with your
-molecular geometry, use a larger box or translate your molecular coordinates).
-The computational world should be large enough so that the electron density
-vanishes at the boundaries. The ``gauge_origin`` can also be specified (relevant
-for molecular properties), or set to the molecular ``center_of_mass``. The
-default computational domain displayed above corresponds to the unit cube (in
-bohr). The maximum refinement level ``max_scale`` should preferably be as small
-as possible for computational efficiency, but if this level is actually
-encountered in the calculation, the accuracy might be affected. Note that
-the total span of length scales (``max_scale`` - ``min_scale``) cannot exceed
-32 (integer precision is :math:`2^{32}`).
+The Basis section can usually safely be omitted in the input.
 
 Molecule
 --------
 
 This input section specifies the geometry, charge and spin multiplicity of the
-molecule, e.g. for water (coords must be specified, otherwise
-defaults are shown)
+molecule, e.g. for water (coords must be specified, otherwise defaults are
+shown)
 
 .. code-block:: bash
 
     Molecule {
         charge       = 0                    # total charge of molecule
         multiplicity = 1                    # spin multiplicity
+        translate    = false                # translate center of mass to origin
         angstrom     = false                # geometry given in angstrom
-        $coords
-        O   0.0000     0.0000     0.0000
-        H   0.0000     1.4375     1.1500
-        H   0.0000    -1.4375     1.1500
-        $end
+    $coords
+    O   0.0000     0.0000     0.0000
+    H   0.0000     1.4375     1.1500
+    H   0.0000    -1.4375     1.1500
+    $end
     }
+
+Since the computational domain is always cubic and symmetric around the origin
+it is usually a good idea to ``translate`` the molecule to the origin.
 
 WaveFunction
 ------------
@@ -153,22 +148,25 @@ must be specified, otherwise defaults are shown)
     }
 
 There are currently four methods available: Core Hamiltonian, Hartree,
-Hartree-Fock (HF) and Density Functional Theory (DFT). When running DFT the
-functional(s) must be specified in a separate DFT section (see below).
+Hartree-Fock (HF) and Density Functional Theory (DFT). When running DFT you can
+`either` set one of the default functionals in this section (e.g. ``method =
+B3LYP``), `or` you can set ``method = DFT`` and specify a "non-standard"
+functional in the separate DFT section (see below). See :ref:`Input
+parameters` for a list of available default functionals.
 
 DFT
 ---
 
 This section specifies the exchange-correlation functional used in DFT
 (functional names must be specified, otherwise defaults are shown)
+This section can be omitted if you are using a default functional, see above.
 
 .. code-block:: bash
 
     DFT {
         spin = false                        # Use spin-polarized functionals
-        exact_exchange = 0.0                # Amount of exact HF exchange
+        use_gamma = true                    # Use explicit derivatives or gamma
         density_cutoff = 0.0                # Cutoff to set XC potential to zero
-        explicit_der = true                 # Use explicit derivatives or gamma
         $functionals
         <func1>     1.0                     # Functional name and coefficient
         <func2>     1.0
@@ -183,10 +181,11 @@ follow the ``restricted`` parameter of the ``WaveFunction`` section.
 Option to use explicit partial derivatives for the density gradients
 (:math:`\delta f_{xc}/\delta\nabla\rho`) or the invariants
 (:math:`\gamma=\nabla\rho\cdot\nabla\rho`). For hybrid functionals you must
-specify the amount of exact Hartree-Fock exchange that should be used (0.2 for
-B3LYP and 0.25 for PBE0 etc.). Option to use spin-polarized functionals.
-XC functionals are provided by the `XCFun <https://github.com/dftlibs/xcfun>`_
-library.
+specify the amount of exact Hartree-Fock exchange as a separate functional
+``EXX`` (``EXX 0.2`` for B3LYP and ``EXX 0.25`` for PBE0 etc.). Option to use
+spin-polarized functionals. Unrestricted calculations will use spin-polarized
+functionals by default. The XC functionals are provided by the
+`XCFun <https://github.com/dftlibs/xcfun>`_ library.
 
 Properties
 ----------
@@ -197,7 +196,7 @@ Specify which properties to compute. Currently the following are available
 .. code-block:: bash
 
     Properties {
-        scf_energy    = false               # Compute total SCF energy
+        scf_energy    = true                # Compute total SCF energy
         dipole_moment = false               # Compute dipole moment
     }
 
@@ -210,32 +209,26 @@ function (defaults shown)
 .. code-block:: bash
 
     SCF {
-        run            = true              # Run SCF optimization
+        kain           = 0                 # Length of KAIN iterative subspace
+        max_iter       = -1                # Maximum number of SCF iterations
+        rotation       = 0                 # Iterations between diagonalize/localize
+        localize       = false             # Use canonical or localized  orbitals
         orbital_thrs   = -1.0              # Convergence threshold orbitals
         property_thrs  = -1.0              # Convergence threshold energy
-        orbital_prec   = [1.0e-4, -1.0]    # Initial and final relative precision in SCF
-        kain           = 0                 # Length of KAIN iterative subspace
-        rotation       = 0                 # Iterations between each localization/diagonalization
-        max_iter       = -1                # Maximum number of SCF iterations
-        canonical      = false             # Use canonical or localized  orbitals
-        write_orbitals = false             # Write final orbitals to disk
-        initial_guess  = none              # Type of inital guess (none, gto, mw)
+        initial_guess  = sad_dz            # Type of inital guess (mw, gto, core, sad)
     }
-
-With ``run=false`` no SCF optimization is performed, and the requested molecular
-properties are computed directly from the initial guess wave function.
 
 We specify a convergence threshold both for the orbitals
 (:math:`\|\Delta \phi_i \|`) and the property (:math:`\Delta E`). The default
 value of -1.0 means that the threshold will not be considered in the
 optimization. The property (total SCF energy) should converge quadratically in
-the orbital errors, however, it will still be limited by the overall precision
-``rel_prec`` in the calculation. For instance, the following will converge the
+the orbital errors. However, it will still be limited by the overall precision
+``world_prec`` in the calculation. For instance, the following will converge the
 energy within nine digits, but only five of them are guaranteed to be correct
 
 .. code-block:: bash
 
-    rel_prec = 1.0e-5
+    world_prec = 1.0e-5
 
     SCF {
         property_thrs = 1.0e-9
@@ -244,40 +237,29 @@ energy within nine digits, but only five of them are guaranteed to be correct
 When computing other properties than total energy, the important threshold is
 that for the orbitals, which translates approximately to the relative accuracy
 that you can expect for other properties. The following input should give five
-digits for the dipole moment (always keep a factor of 10 between ``rel_prec``
+digits for the dipole moment (always keep a factor of 10 between ``world_prec``
 and ``orbital_thrs`` to avoid numerical instabilities)
 
 .. code-block:: bash
 
-    rel_prec = 1.0e-6
+    world_prec = 1.0e-6
 
     SCF {
         orbital_thrs = 1.0e-5
     }
 
 If *both* thresholds are omitted in this section they will be
-set according to the top level ``rel_prec``
+set according to the top level ``world_prec``
 
 .. math:: \Delta E < \frac{\epsilon_{rel}}{10}
 .. math:: \|\Delta \phi_i \| < \sqrt{\frac{\epsilon_{rel}}{10}}
 
 This should yield a final energy accurate within the chosen relative precision.
-This means that in order to get for instance milli-Hartree accuracy in energy,
-you need only specify the ``abs_prec`` keyword in the top level, then all
-related parameters (``order``, ``rel_prec``, ``nuc_prec``, ``orbital_thrs`` and
-``property_thrs``) will be adjusted so that the requested precision is reached.
-
-The ``orbital_prec=[init,final]`` keyword controls the dynamic precision used
-in the SCF iterations. To improve efficiency, the first iterations are done
-with reduced precision, starting at ``init`` and gradually increased
-to ``final``. The initial precision should not be set lower than
-``init=1.0e-3``, and the final precision should not exceed the top level
-``rel_prec``. Negative values sets them equal to ``rel_prec``.
 
 The ``kain`` keyword sets the size of the iterative subspace that is used
 in the KAIN accelerator for the orbital optimization.
 
-The ``rotation`` and ``canonical`` keywords says how often the Fock matrix
+The ``rotation`` and ``localize`` keywords says how often the Fock matrix
 should be diagonalized/localized (for iterations in between, a Löwdin
 orthonormalization using the overlap matrix :math:`S^{-1/2}` is used).
 Option to use Foster-Boys localization or Fock matrix diagonalization in
@@ -286,14 +268,7 @@ rotation is employed to avoid mixing of orbitals in the history, so
 ``rotation=1`` effectively cancels the KAIN accelerator. The default
 ``rotation=0`` will localize/diagonalize the first two iterations and then
 perform Löwdin orthonormalizations from that point on (this is usually the
-way to go).
-
-You also need to specify which ``initial_guess`` to use, "none" means starting
-from hydrogen solutions (this requires no extra input, but is a quite poor
-guess), "gto" means starting with a wave function from a converged calculation
-using a small GTO basis set (basis and MO matrix input files must be provided)
-and "mw" means starting from a previous MRChem calculation (compatible orbitals
-must have been written to disk using the ``write_orbitals`` keyword).
+way to go). See :ref:`Input parameters` for more details.
 
 Plotter
 -------
@@ -331,36 +306,32 @@ Example 1
 ---------
 
 The following input will compute the Hartree-Fock energy of water to
-micro-Hartree precision
+six digits precision, world size :math:`[-32,32]^3`
 
 .. code-block:: bash
 
-    abs_prec = 1.0e-6
-
-    MRA {
-        min_scale = -5                      # Size of each root box 2^{-n}
-        boxes     = [ 2, 2, 2]              # Number of root boxes
-        corner    = [-1,-1,-1]              # Translation of first root box
-    }
+    world_prec = 1.0e-6
+    world_size = 6
 
     Molecule {
-        $coords
-        O   0.0000     0.0000     0.0000
-        H   0.0000     1.4375     1.1500
-        H   0.0000    -1.4375     1.1500
-        $end
+        translate = true
+    $coords
+    O   0.0000     0.0000     0.0000
+    H   0.0000     1.4375     1.1500
+    H   0.0000    -1.4375     1.1500
+    $end
     }
 
     WaveFunction {
-        method = HF                         # Core, Hartree, HF or DFT
+        method = HF
     }
 
     Properties {
-        scf_energy = true                   # Compute total energy
+        scf_energy = true
     }
 
     SCF {
-        kain = 3                            # Length of KAIN iterative subspace
+        kain = 3
     }
 
 
@@ -368,45 +339,31 @@ Example 2
 ---------
 
 The following input will compute the B3LYP energy (six digits) and dipole moment
-(four digits) of carbon monoxide
+(four digits) of carbon monoxide, automatic world size
 
 .. code-block:: bash
 
-    rel_prec = 1.0e-6
-
-    MRA {
-        min_scale = -5                      # Size of each root box 2^{-n}
-        boxes     = [ 2, 2, 2]              # Number of root boxes
-        corner    = [-1,-1,-1]              # Translation of first root box
-    }
+    world_prec = 1.0e-6
 
     Molecule {
         angstrom = true
-        $coords
-        C   0.0000     0.0000    -0.56415
-        O   0.0000     0.0000     0.56415
-        $end
+    $coords
+    C   0.0000     0.0000    -0.56415
+    O   0.0000     0.0000     0.56415
+    $end
     }
 
     WaveFunction {
-        method = DFT                        # Core, Hartree, HF or DFT
-    }
-
-    DFT {
-        exact_exchange = 0.20               # Amount of exact HF exchange
-        $functionals
-        BECKEX      0.80                    # Functional name and coefficient
-        LYPC        1.00
-        $end
+        method = B3LYP
     }
 
     Properties {
-        scf_energy = true                   # Compute total energy
-        dipole_moment = true                # Compute dipole moment
+        scf_energy = true
+        dipole_moment = true
     }
 
     SCF {
-        kain          = 3                   # Length of KAIN iterative subspace
-        orbital_thrs  = 1.0e-4              # Convergence threshold orbitals
-        property_thrs = 1.0e-7              # Convergence threshold energy
+        kain          = 3
+        orbital_thrs  = 1.0e-4
+        property_thrs = 1.0e-7
     }

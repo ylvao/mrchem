@@ -1,19 +1,17 @@
 # vim:syntax=sh:
 
-rel_prec = 1.0e-3                 # Overall relative precision
+world_prec = 1.0e-3               # Overall relative precision
+world_size = 5                    # Size of simulation box 2^n
 
 MPI {
-  numerically_exact = true
+  numerically_exact = true        # Guarantee identical results in MPI
 }
 
-MRA {
-  order = 7                       # Polynomial order of the MW basis
-  basis_type = Legendre           # Polynomial type (Legendre or Interpolating)
-  min_scale = -4                  # Root scale defines world size 2^{-n}
-  max_scale = 25                  # Maximum refinement 2^{-n}
-  corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
-  boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
+Basis {
+  order = 7                       # Polynomial order
+  type = Legendre                 # Polynomial type (Legendre or Interpolating)
 }
+
 
 Molecule {
 $coords

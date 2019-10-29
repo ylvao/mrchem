@@ -1,31 +1,19 @@
 keywords:
-  - name: rel_prec
+  - name: world_prec
     type: float
-    default: -1.0
+    predicates:
+      - '1.0e-10 < value < 1.0'
     docstring: |
       Overall relative precision in the calculation.
-  - name: nuc_prec
-    type: float
-    default: -1.0
-    docstring: |
-      Precision used in the smoothing and projection of the nuclear potential.
-  - name: abs_prec
-    type: float
-    default: -1.0
-    docstring: |
-      Overall absolute precision in the calculation.
-  - name: est_norm
-    type: float
-    default: -1.0
-    docstring: |
-      Norm used in translation from abs_prec to rel_prec.
-  - name: energy_unit
-    type: str
-    default: 'au'
+  - name: world_size
+    type: int
+    default: -1
     predicates:
-      - value in ['au', 'kcal', 'kJ']
+      - 'value <= 10'
     docstring: |
-      Unit used in the translation from abs_prec to rel_prec.
+      Total size of computational domain given as 2**(world_size). Always cubic
+      and symmetric around the origin. Negative value means it will be computed
+      from the molecular geometry.
 sections:
   - name: Plotter
     docstring: |
@@ -60,6 +48,37 @@ sections:
         default: [0.0, 0.0, 1.0]
         docstring: |
           Third boundary vector for plot.
+  - name: Precisions
+    docstring: |
+      Define specific precision parameters.
+    keywords:
+      - name: nuc_prec
+        type: float
+        default: "user['world_prec']"
+        predicates:
+          - '1.0e-10 < value < 1.0'
+        docstring: |
+          Precision parameter used in smoothing and projection of nuclear potential.
+      - name: dft_prec
+        type: float
+        default: "user['world_prec']"
+        predicates:
+          - '1.0e-10 < value < 1.0'
+        docstring: |
+          Precision parameter used in DFT grid.
+      - name: poisson_prec
+        type: float
+        default: "user['world_prec']"
+        predicates:
+          - '1.0e-10 < value < 1.0'
+        docstring: |
+          Precision parameter used in construction of Poisson operators.
+      - name: helmholtz_prec
+        type: float
+        default: "user['world_prec']"
+        docstring: |
+          Precision parameter used in construction of Helmholtz operators.
+          Negative value means it will follow the dynamic precision in SCF.
   - name: Printer
     docstring: |
       Define variables for printed output.
@@ -145,65 +164,23 @@ sections:
         default: 0
         docstring: |
           Number of MPI processes exclusively dedicated to manage orbital bank.
-  - name: MRA
+  - name: Basis
     docstring: |
-      Define polynomial basis and computational domain.
+      Define polynomial basis.
     keywords:
       - name: order
         type: int
         default: -1
         docstring: |
-          Polynomial order of multiwavelet basis.
-      - name: basis_type
+          Polynomial order of multiwavelet basis. Negative value means it will
+          be set automatically based on the world precision.
+      - name: type
         type: str
         default: 'interpolating'
         predicates:
-          - value[0].lower() in ['i', 'l']
+          - "value[0].lower() in ['i', 'l']"
         docstring: |
           Polynomial type of multiwavelet basis.
-      - name: min_scale
-        type: int
-        default: 0
-        predicates:
-          - '-32 < value < 32'
-        docstring: |
-          Root scale of multiresolution analysis. Size of root boxes is 2^{-min_scale}.
-      - name: max_scale
-        type: int
-        default: 20
-        predicates:
-          - '-32 < value < 32'
-        docstring: |
-          Maximum refinement scale of multiresolution analysis.
-      - name: boxes
-        type: List[int]
-        default: [1,1,1]
-        predicates:
-          - '0 < value[0] < 8'
-          - '0 < value[1] < 8'
-          - '0 < value[2] < 8'
-        docstring: |
-          Number of root boxes.
-      - name: corner
-        type: List[int]
-        default: [0,0,0]
-        docstring: |
-          Translation of the first root box.
-      - name: center_of_mass
-        type: bool
-        default: false
-        docstring: |
-          Set gauge origin to center of mass.
-      - name: center_of_charge
-        type: bool
-        default: false
-        docstring: |
-          Set gauge origin to center of charge.
-      - name: gauge_origin
-        type: List[float]
-        default: [0.0, 0.0, 0.0]
-        docstring: |
-          Gauge origin.
   - name: Derivatives
     docstring: |
       Define various derivative operators used in the code.
@@ -247,6 +224,11 @@ sections:
         default: false
         docstring: |
           Coordinates given in angstrom rather than bohr.
+      - name: translate
+        type: bool
+        default: false
+        docstring: |
+          Translate center of mass to origin.
       - name: coords
         type: str
         docstring: |
@@ -257,8 +239,36 @@ sections:
     keywords:
       - name: method
         type: str
+        predicates:
+          - "value.lower() in
+             ['core',
+              'hartree',
+              'hf',
+              'hartreefock',
+              'hartree-fock',
+              'dft',
+              'lda',
+              'svwn3',
+              'svwn5',
+              'pbe',
+              'pbe0',
+              'bpw91',
+              'bp86',
+              'b3p86',
+              'b3p86-g',
+              'blyp',
+              'b3lyp',
+              'b3lyp-g',
+              'olyp',
+              'kt1',
+              'kt2',
+              'kt3']"
         docstring: |
-          Wavefunction method (Hartree-Fock or DFT).
+          Wavefunction method. See predicates for valid methods. 'hf',
+          'hartreefock' and 'hartree-fock' all mean the same thing, while 'lda'
+          is an alias for 'svwn5'. You can set a non-standard DFT functional
+          (e.g. varying the amount of exact exchange) by choosing 'dft' and
+          specifing the functional(s) in the 'DFT' section below.
       - name: restricted
         type: bool
         default: true
@@ -287,14 +297,16 @@ sections:
         type: str
         default: ' '
         docstring: |
-          List of density functionals.
+          List of density functionals with numerical coefficient. E.g. for PBE0
+          'EXX 0.25', 'PBEX 0.75', 'PBEC 1.0'. See xcfun documentation for valid
+          functionals.
   - name: Properties
     docstring: |
       Provide a list of properties to compute.
     keywords:
       - name: scf_energy
         type: bool
-        default: false
+        default: true
         docstring: |
           Compute SCF energy.
       - name: dipole_moment
@@ -347,30 +359,17 @@ sections:
         default: false
         docstring: |
           Compute hyperfine coupling tensors.
-  - name: ExternalField
+  - name: ExternalFields
     docstring: |
-      Define an external electromagnetic field.
+      Define external electromagnetic fields.
     keywords:
-      - name: electric_run
-        type: bool
-        default: false
-        docstring: |
-          Add external electric field.
       - name: electric_field
         type: List[float]
-        default: [0.0, 0.0, 0.0]
+        default: []
+        predicates:
+          - 'len(value) == 0 or len(value) == 3'
         docstring: |
           Strength of external electric field.
-      - name: magnetic_run
-        type: bool
-        default: false
-        docstring: |
-          Add external magnetic field.
-      - name: magnetic_field
-        type: List[float]
-        default: [0.0, 0.0, 0.0]
-        docstring: |
-          Strength of external magnetic field.
   - name: Polarizability
     docstring: |
       Give details regarding the polarizability calculation.
@@ -399,7 +398,7 @@ sections:
         type: bool
         default: true
         docstring: |
-          Run SCF solver.
+          Run SCF solver. Otherwise properties are computed on the initial orbitals.
       - name: max_iter
         type: int
         default: -1
@@ -430,20 +429,51 @@ sections:
         default: -1.0
         docstring: |
           Convergence threshold for SCF energy.
-      - name: orbital_prec
-        type: List[float]
-        default: [-1.0, -1.0]
+      - name: guess_prec
+        type: float
+        default: "user['world_prec']"
+        predicates:
+          - '1.0e-10 < value < 1.0'
         docstring: |
-          Incremental precision in SCF iterations [initial, final]
+          Precision parameter used in construction of initial guess.
+      - name: start_prec
+        type: float
+        default: -1.0
+        docstring: |
+          Incremental precision in SCF iterations, initial value.
+      - name: final_prec
+        type: float
+        default: -1.0
+        docstring: |
+          Incremental precision in SCF iterations, final value.
       - name: initial_guess
         type: str
+        predicates:
+          - "value.lower() in
+            ['mw',
+             'gto',
+             'core_sz',
+             'core_dz',
+             'core_tz',
+             'core_qz',
+             'sad_sz',
+             'sad_dz',
+             'sad_tz',
+             'sad_qz']"
         docstring: |
-          Type of initial guess.
+          Type of initial guess. 'mw' reads previously computed orbitals (must
+          be written using the same world size and polynomial type/order). 'gto'
+          reads precomputed GTO orbitals (requires extra non-standard input
+          files for basis set and MO coefficients). 'core' and 'sad' will
+          diagonalize the Fock matrix in the given AO basis (SZ, DZ, TZ or QZ)
+          using a Core or Superposition of Atomic Densities Hamiltonian,
+          respectively.
       - name: write_orbitals
         type: bool
         default: false
         docstring: |
-          Write converged orbitals to disk.
+          Write converged orbitals to disk. Can be used as 'mw' initial guess in
+          subsequent calculations.
       - name: plot_density
         type: bool
         default: false
@@ -453,7 +483,8 @@ sections:
         type: List[int]
         default: []
         docstring: |
-          Plot converged molecular orbitals of given index. Negative first index plots all.
+          Plot converged molecular orbitals of given index. If the first index
+          is negative, all orbitals will be plotted.
   - name: KineticFree
     docstring: |
       Includes parameters related to the ground state SCF optimization
@@ -474,6 +505,16 @@ sections:
         default: false
         docstring: |
           Use canonical or localized orbitals.
+      - name: start_prec
+        type: float
+        default: -1.0
+        docstring: |
+          Incremental precision in SCF iterations, initial value.
+      - name: final_prec
+        type: float
+        default: -1.0
+        docstring: |
+          Incremental precision in SCF iterations, final value.
       - name: orbital_thrs
         type: float
         default: -1.0
@@ -522,12 +563,17 @@ sections:
         type: List[int]
         default: [1, 1, 1]
         docstring: |
-          Incremental precision in SCF iterations [initial, final]
-      - name: orbital_prec
-        type: List[float]
-        default: [-1.0, -1.0]
+          In which Cartesian directions to run response solver.
+      - name: start_prec
+        type: float
+        default: -1.0
         docstring: |
-          Incremental precision in SCF iterations [initial, final]
+          Incremental precision in SCF iterations, initial value.
+      - name: final_prec
+        type: float
+        default: -1.0
+        docstring: |
+          Incremental precision in SCF iterations, final value.
       - name: initial_guess
         type: str
         default: 'none'

@@ -32,6 +32,7 @@ namespace mrchem {
 namespace qmfunction {
 
 ComplexDouble dot(QMFunction bra, QMFunction ket);
+ComplexDouble node_norm_dot(QMFunction bra, QMFunction ket, bool exact);
 void deep_copy(QMFunction &out, QMFunction &inp);
 void add(QMFunction &out, ComplexDouble a, QMFunction inp_a, ComplexDouble b, QMFunction inp_b, double prec);
 void project(QMFunction &out, std::function<double(const mrcpp::Coord<3> &r)> f, int type, double prec);

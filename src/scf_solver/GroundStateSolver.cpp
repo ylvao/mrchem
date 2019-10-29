@@ -153,21 +153,29 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
         o_thrs_o << std::setprecision(5) << std::scientific << this->orbThrs;
     }
 
+    std::stringstream o_helm;
+    if (this->helmPrec < 0.0) {
+        o_helm << "Dynamic";
+    } else {
+        o_helm << std::setprecision(5) << std::scientific << this->helmPrec;
+    }
+
     std::stringstream o_prec_0, o_prec_1;
     o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[1];
     o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
 
     mrcpp::print::separator(0, '~');
-    print_utils::text(0, "Calculation      ", calculation);
-    print_utils::text(0, "Method           ", this->methodName);
-    print_utils::text(0, "Max iterations   ", o_iter.str());
-    print_utils::text(0, "KAIN solver      ", o_kain.str());
-    print_utils::text(0, "Localization     ", o_loc.str());
-    print_utils::text(0, "Diagonalization  ", o_diag.str());
-    print_utils::text(0, "Start precision  ", o_prec_0.str());
-    print_utils::text(0, "Final precision  ", o_prec_1.str());
-    print_utils::text(0, "Energy threshold ", o_thrs_p.str());
-    print_utils::text(0, "Orbital threshold", o_thrs_o.str());
+    print_utils::text(0, "Calculation        ", calculation);
+    print_utils::text(0, "Method             ", this->methodName);
+    print_utils::text(0, "Max iterations     ", o_iter.str());
+    print_utils::text(0, "KAIN solver        ", o_kain.str());
+    print_utils::text(0, "Localization       ", o_loc.str());
+    print_utils::text(0, "Diagonalization    ", o_diag.str());
+    print_utils::text(0, "Helmholtz precision", o_helm.str());
+    print_utils::text(0, "Start precision    ", o_prec_0.str());
+    print_utils::text(0, "Final precision    ", o_prec_1.str());
+    print_utils::text(0, "Energy threshold   ", o_thrs_p.str());
+    print_utils::text(0, "Orbital threshold  ", o_thrs_o.str());
     mrcpp::print::separator(0, '~', 2);
 }
 

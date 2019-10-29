@@ -25,9 +25,6 @@
 
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
-#include <chrono>
-#include <thread>
-#include <unistd.h>
 
 #include "HelmholtzVector.h"
 #include "KAIN.h"
@@ -106,11 +103,11 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         // Initialize SCF cycle
         Timer t_lap;
         double orb_prec = adjustPrecision(err_o);
+        double helm_prec = getHelmholtzPrec();
         if (nIter < 2) F.setup(orb_prec);
 
         // Apply Helmholtz operator
-        mrcpp::print::memory(2, "memusage before Helmholtz");
-        HelmholtzVector H(orb_prec, F_mat.real().diagonal());
+        HelmholtzVector H(helm_prec, F_mat.real().diagonal());
         OrbitalVector Phi_np1;
         if (mpi::bank_size > 0) {
             // process one orbital at a time, using bank
@@ -120,7 +117,6 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
             Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
             Psi.clear();
         }
-        mrcpp::print::memory(2, "memusage after Helmhlotz");
         F.clear();
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 

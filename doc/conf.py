@@ -37,6 +37,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
+    'sphinx.ext.autosectionlabel',
     'sphinxcontrib.bibtex',
     'breathe'
 ]
@@ -70,8 +71,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'MRChem'
-copyright = '2017, Stig Rune Jensen, Luca Frediani, Jonas Juselius, Peter Wind, Magnar Bjorgve, Rune Sorland Monstad'
-author = 'Stig Rune Jensen, Luca Frediani, Jonas Juselius, Peter Wind, Magnar Bjorgve, Rune Sorland Monstad'
+copyright = '2019, Stig Rune Jensen, Luca Frediani, Peter Wind, Roberto Di Remigio, Magnar Bjorgve, Gabriel Gerez'
+author = 'Stig Rune Jensen, Luca Frediani, Peter Wind, Roberto Di Remigio, Magnar Bjorgve, Gabriel Gerez'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -9,9 +9,9 @@ else()
   FetchContent_Populate(mrcpp_sources
     QUIET
     GIT_REPOSITORY
-      https://github.com/stigrj/mrcpp.git
+      https://github.com/MRChemSoft/mrcpp.git
     GIT_TAG
-      d132bdde6fed22eb156b44d3ec1a63706e43f6b8 # Preferable to have a tag for a release
+      dcfe44c06d03b11fc3a0f68345261ee39c292ccb
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}

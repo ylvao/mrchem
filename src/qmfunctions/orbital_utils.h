@@ -37,6 +37,7 @@ int compare_spin(const Orbital &phi_a, const Orbital &phi_b);
 
 ComplexDouble dot(Orbital bra, Orbital ket);
 ComplexVector dot(OrbitalVector &Bra, OrbitalVector &Ket);
+ComplexDouble node_norm_dot(Orbital bra, Orbital ket, bool exact);
 
 void normalize(Orbital &phi);
 void orthogonalize(Orbital &phi, Orbital psi);
@@ -60,6 +61,7 @@ void orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi);
 ComplexMatrix calc_lowdin_matrix(OrbitalVector &Phi);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &BraKet);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ket);
+ComplexMatrix calc_norm_overlap_matrix(OrbitalVector &BraKet, bool exact = false);
 
 ComplexMatrix localize(double prec, OrbitalVector &Phi, ComplexMatrix &F);
 ComplexMatrix diagonalize(double prec, OrbitalVector &Phi, ComplexMatrix &F);

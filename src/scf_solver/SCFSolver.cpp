@@ -89,6 +89,20 @@ double SCFSolver::adjustPrecision(double error) {
     return this->orbPrec[0];
 }
 
+/** @brief Get precision parameter for Helmholtz
+ *
+ * If the precision is NOT set explicitly (prec < 0) the current dynamic
+ * precision (orbPrec[0]) will be used. If this is not set (prec < 0)
+ * the current max precision (orbPrec[2]) will be used.
+ */
+double SCFSolver::getHelmholtzPrec() {
+    double prec = this->helmPrec;
+    if (prec < 0.0) prec = this->orbPrec[0];
+    if (prec < 0.0) prec = this->orbPrec[2];
+    if (prec < 0.0) MSG_WARN("Negative Helmholtz precision");
+    return prec;
+}
+
 /** @brief Test if current errors are within the thresholds
  *
  * @param err_o: current orbital error

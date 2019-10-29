@@ -26,11 +26,10 @@ Sciences <http://www.ctcc.no/>`_ at
 
 We are currently in the process of rewriting the code and making it publicly
 available, and the latest version (with limited functionality) can be found on
-`GitHub <https://github.com/MRChemSoft/mrchem>`_. This is **not** a stable
-version, expect major changes in the future.
+`GitHub <https://github.com/MRChemSoft/mrchem>`_.
 
-Features as of September 2018:
---------------------------------
+Features in MRChem-0.2.0:
+-------------------------
 
 * Wave functions:
     + Kohn-Sham DFT
@@ -40,18 +39,18 @@ Features as of September 2018:
     + Hartree-Fock
         - Restricted closed-shell
         - Unrestricted
+    + Explicit external fields
+        - Electric field
 * Properties:
     + Ground state energy
     + Dipole moment
-    + Explicit electric field
 * Parallel implementation:
     + Shared memory (OpenMP): ~20 cores
-    + Distributed memory (MPI): ~50 cores
-    + Hybrid scheme (MPI + OpenMP): ~500 cores
-* Current limitations on a single high-memory compute node (~1TB):
-    + nano-Hartree accuracy: ~10 orbitals
-    + micro-Hartree accuracy: ~50 orbitals
-    + milli-Hartree accuracy: ~100 orbitals
+    + Distributed memory (MPI): ~100 procs
+    + Hybrid scheme (MPI + OpenMP): ~1000 cores
+* Current size limitations:
+    + ~200 orbitals on ~50 medium-memory (64GB) compute nodes
+    + ~100 orbitals on a single high-memory (1TB) compute node
 
 Upcoming features:
 ------------------
@@ -69,10 +68,6 @@ Upcoming features:
     + Hyperfine coupling constant
     + Magnetically induced currents
     + Geometry optimization
-* Parallelization:
-    + Improved performance
-    + Larger molecular systems
-    + Weak scaling up to thousands of cores
 
 
 .. toctree::
@@ -80,4 +75,5 @@ Upcoming features:
 
    installation
    mrchem_manual
+   input_reference
    code_reference/classes-and-functions

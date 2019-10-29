@@ -1,15 +1,10 @@
 # vim:syntax=sh:
 
-rel_prec = 1.0e-3                 # Overall relative precision
+world_prec = 1.0e-3               # Overall relative precision
+world_size = 5                    # Size of simulation box 2^n
 
 MPI {
-  numerically_exact = true
-}
-
-MRA {
-  min_scale = -4                  # Root scale defines world size 2^{-n}
-  corner = [ -1, -1, -1 ]         # Translation of corner root box [x,y,z]
-  boxes = [ 2, 2, 2 ]             # Number of root boxes [x,y,z]
+  numerically_exact = true        # Guarantee identical results in MPI
 }
 
 Molecule {
@@ -20,14 +15,8 @@ $end
 }
 
 WaveFunction {
-  method = DFT                    # Wave function method (HF or DFT)
+  method = LDA                    # Wave function method (HF or DFT)
   restricted = false
-}
-
-DFT {
-$functionals
-LDA
-$end
 }
 
 Properties {
