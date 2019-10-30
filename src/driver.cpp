@@ -801,10 +801,10 @@ DerivativeOperator_p driver::get_derivative(const std::string &name) {
         D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
     } else if (name == "abgv_55") {
         D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
-        //} else if (name == "ph") {
-        //    D = std::make_shared<mrcpp::PHOperator<3>>(*MRA, 1);
-        //} else if (name == "bspline") {
-        //    D = std::make_shared<mrcpp::BSOperator<3>>(*MRA, 1);
+    } else if (name == "ph") {
+        D = std::make_shared<mrcpp::PHOperator<3>>(*MRA, 1);
+    } else if (name == "bspline") {
+        D = std::make_shared<mrcpp::BSOperator<3>>(*MRA, 1);
     } else {
         MSG_ERROR("Invalid derivative operator");
     }
