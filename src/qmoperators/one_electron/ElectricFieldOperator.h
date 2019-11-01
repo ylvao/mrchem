@@ -49,28 +49,6 @@ public:
         HEF.name() = "E . mu_E";
     }
 
-    /** @brief returns the total nuclear contribution to the interaction
-     * energy
-     *
-     * @param[in] the set of nuclei
-     *
-     */
-    ComplexDouble trace(const Nuclei &nucs) {
-        ComplexDouble result = 0.0;
-        for (auto &nuc_k : nucs) result += trace(nuc_k);
-        return result;
-    }
-
-    /** @brief returns contribution to the interaction energy from a
-     * single nucleus
-     *
-     * @param[in] the nucleus
-     *
-     */
-    ComplexDouble trace(const Nucleus &nuc) { return -dipole.trace(nuc).dot(field); }
-
-    using RankZeroTensorOperator::trace;
-
 private:
     Eigen::Vector3d field; ///< the external field vector
     H_E_dip dipole;        ///< the dipole moment operator

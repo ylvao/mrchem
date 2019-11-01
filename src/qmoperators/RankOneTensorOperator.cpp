@@ -57,6 +57,13 @@ template <int I> ComplexVector RankOneTensorOperator<I>::trace(OrbitalVector &ph
     return out;
 }
 
+template <int I> ComplexVector RankOneTensorOperator<I>::trace(const Nuclei &nucs) {
+    RankOneTensorOperator<I> &O = *this;
+    ComplexVector out = ComplexVector::Zero(I);
+    for (int i = 0; i < I; i++) out(i) = O[i].trace(nucs);
+    return out;
+}
+
 } // namespace mrchem
 
 template class mrchem::RankOneTensorOperator<3>;

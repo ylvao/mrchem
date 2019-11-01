@@ -60,7 +60,7 @@ double NuclearGradientFunction::du_dr(double r1) const {
     if (r1 > 6.0) {
         double r2 = r1*r1;
         out = -1.0/r2;
-    } else if (r1 > 0.1) {
+    } else if (r1 > 0.01) {
         double r2 = r1*r1;
         out =   2.0*std::exp(-r2)/(mrcpp::root_pi*r1)
               - std::erf(r1)/r2

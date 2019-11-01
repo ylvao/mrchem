@@ -190,12 +190,12 @@ sections:
         default: 'abgv_55'
         docstring: |
           Derivative used in kinetic operator.
-      - name: h_orb
+      - name: h_b_dip
         type: str
         default: 'abgv_00'
         docstring: |
           Derivative used in magnetic dipole operator.
-      - name: h_pso
+      - name: h_m_pso
         type: str
         default: 'abgv_00'
         docstring: |
@@ -228,7 +228,12 @@ sections:
         type: bool
         default: false
         docstring: |
-          Translate center of mass to origin.
+          Translate center of mass to gauge origin.
+      - name: gauge_origin
+        type: List[float]
+        default: [0.0, 0.0, 0.0]
+        docstring: |
+          Gauge origin used in property calculations.
       - name: coords
         type: str
         docstring: |
@@ -348,7 +353,7 @@ sections:
         type: bool
         default: false
         docstring: |
-          Compute NMR shielding tensors.
+          Compute NMR shielding tensor.
       - name: spin_spin_coupling
         type: bool
         default: false
@@ -389,6 +394,20 @@ sections:
         default: []
         docstring: |
           List of external field wavelengths.
+  - name: NMRShielding
+    docstring: |
+      Give details regarding the NMR shileding calculation.
+    keywords:
+      - name: nuclear_specific
+        type: bool
+        default: false
+        docstring: |
+          Use nuclear specific perturbation operator (h_m_pso).
+      - name: nucleus_k
+        type: List[int]
+        default: [-1]
+        docstring: |
+          List of nuclei to compute. Negative value computes all.
   - name: SCF
     docstring: |
       Includes parameters related to the ground state SCF orbital optimization

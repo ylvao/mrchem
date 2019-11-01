@@ -34,9 +34,6 @@ namespace mrchem {
 // clang-format off
 class Magnetizability final {
 public:
-    mrcpp::Coord<3> &getOrigin() { return this->origin; }
-    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
-
     DoubleMatrix getTensor() const { return getDiamagnetic() + getParamagnetic(); }
     DoubleMatrix &getDiamagnetic() { return this->dia_tensor; }
     DoubleMatrix &getParamagnetic() { return this->para_tensor; }
@@ -54,8 +51,6 @@ public:
         auto iso_si_p = iso_au_p * PHYSCONST::JT_m2;
 
         mrcpp::print::header(0, "Magnetizability");
-        print_utils::coord(0, "r_O", getOrigin());
-        mrcpp::print::separator(0, '-');
         print_utils::matrix(0, "Diamagnetic", getDiamagnetic());
         print_utils::scalar(0, "Isotropic average", iso_au_d, "(au)");
         print_utils::scalar(0, "                 ", iso_si_d, "(SI)");
@@ -71,7 +66,6 @@ public:
     }
 
 private:
-    mrcpp::Coord<3> origin{};
     DoubleMatrix dia_tensor{DoubleMatrix::Zero(3,3)};
     DoubleMatrix para_tensor{DoubleMatrix::Zero(3,3)};
 };

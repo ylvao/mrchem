@@ -33,34 +33,6 @@ public:
         h[1].name() = "h_E_dip[y]";
         h[2].name() = "h_E_dip[z]";
     }
-
-    /** @brief returns the nuclear contribution to the dipole moment
-     *
-     * @param[in] the set of nuclei
-     *
-     */
-    ComplexVector trace(const Nuclei &nucs) {
-        ComplexVector result = ComplexVector::Zero(3);
-        for (auto &nuc_k : nucs) result += trace(nuc_k);
-        return result;
-    }
-
-    /** @brief returns the contribution to the dipole moment
-     *
-     * @param[in] the nucleus
-     *
-     */
-    ComplexVector trace(const Nucleus &nuc) {
-        ComplexVector result = ComplexVector::Zero(3);
-        double Z = nuc.getCharge();
-        const mrcpp::Coord<3> &R = nuc.getCoord();
-        result(0) = Z * this->r_x->real().evalf(R);
-        result(1) = Z * this->r_y->real().evalf(R);
-        result(2) = Z * this->r_z->real().evalf(R);
-        return result;
-    }
-
-    using RankOneTensorOperator<3>::trace;
 };
 
 } // namespace mrchem

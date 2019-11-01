@@ -96,8 +96,9 @@ void calc_rsp_properties(const json &input, Molecule &mol, int dir, double omega
 
 void plot_scf_quantities(const json &input, Molecule &mol);
 
-RankOneTensorOperator<3> get_perturbation(const json &input);
 DerivativeOperator_p get_derivative(const std::string &name);
+template <int I> RankOneTensorOperator<I> get_operator(const json &json_oper);
+template <int I, int J> RankTwoTensorOperator<I, J> get_operator(const json &json_oper);
 } // namespace driver
 
 /** @brief Initialize a molecule from input
@@ -109,14 +110,16 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
 
     auto charge = json_mol["charge"].get<int>();
     auto multiplicity = json_mol["multiplicity"].get<int>();
+    auto gauge_origin = json_mol["gauge_origin"].get<mrcpp::Coord<3>>();
 
     mol.setCharge(charge);
     mol.setMultiplicity(multiplicity);
+    mol.setGaugeOrigin(gauge_origin);
 
     Nuclei &nuclei = mol.getNuclei();
     for (const auto &coord : json_mol["coords"].get<json>()) {
         auto atom = coord["atom"].get<std::string>();
-        auto xyz = coord["xyz"].get<std::array<double, 3>>();
+        auto xyz = coord["xyz"].get<mrcpp::Coord<3>>();
         nuclei.push_back(atom, xyz);
     }
 
@@ -340,7 +343,7 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
 
     // Setup perturbation operator
     const auto &json_pert = json_rsp["perturbation"].get<json>();
-    auto h_1 = driver::get_perturbation(json_pert);
+    auto h_1 = driver::get_operator<3>(json_pert);
 
     ///////////////////////////////////////////////////////////
     /////////////////   Running RSP Solver  ///////////////////
@@ -504,17 +507,14 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     auto &nuclei = mol.getNuclei();
     auto &Phi = mol.getOrbitals();
 
-    auto json_dipole = json_prop.find("dipole_moment");
-    if (json_dipole != json_prop.end()) {
+    auto json_dip = json_prop.find("dipole_moment");
+    if (json_dip != json_prop.end()) {
         t_lap.start();
         mrcpp::print::header(2, "Computing dipole moment");
-        auto prec = (*json_dipole)["setup_prec"].get<double>();
-        auto r_O = (*json_dipole)["origin"].get<Coord<3>>();
-
+        auto prec = (*json_dip)["precision"].get<double>();
         DipoleMoment &mu = mol.getDipoleMoment();
-        mu.getOrigin() = r_O;
 
-        H_E_dip h(r_O);
+        auto h = driver::get_operator<3>(*json_dip);
         h.setup(prec);
         mu.getNuclear() = h.trace(nuclei).real();
         mu.getElectronic() = h.trace(Phi).real();
@@ -536,15 +536,12 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     if (json_mag != json_prop.end()) {
         t_lap.start();
         mrcpp::print::header(2, "Computing magnetizability (dia)");
-        auto prec = (*json_mag)["setup_prec"].get<double>();
-        auto r_O = (*json_mag)["origin"].get<Coord<3>>();
+        auto prec = (*json_mag)["precision"].get<double>();
+        Magnetizability &xi = mol.getMagnetizability();
 
-        Magnetizability &khi = mol.getMagnetizability();
-
-        H_BB_dia h(r_O);
+        auto h = driver::get_operator<3, 3>(*json_mag);
         h.setup(prec);
-        khi.getOrigin() = r_O;
-        khi.getDiamagnetic() = -h.trace(Phi).real();
+        xi.getDiamagnetic() = -h.trace(Phi).real();
         h.clear();
         mrcpp::print::footer(2, t_lap, 2);
         if (plevel == 1) mrcpp::print::time(1, "Magnetizability (dia)", t_lap);
@@ -554,18 +551,13 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     if (json_nmr != json_prop.end()) {
         t_lap.start();
         mrcpp::print::header(2, "Computing NMR shielding (dia)");
-        auto prec = (*json_nmr)["setup_prec"].get<double>();
-        auto r_O = (*json_nmr)["origin"].get<Coord<3>>();
-        auto nucleus_k = (*json_nmr)["nucleus_k"].get<std::vector<int>>();
+        for (const auto &json_nuc : *json_nmr) {
+            auto k = json_nuc["nucleus_k"].get<int>();
+            auto prec = json_nuc["precision"].get<double>();
+            NMRShielding &sigma_k = mol.getNMRShielding(k);
 
-        for (int k = 0; k < nucleus_k.size(); k++) {
-            if (k != 0) mrcpp::print::separator(2, '-');
-            NMRShielding &sigma_k = mol.getNMRShielding(nucleus_k[k]);
-            const auto &r_K = sigma_k.getNucleus().getCoord();
-
-            H_BM_dia h(r_O, r_K);
+            auto h = driver::get_operator<3, 3>(json_nuc);
             h.setup(prec);
-            sigma_k.getOrigin() = r_O;
             sigma_k.getDiamagnetic() = h.trace(Phi).real();
             h.clear();
         }
@@ -593,12 +585,10 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
     if (json_pol != json_prop.end()) {
         t_lap.start();
         mrcpp::print::header(2, "Computing polarizability");
-        auto prec = (*json_pol)["setup_prec"].get<double>();
-        auto r_O = (*json_pol)["origin"].get<Coord<3>>();
-
+        auto prec = (*json_pol)["precision"].get<double>();
         Polarizability &alpha = mol.getPolarizability(omega);
 
-        H_E_dip h(r_O);
+        auto h = driver::get_operator<3>(*json_pol);
         h.setup(prec);
         alpha.getTensor().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
@@ -610,21 +600,34 @@ void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, 
     if (json_mag != json_prop.end()) {
         t_lap.start();
         mrcpp::print::header(2, "Computing magnetizability (para)");
-        auto prec = (*json_mag)["setup_prec"].get<double>();
-        auto r_O = (*json_mag)["origin"].get<Coord<3>>();
-        auto pert_diff = (*json_mag)["derivative"].get<std::string>();
-        auto D = driver::get_derivative(pert_diff);
+        auto prec = (*json_mag)["precision"].get<double>();
+        Magnetizability &xi = mol.getMagnetizability();
 
-        Magnetizability &khi = mol.getMagnetizability();
-
-        H_B_dip h(D, r_O);
+        auto h = driver::get_operator<3>(*json_mag);
         h.setup(prec);
-        khi.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
+        xi.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
         h.clear();
         mrcpp::print::footer(2, t_lap, 2);
         if (plevel == 1) mrcpp::print::time(1, "Magnetizability (para)", t_lap);
     }
 
+    auto json_nmr = json_prop.find("nmr_shielding");
+    if (json_nmr != json_prop.end()) {
+        t_lap.start();
+        mrcpp::print::header(2, "Computing NMR shielding (para)");
+        for (const auto &json_nuc : *json_nmr) {
+            auto k = json_nuc["nucleus_k"].get<int>();
+            auto prec = json_nuc["precision"].get<double>();
+            NMRShielding &sigma_k = mol.getNMRShielding(k);
+
+            auto h = driver::get_operator<3>(json_nuc);
+            h.setup(prec);
+            sigma_k.getParamagnetic().row(dir) = -h.trace(Phi, X, Y).real();
+            h.clear();
+        }
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "NMR shielding (para)", t_lap);
+    }
     if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 }
 
@@ -739,7 +742,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
     auto json_external = json_fock.find("external_operator");
     if (json_external != json_fock.end()) {
         auto field = (*json_external)["electric_field"].get<std::array<double, 3>>();
-        auto r_O = (*json_external)["origin"].get<Coord<3>>();
+        auto r_O = (*json_external)["r_O"].get<Coord<3>>();
         auto V_ext = std::make_shared<ElectricFieldOperator>(field, r_O);
         F.getExtOperator() = V_ext;
     }
@@ -747,20 +750,48 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
 }
 
 /** @brief Construct perturbation operator based on input keyword */
-RankOneTensorOperator<3> driver::get_perturbation(const json &json_pert) {
-    RankOneTensorOperator<3> h_1;
-    auto pert_oper = json_pert["operator"].get<std::string>();
-    if (pert_oper == "h_e_dip") {
-        auto r_O = json_pert["origin"].get<mrcpp::Coord<3>>();
-        h_1 = H_E_dip(r_O);
-    }
-    if (pert_oper == "h_b_dip") {
-        auto r_O = json_pert["origin"].get<mrcpp::Coord<3>>();
-        auto pert_diff = json_pert["derivative"].get<std::string>();
+template <int I> RankOneTensorOperator<I> driver::get_operator(const json &json_oper) {
+    RankOneTensorOperator<I> h;
+    auto oper = json_oper["operator"].get<std::string>();
+    if (oper == "h_e_dip") {
+        auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
+        h = H_E_dip(r_O);
+    } else if (oper == "h_b_dip") {
+        auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
+        auto pert_diff = json_oper["derivative"].get<std::string>();
         auto D = driver::get_derivative(pert_diff);
-        h_1 = H_B_dip(D, r_O);
+        h = H_B_dip(D, r_O);
+    } else if (oper == "h_m_pso") {
+        auto r_K = json_oper["r_K"].get<mrcpp::Coord<3>>();
+        auto smoothing = json_oper["smoothing"].get<double>();
+        auto pert_diff = json_oper["derivative"].get<std::string>();
+        auto D = driver::get_derivative(pert_diff);
+        PeriodicTable pt;
+        Nucleus nuc_K(pt.getElement("H"), r_K);
+        h = H_M_pso(D, nuc_K, smoothing);
+    } else {
+        MSG_ERROR("Invalid operator: " << oper);
     }
-    return h_1;
+    return h;
+}
+
+template <int I, int J> RankTwoTensorOperator<I, J> driver::get_operator(const json &json_oper) {
+    RankTwoTensorOperator<I, J> h;
+    auto oper = json_oper["operator"].get<std::string>();
+    if (oper == "h_bb_dia") {
+        auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
+        h = H_BB_dia(r_O);
+    } else if (oper == "h_bm_dia") {
+        auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
+        auto r_K = json_oper["r_K"].get<mrcpp::Coord<3>>();
+        auto smoothing = json_oper["smoothing"].get<double>();
+        PeriodicTable pt;
+        Nucleus nuc_K(pt.getElement("H"), r_K);
+        h = H_BM_dia(r_O, nuc_K, smoothing);
+    } else {
+        MSG_ERROR("Invalid operator: " << oper);
+    }
+    return h;
 }
 
 /** @brief Construct derivative operator based on input keyword */
@@ -770,10 +801,10 @@ DerivativeOperator_p driver::get_derivative(const std::string &name) {
         D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
     } else if (name == "abgv_55") {
         D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
-        //    } else if (name == "ph") {
-        //        D = std::make_shared<mrcpp::PHOperator<3>>(*MRA, 1);
-        //    } else if (name == "bspline") {
-        //        D = std::make_shared<mrcpp::BSOperator<3>>(*MRA, 1);
+    } else if (name == "ph") {
+        D = std::make_shared<mrcpp::PHOperator<3>>(*MRA, 1);
+    } else if (name == "bspline") {
+        D = std::make_shared<mrcpp::BSOperator<3>>(*MRA, 1);
     } else {
         MSG_ERROR("Invalid derivative operator");
     }
