@@ -62,7 +62,7 @@ HelmholtzVector::HelmholtzVector(double pr, const DoubleVector &l)
  * in the OrbitalVector based on the corresponding lambda_i parameter in the
  * HelmholtzVector. Computes output as: out_i = H_i[phi_i]
  *
- * NOTE: Helmholtz operator will be apply with _absolute_ precision
+ * NOTE: Helmholtz operator will be applied with _absolute_ precision
  *
  * MPI: Output vector gets the same MPI distribution as input vector. Only
  *      local orbitals are computed.
@@ -100,7 +100,7 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
  * Specialized version with smaller memory footprint since the full vector V*Phi
  * is never stored, but computed on the fly.
  *
- * NOTE: Helmholtz operator will be apply with _absolute_ precision
+ * NOTE: Helmholtz operator will be applied with _absolute_ precision
  *
  *
  * MPI: Output vector gets the same MPI distribution as input vector. Only
