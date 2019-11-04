@@ -48,7 +48,7 @@ protected:
     std::unique_ptr<mrdft::MRDFT> mrdft;     ///< External XC functional to be used
 
     double getEnergy() const { return this->energy; }
-    Density &getDensity(DENSITY::DensityType spin, int pert_idx);
+    Density &getDensity(DensityType spin, int pert_idx);
     mrcpp::FunctionTree<3> &getPotential(int spin);
 
     void setup(double prec) override;

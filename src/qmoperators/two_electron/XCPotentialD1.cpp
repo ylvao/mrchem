@@ -27,11 +27,11 @@ mrcpp::FunctionTreeVector<3> XCPotentialD1::setupDensities(double prec, mrcpp::F
     if (not this->mrdft->functional().isSpin()) {
         { // Unperturbed total density
             Timer timer;
-            Density &rho = getDensity(DENSITY::DensityType::Total, 0);
+            Density &rho = getDensity(DensityType::Total, 0);
             if (not rho.hasReal()) {
                 rho.alloc(NUMBER::Real);
                 mrcpp::copy_grid(rho.real(), grid);
-                density::compute(prec, rho, *orbitals, DENSITY::DensityType::Total);
+                density::compute(prec, rho, *orbitals, DensityType::Total);
             }
             print_utils::qmfunction(2, "XC rho", rho, timer);
             dens_vec.push_back(std::make_tuple(1.0, &rho.real()));
@@ -39,22 +39,22 @@ mrcpp::FunctionTreeVector<3> XCPotentialD1::setupDensities(double prec, mrcpp::F
     } else {
         { // Unperturbed alpha density
             Timer timer;
-            Density &rho = getDensity(DENSITY::DensityType::Alpha, 0);
+            Density &rho = getDensity(DensityType::Alpha, 0);
             if (not rho.hasReal()) {
                 rho.alloc(NUMBER::Real);
                 mrcpp::copy_grid(rho.real(), grid);
-                density::compute(prec, rho, *orbitals, DENSITY::DensityType::Alpha);
+                density::compute(prec, rho, *orbitals, DensityType::Alpha);
             }
             print_utils::qmfunction(2, "XC rho (alpha)", rho, timer);
             dens_vec.push_back(std::make_tuple(1.0, &rho.real()));
         }
         { // Unperturbed beta density
             Timer timer;
-            Density &rho = getDensity(DENSITY::DensityType::Beta, 0);
+            Density &rho = getDensity(DensityType::Beta, 0);
             if (not rho.hasReal()) {
                 rho.alloc(NUMBER::Real);
                 mrcpp::copy_grid(rho.real(), grid);
-                density::compute(prec, rho, *orbitals, DENSITY::DensityType::Beta);
+                density::compute(prec, rho, *orbitals, DensityType::Beta);
             }
             print_utils::qmfunction(2, "XC rho (beta)", rho, timer);
             dens_vec.push_back(std::make_tuple(1.0, &rho.real()));

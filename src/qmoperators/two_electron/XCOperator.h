@@ -42,7 +42,7 @@ public:
     ~XCOperator() override = default;
 
     auto getEnergy() { return potential->getEnergy(); }
-    auto &getDensity(DENSITY::DensityType spin, int pert_idx = 0) { return potential->getDensity(spin, pert_idx); }
+    auto &getDensity(DensityType spin, int pert_idx = 0) { return potential->getDensity(spin, pert_idx); }
 
 private:
     std::shared_ptr<XCPotential> potential{nullptr};

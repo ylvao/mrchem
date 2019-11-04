@@ -67,15 +67,15 @@ void XCPotential::clear() {
     clearApplyPrec();
 }
 
-Density &XCPotential::getDensity(DENSITY::DensityType spin, int pert_idx) {
+Density &XCPotential::getDensity(DensityType spin, int pert_idx) {
     int dens_idx = -1;
-    if (spin == DENSITY::DensityType::Total) {
+    if (spin == DensityType::Total) {
         if (pert_idx == 0) dens_idx = 0;
         if (pert_idx == 1) dens_idx = 3;
-    } else if (spin == DENSITY::DensityType::Alpha) {
+    } else if (spin == DensityType::Alpha) {
         if (pert_idx == 0) dens_idx = 1;
         if (pert_idx == 1) dens_idx = 4;
-    } else if (spin == DENSITY::DensityType::Beta) {
+    } else if (spin == DensityType::Beta) {
         if (pert_idx == 0) dens_idx = 2;
         if (pert_idx == 1) dens_idx = 5;
     } else {

@@ -114,11 +114,11 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
 
     // Compute XC density
     if (restricted) {
-        Density &rho_xc = XC.getDensity(DENSITY::DensityType::Total);
+        Density &rho_xc = XC.getDensity(DensityType::Total);
         qmfunction::deep_copy(rho_xc, rho_j);
     } else {
-        Density &rho_a = XC.getDensity(DENSITY::DensityType::Alpha);
-        Density &rho_b = XC.getDensity(DENSITY::DensityType::Beta);
+        Density &rho_a = XC.getDensity(DensityType::Alpha);
+        Density &rho_b = XC.getDensity(DensityType::Beta);
         qmfunction::deep_copy(rho_a, rho_j);
         qmfunction::deep_copy(rho_b, rho_j);
         rho_a.rescale(1.0 - static_cast<double>(Nb) / Ne);
