@@ -71,10 +71,10 @@ std::unique_ptr<MRDFT> Factory::build() {
     // Init XC functional
     std::unique_ptr<Functional> func_p{nullptr};
     if (spin) {
-        if (gga) func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
+        if (gga) func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p, log_grad);
         if (lda) func_p = std::make_unique<SpinLDA>(order, xcfun_p);
     } else {
-        if (gga) func_p = std::make_unique<GGA>(order, xcfun_p, diff_p);
+        if (gga) func_p = std::make_unique<GGA>(order, xcfun_p, diff_p, log_grad);
         if (lda) func_p = std::make_unique<LDA>(order, xcfun_p);
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");

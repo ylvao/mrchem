@@ -23,6 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
 #include <MRCPP/trees/FunctionNode.h>
 
@@ -168,6 +169,39 @@ void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Ei
         auto &node = out_nodes[i];
         node->setValues(out_data.col(i));
     }
+}
+
+mrcpp::FunctionTreeVector<3> xc_utils::log_gradient(mrcpp::DerivativeOperator<3> &diff_oper,
+                                                    mrcpp::FunctionTree<3> &rho) {
+    mrcpp::FunctionTree<3> zeta(rho.getMRA());
+    mrcpp::copy_grid(zeta, rho);
+    mrcpp::copy_func(zeta, rho);
+    for (auto i = 0; i < zeta.getNEndNodes(); i++) {
+        auto &node = zeta.getEndFuncNode(i);
+        Eigen::VectorXd values;
+        node.getValues(values);
+        for (auto j = 0; j < node.getNCoefs(); j++) {
+            if (values[j] > mrcpp::MachineZero) {
+                values[j] = std::log(values[j]);
+            } else {
+                values[j] = mrcpp::MachineZero;
+            }
+        }
+        node.setValues(values);
+    }
+    zeta.mwTransform(mrcpp::BottomUp);
+
+    mrcpp::FunctionTreeVector<3> grad_zeta = mrcpp::gradient(diff_oper, zeta);
+
+    mrcpp::FunctionTreeVector<3> grad_rho;
+    for (int i = 0; i < 3; i++) {
+        mrcpp::FunctionTree<3> *grad_comp = new mrcpp::FunctionTree<3>(rho.getMRA());
+        mrcpp::copy_grid(*grad_comp, rho);
+        mrcpp::multiply(-1.0, *grad_comp, 1.0, rho, mrcpp::get_func(grad_zeta, i));
+        grad_rho.push_back(std::make_tuple(1.0, grad_comp));
+    }
+    mrcpp::clear(grad_zeta, true);
+    return grad_rho;
 }
 
 } // namespace mrdft

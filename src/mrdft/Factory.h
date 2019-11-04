@@ -40,6 +40,7 @@ public:
     void setSpin(bool s) { spin = s; }
     void setOrder(int k) { order = k; }
     void setUseGamma(bool g) { gamma = g; }
+    void setLogGradient(bool lg) { log_grad = lg; }
     void setDensityCutoff(double c) { cutoff = c; }
     void setDerivative(const std::string &n) { diff_s = n; }
     void setFunctional(const std::string &n, double c = 1.0) { xc_set(*xcfun_p, n.c_str(), c); }
@@ -50,6 +51,7 @@ protected:
     int order{1};
     bool spin{false};
     bool gamma{false};
+    bool log_grad{false};
     double cutoff{-1.0};
     std::string diff_s{"abgv_00"};
     const mrcpp::MultiResolutionAnalysis<3> mra;

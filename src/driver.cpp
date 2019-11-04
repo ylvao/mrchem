@@ -691,6 +691,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto json_xcfunc = (*json_xc)["xc_functional"].get<json>();
         auto xc_spin = json_xcfunc["spin"].get<bool>();
         auto xc_gamma = json_xcfunc["gamma"].get<bool>();
+        auto xc_log_grad = json_xcfunc["log_grad"].get<bool>();
         auto xc_cutoff = json_xcfunc["cutoff"].get<double>();
         auto xc_diff = json_xcfunc["derivative"].get<std::string>();
         auto xc_funcs = json_xcfunc["functionals"].get<json>();
@@ -700,6 +701,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         xc_factory.setSpin(xc_spin);
         xc_factory.setOrder(xc_order);
         xc_factory.setUseGamma(xc_gamma);
+        xc_factory.setLogGradient(xc_log_grad);
         xc_factory.setDensityCutoff(xc_cutoff);
         for (const auto &f : xc_funcs) {
             auto name = f["name"].get<std::string>();

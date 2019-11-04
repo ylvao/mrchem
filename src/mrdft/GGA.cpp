@@ -31,8 +31,9 @@
 
 namespace mrdft {
 
-GGA::GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
+GGA::GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d, bool lg)
         : Functional(k, f)
+        , log_grad(lg)
         , derivative(std::move(d)) {
     xc_mask = xc_utils::build_output_mask(false, false, this->order);
     d_mask = xc_utils::build_density_mask(false, false, this->order);
@@ -98,7 +99,12 @@ void GGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     for (int i = 0; i < this->order; i++) this->rho.push_back(inp_vec[n++]);
 
     for (int i = 0; i < this->order; i++) {
-        auto tmp = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+        mrcpp::FunctionTreeVector<3> tmp;
+        if (this->log_grad and i == 0) {
+            tmp = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+        } else {
+            tmp = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+        }
         this->grad.insert(this->grad.end(), tmp.begin(), tmp.end());
     }
 }

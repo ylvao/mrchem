@@ -31,8 +31,9 @@
 
 namespace mrdft {
 
-SpinGGA::SpinGGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
+SpinGGA::SpinGGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d, bool lg)
         : Functional(k, f)
+        , log_grad(lg)
         , derivative(std::move(d)) {
     xc_mask = xc_utils::build_output_mask(false, true, this->order);
     d_mask = xc_utils::build_density_mask(false, true, this->order);
@@ -111,8 +112,14 @@ void SpinGGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     }
 
     for (int i = 0; i < this->order; i++) {
-        auto tmp_a = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho_a, i));
-        auto tmp_b = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho_b, i));
+        mrcpp::FunctionTreeVector<3> tmp_a, tmp_b;
+        if (this->log_grad and i == 0) {
+            tmp_a = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho_a, i));
+            tmp_b = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho_b, i));
+        } else {
+            tmp_a = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho_a, i));
+            tmp_b = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho_b, i));
+        }
         this->grad_a.insert(this->grad_a.end(), tmp_a.begin(), tmp_a.end());
         this->grad_b.insert(this->grad_b.end(), tmp_b.begin(), tmp_b.end());
     }
