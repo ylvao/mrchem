@@ -28,9 +28,7 @@
 #include "MRCPP/Timer"
 #include "MRCPP/trees/FunctionNode.h"
 
-#include "/home/mifapw/mrchem/src/parallel.h"
 #include "XCFunctional.h"
-#include "qmfunctions/qmfunction_fwd.h"
 
 using mrcpp::DerivativeOperator;
 using mrcpp::FunctionNode;
@@ -432,7 +430,6 @@ void XCFunctional::setupXCOutput() {
  * The data contained in the xcInput is converted in matrix form and fed to
  * the functional. The output matrix is then converted back to function form.
  */
-
 void XCFunctional::evaluate() {
     if (xcInput.size() == 0) MSG_ERROR("XC input not initialized");
     if (xcOutput.size() == 0) MSG_ERROR("XC output not initialized");
@@ -441,46 +438,15 @@ void XCFunctional::evaluate() {
     int nInp = getInputLength();
     int nOut = getOutputLength();
 
-    int nNodes = mrcpp::get_func(xcInput, 0).getNEndNodes();
-    int nNodesPerRank = nNodes / mrchem::mpi::orb_size;
-    int mynodes_start = mrchem::mpi::orb_rank * nNodesPerRank;
-    int mynodes_end = (mrchem::mpi::orb_rank + 1) * nNodesPerRank;
-    if (mrchem::mpi::orb_rank == mrchem::mpi::orb_size - 1) mynodes_end = nNodes;
-    if (mrchem::mpi::bank_size == 0) {
-        mynodes_start = 0;
-        mynodes_end = nNodes;
-    }
 #pragma omp parallel firstprivate(nInp, nOut)
     {
+        int nNodes = mrcpp::get_func(xcInput, 0).getNEndNodes();
 #pragma omp for schedule(guided)
-        for (int n = mynodes_start; n < mynodes_end; n++) {
+        for (int n = 0; n < nNodes; n++) {
             MatrixXd inpData, outData;
             compressNodeData(n, nInp, xcInput, inpData);
             evaluateBlock(inpData, outData);
             expandNodeData(n, nOut, xcOutput, outData);
-        }
-    }
-    if (mrchem::mpi::bank_size > 0) {
-        // send all computed Output nodecoeff to bank (NB: cannot be inside OMP region)
-        mrchem::mpi::orb_bank.clear_all(mrchem::mpi::orb_rank, mrchem::mpi::comm_orb);
-        FunctionTree<3> &tree = mrcpp::get_func(xcOutput, 0);
-        int nCoefs = tree.getTDim() * tree.getKp1_d();
-
-        mrchem::mpi::orb_bank.set_datasize(nCoefs);
-        for (int i = 0; i < nOut; i++) {
-            for (int n = mynodes_start; n < mynodes_end; n++) {
-                FunctionNode<3> &node = mrcpp::get_func(xcOutput, i).getEndFuncNode(n);
-                mrchem::mpi::orb_bank.put_data(n + i * nNodes, nCoefs, node.getCoefs());
-            }
-            // fetch Output nodes from other ranks from bank
-            for (int n = 0; n < nNodes; n++) {
-                if (n < mynodes_start or n >= mynodes_end) {
-                    FunctionNode<3> &node = mrcpp::get_func(xcOutput, i).getEndFuncNode(n);
-                    mrchem::mpi::orb_bank.get_data(n + i * nNodes, nCoefs, node.getCoefs());
-                    node.setHasCoefs();
-                    node.calcNorms();
-                }
-            }
         }
     }
     for (int i = 0; i < nOut; i++) {
