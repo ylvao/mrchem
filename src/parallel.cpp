@@ -369,10 +369,11 @@ int Bank::open() {
 
     bool printinfo = false;
 
-    // The bank never goes out of this loop as long as it receives a close signal!
+    // The bank never goes out of this loop until it receives a close message!
     while (true) {
         MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, MPI_ANY_TAG, mpi::comm_bank, &status);
-        if (printinfo) std::cout << mpi::world_rank << " got message " << message << std::endl;
+        if (printinfo)
+            std::cout << mpi::world_rank << " got message " << message << " from " << status.MPI_SOURCE << std::endl;
         if (message == CLOSE_BANK) {
             if (mpi::is_bankmaster) std::cout << "Bank is closing" << std::endl;
             this->clear_bank();
@@ -383,23 +384,41 @@ int Bank::open() {
             // send message that it is ready (value of message is not used)
             MPI_Send(&message, 1, MPI_INTEGER, status.MPI_SOURCE, 77, mpi::comm_bank);
         }
-        if (message == GET_ORBITAL or message == GET_FUNCTION or message == GET_DATA) {
+        if (message == GET_ORBITAL or message == GET_ORBITAL_AND_WAIT or message == GET_ORBITAL_AND_DELETE or
+            message == GET_FUNCTION or message == GET_DATA) {
             // withdrawal
             int ix = id2ix[status.MPI_TAG];
             if (ix == 0) {
-                if (printinfo) std::cout << mpi::world_rank << " queuing " << status.MPI_TAG << std::endl;
-                // the id does not exist. Put in queue and Wait until it is defined
-                if (id2qu[status.MPI_TAG] == 0) {
-                    queue.push_back({status.MPI_TAG, {status.MPI_SOURCE}});
-                    id2qu[status.MPI_TAG] = queue.size() - 1;
+                if (printinfo) std::cout << mpi::world_rank << " not found " << status.MPI_TAG << std::endl;
+                if (message == GET_ORBITAL or message == GET_ORBITAL_AND_DELETE) {
+                    // do not wait for the orbital to arrive
+                    int found = 0;
+                    if (printinfo)
+                        std::cout << mpi::world_rank << " sending found 0 to " << status.MPI_SOURCE << std::endl;
+                    MPI_Send(&found, 1, MPI_INTEGER, status.MPI_SOURCE, 117, mpi::comm_bank);
                 } else {
-                    // somebody is already waiting for this id. queue in queue
-                    queue[id2qu[status.MPI_TAG]].clients.push_back(status.MPI_SOURCE);
+                    // the id does not exist. Put in queue and Wait until it is defined
+                    if (printinfo) std::cout << mpi::world_rank << " queuing " << status.MPI_TAG << std::endl;
+                    if (id2qu[status.MPI_TAG] == 0) {
+                        queue.push_back({status.MPI_TAG, {status.MPI_SOURCE}});
+                        id2qu[status.MPI_TAG] = queue.size() - 1;
+                    } else {
+                        // somebody is already waiting for this id. queue in queue
+                        queue[id2qu[status.MPI_TAG]].clients.push_back(status.MPI_SOURCE);
+                    }
                 }
             } else {
-                if (deposits[ix].id != status.MPI_TAG) std::cout << ix << " Bank acounting error " << std::endl;
-                if (message == GET_ORBITAL) {
+                if (deposits[ix].id != status.MPI_TAG) std::cout << ix << " Bank accounting error " << std::endl;
+                if (message == GET_ORBITAL or message == GET_ORBITAL_AND_WAIT or message == GET_ORBITAL_AND_DELETE) {
+                    if (message == GET_ORBITAL or message == GET_ORBITAL_AND_DELETE) {
+                        int found = 1;
+                        MPI_Send(&found, 1, MPI_INTEGER, status.MPI_SOURCE, 117, mpi::comm_bank);
+                    }
                     mpi::send_orbital(*deposits[ix].orb, status.MPI_SOURCE, deposits[ix].id, mpi::comm_bank);
+                    if (message == GET_ORBITAL_AND_DELETE) {
+                        deposits[ix].orb->free(NUMBER::Total);
+                        id2ix[status.MPI_TAG] = 0;
+                    }
                 }
                 if (message == GET_FUNCTION) {
                     mpi::send_function(*deposits[ix].orb, status.MPI_SOURCE, deposits[ix].id, mpi::comm_bank);
@@ -453,7 +472,7 @@ int Bank::open() {
             if (id2qu[deposits[ix].id] != 0) {
                 // someone is waiting for those data. Send to them
                 int iq = id2qu[deposits[ix].id];
-                if (deposits[ix].id != queue[iq].id) std::cout << ix << " Bank queue acounting error " << std::endl;
+                if (deposits[ix].id != queue[iq].id) std::cout << ix << " Bank queue accounting error " << std::endl;
                 for (int iqq : queue[iq].clients) {
                     if (message == SAVE_ORBITAL) {
                         mpi::send_orbital(*deposits[ix].orb, iqq, queue[iq].id, mpi::comm_bank);
@@ -497,12 +516,43 @@ int Bank::put_orb(int id, Orbital &orb) {
 #endif
 }
 
-// get orbital with identity id
-int Bank::get_orb(int id, Orbital &orb) {
+// get orbital with identity id.
+// If wait=0, return immediately with value zero if not available (default)
+// else, wait until available
+int Bank::get_orb(int id, Orbital &orb, int wait) {
 #ifdef HAVE_MPI
     MPI_Status status;
-    MPI_Send(&GET_ORBITAL, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
-    mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    if (wait == 0) {
+        MPI_Send(&GET_ORBITAL, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+        int found;
+        MPI_Recv(&found, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], 117, mpi::comm_bank, &status);
+        if (found != 0) {
+            mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        MPI_Send(&GET_ORBITAL_AND_WAIT, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+        mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    }
+#endif
+}
+
+// get orbital with identity id, and delete from bank.
+// return immediately with value zero if not available
+int Bank::get_orb_del(int id, Orbital &orb) {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    MPI_Send(&GET_ORBITAL_AND_DELETE, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    int found;
+    MPI_Recv(&found, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], 117, mpi::comm_bank, &status);
+    if (found != 0) {
+        mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+        return 1;
+    } else {
+        return 0;
+    }
 #endif
 }
 
@@ -601,6 +651,7 @@ int Bank::clear(int ix) {
 #ifdef HAVE_MPI
     delete deposits[ix].orb;
     delete deposits[ix].data;
+    deposits[ix].hasdata = false;
 #endif
 }
 
