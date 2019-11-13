@@ -123,8 +123,6 @@ OrbitalVector initial_guess::sad::setup(double prec, const Molecule &mol, bool r
         qmfunction::deep_copy(rho_b, rho_j);
         rho_a.rescale(1.0 - static_cast<double>(Nb) / Ne);
         rho_b.rescale(1.0 - static_cast<double>(Na) / Ne);
-        println(0, "rho_a " << rho_a.integrate());
-        println(0, "rho_b " << rho_b.integrate());
     }
     if (plevel == 1) mrcpp::print::time(1, "Projecting GTO density", t_lap);
 
