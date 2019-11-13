@@ -29,28 +29,24 @@
 
 #include "Functional.h"
 #include "Grid.h"
-#include "Regularizer.h"
 
 namespace mrdft {
 
 class MRDFT final {
 public:
-    MRDFT(std::unique_ptr<Grid> &g, std::unique_ptr<Functional> &f, std::unique_ptr<Regularizer> &r)
+    MRDFT(std::unique_ptr<Grid> &g, std::unique_ptr<Functional> &f)
             : G(std::move(g))
-            , F(std::move(f))
-            , R(std::move(r)) {}
+            , F(std::move(f)) {}
     ~MRDFT() = default;
 
     auto &grid() { return *G; }
     auto &functional() { return *F; }
-    auto &regularizer() { return *R; }
 
     mrcpp::FunctionTreeVector<3> evaluate(mrcpp::FunctionTreeVector<3> &inp);
 
 protected:
     std::unique_ptr<Grid> G{nullptr};
     std::unique_ptr<Functional> F{nullptr};
-    std::unique_ptr<Regularizer> R{nullptr};
 };
 
 } // namespace mrdft

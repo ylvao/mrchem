@@ -39,6 +39,9 @@ public:
             , xcfun(std::move(f)) {}
     virtual ~Functional() = default;
 
+    void setLogGradient(bool log) { log_grad = log; }
+    void setDensityCutoff(double cut) { cutoff = cut; }
+
     virtual bool isSpin() const = 0;
     bool isLDA() const { return (not(isGGA() or isMetaGGA())); }
     bool isGGA() const { return xc_is_gga(*xcfun); }
@@ -54,6 +57,8 @@ public:
 
 protected:
     const int order;
+    bool log_grad{false};
+    double cutoff{-1.0};
     Eigen::VectorXi d_mask;
     Eigen::MatrixXi xc_mask;
     std::unique_ptr<xc_functional> xcfun;
@@ -63,7 +68,7 @@ protected:
     virtual int getCtrInputLength() const = 0;
     virtual int getCtrOutputLength() const = 0;
 
-    Eigen::MatrixXd evaluate(double cutoff, Eigen::MatrixXd &inp) const;
+    Eigen::MatrixXd evaluate(Eigen::MatrixXd &inp) const;
     Eigen::MatrixXd contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const;
 
     virtual void clear() = 0;

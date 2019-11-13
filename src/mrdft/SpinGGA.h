@@ -59,13 +59,12 @@ namespace mrdft {
 
 class SpinGGA final : public Functional {
 public:
-    SpinGGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d, bool lg);
+    SpinGGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
     ~SpinGGA() override = default;
 
     bool isSpin() const override { return true; }
 
 private:
-    bool log_grad;
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivative{nullptr};
     mrcpp::FunctionTreeVector<3> rho_a;
     mrcpp::FunctionTreeVector<3> rho_b;

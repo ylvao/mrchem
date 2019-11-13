@@ -59,13 +59,12 @@ namespace mrdft {
 
 class GGA final : public Functional {
 public:
-    GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d, bool lg);
+    GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
     ~GGA() override = default;
 
     bool isSpin() const override { return false; }
 
 private:
-    bool log_grad;
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivative{nullptr};
     mrcpp::FunctionTreeVector<3> rho;
     mrcpp::FunctionTreeVector<3> grad;

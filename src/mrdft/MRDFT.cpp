@@ -39,7 +39,6 @@ mrcpp::FunctionTreeVector<3> MRDFT::evaluate(mrcpp::FunctionTreeVector<3> &inp) 
     // auto nOutXC = functional().getXCOutputLength();
     // mrcpp::FunctionTreeVector<3> xcOutVec = grid().generate(nOutXC);
 
-    auto cutoff = regularizer().getDensityCutoff();
     auto nOutCtr = functional().getCtrOutputLength();
     mrcpp::FunctionTreeVector<3> ctrOutVec = grid().generate(nOutCtr);
 
@@ -51,7 +50,7 @@ mrcpp::FunctionTreeVector<3> MRDFT::evaluate(mrcpp::FunctionTreeVector<3> &inp) 
             auto xcInpNodes = xc_utils::fetch_nodes(n, xcInpVec);
             auto xcInpData = xc_utils::compress_nodes(xcInpNodes);
 
-            auto xcOutData = functional().evaluate(cutoff, xcInpData);
+            auto xcOutData = functional().evaluate(xcInpData);
             // auto xcOutNodes = xc_utils::fetch_nodes(n, xcOutVec);
             // xc_utils::expand_nodes(xcOutNodes, xcOutData);
 

@@ -31,9 +31,8 @@
 
 namespace mrdft {
 
-GGA::GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d, bool lg)
+GGA::GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
         : Functional(k, f)
-        , log_grad(lg)
         , derivative(std::move(d)) {
     xc_mask = xc_utils::build_output_mask(false, false, this->order);
     d_mask = xc_utils::build_density_mask(false, false, this->order);

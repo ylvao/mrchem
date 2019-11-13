@@ -30,7 +30,6 @@
 #include "Grid.h"
 #include "LDA.h"
 #include "MRDFT.h"
-#include "Regularizer.h"
 #include "SpinGGA.h"
 #include "SpinLDA.h"
 
@@ -44,9 +43,6 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
 std::unique_ptr<MRDFT> Factory::build() {
     // Init DFT grid
     auto grid_p = std::make_unique<Grid>(mra);
-
-    // Init density regularization
-    auto reg_p = std::make_unique<Regularizer>(cutoff);
 
     // Init XCFun
     bool gga = xc_is_gga(*xcfun_p);
@@ -63,7 +59,7 @@ std::unique_ptr<MRDFT> Factory::build() {
 
     // Init MW derivative
     if (gga) {
-        // if (diff_s == "bspline") diff_p = std::make_unique<mrcpp::BSOperator<3>>(mra, 1);
+        if (diff_s == "bspline") diff_p = std::make_unique<mrcpp::BSOperator<3>>(mra, 1);
         if (diff_s == "abgv_00") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
         if (diff_s == "abgv_55") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
     }
@@ -71,15 +67,17 @@ std::unique_ptr<MRDFT> Factory::build() {
     // Init XC functional
     std::unique_ptr<Functional> func_p{nullptr};
     if (spin) {
-        if (gga) func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p, log_grad);
+        if (gga) func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
         if (lda) func_p = std::make_unique<SpinLDA>(order, xcfun_p);
     } else {
-        if (gga) func_p = std::make_unique<GGA>(order, xcfun_p, diff_p, log_grad);
+        if (gga) func_p = std::make_unique<GGA>(order, xcfun_p, diff_p);
         if (lda) func_p = std::make_unique<LDA>(order, xcfun_p);
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
+    func_p->setLogGradient(log_grad);
+    func_p->setDensityCutoff(cutoff);
 
-    auto mrdft_p = std::make_unique<MRDFT>(grid_p, func_p, reg_p);
+    auto mrdft_p = std::make_unique<MRDFT>(grid_p, func_p);
     return mrdft_p;
 }
 
