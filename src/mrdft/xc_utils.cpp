@@ -139,13 +139,13 @@ Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &
     auto nFuncs = inp_nodes.size();
     if (nFuncs > 0) {
         auto nCoefs = inp_nodes[0]->getNCoefs();
-        out_data = Eigen::MatrixXd::Zero(nCoefs, nFuncs);
+        out_data = Eigen::MatrixXd::Zero(nFuncs, nCoefs);
         for (auto i = 0; i < nFuncs; i++) {
             auto &node = inp_nodes[i];
-            Eigen::VectorXd col_i;
-            node->getValues(col_i);
-            if (col_i.size() != nCoefs) MSG_ABORT("Size mismatch");
-            out_data.col(i) = col_i;
+            Eigen::VectorXd row_i;
+            node->getValues(row_i);
+            if (row_i.size() != nCoefs) MSG_ABORT("Size mismatch");
+            out_data.row(i) = row_i;
         }
     }
     return out_data;
@@ -163,11 +163,11 @@ Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &
  */
 void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Eigen::MatrixXd &out_data) {
     auto nFuncs = out_nodes.size();
-    if (out_data.cols() != nFuncs) MSG_ERROR("Size mismatch");
+    if (out_data.rows() != nFuncs) MSG_ERROR("Size mismatch");
 
     for (auto i = 0; i < nFuncs; i++) {
         auto &node = out_nodes[i];
-        node->setValues(out_data.col(i));
+        node->setValues(out_data.row(i));
     }
 }
 
