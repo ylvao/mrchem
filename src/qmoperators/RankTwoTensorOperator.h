@@ -47,6 +47,7 @@ public:
     ComplexMatrix operator()(Orbital bra, Orbital ket);
     ComplexMatrix trace(OrbitalVector &phi);
     ComplexMatrix trace(OrbitalVector &phi, OrbitalVector &x, OrbitalVector &y);
+    ComplexMatrix trace(const Nuclei &nucs);
 };
 
 } // namespace mrchem

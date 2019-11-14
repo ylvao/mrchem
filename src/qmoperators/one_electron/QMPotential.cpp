@@ -2,6 +2,7 @@
 #include "MRCPP/Timer"
 
 #include "QMPotential.h"
+#include "chemistry/Nucleus.h"
 #include "qmfunctions/Orbital.h"
 #include "utils/print_utils.h"
 
@@ -35,6 +36,21 @@ QMPotential::QMPotential(int adap, bool shared)
 QMPotential::~QMPotential() {
     if (hasReal()) MSG_ERROR("Potential not cleared");
     if (hasImag()) MSG_ERROR("Potential not cleared");
+}
+
+/** @brief returns the trace with the (negative) nuclear density
+ *
+ * @param[in] the set of nuclei
+ *
+ */
+ComplexDouble QMPotential::trace(const Nuclei &nucs) {
+    ComplexDouble result = 0.0;
+    for (const auto &nuc_k : nucs) {
+        auto Z = nuc_k.getCharge();
+        const auto &R = nuc_k.getCoord();
+        result -= Z * this->real().evalf(R);
+    }
+    return result;
 }
 
 /** @brief apply potential

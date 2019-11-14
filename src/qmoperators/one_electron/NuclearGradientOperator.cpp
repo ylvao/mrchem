@@ -21,7 +21,6 @@ void NuclearGradientPotential::setup(double prec) {
 
     Timer timer;
     qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-    print_utils::qmfunction(0, "Nuclear potential", V, timer);
 }
 
 void NuclearGradientPotential::clear() {

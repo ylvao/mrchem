@@ -39,38 +39,38 @@
 using namespace mrchem;
 using namespace orbital;
 
-namespace xc_operator {
+namespace xc_hessian {
 
-TEST_CASE("XCOperator", "[xc_operator]") {
+TEST_CASE("XCHessianLDA", "[xc_hessian_lda]") {
     const double prec = 1.0e-3;
     const double thrs = 1.0e-8;
 
-    const int nShells = 2;
     std::vector<int> ns;
     std::vector<int> ls;
     std::vector<int> ms;
 
     auto Phi_p = std::make_shared<OrbitalVector>();
+    auto X_p = std::make_shared<OrbitalVector>();
     auto fun_p = std::make_shared<mrdft::XCFunctional>(*MRA, false);
     fun_p->setFunctional("LDA", 1.0);
-    fun_p->setUseGamma(false);
+    fun_p->setUseGamma(true);
     fun_p->setDensityCutoff(1.0e-10);
-    fun_p->evalSetup(1);
-    XCOperator V(fun_p, Phi_p);
+    fun_p->evalSetup(MRDFT::Hessian);
+    fun_p->setNDensities(2);
+    fun_p->allocateDensities();
+    XCOperator V(fun_p, Phi_p, X_p, X_p);
 
     OrbitalVector &Phi = *Phi_p;
-    for (int n = 1; n <= nShells; n++) {
-        int L = n;
-        for (int l = 0; l < L; l++) {
-            int M = 2 * l + 1;
-            for (int m = 0; m < M; m++) {
-                ns.push_back(n);
-                ls.push_back(l);
-                ms.push_back(m);
-                Phi.push_back(Orbital(SPIN::Paired));
-            }
-        }
-    }
+    ns.push_back(1);
+    ls.push_back(0);
+    ms.push_back(0);
+    Phi.push_back(Orbital(SPIN::Paired));
+
+    ns.push_back(2);
+    ls.push_back(0);
+    ms.push_back(0);
+    Phi.push_back(Orbital(SPIN::Paired));
+
     mpi::distribute(Phi);
 
     for (int i = 0; i < Phi.size(); i++) {
@@ -78,16 +78,43 @@ TEST_CASE("XCOperator", "[xc_operator]") {
         if (mpi::my_orb(Phi[i])) qmfunction::project(Phi[i], f, NUMBER::Real, prec);
     }
 
-    // reference values obtained with a test run at order=9 in unit_test.cpp and prec=1.0e-5 here
+    std::vector<int> ns_x;
+    std::vector<int> ls_x;
+    std::vector<int> ms_x;
 
+    OrbitalVector &Phi_x = *X_p;
+    ns_x.push_back(2);
+    ls_x.push_back(0);
+    ms_x.push_back(0);
+    Phi_x.push_back(Orbital(SPIN::Paired));
+
+    ns_x.push_back(2);
+    ls_x.push_back(1);
+    ms_x.push_back(1);
+    Phi_x.push_back(Orbital(SPIN::Paired));
+
+    mpi::distribute(Phi_x);
+
+    for (int i = 0; i < Phi_x.size(); i++) {
+        HydrogenFunction f(ns_x[i], ls_x[i], ms_x[i]);
+        if (mpi::my_orb(Phi_x[i])) qmfunction::project(Phi_x[i], f, NUMBER::Real, prec);
+    }
+
+    int i = 0;
     DoubleMatrix E_P = DoubleMatrix::Zero(Phi.size(), Phi.size());
-    E_P(0, 0) = -0.4574999901;
-    E_P(0, 1) = -0.0593789497;
-    E_P(1, 0) = -0.0593789497;
-    E_P(1, 1) = -0.1894199551;
-    E_P(2, 2) = -0.2109971956;
-    E_P(3, 3) = -0.2109971956;
-    E_P(4, 4) = -0.2109971956;
+
+    E_P(0, 0) = -0.0507818907147;
+    E_P(0, 1) = -0.0226852770676;
+    E_P(1, 0) = -0.0226852770676;
+    E_P(1, 1) = 0.00549970397828;
+
+    mrdft::XCFunctional fun(*MRA, false);
+    fun.setFunctional("LDA", 1.0);
+    fun.setUseGamma(true);
+    fun.setDensityCutoff(1.0e-10);
+    fun.evalSetup(MRDFT::Hessian);
+    fun.setNDensities(2);
+    fun.allocateDensities();
 
     V.setup(prec);
     SECTION("apply") {
@@ -136,4 +163,4 @@ TEST_CASE("XCOperator", "[xc_operator]") {
     V.clear();
 }
 
-} // namespace xc_operator
+} // namespace xc_hessian

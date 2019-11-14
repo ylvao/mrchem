@@ -33,9 +33,6 @@ namespace mrchem {
 // clang-format off
 class DipoleMoment final {
 public:
-    mrcpp::Coord<3> &getOrigin() { return this->origin; }
-    const mrcpp::Coord<3> &getOrigin() const { return this->origin; }
-
     DoubleVector getTensor() const { return getNuclear() + getElectronic(); }
     DoubleVector &getNuclear() { return this->nuc_tensor; }
     DoubleVector &getElectronic() { return this->el_tensor; }
@@ -52,8 +49,6 @@ public:
         auto tot_db = tot_au * PHYSCONST::Debye;
 
         mrcpp::print::header(0, "Dipole Moment");
-        print_utils::coord(0, "r_O", getOrigin());
-        mrcpp::print::separator(0, '-');
         print_utils::vector(0, "Electronic vector", getElectronic());
         print_utils::scalar(0, "Magnitude", el_au, "(au)");
         print_utils::scalar(0, "         ", el_db, "(Debye)");
@@ -69,7 +64,6 @@ public:
     }
 
 private:
-    mrcpp::Coord<3> origin{};
     DoubleVector nuc_tensor{DoubleVector::Zero(3)};
     DoubleVector el_tensor{DoubleVector::Zero(3)};
 };

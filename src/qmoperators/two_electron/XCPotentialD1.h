@@ -1,6 +1,6 @@
 #pragma once
 
-#include "qmoperators/two_electron/XCPotential.h"
+#include "XCPotential.h"
 
 /** @class XCPotential
  *
@@ -32,15 +32,8 @@ public:
                            bool mpi_shared = false);
 
 private:
-    mrcpp::FunctionTreeVector<3> potentials; ///< XC Potential functions collected in a vector
-
     void setup(double prec) override;
-    void clear() override;
-
-    void setupPotential(double prec) override;
-    mrcpp::FunctionTree<3> &getPotential(int spin);
-
-    Orbital apply(Orbital phi) override;
+    void setupPotential(double prec);
 };
 
 } // namespace mrchem

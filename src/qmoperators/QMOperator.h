@@ -27,6 +27,7 @@
 
 #include "MRCPP/Printer"
 
+#include "chemistry/chemistry_fwd.h"
 #include "mrchem.h"
 #include "qmoperator_fwd.h"
 
@@ -85,6 +86,8 @@ protected:
 
     virtual Orbital apply(Orbital inp) = 0;
     virtual Orbital dagger(Orbital inp) = 0;
+
+    virtual ComplexDouble trace(const Nuclei &nucs) { return 0.0; }
 };
 
 } // namespace mrchem

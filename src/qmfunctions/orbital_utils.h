@@ -40,7 +40,7 @@ ComplexVector dot(OrbitalVector &Bra, OrbitalVector &Ket);
 ComplexDouble node_norm_dot(Orbital bra, Orbital ket, bool exact);
 
 void normalize(Orbital &phi);
-void orthogonalize(Orbital &phi, Orbital psi);
+void orthogonalize(double prec, Orbital &phi, Orbital psi);
 
 OrbitalVector add(ComplexDouble a, OrbitalVector &Phi_a, ComplexDouble b, OrbitalVector &Phi_b, double prec = -1.0);
 OrbitalVector rotate(const ComplexMatrix &U, OrbitalVector &Phi, double prec = -1.0);
@@ -55,8 +55,8 @@ void save_orbitals(OrbitalVector &Phi, const std::string &file, const std::strin
 OrbitalVector load_orbitals(const std::string &file, const std::string &suffix = "", int n_orbs = -1);
 
 void normalize(OrbitalVector &Phi);
-void orthogonalize(OrbitalVector &Phi);
-void orthogonalize(OrbitalVector &Phi, OrbitalVector &Psi);
+void orthogonalize(double prec, OrbitalVector &Phi);
+void orthogonalize(double prec, OrbitalVector &Phi, OrbitalVector &Psi);
 
 ComplexMatrix calc_lowdin_matrix(OrbitalVector &Phi);
 ComplexMatrix calc_overlap_matrix(OrbitalVector &BraKet);
