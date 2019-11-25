@@ -1,4 +1,4 @@
-#include "MRCPP/Printer"
+#include <MRCPP/Printer>
 
 #include "parallel.h"
 #include "qmfunctions/ComplexFunction.h"
@@ -49,57 +49,56 @@ void mpi::initialize() {
 
 #ifdef HAVE_MPI
     MPI_Init(nullptr, nullptr);
-
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi::world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpi::world_rank);
 
     // divide the world into groups
     // each group has its own group communicator definition
 
     // define independent group of MPI processes, that are not part of comm_orb
     // for now the new group does not include comm_share
-    comm_bank = MPI_COMM_WORLD; // clients and master
-    MPI_Comm comm_remainder;    // clients only
+    mpi::comm_bank = MPI_COMM_WORLD; // clients and master
+    MPI_Comm comm_remainder;         // clients only
 
-    bankmaster.resize(bank_size);
-    for (int i = 0; i < bank_size; i++) {
-        bankmaster[i] = world_size - i - 1; // rank of the bankmasters
+    if (mpi::world_size - mpi::bank_size < 1) MSG_ABORT("No MPI ranks left for working!");
+    mpi::bankmaster.resize(mpi::bank_size);
+    for (int i = 0; i < mpi::bank_size; i++) {
+        mpi::bankmaster[i] = mpi::world_size - i - 1; // rank of the bankmasters
     }
-    if (world_rank < world_size - bank_size) {
+    if (mpi::world_rank < mpi::world_size - mpi::bank_size) {
         // everything which is left
-        is_bank = 0;
-        is_bankclient = 1;
+        mpi::is_bank = 0;
+        mpi::is_bankclient = 1;
     } else {
         // special group of bankmasters
-        is_bank = 1;
-        is_bankclient = 0;
-        if (world_rank == world_size - bank_size) is_bankmaster = 1;
+        mpi::is_bank = 1;
+        mpi::is_bankclient = 0;
+        if (mpi::world_rank == mpi::world_size - mpi::bank_size) mpi::is_bankmaster = 1;
     }
-    MPI_Comm_split(MPI_COMM_WORLD, is_bankclient, world_rank, &comm_remainder);
+    MPI_Comm_split(MPI_COMM_WORLD, mpi::is_bankclient, mpi::world_rank, &comm_remainder);
 
     // split world into groups that can share memory
-    MPI_Comm_split_type(comm_remainder, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm_share);
+    MPI_Comm_split_type(comm_remainder, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &mpi::comm_share);
 
-    MPI_Comm_rank(comm_share, &share_rank);
-    MPI_Comm_size(comm_share, &share_size);
+    MPI_Comm_rank(mpi::comm_share, &mpi::share_rank);
+    MPI_Comm_size(mpi::comm_share, &mpi::share_size);
 
     // define a rank of the group
-    MPI_Comm_split(comm_remainder, share_rank, world_rank, &comm_sh_group);
+    MPI_Comm_split(comm_remainder, mpi::share_rank, mpi::world_rank, &mpi::comm_sh_group);
     // mpiShRank is color (same color->in same group)
     // MPI_worldrank is key (orders rank within the groups)
 
     // we define a new orbital rank, so that the orbitals within
     // a shared memory group, have consecutive ranks
-    MPI_Comm_rank(comm_sh_group, &sh_group_rank);
+    MPI_Comm_rank(mpi::comm_sh_group, &mpi::sh_group_rank);
 
-    orb_rank = share_rank + sh_group_rank * world_size;
-    MPI_Comm_split(comm_remainder, 0, orb_rank, &comm_orb);
+    mpi::orb_rank = mpi::share_rank + mpi::sh_group_rank * mpi::world_size;
+    MPI_Comm_split(comm_remainder, 0, mpi::orb_rank, &mpi::comm_orb);
     // 0 is color (same color->in same group)
     // mpiOrbRank is key (orders rank in the group)
 
-    MPI_Comm_rank(comm_orb, &orb_rank);
-    MPI_Comm_size(comm_orb, &orb_size);
+    MPI_Comm_rank(mpi::comm_orb, &mpi::orb_rank);
+    MPI_Comm_size(mpi::comm_orb, &mpi::orb_size);
     if (mpi::is_bank) {
         // bank is open until end of program
         mpi::orb_bank.open();
@@ -111,7 +110,7 @@ void mpi::initialize() {
 
 void mpi::finalize() {
 #ifdef HAVE_MPI
-    if (bank_size > 0 and grand_master()) orb_bank.close();
+    if (mpi::bank_size > 0 and mpi::grand_master()) mpi::orb_bank.close();
     MPI_Finalize();
 #endif
 }
@@ -362,7 +361,7 @@ void Bank::open() {
 #ifdef HAVE_MPI
     MPI_Status status;
     char safe_data1;
-    int deposit_size = sizeof(deposit);
+    int deposit_size = sizeof(bank::deposit);
     int n_chunks, ix;
     int message;
     int datasize = -1;

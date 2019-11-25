@@ -68,11 +68,13 @@ void allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm);
 
 } // namespace mpi
 
+namespace bank {
+
 struct deposit {
     Orbital *orb;
     double *data; // for pure data arrays
-    int datasize;
     bool hasdata;
+    int datasize;
     int id;     // to identify what is deposited
     int source; // mpi rank from the source of the data
 };
@@ -81,6 +83,8 @@ struct queue_struct {
     int id;
     std::vector<int> clients;
 };
+
+} // namespace bank
 
 class Bank {
 public:
@@ -112,9 +116,9 @@ private:
     int const GET_DATA = 10;
     int const SAVE_DATA = 11;
     std::map<int, int> id2ix;
-    std::vector<deposit> deposits;
+    std::vector<bank::deposit> deposits;
     std::map<int, int> id2qu;
-    std::vector<queue_struct> queue;
+    std::vector<bank::queue_struct> queue;
 
     void clear_bank();
 };
