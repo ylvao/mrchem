@@ -84,12 +84,12 @@ struct queue_struct {
 
 class Bank {
 public:
-    Bank();
+    Bank() = default;
     ~Bank();
-    int open();
-    int close();
-    int clear_all(int i, MPI_Comm comm);
-    int clear(int ix);
+    void open();
+    void close();
+    void clear_all(int i, MPI_Comm comm);
+    void clear(int ix);
     int put_orb(int id, Orbital &orb);
     int get_orb(int id, Orbital &orb, int wait = 0);
     int get_orb_del(int id, Orbital &orb);
@@ -111,11 +111,12 @@ private:
     int const SET_DATASIZE = 9;
     int const GET_DATA = 10;
     int const SAVE_DATA = 11;
-    int clear_bank();
     std::map<int, int> id2ix;
     std::vector<deposit> deposits;
     std::map<int, int> id2qu;
     std::vector<queue_struct> queue;
+
+    void clear_bank();
 };
 
 namespace mpi {

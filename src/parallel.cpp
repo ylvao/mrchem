@@ -350,24 +350,27 @@ void mpi::broadcast_function(QMFunction &func, MPI_Comm comm) {
 #endif
 }
 
-Bank::Bank() {}
+/**************************
+ * Bank related functions *
+ **************************/
+
 Bank::~Bank() {
     for (int ix = 1; ix < this->deposits.size(); ix++) this->clear(ix);
 }
 
-int Bank::open() {
+void Bank::open() {
 #ifdef HAVE_MPI
     MPI_Status status;
     char safe_data1;
     int deposit_size = sizeof(deposit);
     int n_chunks, ix;
     int message;
-    int datasize;
+    int datasize = -1;
 
     deposits.resize(1); // we reserve 0, since it is the value returned for undefined key
     queue.resize(1);    // we reserve 0, since it is the value returned for undefined key
 
-    bool printinfo = false;
+    bool printinfo = true;
 
     // The bank never goes out of this loop until it receives a close message!
     while (true) {
@@ -514,6 +517,7 @@ int Bank::put_orb(int id, Orbital &orb) {
     MPI_Send(&SAVE_ORBITAL, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::send_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
+    return 1;
 }
 
 // get orbital with identity id.
@@ -537,6 +541,7 @@ int Bank::get_orb(int id, Orbital &orb, int wait) {
         mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     }
 #endif
+    return 1;
 }
 
 // get orbital with identity id, and delete from bank.
@@ -554,6 +559,7 @@ int Bank::get_orb_del(int id, Orbital &orb) {
         return 0;
     }
 #endif
+    return 1;
 }
 
 // save function in Bank with identity id
@@ -564,6 +570,7 @@ int Bank::put_func(int id, QMFunction &func) {
     MPI_Send(&SAVE_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::send_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
+    return 1;
 }
 
 // get function with identity id
@@ -574,6 +581,7 @@ int Bank::get_func(int id, QMFunction &func) {
     MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     mpi::recv_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
+    return 1;
 }
 
 // set the size of the data arrays (in size of doubles) to be sent/received later
@@ -584,6 +592,7 @@ int Bank::set_datasize(int datasize) {
         MPI_Send(&datasize, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
     }
 #endif
+    return 1;
 }
 
 // save data in Bank with identity id . datasize MUST have been set already. NB:not tested
@@ -594,6 +603,7 @@ int Bank::put_data(int id, int size, double *data) {
     MPI_Send(&SAVE_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     MPI_Send(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
 #endif
+    return 1;
 }
 
 // get data with identity id
@@ -604,10 +614,11 @@ int Bank::get_data(int id, int size, double *data) {
     MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
     MPI_Recv(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank, &status);
 #endif
+    return 1;
 }
 
 // Ask to close the Bank
-int Bank::close() {
+void Bank::close() {
 #ifdef HAVE_MPI
     for (int i = 0; i < mpi::bank_size; i++) {
         MPI_Send(&CLOSE_BANK, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
@@ -617,7 +628,7 @@ int Bank::close() {
 
 // remove all deposits
 // NB:: collective call. All clients must call this
-int Bank::clear_all(int iclient, MPI_Comm comm) {
+void Bank::clear_all(int iclient, MPI_Comm comm) {
 #ifdef HAVE_MPI
     // 1) wait until all clients are ready
     mpi::barrier(comm);
@@ -637,7 +648,7 @@ int Bank::clear_all(int iclient, MPI_Comm comm) {
 #endif
 }
 
-int Bank::clear_bank() {
+void Bank::clear_bank() {
 #ifdef HAVE_MPI
     for (int ix = 1; ix < this->deposits.size(); ix++) this->clear(ix);
     this->deposits.resize(1);
@@ -647,7 +658,7 @@ int Bank::clear_bank() {
 #endif
 }
 
-int Bank::clear(int ix) {
+void Bank::clear(int ix) {
 #ifdef HAVE_MPI
     delete deposits[ix].orb;
     delete deposits[ix].data;
