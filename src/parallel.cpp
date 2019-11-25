@@ -369,7 +369,7 @@ void Bank::open() {
     deposits.resize(1); // we reserve 0, since it is the value returned for undefined key
     queue.resize(1);    // we reserve 0, since it is the value returned for undefined key
 
-    bool printinfo = true;
+    bool printinfo = false;
 
     // The bank never goes out of this loop until it receives a close message!
     while (true) {
@@ -377,7 +377,7 @@ void Bank::open() {
         if (printinfo)
             std::cout << mpi::world_rank << " got message " << message << " from " << status.MPI_SOURCE << std::endl;
         if (message == CLOSE_BANK) {
-            if (mpi::is_bankmaster) std::cout << "Bank is closing" << std::endl;
+            if (mpi::is_bankmaster and printinfo) std::cout << "Bank is closing" << std::endl;
             this->clear_bank();
             break; // close bank, i.e stop listening for incoming messages
         }
