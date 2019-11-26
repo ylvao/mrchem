@@ -127,7 +127,8 @@ def translate_input(user_dict):
 def write_mpi(program_dict, user_dict):
     program_dict["mpi"] = {
         "numerically_exact": user_dict["MPI"]["numerically_exact"],
-        "shared_memory_size": user_dict["MPI"]["shared_memory_size"]
+        "shared_memory_size": user_dict["MPI"]["shared_memory_size"],
+        "bank_size": user_dict["MPI"]["bank_size"]
     }
 
 def write_mra(program_dict, user_dict):

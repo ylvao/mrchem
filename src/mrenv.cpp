@@ -48,9 +48,9 @@ void mrenv::initialize(const json &input) {
 
     if (json_mra == input.end()) MSG_ABORT("Missing MRA input!");
 
-    if (json_print != input.end()) mrenv::init_printer(*json_print);
     if (json_mra != input.end()) mrenv::init_mra(*json_mra);
     if (json_mpi != input.end()) mrenv::init_mpi(*json_mpi);
+    if (json_print != input.end()) mrenv::init_printer(*json_print);
 
     mrenv::print_header();
 }
@@ -63,9 +63,9 @@ void mrenv::init_printer(const json &json_print) {
     auto print_mpi = json_print["print_mpi"].get<bool>();
     auto fname = json_print["file_name"].get<std::string>();
     if (print_mpi) {
-        Printer::init(print_level, mpi::orb_rank, mpi::orb_size, fname.c_str());
+        Printer::init(print_level, mpi::world_rank, mpi::world_size, fname.c_str());
     } else {
-        Printer::init(print_level, mpi::orb_rank, mpi::orb_size);
+        Printer::init(print_level, mpi::world_rank, mpi::world_size);
     }
     Printer::setPrecision(print_prec);
     Printer::setWidth(print_width);
@@ -102,10 +102,10 @@ void mrenv::init_mra(const json &json_mra) {
 }
 
 void mrenv::init_mpi(const json &json_mpi) {
-    auto exact = json_mpi["numerically_exact"].get<bool>();
-    auto memory_size = json_mpi["shared_memory_size"].get<int>();
-    mpi::numerically_exact = exact;
-    mpi::shared_memory_size = memory_size;
+    mpi::numerically_exact = json_mpi["numerically_exact"].get<bool>();
+    mpi::shared_memory_size = json_mpi["shared_memory_size"].get<int>();
+    mpi::bank_size = json_mpi["bank_size"].get<int>();
+    mpi::initialize(); // NB: must be after bank_size and init_mra but before init_printer and print_header
 }
 
 void mrenv::print_header() {
@@ -138,9 +138,13 @@ void mrenv::print_header() {
     println(0, pre_str << "                                             " << post_str);
     mrcpp::print::separator(0, '*', 1);
     mrcpp::print::separator(0, '-', 1);
-    print_utils::scalar(0, "MPI processes", mpi::orb_size, "", 0, false);
-    print_utils::scalar(0, "OpenMP threads", omp::n_threads, "", 0, false);
-    print_utils::scalar(0, "Total cores", mpi::orb_size * omp::n_threads, "", 0, false);
+    print_utils::scalar(0, "MPI processes  ", mpi::world_size, "(total)", 0, false);
+    print_utils::scalar(0, "               ", mpi::bank_size, "(bank)", 0, false);
+    print_utils::scalar(0, "               ", mpi::orb_size, "(compute)", 0, false);
+    mrcpp::print::separator(0, ' ', 0);
+    print_utils::scalar(0, "OpenMP threads ", omp::n_threads, "(threads/proc)", 0, false);
+    mrcpp::print::separator(0, ' ', 0);
+    print_utils::scalar(0, "CPU cores used ", mpi::world_size * omp::n_threads, "(total)", 0, false);
     mrcpp::print::separator(0, ' ');
     mrcpp::print::separator(0, '-', 1);
     printout(0, xcfun_splash());

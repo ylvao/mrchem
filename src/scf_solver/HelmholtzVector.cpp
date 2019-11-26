@@ -32,6 +32,7 @@
 #include "HelmholtzVector.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
+#include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/RankZeroTensorOperator.h"
 #include "utils/print_utils.h"
 
@@ -130,6 +131,63 @@ OrbitalVector HelmholtzVector::apply(RankZeroTensorOperator &V, OrbitalVector &P
     }
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Applying Helmholtz operators", t_tot);
+    return out;
+}
+
+OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
+                                            const ComplexMatrix &F_mat,
+                                            OrbitalVector &Phi) const {
+    Timer t_tot, t_lap;
+    double inter_prec = (mpi::numerically_exact) ? -1.0 : prec;
+    auto pprec = Printer::getPrecision();
+    auto plevel = Printer::getPrintLevel();
+    OrbitalVector out = orbital::param_copy(Phi);
+    mrcpp::print::header(2, "Rotating Helmholtz argument and apply");
+    // 1) Save all orbitals in Bank
+    for (int i = 0; i < Phi.size(); i++) {
+        if (not mpi::my_orb(Phi[i])) continue;
+        mpi::orb_bank.put_orb(i, Phi[i]);
+    }
+    ComplexMatrix LmF_mat = getLambdaMatrix() - F_mat;
+    OrbitalVector Psi = orbital::param_copy(Phi);
+    for (int i = 0; i < Phi.size(); i++) {
+        if (not mpi::my_orb(Phi[i])) continue;
+        // ComplexVector coef_vec(Phi.size());
+        QMFunctionVector func_vec;
+        Orbital tmp_i = Phi[i].paramCopy();
+        ComplexVector coef_vec(Phi.size());
+        int idx_j = 0;
+        // 2) Rotate one orbital at a time
+        // Could also fetch several orbitals and use qmfunction::linear_combination, but that would use more memory
+        for (int j = 0; j < Phi.size(); j++) {
+            coef_vec[idx_j] = LmF_mat(i, j);
+            Orbital recv_j;
+            if (mpi::my_orb(Phi[j])) {
+                recv_j = Phi[j];
+            } else {
+                mpi::orb_bank.get_orb(j, recv_j);
+            }
+            tmp_i.add(LmF_mat(i, j), recv_j); // In place addition
+            idx_j++;
+        }
+        tmp_i.crop(inter_prec);
+        // 3) Apply Helmholtz
+        t_lap.start();
+        Orbital Vphi_i = V(Phi[i]);
+        Vphi_i.add(1.0, tmp_i);
+        Vphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
+        out[i] = apply(i, Vphi_i);
+
+        std::stringstream o_txt;
+        o_txt << std::setw(4) << i;
+        o_txt << std::setw(19) << std::setprecision(pprec) << std::scientific << out[i].norm();
+        print_utils::qmfunction(2, o_txt.str(), out[i], t_lap);
+    }
+
+    mrcpp::print::time(1, "Rotating Helmholtz ", t_tot);
+
+    mrcpp::print::footer(2, t_tot, 2);
+
     return out;
 }
 

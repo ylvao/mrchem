@@ -1,4 +1,4 @@
-#include "MRCPP/Printer"
+#include <MRCPP/Printer>
 
 #include "parallel.h"
 #include "qmfunctions/ComplexFunction.h"
@@ -20,60 +20,97 @@ namespace mpi {
 bool numerically_exact = false;
 int shared_memory_size = 1000;
 
-int orb_rank = 0;
+int world_size = 1;
+int world_rank = 0;
 int orb_size = 1;
-int share_rank = 0;
+int orb_rank = 0;
 int share_size = 1;
+int share_rank = 0;
 int sh_group_rank = 0;
+int is_bank = 0;
+int is_bankclient = 1;
+int is_bankmaster = 0; // only one bankmaster is_bankmaster
+int bank_size = 0;
+std::vector<int> bankmaster;
 
 MPI_Comm comm_orb;
 MPI_Comm comm_share;
 MPI_Comm comm_sh_group;
+MPI_Comm comm_bank;
+
+Bank orb_bank;
 
 } // namespace mpi
+
+int const id_shift = 1000000; // to ensure that nodes, orbitals and functions do not collide
 
 void mpi::initialize() {
     omp_set_dynamic(0);
 
 #ifdef HAVE_MPI
     MPI_Init(nullptr, nullptr);
-
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpi::world_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpi::world_rank);
 
     // divide the world into groups
     // each group has its own group communicator definition
 
-    // split world into groups that can share memory
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm_share);
+    // define independent group of MPI processes, that are not part of comm_orb
+    // for now the new group does not include comm_share
+    mpi::comm_bank = MPI_COMM_WORLD; // clients and master
+    MPI_Comm comm_remainder;         // clients only
 
-    MPI_Comm_rank(comm_share, &share_rank);
-    MPI_Comm_size(comm_share, &share_size);
+    if (mpi::world_size - mpi::bank_size < 1) MSG_ABORT("No MPI ranks left for working!");
+    mpi::bankmaster.resize(mpi::bank_size);
+    for (int i = 0; i < mpi::bank_size; i++) {
+        mpi::bankmaster[i] = mpi::world_size - i - 1; // rank of the bankmasters
+    }
+    if (mpi::world_rank < mpi::world_size - mpi::bank_size) {
+        // everything which is left
+        mpi::is_bank = 0;
+        mpi::is_bankclient = 1;
+    } else {
+        // special group of bankmasters
+        mpi::is_bank = 1;
+        mpi::is_bankclient = 0;
+        if (mpi::world_rank == mpi::world_size - mpi::bank_size) mpi::is_bankmaster = 1;
+    }
+    MPI_Comm_split(MPI_COMM_WORLD, mpi::is_bankclient, mpi::world_rank, &comm_remainder);
+
+    // split world into groups that can share memory
+    MPI_Comm_split_type(comm_remainder, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &mpi::comm_share);
+
+    MPI_Comm_rank(mpi::comm_share, &mpi::share_rank);
+    MPI_Comm_size(mpi::comm_share, &mpi::share_size);
 
     // define a rank of the group
-    MPI_Comm_split(MPI_COMM_WORLD, share_rank, world_rank, &comm_sh_group);
+    MPI_Comm_split(comm_remainder, mpi::share_rank, mpi::world_rank, &mpi::comm_sh_group);
     // mpiShRank is color (same color->in same group)
     // MPI_worldrank is key (orders rank within the groups)
 
     // we define a new orbital rank, so that the orbitals within
     // a shared memory group, have consecutive ranks
-    MPI_Comm_rank(comm_sh_group, &sh_group_rank);
+    MPI_Comm_rank(mpi::comm_sh_group, &mpi::sh_group_rank);
 
-    orb_rank = share_rank + sh_group_rank * world_size;
-    MPI_Comm_split(MPI_COMM_WORLD, 0, orb_rank, &comm_orb);
+    mpi::orb_rank = mpi::share_rank + mpi::sh_group_rank * mpi::world_size;
+    MPI_Comm_split(comm_remainder, 0, mpi::orb_rank, &mpi::comm_orb);
     // 0 is color (same color->in same group)
     // mpiOrbRank is key (orders rank in the group)
 
-    MPI_Comm_rank(comm_orb, &orb_rank);
-    MPI_Comm_size(comm_orb, &orb_size);
+    MPI_Comm_rank(mpi::comm_orb, &mpi::orb_rank);
+    MPI_Comm_size(mpi::comm_orb, &mpi::orb_size);
+    if (mpi::is_bank) {
+        // bank is open until end of program
+        mpi::orb_bank.open();
+        MPI_Finalize();
+        exit(EXIT_SUCCESS);
+    }
 #endif
 }
 
 void mpi::finalize() {
 #ifdef HAVE_MPI
+    if (mpi::bank_size > 0 and mpi::grand_master()) mpi::orb_bank.close();
     MPI_Finalize();
 #endif
 }
@@ -176,23 +213,22 @@ void mpi::allreduce_matrix(ComplexMatrix &mat, MPI_Comm comm) {
 }
 
 // send an orbital with MPI, includes orbital meta data
-void mpi::send_orbital(Orbital &orb, int dst, int tag) {
+void mpi::send_orbital(Orbital &orb, int dst, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
-    mpi::send_function(orb, dst, tag, mpi::comm_orb);
-
+    mpi::send_function(orb, dst, tag, comm);
     OrbitalData &orbinfo = orb.getOrbitalData();
-    MPI_Send(&orbinfo, sizeof(OrbitalData), MPI_BYTE, dst, 0, mpi::comm_orb);
+    MPI_Send(&orbinfo, sizeof(OrbitalData), MPI_BYTE, dst, 0, comm);
 #endif
 }
 
 // receive an orbital with MPI, includes orbital meta data
-void mpi::recv_orbital(Orbital &orb, int src, int tag) {
+void mpi::recv_orbital(Orbital &orb, int src, int tag, MPI_Comm comm) {
 #ifdef HAVE_MPI
-    mpi::recv_function(orb, src, tag, mpi::comm_orb);
+    mpi::recv_function(orb, src, tag, comm);
 
     MPI_Status status;
     OrbitalData &orbinfo = orb.getOrbitalData();
-    MPI_Recv(&orbinfo, sizeof(OrbitalData), MPI_BYTE, src, 0, mpi::comm_orb, &status);
+    MPI_Recv(&orbinfo, sizeof(OrbitalData), MPI_BYTE, src, 0, comm, &status);
 #endif
 }
 
@@ -202,7 +238,6 @@ void mpi::send_function(QMFunction &func, int dst, int tag, MPI_Comm comm) {
     if (func.isShared()) MSG_WARN("Sending a shared function is not recommended");
     FunctionData &funcinfo = func.getFunctionData();
     MPI_Send(&funcinfo, sizeof(FunctionData), MPI_BYTE, dst, 0, comm);
-
     if (func.hasReal()) mrcpp::send_tree(func.real(), dst, tag, comm, funcinfo.real_size);
     if (func.hasImag()) mrcpp::send_tree(func.imag(), dst, tag + 10000, comm, funcinfo.imag_size);
 #endif
@@ -216,7 +251,6 @@ void mpi::recv_function(QMFunction &func, int src, int tag, MPI_Comm comm) {
 
     FunctionData &funcinfo = func.getFunctionData();
     MPI_Recv(&funcinfo, sizeof(FunctionData), MPI_BYTE, src, 0, comm, &status);
-
     if (funcinfo.real_size > 0) {
         // We must have a tree defined for receiving nodes. Define one:
         if (not func.hasReal()) func.alloc(NUMBER::Real);
@@ -312,6 +346,322 @@ void mpi::broadcast_function(QMFunction &func, MPI_Comm comm) {
         fac /= 2;
     }
     MPI_Barrier(comm);
+#endif
+}
+
+/**************************
+ * Bank related functions *
+ **************************/
+
+Bank::~Bank() {
+    for (int ix = 1; ix < this->deposits.size(); ix++) this->clear(ix);
+}
+
+void Bank::open() {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    char safe_data1;
+    int deposit_size = sizeof(bank::deposit);
+    int n_chunks, ix;
+    int message;
+    int datasize = -1;
+
+    deposits.resize(1); // we reserve 0, since it is the value returned for undefined key
+    queue.resize(1);    // we reserve 0, since it is the value returned for undefined key
+
+    bool printinfo = false;
+
+    // The bank never goes out of this loop until it receives a close message!
+    while (true) {
+        MPI_Recv(&message, 1, MPI_INTEGER, MPI_ANY_SOURCE, MPI_ANY_TAG, mpi::comm_bank, &status);
+        if (printinfo)
+            std::cout << mpi::world_rank << " got message " << message << " from " << status.MPI_SOURCE << std::endl;
+        if (message == CLOSE_BANK) {
+            if (mpi::is_bankmaster and printinfo) std::cout << "Bank is closing" << std::endl;
+            this->clear_bank();
+            break; // close bank, i.e stop listening for incoming messages
+        }
+        if (message == CLEAR_BANK) {
+            this->clear_bank();
+            // send message that it is ready (value of message is not used)
+            MPI_Send(&message, 1, MPI_INTEGER, status.MPI_SOURCE, 77, mpi::comm_bank);
+        }
+        if (message == GET_ORBITAL or message == GET_ORBITAL_AND_WAIT or message == GET_ORBITAL_AND_DELETE or
+            message == GET_FUNCTION or message == GET_DATA) {
+            // withdrawal
+            int ix = id2ix[status.MPI_TAG];
+            if (ix == 0) {
+                if (printinfo) std::cout << mpi::world_rank << " not found " << status.MPI_TAG << std::endl;
+                if (message == GET_ORBITAL or message == GET_ORBITAL_AND_DELETE) {
+                    // do not wait for the orbital to arrive
+                    int found = 0;
+                    if (printinfo)
+                        std::cout << mpi::world_rank << " sending found 0 to " << status.MPI_SOURCE << std::endl;
+                    MPI_Send(&found, 1, MPI_INTEGER, status.MPI_SOURCE, 117, mpi::comm_bank);
+                } else {
+                    // the id does not exist. Put in queue and Wait until it is defined
+                    if (printinfo) std::cout << mpi::world_rank << " queuing " << status.MPI_TAG << std::endl;
+                    if (id2qu[status.MPI_TAG] == 0) {
+                        queue.push_back({status.MPI_TAG, {status.MPI_SOURCE}});
+                        id2qu[status.MPI_TAG] = queue.size() - 1;
+                    } else {
+                        // somebody is already waiting for this id. queue in queue
+                        queue[id2qu[status.MPI_TAG]].clients.push_back(status.MPI_SOURCE);
+                    }
+                }
+            } else {
+                if (deposits[ix].id != status.MPI_TAG) std::cout << ix << " Bank accounting error " << std::endl;
+                if (message == GET_ORBITAL or message == GET_ORBITAL_AND_WAIT or message == GET_ORBITAL_AND_DELETE) {
+                    if (message == GET_ORBITAL or message == GET_ORBITAL_AND_DELETE) {
+                        int found = 1;
+                        MPI_Send(&found, 1, MPI_INTEGER, status.MPI_SOURCE, 117, mpi::comm_bank);
+                    }
+                    mpi::send_orbital(*deposits[ix].orb, status.MPI_SOURCE, deposits[ix].id, mpi::comm_bank);
+                    if (message == GET_ORBITAL_AND_DELETE) {
+                        deposits[ix].orb->free(NUMBER::Total);
+                        id2ix[status.MPI_TAG] = 0;
+                    }
+                }
+                if (message == GET_FUNCTION) {
+                    mpi::send_function(*deposits[ix].orb, status.MPI_SOURCE, deposits[ix].id, mpi::comm_bank);
+                }
+                if (message == GET_DATA) {
+                    MPI_Send(deposits[ix].data,
+                             deposits[ix].datasize,
+                             MPI_DOUBLE,
+                             status.MPI_SOURCE,
+                             deposits[ix].id,
+                             mpi::comm_bank);
+                }
+            }
+        }
+        if (message == SAVE_ORBITAL or message == SAVE_FUNCTION or message == SAVE_DATA) {
+            // make a new deposit
+            if (id2ix[status.MPI_TAG]) {
+                ix = id2ix[status.MPI_TAG]; // the deposit exist from before. Will be overwritten
+                if (message == SAVE_DATA and !deposits[ix].hasdata) {
+                    deposits[ix].data = new double[datasize];
+                    deposits[ix].hasdata = true;
+                }
+            } else {
+                ix = deposits.size(); // NB: ix is now index of last element + 1
+                deposits.resize(ix + 1);
+                if (message == SAVE_ORBITAL or message == SAVE_FUNCTION) { deposits[ix].orb = new Orbital(0); }
+                if (message == SAVE_DATA) {
+                    deposits[ix].data = new double[datasize];
+                    deposits[ix].hasdata = true;
+                }
+            }
+            deposits[ix].id = status.MPI_TAG;
+            id2ix[deposits[ix].id] = ix;
+            deposits[ix].source = status.MPI_SOURCE;
+            if (message == SAVE_ORBITAL) {
+                mpi::recv_orbital(*deposits[ix].orb, deposits[ix].source, deposits[ix].id, mpi::comm_bank);
+            }
+            if (message == SAVE_FUNCTION) {
+                mpi::recv_function(*deposits[ix].orb, deposits[ix].source, deposits[ix].id, mpi::comm_bank);
+            }
+            if (message == SAVE_DATA) {
+                deposits[ix].datasize = datasize;
+                MPI_Recv(deposits[ix].data,
+                         datasize,
+                         MPI_DOUBLE,
+                         deposits[ix].source,
+                         deposits[ix].id,
+                         mpi::comm_bank,
+                         &status);
+            }
+            if (id2qu[deposits[ix].id] != 0) {
+                // someone is waiting for those data. Send to them
+                int iq = id2qu[deposits[ix].id];
+                if (deposits[ix].id != queue[iq].id) std::cout << ix << " Bank queue accounting error " << std::endl;
+                for (int iqq : queue[iq].clients) {
+                    if (message == SAVE_ORBITAL) {
+                        mpi::send_orbital(*deposits[ix].orb, iqq, queue[iq].id, mpi::comm_bank);
+                    }
+                    if (message == SAVE_FUNCTION) {
+                        mpi::send_function(*deposits[ix].orb, iqq, queue[iq].id, mpi::comm_bank);
+                    }
+                    if (message == SAVE_DATA) {
+                        MPI_Send(deposits[ix].data, datasize, MPI_DOUBLE, iqq, queue[iq].id, mpi::comm_bank);
+                    }
+                }
+                queue.erase(queue.begin() + iq);
+                id2qu.erase(deposits[ix].id);
+            }
+        }
+        if (message == SET_DATASIZE) {
+            int datasize_new;
+            MPI_Recv(&datasize_new, 1, MPI_INTEGER, status.MPI_SOURCE, status.MPI_TAG, mpi::comm_bank, &status);
+            if (datasize_new != datasize) {
+                // make sure that all old data arrays are deleted
+                for (int ix = 1; ix < deposits.size(); ix++) {
+                    if (deposits[ix].hasdata) {
+                        delete deposits[ix].data;
+                        deposits[ix].hasdata = false;
+                    }
+                }
+            }
+            datasize = datasize_new;
+        }
+    }
+#endif
+}
+
+// save orbital in Bank with identity id
+int Bank::put_orb(int id, Orbital &orb) {
+#ifdef HAVE_MPI
+    // for now we distribute according to id
+    if (id > id_shift) MSG_WARN("Bank id should be less than id_shift (1000000)");
+    MPI_Send(&SAVE_ORBITAL, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    mpi::send_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+#endif
+    return 1;
+}
+
+// get orbital with identity id.
+// If wait=0, return immediately with value zero if not available (default)
+// else, wait until available
+int Bank::get_orb(int id, Orbital &orb, int wait) {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    if (wait == 0) {
+        MPI_Send(&GET_ORBITAL, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+        int found;
+        MPI_Recv(&found, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], 117, mpi::comm_bank, &status);
+        if (found != 0) {
+            mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        MPI_Send(&GET_ORBITAL_AND_WAIT, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+        mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    }
+#endif
+    return 1;
+}
+
+// get orbital with identity id, and delete from bank.
+// return immediately with value zero if not available
+int Bank::get_orb_del(int id, Orbital &orb) {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    MPI_Send(&GET_ORBITAL_AND_DELETE, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    int found;
+    MPI_Recv(&found, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], 117, mpi::comm_bank, &status);
+    if (found != 0) {
+        mpi::recv_orbital(orb, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+        return 1;
+    } else {
+        return 0;
+    }
+#endif
+    return 1;
+}
+
+// save function in Bank with identity id
+int Bank::put_func(int id, QMFunction &func) {
+#ifdef HAVE_MPI
+    // for now we distribute according to id
+    id += id_shift;
+    MPI_Send(&SAVE_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    mpi::send_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+#endif
+    return 1;
+}
+
+// get function with identity id
+int Bank::get_func(int id, QMFunction &func) {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    id += id_shift;
+    MPI_Send(&GET_FUNCTION, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    mpi::recv_function(func, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+#endif
+    return 1;
+}
+
+// set the size of the data arrays (in size of doubles) to be sent/received later
+int Bank::set_datasize(int datasize) {
+#ifdef HAVE_MPI
+    for (int i = 0; i < mpi::bank_size; i++) {
+        MPI_Send(&SET_DATASIZE, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
+        MPI_Send(&datasize, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
+    }
+#endif
+    return 1;
+}
+
+// save data in Bank with identity id . datasize MUST have been set already. NB:not tested
+int Bank::put_data(int id, int size, double *data) {
+#ifdef HAVE_MPI
+    // for now we distribute according to id
+    id += 2 * id_shift;
+    MPI_Send(&SAVE_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    MPI_Send(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+#endif
+    return 1;
+}
+
+// get data with identity id
+int Bank::get_data(int id, int size, double *data) {
+#ifdef HAVE_MPI
+    MPI_Status status;
+    id += 2 * id_shift;
+    MPI_Send(&GET_DATA, 1, MPI_INTEGER, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank);
+    MPI_Recv(data, size, MPI_DOUBLE, mpi::bankmaster[id % mpi::bank_size], id, mpi::comm_bank, &status);
+#endif
+    return 1;
+}
+
+// Ask to close the Bank
+void Bank::close() {
+#ifdef HAVE_MPI
+    for (int i = 0; i < mpi::bank_size; i++) {
+        MPI_Send(&CLOSE_BANK, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
+    }
+#endif
+}
+
+// remove all deposits
+// NB:: collective call. All clients must call this
+void Bank::clear_all(int iclient, MPI_Comm comm) {
+#ifdef HAVE_MPI
+    // 1) wait until all clients are ready
+    mpi::barrier(comm);
+    // master send signal to bank
+    if (iclient == 0) {
+        for (int i = 0; i < mpi::bank_size; i++) {
+            MPI_Send(&CLEAR_BANK, 1, MPI_INTEGER, mpi::bankmaster[i], 0, mpi::comm_bank);
+        }
+        for (int i = 0; i < mpi::bank_size; i++) {
+            // wait until Bank is finished and has sent signal
+            MPI_Status status;
+            int message;
+            MPI_Recv(&message, 1, MPI_INTEGER, mpi::bankmaster[i], 77, mpi::comm_bank, &status);
+        }
+    }
+    mpi::barrier(comm);
+#endif
+}
+
+void Bank::clear_bank() {
+#ifdef HAVE_MPI
+    for (int ix = 1; ix < this->deposits.size(); ix++) this->clear(ix);
+    this->deposits.resize(1);
+    this->queue.resize(1);
+    this->id2ix.clear();
+    this->id2qu.clear();
+#endif
+}
+
+void Bank::clear(int ix) {
+#ifdef HAVE_MPI
+    delete deposits[ix].orb;
+    delete deposits[ix].data;
+    deposits[ix].hasdata = false;
 #endif
 }
 

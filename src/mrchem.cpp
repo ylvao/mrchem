@@ -8,8 +8,8 @@
  * GPLv4
  *
  */
-
 #include "MRCPP/Timer"
+#include "parallel.h"
 
 #include "driver.h"
 #include "mrchem.h"
@@ -26,7 +26,6 @@ using Timer = mrcpp::Timer;
 using namespace mrchem;
 
 int main(int argc, char **argv) {
-    mpi::initialize();
     const auto json_input = mrenv::fetch_input(argc, argv);
 
     mrenv::initialize(json_input);
@@ -43,9 +42,9 @@ int main(int argc, char **argv) {
         for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
     }
     driver::print_properties(mol);
-
     mpi::barrier(mpi::comm_orb);
     mrenv::finalize(timer.elapsed());
+
     mpi::finalize();
     return EXIT_SUCCESS;
 }
