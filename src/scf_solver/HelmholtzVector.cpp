@@ -165,7 +165,8 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
             if (mpi::my_orb(Phi[j])) {
                 recv_j = Phi[j];
             } else {
-                mpi::orb_bank.get_orb(j, recv_j);
+                int wait = 1; // wait until orbital is available
+                mpi::orb_bank.get_orb(j, recv_j, wait);
             }
             tmp_i.add(LmF_mat(i, j), recv_j); // In place addition
             idx_j++;
