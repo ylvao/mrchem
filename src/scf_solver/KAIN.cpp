@@ -58,24 +58,24 @@ void KAIN::setupLinearSystem() {
 
     int nOrbitals = this->orbitals[nHistory].size();
     for (int n = 0; n < nOrbitals; n++) {
-        ComplexMatrix orbA = ComplexMatrix::Zero(nHistory, nHistory);
-        ComplexVector orbB = ComplexVector::Zero(nHistory);
+        auto orbA = ComplexMatrix::Zero(nHistory, nHistory).eval();
+        auto orbB = ComplexVector::Zero(nHistory).eval();
 
-        Orbital &phi_m = this->orbitals[nHistory][n];
-        Orbital &fPhi_m = this->dOrbitals[nHistory][n];
+        auto &phi_m = this->orbitals[nHistory][n];
+        auto &fPhi_m = this->dOrbitals[nHistory][n];
         if (mpi::my_orb(phi_m)) {
             if (not mpi::my_orb(fPhi_m)) MSG_ABORT("MPI rank mismatch: fPhi_m");
 
             for (int i = 0; i < nHistory; i++) {
-                Orbital &phi_i = this->orbitals[i][n];
+                auto &phi_i = this->orbitals[i][n];
                 if (not mpi::my_orb(phi_i)) MSG_ABORT("MPI rank mismatch: phi_i");
-                Orbital dPhi_im = phi_m.paramCopy();
+                auto dPhi_im = phi_m.paramCopy();
                 qmfunction::add(dPhi_im, 1.0, phi_i, -1.0, phi_m, -1.0);
 
                 for (int j = 0; j < nHistory; j++) {
-                    Orbital &fPhi_j = this->dOrbitals[j][n];
+                    auto &fPhi_j = this->dOrbitals[j][n];
                     if (not mpi::my_orb(fPhi_j)) MSG_ABORT("MPI rank mismatch: fPhi_j");
-                    Orbital dfPhi_jm = fPhi_m.paramCopy();
+                    auto dfPhi_jm = fPhi_m.paramCopy();
                     qmfunction::add(dfPhi_jm, 1.0, fPhi_j, -1.0, fPhi_m, -1.0);
 
                     // Ref. Harrisons KAIN paper the following has the wrong sign,
@@ -96,26 +96,26 @@ void KAIN::setupLinearSystem() {
 
     // Fock matrix is treated as a whole using the Frobenius inner product
     if (this->orbitals.size() == this->fock.size()) {
-        const ComplexMatrix &X_m = this->fock[nHistory];
-        const ComplexMatrix &fX_m = this->dFock[nHistory];
+        const auto &X_m = this->fock[nHistory];
+        const auto &fX_m = this->dFock[nHistory];
 
-        ComplexMatrix fockA = ComplexMatrix::Zero(nHistory, nHistory);
-        ComplexVector fockB = ComplexVector::Zero(nHistory);
+        auto fockA = ComplexMatrix::Zero(nHistory, nHistory).eval();
+        auto fockB = ComplexVector::Zero(nHistory).eval();
 
         for (int i = 0; i < nHistory; i++) {
-            const ComplexMatrix &X_i = this->fock[i];
-            ComplexMatrix dX_im = X_i - X_m;
+            const auto &X_i = this->fock[i];
+            auto dX_im = X_i - X_m;
             for (int j = 0; j < nHistory; j++) {
-                const ComplexMatrix &fX_j = this->dFock[j];
-                ComplexMatrix dfX_jm = fX_j - fX_m;
-                ComplexMatrix prod = dX_im.transpose() * dfX_jm;
+                const auto &fX_j = this->dFock[j];
+                auto dfX_jm = fX_j - fX_m;
+                auto prod = dX_im.adjoint() * dfX_jm;
                 fockA(i, j) -= prod.trace();
             }
-            ComplexMatrix prod = dX_im.transpose() * fX_m;
+            auto prod = dX_im.adjoint() * fX_m;
             fockB(i) += prod.trace();
         }
-        A_matrices.push_back(fockA.real());
-        b_vectors.push_back(fockB.real());
+        A_matrices.push_back(fockA);
+        b_vectors.push_back(fockB);
     }
 
     sortLinearSystem(A_matrices, b_vectors);
@@ -145,8 +145,8 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
             std::vector<ComplexDouble> totCoefs;
             QMFunctionVector totOrbs;
 
-            Orbital &phi_m = this->orbitals[nHistory][n];
-            Orbital &fPhi_m = this->dOrbitals[nHistory][n];
+            auto &phi_m = this->orbitals[nHistory][n];
+            auto &fPhi_m = this->dOrbitals[nHistory][n];
             totCoefs.push_back({1.0, 0.0});
             totOrbs.push_back(fPhi_m);
 
@@ -158,12 +158,12 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
                 QMFunctionVector partOrbs;
 
                 partCoefs(0) = {1.0, 0.0};
-                Orbital &phi_j = this->orbitals[j][n];
+                auto &phi_j = this->orbitals[j][n];
                 if (not mpi::my_orb(phi_j)) MSG_ABORT("MPI rank mismatch: phi_j");
                 partOrbs.push_back(phi_j);
 
                 partCoefs(1) = {1.0, 0.0};
-                Orbital &fPhi_j = this->dOrbitals[j][n];
+                auto &fPhi_j = this->dOrbitals[j][n];
                 if (not mpi::my_orb(fPhi_j)) MSG_ABORT("MPI rank mismatch: fPhi_j");
                 partOrbs.push_back(fPhi_j);
 
@@ -173,10 +173,10 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
                 partCoefs(3) = {-1.0, 0.0};
                 partOrbs.push_back(fPhi_m);
 
-                Orbital partStep = phi_m.paramCopy();
+                auto partStep = phi_m.paramCopy();
                 qmfunction::linear_combination(partStep, partCoefs, partOrbs, prec);
 
-                ComplexDouble c_j = this->c[m](j);
+                auto c_j = this->c[m](j);
                 totCoefs.push_back(c_j);
                 totOrbs.push_back(partStep);
             }
@@ -194,15 +194,15 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
     if (this->fock.size() == this->orbitals.size()) {
         if (F == nullptr or dF == nullptr) MSG_ERROR("Invalid fock matrix");
 
-        ComplexMatrix X_m = this->fock[nHistory];
-        const ComplexMatrix &fX_m = this->dFock[nHistory];
-        ComplexMatrix fockStep = ComplexMatrix::Zero(nOrbitals, nOrbitals);
+        auto X_m = this->fock[nHistory];
+        const auto &fX_m = this->dFock[nHistory];
+        auto fockStep = ComplexMatrix::Zero(nOrbitals, nOrbitals).eval();
         fockStep = fX_m;
         m = this->c.size();
         for (int j = 0; j < nHistory; j++) {
-            const ComplexMatrix &X_j = this->fock[j];
-            const ComplexMatrix &fX_j = this->dFock[j];
-            ComplexMatrix tmpX = ComplexMatrix::Zero(nOrbitals, nOrbitals);
+            const auto &X_j = this->fock[j];
+            const auto &fX_j = this->dFock[j];
+            auto tmpX = ComplexMatrix::Zero(nOrbitals, nOrbitals).eval();
             tmpX += X_j;
             tmpX -= X_m;
             tmpX += fX_j;
