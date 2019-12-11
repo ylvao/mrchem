@@ -159,37 +159,37 @@ OrbitalVector orbital::add(ComplexDouble a, OrbitalVector &Phi_a, ComplexDouble 
     return out;
 }
 
-/** @brief Orbital transformation out_vec = U*inp_vec
+/** @brief Orbital transformation out_j = sum_i inp_i*U_ij
  *
  * MPI: Rank distribution of output vector is the same as input vector
  *
  */
 OrbitalVector orbital::rotate(const ComplexMatrix &U, OrbitalVector &Phi, double prec) {
     // Get all out orbitals belonging to this MPI
-    double inter_prec = (mpi::numerically_exact) ? -1.0 : prec;
-    OrbitalVector out = orbital::param_copy(Phi);
+    auto inter_prec = (mpi::numerically_exact) ? -1.0 : prec;
+    auto out = orbital::param_copy(Phi);
     OrbitalIterator iter(Phi);
     while (iter.next()) {
-        for (int i = 0; i < out.size(); i++) {
-            if (not mpi::my_orb(out[i])) continue;
+        for (auto j = 0; j < out.size(); j++) {
+            if (not mpi::my_orb(out[j])) continue;
             ComplexVector coef_vec(iter.get_size());
             QMFunctionVector func_vec;
-            for (int j = 0; j < iter.get_size(); j++) {
-                int idx_j = iter.idx(j);
-                Orbital &recv_j = iter.orbital(j);
-                coef_vec[j] = std::conj(U(i, idx_j));
-                func_vec.push_back(recv_j);
+            for (auto i = 0; i < iter.get_size(); i++) {
+                auto idx_i = iter.idx(i);
+                auto &recv_i = iter.orbital(i);
+                coef_vec[idx_i] = U(idx_i, j);
+                func_vec.push_back(recv_i);
             }
-            Orbital tmp_i = out[i].paramCopy();
-            qmfunction::linear_combination(tmp_i, coef_vec, func_vec, inter_prec);
-            out[i].add(1.0, tmp_i); // In place addition
-            out[i].crop(inter_prec);
+            auto tmp_j = out[j].paramCopy();
+            qmfunction::linear_combination(tmp_j, coef_vec, func_vec, inter_prec);
+            out[j].add(1.0, tmp_j); // In place addition
+            out[j].crop(inter_prec);
         }
     }
 
     if (mpi::numerically_exact) {
-        for (auto &out_i : out) {
-            if (mpi::my_orb(out_i)) out_i.crop(prec);
+        for (auto &phi : out) {
+            if (mpi::my_orb(phi)) phi.crop(prec);
         }
     }
 
@@ -390,6 +390,8 @@ void orbital::orthogonalize(double prec, OrbitalVector &Phi, OrbitalVector &Psi)
     }
 }
 
+/** @brief Compute the overlap matrix S_ij = <bra_i|ket_j>
+ */
 ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
     ComplexMatrix S = ComplexMatrix::Zero(BraKet.size(), BraKet.size());
 
@@ -555,7 +557,7 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, ComplexMatrix &
     if (nB > 0) U.block(nP + nA, nP + nA, nB, nB) = localize(prec, Phi, SPIN::Beta);
 
     // Transform Fock matrix
-    F = U * F * U.adjoint();
+    F = U.adjoint() * F * U;
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Localizing orbitals", t_tot);
 
@@ -604,7 +606,7 @@ ComplexMatrix orbital::calc_localization_matrix(double prec, OrbitalVector &Phi)
 
         if (n_it > 0) {
             println(2, " Foster-Boys localization converged in " << n_it << " iterations!");
-            U = rr.getTotalU().transpose().cast<ComplexDouble>();
+            U = rr.getTotalU().cast<ComplexDouble>();
         } else {
             println(2, " Foster-Boys localization did not converge!");
         }
@@ -635,7 +637,7 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
 
     Timer orth_t;
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
-    F = S_m12.transpose() * F * S_m12;
+    F = S_m12.adjoint() * F * S_m12;
     mrcpp::print::time(2, "Computing Lowdin matrix", orth_t);
 
     Timer diag_t;
@@ -646,7 +648,7 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
     if (np > 0) math_utils::diagonalize_block(F, U, 0, np);
     if (na > 0) math_utils::diagonalize_block(F, U, np, na);
     if (nb > 0) math_utils::diagonalize_block(F, U, np + na, nb);
-    U = U * S_m12;
+    U = S_m12 * U;
     mrcpp::print::time(2, "Diagonalizing matrix", diag_t);
 
     Timer rot_t;
@@ -679,7 +681,7 @@ ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi, ComplexMa
     mrcpp::print::time(2, "Rotating orbitals", t_lap);
 
     // Transform Fock matrix
-    F = U * F * U.adjoint();
+    F = U.adjoint() * F * U;
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Lowdin orthonormalization", t_tot);
 

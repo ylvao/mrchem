@@ -104,8 +104,8 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
     for (int i = 0; i < nFock; i++) {
         auto &F = this->fock[i];
         auto &dF = this->dFock[i];
-        F = U * F * U.adjoint();
-        dF = U * dF * U.adjoint();
+        F = U.adjoint() * F * U;
+        dF = U.adjoint() * dF * U;
     }
     mrcpp::print::time(2, "Rotating iterative subspace", t_tot);
 }
