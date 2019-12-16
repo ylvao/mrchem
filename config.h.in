@@ -33,8 +33,6 @@
 
 #cmakedefine HAVE_MPI
 
-#cmakedefine HAVE_OPENMP
-
 #cmakedefine HAVE_BLAS
 
 #cmakedefine HAVE_XCFUN
