@@ -205,7 +205,7 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
     mrcpp::print::separator(2, '-');
 
     auto crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
-    std::string sad_path = SAD_BASIS_DIR;
+    std::string sad_path = sad_basis_dir();
 
     Timer t_tot;
     Density rho_loc(false);

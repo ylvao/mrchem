@@ -8,6 +8,7 @@
 #include "mrenv.h"
 #include "parallel.h"
 #include "utils/print_utils.h"
+#include "version.h"
 
 using json = nlohmann::json;
 using Printer = mrcpp::Printer;
@@ -110,41 +111,61 @@ void mrenv::init_mpi(const json &json_mpi) {
 
 void mrenv::print_header() {
     auto pwidth = Printer::getWidth();
-    auto txt_width = 45;
+    auto txt_width = 50;
     auto pre_spaces = (pwidth - 6 - txt_width) / 2;
     auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
     std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
     std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
-    std::stringstream o_ver, o_rev;
-    o_ver << "VERSION " << std::setw(8) << PROGRAM_VERSION;
-    o_rev << "(rev. " << std::setw(10) << GIT_REVISION << ")";
+    std::stringstream o_ver, o_branch, o_hash, o_author, o_date;
+    o_ver << "VERSION            " << program_version();
+    o_branch << "Git branch         " << git_branch();
+    o_hash << "Git commit hash    " << git_describe();
+    o_author << "Git commit author  " << git_commit_author();
+    o_date << "Git commit date    " << git_commit_date();
+
+    o_ver << std::string(txt_width - o_ver.str().size(), ' ');
+    o_branch << std::string(txt_width - o_branch.str().size(), ' ');
+    o_hash << std::string(txt_width - o_hash.str().size(), ' ');
+    o_author << std::string(txt_width - o_author.str().size(), ' ');
+    o_date << std::string(txt_width - o_date.str().size(), ' ');
+
+    std::stringstream o_bank;
+    if (mpi::bank_size > 0) {
+        o_bank << "(" << mpi::bank_size << " bank)";
+    } else {
+        o_bank << "(no bank)";
+    }
 
     mrcpp::print::separator(0, ' ');
     mrcpp::print::separator(0, ' ');
     mrcpp::print::separator(0, '*');
-    println(0, pre_str << "                                             " << post_str);
-    println(0, pre_str << "                                             " << post_str);
-    println(0, pre_str << " __  __ ____   ____ _                        " << post_str);
-    println(0, pre_str << "|  \\/  |  _ \\ / ___| |__   ___ _ __ ___      " << post_str);
-    println(0, pre_str << "| |\\/| | |_) | |   | '_ \\ / _ \\ '_ ` _ \\     " << post_str);
-    println(0, pre_str << "| |  | |  _ <| |___| | | |  __/ | | | | |    " << post_str);
-    println(0, pre_str << "|_|  |_|_| \\_\\\\____|_| |_|\\___|_| |_| |_|    " << post_str);
-    println(0, pre_str << "                                             " << post_str);
-    println(0, pre_str << o_ver.str() << "        " << o_rev.str() << "    " << post_str);
-    println(0, pre_str << "                                             " << post_str);
-    println(0, pre_str << "Stig Rune Jensen   <stig.r.jensen@uit.no>    " << post_str);
-    println(0, pre_str << "Luca Frediani      <luca.frediani@uit.no>    " << post_str);
-    println(0, pre_str << "Peter Wind         <peter.wind@uit.no>       " << post_str);
-    println(0, pre_str << "                                             " << post_str);
+    println(0, pre_str << "                                                  " << post_str);
+    println(0, pre_str << "                                                  " << post_str);
+    println(0, pre_str << " __  __ ____   ____ _                             " << post_str);
+    println(0, pre_str << "|  \\/  |  _ \\ / ___| |__   ___ _ __ ___           " << post_str);
+    println(0, pre_str << "| |\\/| | |_) | |   | '_ \\ / _ \\ '_ ` _ \\          " << post_str);
+    println(0, pre_str << "| |  | |  _ <| |___| | | |  __/ | | | | |         " << post_str);
+    println(0, pre_str << "|_|  |_|_| \\_\\\\____|_| |_|\\___|_| |_| |_|         " << post_str);
+    println(0, pre_str << "                                                  " << post_str);
+    println(0, pre_str << o_ver.str() << post_str);
+    println(0, pre_str << "                                                  " << post_str);
+    println(0, pre_str << o_branch.str() << post_str);
+    println(0, pre_str << o_hash.str() << post_str);
+    println(0, pre_str << o_author.str() << post_str);
+    println(0, pre_str << o_date.str() << post_str);
+    println(0, pre_str << "                                                  " << post_str);
+    println(0, pre_str << "Magnar Bjorgve     <magnar.bjorgve@uit.no>        " << post_str);
+    println(0, pre_str << "Roberto Di Remigio <roberto.di.remigio@uit.no>    " << post_str);
+    println(0, pre_str << "Luca Frediani      <luca.frediani@uit.no>         " << post_str);
+    println(0, pre_str << "Gabriel Gerez      <gsa017@post.uit.no>           " << post_str);
+    println(0, pre_str << "Stig Rune Jensen   <stig.r.jensen@uit.no>         " << post_str);
+    println(0, pre_str << "Peter Wind         <peter.wind@uit.no>            " << post_str);
+    println(0, pre_str << "                                                  " << post_str);
     mrcpp::print::separator(0, '*', 1);
     mrcpp::print::separator(0, '-', 1);
-    print_utils::scalar(0, "MPI processes  ", mpi::world_size, "(total)", 0, false);
-    print_utils::scalar(0, "               ", mpi::bank_size, "(bank)", 0, false);
-    print_utils::scalar(0, "               ", mpi::orb_size, "(compute)", 0, false);
-    mrcpp::print::separator(0, ' ', 0);
-    print_utils::scalar(0, "OpenMP threads ", omp::n_threads, "(threads/proc)", 0, false);
-    mrcpp::print::separator(0, ' ', 0);
-    print_utils::scalar(0, "CPU cores used ", mpi::world_size * omp::n_threads, "(total)", 0, false);
+    print_utils::scalar(0, "MPI processes  ", mpi::world_size, o_bank.str(), 0, false);
+    print_utils::scalar(0, "OpenMP threads ", omp::n_threads, "", 0, false);
+    print_utils::scalar(0, "Total cores    ", mpi::world_size * omp::n_threads, "", 0, false);
     mrcpp::print::separator(0, ' ');
     mrcpp::print::separator(0, '-', 1);
     printout(0, xcfun_splash());
