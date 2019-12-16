@@ -5,6 +5,8 @@ add_library(mrchem
   mrenv.cpp
   )
 
+add_dependencies(mrchem mrchem-info)
+
 target_include_directories(mrchem
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
@@ -18,6 +20,7 @@ list(APPEND _public_headers
   mrenv.h
   parallel.h
   ${PROJECT_BINARY_DIR}/config.h
+  ${PROJECT_BINARY_DIR}/version.h
   )
 
 add_subdirectory(chemistry)

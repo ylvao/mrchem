@@ -25,7 +25,6 @@ modules:
     - 'custom/mpi.cmake'
     - 'custom/omp.cmake'
     - 'custom/sad_basis.cmake'
-    - 'custom/git.cmake'
     - 'custom/main.cmake'
     - 'custom/feature_summary.cmake'
 - tests:

@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2020 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2019 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -26,15 +26,27 @@
 #pragma once
 
 namespace mrchem {
-inline constexpr auto sad_basis_dir() noexcept {
-  return "@SAD_BASIS_DIR@";
+inline constexpr auto program_version() noexcept {
+  return "@PROGRAM_VERSION@";
+}
+
+inline constexpr auto git_describe() noexcept {
+  return "@_git_describe@";
+}
+
+inline constexpr auto git_commit_hash() noexcept {
+  return "@_git_last_commit_hash@";
+}
+
+inline constexpr auto git_commit_author() noexcept {
+  return "@_git_last_commit_author@";
+}
+
+inline constexpr auto git_commit_date() noexcept {
+  return "@_git_last_commit_date@";
+}
+
+inline constexpr auto git_branch() noexcept {
+  return "@_git_branch@";
 }
 } // namespace mrchem
-
-#define BLAS_H "@BLAS_H@"
-
-#cmakedefine HAVE_MPI
-
-#cmakedefine HAVE_BLAS
-
-#cmakedefine HAVE_XCFUN
