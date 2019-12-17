@@ -27,7 +27,7 @@
 
 namespace mrchem {
 inline constexpr auto program_version() noexcept {
-  return "@PROGRAM_VERSION@";
+  return "@MRCHEM_VERSION@";
 }
 
 inline constexpr auto git_describe() noexcept {

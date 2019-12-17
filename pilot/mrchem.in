@@ -76,7 +76,7 @@ def main():
 
 def parse_cmdline():
     usage = "usage: %prog [options] [config] inp_file"
-    version = "@PROGRAM_VERSION@"
+    version = "@MRCHEM_VERSION@"
     cmdln = optparse.OptionParser(
         usage=usage, version="%prog {0}".format(version))
     cmdln.add_option(
