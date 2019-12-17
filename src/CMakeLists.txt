@@ -15,10 +15,10 @@ target_include_directories(mrchem
   )
 
 list(APPEND _public_headers
-  driver.h
-  mrchem.h
-  mrenv.h
-  parallel.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/driver.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mrchem.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mrenv.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/parallel.h
   ${PROJECT_BINARY_DIR}/config.h
   ${PROJECT_BINARY_DIR}/version.h
   )
@@ -37,6 +37,8 @@ target_link_libraries(mrchem
     MRCPP::mrcpp
     XCFun::xcfun
     nlohmann_json::nlohmann_json
+    $<$<TARGET_EXISTS:MPI::MPI_CXX>:MPI::MPI_CXX>
+    $<$<TARGET_EXISTS:OpenMP::OpenMP_CXX>:OpenMP::OpenMP_CXX>
   )
 
 set_target_properties(mrchem
@@ -67,11 +69,6 @@ install(
 # <<< Build MRChem executables >>>
 add_executable(mrchem.x mrchem.cpp)
 
-target_sources(mrchem.x
-  PUBLIC
-    $<BUILD_INTERFACE:$<JOIN:${CMAKE_CURRENT_LIST_DIR}/,${_public_headers}>>
-  )
-
 set_target_properties(mrchem.x
   PROPERTIES
     MACOSX_RPATH ON
@@ -87,6 +84,8 @@ target_link_libraries(mrchem.x
     MRCPP::mrcpp
     XCFun::xcfun
     nlohmann_json::nlohmann_json
+    $<$<TARGET_EXISTS:MPI::MPI_CXX>:MPI::MPI_CXX>
+    $<$<TARGET_EXISTS:OpenMP::OpenMP_CXX>:OpenMP::OpenMP_CXX>
   )
 
 # RPATH fixing
