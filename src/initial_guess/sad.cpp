@@ -29,6 +29,7 @@
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
+#include "MRCPP/utils/details.h"
 
 #include "core.h"
 #include "gto.h"
@@ -205,7 +206,10 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
     mrcpp::print::separator(2, '-');
 
     auto crop_prec = (mpi::numerically_exact) ? -1.0 : prec;
-    std::string sad_path = sad_basis_dir();
+    std::string sad_path;
+    for (auto n : {sad_basis_source_dir(), sad_basis_install_dir()}) {
+        if (mrcpp::details::directory_exists(n)) sad_path = n;
+    }
 
     Timer t_tot;
     Density rho_loc(false);
@@ -222,8 +226,8 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
 
         const std::string &sym = nucs[k].getElement().getSymbol();
         std::stringstream o_bas, o_dens;
-        o_bas << sad_path << sym << ".bas";
-        o_dens << sad_path << sym << ".dens";
+        o_bas << sad_path << "/" << sym << ".bas";
+        o_dens << sad_path << "/" << sym << ".dens";
 
         Density rho_k = initial_guess::gto::project_density(prec, nucs[k], o_bas.str(), o_dens.str());
         rho_loc.add(1.0, rho_k);

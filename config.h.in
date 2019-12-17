@@ -26,8 +26,11 @@
 #pragma once
 
 namespace mrchem {
-inline constexpr auto sad_basis_dir() noexcept {
-  return "@SAD_BASIS_DIR@";
+inline constexpr auto sad_basis_source_dir() noexcept {
+    return "@SAD_BASIS_SOURCE_DIR@";
+}
+inline constexpr auto sad_basis_install_dir() noexcept {
+    return "@SAD_BASIS_INSTALL_DIR@";
 }
 } // namespace mrchem
 
