@@ -161,10 +161,13 @@ OrbitalVector orbital::add(ComplexDouble a, OrbitalVector &Phi_a, ComplexDouble 
 
 /** @brief Orbital transformation out_j = sum_i inp_i*U_ij
  *
+ * NOTE: OrbitalVector is considered a ROW vector, so rotation
+ *       means matrix multiplication from the right
+ *
  * MPI: Rank distribution of output vector is the same as input vector
  *
  */
-OrbitalVector orbital::rotate(const ComplexMatrix &U, OrbitalVector &Phi, double prec) {
+OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double prec) {
     // Get all out orbitals belonging to this MPI
     auto inter_prec = (mpi::numerically_exact) ? -1.0 : prec;
     auto out = orbital::param_copy(Phi);
@@ -576,7 +579,7 @@ ComplexMatrix orbital::localize(double prec, OrbitalVector &Phi, int spin) {
     OrbitalVector Phi_s = orbital::disjoin(Phi, spin);
     ComplexMatrix U = calc_localization_matrix(prec, Phi_s);
     Timer rot_t;
-    Phi_s = orbital::rotate(U, Phi_s, prec);
+    Phi_s = orbital::rotate(Phi_s, U, prec);
     Phi = orbital::adjoin(Phi, Phi_s);
     mrcpp::print::time(2, "Rotating orbitals", rot_t);
     return U;
@@ -652,7 +655,7 @@ ComplexMatrix orbital::diagonalize(double prec, OrbitalVector &Phi, ComplexMatri
     mrcpp::print::time(2, "Diagonalizing matrix", diag_t);
 
     Timer rot_t;
-    Phi = orbital::rotate(U, Phi, prec);
+    Phi = orbital::rotate(Phi, U, prec);
     mrcpp::print::time(2, "Rotating orbitals", rot_t);
 
     mrcpp::print::footer(2, t_tot, 2);
@@ -677,7 +680,7 @@ ComplexMatrix orbital::orthonormalize(double prec, OrbitalVector &Phi, ComplexMa
     mrcpp::print::time(2, "Computing Lowdin matrix", t_lap);
 
     t_lap.start();
-    Phi = orbital::rotate(U, Phi, prec);
+    Phi = orbital::rotate(Phi, U, prec);
     mrcpp::print::time(2, "Rotating orbitals", t_lap);
 
     // Transform Fock matrix

@@ -341,7 +341,7 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
             U(1, 0) = std::sin(theta);
             U(1, 1) = std::cos(theta);
 
-            OrbitalVector Psi = rotate(U, Phi, prec);
+            OrbitalVector Psi = rotate(Phi, U, prec);
             ComplexMatrix S = orbital::calc_overlap_matrix(Psi);
             for (int i = 0; i < S.rows(); i++) {
                 for (int j = 0; j < S.cols(); j++) {

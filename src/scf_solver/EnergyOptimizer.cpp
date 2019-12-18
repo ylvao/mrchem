@@ -106,7 +106,7 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
         Timer t_arg;
         mrcpp::print::header(2, "Computing Helmholtz argument");
         ComplexMatrix L_mat = H.getLambdaMatrix();
-        OrbitalVector Psi = orbital::rotate(L_mat - F_mat_n, Phi_n);
+        OrbitalVector Psi = orbital::rotate(Phi_n, L_mat - F_mat_n);
         mrcpp::print::time(2, "Rotating orbitals", t_arg);
         mrcpp::print::footer(2, t_arg, 2);
         if (plevel == 1) mrcpp::print::time(1, "Computing Helmholtz argument", t_arg);
@@ -143,7 +143,7 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
 
         // Rotate orbitals
         ComplexMatrix U_mat = orbital::calc_lowdin_matrix(Phi_np1);
-        Phi_n = orbital::rotate(U_mat, Phi_np1, orb_prec);
+        Phi_n = orbital::rotate(Phi_np1, U_mat, orb_prec);
         F_mat_n = U_mat * F_mat_sym * U_mat.adjoint();
         Phi_np1.clear();
 
@@ -234,7 +234,7 @@ ComplexMatrix EnergyOptimizer::calcFockMatrixUpdate(double prec,
     { // The n+1 Fock operator needs orthonormalized orbitals
         t_lap.start();
         ComplexMatrix U_mat = orbital::calc_lowdin_matrix(Phi_np1);
-        Phi_np1 = orbital::rotate(U_mat, Phi_np1, prec);
+        Phi_np1 = orbital::rotate(Phi_np1, U_mat, prec);
         mrcpp::print::time(1, "Orthonormalize n+1", t_lap);
         mrcpp::print::separator(2, '-');
     }
