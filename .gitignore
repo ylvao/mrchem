@@ -9,6 +9,7 @@ Debug*
 Release*
 Profiling*
 build*
+calc*
 debug*
 release*
 install*

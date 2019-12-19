@@ -182,13 +182,11 @@ ComplexMatrix initial_guess::sad::diagonalize_fock(KineticOperator &T,
     mrcpp::print::time(1, "Computing Fock matrix", t1);
 
     Timer t2;
-    Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(f.cols());
-    es.compute(f);
-    ComplexMatrix ei_vec = es.eigenvectors();
-    ComplexMatrix U = ei_vec.transpose() * S_m12;
+    DoubleVector eig;
+    ComplexMatrix U = math_utils::diagonalize_hermitian_matrix(f, eig);
     mrcpp::print::time(1, "Diagonalizing Fock matrix", t2);
 
-    return U;
+    return S_m12 * U;
 }
 
 void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Molecule &mol) {

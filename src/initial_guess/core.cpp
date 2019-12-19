@@ -134,7 +134,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     t_lap.start();
     ComplexMatrix t = T(Phi, Phi);
     ComplexMatrix v = V(Phi, Phi);
-    ComplexMatrix F = S_m12.transpose() * (t + v) * S_m12;
+    ComplexMatrix F = S_m12.adjoint() * (t + v) * S_m12;
     V.clear();
     T.clear();
     mrcpp::print::time(1, "Computing Fock matrix", t_lap);
@@ -143,8 +143,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
     t_lap.start();
     Eigen::SelfAdjointEigenSolver<ComplexMatrix> es(F.cols());
     es.compute(F);
-    ComplexMatrix ei_vec = es.eigenvectors();
-    ComplexMatrix U = ei_vec.transpose() * S_m12;
+    ComplexMatrix U = S_m12 * es.eigenvectors();
     mrcpp::print::time(1, "Diagonalizing Fock matrix", t_lap);
 
     // Need to convert to QMFunctions for linear_combination
@@ -165,6 +164,7 @@ OrbitalVector initial_guess::core::setup(double prec, const Molecule &mol, bool 
         OrbitalVector Psi_b = initial_guess::core::rotate_orbitals(prec, U, Phi, Nb, SPIN::Beta);
         Psi = orbital::adjoin(Psi_a, Psi_b);
     }
+
     mrcpp::print::time(1, "Rotating orbitals", t_lap);
     mrcpp::print::footer(2, t_diag, 2);
     if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
@@ -259,25 +259,25 @@ OrbitalVector initial_guess::core::project_ao(double prec, const Nuclei &nucs, i
 OrbitalVector initial_guess::core::rotate_orbitals(double prec, ComplexMatrix &U, OrbitalVector &Phi, int N, int spin) {
     Timer t_tot;
     OrbitalVector Psi;
-    for (int i = 0; i < N; i++) Psi.push_back(Orbital(spin));
+    for (auto i = 0; i < N; i++) Psi.push_back(Orbital(spin));
     mpi::distribute(Psi);
 
     OrbitalIterator iter(Phi);
     while (iter.next()) {
-        for (int i = 0; i < Psi.size(); i++) {
-            if (not mpi::my_orb(Psi[i])) continue;
+        for (auto j = 0; j < Psi.size(); j++) {
+            if (not mpi::my_orb(Psi[j])) continue;
             QMFunctionVector func_vec;
             ComplexVector coef_vec(iter.get_size());
-            for (int j = 0; j < iter.get_size(); j++) {
-                int idx_j = iter.idx(j);
-                Orbital &recv_j = iter.orbital(j);
-                coef_vec[j] = U(i, idx_j);
-                func_vec.push_back(recv_j);
+            for (auto i = 0; i < iter.get_size(); i++) {
+                auto idx_i = iter.idx(i);
+                auto &recv_i = iter.orbital(i);
+                coef_vec[i] = U(idx_i, j);
+                func_vec.push_back(recv_i);
             }
-            Orbital tmp_i = Psi[i].paramCopy();
-            qmfunction::linear_combination(tmp_i, coef_vec, func_vec, prec);
-            Psi[i].add(1.0, tmp_i); // In place addition
-            Psi[i].crop(prec);
+            auto tmp_j = Psi[j].paramCopy();
+            qmfunction::linear_combination(tmp_j, coef_vec, func_vec, prec);
+            Psi[j].add(1.0, tmp_j); // In place addition
+            Psi[j].crop(prec);
         }
     }
     mrcpp::print::time(1, "Rotating orbitals", t_tot);

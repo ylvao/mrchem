@@ -117,7 +117,7 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
             Timer t_arg;
             mrcpp::print::header(2, "Computing Helmholtz argument");
             ComplexMatrix L_mat = H.getLambdaMatrix();
-            OrbitalVector Psi = orbital::rotate(L_mat - F_mat, Phi_n);
+            OrbitalVector Psi = orbital::rotate(Phi_n, L_mat - F_mat);
             mrcpp::print::time(2, "Rotating orbitals", t_arg);
             mrcpp::print::footer(2, t_arg, 2);
             if (plevel == 1) mrcpp::print::time(1, "Computing Helmholtz argument", t_arg);

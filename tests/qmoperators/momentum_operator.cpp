@@ -65,13 +65,14 @@ TEST_CASE("MomentumOperator", "[momentum_operator]") {
             if (i == j - 1) ref(i, j) = -std::sqrt(j / 2.0);
         }
     }
-
     auto D = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.5, 0.5);
     MomentumOperator p(D);
     p.setup(prec);
     SECTION("vector apply") {
         OrbitalVector xPhi = p[0](Phi);
         ComplexMatrix X = orbital::calc_overlap_matrix(Phi, xPhi);
+        std::cout << ref << std::endl << std::endl;
+        std::cout << X << std::endl << std::endl;
         for (int i = 0; i < X.rows(); i++) {
             for (int j = 0; j < X.cols(); j++) { REQUIRE(std::abs(X(i, j).imag() - ref(i, j)) < thrs); }
         }

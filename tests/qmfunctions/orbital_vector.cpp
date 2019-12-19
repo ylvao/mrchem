@@ -30,6 +30,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "utils/math_utils.h"
 
 using namespace mrchem;
 using namespace orbital;
@@ -193,6 +194,7 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
             REQUIRE(norms[1] < 0.0);
         }
     }
+
     SECTION("normalization") {
         OrbitalVector Phi;
         Phi.push_back(Orbital(SPIN::Paired));
@@ -250,11 +252,41 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
         if (mpi::my_orb(Phi[2])) qmfunction::project(Phi[2], f3, NUMBER::Real, prec);
         if (mpi::my_orb(Phi[3])) qmfunction::project(Phi[3], f4, NUMBER::Real, prec);
 
-        orthogonalize(prec, Phi);
+        // Complex phase rotation
+        for (int n = 0; n < Phi.size(); n++) {
+            double theta = (n + 1.0) * mrcpp::pi / 7.0;
+            ComplexDouble phase(std::cos(theta), std::sin(theta));
+            Phi[n].rescale(phase);
+        }
 
-        SECTION("in place orthonormalize") {
+        SECTION("Lowdin orthonormalize") {
+            ComplexMatrix M = ComplexMatrix::Zero(Phi.size(), Phi.size());
+            orthonormalize(-1.0, Phi, M);
+
+            ComplexMatrix S = calc_overlap_matrix(Phi);
+            for (int i = 0; i < S.rows(); i++) {
+                for (int j = 0; j < S.cols(); j++) {
+                    if (i == j) REQUIRE(std::abs(S(i, j)) == Approx(1.0));
+                    if (i != j) REQUIRE(std::abs(S(i, j)) < thrs);
+                }
+            }
+        }
+
+        SECTION("diagonalize overlap") {
+            auto S = calc_overlap_matrix(Phi);
+            diagonalize(-1.0, Phi, S);
+            for (int i = 0; i < S.rows(); i++) {
+                for (int j = 0; j < S.cols(); j++) {
+                    if (i == j) REQUIRE(std::abs(S(i, j)) == Approx(1.0));
+                    if (i != j) REQUIRE(std::abs(S(i, j)) < thrs);
+                }
+            }
+        }
+
+        SECTION("Gram-Schmidt orthonormalize") {
+            orthogonalize(prec, Phi);
             normalize(Phi);
-            ComplexMatrix S = orbital::calc_overlap_matrix(Phi);
+            ComplexMatrix S = calc_overlap_matrix(Phi);
             for (int i = 0; i < S.rows(); i++) {
                 for (int j = 0; j < S.cols(); j++) {
                     if (i == j) REQUIRE(std::abs(S(i, j)) == Approx(1.0));
@@ -272,6 +304,7 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
             if (mpi::my_orb(Psi[0])) qmfunction::project(Psi[0], f5, NUMBER::Real, prec);
             if (mpi::my_orb(Psi[1])) qmfunction::project(Psi[1], f6, NUMBER::Real, prec);
 
+            orthogonalize(prec, Phi);
             orthogonalize(prec, Psi, Phi);
 
             ComplexMatrix S = orbital::calc_overlap_matrix(Psi, Phi);
@@ -300,15 +333,30 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
         orthogonalize(prec, Phi);
         normalize(Phi);
 
-        double theta = 0.5;
-        ComplexMatrix U(Phi.size(), Phi.size());
-        U(0, 0) = cos(theta);
-        U(0, 1) = -sin(theta);
-        U(1, 0) = sin(theta);
-        U(1, 1) = cos(theta);
-
         SECTION("unitary transformation") {
-            OrbitalVector Psi = rotate(U, Phi, prec);
+            double theta = 0.5;
+            ComplexMatrix U(Phi.size(), Phi.size());
+            U(0, 0) = std::cos(theta);
+            U(0, 1) = -std::sin(theta);
+            U(1, 0) = std::sin(theta);
+            U(1, 1) = std::cos(theta);
+
+            OrbitalVector Psi = rotate(Phi, U, prec);
+            ComplexMatrix S = orbital::calc_overlap_matrix(Psi);
+            for (int i = 0; i < S.rows(); i++) {
+                for (int j = 0; j < S.cols(); j++) {
+                    if (i == j) REQUIRE(std::abs(S(i, j)) == Approx(1.0));
+                    if (i != j) REQUIRE(std::abs(S(i, j)) < thrs);
+                }
+            }
+        }
+
+        SECTION("vector addition") {
+            // Complex phase rotation
+            double theta = 0.6;
+            ComplexDouble a(std::cos(theta), 0.0), b(0.0, std::sin(theta));
+            OrbitalVector Psi = add(a, Phi, b, Phi, prec);
+
             ComplexMatrix S = orbital::calc_overlap_matrix(Psi);
             for (int i = 0; i < S.rows(); i++) {
                 for (int j = 0; j < S.cols(); j++) {

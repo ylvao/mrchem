@@ -80,15 +80,15 @@ RRMaximizer::RRMaximizer(double prec, OrbitalVector &Phi) {
                 Orbital &ket_j_x = std::get<1>(xPhi[j]);
                 if (mpi::my_unique_orb(ket_j_x) or mpi::orb_rank == 0) {
                     R_x(idx_i, idx_j) = orbital::dot(bra_i, ket_j_x);
-                    R_x(idx_j, idx_i) = R_x(idx_i, idx_j);
+                    R_x(idx_j, idx_i) = std::conj(R_x(idx_i, idx_j));
 
                     Orbital &ket_j_y = std::get<1>(yPhi[j]);
                     R_y(idx_i, idx_j) = orbital::dot(bra_i, ket_j_y);
-                    R_y(idx_j, idx_i) = R_y(idx_i, idx_j);
+                    R_y(idx_j, idx_i) = std::conj(R_y(idx_i, idx_j));
 
                     Orbital &ket_j_z = std::get<1>(zPhi[j]);
                     R_z(idx_i, idx_j) = orbital::dot(bra_i, ket_j_z);
-                    R_z(idx_j, idx_i) = R_z(idx_i, idx_j);
+                    R_z(idx_j, idx_i) = std::conj(R_z(idx_i, idx_j));
                 }
             }
         }

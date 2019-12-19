@@ -23,8 +23,8 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
+#include <MRCPP/Printer>
+#include <MRCPP/Timer>
 
 #include "parallel.h"
 
@@ -36,7 +36,6 @@ using mrcpp::Printer;
 using mrcpp::Timer;
 
 namespace mrchem {
-extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 
 /** @brief constructor
  *
@@ -96,17 +95,17 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
     }
     if (nOrbs <= 0) { return; }
     for (int i = 0; i < nOrbs; i++) {
-        OrbitalVector &Phi = this->orbitals[i];
-        Phi = orbital::rotate(U, Phi);
+        auto &Phi = this->orbitals[i];
+        Phi = orbital::rotate(Phi, U);
 
-        OrbitalVector &dPhi = this->dOrbitals[i];
-        dPhi = orbital::rotate(U, dPhi);
+        auto &dPhi = this->dOrbitals[i];
+        dPhi = orbital::rotate(Phi, U);
     }
     for (int i = 0; i < nFock; i++) {
-        ComplexMatrix &F = this->fock[i];
-        ComplexMatrix &dF = this->dFock[i];
-        F = U * F * U.transpose();
-        dF = U * dF * U.transpose();
+        auto &F = this->fock[i];
+        auto &dF = this->dFock[i];
+        F = U.adjoint() * F * U;
+        dF = U.adjoint() * dF * U;
     }
     mrcpp::print::time(2, "Rotating iterative subspace", t_tot);
 }
@@ -127,7 +126,7 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
  */
 void Accelerator::push_back(OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatrix *F, ComplexMatrix *dF) {
     Timer t_tot;
-    auto nHistory = static_cast<int>(this->orbitals.size());
+    int nHistory = this->orbitals.size();
     if (F != nullptr) {
         if (dF == nullptr) MSG_ERROR("Need to give both F and dF");
         if (this->fock.size() != nHistory) MSG_ERROR("Size mismatch orbitals vs matrices");
@@ -165,16 +164,16 @@ void Accelerator::push_back(OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatr
  */
 bool Accelerator::verifyOverlap(OrbitalVector &Phi) {
     int nOrbs = Phi.size();
-    IntVector out = IntVector::Zero(nOrbs);
     int nHistory = this->orbitals.size() - 1;
+    auto out = IntVector::Zero(nOrbs).eval();
     if (nHistory > 0) {
         for (int i = 0; i < nOrbs; i++) {
-            Orbital &phi_i = Phi[i];
+            auto &phi_i = Phi[i];
             if (mpi::my_orb(phi_i)) {
-                Orbital &last_i = this->orbitals[nHistory][i];
+                auto &last_i = this->orbitals[nHistory][i];
                 if (not mpi::my_orb(last_i)) MSG_ABORT("MPI rank mismatch");
-                double sqNorm = phi_i.squaredNorm();
-                ComplexDouble overlap = orbital::dot(phi_i, last_i);
+                auto sqNorm = phi_i.squaredNorm();
+                auto overlap = orbital::dot(phi_i, last_i);
                 if (std::abs(overlap) < 0.5 * sqNorm) {
                     mrcpp::print::value(2, "Overlap not verified ", std::abs(overlap));
                     out(i) = 1;
@@ -236,9 +235,8 @@ void Accelerator::accelerate(double prec,
 void Accelerator::solveLinearSystem() {
     Timer t_tot;
     this->c.clear();
-    int N = this->A.size();
-    for (int n = 0; n < N; n++) {
-        DoubleVector tmpC = this->A[n].colPivHouseholderQr().solve(this->b[n]);
+    for (int n = 0; n < this->A.size(); n++) {
+        auto tmpC = this->A[n].colPivHouseholderQr().solve(this->b[n]).eval();
         this->c.push_back(tmpC);
     }
     mrcpp::print::time(2, "Solve linear system", t_tot);
@@ -330,23 +328,20 @@ void Accelerator::replaceOrbitalUpdates(OrbitalVector &dPhi, int nHistory) {
  * If orbitals are not separated these are added up to one final A matrix and
  * b vector, otherwise all individual entries are kept.
  */
-void Accelerator::sortLinearSystem(std::vector<DoubleMatrix> &A_matrices, std::vector<DoubleVector> &b_vectors) {
-    int nOrbs = b_vectors.size();
-    int nHist = b_vectors[0].size();
-
+void Accelerator::sortLinearSystem(std::vector<ComplexMatrix> &A_matrices, std::vector<ComplexVector> &b_vectors) {
     if (this->sepOrbitals) {
-        for (int i = 0; i < nOrbs; i++) {
-            DoubleMatrix tmpA(A_matrices[i]);
-            DoubleVector tmpB(b_vectors[i]);
+        for (int i = 0; i < b_vectors.size(); i++) {
+            auto tmpA(A_matrices[i]);
+            auto tmpB(b_vectors[i]);
             this->A.push_back(tmpA);
             this->b.push_back(tmpB);
         }
     } else {
-        DoubleMatrix tmpA(nHist, nHist);
-        DoubleVector tmpB(nHist);
+        auto tmpA(A_matrices[0]);
+        auto tmpB(b_vectors[0]);
         tmpA.setZero();
         tmpB.setZero();
-        for (int i = 0; i < nOrbs; i++) {
+        for (int i = 0; i < b_vectors.size(); i++) {
             tmpA += A_matrices[i];
             tmpB += b_vectors[i];
         }

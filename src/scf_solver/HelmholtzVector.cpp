@@ -160,7 +160,7 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
         // 2) Rotate one orbital at a time
         // Could also fetch several orbitals and use qmfunction::linear_combination, but that would use more memory
         for (int j = 0; j < Phi.size(); j++) {
-            coef_vec[idx_j] = LmF_mat(i, j);
+            coef_vec[idx_j] = LmF_mat(j, i);
             Orbital recv_j;
             if (mpi::my_orb(Phi[j])) {
                 recv_j = Phi[j];
@@ -168,7 +168,7 @@ OrbitalVector HelmholtzVector::rotate_apply(RankZeroTensorOperator &V,
                 int wait = 1; // wait until orbital is available
                 mpi::orb_bank.get_orb(j, recv_j, wait);
             }
-            tmp_i.add(LmF_mat(i, j), recv_j); // In place addition
+            tmp_i.add(LmF_mat(j, i), recv_j); // In place addition
             idx_j++;
         }
         tmp_i.crop(inter_prec);
