@@ -38,6 +38,11 @@ SpinGGA::SpinGGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp
     d_mask = xc_utils::build_density_mask(false, true, this->order);
 }
 
+/** @brief Clear internal functions
+ *
+ * Ownership of densities is outside MRDFT -> clear
+ * Ownership of gradients is inside MRDFT -> free
+ */
 void SpinGGA::clear() {
     mrcpp::clear(this->rho_a, false);
     mrcpp::clear(this->rho_b, false);
@@ -45,6 +50,7 @@ void SpinGGA::clear() {
     mrcpp::clear(this->grad_b, true);
 }
 
+/** @brief Number of function involved in contraction step */
 int SpinGGA::getCtrInputLength() const {
     int length = -1;
     if (this->order < 2) length = 0;
@@ -53,11 +59,9 @@ int SpinGGA::getCtrInputLength() const {
     return length;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Collect input functions to xcfun evaluation step
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * For SpinGGA : [alpha_0, beta_0, grad(alpha_0), grad(beta_0)]
  */
 mrcpp::FunctionTreeVector<3> SpinGGA::setupXCInput() {
     if (this->rho_a.size() < 1) MSG_ERROR("Alpha density not initialized");
@@ -73,11 +77,12 @@ mrcpp::FunctionTreeVector<3> SpinGGA::setupXCInput() {
     return out_vec;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Collect input functions to contraction step
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * For SpinGGA:
+ * Ground State: No contraction, empty vector
+ * Linear Response: [alpha_1, beta_1, grad(alpha_1), grad(beta_1)]
+ * Higher Response: NOT_IMPLEMENTED
  */
 mrcpp::FunctionTreeVector<3> SpinGGA::setupCtrInput() {
     if (this->order > 2) NOT_IMPLEMENTED_ABORT;
@@ -91,11 +96,16 @@ mrcpp::FunctionTreeVector<3> SpinGGA::setupCtrInput() {
     return out_vec;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Prepare input functions to xcfun
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * Collects input densities and computes necessary gradients.
+ *
+ * Ordering of input:
+ * inp_vec[0] = alpha_0
+ * inp_vec[1] = beta_0
+ * inp_vec[2] = alpha_1
+ * inp_vec[3] = beta_1
+ * ...
  */
 void SpinGGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     if (inp_vec.size() != 2 * this->order) MSG_ERROR("Invalid input length");
@@ -124,11 +134,14 @@ void SpinGGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     }
 }
 
-/** @brief Potential calculation for GGA functionals
+/** @brief Compute final output functions
  *
- * The potential functions are assembled from the xcfun output functions.
- * The method used depends on whether the functional is spin-separated
- * and whether explicit or gamma-type derivatives have been used in xcfun.
+ * Combine the raw partial derivatives from xcfun into functional derivatives.
+ *
+ * For SpinGGA:
+ * f_xc         : out[0] = inp[0]
+ * df_xc/drho_a : out[1] = inp[1] - div(inp[3,4,5])
+ * df_xc/drho_b : out[2] = inp[2] - div(inp[6,7,8])
  */
 mrcpp::FunctionTreeVector<3> SpinGGA::postprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     // Energy density

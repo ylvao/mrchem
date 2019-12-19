@@ -29,6 +29,13 @@
 
 namespace mrdft {
 
+/** @brief Run a collection of grid points through XCFun
+ *
+ * Each row corresponds to one grid point.
+ *
+ * param[in] inp_data Matrix of input values
+ * param[out] out_data Matrix of output values
+ */
 Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
     int nInp = xc_input_length(*xcfun);  // Input parameters to XCFun
     int nOut = xc_output_length(*xcfun); // Input parameters to XCFun
@@ -48,6 +55,14 @@ Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
     return out;
 }
 
+/** @brief Contract a collection of grid points
+ *
+ * Each row corresponds to one grid point.
+ *
+ * param[in] xc_data Matrix of functional partial derivative values
+ * param[in] d_data Matrix of density input values
+ * param[out] out_data Matrix of contracted output values
+ */
 Eigen::MatrixXd Functional::contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const {
     auto nPts = xc_data.cols();
     auto nFcs = getCtrOutputLength();

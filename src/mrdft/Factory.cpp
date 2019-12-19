@@ -40,6 +40,7 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
     xcfun_p = std::make_unique<xc_functional>(xc_new_functional());
 }
 
+/** @brief Build a MRDFT object from the currently defined parameters */
 std::unique_ptr<MRDFT> Factory::build() {
     // Init DFT grid
     auto grid_p = std::make_unique<Grid>(mra);

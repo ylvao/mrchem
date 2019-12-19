@@ -30,6 +30,30 @@
 
 namespace mrdft {
 
+/** @brief Compute XC potentials from densities
+ *
+ * This routine computes the XC energy density and potentials on the
+ * union grid of all the density input functions. Functional evaluation
+ * and subsequent contraction is done node by node, to avoid explicit
+ * construction of the huge number of intermediate functions.
+ *
+ * Ordering without spin:
+ * inp_vec[0] = rho_0 (unperturbed)
+ * inp_vec[1] = rho_1 (first order perturbed)
+ * ...
+ * out_vec[0] = f_xc (XC energy density)
+ * out_vec[1] = v_xc (XC potential)
+ *
+ * Ordering with spin:
+ * inp_vec[0] = alpha_0 (unperturbed)
+ * inp_vec[1] = beta_0
+ * inp_vec[2] = alpha_1 (first order perturbed)
+ * inp_vec[3] = beta_1
+ * ...
+ * out_vec[0] = f_xc (XC energy density)
+ * out_vec[1] = v_xc_a (XC alpha potential)
+ * out_vec[2] = v_xc_b (XC beta potential)
+ */
 mrcpp::FunctionTreeVector<3> MRDFT::evaluate(mrcpp::FunctionTreeVector<3> &inp) {
     grid().unify(inp);
     functional().preprocess(inp);

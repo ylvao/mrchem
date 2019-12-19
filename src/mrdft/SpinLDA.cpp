@@ -37,11 +37,17 @@ SpinLDA::SpinLDA(int k, std::unique_ptr<xc_functional> &f)
     d_mask = xc_utils::build_density_mask(true, true, this->order);
 }
 
+/** @brief Clear internal functions
+ *
+ * Ownership of densities is outside MRDFT -> clear
+ * Ownership of gradients is inside MRDFT -> free
+ */
 void SpinLDA::clear() {
     mrcpp::clear(this->rho_a, false);
     mrcpp::clear(this->rho_b, false);
 }
 
+/** @brief Number of function involved in contraction step */
 int SpinLDA::getCtrInputLength() const {
     int length = -1;
     if (this->order < 2) length = 0;
@@ -50,6 +56,10 @@ int SpinLDA::getCtrInputLength() const {
     return length;
 }
 
+/** @brief Collect input functions to xcfun evaluation step
+ *
+ * For SpinLDA : [alpha_0, beta_0]
+ */
 mrcpp::FunctionTreeVector<3> SpinLDA::setupXCInput() {
     if (this->rho_a.size() < 1) MSG_ERROR("Alpha density not initialized");
     if (this->rho_b.size() < 1) MSG_ERROR("Beta density not initialized");
@@ -60,11 +70,12 @@ mrcpp::FunctionTreeVector<3> SpinLDA::setupXCInput() {
     return out_vec;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Collect input functions to contraction step
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * For SpinLDA:
+ * Ground State: No contraction, empty vector
+ * Linear Response: [alpha_1, beta_1]
+ * Higher Response: NOT_IMPLEMENTED
  */
 mrcpp::FunctionTreeVector<3> SpinLDA::setupCtrInput() {
     if (this->order > 2) NOT_IMPLEMENTED_ABORT;
@@ -76,6 +87,17 @@ mrcpp::FunctionTreeVector<3> SpinLDA::setupCtrInput() {
     return out_vec;
 }
 
+/** @brief Prepare input functions to xcfun
+ *
+ * Collects input densities and computes necessary gradients.
+ *
+ * Ordering of input:
+ * inp_vec[0] = alpha_0
+ * inp_vec[1] = beta_0
+ * inp_vec[2] = alpha_1
+ * inp_vec[3] = beta_1
+ * ...
+ */
 void SpinLDA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     if (inp_vec.size() != 2 * this->order) MSG_ERROR("Invalid input length");
     if (this->rho_a.size() > 0) MSG_ERROR("Alpha density not empty");
@@ -88,10 +110,14 @@ void SpinLDA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     }
 }
 
-/** @brief Compute the XC potential(s)
+/** @brief Compute final output functions
  *
- * Combines the xcfun output functions into the final XC potential functions.
- * Different calls for LDA and GGA, and for gamma-type vs explicit derivatives.
+ * Combine the raw partial derivatives from xcfun into functional derivatives.
+ *
+ * For SpinLDA:
+ * f_xc         : out[0] = inp[0]
+ * df_xc/drho_a : out[1] = inp[1]
+ * df_xc/drho_b : out[2] = inp[2]
  */
 mrcpp::FunctionTreeVector<3> SpinLDA::postprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     // Energy density

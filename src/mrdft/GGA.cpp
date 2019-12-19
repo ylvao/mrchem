@@ -21,8 +21,8 @@
  *
  * For information on the complete list of contributors to MRChem, see:
  * <https://mrchem.readthedocs.io/>
- */
 
+ */
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
 
@@ -38,11 +38,17 @@ GGA::GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::Deriva
     d_mask = xc_utils::build_density_mask(false, false, this->order);
 }
 
+/** @brief Clear internal functions
+ *
+ * Ownership of densities is outside MRDFT -> clear
+ * Ownership of gradients is inside MRDFT -> free
+ */
 void GGA::clear() {
     mrcpp::clear(this->rho, false);
     mrcpp::clear(this->grad, true);
 }
 
+/** @brief Number of function involved in contraction step */
 int GGA::getCtrInputLength() const {
     int length = -1;
     if (this->order < 2) length = 0;
@@ -51,11 +57,9 @@ int GGA::getCtrInputLength() const {
     return length;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Collect input functions to xcfun evaluation step
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * For GGA : [rho_0, grad(rho_0)]
  */
 mrcpp::FunctionTreeVector<3> GGA::setupXCInput() {
     if (this->rho.size() < 1) MSG_ERROR("Density not initialized");
@@ -67,11 +71,12 @@ mrcpp::FunctionTreeVector<3> GGA::setupXCInput() {
     return out_vec;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Collect input functions to contraction step
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * For GGA:
+ * Ground State: No contraction, empty vector
+ * Linear Response: [rho_1, grad(rho_1)]
+ * Higher Response: NOT_IMPLEMENTED
  */
 mrcpp::FunctionTreeVector<3> GGA::setupCtrInput() {
     if (this->order > 2) NOT_IMPLEMENTED_ABORT;
@@ -83,11 +88,16 @@ mrcpp::FunctionTreeVector<3> GGA::setupCtrInput() {
     return out_vec;
 }
 
-/** @brief Allocate input arrays for xcfun
+/** @brief Prepare input functions to xcfun
  *
- * Based on the xcfun setup, the requested array of FunctionTrees(s)
- * is allocared and its pointers assigned to the required input
- * functions.
+ * Collects input densities and computes necessary gradients.
+ *
+ * Ordering of input:
+ * inp_vec[0] = alpha_0
+ * inp_vec[1] = beta_0
+ * inp_vec[2] = alpha_1
+ * inp_vec[3] = beta_1
+ * ...
  */
 void GGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     if (inp_vec.size() != this->order) MSG_ERROR("Invalid input length");
@@ -108,11 +118,13 @@ void GGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     }
 }
 
-/** @brief Potential calculation for GGA functionals
+/** @brief Compute final output functions
  *
- * The potential functions are assembled from the xcfun output functions.
- * The method used depends on whether the functional is spin-separated
- * and whether explicit or gamma-type derivatives have been used in xcfun.
+ * Combine the raw partial derivatives from xcfun into functional derivatives.
+ *
+ * For GGA:
+ * f_xc       : out[0] = inp[0]
+ * df_xc/drho : out[1] = inp[1] - div(inp[2,3,4])
  */
 mrcpp::FunctionTreeVector<3> GGA::postprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     // Energy density

@@ -113,34 +113,42 @@ void xc_utils::fill_output_mask(Eigen::MatrixXi &mask, int value) {
     }
 }
 
-std::vector<mrcpp::FunctionNode<3> *> xc_utils::fetch_nodes(int n, mrcpp::FunctionTreeVector<3> &inp) {
-    std::vector<mrcpp::FunctionNode<3> *> nodes;
-    for (auto i = 0; i < inp.size(); i++) {
-        auto &iTree = mrcpp::get_func(inp, i);
+/** @brief Fetch specific node from several FunctionTrees
+ *
+ * This will retrieve one node from each of the input trees and put them
+ * into a vector of FunctionNodes. The node is fetched from position n
+ * in the respective endNodeTables, which means that the tree structures
+ * must be identical for this routine to work as intended.
+ *
+ * param[in] n Node position in EndNodeTable
+ * param[in] inp_trees Array of FunctionTrees
+ * param[out] out_nodes Array of FunctionNodes
+ */
+std::vector<mrcpp::FunctionNode<3> *> xc_utils::fetch_nodes(int n, mrcpp::FunctionTreeVector<3> &inp_trees) {
+    std::vector<mrcpp::FunctionNode<3> *> out_nodes;
+    for (auto i = 0; i < inp_trees.size(); i++) {
+        auto &iTree = mrcpp::get_func(inp_trees, i);
         auto &iNode = iTree.getEndFuncNode(n);
-        nodes.push_back(&iNode);
+        out_nodes.push_back(&iNode);
     }
-    return nodes;
+    return out_nodes;
 }
 
-/** @brief Converts data from a FunctionNode to a matrix
+/** @brief Collect data from FunctionNodes into a matrix
  *
- * The FunctionNode(s) row data is packed into a matrix whose
- * dimensions are the overall number of grid points (nCoefs) and the
- * number of functions (nFuncs).
+ * Collects function values from the input nodes into the rows
+ * of a matrix. Matrix dimension: rows = nNodes, cols = nCoefs.
  *
- * parma[in] n the Index of the requested node
- * param[in] nFuncs The number of functions
- * param[in] trees The array of FunctionTree(s)
- * param[in] data The matrix object
+ * param[in] inp_nodes Array of FunctionNodes
+ * param[out] out_data Matrix of function values
  */
 Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &inp_nodes) {
     Eigen::MatrixXd out_data;
-    auto nFuncs = inp_nodes.size();
-    if (nFuncs > 0) {
+    auto nNodes = inp_nodes.size();
+    if (nNodes > 0) {
         auto nCoefs = inp_nodes[0]->getNCoefs();
-        out_data = Eigen::MatrixXd::Zero(nFuncs, nCoefs);
-        for (auto i = 0; i < nFuncs; i++) {
+        out_data = Eigen::MatrixXd::Zero(nNodes, nCoefs);
+        for (auto i = 0; i < nNodes; i++) {
             auto &node = inp_nodes[i];
             Eigen::VectorXd row_i;
             node->getValues(row_i);
@@ -151,31 +159,39 @@ Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &
     return out_data;
 }
 
-/** @brief Converts data from a matrix to a FunctionNode
+/** @brief Put data from a matrix into FunctionNodes
  *
- * The matrix containing the output from xcfun is converted back to the corresponding FunctionNode(s). The matrix
- * dimensions are the overall number of grid points (nCoefs) and the number of functions (nFuncs).
+ * Each row of the input data is used as function values
+ * of the corresponding FunctionNode in the output vector.
+ * Matrix dimension: rows = nNodes, cols = nCoefs.
  *
- * parma[in] n the Index of the requested node
- * param[in] nFuncs The number of functions
- * param[in] trees The array of FunctionTree(s)
- * param[in] data The matrix object
+ * param[inout] out_nodes Array of FunctionNodes
+ * param[in] inp_data Matrix of function values
  */
-void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Eigen::MatrixXd &out_data) {
+void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Eigen::MatrixXd &inp_data) {
     auto nFuncs = out_nodes.size();
-    if (out_data.rows() != nFuncs) MSG_ERROR("Size mismatch");
+    if (inp_data.rows() != nFuncs) MSG_ERROR("Size mismatch");
 
     for (auto i = 0; i < nFuncs; i++) {
         auto &node = out_nodes[i];
-        node->setValues(out_data.row(i));
+        node->setValues(inp_data.row(i));
     }
 }
 
+/** @brief Compute the gradient using a log parametrization
+ *
+ * zeta = log(inp_func)
+ * grad(inp_func) = inp_func * grad(zeta)
+ *
+ * param[in] diff_oper Derivative operator
+ * param[in] inp_func Function to differentiate
+ * param[out] out_grad Gradient of input function
+ */
 mrcpp::FunctionTreeVector<3> xc_utils::log_gradient(mrcpp::DerivativeOperator<3> &diff_oper,
-                                                    mrcpp::FunctionTree<3> &rho) {
-    mrcpp::FunctionTree<3> zeta(rho.getMRA());
-    mrcpp::copy_grid(zeta, rho);
-    mrcpp::copy_func(zeta, rho);
+                                                    mrcpp::FunctionTree<3> &inp_func) {
+    mrcpp::FunctionTree<3> zeta(inp_func.getMRA());
+    mrcpp::copy_grid(zeta, inp_func);
+    mrcpp::copy_func(zeta, inp_func);
     for (auto i = 0; i < zeta.getNEndNodes(); i++) {
         auto &node = zeta.getEndFuncNode(i);
         Eigen::VectorXd values;
@@ -193,15 +209,15 @@ mrcpp::FunctionTreeVector<3> xc_utils::log_gradient(mrcpp::DerivativeOperator<3>
 
     mrcpp::FunctionTreeVector<3> grad_zeta = mrcpp::gradient(diff_oper, zeta);
 
-    mrcpp::FunctionTreeVector<3> grad_rho;
+    mrcpp::FunctionTreeVector<3> out_grad;
     for (int i = 0; i < 3; i++) {
-        mrcpp::FunctionTree<3> *grad_comp = new mrcpp::FunctionTree<3>(rho.getMRA());
-        mrcpp::copy_grid(*grad_comp, rho);
-        mrcpp::multiply(-1.0, *grad_comp, 1.0, rho, mrcpp::get_func(grad_zeta, i));
-        grad_rho.push_back(std::make_tuple(1.0, grad_comp));
+        mrcpp::FunctionTree<3> *grad_comp = new mrcpp::FunctionTree<3>(inp_func.getMRA());
+        mrcpp::copy_grid(*grad_comp, inp_func);
+        mrcpp::multiply(-1.0, *grad_comp, 1.0, inp_func, mrcpp::get_func(grad_zeta, i));
+        out_grad.push_back(std::make_tuple(1.0, grad_comp));
     }
     mrcpp::clear(grad_zeta, true);
-    return grad_rho;
+    return out_grad;
 }
 
 } // namespace mrdft
