@@ -44,7 +44,7 @@ public:
 
     mrcpp::FunctionTreeVector<3> evaluate(mrcpp::FunctionTreeVector<3> &inp);
 
-protected:
+private:
     std::unique_ptr<Grid> G{nullptr};
     std::unique_ptr<Functional> F{nullptr};
 };

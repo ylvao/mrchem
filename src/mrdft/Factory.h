@@ -47,7 +47,7 @@ public:
 
     std::unique_ptr<MRDFT> build();
 
-protected:
+private:
     int order{1};
     bool spin{false};
     bool gamma{false};
