@@ -6,7 +6,6 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/density_utils.h"
 #include "qmfunctions/orbital_utils.h"
-#include "utils/print_utils.h"
 
 using mrcpp::FunctionTree;
 using mrcpp::Printer;
@@ -14,51 +13,77 @@ using mrcpp::Timer;
 
 namespace mrchem {
 
-/** @brief Compute electron density
+/** @brief Prepare the operator for application
  *
- * The density is computed on the grid provided by the MRDFT module. The grid
- * is kept as is, e.i. no additional refinement at this point, since the grid
- * size is determined inside the module.
+ * @param[in] prec Apply precision
+ *
+ * Sequence of steps required to compute the XC potentials:
+ *
+ * 1) Compute density
+ * 2) Setup xcfun input functions (gradients etc.)
+ * 3) Evaluate xcfun
+ * 4) Compute XC energy by integrating energy density
+ * 5) Compute XC potential(s) from xcfun output functions
+ *
  */
-void XCPotential::setupDensity(double prec) {
-    if (this->functional->hasDensity()) return;
-    if (this->orbitals == nullptr) MSG_ERROR("Orbitals not initialized");
-    OrbitalVector &Phi = *this->orbitals;
-    if (this->functional->isSpinSeparated()) {
-        buildDensity(Phi, DensityType::Alpha, prec);
-        buildDensity(Phi, DensityType::Beta, prec);
-        FunctionTree<3> &func_a = this->getDensity(DensityType::Alpha);
-        FunctionTree<3> &func_b = this->getDensity(DensityType::Beta);
-        println(5, static_cast<mrcpp::MWTree<3> &>(func_a));
-        println(5, static_cast<mrcpp::MWTree<3> &>(func_b));
-        while (mrcpp::refine_grid(func_a, func_b)) {}
-        while (mrcpp::refine_grid(func_b, func_a)) {}
-        println(5, static_cast<mrcpp::MWTree<3> &>(func_a));
-        println(5, static_cast<mrcpp::MWTree<3> &>(func_b));
-    } else {
-        buildDensity(Phi, DensityType::Total, prec);
+void XCPotential::setup(double prec) {
+    if (isSetup(prec)) return;
+    setApplyPrec(prec);
+    if (this->mrdft == nullptr) MSG_ERROR("XCFunctional not initialized");
+    if (this->potentials.size() != 0) MSG_ERROR("Potential not properly cleared");
+
+    auto &grid = this->mrdft->grid().get();
+    mrcpp::FunctionTreeVector<3> xc_inp = setupDensities(prec, grid);
+    mrcpp::FunctionTreeVector<3> xc_out = this->mrdft->evaluate(xc_inp);
+
+    // Fetch energy density
+    mrcpp::FunctionTree<3> &f_xc = mrcpp::get_func(xc_out, 0);
+    this->energy = f_xc.integrate();
+
+    // Fetch potential
+    auto &v_local = mrcpp::get_func(xc_out, 1);
+    auto *v_global = new mrcpp::FunctionTree<3>(v_local.getMRA());
+    mrcpp::copy_grid(*v_global, v_local);
+    mrcpp::copy_func(*v_global, v_local);
+    this->potentials.push_back(std::make_tuple(1.0, v_global));
+
+    // Fetch potential
+    if (this->mrdft->functional().isSpin()) {
+        auto &v_local = mrcpp::get_func(xc_out, 2);
+        auto *v_global = new mrcpp::FunctionTree<3>(v_local.getMRA());
+        mrcpp::copy_grid(*v_global, v_local);
+        mrcpp::copy_func(*v_global, v_local);
+        this->potentials.push_back(std::make_tuple(1.0, v_global));
     }
+
+    mrcpp::clear(xc_out, true);
 }
 
 /** @brief Clears all data in the XCPotential object */
 void XCPotential::clear() {
     this->energy = 0.0;
+    for (auto &rho : this->densities) rho.free(NUMBER::Total);
     mrcpp::clear(this->potentials, true);
     clearApplyPrec();
 }
 
-void XCPotential::buildDensity(OrbitalVector &Phi, DensityType spin, double prec) {
-    Timer timer;
-    FunctionTree<3> &func = this->getDensity(spin);
-    Density rho(false);
-    rho.setReal(&func);
-    density::compute(prec, rho, Phi, spin);
-    print_utils::qmfunction(2, "XC rho", rho, timer);
-    rho.setReal(nullptr);
-}
-
-mrcpp::FunctionTree<3> &XCPotential::getDensity(DensityType spin, int index) {
-    return this->functional->getDensity(spin, index);
+Density &XCPotential::getDensity(DensityType spin, int pert_idx) {
+    int dens_idx = -1;
+    if (spin == DensityType::Total) {
+        if (pert_idx == 0) dens_idx = 0;
+        if (pert_idx == 1) dens_idx = 3;
+    } else if (spin == DensityType::Alpha) {
+        if (pert_idx == 0) dens_idx = 1;
+        if (pert_idx == 1) dens_idx = 4;
+    } else if (spin == DensityType::Beta) {
+        if (pert_idx == 0) dens_idx = 2;
+        if (pert_idx == 1) dens_idx = 5;
+    } else {
+        NOT_IMPLEMENTED_ABORT;
+    }
+    if (dens_idx < 0) MSG_ABORT("Invalid density index");
+    if (dens_idx > densities.size()) MSG_ABORT("Invalid density index");
+    return densities[dens_idx];
 }
 
 /** @brief Return FunctionTree for the XC spin potential
@@ -66,7 +91,10 @@ mrcpp::FunctionTree<3> &XCPotential::getDensity(DensityType spin, int index) {
  * @param[in] type Which spin potential to return (alpha, beta or total)
  */
 FunctionTree<3> &XCPotential::getPotential(int spin) {
-    bool spinFunctional = this->functional->isSpinSeparated();
+    int nPots = this->potentials.size();
+    if (nPots < 1 or nPots > 2) MSG_ERROR("Invalid potential");
+
+    bool spinFunctional = this->mrdft->functional().isSpin();
     int pot_idx = -1;
     if (spinFunctional and spin == SPIN::Alpha) {
         pot_idx = 0;
@@ -96,13 +124,6 @@ Orbital XCPotential::apply(Orbital phi) {
     V.setReal(&pot);
     Orbital Vphi = QMPotential::apply(phi);
     V.setReal(nullptr);
-
-    if (phi.spin() == SPIN::Alpha) pot.setName("v_xc alpha");
-    if (phi.spin() == SPIN::Beta) pot.setName("v_xc beta");
-    println(5, static_cast<mrcpp::MWTree<3> &>(pot));
-    if (phi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(phi.real()));
-    if (Vphi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(Vphi.real()));
-
     return Vphi;
 }
 
@@ -114,20 +135,7 @@ Orbital XCPotential::dagger(Orbital phi) {
     V.setReal(&pot);
     Orbital Vphi = QMPotential::dagger(phi);
     V.setReal(nullptr);
-
-    if (phi.spin() == SPIN::Alpha) pot.setName("v_xc alpha");
-    if (phi.spin() == SPIN::Beta) pot.setName("v_xc beta");
-    println(5, static_cast<mrcpp::MWTree<3> &>(pot));
-    if (phi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(phi.real()));
-    if (Vphi.hasReal()) println(5, static_cast<mrcpp::MWTree<3> &>(Vphi.real()));
-
     return Vphi;
 }
-
-// NOTE AFTER DISCUSSION WITH STIG: Need to move stuff that is
-// iteration-independent out of the response loop, so that all required
-// functions, which only depend on the GS density are computed
-// once. Comment: still the grid for rho_1 is borrowed from rho_0 and
-// rho_0 should still be available.
 
 } // namespace mrchem

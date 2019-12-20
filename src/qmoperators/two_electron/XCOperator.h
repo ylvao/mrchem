@@ -17,7 +17,7 @@ namespace mrchem {
 
 class XCOperator final : public RankZeroTensorOperator {
 public:
-    explicit XCOperator(std::shared_ptr<mrdft::XCFunctional> F,
+    explicit XCOperator(std::unique_ptr<mrdft::MRDFT> &F,
                         std::shared_ptr<OrbitalVector> Phi = nullptr,
                         bool mpi_shared = false) {
         potential = std::make_shared<XCPotentialD1>(F, Phi, mpi_shared);
@@ -27,7 +27,7 @@ public:
         XC = potential;
         XC.name() = "V_xc";
     }
-    XCOperator(std::shared_ptr<mrdft::XCFunctional> F,
+    XCOperator(std::unique_ptr<mrdft::MRDFT> &F,
                std::shared_ptr<OrbitalVector> Phi,
                std::shared_ptr<OrbitalVector> X,
                std::shared_ptr<OrbitalVector> Y,
@@ -41,13 +41,8 @@ public:
     }
     ~XCOperator() override = default;
 
-    void setupDensity(double prec = -1.0) { potential->setupDensity(prec); }
-    void setupPotential(double prec = -1.0) { potential->setupPotential(prec); }
-
-    double getEnergy() { return potential->getEnergy(); }
-    int getOrder() { return potential->getOrder(); }
-    mrcpp::FunctionTree<3> &getDensity(DensityType spin) { return potential->getDensity(spin); }
-    std::shared_ptr<mrdft::XCFunctional> getFunctional() const { return potential->getFunctional(); }
+    auto getEnergy() { return potential->getEnergy(); }
+    auto &getDensity(DensityType spin, int pert_idx = 0) { return potential->getDensity(spin, pert_idx); }
 
 private:
     std::shared_ptr<XCPotential> potential{nullptr};

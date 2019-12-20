@@ -387,6 +387,7 @@ def write_scf_calculation(program_dict, user_dict):
             "spin": user_dict["DFT"]["spin"],
             "gamma": user_dict["DFT"]["use_gamma"],
             "cutoff": user_dict["DFT"]["density_cutoff"],
+            "log_grad": user_dict["DFT"]["log_grad"],
             "derivative": user_dict["Derivatives"]["dft"],
             "functionals": func_dict
           }
@@ -496,6 +497,7 @@ def write_rsp_calculations(program_dict, user_dict):
                         "spin": user_dict["DFT"]["spin"],
                         "gamma": user_dict["DFT"]["use_gamma"],
                         "cutoff": user_dict["DFT"]["density_cutoff"],
+                        "log_grad": user_dict["DFT"]["log_grad"],
                         "derivative": user_dict["Derivatives"]["dft"],
                         "functionals": func_dict
                     }
@@ -532,6 +534,7 @@ def write_rsp_calculations(program_dict, user_dict):
                         "spin": user_dict["DFT"]["spin"],
                         "gamma": user_dict["DFT"]["use_gamma"],
                         "cutoff": user_dict["DFT"]["density_cutoff"],
+                        "log_grad": user_dict["DFT"]["log_grad"],
                         "derivative": user_dict["Derivatives"]["dft"],
                         "functionals": func_dict
                     }
@@ -639,6 +642,7 @@ def write_rsp_calculations(program_dict, user_dict):
                     "spin": user_dict["DFT"]["spin"],
                     "gamma": user_dict["DFT"]["use_gamma"],
                     "cutoff": user_dict["DFT"]["density_cutoff"],
+                    "log_grad": user_dict["DFT"]["log_grad"],
                     "derivative": user_dict["Derivatives"]["dft"],
                     "functionals": func_dict
                 }
@@ -736,6 +740,7 @@ def write_rsp_calculations(program_dict, user_dict):
                             "spin": user_dict["DFT"]["spin"],
                             "gamma": user_dict["DFT"]["use_gamma"],
                             "cutoff": user_dict["DFT"]["density_cutoff"],
+                            "log_grad": user_dict["DFT"]["log_grad"],
                             "derivative": user_dict["Derivatives"]["dft"],
                             "functionals": func_dict
                         }

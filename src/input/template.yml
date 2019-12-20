@@ -298,6 +298,11 @@ sections:
         default: false
         docstring: |
           Express functional derivative through the gradient invariant gamma.
+      - name: log_grad
+        type: bool
+        default: false
+        docstring: |
+          Compute density gradient from log(rho).
       - name: density_cutoff
         type: float
         default: 0.0

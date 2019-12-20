@@ -38,6 +38,8 @@
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
+#include "mrdft/Factory.h"
+
 using namespace mrchem;
 using namespace orbital;
 
@@ -53,14 +55,14 @@ TEST_CASE("XCOperatorBLYP", "[xc_operator_blyp]") {
     std::vector<int> ms;
 
     auto Phi_p = std::make_shared<OrbitalVector>();
-    auto fun_p = std::make_shared<mrdft::XCFunctional>(*MRA, false);
-    fun_p->setFunctional("BLYP", 1.0);
-    fun_p->setUseGamma(false);
-    fun_p->setDensityCutoff(1.0e-10);
-    fun_p->evalSetup(1);
-    fun_p->setNDensities(1);
-    fun_p->allocateDensities();
-    XCOperator V(fun_p, Phi_p);
+
+    mrdft::Factory xc_factory(*MRA);
+    xc_factory.setOrder(MRDFT::Gradient);
+    xc_factory.setFunctional("BLYP", 1.0);
+    xc_factory.setDensityCutoff(1.0e-10);
+    auto mrdft_p = xc_factory.build();
+
+    XCOperator V(mrdft_p, Phi_p);
 
     OrbitalVector &Phi = *Phi_p;
     for (int n = 1; n <= nShells; n++) {
