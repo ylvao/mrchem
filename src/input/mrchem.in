@@ -192,6 +192,22 @@ def write_molecule(program_dict, user_dict):
         for coord in coords_dict:
             coord["xyz"] = [AA * r for r in coord["xyz"]]
 
+    # Check for singularity
+    for a in range(len(coords_dict)):
+        for b in range(a + 1, len(coords_dict)):
+            A = coords_dict[a]
+            B = coords_dict[b]
+            R = math.sqrt(sum([(a - b)**2 for a,b in zip(A["xyz"], B["xyz"])]))
+            if R < 1.0e-6:
+                print("ABORT: Atoms are too close")
+                print(" " + A["atom"] + " : " + str(A["xyz"]))
+                print(" " + B["atom"] + " : " + str(B["xyz"]))
+                sys.exit(1)
+            elif R < 1.0e-3:
+                print("WARNING: Atoms are very close")
+                print(" " + A["atom"] + " : " + str(A["xyz"]))
+                print(" " + B["atom"] + " : " + str(B["xyz"]))
+
     # Translate center of mass to origin
     if user_dict["Molecule"]["translate"]:
         # Calc center of mass
