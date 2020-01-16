@@ -1,49 +1,41 @@
-# vim:syntax=sh:
-
-world_prec = 1.0e-3               # Overall relative precision
-world_size = 6                    # Size of simulation box 2^n
-
-MPI {
-  numerically_exact = true        # Guarantee identical results in MPI
+{
+    "world_prec": 0.001,
+    "world_size": 6,
+    "MPI": {
+        "numerically_exact": true
+    },
+    "Molecule": {
+        "angstrom": true,
+        "coords": "H      0.0000 0.0000   -0.3705\nH      0.0000 0.0000    0.3705\n"
+    },
+    "WaveFunction": {
+        "method": "DFT",
+        "restricted": false
+    },
+    "DFT": {
+        "functionals": "LDA\n"
+    },
+    "Properties": {
+        "scf_energy": true,
+        "polarizability": true
+    },
+    "Polarizability": {
+        "frequency": [
+            0.0
+        ]
+    },
+    "SCF": {
+        "run": false,
+        "initial_guess": "GTO"
+    },
+    "Response": {
+        "kain": 3,
+        "max_iter": 10,
+        "orbital_thrs": 0.01,
+        "directions": [
+            0,
+            0,
+            1
+        ]
+    }
 }
-
-Molecule {
-  angstrom = true
-$coords
-H      0.0000 0.0000   -0.3705
-H      0.0000 0.0000    0.3705
-$end
-}
-
-WaveFunction {
-  method = DFT                    # Wave function method (HF or DFT)
-  restricted = false              # Unrestricted calculation
-}
-
-DFT {
-$functionals
-LDA
-$end
-}
-
-Properties {
-  scf_energy = true               # Compute ground state energy
-  polarizability = true           # Compute electric polarizability
-}
-
-Polarizability {
-  frequency = [0.0]               # Static polarizability 
-}
-
-SCF {
-  run = false                     # Use initial guess, don't optimize
-  initial_guess = GTO             # Reading precomputed GTO MOs
-}
-
-Response {
-  kain = 3                        # Length of KAIN iterative history
-  max_iter = 10
-  orbital_thrs = 1.0e-2           # Convergence threshold in orbital residual
-  directions = [0,0,1]            # Compute only in z direction
-}
-
