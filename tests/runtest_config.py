@@ -7,17 +7,15 @@ def configure(options, input_files, extra_args):
     This function configures runtest
     at runtime for code specific launch command and file naming.
     """
-
     launcher = 'mrchem'
     launcher_full_path = path.normpath(path.join(options.binary_dir, launcher))
 
     command = []
     command.append(launcher_full_path)
     command.append(input_files[0])
-    command.append('--executable={:s}/{:s}'.format(options.binary_dir, 'mrchem.x'))
-
+    command.append(f'--executable={options.binary_dir}/mrchem.x')
     if extra_args is not None:
-        command.append(extra_args)
+        command += extra_args
 
     full_command = ' '.join(command)
 

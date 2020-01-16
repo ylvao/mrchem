@@ -40,7 +40,7 @@ from pathlib import Path
 sys.path.append("@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
 sys.path.append('@PROJECT_SOURCE_DIR@/src/chemistry')
 
-from parselglossy.api import parse
+from parselglossy.api import parse, validate
 from periodictable import PeriodicTable as PT
 
 
@@ -53,20 +53,24 @@ def main():
             os.mkdir(d)
 
     # Parse command line
-    executable, dryrun, inp_file_cmd = parse_cmdline()
+    executable, dryrun, inp_json, inp_file_cmd = parse_cmdline()
 
     in_path = Path(inp_file_cmd)
     tmpl_path = Path('@PROJECT_SOURCE_DIR@/src/input/template.yml')
 
-    # read user input file (JSONDict <- getkw file)
-    user_dict = parse(infile=in_path, template=tmpl_path, grammar='getkw')
+    # read user input file (JSONDict <- getkw file) or (JSONDict <- json file)
+    if inp_json:
+        user_dict = validate(infile=in_path, template=tmpl_path)
+    else:
+        user_dict = parse(infile=in_path, template=tmpl_path, grammar='getkw')
+
 
     # now that all keywords have sensible values,
     # we can translate user input into program input
     program_dict = translate_input(user_dict)
 
     inp_name, ext_ext = os.path.splitext(inp_file_cmd)
-    xfile = inp_name + '.json'
+    xfile = inp_name + '_parsed.json'
     with open(xfile, 'w') as fd:
         fd.write(json.dumps(program_dict, indent=2))
 
@@ -96,11 +100,20 @@ def parse_cmdline():
         type='string',
         default='@MRCHEM_EXECUTABLE@',
         help='set executable name')
+    cmdln.add_option(
+        '-j',
+        '--json',
+        action='store_true',
+        dest='inp_json',
+        default=False,
+        help='Input file is in json format')
+
 
     opts, args = cmdln.parse_args()
 
     executable = opts.executable
     dryrun = opts.dryrun
+    inp_json = opts.inp_json
 
     if (len(args) == 0):
         cmdln.error('No input file passed!')
@@ -111,7 +124,7 @@ def parse_cmdline():
         cmdln.error('Incorrect number of files')
         sys.exit(1)
 
-    return executable, dryrun, inp_file
+    return executable, dryrun, inp_json, inp_file
 
 def translate_input(user_dict):
     program_dict = {}
