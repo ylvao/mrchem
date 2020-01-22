@@ -8,9 +8,9 @@ namespace mrchem {
 
 class H_BM_dia final : public RankTwoTensorOperator<3, 3> {
 public:
-    H_BM_dia(const mrcpp::Coord<3> &o, const Nucleus &nuc_k, double c)
+    H_BM_dia(const mrcpp::Coord<3> &o, const mrcpp::Coord<3> &k, double c)
             : r_o(o)
-            , r_rm3(nuc_k, c) {
+            , r_rm3(1.0, k, c) {
         const double alpha_2 = PHYSCONST::alpha * PHYSCONST::alpha;
         RankZeroTensorOperator &o_x = this->r_o[0];
         RankZeroTensorOperator &o_y = this->r_o[1];

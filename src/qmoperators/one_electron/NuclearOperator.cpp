@@ -129,24 +129,4 @@ void NuclearPotential::allreducePotential(double prec, QMFunction &V_loc) {
     }
 }
 
-/** @brief computes the interaction energy of the nuclear potential with a second set of nuclei.
- *
- * @param[in] nucs the set of nuclei
- *
- * Note: this function is not suited to compute the nuclear self-energy
- *
- */
-double NuclearOperator::trace(const Nuclei &nucs) {
-    MSG_WARN("This routine has never been tested!");
-    int nNucs = nucs.size();
-    double E_nuc = 0.0;
-    for (int k = 0; k < nNucs; k++) {
-        const Nucleus &nuc_k = nucs[k];
-        double Z_k = nuc_k.getCharge();
-        const mrcpp::Coord<3> &R_k = nuc_k.getCoord();
-        E_nuc += Z_k * this->r_m1->evalf(R_k);
-    }
-    return E_nuc;
-}
-
 } // namespace mrchem

@@ -8,9 +8,9 @@ namespace mrchem {
 
 class H_M_pso final : public RankOneTensorOperator<3> {
 public:
-    H_M_pso(std::shared_ptr<mrcpp::DerivativeOperator<3>> D, const Nucleus &nuc, double c)
+    H_M_pso(std::shared_ptr<mrcpp::DerivativeOperator<3>> D, const mrcpp::Coord<3> &k, double c)
             : p(D)
-            , r_m3(nuc, c) {
+            , r_m3(1.0, k, c) {
         const double alpha_2 = PHYSCONST::alpha * PHYSCONST::alpha;
 
         // Invoke operator= to assign *this operator

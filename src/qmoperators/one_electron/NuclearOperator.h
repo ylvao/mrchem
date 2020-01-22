@@ -16,7 +16,6 @@ public:
 
     Nuclei &getNuclei() { return this->func.getNuclei(); }
     const Nuclei &getNuclei() const { return this->func.getNuclei(); }
-    double evalf(const mrcpp::Coord<3> &r) { return this->func.evalf(r); }
 
 private:
     NuclearFunction func;
@@ -37,8 +36,6 @@ public:
 
     Nuclei &getNuclei() { return this->r_m1->getNuclei(); }
     const Nuclei &getNuclei() const { return this->r_m1->getNuclei(); }
-
-    double trace(const Nuclei &nucs);
 
     using RankZeroTensorOperator::trace;
 

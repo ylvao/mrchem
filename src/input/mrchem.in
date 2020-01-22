@@ -243,7 +243,6 @@ def write_molecule(program_dict, user_dict):
         "coords": coords_dict
     }
 
-
 def write_initial_guess(program_dict, user_dict):
     guess_str = user_dict["SCF"]["initial_guess"].lower()
     method = guess_str.split('_')[0]
@@ -310,6 +309,12 @@ def write_scf_calculation(program_dict, user_dict):
     if user_dict["Properties"]["dipole_moment"]:
         prop_dict["dipole_moment"] = {
             "operator": "h_e_dip",
+            "precision": user_dict["world_prec"],
+            "r_O": program_dict["molecule"]["gauge_origin"]
+        }
+    if user_dict["Properties"]["quadrupole_moment"]:
+        prop_dict["quadrupole_moment"] = {
+            "operator": "h_e_quad",
             "precision": user_dict["world_prec"],
             "r_O": program_dict["molecule"]["gauge_origin"]
         }
@@ -410,16 +415,16 @@ def write_scf_calculation(program_dict, user_dict):
                     "coef": coef[0]
                 })
         fock_dict["xc_operator"] = {
-          "grid_prec": user_dict["Precisions"]["dft_prec"],
-          "shared_memory": user_dict["MPI"]["share_xc_potential"],
-          "xc_functional": {
-            "spin": user_dict["DFT"]["spin"],
-            "gamma": user_dict["DFT"]["use_gamma"],
-            "cutoff": user_dict["DFT"]["density_cutoff"],
-            "log_grad": user_dict["DFT"]["log_grad"],
-            "derivative": user_dict["Derivatives"]["dft"],
-            "functionals": func_dict
-          }
+            "grid_prec": user_dict["Precisions"]["dft_prec"],
+            "shared_memory": user_dict["MPI"]["share_xc_potential"],
+            "xc_functional": {
+                "spin": user_dict["DFT"]["spin"],
+                "gamma": user_dict["DFT"]["use_gamma"],
+                "cutoff": user_dict["DFT"]["density_cutoff"],
+                "log_grad": user_dict["DFT"]["log_grad"],
+                "derivative": user_dict["Derivatives"]["dft"],
+                "functionals": func_dict
+            }
         }
     if len(user_dict["ExternalFields"]["electric_field"]) > 0:
         fock_dict["external_operator"] = {

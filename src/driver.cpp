@@ -57,6 +57,7 @@
 #include "qmoperators/one_electron/H_B_dip.h"
 #include "qmoperators/one_electron/H_B_spin.h"
 #include "qmoperators/one_electron/H_E_dip.h"
+#include "qmoperators/one_electron/H_E_quad.h"
 #include "qmoperators/one_electron/H_M_fc.h"
 #include "qmoperators/one_electron/H_M_pso.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
@@ -514,15 +515,28 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
 
         auto h = driver::get_operator<3>(*json_dip);
         h.setup(prec);
-        mu.getNuclear() = h.trace(nuclei).real();
+        mu.getNuclear() = -h.trace(nuclei).real();
         mu.getElectronic() = h.trace(Phi).real();
         h.clear();
         mrcpp::print::footer(2, t_lap, 2);
         if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
     }
 
-    auto json_quadrupole = json_prop.find("quadrupole_moment");
-    if (json_quadrupole != json_prop.end()) MSG_ERROR("Quadrupole moment not implemented");
+    auto json_quad = json_prop.find("quadrupole_moment");
+    if (json_quad != json_prop.end()) {
+        t_lap.start();
+        mrcpp::print::header(2, "Computing quadrupole moment");
+        auto prec = (*json_quad)["precision"].get<double>();
+        QuadrupoleMoment &Q = mol.getQuadrupoleMoment();
+
+        auto h = driver::get_operator<3, 3>(*json_quad);
+        h.setup(prec);
+        Q.getNuclear() = -h.trace(nuclei).real();
+        Q.getElectronic() = h.trace(Phi).real();
+        h.clear();
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
+    }
 
     auto json_hyperpolarizability = json_prop.find("hyperpolarizability");
     if (json_hyperpolarizability != json_prop.end()) MSG_ERROR("Hyperpolarizability not implemented");
@@ -766,9 +780,7 @@ template <int I> RankOneTensorOperator<I> driver::get_operator(const json &json_
         auto smoothing = json_oper["smoothing"].get<double>();
         auto pert_diff = json_oper["derivative"].get<std::string>();
         auto D = driver::get_derivative(pert_diff);
-        PeriodicTable pt;
-        Nucleus nuc_K(pt.getElement("H"), r_K);
-        h = H_M_pso(D, nuc_K, smoothing);
+        h = H_M_pso(D, r_K, smoothing);
     } else {
         MSG_ERROR("Invalid operator: " << oper);
     }
@@ -778,16 +790,17 @@ template <int I> RankOneTensorOperator<I> driver::get_operator(const json &json_
 template <int I, int J> RankTwoTensorOperator<I, J> driver::get_operator(const json &json_oper) {
     RankTwoTensorOperator<I, J> h;
     auto oper = json_oper["operator"].get<std::string>();
-    if (oper == "h_bb_dia") {
+    if (oper == "h_e_quad") {
+        auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
+        h = H_E_quad(r_O);
+    } else if (oper == "h_bb_dia") {
         auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
         h = H_BB_dia(r_O);
     } else if (oper == "h_bm_dia") {
         auto r_O = json_oper["r_O"].get<mrcpp::Coord<3>>();
         auto r_K = json_oper["r_K"].get<mrcpp::Coord<3>>();
         auto smoothing = json_oper["smoothing"].get<double>();
-        PeriodicTable pt;
-        Nucleus nuc_K(pt.getElement("H"), r_K);
-        h = H_BM_dia(r_O, nuc_K, smoothing);
+        h = H_BM_dia(r_O, r_K, smoothing);
     } else {
         MSG_ERROR("Invalid operator: " << oper);
     }

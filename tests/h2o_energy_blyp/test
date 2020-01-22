@@ -23,6 +23,9 @@ f = [
     get_filter(string='(kJ/mol)',                     rel_tolerance=1.0e-6),
     get_filter(string='(eV)',                         rel_tolerance=1.0e-6),
     get_filter(string='(Debye)',                      abs_tolerance=1.0e-6),
+    get_filter(from_string='Total tensor',
+               to_string='==============',
+               abs_tolerance=1.0e-6),
 ]
 
 options = cli()

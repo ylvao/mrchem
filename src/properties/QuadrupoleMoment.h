@@ -25,30 +25,34 @@
 
 #pragma once
 
-#include "MRCPP/MWFunctions"
+#include "mrchem.h"
+#include "utils/print_utils.h"
 
 namespace mrchem {
 
-class NuclearGradientFunction : public mrcpp::RepresentableFunction<3> {
+// clang-format off
+class QuadrupoleMoment final {
 public:
-    NuclearGradientFunction(int d, double z, const mrcpp::Coord<3> &r, double c)
-            : D(d)
-            , C(c)
-            , Z(z)
-            , R(r) {}
+    DoubleMatrix getTensor() const { return getNuclear() + getElectronic(); }
+    DoubleMatrix &getNuclear() { return this->nuc_tensor; }
+    DoubleMatrix &getElectronic() { return this->el_tensor; }
+    const DoubleMatrix &getNuclear() const { return this->nuc_tensor; }
+    const DoubleMatrix &getElectronic() const { return this->el_tensor; }
 
-    double evalf(const mrcpp::Coord<3> &r) const override;
+    void print() const {
+        mrcpp::print::header(0, "Quadrupole Moment");
+        print_utils::matrix(0, "Electronic tensor", getElectronic());
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Nuclear tensor", getNuclear());
+        mrcpp::print::separator(0, '-');
+        print_utils::matrix(0, "Total tensor", getTensor());
+        mrcpp::print::separator(0, '=', 2);
+    }
 
-    bool isVisibleAtScale(int scale, int nQuadPts) const override;
-    bool isZeroOnInterval(const double *a, const double *b) const override;
-
-protected:
-    int D;             ///< Cartesian direction
-    double C;          ///< Smmothing parameter
-    double Z;          ///< Nuclear charge
-    mrcpp::Coord<3> R; ///< Nuclear coordinate
-
-    double du_dr(double r1) const;
+private:
+    DoubleMatrix nuc_tensor{DoubleVector::Zero(3)};
+    DoubleMatrix el_tensor{DoubleVector::Zero(3)};
 };
+// clang-format on
 
 } // namespace mrchem

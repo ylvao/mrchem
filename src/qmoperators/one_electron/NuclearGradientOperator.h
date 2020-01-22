@@ -8,9 +8,9 @@ namespace mrchem {
 
 class NuclearGradientPotential final : public QMPotential {
 public:
-    NuclearGradientPotential(int d, const Nucleus &nuc, double c)
+    NuclearGradientPotential(int d, double z, const mrcpp::Coord<3> &r, double c)
             : QMPotential(1)
-            , func(d, nuc, c) {}
+            , func(d, z, r, c) {}
 
     void setup(double prec) override;
     void clear() override;
@@ -21,10 +21,10 @@ private:
 
 class NuclearGradientOperator final : public RankOneTensorOperator<3> {
 public:
-    NuclearGradientOperator(const Nucleus &nuc, double c) {
-        x_rm3 = std::make_shared<NuclearGradientPotential>(0, nuc, c);
-        y_rm3 = std::make_shared<NuclearGradientPotential>(1, nuc, c);
-        z_rm3 = std::make_shared<NuclearGradientPotential>(2, nuc, c);
+    NuclearGradientOperator(double z, const mrcpp::Coord<3> &r, double c) {
+        x_rm3 = std::make_shared<NuclearGradientPotential>(0, z, r, c);
+        y_rm3 = std::make_shared<NuclearGradientPotential>(1, z, r, c);
+        z_rm3 = std::make_shared<NuclearGradientPotential>(2, z, r, c);
 
         // Invoke operator= to assign *this operator
         RankOneTensorOperator &v = (*this);
