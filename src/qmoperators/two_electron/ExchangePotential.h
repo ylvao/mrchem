@@ -41,6 +41,8 @@ protected:
     double getSpinFactor(Orbital phi_i, Orbital phi_j) const;
 
     void rotate(const ComplexMatrix &U);
+    void setupInternal(double prec);
+    int testPreComputed(Orbital phi_p) const;
     void setup(double prec) override;
     void clear() override;
 

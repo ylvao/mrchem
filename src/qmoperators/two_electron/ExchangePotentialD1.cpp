@@ -134,7 +134,7 @@ Orbital ExchangePotentialD1::calcExchange(Orbital phi_p) {
     OrbitalVector &Phi = *this->orbitals;
     mrcpp::PoissonOperator &P = *this->poisson;
 
-    std::vector<std::complex<double>> coef_vec;
+    std::vector<ComplexDouble> coef_vec;
     QMFunctionVector func_vec;
 
     OrbitalIterator iter(Phi);
@@ -147,7 +147,7 @@ Orbital ExchangePotentialD1::calcExchange(Orbital phi_p) {
 
             // compute phi_ip = phi_i^dag * phi_p
             Orbital phi_ip = phi_p.paramCopy();
-            qmfunction::multiply(phi_ip, phi_i, phi_p, -1.0);
+            qmfunction::multiply(phi_ip, phi_i.dagger(), phi_p, -1.0);
 
             // compute V_ip = P[phi_ip]
             Orbital V_ip = phi_p.paramCopy();

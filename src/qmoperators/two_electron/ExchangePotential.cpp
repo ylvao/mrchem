@@ -33,6 +33,100 @@ ExchangePotential::ExchangePotential(PoissonOperator_p P, OrbitalVector_p Phi, b
     this->part_norms = DoubleMatrix::Zero(nOrbs, nOrbs);
 }
 
+/** @brief Test if a given contribution has been precomputed
+ *
+ * @param[in] phi_p orbital for which the check is performed
+ *
+ * If the given contribution has been precomputed, it is simply copied,
+ * without additional recalculation.
+ */
+int ExchangePotential::testPreComputed(Orbital phi_p) const {
+    const OrbitalVector &Phi = *this->orbitals;
+    const OrbitalVector &Ex = this->exchange;
+
+    int out = -1;
+    if (Ex.size() == Phi.size()) {
+        for (int i = 0; i < Phi.size(); i++) {
+            if (&Phi[i].real() == &phi_p.real() and &Phi[i].imag() == &phi_p.imag()) {
+                out = i;
+                break;
+            }
+        }
+    }
+    return out;
+}
+
+/** @brief precomputes the exchange potential
+ *
+ *  @param[in] phi_p input orbital
+ *
+ * The exchange potential is (pre)computed among the orbitals that define the operator
+ */
+void ExchangePotential::setupInternal(double prec) {
+    setApplyPrec(prec);
+
+    if (this->exchange.size() != 0) MSG_ERROR("Exchange not properly cleared");
+
+    OrbitalVector &Phi = *this->orbitals;
+    OrbitalVector &Ex = this->exchange;
+
+    Timer timer;
+    // Diagonal must come first because it's NOT in-place
+    for (int i = 0; i < Phi.size(); i++) calcInternal(i);
+
+    // Off-diagonal must come last because it IS in-place
+    OrbitalIterator iter(Phi, true); // symmetric iterator
+    Orbital ex_rcv;
+    while (iter.next(1)) { // one orbital at the time
+        if (iter.get_size() > 0) {
+            Orbital &phi_i = iter.orbital(0);
+            int idx = iter.idx(0);
+            for (int j = 0; j < Phi.size(); j++) {
+                if (mpi::my_orb(phi_i) and j <= idx) continue; // compute only i<j for own block
+                Orbital &phi_j = (*this->orbitals)[j];
+                if (mpi::my_orb(phi_j)) calcInternal(idx, j, phi_i, phi_j);
+            }
+            // must send exchange_i to owner and receive exchange computed by other
+            if (iter.get_step(0) and not mpi::my_orb(phi_i))
+                mpi::send_function(Ex[idx], phi_i.rankID(), idx, mpi::comm_orb);
+
+            if (iter.get_sent_size()) {
+                // get exchange from where we sent orbital to
+                int idx_sent = iter.get_idx_sent(0);
+                int sent_rank = iter.get_rank_sent(0);
+                mpi::recv_function(ex_rcv, sent_rank, idx_sent, mpi::comm_orb);
+                Ex[idx_sent].add(1.0, ex_rcv);
+            }
+
+            if (not iter.get_step(0) and not mpi::my_orb(phi_i))
+                mpi::send_function(Ex[idx], phi_i.rankID(), idx, mpi::comm_orb);
+            if (not mpi::my_orb(Ex[idx])) Ex[idx].free(NUMBER::Total);
+        } else {
+            if (iter.get_sent_size()) { // must receive exchange computed by other
+                // get exchange from where we sent orbital to
+                int idx_sent = iter.get_idx_sent(0);
+                int sent_rank = iter.get_rank_sent(0);
+                mpi::recv_function(ex_rcv, sent_rank, idx_sent, mpi::comm_orb);
+                Ex[idx_sent].add(1.0, ex_rcv);
+            }
+        }
+        ex_rcv.free(NUMBER::Total);
+    }
+
+    // Collect info from the calculation
+    for (int i = 0; i < Phi.size(); i++) {
+        if (mpi::my_orb(Phi[i])) this->tot_norms(i) = Ex[i].norm();
+    }
+
+    mpi::allreduce_vector(this->tot_norms, mpi::comm_orb);  // to be checked
+    mpi::allreduce_matrix(this->part_norms, mpi::comm_orb); // to be checked
+
+    auto n = orbital::get_n_nodes(Ex);
+    auto m = orbital::get_size_nodes(Ex);
+    auto t = timer.elapsed();
+    mrcpp::print::tree(2, "Hartree-Fock exchange", n, m, t);
+}
+
 /** @brief Perform a unitary transformation among the precomputed exchange contributions
  *
  * @param[in] U unitary matrix defining the rotation
@@ -51,8 +145,7 @@ void ExchangePotential::rotate(const ComplexMatrix &U) {
 
 /** @brief determines the exchange factor to be used in the calculation of the exact exchange
  *
- * @param [in] phi_i orbital defining the K operator
- * @param [in] phi_j orbital to which K is applied
+ * @param [in] orb input orbital to which K is applied
  *
  * The factor is computed in terms of the occupancy of the two orbitals and in terms of the spin
  * 0.5 factors are used in order to preserve occupancy of the set of doubly occupied orbitals
@@ -78,9 +171,9 @@ void ExchangePotential::rotate(const ComplexMatrix &U) {
  */
 double ExchangePotential::getSpinFactor(Orbital phi_i, Orbital phi_j) const {
     double out = 0.0;
-    if (phi_i.spin() == SPIN::Paired)
+    if (phi_j.spin() == SPIN::Paired)
         out = 1.0;
-    else if (phi_j.spin() == SPIN::Paired)
+    else if (phi_i.spin() == SPIN::Paired)
         out = 0.5;
     else if (phi_i.spin() == phi_j.spin())
         out = 1.0;
