@@ -119,7 +119,7 @@ void mrenv::print_header() {
     std::stringstream o_ver, o_branch, o_hash, o_author, o_date;
     o_ver << "VERSION            " << program_version();
     o_branch << "Git branch         " << git_branch();
-    o_hash << "Git commit hash    " << git_describe();
+    o_hash << "Git commit hash    " << git_commit_hash();
     o_author << "Git commit author  " << git_commit_author();
     o_date << "Git commit date    " << git_commit_date();
 
