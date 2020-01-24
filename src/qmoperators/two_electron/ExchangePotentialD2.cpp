@@ -32,7 +32,7 @@ ExchangePotentialD2::ExchangePotentialD2(PoissonOperator_p P,
         : ExchangePotential(P, Phi, s)
         , orbitals_x(X)
         , orbitals_y(Y) {
-    if (X == Y) useOnlyX = true;
+    if (&X == &Y) useOnlyX = true;
 }
 
 /** @brief Test if a given contribution has been precomputed
