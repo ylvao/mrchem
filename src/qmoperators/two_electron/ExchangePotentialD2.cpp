@@ -114,7 +114,7 @@ Orbital ExchangePotentialD2::calcExchange_X(Orbital phi_p) {
 
     OrbitalVector &Phi = *this->orbitals;
     OrbitalVector &X = *this->orbitals_x;
-    std::vector<std::complex<double>> coef_vec;
+    std::vector<ComplexDouble> coef_vec;
     QMFunctionVector func_vec;
 
     for (int i = 0; i < Phi.size(); i++) {
@@ -145,7 +145,6 @@ Orbital ExchangePotentialD2::calcExchange_XY(Orbital phi_p) {
 }
 
 Orbital ExchangePotentialD2::calcExchangeComponent(Orbital phi_p, Orbital phi_a, Orbital phi_b) {
-
     double prec = this->apply_prec;
     mrcpp::PoissonOperator &P = *this->poisson;
     // compute phi_pb = phi_p * phi_b.dagger()
