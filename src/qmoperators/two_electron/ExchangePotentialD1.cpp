@@ -147,7 +147,7 @@ Orbital ExchangePotentialD1::calcExchange(Orbital phi_p) {
 
             // compute phi_ip = phi_i^dag * phi_p
             Orbital phi_ip = phi_p.paramCopy();
-            qmfunction::multiply(phi_ip, phi_i.dagger(), phi_p, -1.0);
+            qmfunction::multiply(phi_ip, phi_i, phi_p, -1.0);
 
             // compute V_ip = P[phi_ip]
             Orbital V_ip = phi_p.paramCopy();
