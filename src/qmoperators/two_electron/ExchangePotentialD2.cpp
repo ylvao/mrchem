@@ -32,7 +32,7 @@ ExchangePotentialD2::ExchangePotentialD2(PoissonOperator_p P,
         : ExchangePotential(P, Phi, s)
         , orbitals_x(X)
         , orbitals_y(Y) {
-    if (&X == &Y) useOnlyX = true;
+    if (X == Y) useOnlyX = true;
 }
 
 /** @brief Test if a given contribution has been precomputed
@@ -117,7 +117,6 @@ Orbital ExchangePotentialD2::calcExchange_X(Orbital phi_p) {
     std::vector<ComplexDouble> coef_vec;
     QMFunctionVector func_vec;
 
-    int coef_vec_index = 0;
     for (int i = 0; i < Phi.size(); i++) {
         Orbital &phi_i = Phi[i];
         Orbital &x_i = X[i];
