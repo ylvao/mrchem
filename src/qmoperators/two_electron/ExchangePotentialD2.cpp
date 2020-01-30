@@ -117,6 +117,7 @@ Orbital ExchangePotentialD2::calcExchange_X(Orbital phi_p) {
     std::vector<ComplexDouble> coef_vec;
     QMFunctionVector func_vec;
 
+    int coef_vec_index = 0;
     for (int i = 0; i < Phi.size(); i++) {
         Orbital &phi_i = Phi[i];
         Orbital &x_i = X[i];
