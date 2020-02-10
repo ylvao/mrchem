@@ -24,6 +24,7 @@
  */
 
 #include <MRCPP/MWOperators>
+#include <MRCPP/Printer>
 
 #include "Factory.h"
 #include "GGA.h"
