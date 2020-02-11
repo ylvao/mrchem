@@ -18,14 +18,12 @@ modules:
     - '%(url_root)modules/default_build_paths.cmake'
     - '%(url_root)modules/safeguards.cmake'
     - '%(url_root)modules/python_interpreter.cmake'
-    - '%(url_root)modules/mpi.cmake'
-    - '%(url_root)modules/omp.cmake'
-    - '%(url_root)modules/version.cmake'
     - '%(url_root)modules/code_coverage.cmake'
 - custom:
   - source:
+    - 'custom/mpi.cmake'
+    - 'custom/omp.cmake'
     - 'custom/sad_basis.cmake'
-    - 'custom/git.cmake'
     - 'custom/main.cmake'
     - 'custom/feature_summary.cmake'
 - tests:
