@@ -37,8 +37,6 @@ target_link_libraries(mrchem
     MRCPP::mrcpp
     XCFun::xcfun
     nlohmann_json::nlohmann_json
-    $<$<TARGET_EXISTS:MPI::MPI_CXX>:MPI::MPI_CXX>
-    $<$<TARGET_EXISTS:OpenMP::OpenMP_CXX>:OpenMP::OpenMP_CXX>
   )
 
 set_target_properties(mrchem
