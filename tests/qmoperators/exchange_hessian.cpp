@@ -55,34 +55,19 @@ TEST_CASE("ExchangeHessian", "[exchange_hessian]") {
     ExchangeOperator V(P_p, Phi_p, X_p, X_p);
 
     OrbitalVector &Phi = *Phi_p;
-    ns.push_back(1);
-    ls.push_back(0);
+    ns.push_back(2);
+    ls.push_back(1);
     ms.push_back(0);
     Phi.push_back(Orbital(SPIN::Alpha));
 
     ns.push_back(2);
-    ls.push_back(0);
-    ms.push_back(0);
-    Phi.push_back(Orbital(SPIN::Alpha));
-
-    ns.push_back(2);
-    ls.push_back(0);
+    ls.push_back(1);
     ms.push_back(0);
     Phi.push_back(Orbital(SPIN::Beta));
 
     ns.push_back(2);
     ls.push_back(1);
     ms.push_back(1);
-    Phi.push_back(Orbital(SPIN::Beta));
-
-    ns.push_back(2);
-    ls.push_back(1);
-    ms.push_back(2);
-    Phi.push_back(Orbital(SPIN::Beta));
-
-    ns.push_back(2);
-    ls.push_back(1);
-    ms.push_back(0);
     Phi.push_back(Orbital(SPIN::Beta));
 
     mpi::distribute(Phi);
@@ -97,20 +82,10 @@ TEST_CASE("ExchangeHessian", "[exchange_hessian]") {
     std::vector<int> ms_x;
 
     OrbitalVector &Phi_x = *X_p;
-    ns_x.push_back(2);
-    ls_x.push_back(0);
-    ms_x.push_back(0);
-    Phi_x.push_back(Orbital(SPIN::Alpha));
-
     ns_x.push_back(3);
-    ls_x.push_back(0);
+    ls_x.push_back(1);
     ms_x.push_back(0);
     Phi_x.push_back(Orbital(SPIN::Alpha));
-
-    ns_x.push_back(2);
-    ls_x.push_back(0);
-    ms_x.push_back(0);
-    Phi_x.push_back(Orbital(SPIN::Beta));
 
     ns_x.push_back(3);
     ls_x.push_back(1);
@@ -120,11 +95,6 @@ TEST_CASE("ExchangeHessian", "[exchange_hessian]") {
     ns_x.push_back(3);
     ls_x.push_back(1);
     ms_x.push_back(1);
-    Phi_x.push_back(Orbital(SPIN::Beta));
-
-    ns_x.push_back(3);
-    ls_x.push_back(1);
-    ms_x.push_back(2);
     Phi_x.push_back(Orbital(SPIN::Beta));
 
     mpi::distribute(Phi_x);
@@ -137,26 +107,11 @@ TEST_CASE("ExchangeHessian", "[exchange_hessian]") {
     int i = 0;
     DoubleMatrix E = DoubleMatrix::Zero(Phi.size(), Phi.size());
 
-    // S-type alpha orbitals
-    E(0, 0) = 0.2011155951;
-    E(1, 0) = 0.2402873221;
-    E(0, 1) = 0.2402873221;
-    E(1, 1) = 0.060776316;
-    // S-type beta orbital
-    E(2, 2) = 0.3006602696;
-    // P-type beta orbitals
-    E(3, 3) = 0.0585931074;
-    E(4, 3) = 0.0293705356;
-    E(3, 4) = 0.0293705356;
-    E(4, 4) = 0.0585931074;
-    E(5, 3) = 0.029371641;
-    E(3, 5) = 0.029371641;
-    E(5, 4) = 0.0293705356;
-    E(4, 5) = 0.0293705356;
-    E(5, 5) = 0.0585931074;
+    E(0, 0) = 0.0630355499;
+    E(1, 1) = 0.0673407628;
+    E(2, 2) = 0.0673407628;
 
     V.setup(prec);
-
     SECTION("apply") {
         Orbital Vphi_0 = V(Phi[0]);
         ComplexDouble V_00 = orbital::dot(Phi[0], Vphi_0);
@@ -195,13 +150,16 @@ TEST_CASE("ExchangeHessian", "[exchange_hessian]") {
         ComplexMatrix v = V(Phi, Phi);
         for (int i = 0; i < Phi.size(); i++) {
             for (int j = 0; j <= i; j++) {
-                //      	      REQUIRE(v(i, j).real() == Approx(v(i, j).real()).epsilon(thrs));
-                if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E(i, j)).epsilon(thrs));
-                REQUIRE(v(i, j).imag() < thrs);
+	       if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E(i, j)).epsilon(thrs));
+	       REQUIRE(v(i, j).imag() < thrs);
             }
         }
     }
     V.clear();
 }
 
-} // namespace exchnage_hessian
+} // namespace exchange_hessian
+
+
+		// if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E(i, j)).epsilon(thrs));
+		// REQUIRE(v(i, j).imag() < thrs);

@@ -55,18 +55,15 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
     ExchangeOperator V(P_p, Phi_p);
 
     OrbitalVector &Phi = *Phi_p;
-    for (int n = 1; n <= nShells; n++) {
-        int L = n;
-        for (int l = 0; l < L; l++) {
-            int M = 2 * l + 1;
-            for (int m = 0; m < M; m++) {
-                ns.push_back(n);
-                ls.push_back(l);
-                ms.push_back(m);
-                Phi.push_back(Orbital(SPIN::Paired));
-            }
-        }
-    }
+    ns.push_back(1);
+    ls.push_back(0);
+    ms.push_back(0);
+    Phi.push_back(Orbital(SPIN::Paired));
+
+    ns.push_back(2);
+    ls.push_back(0);
+    ms.push_back(0);
+    Phi.push_back(Orbital(SPIN::Paired));
     mpi::distribute(Phi);
 
     for (int i = 0; i < Phi.size(); i++) {
@@ -77,15 +74,13 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
     int i = 0;
     DoubleMatrix E_P = DoubleMatrix::Zero(Phi.size(), Phi.size());
 
-    E_P(0, 0) = 0.6980508089;
-    E_P(1, 0) = 0.0592777404;
-    E_P(0, 1) = 0.0592777404;
-    E_P(1, 1) = 0.2601678498;
-    E_P(2, 2) = 0.2631487488;
-    E_P(3, 3) = 0.2631487488;
-    E_P(4, 4) = 0.2631487488;
-
+    E_P(0, 0) = 0.646839239;
+    E_P(1, 0) = 0.0978951545;
+    E_P(0, 1) = 0.0978951545;
+    E_P(1, 1) = 0.1722781696;
+    
     V.setup(prec);
+
     SECTION("apply") {
         Orbital Vphi_0 = V(Phi[0]);
         ComplexDouble V_00 = orbital::dot(Phi[0], Vphi_0);
@@ -124,8 +119,8 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
         ComplexMatrix v = V(Phi, Phi);
         for (int i = 0; i < Phi.size(); i++) {
             for (int j = 0; j <= i; j++) {
-                if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E_P(i, j)).epsilon(thrs));
-                REQUIRE(v(i, j).imag() < thrs);
+		if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E_P(i, j)).epsilon(thrs));
+		REQUIRE(v(i, j).imag() < thrs);
             }
         }
     }
@@ -133,3 +128,5 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
 }
 
 } // namespace exchange_potential
+
+
