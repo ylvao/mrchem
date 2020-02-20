@@ -78,7 +78,7 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
     E_P(1, 0) = 0.0978951545;
     E_P(0, 1) = 0.0978951545;
     E_P(1, 1) = 0.1722781696;
-    
+
     V.setup(prec);
 
     SECTION("apply") {
@@ -119,8 +119,8 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
         ComplexMatrix v = V(Phi, Phi);
         for (int i = 0; i < Phi.size(); i++) {
             for (int j = 0; j <= i; j++) {
-		if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E_P(i, j)).epsilon(thrs));
-		REQUIRE(v(i, j).imag() < thrs);
+                if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Approx(E_P(i, j)).epsilon(thrs));
+                REQUIRE(v(i, j).imag() < thrs);
             }
         }
     }
@@ -128,5 +128,3 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
 }
 
 } // namespace exchange_potential
-
-
