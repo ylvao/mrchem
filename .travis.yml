@@ -102,7 +102,7 @@ script:
   - cd build
   - |
     if [[ "${COVERAGE}" = "--coverage" ]]; then
-      travis_wait 60 ctest --output-on-failure --verbose -L "unit" -LE "exchange"
+      travis_wait 60 ctest --output-on-failure --verbose -L "unit" -LE "exchange_hessian"
     else
       travis_wait 60 ctest --output-on-failure --verbose
     fi
