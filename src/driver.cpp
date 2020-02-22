@@ -251,8 +251,8 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto localize = (*scf_solver)["localize"].get<bool>();
         auto start_prec = (*scf_solver)["start_prec"].get<double>();
         auto final_prec = (*scf_solver)["final_prec"].get<double>();
+        auto energy_thrs = (*scf_solver)["energy_thrs"].get<double>();
         auto orbital_thrs = (*scf_solver)["orbital_thrs"].get<double>();
-        auto property_thrs = (*scf_solver)["property_thrs"].get<double>();
         auto helmholtz_prec = (*scf_solver)["helmholtz_prec"].get<double>();
 
         GroundStateSolver solver;
@@ -263,7 +263,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setLocalize(localize);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
-        solver.setThreshold(orbital_thrs, property_thrs);
+        solver.setThreshold(orbital_thrs, energy_thrs);
         success = solver.optimize(mol, F);
     }
 

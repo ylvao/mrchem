@@ -453,7 +453,7 @@ sections:
         default: -1.0
         docstring: |
           Convergence threshold for orbtial residuals.
-      - name: property_thrs
+      - name: energy_thrs
         type: float
         default: -1.0
         docstring: |
