@@ -1,6 +1,6 @@
 language: cpp
 sudo: false
-dist: xenial
+dist: bionic
 ruby: 2.5.3
 
 notifications:
