@@ -10,9 +10,11 @@ else()
     URL
       https://gitlab.com/libeigen/eigen/-/archive/before-git-migration/eigen-before-git-migration.tar.gz
     )
+
   FetchContent_GetProperties(eigen3_sources)
 
   set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+
   if(NOT eigen3_sources_POPULATED)
     FetchContent_Populate(eigen3_sources)
 
