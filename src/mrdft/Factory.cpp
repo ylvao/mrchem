@@ -23,10 +23,12 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include "Factory.h"
+
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
+#include <XCFun/xcfun.h>
 
-#include "Factory.h"
 #include "GGA.h"
 #include "Grid.h"
 #include "LDA.h"
@@ -37,9 +39,8 @@
 namespace mrdft {
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
-        : mra(MRA) {
-    xcfun_p = std::make_unique<xc_functional>(xc_new_functional());
-}
+        : mra(MRA)
+        , xcfun_p(xcfun_new(), xcfun_delete) {}
 
 /** @brief Build a MRDFT object from the currently defined parameters */
 std::unique_ptr<MRDFT> Factory::build() {
@@ -47,7 +48,7 @@ std::unique_ptr<MRDFT> Factory::build() {
     auto grid_p = std::make_unique<Grid>(mra);
 
     // Init XCFun
-    bool gga = xc_is_gga(*xcfun_p);
+    bool gga = xcfun_is_gga(xcfun_p.get());
     bool lda = not(gga);
     unsigned int mode = 1;                  //!< only partial derivative mode implemented
     unsigned int func_type = (gga) ? 1 : 0; //!< only LDA and GGA supported for now
@@ -57,7 +58,8 @@ std::unique_ptr<MRDFT> Factory::build() {
     unsigned int current = 0;               //!< no current density
     unsigned int exp_derivative = not(gamma); //!< use gamma or explicit derivatives
     if (not(gga)) exp_derivative = 0;         //!< fall back to gamma-type derivatives if LDA
-    xc_user_eval_setup(*xcfun_p, order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
+    xcfun_user_eval_setup(
+        xcfun_p.get(), order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
 
     // Init MW derivative
     if (gga) {

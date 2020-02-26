@@ -43,7 +43,7 @@ public:
     void setLogGradient(bool lg) { log_grad = lg; }
     void setDensityCutoff(double c) { cutoff = c; }
     void setDerivative(const std::string &n) { diff_s = n; }
-    void setFunctional(const std::string &n, double c = 1.0) { xc_set(*xcfun_p, n.c_str(), c); }
+    void setFunctional(const std::string &n, double c = 1.0) { xcfun_set(xcfun_p.get(), n.c_str(), c); }
 
     std::unique_ptr<MRDFT> build();
 
@@ -56,8 +56,8 @@ private:
     std::string diff_s{"abgv_00"};
     const mrcpp::MultiResolutionAnalysis<3> mra;
 
-    std::unique_ptr<xc_functional> xcfun_p{nullptr};
-    std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p{nullptr};
+    XC_p xcfun_p;
+    std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p;
 };
 
 } // namespace mrdft

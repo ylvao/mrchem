@@ -25,6 +25,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <Eigen/Core>
 #include <MRCPP/MWFunctions>
 #include <MRCPP/MWOperators>
@@ -32,9 +34,11 @@
 
 namespace mrdft {
 
+using XC_p = std::unique_ptr<xcfun_t, decltype(&xcfun_delete)>;
+
 class Functional {
 public:
-    Functional(int k, std::unique_ptr<xc_functional> &f)
+    Functional(int k, XC_p &f)
             : order(k)
             , xcfun(std::move(f)) {}
     virtual ~Functional() = default;
@@ -44,12 +48,12 @@ public:
 
     virtual bool isSpin() const = 0;
     bool isLDA() const { return (not(isGGA() or isMetaGGA())); }
-    bool isGGA() const { return xc_is_gga(*xcfun); }
-    bool isMetaGGA() const { return xc_is_metagga(*xcfun); }
+    bool isGGA() const { return xcfun_is_gga(xcfun.get()); }
+    bool isMetaGGA() const { return xcfun_is_metagga(xcfun.get()); }
     bool isHybrid() const { return (std::abs(amountEXX()) > 1.0e-10); }
     double amountEXX() const {
         double exx = 0.0;
-        xc_get(*xcfun, "exx", &exx);
+        xcfun_get(xcfun.get(), "exx", &exx);
         return exx;
     }
 
@@ -61,10 +65,10 @@ protected:
     double cutoff{-1.0};
     Eigen::VectorXi d_mask;
     Eigen::MatrixXi xc_mask;
-    std::unique_ptr<xc_functional> xcfun;
+    XC_p xcfun;
 
-    int getXCInputLength() const { return xc_input_length(*xcfun); }
-    int getXCOutputLength() const { return xc_output_length(*xcfun); }
+    int getXCInputLength() const { return xcfun_input_length(xcfun.get()); }
+    int getXCOutputLength() const { return xcfun_output_length(xcfun.get()); }
     virtual int getCtrInputLength() const = 0;
     virtual int getCtrOutputLength() const = 0;
 

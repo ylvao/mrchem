@@ -25,13 +25,15 @@
 
 #pragma once
 
+#include <XCFun/xcfun.h>
+
 #include "Functional.h"
 
 namespace mrdft {
 
 class GGA final : public Functional {
 public:
-    GGA(int k, std::unique_ptr<xc_functional> &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
+    GGA(int k, XC_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
     ~GGA() override = default;
 
     bool isSpin() const override { return false; }

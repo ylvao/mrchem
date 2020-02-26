@@ -25,13 +25,15 @@
 
 #pragma once
 
+#include <XCFun/xcfun.h>
+
 #include "Functional.h"
 
 namespace mrdft {
 
 class SpinLDA final : public Functional {
 public:
-    SpinLDA(int k, std::unique_ptr<xc_functional> &f);
+    SpinLDA(int k, XC_p &f);
     ~SpinLDA() override = default;
 
     bool isSpin() const override { return true; }

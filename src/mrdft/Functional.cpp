@@ -37,8 +37,8 @@ namespace mrdft {
  * param[out] out_data Matrix of output values
  */
 Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
-    int nInp = xc_input_length(*xcfun);  // Input parameters to XCFun
-    int nOut = xc_output_length(*xcfun); // Input parameters to XCFun
+    int nInp = xcfun_input_length(xcfun.get());  // Input parameters to XCFun
+    int nOut = xcfun_output_length(xcfun.get()); // Input parameters to XCFun
     int nPts = inp.cols();
     if (nInp != inp.rows()) MSG_ABORT("Invalid input");
 
@@ -50,7 +50,7 @@ Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
         } else {
             if (inp(0, i) < cutoff) calc = false;
         }
-        if (calc) xc_eval(*xcfun, inp.col(i).data(), out.col(i).data());
+        if (calc) xcfun_eval(xcfun.get(), inp.col(i).data(), out.col(i).data());
     }
     return out;
 }
