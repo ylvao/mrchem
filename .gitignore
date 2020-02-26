@@ -122,3 +122,4 @@ doc/xml/
 .direnv/
 *_inst
 *_build
+.ccls-cache/
