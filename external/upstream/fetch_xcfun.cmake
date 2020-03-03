@@ -13,7 +13,6 @@ else()
 
   FetchContent_GetProperties(xcfun_sources)
 
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/external)
   set(ENABLE_TESTALL FALSE CACHE BOOL "")
   set(STATIC_LIBRARY_ONLY TRUE CACHE BOOL "")
   set(XCFUN_MAX_ORDER 3)  # TODO Maybe as a user-facing option?
