@@ -160,6 +160,7 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
 
     // Electronic part
     if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
+    if (this->kin != nullptr) E_kin = this->kin->trace(Phi).real();
     if (this->coul != nullptr) E_ee = this->coul->trace(Phi).real();
     if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
     if (this->xc != nullptr) E_xc = this->xc->getEnergy();
@@ -168,10 +169,18 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Calculating molecular energy", t_tot);
 
+    println(0, "TOTAL ENERGY " << E_kin + E_en + E_ee + E_xc);
+
+    println(0, "Kinetic Energy " << E_kin);
+    println(0, "E-N Energy " << E_en);
+    println(0, "Coulomb Energy " << E_ee);
+    println(0, "Exchange Energy " << E_x);
+    println(0, "X-C Energy " << E_xc);
+    println(0, "E_ext Energy " << E_ext);
+
     double E_eex = E_ee + E_x;
     double E_orbxc2 = E_orb - E_xc2;
-    E_kin = E_orbxc2 - 2.0 * E_eex - E_en - E_ext;
-    E_el = E_orbxc2 - E_eex + E_xc;
+    E_el = E_kin + E_en + E_ee + E_xc + E_x - E_ext;
     return SCFEnergy{E_nuc, E_el, E_orb, E_kin, E_en, E_ee, E_xc, E_x, E_nex, E_ext};
 }
 
