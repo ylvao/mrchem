@@ -23,8 +23,8 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
+#include <MRCPP/Printer>
+#include <MRCPP/Timer>
 
 #include "HelmholtzVector.h"
 #include "KAIN.h"
@@ -284,12 +284,6 @@ void LinearResponseSolver::printParameters(double omega, const std::string &oper
     } else {
         o_calc << "Static linear response";
     }
-    std::stringstream o_loc;
-    if (this->localize) {
-        o_loc << "On";
-    } else {
-        o_loc << "Off";
-    }
 
     std::stringstream o_omega;
     o_omega << std::setprecision(5) << std::fixed << omega << " (au)";
@@ -339,7 +333,6 @@ void LinearResponseSolver::printParameters(double omega, const std::string &oper
     print_utils::text(0, "Perturbation       ", oper);
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());
-    print_utils::text(0, "Localization       ", o_loc.str());
     print_utils::text(0, "Start precision    ", o_prec_0.str());
     print_utils::text(0, "Final precision    ", o_prec_1.str());
     print_utils::text(0, "Helmholtz precision", o_helm.str());

@@ -53,15 +53,23 @@ public:
     GroundStateSolver() = default;
     virtual ~GroundStateSolver() override = default;
 
+    void setRotation(int iter) { this->rotation = iter; }
+    void setLocalize(bool loc) { this->localize = loc; }
+
     bool optimize(Molecule &mol, FockOperator &F);
 
 protected:
+    int rotation{0};      ///< Number of iterations between localization/diagonalization
+    bool localize{false}; ///< Use localized or canonical orbitals
     std::vector<SCFEnergy> energy;
 
     void reset() override;
     double calcPropertyError() const;
     void printProperty() const;
     void printParameters(const std::string &method) const;
+
+    bool needLocalization(int nIter, bool converged) const;
+    bool needDiagonalization(int nIter, bool converged) const;
 };
 
 } // namespace mrchem

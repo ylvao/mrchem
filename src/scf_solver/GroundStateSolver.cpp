@@ -333,4 +333,47 @@ bool GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
 
     return converged;
 }
+
+/** @brief Test if orbitals needs localization
+ *
+ * @param nIter: current iteration number
+ *
+ * This check is based on the "localize" and "rotation" parameters, where the latter
+ * tells how oftern (in terms of iterations) the orbitals should be rotated.
+ */
+bool GroundStateSolver::needLocalization(int nIter, bool converged) const {
+    bool loc = false;
+    if (not this->localize) {
+        loc = false;
+    } else if (nIter <= 2 or converged) {
+        loc = true;
+    } else if (this->rotation == 0) {
+        loc = false;
+    } else if (nIter % this->rotation == 0) {
+        loc = true;
+    }
+    return loc;
+}
+
+/** @brief Test if orbitals needs diagonalization
+ *
+ * @param nIter: current iteration number
+ *
+ * This check is based on the "localize" and "rotation" parameters, where the latter
+ * tells how oftern (in terms of iterations) the orbitals should be rotated.
+ */
+bool GroundStateSolver::needDiagonalization(int nIter, bool converged) const {
+    bool diag = false;
+    if (this->localize) {
+        diag = false;
+    } else if (nIter <= 2 or converged) {
+        diag = true;
+    } else if (this->rotation == 0) {
+        diag = false;
+    } else if (nIter % this->rotation == 0) {
+        diag = true;
+    }
+    return diag;
+}
+
 } // namespace mrchem

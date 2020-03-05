@@ -301,7 +301,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     auto success = true;
     auto rsp_prec = json_rsp["rsp_prec"].get<double>();
     auto dynamic = json_rsp["dynamic"].get<bool>();
-    auto localize = json_rsp["localize"].get<bool>();
 
     mol.initPerturbedOrbitals(dynamic);
 
@@ -343,7 +342,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         solver.setMethodName(method);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
-        solver.setLocalize(localize);
         solver.setOrthPrec(orth_prec);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);

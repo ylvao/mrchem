@@ -439,7 +439,6 @@ def write_rsp_calculations(program_dict, user_dict):
         for omega in user_dict["Polarizability"]["frequency"]:
             rsp_dict = {
                 "rsp_prec": user_dict["world_prec"],
-                "localize": user_dict["Response"]["localize"],
                 "dynamic": (omega > 1.0e-12),
                 "final_orbitals": "orbitals/phi_x",
                 "write_orbitals": user_dict["Response"]["write_orbitals"],
@@ -567,7 +566,6 @@ def write_rsp_calculations(program_dict, user_dict):
     if run_mag or (run_nmr and not nuc_spec):
         rsp_dict = {
             "rsp_prec": user_dict["world_prec"],
-            "localize": user_dict["Response"]["localize"],
             "dynamic": False,
             "final_orbitals": "orbitals/phi_x",
             "write_orbitals": user_dict["Response"]["write_orbitals"],
@@ -683,7 +681,6 @@ def write_rsp_calculations(program_dict, user_dict):
             if all_nucs or k in nuc_vec:
                 rsp_dict = {
                     "rsp_prec": user_dict["world_prec"],
-                    "localize": user_dict["Response"]["localize"],
                     "dynamic": False,
                     "final_orbitals": "orbitals/phi_x",
                     "write_orbitals": user_dict["Response"]["write_orbitals"],
