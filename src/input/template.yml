@@ -514,46 +514,6 @@ sections:
         docstring: |
           Plot converged molecular orbitals of given index. If the first index
           is negative, all orbitals will be plotted.
-  - name: KineticFree
-    docstring: |
-      Includes parameters related to the ground state SCF optimization
-      (kinetic free algorithm).
-    keywords:
-      - name: run
-        type: bool
-        default: false
-        docstring: |
-          Run kinetic free SCF solver.
-      - name: max_iter
-        type: int
-        default: -1
-        docstring: |
-          Maximum number of SCF iterations.
-      - name: localize
-        type: bool
-        default: false
-        docstring: |
-          Use canonical or localized orbitals.
-      - name: start_prec
-        type: float
-        default: -1.0
-        docstring: |
-          Incremental precision in SCF iterations, initial value.
-      - name: final_prec
-        type: float
-        default: -1.0
-        docstring: |
-          Incremental precision in SCF iterations, final value.
-      - name: orbital_thrs
-        type: float
-        default: -1.0
-        docstring: |
-          Convergence threshold for orbtial residuals.
-      - name: property_thrs
-        type: float
-        default: -1.0
-        docstring: |
-          Convergence threshold for SCF energy.
   - name: Response
     docstring: |
       Includes parameters related to the response SCF optimization.

@@ -62,7 +62,6 @@
 #include "qmoperators/one_electron/H_M_pso.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 
-#include "scf_solver/EnergyOptimizer.h"
 #include "scf_solver/KAIN.h"
 #include "scf_solver/LinearResponseSolver.h"
 #include "scf_solver/OrbitalOptimizer.h"
@@ -261,29 +260,6 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
         solver.setRotation(rotation);
-        solver.setLocalize(localize);
-        solver.setHelmholtzPrec(helmholtz_prec);
-        solver.setOrbitalPrec(start_prec, final_prec);
-        solver.setThreshold(orbital_thrs, property_thrs);
-        success = solver.optimize(mol, F);
-    }
-
-    // Run EnergyOptimizer if present in input JSON
-    auto energy_solver = json_scf.find("energy_solver");
-    if (energy_solver != json_scf.end()) {
-        auto method = (*orbital_solver)["method_name"].get<std::string>();
-        auto max_iter = (*energy_solver)["max_iter"].get<int>();
-        auto localize = (*energy_solver)["localize"].get<bool>();
-        auto start_prec = (*energy_solver)["start_prec"].get<double>();
-        auto final_prec = (*energy_solver)["final_prec"].get<double>();
-        auto orbital_thrs = (*energy_solver)["orbital_thrs"].get<double>();
-        auto property_thrs = (*energy_solver)["property_thrs"].get<double>();
-        auto helmholtz_prec = (*energy_solver)["helmholtz_prec"].get<double>();
-
-        EnergyOptimizer solver;
-        solver.setMethodName(method);
-        solver.setMaxIterations(max_iter);
-        solver.setRotation(1);
         solver.setLocalize(localize);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
