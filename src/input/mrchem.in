@@ -297,7 +297,19 @@ def write_scf_guess(user_dict, method_name):
 def write_rsp_guess(user_dict, method_name):
     guess_dict = {
         "prec": user_dict["Response"]["guess_prec"],
-        "type": user_dict["Response"]["guess_type"].lower()
+        "type": user_dict["Response"]["guess_type"].lower(),
+        "file_chk_x": user_dict["Response"]["path_checkpoint"] + "/X_rsp",
+        "file_chk_y": user_dict["Response"]["path_checkpoint"] + "/Y_rsp",
+        "file_basis": user_dict["Files"]["guess_basis"],
+        "file_gto_p": user_dict["Files"]["guess_gto_p"],
+        "file_gto_a": user_dict["Files"]["guess_gto_a"],
+        "file_gto_b": user_dict["Files"]["guess_gto_b"],
+        "file_x_p": user_dict["Files"]["guess_x_p"],
+        "file_x_a": user_dict["Files"]["guess_x_a"],
+        "file_x_b": user_dict["Files"]["guess_x_b"],
+        "file_y_p": user_dict["Files"]["guess_y_p"],
+        "file_y_a": user_dict["Files"]["guess_y_a"],
+        "file_y_b": user_dict["Files"]["guess_y_b"]
     }
     return guess_dict
 
@@ -353,6 +365,9 @@ def write_rsp_solver(user_dict, method_name):
         "method": method_name,
         "kain": user_dict["Response"]["kain"],
         "max_iter": user_dict["Response"]["max_iter"],
+        "file_chk_x": user_dict["Response"]["path_checkpoint"] + "/X_rsp",
+        "file_chk_y": user_dict["Response"]["path_checkpoint"] + "/Y_rsp",
+        "checkpoint": user_dict["Response"]["write_checkpoint"],
         "start_prec": start_prec,
         "final_prec": final_prec,
         "orbital_thrs": orbital_thrs,
