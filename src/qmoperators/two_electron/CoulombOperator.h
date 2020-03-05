@@ -52,8 +52,6 @@ public:
     auto &getPoisson() { return this->potential->getPoisson(); }
     auto &getDensity() { return this->potential->getDensity(); }
 
-    ComplexDouble trace(OrbitalVector &Phi) { return 0.5 * RankZeroTensorOperator::trace(Phi); }
-
 private:
     std::shared_ptr<CoulombPotential> potential{nullptr};
 };

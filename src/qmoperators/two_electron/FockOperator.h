@@ -48,7 +48,7 @@ public:
     void setup(double prec);
     void clear();
 
-    SCFEnergy trace(OrbitalVector &Phi, const ComplexMatrix &F);
+    SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
 
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
     ComplexMatrix dagger(OrbitalVector &bra, OrbitalVector &ket);

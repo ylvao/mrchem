@@ -125,54 +125,35 @@ void FockOperator::rotate(const ComplexMatrix &U) {
  * the corresponding Fock matrix. Tracing the kinetic energy operator is avoided
  * by tracing the Fock matrix and subtracting all other contributions.
  */
-SCFEnergy FockOperator::trace(OrbitalVector &Phi, const ComplexMatrix &F) {
+SCFEnergy FockOperator::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     Timer t_tot;
     auto plevel = Printer::getPrintLevel();
     mrcpp::print::header(2, "Calculating molecular energy");
 
-    double E_nuc = 0.0; // Nuclear repulsion
-    double E_el = 0.0;  // Electronic energy
-    double E_orb = 0.0; // Orbital energy
-    double E_kin = 0.0; // Kinetic energy
-    double E_en = 0.0;  // Nuclear-electronic interaction
-    double E_ee = 0.0;  // Electronic repulsion
-    double E_x = 0.0;   // Exact Exchange
-    double E_xc = 0.0;  // Exchange and Correlation
-    double E_xc2 = 0.0; // Trace of the XC operator
-    double E_ext = 0.0; // External field contribution to the electronic energy
-    double E_nex = 0.0; // External field contribution to the nuclear energy
-
-    // Orbital energies
-    for (int i = 0; i < Phi.size(); i++) {
-        auto occ = static_cast<double>(Phi[i].occ());
-        E_orb += occ * F(i, i).real();
-    }
+    double E_kin = 0.0;  // Kinetic energy
+    double E_nn = 0.0;   // Nuclear repulsion
+    double E_en = 0.0;   // Nuclear-electronic interaction
+    double E_ee = 0.0;   // Electronic repulsion
+    double E_x = 0.0;    // Exact Exchange
+    double E_xc = 0.0;   // Exchange and Correlation
+    double E_eext = 0.0; // External field contribution to the electronic energy
+    double E_next = 0.0; // External field contribution to the nuclear energy
 
     // Nuclear part
-    if (this->nuc != nullptr) {
-        Nuclei &nucs = this->nuc->getNuclei();
-        E_nuc = chemistry::compute_nuclear_repulsion(nucs);
-        if (this->ext != nullptr) {
-            E_nex = this->ext->trace(nucs).real();
-            E_nuc += E_nex;
-        }
-    }
+    if (this->nuc != nullptr) E_nn = chemistry::compute_nuclear_repulsion(nucs);
+    if (this->ext != nullptr) E_next = -this->ext->trace(nucs).real();
 
     // Electronic part
+    if (this->kin != nullptr) E_kin = this->kin->trace(Phi).real();
     if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
-    if (this->coul != nullptr) E_ee = this->coul->trace(Phi).real();
+    if (this->coul != nullptr) E_ee = 0.5 * this->coul->trace(Phi).real();
     if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
     if (this->xc != nullptr) E_xc = this->xc->getEnergy();
-    if (this->xc != nullptr) E_xc2 = this->xc->trace(Phi).real();
-    if (this->ext != nullptr) E_ext = this->ext->trace(Phi).real();
+    if (this->ext != nullptr) E_eext = this->ext->trace(Phi).real();
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Calculating molecular energy", t_tot);
 
-    double E_eex = E_ee + E_x;
-    double E_orbxc2 = E_orb - E_xc2;
-    E_kin = E_orbxc2 - 2.0 * E_eex - E_en - E_ext;
-    E_el = E_orbxc2 - E_eex + E_xc;
-    return SCFEnergy{E_nuc, E_el, E_orb, E_kin, E_en, E_ee, E_xc, E_x, E_nex, E_ext};
+    return SCFEnergy{E_kin, E_nn, E_en, E_ee, E_x, E_xc, E_next, E_eext};
 }
 
 ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {

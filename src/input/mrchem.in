@@ -288,12 +288,6 @@ def write_scf_calculation(program_dict, user_dict):
         scf_property_thrs = user_dict["world_prec"] / 10
         scf_orbital_thrs = math.sqrt(scf_property_thrs)
 
-    kin_orbital_thrs =  user_dict["KineticFree"]["orbital_thrs"]
-    kin_property_thrs =  user_dict["KineticFree"]["property_thrs"]
-    if kin_orbital_thrs < 0.0 and kin_property_thrs < 0.0:
-        kin_property_thrs = user_dict["world_prec"] / 10
-        kin_orbital_thrs = math.sqrt(kin_property_thrs)
-
     scf_dict = {
         "final_orbitals": "orbitals/phi",
         "write_orbitals": user_dict["SCF"]["write_orbitals"],
@@ -349,7 +343,7 @@ def write_scf_calculation(program_dict, user_dict):
             "localize": user_dict["SCF"]["localize"],
             "prec": scf_start_prec,
         }
-        scf_dict["orbital_solver"] = {
+        scf_dict["scf_solver"] = {
             "method_name": method_name,
             "kain": user_dict["SCF"]["kain"],
             "max_iter": user_dict["SCF"]["max_iter"],
@@ -366,17 +360,6 @@ def write_scf_calculation(program_dict, user_dict):
             "method_name": method_name,
             "localize": user_dict["SCF"]["localize"],
             "prec": scf_start_prec,
-        }
-    if user_dict["KineticFree"]["run"]:
-        scf_dict["energy_solver"] = {
-            "method_name": method_name,
-            "max_iter": user_dict["KineticFree"]["max_iter"],
-            "localize": user_dict["KineticFree"]["localize"],
-            "start_prec": user_dict["world_prec"],
-            "final_prec": user_dict["world_prec"],
-            "orbital_thrs": kin_orbital_thrs,
-            "property_thrs": kin_property_thrs,
-            "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
         }
 
     fock_dict = {
@@ -456,7 +439,6 @@ def write_rsp_calculations(program_dict, user_dict):
         for omega in user_dict["Polarizability"]["frequency"]:
             rsp_dict = {
                 "rsp_prec": user_dict["world_prec"],
-                "localize": user_dict["Response"]["localize"],
                 "dynamic": (omega > 1.0e-12),
                 "final_orbitals": "orbitals/phi_x",
                 "write_orbitals": user_dict["Response"]["write_orbitals"],
@@ -584,7 +566,6 @@ def write_rsp_calculations(program_dict, user_dict):
     if run_mag or (run_nmr and not nuc_spec):
         rsp_dict = {
             "rsp_prec": user_dict["world_prec"],
-            "localize": user_dict["Response"]["localize"],
             "dynamic": False,
             "final_orbitals": "orbitals/phi_x",
             "write_orbitals": user_dict["Response"]["write_orbitals"],
@@ -700,7 +681,6 @@ def write_rsp_calculations(program_dict, user_dict):
             if all_nucs or k in nuc_vec:
                 rsp_dict = {
                     "rsp_prec": user_dict["world_prec"],
-                    "localize": user_dict["Response"]["localize"],
                     "dynamic": False,
                     "final_orbitals": "orbitals/phi_x",
                     "write_orbitals": user_dict["Response"]["write_orbitals"],

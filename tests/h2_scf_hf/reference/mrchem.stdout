@@ -3,29 +3,37 @@
 **********************************************************************
 ***                                                                ***
 ***                                                                ***
-***          __  __ ____   ____ _                                  ***
-***         |  \/  |  _ \ / ___| |__   ___ _ __ ___                ***
-***         | |\/| | |_) | |   | '_ \ / _ \ '_ ` _ \               ***
-***         | |  | |  _ <| |___| | | |  __/ | | | | |              ***
-***         |_|  |_|_| \_\\____|_| |_|\___|_| |_| |_|              ***
+***        __  __ ____   ____ _                                    ***
+***       |  \/  |  _ \ / ___| |__   ___ _ __ ___                  ***
+***       | |\/| | |_) | |   | '_ \ / _ \ '_ ` _ \                 ***
+***       | |  | |  _ <| |___| | | |  __/ | | | | |                ***
+***       |_|  |_|_| \_\\____|_| |_|\___|_| |_| |_|                ***
 ***                                                                ***
-***         VERSION    0.0.1        (rev.   68df7e4c)              ***
+***       VERSION            0.3.0-alpha                           ***
 ***                                                                ***
-***         Stig Rune Jensen   <stig.r.jensen@uit.no>              ***
-***         Luca Frediani      <luca.frediani@uit.no>              ***
-***         Peter Wind         <peter.wind@uit.no>                 ***
+***       Git branch         modernize_energy_calculation          ***
+***       Git commit hash    f869d887b25c726c881d-dirty            ***
+***       Git commit author  Stig Rune Jensen                      ***
+***       Git commit date    Thu Mar 5 12:03:21 2020 +0100         ***
+***                                                                ***
+***       Magnar Bjorgve     <magnar.bjorgve@uit.no>               ***
+***       Roberto Di Remigio <roberto.di.remigio@uit.no>           ***
+***       Luca Frediani      <luca.frediani@uit.no>                ***
+***       Gabriel Gerez      <gsa017@post.uit.no>                  ***
+***       Stig Rune Jensen   <stig.r.jensen@uit.no>                ***
+***       Peter Wind         <peter.wind@uit.no>                   ***
 ***                                                                ***
 **********************************************************************
 
 ----------------------------------------------------------------------
 
- MPI processes         :                                            1
+ MPI processes         :      (no bank)                             1
  OpenMP threads        :                                            1
  Total cores           :                                            1
                                                                       
 ----------------------------------------------------------------------
 
-XCFun DFT library Copyright 2009-2011 Ulf Ekstrom and contributors.
+XCFun DFT library Copyright 2009-2020 Ulf Ekstrom and contributors.
 See http://dftlibs.org/xcfun/ for more information.
 
 This is free software; see the source code for copying conditions.
@@ -37,8 +45,11 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 
 ----------------------------------------------------------------------
 
- MRCPP version         : X.Y.Z
- Git revision          : 316f21ec
+ MRCPP version         : 1.2.0-alpha2
+ Git branch            : modernize_energy_calculation
+ Git commit hash       : ea07b65c8109b8937518-dirty
+ Git commit author     : Magnar Bjørgve
+ Git commit date       : Wed Mar 4 22:18:16 2020 +0100
 
  Linear algebra        : EIGEN v3.3.7
  Parallelization       : OpenMP
@@ -83,6 +94,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
     1       H          :       0.000000       0.000000       0.700000
 ----------------------------------------------------------------------
  Center of mass        :       0.000000       0.000000      -0.000000
+ Gauge origin          :       0.000000       0.000000       0.000000
 ======================================================================
 
 
@@ -99,7 +111,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Precision             : 1.00000e-03
  Restricted            : True
  Hamiltonian           : Superposition of Atomic Densities (SAD)
- Functional            : LDA (SWVN5)
+ Functional            : LDA (SVWN5)
  AO basis              : Hydrogenic orbitals
  Zeta quality          : 2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -138,9 +150,9 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
                            Molecular Energy
 ----------------------------------------------------------------------
  Kinetic energy        :           (au)                0.887101649591
- E-N energy            :           (au)               -3.289210351294
- Coulomb energy        :           (au)                1.178799428203
- Exchange energy       :           (au)               -0.589401251812
+ E-N energy            :           (au)               -3.289210351293
+ Coulomb energy        :           (au)                1.178799428204
+ Exchange energy       :           (au)               -0.589401251813
  X-C energy            :           (au)                0.000000000000
  Ext. field (el)       :           (au)                0.000000000000
  Ext. field (nuc)      :           (au)                0.000000000000
@@ -149,19 +161,20 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Nuclear energy        :           (au)                0.714285714286
 ----------------------------------------------------------------------
  Total energy          :           (au)           -1.098424811026e+00
-                       :     (kcal/mol)           -6.892719699035e+02
-                       :       (kJ/mol)           -2.883913923948e+03
-                       :           (eV)           -2.988966048131e+01
+                       :     (kcal/mol)           -6.892719699033e+02
+                       :       (kJ/mol)           -2.883913923947e+03
+                       :           (eV)           -2.988966048130e+01
 ======================================================================
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- Calculation           : Optimize molecular orbitals
+ Calculation           : Optimize ground state orbitals
  Method                : Hartree-Fock
  Max iterations        : 5
  KAIN solver           : 3
  Localization          : Off
  Diagonalization       : First two iterations
+ Helmholtz precision   : 1.00000e-03
  Start precision       : 1.00000e-03
  Final precision       : 1.00000e-03
  Energy threshold      : Off
@@ -170,39 +183,14 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 
 
 ======================================================================
- Iter         MO residual                Property              Update
+ Iter         MO residual            Total energy              Update
 ----------------------------------------------------------------------
     0        1.000000e+00         -1.098424811026       -1.098425e+00
-    1        8.091941e-02         -1.129611984934       -3.118717e-02
-    2        2.765741e-02         -1.133576859187       -3.964874e-03
-    3        8.810222e-03         -1.133996597232       -4.197380e-04
+    1        8.091939e-02         -1.129611786251       -3.118698e-02
+    2        2.765730e-02         -1.133576810812       -3.965025e-03
+    3        8.810274e-03         -1.133996586306       -4.197755e-04
 ----------------------------------------------------------------------
                    SCF converged in 3 iterations!
-======================================================================
-
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- Calculation           : Optimize energy (kinetic free)
- Method                : Hartree-Fock
- Max iterations        : 5
- KAIN solver           : Off
- Localization          : Off
- Diagonalization       : Every iteration
- Start precision       : 1.00000e-03
- Final precision       : 1.00000e-03
- Energy threshold      : 1.00000e-03
- Orbital threshold     : Off
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-======================================================================
- Iter         MO residual                Property              Update
-----------------------------------------------------------------------
-    0        1.000000e+00         -1.133996597232       -1.133997e+00
-    1        3.166700e-03         -1.133930331749        6.626548e-05
-    2        9.485379e-04         -1.133920503107        9.828642e-06
-----------------------------------------------------------------------
-                   SCF converged in 2 iterations!
 ======================================================================
 
 
@@ -226,6 +214,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
     1       H          :       0.000000       0.000000       0.700000
 ----------------------------------------------------------------------
  Center of mass        :       0.000000       0.000000      -0.000000
+ Gauge origin          :       0.000000       0.000000       0.000000
 ======================================================================
 
 
@@ -234,49 +223,47 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ----------------------------------------------------------------------
     n  Occ Spin        :                                      Epsilon
 ----------------------------------------------------------------------
-    0    2    p        :           (au)               -0.594904718180
+    0    2    p        :           (au)               -0.596133571590
 ----------------------------------------------------------------------
- Sum occupied          :           (au)               -1.189809436360
+ Sum occupied          :           (au)               -1.192267143179
 ======================================================================
 
 
 ======================================================================
                            Molecular Energy
 ----------------------------------------------------------------------
- Kinetic energy        :           (au)                1.127641086981
- E-N energy            :           (au)               -3.634244085406
- Coulomb energy        :           (au)                1.317228885890
- Exchange energy       :           (au)               -0.658832104857
+ Kinetic energy        :           (au)                1.117767387200
+ E-N energy            :           (au)               -3.622064845205
+ Coulomb energy        :           (au)                1.312451048159
+ Exchange energy       :           (au)               -0.656435890746
  X-C energy            :           (au)                0.000000000000
  Ext. field (el)       :           (au)                0.000000000000
  Ext. field (nuc)      :           (au)                0.000000000000
 ----------------------------------------------------------------------
- Electronic energy     :           (au)               -1.848206217393
+ Electronic energy     :           (au)               -1.848282300592
  Nuclear energy        :           (au)                0.714285714286
 ----------------------------------------------------------------------
- Total energy          :           (au)           -1.133920503107e+00
-                       :     (kcal/mol)           -7.115458527928e+02
-                       :       (kJ/mol)           -2.977107850017e+03
-                       :           (eV)           -3.085554742613e+01
+ Total energy          :           (au)           -1.133996586306e+00
+                       :     (kcal/mol)           -7.115935957208e+02
+                       :       (kJ/mol)           -2.977307606428e+03
+                       :           (eV)           -3.085761775536e+01
 ======================================================================
 
 
 ======================================================================
                             Dipole Moment
 ----------------------------------------------------------------------
- r_O                   :       0.000000       0.000000       0.000000
+ Electronic vector     :      -0.000000      -0.000000       0.000254
+ Magnitude             :           (au)                      0.000254
+                       :        (Debye)                      0.000645
 ----------------------------------------------------------------------
- Electronic vector     :      -0.000000      -0.000000       0.000048
- Magnitude             :           (au)                      0.000048
-                       :        (Debye)                      0.000123
-----------------------------------------------------------------------
- Nuclear vector        :      -0.000000      -0.000000      -0.000000
+ Nuclear vector        :       0.000000       0.000000      -0.000000
  Magnitude             :           (au)                      0.000000
                        :        (Debye)                      0.000000
 ----------------------------------------------------------------------
- Total vector          :      -0.000000      -0.000000       0.000048
- Magnitude             :           (au)                      0.000048
-                       :        (Debye)                      0.000123
+ Total vector          :       0.000000       0.000000       0.000254
+ Magnitude             :           (au)                      0.000254
+                       :        (Debye)                      0.000645
 ======================================================================
 
 
@@ -286,7 +273,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ***                                                                ***
 ***                         Exiting MRChem                         ***
 ***                                                                ***
-***                    Wall time :  0h  0m 30s                     ***
+***                    Wall time :  0h  0m 23s                     ***
 ***                                                                ***
 **********************************************************************
                                                                       

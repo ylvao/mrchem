@@ -36,9 +36,3 @@ SCF {
   initial_guess = SAD_DZ          # Type of initial guess: none, mw, gto
 }
 
-KineticFree {
-  run = true
-  max_iter = 5
-  property_thrs = 1.0e-3          # Convergence threshold in total energy
-}
-

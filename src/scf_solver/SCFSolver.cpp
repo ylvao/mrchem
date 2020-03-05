@@ -23,11 +23,12 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
-#include "MRCPP/utils/details.h"
+#include <MRCPP/Printer>
+#include <MRCPP/Timer>
+#include <MRCPP/utils/details.h>
 
 #include "SCFSolver.h"
+
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 
@@ -116,48 +117,6 @@ bool SCFSolver::checkConvergence(double err_o, double err_p) const {
     if (err_o < this->orbThrs or this->orbThrs < 0.0) conv_o = true;
     if (err_p < this->propThrs or this->propThrs < 0.0) conv_p = true;
     return (conv_o and conv_p);
-}
-
-/** @brief Test if orbitals needs localization
- *
- * @param nIter: current iteration number
- *
- * This check is based on the "localize" and "rotation" parameters, where the latter
- * tells how oftern (in terms of iterations) the orbitals should be rotated.
- */
-bool SCFSolver::needLocalization(int nIter, bool converged) const {
-    bool loc = false;
-    if (not this->localize) {
-        loc = false;
-    } else if (nIter <= 2 or converged) {
-        loc = true;
-    } else if (this->rotation == 0) {
-        loc = false;
-    } else if (nIter % this->rotation == 0) {
-        loc = true;
-    }
-    return loc;
-}
-
-/** @brief Test if orbitals needs diagonalization
- *
- * @param nIter: current iteration number
- *
- * This check is based on the "localize" and "rotation" parameters, where the latter
- * tells how oftern (in terms of iterations) the orbitals should be rotated.
- */
-bool SCFSolver::needDiagonalization(int nIter, bool converged) const {
-    bool diag = false;
-    if (this->localize) {
-        diag = false;
-    } else if (nIter <= 2 or converged) {
-        diag = true;
-    } else if (this->rotation == 0) {
-        diag = false;
-    } else if (nIter % this->rotation == 0) {
-        diag = true;
-    }
-    return diag;
 }
 
 /** @brief Get property update

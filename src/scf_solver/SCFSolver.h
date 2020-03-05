@@ -49,8 +49,6 @@ public:
     virtual ~SCFSolver() = default;
 
     void setHistory(int hist) { this->history = hist; }
-    void setRotation(int iter) { this->rotation = iter; }
-    void setLocalize(bool loc) { this->localize = loc; }
     void setThreshold(double orb, double prop);
     void setOrbitalPrec(double init, double final);
     void setHelmholtzPrec(double prec) { this->helmPrec = prec; }
@@ -60,8 +58,6 @@ public:
 protected:
     int history{0};                      ///< Maximum length of KAIN history
     int maxIter{-1};                     ///< Maximum number of iterations
-    int rotation{0};                     ///< Number of iterations between localization/diagonalization
-    bool localize{false};                ///< Use localized or canonical orbitals
     double orbThrs{-1.0};                ///< Convergence threshold for norm of orbital update
     double propThrs{-1.0};               ///< Convergence threshold for property
     double helmPrec{-1.0};               ///< Precision for construction of Helmholtz operators
@@ -73,16 +69,13 @@ protected:
 
     virtual void reset();
 
-    bool checkConvergence(double err_o, double err_p) const;
-    bool needLocalization(int nIter, bool converged) const;
-    bool needDiagonalization(int nIter, bool converged) const;
-
     double adjustPrecision(double error);
     double getHelmholtzPrec();
 
     double getUpdate(const std::vector<double> &vec, int i, bool absPrec) const;
     void printUpdate(int plevel, const std::string &txt, double P, double dP, double thrs) const;
 
+    bool checkConvergence(double err_o, double err_p) const;
     void printConvergence(bool converged, const std::string &txt) const;
     void printConvergenceHeader(const std::string &txt) const;
     void printConvergenceRow(int i) const;

@@ -40,18 +40,19 @@ namespace mrchem {
 class SCFEnergy final {
 public:
     SCFEnergy() = default;
-    SCFEnergy(double nuc, double el, double orb,
-              double kin, double en, double ee,
-              double xc, double x, double nex,
-              double ext) :
-        E_nuc(nuc), E_el(el), E_orb(orb), E_kin(kin), E_en(en),
-        E_ee(ee), E_x(x), E_xc(xc), E_nex(nex), E_ext(ext) {}
+    SCFEnergy(double kin, double nn, double en,
+              double ee, double x, double xc,
+              double next, double eext) :
+        E_kin(kin), E_nn(nn), E_en(en), E_ee(ee),
+        E_x(x), E_xc(xc), E_next(next), E_eext(eext) {
+            E_nuc = E_nn + E_next;
+            E_el = E_kin + E_en + E_ee + E_xc + E_x + E_eext;
+        }
 
     double getTotalEnergy() const { return this->E_nuc + this->E_el; }
     double getNuclearEnergy() const { return this->E_nuc; }
     double getElectronicEnergy() const { return this->E_el; }
 
-    double getOrbitalEnergy() const { return this->E_orb; }
     double getKineticEnergy() const { return this->E_kin; }
     double getElectronNuclearEnergy() const { return this->E_en; }
     double getElectronElectronEnergy() const { return this->E_ee; }
@@ -71,8 +72,8 @@ public:
         print_utils::scalar(0, "Coulomb energy   ", E_ee,   "(au)", pprec, false);
         print_utils::scalar(0, "Exchange energy  ", E_x,    "(au)", pprec, false);
         print_utils::scalar(0, "X-C energy       ", E_xc,   "(au)", pprec, false);
-        print_utils::scalar(0, "Ext. field (el)  ", E_ext,  "(au)", pprec, false);
-        print_utils::scalar(0, "Ext. field (nuc) ", E_nex,  "(au)", pprec, false);
+        print_utils::scalar(0, "Ext. field (el)  ", E_eext, "(au)", pprec, false);
+        print_utils::scalar(0, "Ext. field (nuc) ", E_next, "(au)", pprec, false);
         mrcpp::print::separator(0, '-');
         print_utils::scalar(0, "Electronic energy", E_el,   "(au)", pprec, false);
         print_utils::scalar(0, "Nuclear energy   ", E_nuc,  "(au)", pprec, false);
@@ -88,14 +89,14 @@ private:
     double E_nuc{0.0};
     double E_el{0.0};
 
-    double E_orb{0.0};
     double E_kin{0.0};
+    double E_nn{0.0};
     double E_en{0.0};
     double E_ee{0.0};
     double E_x{0.0};
     double E_xc{0.0};
-    double E_nex{0.0};
-    double E_ext{0.0};
+    double E_next{0.0};
+    double E_eext{0.0};
 };
 // clang-format on
 

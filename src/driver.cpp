@@ -62,10 +62,9 @@
 #include "qmoperators/one_electron/H_M_pso.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 
-#include "scf_solver/EnergyOptimizer.h"
+#include "scf_solver/GroundStateSolver.h"
 #include "scf_solver/KAIN.h"
 #include "scf_solver/LinearResponseSolver.h"
-#include "scf_solver/OrbitalOptimizer.h"
 
 #include "mrdft/Factory.h"
 
@@ -205,6 +204,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
 
     auto success = true;
     auto &Phi = mol.getOrbitals();
+    auto &nucs = mol.getNuclei();
     auto &F_mat = mol.getFockMatrix();
 
     // Calc inital energy if present in input JSON
@@ -228,7 +228,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Energy");
         F.setup(prec);
         F_mat = F(Phi, Phi);
-        mol.getSCFEnergy() = F.trace(Phi, F_mat);
+        mol.getSCFEnergy() = F.trace(Phi, nucs);
         F.clear();
 
         if (localize) {
@@ -241,48 +241,25 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         mol.getSCFEnergy().print();
     }
 
-    // Run OrbitalOptimizer if present in input JSON
-    auto orbital_solver = json_scf.find("orbital_solver");
-    if (orbital_solver != json_scf.end()) {
-        auto method = (*orbital_solver)["method_name"].get<std::string>();
-        auto kain = (*orbital_solver)["kain"].get<int>();
-        auto max_iter = (*orbital_solver)["max_iter"].get<int>();
-        auto rotation = (*orbital_solver)["rotation"].get<int>();
-        auto localize = (*orbital_solver)["localize"].get<bool>();
-        auto start_prec = (*orbital_solver)["start_prec"].get<double>();
-        auto final_prec = (*orbital_solver)["final_prec"].get<double>();
-        auto orbital_thrs = (*orbital_solver)["orbital_thrs"].get<double>();
-        auto property_thrs = (*orbital_solver)["property_thrs"].get<double>();
-        auto helmholtz_prec = (*orbital_solver)["helmholtz_prec"].get<double>();
+    // Run GroundStateSolver if present in input JSON
+    auto scf_solver = json_scf.find("scf_solver");
+    if (scf_solver != json_scf.end()) {
+        auto method = (*scf_solver)["method_name"].get<std::string>();
+        auto kain = (*scf_solver)["kain"].get<int>();
+        auto max_iter = (*scf_solver)["max_iter"].get<int>();
+        auto rotation = (*scf_solver)["rotation"].get<int>();
+        auto localize = (*scf_solver)["localize"].get<bool>();
+        auto start_prec = (*scf_solver)["start_prec"].get<double>();
+        auto final_prec = (*scf_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*scf_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*scf_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*scf_solver)["helmholtz_prec"].get<double>();
 
-        OrbitalOptimizer solver;
+        GroundStateSolver solver;
         solver.setMethodName(method);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
         solver.setRotation(rotation);
-        solver.setLocalize(localize);
-        solver.setHelmholtzPrec(helmholtz_prec);
-        solver.setOrbitalPrec(start_prec, final_prec);
-        solver.setThreshold(orbital_thrs, property_thrs);
-        success = solver.optimize(mol, F);
-    }
-
-    // Run EnergyOptimizer if present in input JSON
-    auto energy_solver = json_scf.find("energy_solver");
-    if (energy_solver != json_scf.end()) {
-        auto method = (*orbital_solver)["method_name"].get<std::string>();
-        auto max_iter = (*energy_solver)["max_iter"].get<int>();
-        auto localize = (*energy_solver)["localize"].get<bool>();
-        auto start_prec = (*energy_solver)["start_prec"].get<double>();
-        auto final_prec = (*energy_solver)["final_prec"].get<double>();
-        auto orbital_thrs = (*energy_solver)["orbital_thrs"].get<double>();
-        auto property_thrs = (*energy_solver)["property_thrs"].get<double>();
-        auto helmholtz_prec = (*energy_solver)["helmholtz_prec"].get<double>();
-
-        EnergyOptimizer solver;
-        solver.setMethodName(method);
-        solver.setMaxIterations(max_iter);
-        solver.setRotation(1);
         solver.setLocalize(localize);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
@@ -324,7 +301,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     auto success = true;
     auto rsp_prec = json_rsp["rsp_prec"].get<double>();
     auto dynamic = json_rsp["dynamic"].get<bool>();
-    auto localize = json_rsp["localize"].get<bool>();
 
     mol.initPerturbedOrbitals(dynamic);
 
@@ -366,7 +342,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         solver.setMethodName(method);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);
-        solver.setLocalize(localize);
         solver.setOrthPrec(orth_prec);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
