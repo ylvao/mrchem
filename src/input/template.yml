@@ -438,27 +438,11 @@ sections:
         default: "initial_guess/mrchem.mob"
         docstring: |
           File name for beta MO matrix, used with 'gto' guess.
-      - name: file_mw_paired
-        type: str
-        default: "orbitals/phi_p"
-        docstring: |
-          File name for paired orbitals, used with 'mw' guess.
-      - name: file_mw_alpha
-        type: str
-        default: "orbitals/phi_a"
-        docstring: |
-          File name for alpha orbitals, used with 'mw' guess.
-      - name: file_mw_beta
-        type: str
-        default: "orbitals/phi_b"
-        docstring: |
-          File name for beta orbitals, used with 'mw' guess.
       - name: file_orbitals
         type: str
         default: "orbitals/phi"
         docstring: |
-          File name for orbitals, used with 'write_orbitals', will get
-          "_p", "_a" or "_b" extension.
+          File name for orbitals, used with 'write_orbitals'.
   - name: SCF
     docstring: |
       Includes parameters related to the ground state SCF orbital optimization
@@ -578,6 +562,11 @@ sections:
         default: 3
         docstring: |
           Length of KAIN iterative history.
+      - name: localize
+        type: bool
+        default: false
+        docstring: |
+          Use canonical or localized unperturbed orbitals.
       - name: orbital_thrs
         type: float
         default: -1.0
@@ -613,8 +602,12 @@ sections:
       - name: guess_type
         type: str
         default: 'none'
+        predicates:
+          - "value.lower() in
+            ['none']"
         docstring: |
           Type of initial guess for response.
+          'none' will start from a zero guess for the response functions.
       - name: write_orbitals
         type: bool
         default: false
