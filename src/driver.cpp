@@ -205,6 +205,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
 
     auto success = true;
     auto &Phi = mol.getOrbitals();
+    auto &nucs = mol.getNuclei();
     auto &F_mat = mol.getFockMatrix();
 
     // Calc inital energy if present in input JSON
@@ -228,7 +229,7 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         if (plevel == 1) mrcpp::print::header(1, "Calculating Molecular Energy");
         F.setup(prec);
         F_mat = F(Phi, Phi);
-        mol.getSCFEnergy() = F.trace(Phi, F_mat);
+        mol.getSCFEnergy() = F.trace(Phi, nucs);
         F.clear();
 
         if (localize) {

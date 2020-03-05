@@ -149,7 +149,8 @@ bool EnergyOptimizer::optimize(Molecule &mol, FockOperator &F_n) {
 
         // Compute energy
         F_n.setup(orb_prec);
-        E_n = F_n.trace(Phi_n, F_mat_n);
+        NOT_IMPLEMENTED_ABORT;
+        // E_n = F_n.trace(Phi_n, F_mat_n);
 
         if (converged) {
             if (localize) {

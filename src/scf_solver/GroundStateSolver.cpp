@@ -51,8 +51,6 @@ void GroundStateSolver::printProperty() const {
     if (iter > 1) scf_0 = this->energy[iter - 2];
     if (iter > 0) scf_1 = this->energy[iter - 1];
 
-    double phi_0 = scf_0.getOrbitalEnergy();
-    double phi_1 = scf_1.getOrbitalEnergy();
     double T_0 = scf_0.getKineticEnergy();
     double T_1 = scf_1.getKineticEnergy();
     double V_0 = scf_0.getElectronNuclearEnergy();
@@ -84,7 +82,6 @@ void GroundStateSolver::printProperty() const {
     println(2, o_head.str());
     mrcpp::print::separator(2, '-');
 
-    printUpdate(2, " Orbital energy  ", phi_1, phi_1 - phi_0, this->propThrs);
     printUpdate(2, " Kinetic energy  ", T_1, T_1 - T_0, this->propThrs);
     printUpdate(2, " N-E energy      ", V_1, V_1 - V_0, this->propThrs);
     printUpdate(2, " Coulomb energy  ", J_1, J_1 - J_0, this->propThrs);

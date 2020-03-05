@@ -14,9 +14,6 @@ public:
     void setup(double prec) override { setApplyPrec(prec); }
     void clear() override { clearApplyPrec(); }
 
-    Nuclei &getNuclei() { return this->func.getNuclei(); }
-    const Nuclei &getNuclei() const { return this->func.getNuclei(); }
-
 private:
     NuclearFunction func;
 
@@ -33,11 +30,6 @@ public:
         v = r_m1;
         v.name() = "V_nuc";
     }
-
-    Nuclei &getNuclei() { return this->r_m1->getNuclei(); }
-    const Nuclei &getNuclei() const { return this->r_m1->getNuclei(); }
-
-    using RankZeroTensorOperator::trace;
 
 private:
     std::shared_ptr<NuclearPotential> r_m1{nullptr};

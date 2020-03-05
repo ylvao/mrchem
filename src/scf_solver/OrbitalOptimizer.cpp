@@ -75,6 +75,7 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
 
     KAIN kain(this->history);
     SCFEnergy &E_n = mol.getSCFEnergy();
+    const Nuclei &nucs = mol.getNuclei();
     OrbitalVector &Phi_n = mol.getOrbitals();
     ComplexMatrix &F_mat = mol.getFockMatrix();
 
@@ -150,7 +151,7 @@ bool OrbitalOptimizer::optimize(Molecule &mol, FockOperator &F) {
         // Compute Fock matrix and energy
         F.setup(orb_prec);
         F_mat = F(Phi_n, Phi_n);
-        E_n = F.trace(Phi_n, F_mat);
+        E_n = F.trace(Phi_n, nucs);
 
         // Collect convergence data
         this->error.push_back(err_t);
