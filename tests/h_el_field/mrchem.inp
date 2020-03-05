@@ -11,7 +11,7 @@ MPI {
 Molecule {
   multiplicity = 2
 $coords
-H       0.0000  0.0000  0.0000
+H       0.0000  0.0000  1.0000
 $end
 }
 
