@@ -62,9 +62,9 @@
 #include "qmoperators/one_electron/H_M_pso.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 
+#include "scf_solver/GroundStateSolver.h"
 #include "scf_solver/KAIN.h"
 #include "scf_solver/LinearResponseSolver.h"
-#include "scf_solver/OrbitalOptimizer.h"
 
 #include "mrdft/Factory.h"
 
@@ -241,21 +241,21 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         mol.getSCFEnergy().print();
     }
 
-    // Run OrbitalOptimizer if present in input JSON
-    auto orbital_solver = json_scf.find("orbital_solver");
-    if (orbital_solver != json_scf.end()) {
-        auto method = (*orbital_solver)["method_name"].get<std::string>();
-        auto kain = (*orbital_solver)["kain"].get<int>();
-        auto max_iter = (*orbital_solver)["max_iter"].get<int>();
-        auto rotation = (*orbital_solver)["rotation"].get<int>();
-        auto localize = (*orbital_solver)["localize"].get<bool>();
-        auto start_prec = (*orbital_solver)["start_prec"].get<double>();
-        auto final_prec = (*orbital_solver)["final_prec"].get<double>();
-        auto orbital_thrs = (*orbital_solver)["orbital_thrs"].get<double>();
-        auto property_thrs = (*orbital_solver)["property_thrs"].get<double>();
-        auto helmholtz_prec = (*orbital_solver)["helmholtz_prec"].get<double>();
+    // Run GroundStateSolver if present in input JSON
+    auto scf_solver = json_scf.find("scf_solver");
+    if (scf_solver != json_scf.end()) {
+        auto method = (*scf_solver)["method_name"].get<std::string>();
+        auto kain = (*scf_solver)["kain"].get<int>();
+        auto max_iter = (*scf_solver)["max_iter"].get<int>();
+        auto rotation = (*scf_solver)["rotation"].get<int>();
+        auto localize = (*scf_solver)["localize"].get<bool>();
+        auto start_prec = (*scf_solver)["start_prec"].get<double>();
+        auto final_prec = (*scf_solver)["final_prec"].get<double>();
+        auto orbital_thrs = (*scf_solver)["orbital_thrs"].get<double>();
+        auto property_thrs = (*scf_solver)["property_thrs"].get<double>();
+        auto helmholtz_prec = (*scf_solver)["helmholtz_prec"].get<double>();
 
-        OrbitalOptimizer solver;
+        GroundStateSolver solver;
         solver.setMethodName(method);
         solver.setHistory(kain);
         solver.setMaxIterations(max_iter);

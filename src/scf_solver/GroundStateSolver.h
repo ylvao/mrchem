@@ -30,21 +30,30 @@
 
 /** @class GroundStateSolver
  *
- * @brief Abstract class for different types of ground state SCF solvers
+ * @brief Ground state SCF optimization with kinetic energy operator
  *
- * The ground state SCF solvers share some common features which are collected in this
- * abstract base class. This is mainly the construction of the argument that is used
- * for the Helmholtz operators.
+ * This ground state SCF solver computes the Fock matrix explicitly by application of
+ * the kinetic energy operator. This simplifies the algorithm significanly when a KAIN
+ * iterative accelerator is present, or when diagonalization/localization occurs.
+ * The derivative operator in the kinetic energy MIGHT affect the quadratic precision
+ * in the energy, but this point seems to no longer be critical.
+ *
+ * NOTE: The old algorithm which completely avoided the kinetic energy operator has
+ *       been removed, but can be recovered from the git history if needed in the
+ *       future (search for EnergyOptimizer).
  */
 
 namespace mrchem {
 
+class Molecule;
 class FockOperator;
 
 class GroundStateSolver : public SCFSolver {
 public:
     GroundStateSolver() = default;
     virtual ~GroundStateSolver() override = default;
+
+    bool optimize(Molecule &mol, FockOperator &F);
 
 protected:
     std::vector<SCFEnergy> energy;

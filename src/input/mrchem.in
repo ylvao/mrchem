@@ -343,7 +343,7 @@ def write_scf_calculation(program_dict, user_dict):
             "localize": user_dict["SCF"]["localize"],
             "prec": scf_start_prec,
         }
-        scf_dict["orbital_solver"] = {
+        scf_dict["scf_solver"] = {
             "method_name": method_name,
             "kain": user_dict["SCF"]["kain"],
             "max_iter": user_dict["SCF"]["max_iter"],
