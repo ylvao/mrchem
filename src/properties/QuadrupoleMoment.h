@@ -26,6 +26,8 @@
 #pragma once
 
 #include "mrchem.h"
+
+#include "utils/math_utils.h"
 #include "utils/print_utils.h"
 
 namespace mrchem {
@@ -50,8 +52,8 @@ public:
     }
 
 private:
-    DoubleMatrix nuc_tensor{DoubleVector::Zero(3)};
-    DoubleMatrix el_tensor{DoubleVector::Zero(3)};
+    DoubleMatrix nuc_tensor{math_utils::init_nan(3)};
+    DoubleMatrix el_tensor{math_utils::init_nan(3)};
 };
 // clang-format on
 

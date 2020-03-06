@@ -38,6 +38,9 @@ namespace math_utils {
 
 double calc_distance(const mrcpp::Coord<3> &a, const mrcpp::Coord<3> &b);
 
+DoubleVector init_nan(int I);
+DoubleMatrix init_nan(int I, int J);
+
 DoubleMatrix read_matrix_file(const std::string &file);
 DoubleMatrix skew_matrix_exp(const DoubleMatrix &A);
 ComplexMatrix hermitian_matrix_pow(const ComplexMatrix &A, double b);

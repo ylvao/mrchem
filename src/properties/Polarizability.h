@@ -26,6 +26,8 @@
 #pragma once
 
 #include "mrchem.h"
+
+#include "utils/math_utils.h"
 #include "utils/print_utils.h"
 
 namespace mrchem {
@@ -59,7 +61,7 @@ public:
 
 private:
     double frequency;
-    DoubleMatrix tensor{DoubleMatrix::Zero(3,3)};
+    DoubleMatrix tensor{math_utils::init_nan(3,3)};
 };
 // clang-format on
 
