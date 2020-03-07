@@ -510,7 +510,7 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
         Q.getElectronic() = h.trace(Phi).real();
         h.clear();
         mrcpp::print::footer(2, t_lap, 2);
-        if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
+        if (plevel == 1) mrcpp::print::time(1, "Quadrupole moment", t_lap);
     }
 
     auto json_hyperpolarizability = json_prop.find("hyperpolarizability");
