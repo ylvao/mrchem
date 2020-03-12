@@ -8,8 +8,10 @@ else()
 
   FetchContent_Declare(mrcpp_sources
     QUIET
-    URL
-      https://github.com/MRChemSoft/mrcpp/archive/v1.2.0-alpha2.tar.gz
+    GIT_REPOSITORY
+      https://github.com/MRChemSoft/mrcpp.git
+    GIT_TAG
+      8da4f313858f841aea9e892121da9c2b578ca7ea
     )
 
   FetchContent_GetProperties(mrcpp_sources)
