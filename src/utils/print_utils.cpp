@@ -94,7 +94,9 @@ void print_utils::scalar(int level, const std::string &txt, double val, const st
     std::stringstream o;
     o << " " << txt << std::string(w3, ' ') << ":";
     o << std::setw(w1) << unit;
-    if (s) {
+    if (std::isnan(val)) {
+        o << std::setw(2 * w1) << "N/A";
+    } else if (s) {
         o << std::setw(2 * w1) << std::setprecision(p) << std::scientific << val;
     } else {
         o << std::setw(2 * w1) << std::setprecision(p) << std::fixed << val;
@@ -112,7 +114,9 @@ void print_utils::vector(int level, const std::string &txt, const DoubleVector &
     std::stringstream o;
     o << " " << txt << std::string(w3, ' ') << ":";
     for (int i = 0; i < val.size(); i++) {
-        if (s) {
+        if (std::isnan(val(i))) {
+            o << std::setw(w1) << "N/A";
+        } else if (s) {
             o << std::setw(w1) << std::setprecision(p) << std::scientific << val(i);
         } else {
             o << std::setw(w1) << std::setprecision(p) << std::fixed << val(i);
@@ -136,7 +140,9 @@ void print_utils::matrix(int level, const std::string &txt, const DoubleMatrix &
             o << " " << std::string(w2 - 1, ' ') << ":";
         }
         for (int j = 0; j < val.cols(); j++) {
-            if (s) {
+            if (std::isnan(val(i, j))) {
+                o << std::setw(w1) << "N/A";
+            } else if (s) {
                 o << std::setw(w1) << std::setprecision(p) << std::scientific << val(i, j);
             } else {
                 o << std::setw(w1) << std::setprecision(p) << std::fixed << val(i, j);
