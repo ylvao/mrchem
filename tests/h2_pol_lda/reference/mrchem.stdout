@@ -3,29 +3,37 @@
 **********************************************************************
 ***                                                                ***
 ***                                                                ***
-***          __  __ ____   ____ _                                  ***
-***         |  \/  |  _ \ / ___| |__   ___ _ __ ___                ***
-***         | |\/| | |_) | |   | '_ \ / _ \ '_ ` _ \               ***
-***         | |  | |  _ <| |___| | | |  __/ | | | | |              ***
-***         |_|  |_|_| \_\\____|_| |_|\___|_| |_| |_|              ***
+***        __  __ ____   ____ _                                    ***
+***       |  \/  |  _ \ / ___| |__   ___ _ __ ___                  ***
+***       | |\/| | |_) | |   | '_ \ / _ \ '_ ` _ \                 ***
+***       | |  | |  _ <| |___| | | |  __/ | | | | |                ***
+***       |_|  |_|_| \_\\____|_| |_|\___|_| |_| |_|                ***
 ***                                                                ***
-***         VERSION    0.2.0        (rev.   eb2c9f6b)              ***
+***       VERSION            0.3.0-alpha                           ***
 ***                                                                ***
-***         Stig Rune Jensen   <stig.r.jensen@uit.no>              ***
-***         Luca Frediani      <luca.frediani@uit.no>              ***
-***         Peter Wind         <peter.wind@uit.no>                 ***
+***       Git branch         prop-print                            ***
+***       Git commit hash    3bfae167fa1d92f7c42c                  ***
+***       Git commit author  Stig Rune Jensen                      ***
+***       Git commit date    Mon Mar 16 18:22:17 2020 +0100        ***
+***                                                                ***
+***       Magnar Bjorgve     <magnar.bjorgve@uit.no>               ***
+***       Roberto Di Remigio <roberto.di.remigio@uit.no>           ***
+***       Luca Frediani      <luca.frediani@uit.no>                ***
+***       Gabriel Gerez      <gsa017@post.uit.no>                  ***
+***       Stig Rune Jensen   <stig.r.jensen@uit.no>                ***
+***       Peter Wind         <peter.wind@uit.no>                   ***
 ***                                                                ***
 **********************************************************************
 
 ----------------------------------------------------------------------
 
- MPI processes         :                                            1
+ MPI processes         :      (no bank)                             1
  OpenMP threads        :                                            1
  Total cores           :                                            1
                                                                       
 ----------------------------------------------------------------------
 
-XCFun DFT library Copyright 2009-2011 Ulf Ekstrom and contributors.
+XCFun DFT library Copyright 2009-2020 Ulf Ekstrom and contributors.
 See http://dftlibs.org/xcfun/ for more information.
 
 This is free software; see the source code for copying conditions.
@@ -37,8 +45,11 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 
 ----------------------------------------------------------------------
 
- MRCPP version         : 1.0.1
- Git revision          : bfaa4387
+ MRCPP version         : 1.2.0-alpha2
+ Git branch            : prop-print
+ Git commit hash       : 64ff947f46ad4042b90b
+ Git commit author     : Stig Rune Jensen
+ Git commit date       : Mon Mar 16 16:56:57 2020 +0100
 
  Linear algebra        : EIGEN v3.3.7
  Parallelization       : OpenMP
@@ -170,7 +181,6 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Perturbation          : h_E_dip[z]
  Max iterations        : 10
  KAIN solver           : 3
- Localization          : Off
  Start precision       : 1.00000e-03
  Final precision       : 1.00000e-03
  Helmholtz precision   : 1.00000e-03
@@ -183,10 +193,10 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Iter         MO residual      Symmetric property              Update
 ----------------------------------------------------------------------
     0        1.000000e+00          0.000000000000        0.000000e+00
-    1        2.061933e+00         -5.523951430940       -5.523951e+00
-    2        4.484976e-01         -7.124862206329       -1.600911e+00
-    3        3.142219e-02         -7.211439925326       -8.657772e-02
-    4        5.670596e-03         -7.222017736988       -1.057781e-02
+    1        2.061933e+00         -5.523958969627       -5.523959e+00
+    2        4.485058e-01         -7.124916590397       -1.600958e+00
+    3        3.140761e-02         -7.211411969279       -8.649538e-02
+    4        5.671671e-03         -7.222012691491       -1.060072e-02
 ----------------------------------------------------------------------
                    SCF converged in 4 iterations!
 ======================================================================
@@ -255,10 +265,10 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Frequency             :           (au)                      0.000000
                        :         (cm-1)                      0.000000
 ----------------------------------------------------------------------
- Total tensor          :       0.000000       0.000000       0.000000
-                       :       0.000000       0.000000       0.000000
-                       :      -0.000000      -0.000000       7.222018
- Isotropic average     :           (au)                      2.407339
+ Total tensor          :            N/A            N/A            N/A
+                       :            N/A            N/A            N/A
+                       :      -0.000000      -0.000000       7.222013
+ Isotropic average     :           (au)                           N/A
 ======================================================================
 
 
@@ -268,7 +278,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ***                                                                ***
 ***                         Exiting MRChem                         ***
 ***                                                                ***
-***                    Wall time :  0h  0m 35s                     ***
+***                    Wall time :  0h  0m 24s                     ***
 ***                                                                ***
 **********************************************************************
                                                                       
