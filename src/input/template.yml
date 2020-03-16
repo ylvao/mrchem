@@ -319,11 +319,6 @@ sections:
     docstring: |
       Provide a list of properties to compute.
     keywords:
-      - name: scf_energy
-        type: bool
-        default: true
-        docstring: |
-          Compute SCF energy.
       - name: dipole_moment
         type: bool
         default: false

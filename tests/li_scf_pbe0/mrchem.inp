@@ -19,10 +19,6 @@ WaveFunction {
   restricted = false
 }
 
-Properties {
-  scf_energy = true               # Compute ground state energy
-}
-
 SCF {
   kain = 3                        # Length of KAIN iterative history
   max_iter = 5

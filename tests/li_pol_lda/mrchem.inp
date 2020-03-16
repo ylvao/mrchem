@@ -20,7 +20,6 @@ WaveFunction {
 }
 
 Properties {
-  scf_energy = true               # Compute ground state energy
   polarizability = true
 }
 

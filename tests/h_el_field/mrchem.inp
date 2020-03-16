@@ -25,7 +25,6 @@ ExternalFields {
 }
 
 Properties {
-  scf_energy = true               # Compute ground state energy
   dipole_moment = true            # Compute electrostatic dipole moment
 }
 

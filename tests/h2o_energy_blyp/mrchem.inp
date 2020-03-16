@@ -31,7 +31,6 @@ $end
 }
 
 Properties {
-  scf_energy = true               # Compute ground state energy
   dipole_moment = true            # Compute electrostatic dipole moment
   quadrupole_moment = true        # Compute electrostatic quadrupole moment
 }

@@ -16,7 +16,6 @@
         "functionals": "LDA\n"
     },
     "Properties": {
-        "scf_energy": true,
         "polarizability": true
     },
     "Polarizability": {
