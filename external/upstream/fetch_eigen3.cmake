@@ -8,7 +8,8 @@ else()
   FetchContent_Declare(eigen3_sources
     QUIET
     URL
-      https://gitlab.com/libeigen/eigen/-/archive/before-git-migration/eigen-before-git-migration.tar.gz
+      https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
+    PATCH_COMMAND patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/eigen-config-cmake.patch
     )
 
   FetchContent_GetProperties(eigen3_sources)
