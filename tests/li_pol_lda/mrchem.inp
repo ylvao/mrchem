@@ -26,7 +26,7 @@ Properties {
 
 SCF {
   run = false
-  initial_guess = SAD_DZ
+  guess_type = SAD_DZ
 }
 
 Response {

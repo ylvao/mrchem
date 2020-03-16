@@ -39,5 +39,5 @@ Properties {
 SCF {
   run = false
   localize = true                 # Use canonical of localized orbitals
-  initial_guess = GTO             # Type of initial guess: none, mw, gto
+  guess_type = GTO                # Type of initial guess: none, mw, gto
 }

@@ -26,7 +26,7 @@
     },
     "SCF": {
         "run": false,
-        "initial_guess": "GTO"
+        "guess_type": "GTO"
     },
     "Response": {
         "kain": 3,

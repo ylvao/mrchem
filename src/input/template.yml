@@ -475,7 +475,7 @@ sections:
         default: -1.0
         docstring: |
           Incremental precision in SCF iterations, final value.
-      - name: initial_guess
+      - name: guess_type
         type: str
         default: 'sad_dz'
         predicates:
@@ -559,7 +559,7 @@ sections:
         default: -1.0
         docstring: |
           Incremental precision in SCF iterations, final value.
-      - name: initial_guess
+      - name: guess_type
         type: str
         default: 'none'
         docstring: |

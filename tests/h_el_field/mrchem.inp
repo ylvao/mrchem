@@ -32,6 +32,6 @@ Properties {
 SCF {
   kain = 3                        # Length of KAIN iterative history
   max_iter = 5
-  initial_guess = CORE_DZ
+  guess_type = CORE_DZ
 }
 
