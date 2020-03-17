@@ -31,7 +31,6 @@ $end
 }
 
 Properties {
-  scf_energy = true               # Compute ground state energy
   dipole_moment = true            # Compute electrostatic dipole moment
   quadrupole_moment = true        # Compute electrostatic quadrupole moment
 }
@@ -39,5 +38,5 @@ Properties {
 SCF {
   run = false
   localize = true                 # Use canonical of localized orbitals
-  initial_guess = GTO             # Type of initial guess: none, mw, gto
+  guess_type = GTO                # Type of initial guess: none, mw, gto
 }

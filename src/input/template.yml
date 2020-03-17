@@ -319,11 +319,6 @@ sections:
     docstring: |
       Provide a list of properties to compute.
     keywords:
-      - name: scf_energy
-        type: bool
-        default: true
-        docstring: |
-          Compute SCF energy.
       - name: dipole_moment
         type: bool
         default: false
@@ -430,12 +425,12 @@ sections:
           Run SCF solver. Otherwise properties are computed on the initial orbitals.
       - name: max_iter
         type: int
-        default: -1
+        default: 100
         docstring: |
           Maximum number of SCF iterations.
       - name: kain
         type: int
-        default: 0
+        default: 3
         docstring: |
           Length of KAIN iterative history.
       - name: rotation
@@ -453,14 +448,14 @@ sections:
         default: -1.0
         docstring: |
           Convergence threshold for orbtial residuals.
-      - name: property_thrs
+      - name: energy_thrs
         type: float
         default: -1.0
         docstring: |
           Convergence threshold for SCF energy.
       - name: guess_prec
         type: float
-        default: "user['world_prec']"
+        default: 1.0e-3
         predicates:
           - '1.0e-10 < value < 1.0'
         docstring: |
@@ -475,8 +470,9 @@ sections:
         default: -1.0
         docstring: |
           Incremental precision in SCF iterations, final value.
-      - name: initial_guess
+      - name: guess_type
         type: str
+        default: 'sad_dz'
         predicates:
           - "value.lower() in
             ['mw',
@@ -525,12 +521,12 @@ sections:
           Run response solver.
       - name: max_iter
         type: int
-        default: -1
+        default: 100
         docstring: |
           Maximum number of response iterations.
       - name: kain
         type: int
-        default: 0
+        default: 3
         docstring: |
           Length of KAIN iterative history.
       - name: orbital_thrs
@@ -558,7 +554,7 @@ sections:
         default: -1.0
         docstring: |
           Incremental precision in SCF iterations, final value.
-      - name: initial_guess
+      - name: guess_type
         type: str
         default: 'none'
         docstring: |

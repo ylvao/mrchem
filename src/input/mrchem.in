@@ -244,7 +244,7 @@ def write_molecule(program_dict, user_dict):
     }
 
 def write_initial_guess(program_dict, user_dict):
-    guess_str = user_dict["SCF"]["initial_guess"].lower()
+    guess_str = user_dict["SCF"]["guess_type"].lower()
     method = guess_str.split('_')[0]
     zeta = 0
     if method == 'sad' or method == 'core':
@@ -283,7 +283,7 @@ def write_scf_calculation(program_dict, user_dict):
         scf_start_prec = scf_final_prec
 
     scf_orbital_thrs =  user_dict["SCF"]["orbital_thrs"]
-    scf_property_thrs =  user_dict["SCF"]["property_thrs"]
+    scf_property_thrs =  user_dict["SCF"]["energy_thrs"]
     if scf_orbital_thrs < 0.0 and scf_property_thrs < 0.0:
         scf_property_thrs = user_dict["world_prec"] / 10
         scf_orbital_thrs = math.sqrt(scf_property_thrs)
@@ -352,7 +352,7 @@ def write_scf_calculation(program_dict, user_dict):
             "start_prec": scf_start_prec,
             "final_prec": scf_final_prec,
             "orbital_thrs": scf_orbital_thrs,
-            "property_thrs": scf_property_thrs,
+            "energy_thrs": scf_property_thrs,
             "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
         }
     else:

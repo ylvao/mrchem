@@ -16,7 +16,6 @@
         "functionals": "LDA\n"
     },
     "Properties": {
-        "scf_energy": true,
         "polarizability": true
     },
     "Polarizability": {
@@ -26,7 +25,7 @@
     },
     "SCF": {
         "run": false,
-        "initial_guess": "GTO"
+        "guess_type": "GTO"
     },
     "Response": {
         "kain": 3,

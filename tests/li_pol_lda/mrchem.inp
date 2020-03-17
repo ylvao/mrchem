@@ -20,13 +20,12 @@ WaveFunction {
 }
 
 Properties {
-  scf_energy = true               # Compute ground state energy
   polarizability = true
 }
 
 SCF {
   run = false
-  initial_guess = SAD_DZ
+  guess_type = SAD_DZ
 }
 
 Response {
