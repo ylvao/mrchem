@@ -271,10 +271,10 @@ void Molecule::printProperties() const {
     if (this->energy != nullptr) this->energy->print();
     if (this->dipole != nullptr) this->dipole->print();
     if (this->quadrupole != nullptr) this->quadrupole->print();
-    if (this->magnetizability != nullptr) this->magnetizability->print();
     for (auto &pol : this->polarizability) {
         if (pol != nullptr) pol->print();
     }
+    if (this->magnetizability != nullptr) this->magnetizability->print();
     for (auto &nmr_k : this->nmr) {
         if (nmr_k != nullptr) nmr_k->print();
     }

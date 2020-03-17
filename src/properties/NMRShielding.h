@@ -27,6 +27,7 @@
 
 #include "mrchem.h"
 
+#include "utils/math_utils.h"
 #include "utils/print_utils.h"
 
 namespace mrchem {
@@ -67,8 +68,8 @@ public:
 private:
     const int K;
     const Nucleus nuc;
-    DoubleMatrix dia_tensor{DoubleMatrix::Zero(3,3)};
-    DoubleMatrix para_tensor{DoubleMatrix::Zero(3,3)};
+    DoubleMatrix dia_tensor{math_utils::init_nan(3,3)};
+    DoubleMatrix para_tensor{math_utils::init_nan(3,3)};
 };
 // clang-format on
 

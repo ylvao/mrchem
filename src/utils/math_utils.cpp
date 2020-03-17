@@ -32,6 +32,20 @@
 namespace mrchem {
 namespace math_utils {
 
+DoubleVector init_nan(int I) {
+    DoubleVector V(I);
+    for (int i = 0; i < I; i++) V(i) = std::numeric_limits<double>::quiet_NaN();
+    return V;
+}
+
+DoubleMatrix init_nan(int I, int J) {
+    DoubleMatrix M(I, J);
+    for (int i = 0; i < I; i++) {
+        for (int j = 0; j < J; j++) M(i, j) = std::numeric_limits<double>::quiet_NaN();
+    }
+    return M;
+}
+
 /** @brief Calculate the distance between two points in three dimensions */
 double calc_distance(const mrcpp::Coord<3> &a, const mrcpp::Coord<3> &b) {
     double r_x = a[0] - b[0];

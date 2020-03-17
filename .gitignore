@@ -123,3 +123,5 @@ doc/xml/
 *_inst
 *_build
 .ccls-cache/
+
+Pipfile.lock

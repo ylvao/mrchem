@@ -3,29 +3,37 @@
 **********************************************************************
 ***                                                                ***
 ***                                                                ***
-***          __  __ ____   ____ _                                  ***
-***         |  \/  |  _ \ / ___| |__   ___ _ __ ___                ***
-***         | |\/| | |_) | |   | '_ \ / _ \ '_ ` _ \               ***
-***         | |  | |  _ <| |___| | | |  __/ | | | | |              ***
-***         |_|  |_|_| \_\\____|_| |_|\___|_| |_| |_|              ***
+***        __  __ ____   ____ _                                    ***
+***       |  \/  |  _ \ / ___| |__   ___ _ __ ___                  ***
+***       | |\/| | |_) | |   | '_ \ / _ \ '_ ` _ \                 ***
+***       | |  | |  _ <| |___| | | |  __/ | | | | |                ***
+***       |_|  |_|_| \_\\____|_| |_|\___|_| |_| |_|                ***
 ***                                                                ***
-***         VERSION    0.2.0        (rev.   81247d7b)              ***
+***       VERSION            0.3.0-alpha                           ***
 ***                                                                ***
-***         Stig Rune Jensen   <stig.r.jensen@uit.no>              ***
-***         Luca Frediani      <luca.frediani@uit.no>              ***
-***         Peter Wind         <peter.wind@uit.no>                 ***
+***       Git branch         prop-print                            ***
+***       Git commit hash    3bfae167fa1d92f7c42c                  ***
+***       Git commit author  Stig Rune Jensen                      ***
+***       Git commit date    Mon Mar 16 18:22:17 2020 +0100        ***
+***                                                                ***
+***       Magnar Bjorgve     <magnar.bjorgve@uit.no>               ***
+***       Roberto Di Remigio <roberto.di.remigio@uit.no>           ***
+***       Luca Frediani      <luca.frediani@uit.no>                ***
+***       Gabriel Gerez      <gsa017@post.uit.no>                  ***
+***       Stig Rune Jensen   <stig.r.jensen@uit.no>                ***
+***       Peter Wind         <peter.wind@uit.no>                   ***
 ***                                                                ***
 **********************************************************************
 
 ----------------------------------------------------------------------
 
- MPI processes         :                                            1
+ MPI processes         :      (no bank)                             1
  OpenMP threads        :                                            1
  Total cores           :                                            1
                                                                       
 ----------------------------------------------------------------------
 
-XCFun DFT library Copyright 2009-2011 Ulf Ekstrom and contributors.
+XCFun DFT library Copyright 2009-2020 Ulf Ekstrom and contributors.
 See http://dftlibs.org/xcfun/ for more information.
 
 This is free software; see the source code for copying conditions.
@@ -37,11 +45,14 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 
 ----------------------------------------------------------------------
 
- MRCPP version         : 1.1.0
- Git revision          : 36888523
+ MRCPP version         : 1.2.0-alpha2
+ Git branch            : prop-print
+ Git commit hash       : 64ff947f46ad4042b90b
+ Git commit author     : Stig Rune Jensen
+ Git commit date       : Mon Mar 16 16:56:57 2020 +0100
 
  Linear algebra        : EIGEN v3.3.7
- Parallelization       : NONE
+ Parallelization       : OpenMP
 
 ----------------------------------------------------------------------
 
@@ -171,7 +182,6 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Perturbation          : h_E_dip[z]
  Max iterations        : 10
  KAIN solver           : 3
- Localization          : Off
  Start precision       : 1.00000e-03
  Final precision       : 1.00000e-03
  Helmholtz precision   : 1.00000e-03
@@ -185,14 +195,14 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ----------------------------------------------------------------------
     0        1.000000e+00          0.000000000000        0.000000e+00
     1        1.179433e+01        -53.790213511671       -5.379021e+01
-    2        6.322027e+00       -116.122330136539       -6.233212e+01
-    3        1.539591e+00       -120.285459241636       -4.163129e+00
-    4        1.181818e+00       -135.982272744216       -1.569681e+01
-    5        3.464292e-01       -137.352895647902       -1.370623e+00
-    6        1.612162e-01       -138.631855971302       -1.278960e+00
-    7        5.890191e-02       -139.486608699907       -8.547527e-01
-    8        1.300792e-02       -139.566251916183       -7.964322e-02
-    9        3.801377e-03       -139.574487320761       -8.235405e-03
+    2        6.322027e+00       -116.122330136540       -6.233212e+01
+    3        1.539591e+00       -120.285459241638       -4.163129e+00
+    4        1.181818e+00       -135.982272745208       -1.569681e+01
+    5        3.464292e-01       -137.352895651252       -1.370623e+00
+    6        1.612162e-01       -138.631855987029       -1.278960e+00
+    7        5.890191e-02       -139.486608662079       -8.547527e-01
+    8        1.300792e-02       -139.566251909986       -7.964325e-02
+    9        3.801376e-03       -139.574487350566       -8.235441e-03
 ----------------------------------------------------------------------
                    SCF converged in 9 iterations!
 ======================================================================
@@ -261,10 +271,10 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Frequency             :           (au)                      0.000000
                        :         (cm-1)                      0.000000
 ----------------------------------------------------------------------
- Total tensor          :       0.000000       0.000000       0.000000
-                       :       0.000000       0.000000       0.000000
+ Total tensor          :            N/A            N/A            N/A
+                       :            N/A            N/A            N/A
                        :      -0.000000      -0.000000     139.574487
- Isotropic average     :           (au)                     46.524829
+ Isotropic average     :           (au)                           N/A
 ======================================================================
 
 
@@ -274,7 +284,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ***                                                                ***
 ***                         Exiting MRChem                         ***
 ***                                                                ***
-***                    Wall time :  0h  1m 40s                     ***
+***                    Wall time :  0h  1m  4s                     ***
 ***                                                                ***
 **********************************************************************
                                                                       
