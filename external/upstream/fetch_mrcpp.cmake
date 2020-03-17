@@ -8,14 +8,13 @@ else()
 
   FetchContent_Declare(mrcpp_sources
     QUIET
-    GIT_REPOSITORY
-      https://github.com/MRChemSoft/mrcpp.git
-    GIT_TAG
-      8da4f313858f841aea9e892121da9c2b578ca7ea
+    URL
+      https://github.com/MRChemSoft/mrcpp/archive/v1.2.0-alpha3.tar.gz
     )
 
   FetchContent_GetProperties(mrcpp_sources)
 
+  set(CMAKE_BUILD_TYPE Release)
   set(ENABLE_OPENMP ${ENABLE_OPENMP})
   set(ENABLE_MPI ${ENABLE_MPI})
   set(Eigen3_DIR ${eigen3_sources_BINARY_DIR})
