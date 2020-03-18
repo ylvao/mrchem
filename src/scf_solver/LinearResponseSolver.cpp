@@ -302,8 +302,8 @@ void LinearResponseSolver::printParameters(double omega, const std::string &oper
     }
 
     std::stringstream o_prec_0, o_prec_1;
-    o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[0];
-    o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[1];
+    o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[1];
+    o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
 
     std::stringstream o_thrs_p;
     if (this->propThrs < 0.0) {

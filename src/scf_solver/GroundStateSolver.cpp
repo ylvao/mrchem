@@ -170,9 +170,9 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     print_utils::text(0, "KAIN solver        ", o_kain.str());
     print_utils::text(0, "Localization       ", o_loc.str());
     print_utils::text(0, "Diagonalization    ", o_diag.str());
-    print_utils::text(0, "Helmholtz precision", o_helm.str());
     print_utils::text(0, "Start precision    ", o_prec_0.str());
     print_utils::text(0, "Final precision    ", o_prec_1.str());
+    print_utils::text(0, "Helmholtz precision", o_helm.str());
     print_utils::text(0, "Energy threshold   ", o_thrs_p.str());
     print_utils::text(0, "Orbital threshold  ", o_thrs_o.str());
     mrcpp::print::separator(0, '~', 2);
