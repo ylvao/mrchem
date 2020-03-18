@@ -172,7 +172,7 @@ Orbital ExchangePotentialD1::calcExchange(Orbital phi_p) {
     Orbital ex_p = phi_p.paramCopy();
     Eigen::Map<ComplexVector> coefs(coef_vec.data(), coef_vec.size());
     qmfunction::linear_combination(ex_p, coefs, func_vec, -1.0);
-    print_utils::qmfunction(0, "Applied exchange", ex_p, timer);
+    print_utils::qmfunction(3, "Applied exchange", ex_p, timer);
     return ex_p;
 }
 
