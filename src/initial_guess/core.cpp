@@ -262,6 +262,9 @@ OrbitalVector initial_guess::core::rotate_orbitals(double prec, ComplexMatrix &U
     for (auto i = 0; i < N; i++) Psi.push_back(Orbital(spin));
     mpi::distribute(Psi);
 
+    // To get MPI invariant results we cannot crop until all terms are added
+    auto part_prec = (mpi::numerically_exact) ? -1.0 : prec;
+
     OrbitalIterator iter(Phi);
     while (iter.next()) {
         for (auto j = 0; j < Psi.size(); j++) {
@@ -275,11 +278,14 @@ OrbitalVector initial_guess::core::rotate_orbitals(double prec, ComplexMatrix &U
                 func_vec.push_back(recv_i);
             }
             auto tmp_j = Psi[j].paramCopy();
-            qmfunction::linear_combination(tmp_j, coef_vec, func_vec, prec);
+            qmfunction::linear_combination(tmp_j, coef_vec, func_vec, part_prec);
             Psi[j].add(1.0, tmp_j); // In place addition
-            Psi[j].crop(prec);
+            Psi[j].crop(part_prec);
         }
     }
+    if (mpi::numerically_exact)
+        for (auto &psi : Psi) psi.crop(prec);
+
     mrcpp::print::time(1, "Rotating orbitals", t_tot);
     return Psi;
 }
