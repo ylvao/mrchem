@@ -25,31 +25,23 @@
 
 #pragma once
 
-#include "mrchem.h"
 #include "qmfunctions/qmfunction_fwd.h"
-#include "qmoperators/qmoperator_fwd.h"
 
-#include "qmoperators/one_electron/KineticOperator.h"
-
-/** @file core.h
+/** @file mw.h
  *
- * @brief Module for generating initial guess of hydrogen functions
+ * @brief Module for generating initial guess from previous MW calculations
  *
- * The initial_guess::core namespace provides functionality to setup an
- * initial guess of hydrogen eigenfunctions.
+ * The initial_guess::mw namespace provides functionality to setup an initial
+ * guess from orbitals stored in previous MW calculations.
  */
 
 namespace mrchem {
-class Nuclei;
 
 namespace initial_guess {
-namespace core {
+namespace mw {
 
-bool setup(OrbitalVector &Phi, double prec, const Nuclei &nucs, int zeta);
-void project_ao(OrbitalVector &Phi, double prec, const Nuclei &nucs, int zeta);
-void rotate_orbitals(OrbitalVector &Psi, double prec, ComplexMatrix &U, OrbitalVector &Phi);
-ComplexMatrix diagonalize(OrbitalVector &Phi, KineticOperator &T, RankZeroTensorOperator &V);
+bool setup(OrbitalVector &Phi, const std::string &file);
 
-} // namespace core
+} // namespace mw
 } // namespace initial_guess
 } // namespace mrchem

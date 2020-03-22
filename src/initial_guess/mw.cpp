@@ -23,33 +23,24 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#pragma once
+#include "MRCPP/Printer"
 
-#include "mrchem.h"
-#include "qmfunctions/qmfunction_fwd.h"
-#include "qmoperators/qmoperator_fwd.h"
+#include "mw.h"
 
-#include "qmoperators/one_electron/KineticOperator.h"
-
-/** @file core.h
- *
- * @brief Module for generating initial guess of hydrogen functions
- *
- * The initial_guess::core namespace provides functionality to setup an
- * initial guess of hydrogen eigenfunctions.
- */
+#include "qmfunctions/Orbital.h"
+#include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 namespace mrchem {
-class Nuclei;
 
-namespace initial_guess {
-namespace core {
+bool initial_guess::mw::setup(OrbitalVector &Phi, const std::string &file) {
+    mrcpp::print::separator(0, '~');
+    print_utils::text(0, "Calculation ", "Read orbitals from file (MW)");
+    print_utils::text(0, "File name   ", file);
+    mrcpp::print::separator(0, '~', 2);
 
-bool setup(OrbitalVector &Phi, double prec, const Nuclei &nucs, int zeta);
-void project_ao(OrbitalVector &Phi, double prec, const Nuclei &nucs, int zeta);
-void rotate_orbitals(OrbitalVector &Psi, double prec, ComplexMatrix &U, OrbitalVector &Phi);
-ComplexMatrix diagonalize(OrbitalVector &Phi, KineticOperator &T, RankZeroTensorOperator &V);
+    Phi = orbital::load_orbitals(file);
+    return true;
+}
 
-} // namespace core
-} // namespace initial_guess
 } // namespace mrchem
