@@ -33,13 +33,14 @@
 
 namespace mrchem {
 
-OrbitalVector initial_guess::mw::setup(const std::string &file) {
+bool initial_guess::mw::setup(OrbitalVector &Phi, const std::string &file) {
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation ", "Read orbitals from file (MW)");
     print_utils::text(0, "File name   ", file);
     mrcpp::print::separator(0, '~', 2);
 
-    return orbital::load_orbitals(file);
+    Phi = orbital::load_orbitals(file);
+    return true;
 }
 
 } // namespace mrchem

@@ -36,12 +36,11 @@
  */
 
 namespace mrchem {
-class Molecule;
 
 namespace initial_guess {
 namespace mw {
 
-OrbitalVector setup(const std::string &file);
+bool setup(OrbitalVector &Phi, const std::string &file);
 
 } // namespace mw
 } // namespace initial_guess
