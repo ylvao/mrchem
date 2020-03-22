@@ -44,10 +44,16 @@ public:
 
     bool optimize(double omega, Molecule &mol, FockOperator &F_0, FockOperator &F_1);
     void setOrthPrec(double prec) { this->orth_prec = prec; }
+    void setCheckpointFile(const std::string &file_x, const std::string &file_y) {
+        this->chkFileX = file_x;
+        this->chkFileY = file_y;
+    }
 
 protected:
     const bool dynamic;
     double orth_prec{mrcpp::MachineZero};
+    std::string chkFileX; ///< Name of checkpoint file
+    std::string chkFileY; ///< Name of checkpoint file
 
     void printProperty() const;
     void printParameters(double omega, const std::string &oper) const;

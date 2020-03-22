@@ -166,6 +166,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation        ", calculation);
     print_utils::text(0, "Method             ", this->methodName);
+    print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());
     print_utils::text(0, "Localization       ", o_loc.str());
@@ -311,6 +312,9 @@ bool GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
             F.rotate(U_mat);
             kain.clear();
         }
+
+        // Save checkpoint file
+        if (this->checkpoint) orbital::save_orbitals(Phi_n, this->chkFile);
 
         // Finalize SCF cycle
         if (plevel < 1) printConvergenceRow(nIter);
