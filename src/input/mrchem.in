@@ -48,7 +48,7 @@ def main():
     this_path = Path(__file__).parent
 
     # create necessary directories
-    for d in ['orbitals', 'initial_guess', 'plots']:
+    for d in ['checkpoint', 'orbitals', 'initial_guess', 'plots']:
         if not os.path.exists(d):
             os.mkdir(d)
 
@@ -279,6 +279,7 @@ def write_scf_guess(user_dict, method_name):
         "method": method_name,
         "localize": user_dict["SCF"]["localize"],
         "restricted": user_dict["WaveFunction"]["restricted"],
+        "file_chk": user_dict["Files"]["file_chk"],
         "file_gto_basis": user_dict["Files"]["file_gto_basis"],
         "file_gto_paired": user_dict["Files"]["file_gto_paired"],
         "file_gto_alpha": user_dict["Files"]["file_gto_alpha"],
@@ -319,6 +320,8 @@ def write_scf_solver(user_dict, method_name):
         "max_iter": user_dict["SCF"]["max_iter"],
         "rotation": user_dict["SCF"]["rotation"],
         "localize": user_dict["SCF"]["localize"],
+        "file_chk": user_dict["Files"]["file_chk"],
+        "checkpoint": user_dict["SCF"]["write_checkpoint"],
         "start_prec": start_prec,
         "final_prec": final_prec,
         "energy_thrs": energy_thrs,

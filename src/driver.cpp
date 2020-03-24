@@ -32,6 +32,7 @@
 #include "chemistry/Molecule.h"
 #include "chemistry/Nucleus.h"
 
+#include "initial_guess/chk.h"
 #include "initial_guess/core.h"
 #include "initial_guess/gto.h"
 #include "initial_guess/mw.h"
@@ -150,6 +151,7 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     auto gto_a = json_guess["file_gto_alpha"];
     auto gto_b = json_guess["file_gto_beta"];
     auto gto_bas = json_guess["file_gto_basis"];
+    auto file_chk = json_guess["file_chk"];
     auto restricted = json_guess["restricted"];
 
     // Figure out number of electrons
@@ -175,7 +177,9 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     for (auto b = 0; b < Nb; b++) Phi.push_back(Orbital(SPIN::Beta));
 
     auto success = true;
-    if (type == "mw") {
+    if (type == "chk") {
+        success = initial_guess::chk::setup(Phi, file_chk);
+    } else if (type == "mw") {
         success = initial_guess::mw::setup(Phi, prec, mw_p, mw_a, mw_b);
     } else if (type == "core") {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
@@ -271,6 +275,8 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         auto max_iter = (*scf_solver)["max_iter"];
         auto rotation = (*scf_solver)["rotation"];
         auto localize = (*scf_solver)["localize"];
+        auto file_chk = (*scf_solver)["file_chk"];
+        auto checkpoint = (*scf_solver)["checkpoint"];
         auto start_prec = (*scf_solver)["start_prec"];
         auto final_prec = (*scf_solver)["final_prec"];
         auto energy_thrs = (*scf_solver)["energy_thrs"];
@@ -282,6 +288,8 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
         solver.setRotation(rotation);
         solver.setLocalize(localize);
         solver.setMethodName(method);
+        solver.setCheckpoint(checkpoint);
+        solver.setCheckpointFile(file_chk);
         solver.setMaxIterations(max_iter);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
