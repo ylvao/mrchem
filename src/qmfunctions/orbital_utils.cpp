@@ -143,6 +143,62 @@ int orbital::compare_spin(const Orbital &phi_a, const Orbital &phi_b) {
     return comp;
 }
 
+/** @brief Compare spin and occupancy of two orbital vector
+ *
+ *  Returns true if orbital parameters are the same, orbital ordering
+ *  NOT taken into account.
+ *
+ */
+bool orbital::compare(const OrbitalVector &Phi_a, const OrbitalVector &Phi_b) {
+    bool comp = true;
+    if (orbital::size_alpha(Phi_a) != orbital::size_alpha(Phi_b)) {
+        MSG_WARN("Different alpha occupancy");
+        comp = false;
+    }
+    if (orbital::size_beta(Phi_a) != orbital::size_beta(Phi_b)) {
+        MSG_WARN("Different beta occupancy");
+        comp = false;
+    }
+    if (orbital::size_paired(Phi_a) != orbital::size_paired(Phi_b)) {
+        MSG_WARN("Different paired occupancy");
+        comp = false;
+    }
+    if (orbital::size_empty(Phi_a) != orbital::size_empty(Phi_b)) {
+        MSG_WARN("Different empty occupancy");
+        comp = false;
+    }
+    if (orbital::size_singly(Phi_a) != orbital::size_singly(Phi_b)) {
+        MSG_WARN("Different single occupancy");
+        comp = false;
+    }
+    if (orbital::size_doubly(Phi_a) != orbital::size_doubly(Phi_b)) {
+        MSG_WARN("Different double occupancy");
+        comp = false;
+    }
+    if (orbital::size_occupied(Phi_a) != orbital::size_occupied(Phi_b)) {
+        MSG_WARN("Different total occupancy");
+        comp = false;
+    }
+
+    for (auto &phi_a : Phi_a) {
+        const mrcpp::MultiResolutionAnalysis<3> *mra_a{nullptr};
+        if (phi_a.hasReal()) mra_a = &phi_a.real().getMRA();
+        if (phi_a.hasImag()) mra_a = &phi_a.imag().getMRA();
+        if (mra_a == nullptr) continue;
+        for (auto &phi_b : Phi_b) {
+            const mrcpp::MultiResolutionAnalysis<3> *mra_b{nullptr};
+            if (phi_b.hasReal()) mra_b = &phi_a.real().getMRA();
+            if (phi_b.hasImag()) mra_b = &phi_a.imag().getMRA();
+            if (mra_b == nullptr) continue;
+            if (*mra_a != *mra_b) {
+                MSG_WARN("Different MRA");
+                comp = false;
+            }
+        }
+    }
+    return comp;
+}
+
 /** @brief out_i = a*(inp_a)_i + b*(inp_b)_i
  *
  *  Component-wise addition of orbitals.

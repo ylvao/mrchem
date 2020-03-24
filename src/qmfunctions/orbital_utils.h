@@ -31,6 +31,7 @@
 namespace mrchem {
 namespace orbital {
 
+bool compare(const OrbitalVector &Phi_a, const OrbitalVector &Phi_b);
 bool compare(const Orbital &phi_a, const Orbital &phi_b);
 int compare_occ(const Orbital &phi_a, const Orbital &phi_b);
 int compare_spin(const Orbital &phi_a, const Orbital &phi_b);
