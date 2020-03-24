@@ -1,5 +1,4 @@
 language: cpp
-sudo: false
 dist: bionic
 ruby: 2.5.3
 
