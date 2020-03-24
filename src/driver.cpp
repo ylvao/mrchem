@@ -91,7 +91,7 @@ namespace mrchem {
 
 namespace driver {
 bool guess_scf_orbitals(const json &json_guess, Molecule &mol);
-bool guess_rsp_orbitals(const json &json_guess, Molecule &mol, int d);
+bool guess_rsp_orbitals(const json &json_guess, Molecule &mol);
 bool guess_scf_energy(const json &json_guess, Molecule &mol, FockOperator &F);
 
 void build_fock_operator(const json &input, Molecule &mol, FockOperator &F, int order);
@@ -336,7 +336,7 @@ void driver::write_scf_orbitals(const json &json_orbs, Molecule &mol) {
  *
  * This function expects the "initial_guess" subsection of the input.
  */
-bool driver::guess_rsp_orbitals(const json &json_guess, Molecule &mol, int d) {
+bool driver::guess_rsp_orbitals(const json &json_guess, Molecule &mol) {
     auto prec = json_guess["prec"];
     auto type = json_guess["type"];
     auto mw_xp = json_guess["file_x_p"];
@@ -352,7 +352,7 @@ bool driver::guess_rsp_orbitals(const json &json_guess, Molecule &mol, int d) {
     auto &X = mol.getOrbitalsX();
     auto &Y = mol.getOrbitalsY();
 
-    auto success_x = true;
+    auto success_x = false;
     X = orbital::param_copy(Phi);
     if (type == "chk") {
         success_x = initial_guess::chk::setup(X, file_chk_x);
@@ -365,11 +365,10 @@ bool driver::guess_rsp_orbitals(const json &json_guess, Molecule &mol, int d) {
         mrcpp::print::separator(0, '~', 2);
     } else {
         MSG_ERROR("Invalid initial guess");
-        success_x = false;
     }
     orbital::print(X);
 
-    auto success_y = true;
+    auto success_y = false;
     if (&X != &Y) {
         Y = orbital::param_copy(Phi);
         if (type == "chk") {
@@ -383,7 +382,6 @@ bool driver::guess_rsp_orbitals(const json &json_guess, Molecule &mol, int d) {
             mrcpp::print::separator(0, '~', 2);
         } else {
             MSG_ERROR("Invalid initial guess");
-            success_y = false;
         }
         orbital::print(Y);
     }
@@ -435,7 +433,6 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
 
     auto omega = json_rsp["frequency"];
     auto dynamic = json_rsp["dynamic"];
-    auto directions = json_rsp["directions"];
     mol.initPerturbedOrbitals(dynamic);
 
     FockOperator F_1;
@@ -446,23 +443,23 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
     auto h_1 = driver::get_operator<3>(json_pert);
 
     auto success = true;
-    for (int d = 0; d < 3; d++) {
-        if (directions[d] == 0) continue;
+    for (auto d = 0; d < 3; d++) {
+        const auto &json_comp = json_rsp["components"][d];
         F_1.perturbation() = h_1[d];
 
         ///////////////////////////////////////////////////////////
         ///////////////   Setting Up Initial Guess   //////////////
         ///////////////////////////////////////////////////////////
 
-        const auto &json_guess = json_rsp["initial_guess"];
-        driver::guess_rsp_orbitals(json_guess, mol, d);
+        const auto &json_guess = json_comp["initial_guess"];
+        success = driver::guess_rsp_orbitals(json_guess, mol);
 
         ///////////////////////////////////////////////////////////
         /////////////   Optimizing Perturbed Orbitals  ////////////
         ///////////////////////////////////////////////////////////
 
-        auto rsp_solver = json_rsp.find("rsp_solver");
-        if (rsp_solver != json_rsp.end()) {
+        auto rsp_solver = json_comp.find("rsp_solver");
+        if (rsp_solver != json_comp.end()) {
             auto kain = (*rsp_solver)["kain"];
             auto method = (*rsp_solver)["method"];
             auto max_iter = (*rsp_solver)["max_iter"];
@@ -495,8 +492,8 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         ///////////////////////////////////////////////////////////
 
         if (success) {
-            auto json_orbs = json_rsp.find("write_orbitals");
-            if (json_orbs != json_rsp.end()) write_rsp_orbitals(json_rsp, mol, dynamic);
+            auto json_orbs = json_comp.find("write_orbitals");
+            if (json_orbs != json_comp.end()) write_rsp_orbitals(*json_orbs, mol, dynamic);
 
             auto json_prop = json_rsp.find("properties");
             if (json_prop != json_rsp.end()) calc_rsp_properties(*json_prop, mol, d, omega);

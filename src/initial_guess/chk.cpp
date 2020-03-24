@@ -39,7 +39,7 @@ bool initial_guess::chk::setup(OrbitalVector &Phi, const std::string &chk_file) 
     print_utils::text(0, "Checkpoint file ", chk_file);
     mrcpp::print::separator(0, '~', 2);
 
-    auto success = true;
+    auto success = false;
     auto Psi = orbital::load_orbitals(chk_file);
     if (Psi.size() > 0) {
         success = orbital::compare(Psi, Phi);

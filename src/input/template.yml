@@ -613,10 +613,10 @@ sections:
       Includes parameters related to the response SCF optimization.
     keywords:
       - name: run
-        type: bool
-        default: true
+        type: List[bool]
+        default: [true, true, true]
         docstring: |
-          Run response solver.
+          In which Cartesian directions to run response solver.
       - name: max_iter
         type: int
         default: 100
@@ -642,11 +642,6 @@ sections:
         default: -1.0
         docstring: |
           Convergence threshold for SCF energy.
-      - name: directions
-        type: List[int]
-        default: [1, 1, 1]
-        docstring: |
-          In which Cartesian directions to run response solver.
       - name: start_prec
         type: float
         default: -1.0
