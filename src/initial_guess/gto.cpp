@@ -75,7 +75,8 @@ bool initial_guess::gto::setup(OrbitalVector &Phi,
     if (Phi.size() == 0) return false;
 
     mrcpp::print::separator(0, '~');
-    print_utils::text(0, "Calculation   ", "Read orbitals from file (GTO)");
+    print_utils::text(0, "Calculation   ", "Compute initial orbitals");
+    print_utils::text(0, "Method        ", "Project GTO molecular orbitals");
     print_utils::text(0, "Precision     ", print_utils::dbl_to_str(prec, 5, true));
     if (orbital::size_singly(Phi)) {
         print_utils::text(0, "Restricted    ", "False");
