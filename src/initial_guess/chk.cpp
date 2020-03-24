@@ -23,7 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Printer"
+#include <MRCPP/Printer>
 
 #include "chk.h"
 
@@ -34,7 +34,8 @@ namespace mrchem {
 
 bool initial_guess::chk::setup(OrbitalVector &Phi, const std::string &chk_file) {
     mrcpp::print::separator(0, '~');
-    print_utils::text(0, "Calculation     ", "Read checkpoint file");
+    print_utils::text(0, "Calculation     ", "Compute initial orbitals");
+    print_utils::text(0, "Method          ", "Read checkpoint file");
     print_utils::text(0, "Checkpoint file ", chk_file);
     mrcpp::print::separator(0, '~', 2);
 
