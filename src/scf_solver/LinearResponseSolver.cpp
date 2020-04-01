@@ -281,14 +281,14 @@ void LinearResponseSolver::printProperty() const {
 
 void LinearResponseSolver::printParameters(double omega, const std::string &oper) const {
     std::stringstream o_calc;
-    if (this->dynamic) {
-        o_calc << "Dynamic linear response";
-    } else {
-        o_calc << "Static linear response";
-    }
+    o_calc << "Optimize linear response orbitals";
 
     std::stringstream o_omega;
-    o_omega << std::setprecision(5) << std::fixed << omega << " (au)";
+    if (this->dynamic) {
+        o_omega << std::setprecision(5) << std::fixed << omega << " au";
+    } else {
+        o_omega << "Static field";
+    }
 
     std::stringstream o_kain;
     if (this->history > 0) {
@@ -330,10 +330,10 @@ void LinearResponseSolver::printParameters(double omega, const std::string &oper
 
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation        ", o_calc.str());
-    if (dynamic) print_utils::text(0, "Frequency          ", o_omega.str());
+    print_utils::text(0, "Frequency          ", o_omega.str());
+    print_utils::text(0, "Perturbation       ", oper);
     print_utils::text(0, "Method             ", this->methodName);
     print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
-    print_utils::text(0, "Perturbation       ", oper);
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());
     print_utils::text(0, "Start precision    ", o_prec_0.str());
