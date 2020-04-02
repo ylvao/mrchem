@@ -65,10 +65,10 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
 
     auto restricted = (orbital::size_singly(Phi)) ? false : true;
     mrcpp::print::separator(0, '~');
-    print_utils::text(0, "Calculation ", "Diagonalize Hamiltonian matrix");
+    print_utils::text(0, "Calculation ", "Compute initial orbitals");
+    print_utils::text(0, "Method      ", "Diagonalize SAD Hamiltonian");
     print_utils::text(0, "Precision   ", print_utils::dbl_to_str(prec, 5, true));
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
-    print_utils::text(0, "Hamiltonian ", "Superposition of Atomic Densities (SAD)");
     print_utils::text(0, "Functional  ", "LDA (SVWN5)");
     print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
     print_utils::text(0, "Zeta quality", std::to_string(zeta));

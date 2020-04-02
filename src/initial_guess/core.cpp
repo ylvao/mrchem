@@ -88,10 +88,10 @@ int PT[29][2] = {
  */
 bool initial_guess::core::setup(OrbitalVector &Phi, double prec, const Nuclei &nucs, int zeta) {
     mrcpp::print::separator(0, '~');
-    print_utils::text(0, "Calculation ", "Diagonalize Hamiltonian matrix");
+    print_utils::text(0, "Calculation ", "Compute initial orbitals");
+    print_utils::text(0, "Method      ", "Diagonalize Core Hamiltonian matrix");
     print_utils::text(0, "Precision   ", print_utils::dbl_to_str(prec, 5, true));
     print_utils::text(0, "Restricted  ", (orbital::size_singly(Phi)) ? "False" : "True");
-    print_utils::text(0, "Hamiltonian ", "Core");
     print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
     print_utils::text(0, "Zeta quality", std::to_string(zeta));
     mrcpp::print::separator(0, '~', 2);

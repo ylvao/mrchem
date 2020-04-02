@@ -283,7 +283,9 @@ def write_scf_guess(user_dict, method_name):
         "file_gto_paired": user_dict["Files"]["file_gto_paired"],
         "file_gto_alpha": user_dict["Files"]["file_gto_alpha"],
         "file_gto_beta": user_dict["Files"]["file_gto_beta"],
-        "file_orbitals": user_dict["Files"]["file_orbitals"],
+        "file_mw_paired": user_dict["Files"]["file_mw_paired"],
+        "file_mw_alpha": user_dict["Files"]["file_mw_alpha"],
+        "file_mw_beta": user_dict["Files"]["file_mw_beta"]
     }
     return guess_dict
 

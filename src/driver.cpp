@@ -143,11 +143,13 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     auto prec = json_guess["prec"];
     auto zeta = json_guess["zeta"];
     auto type = json_guess["type"];
+    auto mw_p = json_guess["file_mw_paired"];
+    auto mw_a = json_guess["file_mw_alpha"];
+    auto mw_b = json_guess["file_mw_beta"];
     auto gto_p = json_guess["file_gto_paired"];
     auto gto_a = json_guess["file_gto_alpha"];
     auto gto_b = json_guess["file_gto_beta"];
     auto gto_bas = json_guess["file_gto_basis"];
-    auto mw_file = json_guess["file_orbitals"];
     auto restricted = json_guess["restricted"];
 
     // Figure out number of electrons
@@ -174,7 +176,7 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
 
     auto success = true;
     if (type == "mw") {
-        success = initial_guess::mw::setup(Phi, mw_file);
+        success = initial_guess::mw::setup(Phi, prec, mw_p, mw_a, mw_b);
     } else if (type == "core") {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
     } else if (type == "sad") {
@@ -294,7 +296,9 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
     if (success) {
         if (json_scf["write_orbitals"]) {
             auto &Phi = mol.getOrbitals();
-            orbital::save_orbitals(Phi, json_scf["file_orbitals"]);
+            orbital::save_orbitals(Phi, json_scf["file_orbitals"], SPIN::Paired);
+            orbital::save_orbitals(Phi, json_scf["file_orbitals"], SPIN::Alpha);
+            orbital::save_orbitals(Phi, json_scf["file_orbitals"], SPIN::Beta);
         }
 
         auto json_prop = json_scf.find("properties");
