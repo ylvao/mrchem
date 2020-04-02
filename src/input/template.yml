@@ -423,6 +423,21 @@ sections:
         default: "initial_guess/mrchem.bas"
         docstring: |
           File name for GTO basis set, used with 'gto' guess.
+      - name: guess_gto_p
+        type: str
+        default: "initial_guess/mrchem.mop"
+        docstring: |
+          File name for paired orbitals, used with 'mw' and 'gto' guess.
+      - name: guess_gto_a
+        type: str
+        default: "initial_guess/mrchem.moa"
+        docstring: |
+          File name for alpha orbitals, used with 'mw' and 'gto' guess.
+      - name: guess_gto_b
+        type: str
+        default: "initial_guess/mrchem.mob"
+        docstring: |
+          File name for beta orbitals, used with 'mw' and 'gto' guess.
       - name: guess_phi_p
         type: str
         default: "initial_guess/phi_p"

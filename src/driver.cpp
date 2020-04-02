@@ -145,10 +145,13 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     auto prec = json_guess["prec"];
     auto zeta = json_guess["zeta"];
     auto type = json_guess["type"];
-    auto file_p = json_guess["file_phi_p"];
-    auto file_a = json_guess["file_phi_a"];
-    auto file_b = json_guess["file_phi_b"];
-    auto file_bas = json_guess["file_basis"];
+    auto mw_p = json_guess["file_phi_p"];
+    auto mw_a = json_guess["file_phi_a"];
+    auto mw_b = json_guess["file_phi_b"];
+    auto gto_p = json_guess["file_gto_p"];
+    auto gto_a = json_guess["file_gto_a"];
+    auto gto_b = json_guess["file_gto_b"];
+    auto gto_bas = json_guess["file_basis"];
     auto file_chk = json_guess["file_chk"];
     auto restricted = json_guess["restricted"];
 
@@ -179,13 +182,13 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     if (type == "chk") {
         success = initial_guess::chk::setup(Phi, file_chk);
     } else if (type == "mw") {
-        success = initial_guess::mw::setup(Phi, prec, file_p, file_a, file_b);
+        success = initial_guess::mw::setup(Phi, prec, mw_p, mw_a, mw_b);
     } else if (type == "core") {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
     } else if (type == "sad") {
         success = initial_guess::sad::setup(Phi, prec, nucs, zeta);
     } else if (type == "gto") {
-        success = initial_guess::gto::setup(Phi, prec, file_bas, file_p, file_a, file_b);
+        success = initial_guess::gto::setup(Phi, prec, gto_bas, gto_p, gto_a, gto_b);
     } else {
         MSG_ERROR("Invalid initial guess");
         success = false;
