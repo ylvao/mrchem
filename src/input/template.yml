@@ -22,6 +22,8 @@ sections:
       - name: path_plots
         type: str
         default: "plots"
+        predicates:
+          - "value[-1] != '/'"
         docstring: |
           File path to plot directory.
       - name: points
@@ -586,6 +588,8 @@ sections:
       - name: path_checkpoint
         type: str
         default: "checkpoint"
+        predicates:
+          - "value[-1] != '/'"
         docstring: |
           Path to checkpoint files during SCF, used with 'write_checkpoint'
           and 'chk' guess.
@@ -599,6 +603,8 @@ sections:
       - name: path_orbitals
         type: str
         default: "orbitals"
+        predicates:
+          - "value[-1] != '/'"
         docstring: |
           Path to where converged orbitals will be written in connection with
           the 'write_orbitals' keyword.
@@ -690,6 +696,8 @@ sections:
       - name: path_checkpoint
         type: str
         default: "checkpoint"
+        predicates:
+          - "value[-1] != '/'"
         docstring: |
           Path to checkpoint files during SCF, used with 'write_checkpoint'
           and 'chk' guess.
@@ -703,6 +711,8 @@ sections:
       - name: path_orbitals
         type: str
         default: "orbitals"
+        predicates:
+          - "value[-1] != '/'"
         docstring: |
           Path to where converged orbitals will be written in connection with
           the 'write_orbitals' keyword.
