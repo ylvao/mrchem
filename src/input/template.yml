@@ -418,53 +418,56 @@ sections:
     docstring: |
       Defines file paths used for program input/output.
     keywords:
-      - name: file_chk
-        type: str
-        default: "checkpoint/phi"
-        docstring: |
-          File name for checkpoint files during SCF, used with 'write_checkpoint'
-          and 'chk' guess.
-      - name: file_gto_basis
+      - name: guess_basis
         type: str
         default: "initial_guess/mrchem.bas"
         docstring: |
           File name for GTO basis set, used with 'gto' guess.
-      - name: file_gto_paired
+      - name: guess_phi_p
         type: str
-        default: "initial_guess/mrchem.mop"
+        default: "initial_guess/phi_p"
         docstring: |
-          File name for paired MO matrix, used with 'gto' guess.
-      - name: file_gto_alpha
+          File name for paired orbitals, used with 'mw' and 'gto' guess.
+      - name: guess_phi_a
         type: str
-        default: "initial_guess/mrchem.moa"
+        default: "initial_guess/phi_a"
         docstring: |
-          File name for alpha MO matrix, used with 'gto' guess.
-      - name: file_gto_beta
+          File name for alpha orbitals, used with 'mw' and 'gto' guess.
+      - name: guess_phi_b
         type: str
-        default: "initial_guess/mrchem.mob"
+        default: "initial_guess/phi_b"
         docstring: |
-          File name for beta MO matrix, used with 'gto' guess.
-      - name: file_mw_paired
+          File name for beta orbitals, used with 'mw' and 'gto' guess.
+      - name: guess_x_p
         type: str
-        default: "orbitals/phi_p"
+        default: "initial_guess/X_p"
         docstring: |
-          File name for paired orbitals, used with 'mw' guess.
-      - name: file_mw_alpha
+          File name for paired response orbitals, used with 'mw' guess.
+      - name: guess_x_a
         type: str
-        default: "orbitals/phi_a"
+        default: "initial_guess/X_a"
         docstring: |
-          File name for alpha orbitals, used with 'mw' guess.
-      - name: file_mw_beta
+          File name for alpha response orbitals, used with 'mw' guess.
+      - name: guess_x_b
         type: str
-        default: "orbitals/phi_b"
+        default: "initial_guess/X_b"
         docstring: |
-          File name for beta orbitals, used with 'mw' guess.
-      - name: file_orbitals
+          File name for beta response orbitals, used with 'mw' guess.
+      - name: guess_y_p
         type: str
-        default: "orbitals/phi"
+        default: "initial_guess/Y_p"
         docstring: |
-          File name for orbitals, used with 'write_orbitals', will get
-          "_p", "_a" or "_b" extension.
+          File name for paired response orbitals, used with 'mw' guess.
+      - name: guess_y_a
+        type: str
+        default: "initial_guess/Y_a"
+        docstring: |
+          File name for alpha response orbitals, used with 'mw' guess.
+      - name: guess_y_b
+        type: str
+        default: "initial_guess/Y_b"
+        docstring: |
+          File name for beta response orbitals, used with 'mw' guess.
   - name: SCF
     docstring: |
       Includes parameters related to the ground state SCF orbital optimization
@@ -557,8 +560,28 @@ sections:
         type: bool
         default: false
         docstring: |
-          Write orbitals to disk in each iteration. Can be used as 'chk' initial
+          Write orbitals to disk in each iteration, file name
+          "<path_checkpoint>/phi_scf_idx_<0..N>". Can be used as 'chk' initial
           guess in subsequent calculations.
+      - name: path_checkpoint
+        type: str
+        default: "checkpoint"
+        docstring: |
+          Path to checkpoint files during SCF, used with 'write_checkpoint'
+          and 'chk' guess.
+      - name: write_orbitals
+        type: bool
+        default: false
+        docstring: |
+          Write final orbitals to disk, file name
+          "<path_orbitals>/phi_<p/a/b>_scf_idx_<0..Np/Na/Nb>".
+          Can be used as 'mw' initial guess in subsequent calculations.
+      - name: path_orbitals
+        type: str
+        default: "orbitals"
+        docstring: |
+          Path to where converged orbitals will be written in connection with
+          the 'write_orbitals' keyword.
       - name: plot_density
         type: bool
         default: false
@@ -570,12 +593,6 @@ sections:
         docstring: |
           Plot converged molecular orbitals of given index. If the first index
           is negative, all orbitals will be plotted.
-      - name: write_orbitals
-        type: bool
-        default: false
-        docstring: |
-          Write final orbitals to disk. Can be used as 'mw' initial
-          guess in subsequent calculations.
   - name: Response
     docstring: |
       Includes parameters related to the response SCF optimization.
@@ -637,13 +654,40 @@ sections:
         default: 'none'
         predicates:
           - "value.lower() in
-            ['none']"
+            ['none',
+             'chk',
+             'mw']"
         docstring: |
           Type of initial guess for response.
           'none' will start from a zero guess for the response functions.
+          'chk' restarts a previous calculation which was dumped using the
+          'write_checkpoint' keyword.
+          'mw' will start from final orbitals in a previous calculation written
+          using the 'write_orbitals' keyword. The orbitals will be re-projected
+          into the new computational setup.
+      - name: write_checkpoint
+        type: bool
+        default: false
+        docstring: |
+          Write perturbed orbitals to disk in each iteration, file name
+          "<path_checkpoint>/<X/Y>_rsp_<direction>_idx_<0..N>". Can be used as 'chk'
+          initial guess in subsequent calculations.
+      - name: path_checkpoint
+        type: str
+        default: "checkpoint"
+        docstring: |
+          Path to checkpoint files during SCF, used with 'write_checkpoint'
+          and 'chk' guess.
       - name: write_orbitals
         type: bool
         default: false
         docstring: |
-          Write final perturbed orbitals to disk. Can be used as 'mw' initial
-          guess in subsequent calculations.
+          Write final perturbed orbitals to disk, file name
+          "<path_orbitals>/<X/Y>_<p/a/b>_rsp_<direction>_idx_<0..Np/Na/Nb>".
+          Can be used as 'mw' initial guess in subsequent calculations.
+      - name: path_orbitals
+        type: str
+        default: "orbitals"
+        docstring: |
+          Path to where converged orbitals will be written in connection with
+          the 'write_orbitals' keyword.

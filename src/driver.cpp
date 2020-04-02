@@ -98,6 +98,7 @@ void build_fock_operator(const json &input, Molecule &mol, FockOperator &F, int 
 void calc_scf_properties(const json &input, Molecule &mol);
 void calc_rsp_properties(const json &input, Molecule &mol, int dir, double omega);
 
+void write_scf_orbitals(const json &json_orbs, Molecule &mol);
 void plot_scf_quantities(const json &input, Molecule &mol);
 
 DerivativeOperator_p get_derivative(const std::string &name);
@@ -144,13 +145,10 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     auto prec = json_guess["prec"];
     auto zeta = json_guess["zeta"];
     auto type = json_guess["type"];
-    auto mw_p = json_guess["file_mw_paired"];
-    auto mw_a = json_guess["file_mw_alpha"];
-    auto mw_b = json_guess["file_mw_beta"];
-    auto gto_p = json_guess["file_gto_paired"];
-    auto gto_a = json_guess["file_gto_alpha"];
-    auto gto_b = json_guess["file_gto_beta"];
-    auto gto_bas = json_guess["file_gto_basis"];
+    auto file_p = json_guess["file_phi_p"];
+    auto file_a = json_guess["file_phi_a"];
+    auto file_b = json_guess["file_phi_b"];
+    auto file_bas = json_guess["file_basis"];
     auto file_chk = json_guess["file_chk"];
     auto restricted = json_guess["restricted"];
 
@@ -181,13 +179,13 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     if (type == "chk") {
         success = initial_guess::chk::setup(Phi, file_chk);
     } else if (type == "mw") {
-        success = initial_guess::mw::setup(Phi, prec, mw_p, mw_a, mw_b);
+        success = initial_guess::mw::setup(Phi, prec, file_p, file_a, file_b);
     } else if (type == "core") {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
     } else if (type == "sad") {
         success = initial_guess::sad::setup(Phi, prec, nucs, zeta);
     } else if (type == "gto") {
-        success = initial_guess::gto::setup(Phi, prec, gto_bas, gto_p, gto_a, gto_b);
+        success = initial_guess::gto::setup(Phi, prec, file_bas, file_p, file_a, file_b);
     } else {
         MSG_ERROR("Invalid initial guess");
         success = false;
@@ -303,12 +301,8 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
     ///////////////////////////////////////////////////////////
 
     if (success) {
-        if (json_scf["write_orbitals"]) {
-            auto &Phi = mol.getOrbitals();
-            orbital::save_orbitals(Phi, json_scf["file_orbitals"], SPIN::Paired);
-            orbital::save_orbitals(Phi, json_scf["file_orbitals"], SPIN::Alpha);
-            orbital::save_orbitals(Phi, json_scf["file_orbitals"], SPIN::Beta);
-        }
+        auto json_orbs = json_scf.find("write_orbitals");
+        if (json_orbs != json_scf.end()) write_scf_orbitals(*json_orbs, mol);
 
         auto json_prop = json_scf.find("properties");
         if (json_prop != json_scf.end()) calc_scf_properties(*json_prop, mol);
@@ -318,6 +312,13 @@ bool driver::run_scf(const json &json_scf, Molecule &mol) {
     }
 
     return success;
+}
+
+void driver::write_scf_orbitals(const json &json_orbs, Molecule &mol) {
+    auto &Phi = mol.getOrbitals();
+    orbital::save_orbitals(Phi, json_orbs["file_phi_p"], SPIN::Paired);
+    orbital::save_orbitals(Phi, json_orbs["file_phi_a"], SPIN::Alpha);
+    orbital::save_orbitals(Phi, json_orbs["file_phi_b"], SPIN::Beta);
 }
 
 /** @brief Run linear response SCF calculation
@@ -420,10 +421,11 @@ bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
         ///////////////////////////////////////////////////////////
 
         if (success) {
+            auto json_orbs = json_rsp.find("write_orbitals");
+            if (json_orbs != json_rsp.end()) NOT_IMPLEMENTED_ABORT;
+
             auto json_prop = json_rsp.find("properties");
             if (json_prop != json_rsp.end()) calc_rsp_properties(*json_prop, mol, d, omega);
-
-            if (json_rsp["write_orbitals"]) NOT_IMPLEMENTED_ABORT;
         }
         mol.getOrbitalsX().clear(); // Clear orbital vector
         mol.getOrbitalsY().clear(); // Clear orbital vector
