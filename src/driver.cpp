@@ -88,24 +88,27 @@ using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
 extern mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
 
 namespace mrchem {
-
 namespace driver {
-bool guess_scf_orbitals(const json &json_guess, Molecule &mol);
-bool guess_rsp_orbitals(const json &json_guess, Molecule &mol);
-bool guess_scf_energy(const json &json_guess, Molecule &mol, FockOperator &F);
-
-void build_fock_operator(const json &input, Molecule &mol, FockOperator &F, int order);
-
-void calc_scf_properties(const json &input, Molecule &mol);
-void calc_rsp_properties(const json &input, Molecule &mol, int dir, double omega);
-
-void write_scf_orbitals(const json &input, Molecule &mol);
-void write_rsp_orbitals(const json &input, Molecule &mol, bool dynamic);
-void plot_scf_quantities(const json &input, Molecule &mol);
 
 DerivativeOperator_p get_derivative(const std::string &name);
 template <int I> RankOneTensorOperator<I> get_operator(const json &json_oper);
 template <int I, int J> RankTwoTensorOperator<I, J> get_operator(const json &json_oper);
+void build_fock_operator(const json &input, Molecule &mol, FockOperator &F, int order);
+
+namespace scf {
+bool guess_orbitals(const json &input, Molecule &mol);
+bool guess_energy(const json &input, Molecule &mol, FockOperator &F);
+void write_orbitals(const json &input, Molecule &mol);
+void calc_properties(const json &input, Molecule &mol);
+void plot_quantities(const json &input, Molecule &mol);
+} // namespace scf
+
+namespace rsp {
+bool guess_orbitals(const json &input, Molecule &mol);
+void write_orbitals(const json &input, Molecule &mol, bool dynamic);
+void calc_properties(const json &input, Molecule &mol, int dir, double omega);
+} // namespace rsp
+
 } // namespace driver
 
 /** @brief Initialize a molecule from input
@@ -133,6 +136,92 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
     mol.printGeometry();
 }
 
+/** @brief Run ground-state SCF calculation
+ *
+ * This function will update the ground state orbitals and the Fock
+ * matrix of the molecule based on the chosen electronic structure
+ * method. The resulting orbitals will be either diagonalized or
+ * localized at exit. Returns true if the calculation converges.
+ *
+ * After convergence the requested ground-state properties are computed.
+ *
+ * This function expects the "scf_calculation" subsection of the input.
+ */
+bool driver::scf::run(const json &json_scf, Molecule &mol) {
+    print_utils::headline(0, "Computing Ground State Wavefunction");
+
+    ///////////////////////////////////////////////////////////
+    ////////////////   Building Fock Operator   ///////////////
+    ///////////////////////////////////////////////////////////
+
+    FockOperator F;
+    const auto &json_fock = json_scf["fock_operator"];
+    driver::build_fock_operator(json_fock, mol, F, 0);
+
+    ///////////////////////////////////////////////////////////
+    ///////////////   Setting Up Initial Guess   //////////////
+    ///////////////////////////////////////////////////////////
+
+    const auto &json_guess = json_scf["initial_guess"];
+    if (driver::scf::guess_orbitals(json_guess, mol)) {
+        driver::scf::guess_energy(json_guess, mol, F);
+    } else {
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////
+    //////////   Optimizing Ground State Orbitals  ////////////
+    ///////////////////////////////////////////////////////////
+
+    // Run GroundStateSolver if present in input JSON
+    auto success = true;
+    auto scf_solver = json_scf.find("scf_solver");
+    if (scf_solver != json_scf.end()) {
+        auto kain = (*scf_solver)["kain"];
+        auto method = (*scf_solver)["method"];
+        auto max_iter = (*scf_solver)["max_iter"];
+        auto rotation = (*scf_solver)["rotation"];
+        auto localize = (*scf_solver)["localize"];
+        auto file_chk = (*scf_solver)["file_chk"];
+        auto checkpoint = (*scf_solver)["checkpoint"];
+        auto start_prec = (*scf_solver)["start_prec"];
+        auto final_prec = (*scf_solver)["final_prec"];
+        auto energy_thrs = (*scf_solver)["energy_thrs"];
+        auto orbital_thrs = (*scf_solver)["orbital_thrs"];
+        auto helmholtz_prec = (*scf_solver)["helmholtz_prec"];
+
+        GroundStateSolver solver;
+        solver.setHistory(kain);
+        solver.setRotation(rotation);
+        solver.setLocalize(localize);
+        solver.setMethodName(method);
+        solver.setCheckpoint(checkpoint);
+        solver.setCheckpointFile(file_chk);
+        solver.setMaxIterations(max_iter);
+        solver.setHelmholtzPrec(helmholtz_prec);
+        solver.setOrbitalPrec(start_prec, final_prec);
+        solver.setThreshold(orbital_thrs, energy_thrs);
+        success = solver.optimize(mol, F);
+    }
+
+    ///////////////////////////////////////////////////////////
+    //////////   Computing Ground State Properties   //////////
+    ///////////////////////////////////////////////////////////
+
+    if (success) {
+        auto json_orbs = json_scf.find("write_orbitals");
+        if (json_orbs != json_scf.end()) driver::scf::write_orbitals(*json_orbs, mol);
+
+        auto json_prop = json_scf.find("properties");
+        if (json_prop != json_scf.end()) driver::scf::calc_properties(*json_prop, mol);
+
+        auto json_plot = json_scf.find("cube_plot");
+        if (json_plot != json_scf.end()) driver::scf::plot_quantities(*json_plot, mol);
+    }
+
+    return success;
+}
+
 /** @brief Run initial guess calculation for the orbitals
  *
  * This function will update the ground state orbitals and the Fock
@@ -143,7 +232,7 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
  *
  * This function expects the "initial_guess" subsection of the input.
  */
-bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
+bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
     auto prec = json_guess["prec"];
     auto zeta = json_guess["zeta"];
     auto type = json_guess["type"];
@@ -200,7 +289,7 @@ bool driver::guess_scf_orbitals(const json &json_guess, Molecule &mol) {
     return success;
 }
 
-bool driver::guess_scf_energy(const json &json_guess, Molecule &mol, FockOperator &F) {
+bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockOperator &F) {
     double prec = json_guess["prec"];
     auto method = json_guess["method"];
     auto localize = json_guess["localize"];
@@ -233,378 +322,11 @@ bool driver::guess_scf_energy(const json &json_guess, Molecule &mol, FockOperato
     return true;
 }
 
-/** @brief Run ground-state SCF calculation
- *
- * This function will update the ground state orbitals and the Fock
- * matrix of the molecule based on the chosen electronic structure
- * method. The resulting orbitals will be either diagonalized or
- * localized at exit. Returns true if the calculation converges.
- *
- * After convergence the requested ground-state properties are computed.
- *
- * This function expects the "scf_calculation" subsection of the input.
- */
-bool driver::run_scf(const json &json_scf, Molecule &mol) {
-    print_utils::headline(0, "Computing Ground State Wavefunction");
-
-    ///////////////////////////////////////////////////////////
-    ////////////////   Building Fock Operator   ///////////////
-    ///////////////////////////////////////////////////////////
-
-    FockOperator F;
-    const auto &json_fock = json_scf["fock_operator"];
-    driver::build_fock_operator(json_fock, mol, F, 0);
-
-    ///////////////////////////////////////////////////////////
-    ///////////////   Setting Up Initial Guess   //////////////
-    ///////////////////////////////////////////////////////////
-
-    const auto &json_guess = json_scf["initial_guess"];
-    if (driver::guess_scf_orbitals(json_guess, mol)) {
-        driver::guess_scf_energy(json_guess, mol, F);
-    } else {
-        return false;
-    }
-
-    ///////////////////////////////////////////////////////////
-    //////////   Optimizing Ground State Orbitals  ////////////
-    ///////////////////////////////////////////////////////////
-
-    // Run GroundStateSolver if present in input JSON
-    auto success = true;
-    auto scf_solver = json_scf.find("scf_solver");
-    if (scf_solver != json_scf.end()) {
-        auto kain = (*scf_solver)["kain"];
-        auto method = (*scf_solver)["method"];
-        auto max_iter = (*scf_solver)["max_iter"];
-        auto rotation = (*scf_solver)["rotation"];
-        auto localize = (*scf_solver)["localize"];
-        auto file_chk = (*scf_solver)["file_chk"];
-        auto checkpoint = (*scf_solver)["checkpoint"];
-        auto start_prec = (*scf_solver)["start_prec"];
-        auto final_prec = (*scf_solver)["final_prec"];
-        auto energy_thrs = (*scf_solver)["energy_thrs"];
-        auto orbital_thrs = (*scf_solver)["orbital_thrs"];
-        auto helmholtz_prec = (*scf_solver)["helmholtz_prec"];
-
-        GroundStateSolver solver;
-        solver.setHistory(kain);
-        solver.setRotation(rotation);
-        solver.setLocalize(localize);
-        solver.setMethodName(method);
-        solver.setCheckpoint(checkpoint);
-        solver.setCheckpointFile(file_chk);
-        solver.setMaxIterations(max_iter);
-        solver.setHelmholtzPrec(helmholtz_prec);
-        solver.setOrbitalPrec(start_prec, final_prec);
-        solver.setThreshold(orbital_thrs, energy_thrs);
-        success = solver.optimize(mol, F);
-    }
-
-    ///////////////////////////////////////////////////////////
-    //////////   Computing Ground State Properties   //////////
-    ///////////////////////////////////////////////////////////
-
-    if (success) {
-        auto json_orbs = json_scf.find("write_orbitals");
-        if (json_orbs != json_scf.end()) write_scf_orbitals(*json_orbs, mol);
-
-        auto json_prop = json_scf.find("properties");
-        if (json_prop != json_scf.end()) calc_scf_properties(*json_prop, mol);
-
-        auto json_plot = json_scf.find("cube_plot");
-        if (json_plot != json_scf.end()) plot_scf_quantities(*json_plot, mol);
-    }
-
-    return success;
-}
-
-void driver::write_scf_orbitals(const json &json_orbs, Molecule &mol) {
+void driver::scf::write_orbitals(const json &json_orbs, Molecule &mol) {
     auto &Phi = mol.getOrbitals();
     orbital::save_orbitals(Phi, json_orbs["file_phi_p"], SPIN::Paired);
     orbital::save_orbitals(Phi, json_orbs["file_phi_a"], SPIN::Alpha);
     orbital::save_orbitals(Phi, json_orbs["file_phi_b"], SPIN::Beta);
-}
-
-/** @brief Run initial guess calculation for the response orbitals
- *
- * This function will update the ground state orbitals and the Fock
- * matrix of the molecule, based on the chosen initial guess method.
- * The orbital vector is initialized with the appropriate particle
- * number and spin. The Fock matrix is initialized to the zero matrix
- * of the appropriate size.
- *
- * This function expects the "initial_guess" subsection of the input.
- */
-bool driver::guess_rsp_orbitals(const json &json_guess, Molecule &mol) {
-    auto prec = json_guess["prec"];
-    auto type = json_guess["type"];
-    auto mw_xp = json_guess["file_x_p"];
-    auto mw_xa = json_guess["file_x_a"];
-    auto mw_xb = json_guess["file_x_b"];
-    auto mw_yp = json_guess["file_y_p"];
-    auto mw_ya = json_guess["file_y_a"];
-    auto mw_yb = json_guess["file_y_b"];
-    auto file_chk_x = json_guess["file_chk_x"];
-    auto file_chk_y = json_guess["file_chk_y"];
-
-    auto &Phi = mol.getOrbitals();
-    auto &X = mol.getOrbitalsX();
-    auto &Y = mol.getOrbitalsY();
-
-    auto success_x = false;
-    X = orbital::param_copy(Phi);
-    if (type == "chk") {
-        success_x = initial_guess::chk::setup(X, file_chk_x);
-    } else if (type == "mw") {
-        success_x = initial_guess::mw::setup(X, prec, mw_xp, mw_xa, mw_xb);
-    } else if (type == "none") {
-        mrcpp::print::separator(0, '~');
-        print_utils::text(0, "Calculation     ", "Compute initial orbitals");
-        print_utils::text(0, "Method          ", "Zero guess");
-        mrcpp::print::separator(0, '~', 2);
-    } else {
-        MSG_ERROR("Invalid initial guess");
-    }
-    orbital::print(X);
-
-    auto success_y = false;
-    if (&X != &Y) {
-        Y = orbital::param_copy(Phi);
-        if (type == "chk") {
-            success_y = initial_guess::chk::setup(Y, file_chk_y);
-        } else if (type == "mw") {
-            success_y = initial_guess::mw::setup(Y, prec, mw_yp, mw_ya, mw_yb);
-        } else if (type == "none") {
-            mrcpp::print::separator(0, '~');
-            print_utils::text(0, "Calculation     ", "Compute initial orbitals");
-            print_utils::text(0, "Method          ", "Zero guess");
-            mrcpp::print::separator(0, '~', 2);
-        } else {
-            MSG_ERROR("Invalid initial guess");
-        }
-        orbital::print(Y);
-    }
-
-    return (success_x and success_y);
-}
-
-/** @brief Run linear response SCF calculation
- *
- * This function will update the perturbed orbitals of the molecule
- * based on the chosen electronic structure method and perturbation
- * operator. Each response calculation corresponds to one particular
- * perturbation operator (could be a vector operator with several
- * components). Returns true if the calculation converges.
- *
- * After convergence the requested linear response properties are computed.
- *
- * This function expects a single subsection entry in the "rsp_calculations"
- * vector of the input.
- */
-bool driver::run_rsp(const json &json_rsp, Molecule &mol) {
-    print_utils::headline(0, "Computing Linear Response Wavefunction");
-
-    ///////////////////////////////////////////////////////////
-    /////////////   Preparing Unperturbed System   ////////////
-    ///////////////////////////////////////////////////////////
-
-    const auto &json_unpert = json_rsp["unperturbed"];
-    const auto &unpert_fock = json_unpert["fock_operator"];
-    auto unpert_loc = json_unpert["localize"];
-    auto unpert_prec = json_unpert["prec"];
-
-    auto &Phi = mol.getOrbitals();
-    auto &F_mat = mol.getFockMatrix();
-
-    if (unpert_loc) {
-        orbital::localize(unpert_prec, Phi, F_mat);
-    } else {
-        orbital::diagonalize(unpert_prec, Phi, F_mat);
-    }
-
-    FockOperator F_0;
-    driver::build_fock_operator(unpert_fock, mol, F_0, 0);
-    F_0.setup(unpert_prec);
-
-    ///////////////////////////////////////////////////////////
-    //////////////   Preparing Perturbed System   /////////////
-    ///////////////////////////////////////////////////////////
-
-    auto omega = json_rsp["frequency"];
-    auto dynamic = json_rsp["dynamic"];
-    mol.initPerturbedOrbitals(dynamic);
-
-    FockOperator F_1;
-    const auto &json_fock_1 = json_rsp["fock_operator"];
-    driver::build_fock_operator(json_fock_1, mol, F_1, 1);
-
-    const auto &json_pert = json_rsp["perturbation"];
-    auto h_1 = driver::get_operator<3>(json_pert);
-
-    auto success = true;
-    for (auto d = 0; d < 3; d++) {
-        const auto &json_comp = json_rsp["components"][d];
-        F_1.perturbation() = h_1[d];
-
-        ///////////////////////////////////////////////////////////
-        ///////////////   Setting Up Initial Guess   //////////////
-        ///////////////////////////////////////////////////////////
-
-        const auto &json_guess = json_comp["initial_guess"];
-        success = driver::guess_rsp_orbitals(json_guess, mol);
-
-        ///////////////////////////////////////////////////////////
-        /////////////   Optimizing Perturbed Orbitals  ////////////
-        ///////////////////////////////////////////////////////////
-
-        auto rsp_solver = json_comp.find("rsp_solver");
-        if (rsp_solver != json_comp.end()) {
-            auto kain = (*rsp_solver)["kain"];
-            auto method = (*rsp_solver)["method"];
-            auto max_iter = (*rsp_solver)["max_iter"];
-            auto file_chk_x = (*rsp_solver)["file_chk_x"];
-            auto file_chk_y = (*rsp_solver)["file_chk_y"];
-            auto checkpoint = (*rsp_solver)["checkpoint"];
-            auto orth_prec = (*rsp_solver)["orth_prec"];
-            auto start_prec = (*rsp_solver)["start_prec"];
-            auto final_prec = (*rsp_solver)["final_prec"];
-            auto orbital_thrs = (*rsp_solver)["orbital_thrs"];
-            auto property_thrs = (*rsp_solver)["property_thrs"];
-            auto helmholtz_prec = (*rsp_solver)["helmholtz_prec"];
-
-            LinearResponseSolver solver(dynamic);
-            solver.setHistory(kain);
-            solver.setMethodName(method);
-            solver.setMaxIterations(max_iter);
-            solver.setCheckpoint(checkpoint);
-            solver.setCheckpointFile(file_chk_x, file_chk_y);
-            solver.setHelmholtzPrec(helmholtz_prec);
-            solver.setOrbitalPrec(start_prec, final_prec);
-            solver.setThreshold(orbital_thrs, property_thrs);
-            solver.setOrthPrec(orth_prec);
-
-            success = solver.optimize(omega, mol, F_0, F_1);
-        }
-
-        ///////////////////////////////////////////////////////////
-        ////////////   Compute Response Properties   //////////////
-        ///////////////////////////////////////////////////////////
-
-        if (success) {
-            auto json_orbs = json_comp.find("write_orbitals");
-            if (json_orbs != json_comp.end()) write_rsp_orbitals(*json_orbs, mol, dynamic);
-
-            auto json_prop = json_rsp.find("properties");
-            if (json_prop != json_rsp.end()) calc_rsp_properties(*json_prop, mol, d, omega);
-        }
-        mol.getOrbitalsX().clear(); // Clear orbital vector
-        mol.getOrbitalsY().clear(); // Clear orbital vector
-    }
-    F_0.clear();
-    mol.getOrbitalsX_p().reset(); // Release shared_ptr
-    mol.getOrbitalsY_p().reset(); // Release shared_ptr
-
-    return success;
-}
-
-void driver::write_rsp_orbitals(const json &json_orbs, Molecule &mol, bool dynamic) {
-    auto &X = mol.getOrbitalsX();
-    orbital::save_orbitals(X, json_orbs["file_x_p"], SPIN::Paired);
-    orbital::save_orbitals(X, json_orbs["file_x_a"], SPIN::Alpha);
-    orbital::save_orbitals(X, json_orbs["file_x_b"], SPIN::Beta);
-    if (dynamic) {
-        auto &Y = mol.getOrbitalsY();
-        orbital::save_orbitals(Y, json_orbs["file_y_p"], SPIN::Paired);
-        orbital::save_orbitals(Y, json_orbs["file_y_a"], SPIN::Alpha);
-        orbital::save_orbitals(Y, json_orbs["file_y_b"], SPIN::Beta);
-    }
-}
-
-/** @brief Plot ground-state quantities
- *
- * This function expects the "cube_plot" subsection of the
- * "scf_calculation" input section.
- */
-void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
-    Timer t_tot, t_lap;
-
-    auto path = json_plot["plotter"]["path_plots"].get<std::string>();
-    auto npts = json_plot["plotter"]["points"];
-    auto O = json_plot["plotter"]["O"];
-    auto A = json_plot["plotter"]["A"];
-    auto B = json_plot["plotter"]["B"];
-    auto C = json_plot["plotter"]["C"];
-    auto dens_plot = json_plot["density"];
-    auto orb_idx = json_plot["orbital"];
-
-    print_utils::headline(1, "Plotting Ground State Quantities");
-    mrcpp::print::header(1, "CubePlot");
-
-    auto &Phi = mol.getOrbitals();
-    MolPlotter plt(mol, O);
-    plt.setRange(A, B, C);
-
-    if (dens_plot) {
-        Density rho(false);
-
-        t_lap.start();
-        std::string fname = path + "/rho_t";
-        density::compute(-1.0, rho, Phi, DensityType::Total);
-        plt.cubePlot(npts, rho, fname);
-        rho.free(NUMBER::Total);
-        mrcpp::print::time(1, fname, t_lap);
-
-        if (orbital::size_singly(Phi) > 0) {
-            t_lap.start();
-            fname = path + "/rho_s";
-            density::compute(-1.0, rho, Phi, DensityType::Spin);
-            plt.cubePlot(npts, rho, fname);
-            mrcpp::print::time(1, fname, t_lap);
-            rho.free(NUMBER::Total);
-
-            t_lap.start();
-            fname = path + "/rho_a";
-            density::compute(-1.0, rho, Phi, DensityType::Alpha);
-            plt.cubePlot(npts, rho, fname);
-            mrcpp::print::time(1, fname, t_lap);
-            rho.free(NUMBER::Total);
-
-            t_lap.start();
-            fname = path + "/rho_b";
-            density::compute(-1.0, rho, Phi, DensityType::Beta);
-            plt.cubePlot(npts, rho, fname);
-            rho.free(NUMBER::Total);
-            mrcpp::print::time(1, fname, t_lap);
-        }
-    }
-
-    // Plotting NO orbitals
-    if (orb_idx.size() > 0) {
-        if (orb_idx[0] < 0) {
-            // Plotting ALL orbitals
-            for (auto i = 0; i < Phi.size(); i++) {
-                if (not mpi::my_orb(Phi[i])) continue;
-                t_lap.start();
-                std::stringstream name;
-                name << path << "/phi_" << i;
-                plt.cubePlot(npts, Phi[i], name.str());
-                mrcpp::print::time(1, name.str(), t_lap);
-            }
-        } else {
-            // Plotting some orbitals
-            for (auto &i : orb_idx) {
-                if (not mpi::my_orb(Phi[i])) continue;
-                t_lap.start();
-                std::stringstream name;
-                name << path << "/phi_" << i;
-                plt.cubePlot(npts, Phi[i], name.str());
-                mrcpp::print::time(1, name.str(), t_lap);
-            }
-        }
-    }
-
-    mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Compute ground-state properties
@@ -613,7 +335,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
  * input section, and will compute all properties which are present in this input.
  * This includes the diamagnetic contributions to the magnetic response properties.
  */
-void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
+void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
     Timer t_tot, t_lap;
     auto plevel = Printer::getPrintLevel();
     if (plevel == 1) mrcpp::print::header(1, "Computing Ground State Properties");
@@ -694,12 +416,293 @@ void driver::calc_scf_properties(const json &json_prop, Molecule &mol) {
     if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
 }
 
+/** @brief Plot ground-state quantities
+ *
+ * This function expects the "cube_plot" subsection of the
+ * "scf_calculation" input section.
+ */
+void driver::scf::plot_quantities(const json &json_plot, Molecule &mol) {
+    Timer t_tot, t_lap;
+
+    auto path = json_plot["plotter"]["path_plots"].get<std::string>();
+    auto npts = json_plot["plotter"]["points"];
+    auto O = json_plot["plotter"]["O"];
+    auto A = json_plot["plotter"]["A"];
+    auto B = json_plot["plotter"]["B"];
+    auto C = json_plot["plotter"]["C"];
+    auto dens_plot = json_plot["density"];
+    auto orb_idx = json_plot["orbital"];
+
+    print_utils::headline(1, "Plotting Ground State Quantities");
+    mrcpp::print::header(1, "CubePlot");
+
+    auto &Phi = mol.getOrbitals();
+    MolPlotter plt(mol, O);
+    plt.setRange(A, B, C);
+
+    if (dens_plot) {
+        Density rho(false);
+
+        t_lap.start();
+        std::string fname = path + "/rho_t";
+        density::compute(-1.0, rho, Phi, DensityType::Total);
+        plt.cubePlot(npts, rho, fname);
+        rho.free(NUMBER::Total);
+        mrcpp::print::time(1, fname, t_lap);
+
+        if (orbital::size_singly(Phi) > 0) {
+            t_lap.start();
+            fname = path + "/rho_s";
+            density::compute(-1.0, rho, Phi, DensityType::Spin);
+            plt.cubePlot(npts, rho, fname);
+            mrcpp::print::time(1, fname, t_lap);
+            rho.free(NUMBER::Total);
+
+            t_lap.start();
+            fname = path + "/rho_a";
+            density::compute(-1.0, rho, Phi, DensityType::Alpha);
+            plt.cubePlot(npts, rho, fname);
+            mrcpp::print::time(1, fname, t_lap);
+            rho.free(NUMBER::Total);
+
+            t_lap.start();
+            fname = path + "/rho_b";
+            density::compute(-1.0, rho, Phi, DensityType::Beta);
+            plt.cubePlot(npts, rho, fname);
+            rho.free(NUMBER::Total);
+            mrcpp::print::time(1, fname, t_lap);
+        }
+    }
+
+    // Plotting NO orbitals
+    if (orb_idx.size() > 0) {
+        if (orb_idx[0] < 0) {
+            // Plotting ALL orbitals
+            for (auto i = 0; i < Phi.size(); i++) {
+                if (not mpi::my_orb(Phi[i])) continue;
+                t_lap.start();
+                std::stringstream name;
+                name << path << "/phi_" << i;
+                plt.cubePlot(npts, Phi[i], name.str());
+                mrcpp::print::time(1, name.str(), t_lap);
+            }
+        } else {
+            // Plotting some orbitals
+            for (auto &i : orb_idx) {
+                if (not mpi::my_orb(Phi[i])) continue;
+                t_lap.start();
+                std::stringstream name;
+                name << path << "/phi_" << i;
+                plt.cubePlot(npts, Phi[i], name.str());
+                mrcpp::print::time(1, name.str(), t_lap);
+            }
+        }
+    }
+
+    mrcpp::print::footer(1, t_tot, 2);
+}
+
+/** @brief Run linear response SCF calculation
+ *
+ * This function will update the perturbed orbitals of the molecule
+ * based on the chosen electronic structure method and perturbation
+ * operator. Each response calculation corresponds to one particular
+ * perturbation operator (could be a vector operator with several
+ * components). Returns true if the calculation converges.
+ *
+ * After convergence the requested linear response properties are computed.
+ *
+ * This function expects a single subsection entry in the "rsp_calculations"
+ * vector of the input.
+ */
+bool driver::rsp::run(const json &json_rsp, Molecule &mol) {
+    print_utils::headline(0, "Computing Linear Response Wavefunction");
+
+    ///////////////////////////////////////////////////////////
+    /////////////   Preparing Unperturbed System   ////////////
+    ///////////////////////////////////////////////////////////
+
+    const auto &json_unpert = json_rsp["unperturbed"];
+    const auto &unpert_fock = json_unpert["fock_operator"];
+    auto unpert_loc = json_unpert["localize"];
+    auto unpert_prec = json_unpert["prec"];
+
+    auto &Phi = mol.getOrbitals();
+    auto &F_mat = mol.getFockMatrix();
+
+    if (unpert_loc) {
+        orbital::localize(unpert_prec, Phi, F_mat);
+    } else {
+        orbital::diagonalize(unpert_prec, Phi, F_mat);
+    }
+
+    FockOperator F_0;
+    driver::build_fock_operator(unpert_fock, mol, F_0, 0);
+    F_0.setup(unpert_prec);
+
+    ///////////////////////////////////////////////////////////
+    //////////////   Preparing Perturbed System   /////////////
+    ///////////////////////////////////////////////////////////
+
+    auto omega = json_rsp["frequency"];
+    auto dynamic = json_rsp["dynamic"];
+    mol.initPerturbedOrbitals(dynamic);
+
+    FockOperator F_1;
+    const auto &json_fock_1 = json_rsp["fock_operator"];
+    driver::build_fock_operator(json_fock_1, mol, F_1, 1);
+
+    const auto &json_pert = json_rsp["perturbation"];
+    auto h_1 = driver::get_operator<3>(json_pert);
+
+    auto success = true;
+    for (auto d = 0; d < 3; d++) {
+        const auto &json_comp = json_rsp["components"][d];
+        F_1.perturbation() = h_1[d];
+
+        ///////////////////////////////////////////////////////////
+        ///////////////   Setting Up Initial Guess   //////////////
+        ///////////////////////////////////////////////////////////
+
+        const auto &json_guess = json_comp["initial_guess"];
+        success = driver::rsp::guess_orbitals(json_guess, mol);
+
+        ///////////////////////////////////////////////////////////
+        /////////////   Optimizing Perturbed Orbitals  ////////////
+        ///////////////////////////////////////////////////////////
+
+        auto rsp_solver = json_comp.find("rsp_solver");
+        if (rsp_solver != json_comp.end()) {
+            auto kain = (*rsp_solver)["kain"];
+            auto method = (*rsp_solver)["method"];
+            auto max_iter = (*rsp_solver)["max_iter"];
+            auto file_chk_x = (*rsp_solver)["file_chk_x"];
+            auto file_chk_y = (*rsp_solver)["file_chk_y"];
+            auto checkpoint = (*rsp_solver)["checkpoint"];
+            auto orth_prec = (*rsp_solver)["orth_prec"];
+            auto start_prec = (*rsp_solver)["start_prec"];
+            auto final_prec = (*rsp_solver)["final_prec"];
+            auto orbital_thrs = (*rsp_solver)["orbital_thrs"];
+            auto property_thrs = (*rsp_solver)["property_thrs"];
+            auto helmholtz_prec = (*rsp_solver)["helmholtz_prec"];
+
+            LinearResponseSolver solver(dynamic);
+            solver.setHistory(kain);
+            solver.setMethodName(method);
+            solver.setMaxIterations(max_iter);
+            solver.setCheckpoint(checkpoint);
+            solver.setCheckpointFile(file_chk_x, file_chk_y);
+            solver.setHelmholtzPrec(helmholtz_prec);
+            solver.setOrbitalPrec(start_prec, final_prec);
+            solver.setThreshold(orbital_thrs, property_thrs);
+            solver.setOrthPrec(orth_prec);
+
+            success = solver.optimize(omega, mol, F_0, F_1);
+        }
+
+        ///////////////////////////////////////////////////////////
+        ////////////   Compute Response Properties   //////////////
+        ///////////////////////////////////////////////////////////
+
+        if (success) {
+            auto json_orbs = json_comp.find("write_orbitals");
+            if (json_orbs != json_comp.end()) driver::rsp::write_orbitals(*json_orbs, mol, dynamic);
+
+            auto json_prop = json_rsp.find("properties");
+            if (json_prop != json_rsp.end()) driver::rsp::calc_properties(*json_prop, mol, d, omega);
+        }
+        mol.getOrbitalsX().clear(); // Clear orbital vector
+        mol.getOrbitalsY().clear(); // Clear orbital vector
+    }
+    F_0.clear();
+    mol.getOrbitalsX_p().reset(); // Release shared_ptr
+    mol.getOrbitalsY_p().reset(); // Release shared_ptr
+
+    return success;
+}
+
+/** @brief Run initial guess calculation for the response orbitals
+ *
+ * This function will update the ground state orbitals and the Fock
+ * matrix of the molecule, based on the chosen initial guess method.
+ * The orbital vector is initialized with the appropriate particle
+ * number and spin. The Fock matrix is initialized to the zero matrix
+ * of the appropriate size.
+ *
+ * This function expects the "initial_guess" subsection of the input.
+ */
+bool driver::rsp::guess_orbitals(const json &json_guess, Molecule &mol) {
+    auto prec = json_guess["prec"];
+    auto type = json_guess["type"];
+    auto mw_xp = json_guess["file_x_p"];
+    auto mw_xa = json_guess["file_x_a"];
+    auto mw_xb = json_guess["file_x_b"];
+    auto mw_yp = json_guess["file_y_p"];
+    auto mw_ya = json_guess["file_y_a"];
+    auto mw_yb = json_guess["file_y_b"];
+    auto file_chk_x = json_guess["file_chk_x"];
+    auto file_chk_y = json_guess["file_chk_y"];
+
+    auto &Phi = mol.getOrbitals();
+    auto &X = mol.getOrbitalsX();
+    auto &Y = mol.getOrbitalsY();
+
+    auto success_x = false;
+    X = orbital::param_copy(Phi);
+    if (type == "chk") {
+        success_x = initial_guess::chk::setup(X, file_chk_x);
+    } else if (type == "mw") {
+        success_x = initial_guess::mw::setup(X, prec, mw_xp, mw_xa, mw_xb);
+    } else if (type == "none") {
+        mrcpp::print::separator(0, '~');
+        print_utils::text(0, "Calculation     ", "Compute initial orbitals");
+        print_utils::text(0, "Method          ", "Zero guess");
+        mrcpp::print::separator(0, '~', 2);
+    } else {
+        MSG_ERROR("Invalid initial guess");
+    }
+    orbital::print(X);
+
+    auto success_y = false;
+    if (&X != &Y) {
+        Y = orbital::param_copy(Phi);
+        if (type == "chk") {
+            success_y = initial_guess::chk::setup(Y, file_chk_y);
+        } else if (type == "mw") {
+            success_y = initial_guess::mw::setup(Y, prec, mw_yp, mw_ya, mw_yb);
+        } else if (type == "none") {
+            mrcpp::print::separator(0, '~');
+            print_utils::text(0, "Calculation     ", "Compute initial orbitals");
+            print_utils::text(0, "Method          ", "Zero guess");
+            mrcpp::print::separator(0, '~', 2);
+        } else {
+            MSG_ERROR("Invalid initial guess");
+        }
+        orbital::print(Y);
+    }
+
+    return (success_x and success_y);
+}
+
+void driver::rsp::write_orbitals(const json &json_orbs, Molecule &mol, bool dynamic) {
+    auto &X = mol.getOrbitalsX();
+    orbital::save_orbitals(X, json_orbs["file_x_p"], SPIN::Paired);
+    orbital::save_orbitals(X, json_orbs["file_x_a"], SPIN::Alpha);
+    orbital::save_orbitals(X, json_orbs["file_x_b"], SPIN::Beta);
+    if (dynamic) {
+        auto &Y = mol.getOrbitalsY();
+        orbital::save_orbitals(Y, json_orbs["file_y_p"], SPIN::Paired);
+        orbital::save_orbitals(Y, json_orbs["file_y_a"], SPIN::Alpha);
+        orbital::save_orbitals(Y, json_orbs["file_y_b"], SPIN::Beta);
+    }
+}
+
 /** @brief Compute linear response properties
  *
  * This function expects the "properties" subsection of the "rsp_calculations"
  * input section, and will compute all properties which are present in this input.
  */
-void driver::calc_rsp_properties(const json &json_prop, Molecule &mol, int dir, double omega) {
+void driver::rsp::calc_properties(const json &json_prop, Molecule &mol, int dir, double omega) {
     Timer t_tot, t_lap;
     auto plevel = Printer::getPrintLevel();
     if (plevel == 1) mrcpp::print::header(1, "Computing Linear Response Properties");
