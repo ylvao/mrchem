@@ -64,8 +64,7 @@ def main():
               user_dict["SCF"]["path_orbitals"],
               user_dict["Response"]["path_checkpoint"],
               user_dict["Response"]["path_orbitals"],
-              'initial_guess',
-              'plots']:
+              user_dict["Plotter"]["path_plots"]]:
         if not os.path.exists(d):
             os.mkdir(d)
 

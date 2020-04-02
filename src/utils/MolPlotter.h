@@ -35,7 +35,7 @@ namespace mrchem {
 
 class MolPlotter final : public mrcpp::Plotter<3> {
 public:
-    MolPlotter(Molecule &mol, mrcpp::Coord<3> &o)
+    MolPlotter(Molecule &mol, const mrcpp::Coord<3> &o)
             : mrcpp::Plotter<3>(o)
             , molecule(&mol) {}
 

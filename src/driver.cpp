@@ -529,18 +529,17 @@ void driver::write_rsp_orbitals(const json &json_orbs, Molecule &mol, bool dynam
 void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
     Timer t_tot, t_lap;
 
-    auto npts = json_plot["plotter"]["points"].get<std::array<int, 3>>();
-    auto O = json_plot["plotter"]["O"].get<mrcpp::Coord<3>>();
-    auto A = json_plot["plotter"]["A"].get<mrcpp::Coord<3>>();
-    auto B = json_plot["plotter"]["B"].get<mrcpp::Coord<3>>();
-    auto C = json_plot["plotter"]["C"].get<mrcpp::Coord<3>>();
-    auto dens_plot = json_plot["density"].get<bool>();
-    auto orb_idx = json_plot["orbital"].get<std::vector<int>>();
+    auto path = json_plot["plotter"]["path_plots"].get<std::string>();
+    auto npts = json_plot["plotter"]["points"];
+    auto O = json_plot["plotter"]["O"];
+    auto A = json_plot["plotter"]["A"];
+    auto B = json_plot["plotter"]["B"];
+    auto C = json_plot["plotter"]["C"];
+    auto dens_plot = json_plot["density"];
+    auto orb_idx = json_plot["orbital"];
 
-    if (dens_plot or orb_idx.size() > 0) {
-        print_utils::headline(1, "Plotting Ground State Quantities");
-        mrcpp::print::header(1, "CubePlot");
-    }
+    print_utils::headline(1, "Plotting Ground State Quantities");
+    mrcpp::print::header(1, "CubePlot");
 
     auto &Phi = mol.getOrbitals();
     MolPlotter plt(mol, O);
@@ -550,7 +549,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
         Density rho(false);
 
         t_lap.start();
-        std::string fname = "plots/rho_t";
+        std::string fname = path + "/rho_t";
         density::compute(-1.0, rho, Phi, DensityType::Total);
         plt.cubePlot(npts, rho, fname);
         rho.free(NUMBER::Total);
@@ -558,21 +557,21 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
 
         if (orbital::size_singly(Phi) > 0) {
             t_lap.start();
-            fname = "plots/rho_s";
+            fname = path + "/rho_s";
             density::compute(-1.0, rho, Phi, DensityType::Spin);
             plt.cubePlot(npts, rho, fname);
             mrcpp::print::time(1, fname, t_lap);
             rho.free(NUMBER::Total);
 
             t_lap.start();
-            fname = "plots/rho_a";
+            fname = path + "/rho_a";
             density::compute(-1.0, rho, Phi, DensityType::Alpha);
             plt.cubePlot(npts, rho, fname);
             mrcpp::print::time(1, fname, t_lap);
             rho.free(NUMBER::Total);
 
             t_lap.start();
-            fname = "plots/rho_b";
+            fname = path + "/rho_b";
             density::compute(-1.0, rho, Phi, DensityType::Beta);
             plt.cubePlot(npts, rho, fname);
             rho.free(NUMBER::Total);
@@ -588,7 +587,7 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
                 if (not mpi::my_orb(Phi[i])) continue;
                 t_lap.start();
                 std::stringstream name;
-                name << "plots/phi_" << i;
+                name << path << "/phi_" << i;
                 plt.cubePlot(npts, Phi[i], name.str());
                 mrcpp::print::time(1, name.str(), t_lap);
             }
@@ -598,14 +597,14 @@ void driver::plot_scf_quantities(const json &json_plot, Molecule &mol) {
                 if (not mpi::my_orb(Phi[i])) continue;
                 t_lap.start();
                 std::stringstream name;
-                name << "plots/phi_" << i;
+                name << path << "/phi_" << i;
                 plt.cubePlot(npts, Phi[i], name.str());
                 mrcpp::print::time(1, name.str(), t_lap);
             }
         }
     }
 
-    if (dens_plot or orb_idx.size() > 0) mrcpp::print::footer(1, t_tot, 2);
+    mrcpp::print::footer(1, t_tot, 2);
 }
 
 /** @brief Compute ground-state properties

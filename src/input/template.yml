@@ -19,6 +19,11 @@ sections:
     docstring: |
       Cube plots of converged orbitals and densities.
     keywords:
+      - name: path_plots
+        type: str
+        default: "plots"
+        docstring: |
+          File path to plot directory.
       - name: points
         type: List[int]
         default: [20, 20, 20]
