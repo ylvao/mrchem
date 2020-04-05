@@ -109,7 +109,7 @@ void initial_guess::mw::project_mo(OrbitalVector &Phi, double prec, const std::s
         Timer t_i;
         if (mpi::my_orb(Phi[i])) {
             std::stringstream orbname;
-            orbname << mo_file << "_" << i;
+            orbname << mo_file << "_idx_" << i;
 
             Orbital phi_i;
             phi_i.loadOrbital(orbname.str());

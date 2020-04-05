@@ -48,7 +48,7 @@ def main():
     this_path = Path(__file__).parent
 
     # create necessary directories
-    for d in ['orbitals', 'initial_guess', 'plots']:
+    for d in ['checkpoint', 'orbitals', 'initial_guess', 'plots']:
         if not os.path.exists(d):
             os.mkdir(d)
 
@@ -272,20 +272,24 @@ def write_scf_guess(user_dict, method_name):
         else:
             print("Invalid zeta:" + guess_suffix)
 
+    scf_dict = user_dict["SCF"]
+    file_dict = user_dict["Files"]
+    print(file_dict["guess_basis"])
     guess_dict = {
-        "prec": user_dict["SCF"]["guess_prec"],
+        "prec": scf_dict["guess_prec"],
         "zeta": zeta,
         "type": guess_type,
         "method": method_name,
-        "localize": user_dict["SCF"]["localize"],
+        "localize": scf_dict["localize"],
         "restricted": user_dict["WaveFunction"]["restricted"],
-        "file_gto_basis": user_dict["Files"]["file_gto_basis"],
-        "file_gto_paired": user_dict["Files"]["file_gto_paired"],
-        "file_gto_alpha": user_dict["Files"]["file_gto_alpha"],
-        "file_gto_beta": user_dict["Files"]["file_gto_beta"],
-        "file_mw_paired": user_dict["Files"]["file_mw_paired"],
-        "file_mw_alpha": user_dict["Files"]["file_mw_alpha"],
-        "file_mw_beta": user_dict["Files"]["file_mw_beta"]
+        "file_chk": scf_dict["path_checkpoint"] + "/phi_scf",
+        "file_basis": file_dict["guess_basis"],
+        "file_gto_p": file_dict["guess_gto_p"],
+        "file_gto_a": file_dict["guess_gto_a"],
+        "file_gto_b": file_dict["guess_gto_b"],
+        "file_phi_p": file_dict["guess_phi_p"] + "_scf",
+        "file_phi_a": file_dict["guess_phi_a"] + "_scf",
+        "file_phi_b": file_dict["guess_phi_b"] + "_scf"
     }
     return guess_dict
 
@@ -319,6 +323,8 @@ def write_scf_solver(user_dict, method_name):
         "max_iter": user_dict["SCF"]["max_iter"],
         "rotation": user_dict["SCF"]["rotation"],
         "localize": user_dict["SCF"]["localize"],
+        "file_chk": user_dict["SCF"]["path_checkpoint"] + "/phi_scf",
+        "checkpoint": user_dict["SCF"]["write_checkpoint"],
         "start_prec": start_prec,
         "final_prec": final_prec,
         "energy_thrs": energy_thrs,
@@ -521,10 +527,16 @@ def write_scf_calculation(user_dict, mol_dict):
     method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
 
     scf_dict = {}
-    scf_dict["write_orbitals"] = user_dict["SCF"]["write_orbitals"]
-    scf_dict["file_orbitals"] = user_dict["Files"]["file_orbitals"]
     scf_dict["fock_operator"] = write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs)
     scf_dict["initial_guess"] = write_scf_guess(user_dict, method_name)
+
+    path_orbitals = user_dict["SCF"]["path_orbitals"]
+    if user_dict["SCF"]["write_orbitals"]:
+        scf_dict["write_orbitals"] = {
+            "file_phi_p": path_orbitals + "/phi_p_scf",
+            "file_phi_a": path_orbitals + "/phi_a_scf",
+            "file_phi_b": path_orbitals + "/phi_b_scf"
+        }
 
     if user_dict["SCF"]["run"]:
         scf_dict["scf_solver"] = write_scf_solver(user_dict, method_name)
@@ -632,8 +644,6 @@ def write_rsp_calc(omega, user_dict, mol_dict):
     rsp_calc["frequency"] = omega
     rsp_calc["dynamic"] = (omega > 1.0e-12)
     rsp_calc["directions"] = user_dict["Response"]["directions"]
-    rsp_calc["file_orbitals"] = user_dict["Files"]["file_orbitals"]
-    rsp_calc["write_orbitals"] = user_dict["Response"]["write_orbitals"]
     rsp_calc["fock_operator"] = write_rsp_fock(user_dict, mol_dict, wf_method, dft_funcs)
     rsp_calc["initial_guess"] = write_rsp_guess(user_dict, method_name)
 

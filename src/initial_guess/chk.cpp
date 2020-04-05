@@ -23,40 +23,29 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#pragma once
+#include <MRCPP/Printer>
 
-#include "SCFSolver.h"
+#include "chk.h"
 
-/** @class LinearResponseSolver
- *
- */
+#include "qmfunctions/orbital_utils.h"
+#include "utils/print_utils.h"
 
 namespace mrchem {
 
-class Molecule;
-class FockOperator;
+bool initial_guess::chk::setup(OrbitalVector &Phi, const std::string &chk_file) {
+    mrcpp::print::separator(0, '~');
+    print_utils::text(0, "Calculation     ", "Compute initial orbitals");
+    print_utils::text(0, "Method          ", "Read checkpoint file");
+    print_utils::text(0, "Checkpoint file ", chk_file);
+    mrcpp::print::separator(0, '~', 2);
 
-class LinearResponseSolver final : public SCFSolver {
-public:
-    explicit LinearResponseSolver(bool dyn = false)
-            : dynamic(dyn) {}
-    ~LinearResponseSolver() override = default;
-
-    bool optimize(double omega, Molecule &mol, FockOperator &F_0, FockOperator &F_1);
-    void setOrthPrec(double prec) { this->orth_prec = prec; }
-    void setCheckpointFile(const std::string &file_x, const std::string &file_y) {
-        this->chkFileX = file_x;
-        this->chkFileY = file_y;
+    auto success = true;
+    auto Psi = orbital::load_orbitals(chk_file);
+    if (Psi.size() > 0) {
+        success = orbital::compare(Psi, Phi);
+        Phi = Psi;
     }
-
-protected:
-    const bool dynamic;
-    double orth_prec{mrcpp::MachineZero};
-    std::string chkFileX; ///< Name of checkpoint file
-    std::string chkFileY; ///< Name of checkpoint file
-
-    void printProperty() const;
-    void printParameters(double omega, const std::string &oper) const;
-};
+    return success;
+}
 
 } // namespace mrchem

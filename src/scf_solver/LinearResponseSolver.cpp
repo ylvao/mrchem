@@ -157,6 +157,9 @@ bool LinearResponseSolver::optimize(double omega, Molecule &mol, FockOperator &F
 
             // Prepare for next iteration
             X_n = orbital::add(1.0, X_n, 1.0, dX_n);
+
+            // Save checkpoint file
+            if (this->checkpoint) orbital::save_orbitals(X_n, this->chkFileX);
         }
 
         if (dynamic and plevel == 1) mrcpp::print::separator(1, '-');
@@ -205,6 +208,9 @@ bool LinearResponseSolver::optimize(double omega, Molecule &mol, FockOperator &F
 
             // Prepare for next iteration
             Y_n = orbital::add(1.0, Y_n, 1.0, dY_n);
+
+            // Save checkpoint file
+            if (this->checkpoint) orbital::save_orbitals(Y_n, this->chkFileY);
         }
 
         // Compute property
@@ -326,6 +332,7 @@ void LinearResponseSolver::printParameters(double omega, const std::string &oper
     print_utils::text(0, "Calculation        ", o_calc.str());
     if (dynamic) print_utils::text(0, "Frequency          ", o_omega.str());
     print_utils::text(0, "Method             ", this->methodName);
+    print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
     print_utils::text(0, "Perturbation       ", oper);
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());

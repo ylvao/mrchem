@@ -350,11 +350,7 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, int spi
         if ((Phi[i].spin() == spin) or (spin < 0)) {
             Timer t1;
             std::stringstream orbname;
-            orbname << file;
-            if (spin == SPIN::Paired) orbname << "_p";
-            if (spin == SPIN::Alpha) orbname << "_a";
-            if (spin == SPIN::Beta) orbname << "_b";
-            orbname << "_" << n;
+            orbname << file << "_idx_" << i;
             if (mpi::my_orb(Phi[i])) Phi[i].saveOrbital(orbname.str());
             print_utils::qmfunction(2, "'" + orbname.str() + "'", Phi[i], t1);
             n++;
@@ -384,7 +380,7 @@ OrbitalVector orbital::load_orbitals(const std::string &file, int n_orbs) {
         Timer t1;
         Orbital phi_i;
         std::stringstream orbname;
-        orbname << file << "_" << i;
+        orbname << file << "_idx_" << i;
         phi_i.loadOrbital(orbname.str());
         phi_i.setRankID(mpi::orb_rank);
         if (phi_i.hasReal() or phi_i.hasImag()) {

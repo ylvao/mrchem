@@ -25,38 +25,23 @@
 
 #pragma once
 
-#include "SCFSolver.h"
+#include "qmfunctions/Orbital.h"
+#include "qmfunctions/qmfunction_fwd.h"
 
-/** @class LinearResponseSolver
+/** @file chk.h
  *
+ * @brief Module for generating initial guess from checkpoint file
+ *
+ * The initial_guess::chk namespace provides functionality to setup an initial
+ * guess from orbitals dumped in a checkpoint file in a precious calculation.
  */
 
 namespace mrchem {
+namespace initial_guess {
+namespace chk {
 
-class Molecule;
-class FockOperator;
+bool setup(OrbitalVector &Phi, const std::string &chk_file);
 
-class LinearResponseSolver final : public SCFSolver {
-public:
-    explicit LinearResponseSolver(bool dyn = false)
-            : dynamic(dyn) {}
-    ~LinearResponseSolver() override = default;
-
-    bool optimize(double omega, Molecule &mol, FockOperator &F_0, FockOperator &F_1);
-    void setOrthPrec(double prec) { this->orth_prec = prec; }
-    void setCheckpointFile(const std::string &file_x, const std::string &file_y) {
-        this->chkFileX = file_x;
-        this->chkFileY = file_y;
-    }
-
-protected:
-    const bool dynamic;
-    double orth_prec{mrcpp::MachineZero};
-    std::string chkFileX; ///< Name of checkpoint file
-    std::string chkFileY; ///< Name of checkpoint file
-
-    void printProperty() const;
-    void printParameters(double omega, const std::string &oper) const;
-};
-
+} // namespace chk
+} // namespace initial_guess
 } // namespace mrchem
