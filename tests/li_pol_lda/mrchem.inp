@@ -32,7 +32,7 @@ Response {
   kain = 3                        # Length of KAIN iterative history
   max_iter = 10
   orbital_thrs = 1.0e-2           # Convergence threshold in orbital residual
-  directions = [0,0,1]
+  run = [false,false,true]
 }
 
 Polarizability {

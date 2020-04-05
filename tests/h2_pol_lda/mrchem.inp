@@ -31,10 +31,10 @@
         "kain": 3,
         "max_iter": 10,
         "orbital_thrs": 0.01,
-        "directions": [
-            0,
-            0,
-            1
+        "run": [
+            false,
+            false,
+            true
         ]
     }
 }
