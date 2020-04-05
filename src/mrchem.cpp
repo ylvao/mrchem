@@ -36,8 +36,8 @@ int main(int argc, char **argv) {
     Timer timer;
     Molecule mol;
     driver::init_molecule(json_mol, mol);
-    if (driver::run_scf(json_scf, mol)) {
-        for (const auto &json_rsp : json_rsps) driver::run_rsp(json_rsp, mol);
+    if (driver::scf::run(json_scf, mol)) {
+        for (const auto &json_rsp : json_rsps) driver::rsp::run(json_rsp, mol);
     }
     driver::print_properties(mol);
     mpi::barrier(mpi::comm_orb);
