@@ -350,7 +350,7 @@ void orbital::save_orbitals(OrbitalVector &Phi, const std::string &file, int spi
         if ((Phi[i].spin() == spin) or (spin < 0)) {
             Timer t1;
             std::stringstream orbname;
-            orbname << file << "_idx_" << i;
+            orbname << file << "_idx_" << n;
             if (mpi::my_orb(Phi[i])) Phi[i].saveOrbital(orbname.str());
             print_utils::qmfunction(2, "'" + orbname.str() + "'", Phi[i], t1);
             n++;
