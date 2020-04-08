@@ -55,9 +55,11 @@ void CoulombPotential::setup(double prec) {
         setupGlobalDensity(prec);
         setupGlobalPotential(prec);
     } else {
-        setupLocalDensity(prec);
-        QMFunction V = setupLocalPotential(prec);
-        allreducePotential(prec, V);
+        // Keep each local contribution a bit
+        // more precise than strictly necessary
+        setupLocalDensity(0.1 * prec);
+        QMFunction V = setupLocalPotential(0.1 * prec);
+        allreducePotential(0.1 * prec, V);
     }
 }
 
