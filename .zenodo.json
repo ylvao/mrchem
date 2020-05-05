@@ -1,0 +1,42 @@
+{
+  "title": "MRChem: MultiResolution Chemistry",
+  "access_right": "open",
+  "license": {
+    "id": "LGPL-3.0"
+  },
+  "creators": [
+    {
+      "affiliation": "Hylleraas Centre for Quantum Molecular Sciences, UiT - The Arctic University of Norway",
+      "name": "Frediani, Luca"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Bast, Radovan"
+    },
+    {
+      "name": "Bjorgve, Magnar"
+    },
+    {
+      "name": "Di Remigio, Roberto"
+    },
+    {
+      "name": "Durdek, Antoine"
+    },
+    {
+      "name": "Gerez, Gabriel"
+    },
+    {
+      "name": "Jensen, Stig Rune"
+    },
+    {
+      "name": "Juselius, Jonas"
+    },
+    {
+      "name": "Monstad, Rune"
+    },
+    {
+      "name": "Wind, Peter"
+    }
+  ]
+}
