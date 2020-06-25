@@ -1,4 +1,7 @@
-find_package(Eigen3 3.3 CONFIG QUIET NO_CMAKE_PACKAGE_REGISTRY)
+find_package(Eigen3 3.3 CONFIG QUIET
+  NO_CMAKE_PATH
+  NO_CMAKE_PACKAGE_REGISTRY
+  )
 if(TARGET Eigen3::Eigen)
   message(STATUS "Using Eigen3: ${EIGEN3_ROOT_DIR} (version ${Eigen3_VERSION})")
 else()
