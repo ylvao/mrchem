@@ -1,5 +1,7 @@
-find_package(nlohmann_json 3.6 CONFIG QUIET)
-
+find_package(nlohmann_json 3.6 CONFIG QUIET
+  NO_CMAKE_PATH
+  NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+  )
 if(TARGET nlohmann_json::nlohmann_json)
   get_target_property(
     _loc

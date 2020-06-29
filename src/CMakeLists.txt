@@ -23,6 +23,15 @@ list(APPEND _public_headers
   ${PROJECT_BINARY_DIR}/version.h
   )
 
+# RPATH fixing
+file(RELATIVE_PATH _rel ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR} ${CMAKE_INSTALL_PREFIX})
+if(APPLE)
+  set(_rpath "@loader_path/${_rel}")
+else()
+  set(_rpath "\$ORIGIN/${_rel}")
+endif()
+file(TO_NATIVE_PATH "${_rpath}/${CMAKE_INSTALL_LIBDIR}" MRChem_RPATH)
+
 add_subdirectory(chemistry)
 add_subdirectory(analyticfunctions)
 add_subdirectory(qmfunctions)
@@ -32,10 +41,11 @@ add_subdirectory(scf_solver)
 add_subdirectory(utils)
 
 target_link_libraries(mrchem
-  PUBLIC
+  PRIVATE
     Eigen3::Eigen
-    MRCPP::mrcpp
+  PUBLIC
     XCFun::xcfun
+    MRCPP::mrcpp
     nlohmann_json::nlohmann_json
   )
 
@@ -67,41 +77,19 @@ install(
 # <<< Build MRChem executables >>>
 add_executable(mrchem.x mrchem.cpp)
 
-set_target_properties(mrchem.x
-  PROPERTIES
-    MACOSX_RPATH ON
-    SKIP_BUILD_RPATH OFF
-    BUILD_WITH_INSTALL_RPATH OFF
-    INSTALL_RPATH "${MRChem_RPATH}"
-    INSTALL_RPATH_USE_LINK_PATH ON
-  )
-
 target_link_libraries(mrchem.x
   PRIVATE
     mrchem
-    MRCPP::mrcpp
-    XCFun::xcfun
-    nlohmann_json::nlohmann_json
     $<$<TARGET_EXISTS:MPI::MPI_CXX>:MPI::MPI_CXX>
     $<$<TARGET_EXISTS:OpenMP::OpenMP_CXX>:OpenMP::OpenMP_CXX>
   )
 
-# RPATH fixing
-file(RELATIVE_PATH _rel ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR} ${CMAKE_INSTALL_PREFIX})
-if(APPLE)
-  set(_rpath "@loader_path/${_rel}")
-else()
-  set(_rpath "\$ORIGIN/${_rel}")
-endif()
-file(TO_NATIVE_PATH "${_rpath}/${CMAKE_INSTALL_LIBDIR}" MRChem_RPATH)
-
 set_target_properties(mrchem.x
   PROPERTIES
     MACOSX_RPATH ON
     SKIP_BUILD_RPATH OFF
     BUILD_WITH_INSTALL_RPATH OFF
     INSTALL_RPATH "${MRChem_RPATH}"
-    INSTALL_RPATH_USE_LINK_PATH ON
   )
 
 install(
