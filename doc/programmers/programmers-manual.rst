@@ -1,6 +1,9 @@
+:orphan:
+
 =============================
 MRChem Programmers' Manual
 =============================
+
 
 .. toctree::
 
