@@ -39,7 +39,8 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.bibtex',
-    'breathe'
+    'breathe',
+    'recommonmark'
 ]
 breathe_projects = { 'MRChem': 'xml' }
 breathe_default_project = 'MRChem'
@@ -51,17 +52,6 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-
-# Markdown support
-
-from recommonmark.parser import CommonMarkParser
-
-# The suffix of source filenames.
-source_suffix = ['.rst', '.md']
-
-source_parsers = {
-            '.md': CommonMarkParser,
-            }
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
