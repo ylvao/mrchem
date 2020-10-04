@@ -58,6 +58,10 @@ def POLARIZABILITY(frequency):
             "tensor")
 
 
+def GEOMETRIC_DERIVATIVE(index, comp):
+    return ("output", "properties", "geometric_derivative", f"geom-{index}", comp)
+
+
 def run(options, *, input_file, filters=None, extra_args=None):
     launcher = "mrchem"
     launcher_full_path = Path(options.binary_dir).joinpath(launcher).resolve()

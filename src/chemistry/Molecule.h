@@ -43,6 +43,7 @@
 
 #include "Nucleus.h"
 #include "properties/DipoleMoment.h"
+#include "properties/GeometricDerivative.h"
 #include "properties/Magnetizability.h"
 #include "properties/NMRShielding.h"
 #include "properties/OrbitalEnergies.h"
@@ -113,12 +114,14 @@ public:
     Polarizability &getPolarizability(const std::string &id) { return this->polarizability.at(id); }
     Magnetizability &getMagnetizability(const std::string &id) { return this->magnetizability.at(id); }
     NMRShielding &getNMRShielding(const std::string &id) { return this->nmr_shielding.at(id); }
+    GeometricDerivative &getGeometricDerivative(const std::string &id) { return this->geometric_derivative.at(id); }
 
     PropertyMap<DipoleMoment> &getDipoleMoments() { return this->dipole; }
     PropertyMap<QuadrupoleMoment> &getQuadrupoleMoments() { return this->quadrupole; }
     PropertyMap<Polarizability> &getPolarizabilities() { return this->polarizability; }
     PropertyMap<Magnetizability> &getMagnetizabilities() { return this->magnetizability; }
     PropertyMap<NMRShielding> &getNMRShieldings() { return this->nmr_shielding; }
+    PropertyMap<GeometricDerivative> &getGeometricDerivatives() { return this->geometric_derivative; }
 
 protected:
     int charge{0};
@@ -138,6 +141,7 @@ protected:
     PropertyMap<Polarizability> polarizability{};
     PropertyMap<Magnetizability> magnetizability{};
     PropertyMap<NMRShielding> nmr_shielding{};
+    PropertyMap<GeometricDerivative> geometric_derivative{};
 
     void readCoordinateFile(const std::string &file);
     void readCoordinateString(const std::vector<std::string> &coord_str);
