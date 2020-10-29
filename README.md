@@ -24,7 +24,7 @@ For optimal performance it is recommended to build from source, as the packaged
 builds are quite generic without architecture specific optimizations.
 
 
-### From source including code examples
+### From source
 
 To build MRChem from source with MPI+OpenMP parallelization:
 
@@ -63,7 +63,7 @@ To list all available versions
 
 ### Using Spack
 
-To install MRCPP in a Spack environment `myenv`:
+To install MRChem in a Spack environment `myenv`:
 
     $ spack env create myenv
     $ spack env activate myenv
@@ -88,4 +88,17 @@ available):
 See
 [EasyBuild](https://github.com/easybuilders/easybuild-easyconfigs/tree/develop/easybuild/easyconfigs/m/MRChem)
 for available `<versions>` and `<toolchains>`.
+
+
+### Using Singularity
+
+To download MRChem image from Singularity Hub:
+
+    $ singularity pull --name mrchem-omp.sif shub://MRChemSoft/mrchem-singularity:v1.0.0-nompi
+    $ singularity pull --name mrchem-mpi.sif shub://MRChemSoft/mrchem-singularity:v1.0.0-openmpi4.0.5
+
+Note that the MPI image requires that a compatible MPI library is installed and
+available on the host. For information on how to launch the container:
+
+    $ singularity --run-help mrchem-mpi.sif
 
