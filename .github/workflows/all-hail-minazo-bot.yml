@@ -8,9 +8,7 @@ jobs:
   danger:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+    - uses: actions/checkout@v1
         
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
@@ -25,5 +23,5 @@ jobs:
     - name: Run Danger
       env:
         BUNDLE_GEMFILE: ".github/Gemfile"
-        DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_API_TOKEN }}
       run: bundle exec danger --dangerfile=.github/Dangerfile
