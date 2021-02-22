@@ -68,11 +68,11 @@ void QMFunction::alloc(int type, mrcpp::MultiResolutionAnalysis<3> *mra) {
     if (mra == nullptr) MSG_ABORT("Invalid argument");
     if (type == NUMBER::Real or type == NUMBER::Total) {
         if (hasReal()) MSG_ABORT("Real part already allocated");
-        this->func_ptr->re = new mrcpp::FunctionTree<3>(*mra, this->func_ptr->shared_mem);
+        this->func_ptr->re = new mrcpp::FunctionTree<3>(*mra, this->func_ptr->shared_mem_re);
     }
     if (type == NUMBER::Imag or type == NUMBER::Total) {
         if (hasImag()) MSG_ABORT("Imaginary part already allocated");
-        this->func_ptr->im = new mrcpp::FunctionTree<3>(*mra, this->func_ptr->shared_mem);
+        this->func_ptr->im = new mrcpp::FunctionTree<3>(*mra, this->func_ptr->shared_mem_im);
     }
 }
 
@@ -80,12 +80,13 @@ void QMFunction::free(int type) {
     if (type == NUMBER::Real or type == NUMBER::Total) {
         if (hasReal()) delete this->func_ptr->re;
         this->func_ptr->re = nullptr;
+        if (this->func_ptr->shared_mem_re) this->func_ptr->shared_mem_re->clear();
     }
     if (type == NUMBER::Imag or type == NUMBER::Total) {
         if (hasImag()) delete this->func_ptr->im;
         this->func_ptr->im = nullptr;
+        if (this->func_ptr->shared_mem_im) this->func_ptr->shared_mem_im->clear();
     }
-    if (this->func_ptr->shared_mem and !hasImag() and !hasReal()) this->func_ptr->shared_mem->clear();
 }
 
 /** @brief Returns the orbital meta data
