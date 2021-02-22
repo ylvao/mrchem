@@ -56,31 +56,40 @@ TEST_CASE("ReactionOperator", "[reaction_operator]") {
     const double prec = 1.0e-3;
     const double thrs = 1.0e-8;
 
-    // initialize operators, kain history and linearity
+    // initialize operators
     auto P_p = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
     std::shared_ptr<mrcpp::DerivativeOperator<3>> D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
-    auto history = 4;
-    // Initialize cavity and dielectric constants
-    std::vector<mrcpp::Coord<3>> coords = {{0.0, 0.0, 0.0}};
-    std::vector<double> R = {1.0};
+
+    // initialize spherical cavity
     double slope = 0.2;
-    auto sphere = std::make_shared<Cavity>(coords, R, slope);
+    std::vector<double> radius = {1.0};
+    std::vector<mrcpp::Coord<3>> coords = {{0.0, 0.0, 0.0}};
+    Cavity sphere(coords, radius, slope);
 
-    auto PT = std::make_shared<PeriodicTable>();
-    auto N = Nucleus(PT->getElement(1), coords[0]);
-    Nuclei molecule;
-    molecule.push_back(N);
-
-    auto Phi_p = std::make_shared<OrbitalVector>();
-
-    Phi_p->push_back(Orbital(SPIN::Paired));
-    HydrogenFunction f(1, 0, 0);
-    qmfunction::project((*Phi_p)[0], f, NUMBER::Real, prec);
+    // initialize dielectric function
     double eps_in = 1.0;
     double eps_out = 2.0;
-    Permittivity dielectric_func(*sphere, eps_in, eps_out, "exponential");
+    Permittivity dielectric_func(sphere, eps_in, eps_out, "exponential");
 
-    SCRF helper(dielectric_func, molecule, P_p, D_p, prec, history, 100, true, "dynamic", "scrf", "total");
+    // initialize molecule containing single hydrogen
+    PeriodicTable PT;
+    Nucleus H(PT.getElement(1), coords[0]);
+    Nuclei molecule;
+    molecule.push_back(H);
+
+    // initialize orbital vector
+    auto Phi_p = std::make_shared<OrbitalVector>();
+    auto &Phi = *Phi_p;
+    Phi.push_back(Orbital(SPIN::Paired));
+    mpi::distribute(Phi);
+
+    // project analytic 1s orbital
+    HydrogenFunction f(1, 0, 0);
+    if (mpi::my_orb(Phi[0])) qmfunction::project(Phi[0], f, NUMBER::Real, prec);
+
+    int kain = 4;
+    SCRF helper(dielectric_func, molecule, P_p, D_p, prec, kain, 100, true, "dynamic", "scrf", "total");
+
     auto Reo = std::make_shared<ReactionOperator>(Phi_p, helper);
     Reo->setTesting();
     Reo->setup(prec);
