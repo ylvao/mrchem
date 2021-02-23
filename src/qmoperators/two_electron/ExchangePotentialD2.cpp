@@ -80,8 +80,6 @@ Orbital ExchangePotentialD2::apply(Orbital phi_p) {
         return phi_p.paramCopy();
     }
 
-    int id_shift = 10000;
-
     Timer timer;
     OrbitalVector &Phi = *this->orbitals;
     OrbitalVector &X = *this->orbitals_x;
@@ -100,9 +98,9 @@ Orbital ExchangePotentialD2::apply(Orbital phi_p) {
         Orbital &x_i = X[i];
         Orbital &y_i = Y[i];
 
-        if (not mpi::my_orb(phi_i)) PhiBank.get_orb(i + id_shift, phi_i, 1);
-        if (not mpi::my_orb(x_i)) PhiBank.get_orb(i + 2 * id_shift, x_i, 1);
-        if (not mpi::my_orb(y_i)) PhiBank.get_orb(i + 3 * id_shift, y_i, 1);
+        if (not mpi::my_orb(phi_i)) PhiBank.get_orb(i, phi_i, 1);
+        if (not mpi::my_orb(x_i)) XBank.get_orb(i, x_i, 1);
+        if (not mpi::my_orb(y_i)) YBank.get_orb(i, y_i, 1);
 
         double spin_fac = getSpinFactor(phi_i, phi_p);
         if (std::abs(spin_fac) >= mrcpp::MachineZero) {
@@ -141,8 +139,6 @@ Orbital ExchangePotentialD2::dagger(Orbital phi_p) {
         return phi_p.paramCopy();
     }
 
-    int id_shift = 10000;
-
     Timer timer;
     OrbitalVector &Phi = *this->orbitals;
     OrbitalVector &X = *this->orbitals_x;
@@ -161,9 +157,9 @@ Orbital ExchangePotentialD2::dagger(Orbital phi_p) {
         Orbital &x_i = X[i];
         Orbital &y_i = Y[i];
 
-        if (not mpi::my_orb(phi_i)) PhiBank.get_orb(i + id_shift, phi_i, 1);
-        if (not mpi::my_orb(x_i)) PhiBank.get_orb(i + 2 * id_shift, x_i, 1);
-        if (not mpi::my_orb(y_i)) PhiBank.get_orb(i + 3 * id_shift, y_i, 1);
+        if (not mpi::my_orb(phi_i)) PhiBank.get_orb(i, phi_i, 1);
+        if (not mpi::my_orb(x_i)) XBank.get_orb(i, x_i, 1);
+        if (not mpi::my_orb(y_i)) YBank.get_orb(i, y_i, 1);
 
         double spin_fac = getSpinFactor(phi_i, phi_p);
         if (std::abs(spin_fac) >= mrcpp::MachineZero) {
