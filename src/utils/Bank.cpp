@@ -960,8 +960,9 @@ void BankAccount::clear(int iclient, MPI_Comm comm) {
 
 // creator. NB: collective
 TaskManager::TaskManager(int ntasks, int iclient, MPI_Comm comm) {
-    this->account_id = dataBank.openTaskManager(ntasks, iclient, comm);
     this->n_tasks = ntasks;
+    if (bank_size == 0) return;
+    this->account_id = dataBank.openTaskManager(ntasks, iclient, comm);
 #ifdef MRCHEM_HAS_MPI
     MPI_Barrier(comm);
 #endif
@@ -970,27 +971,31 @@ TaskManager::TaskManager(int ntasks, int iclient, MPI_Comm comm) {
 // destructor
 TaskManager::~TaskManager() {
     // The account will in reality not be removed before everybody has sent a delete message
+    if (this->account_id < 0) return;
     dataBank.closeTaskManager(this->account_id);
 }
 
 int TaskManager::next_task() {
     int nexttask = 0;
 #ifdef MRCHEM_HAS_MPI
-    MPI_Status status;
-    int messages[message_size];
-    messages[0] = GET_NEXTTASK;
-    messages[1] = account_id;
-    MPI_Send(messages, message_size, MPI_INT, task_bank, 0, comm_bank);
-    MPI_Recv(&nexttask, 1, MPI_INT, task_bank, 1, comm_bank, &status);
-#else
+    if (this->account_id >= 0) {
+        MPI_Status status;
+        int messages[message_size];
+        messages[0] = GET_NEXTTASK;
+        messages[1] = account_id;
+        MPI_Send(messages, message_size, MPI_INT, task_bank, 0, comm_bank);
+        MPI_Recv(&nexttask, 1, MPI_INT, task_bank, 1, comm_bank, &status);
+        return nexttask;
+    }
+#endif
     nexttask = this->task++;
     if (nexttask >= this->n_tasks) nexttask = -1;
-#endif
     return nexttask;
 }
 
 void TaskManager::put_readytask(int i, int j) {
 #ifdef MRCHEM_HAS_MPI
+    if (this->account_id < 0) return;
     MPI_Status status;
     int messages[message_size];
     messages[0] = PUT_READYTASK;
@@ -1003,6 +1008,7 @@ void TaskManager::put_readytask(int i, int j) {
 
 void TaskManager::del_readytask(int i, int j) {
 #ifdef MRCHEM_HAS_MPI
+    if (this->account_id < 0) return;
     MPI_Status status;
     int messages[message_size];
     messages[0] = DEL_READYTASK;
@@ -1016,6 +1022,7 @@ void TaskManager::del_readytask(int i, int j) {
 std::vector<int> TaskManager::get_readytask(int i, int del) {
     std::vector<int> readytasks;
 #ifdef MRCHEM_HAS_MPI
+    if (this->account_id < 0) return readytasks;
     MPI_Status status;
     int messages[message_size];
     messages[0] = GET_READYTASK;
