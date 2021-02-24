@@ -17,6 +17,8 @@ using PoissonOperator = mrcpp::PoissonOperator;
 using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
 using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
+using namespace std;
+
 namespace mrchem {
 
 /** @brief constructor
@@ -94,8 +96,7 @@ Orbital ExchangePotentialD1::apply(Orbital phi_p) {
         return calcExchange(phi_p);
     } else {
         println(4, "Precomputed exchange");
-        qmfunction::deep_copy(out_p, this->exchange[i]); // TODO: check if reference kan be used
-        return out_p;
+        return this->exchange[i];
     }
 }
 
@@ -115,15 +116,14 @@ Orbital ExchangePotentialD1::dagger(Orbital phi_p) {
  * The exchange potential is (pre)computed among the orbitals that define the operator
  */
 void ExchangePotentialD1::setupInternal(double prec) {
-    Timer timerT, timerS(false), t_calc(false);
+    Timer timerT, timerS(false), timerR(false), t_calc(false), t_add(false), t_get(false), t_wait(false);
     setApplyPrec(prec);
     if (this->exchange.size() != 0) MSG_ERROR("Exchange not properly cleared");
 
-    int id_shift = 100000; // temporary shift for not colliding with existing ids
     OrbitalVector &Ex = this->exchange;
     OrbitalVector &Phi = *this->orbitals;
     BankAccount ExBank;
-
+    int N = Phi.size();
     // use fixed exchange_prec if set explicitly, otherwise use setup prec
     double precf = (this->exchange_prec > 0.0) ? this->exchange_prec : prec;
     // adjust precision since we sum over orbitals
@@ -140,118 +140,214 @@ void ExchangePotentialD1::setupInternal(double prec) {
     }
     mrcpp::print::time(4, "Exchange time diagonal", timerD);
 
-    // total size (kB) of all tree saved in bank by this process so far (until read)
-    int totsize = 0;
-    // size allowed to be stored before going to the bank for withdrawals (5000 MB).
-    int maxSize = 5000 * 1024 * mpi::bank_size / mpi::orb_size;
+    // We divide all the exchange contributions into a fixed number of tasks.
+    // all "j" orbitals are fetched and stored, and used together with one "i" orbital
+    // At the end of a task, the Exchange for j is summed up with the contributions
+    // stored in the bank, and then stored.
+    // When all tasks are finished, each MPI fetch and sum the contributions to its
+    // own exchange.
 
-    int foundcount = 0;
-    int N = Phi.size();
-    bool use_sym = true;
-    for (int j = 0; j < N; j++) {
-        Orbital &phi_j = Phi[j];
-        if (not mpi::my_orb(phi_j)) continue; // compute only own j
-        for (int i = 0; i < N; i++) {
-            if (i == j) continue;
-            // compute only half of matrix (in band where i-j < size/2 %size)
-            if (i > j + (N - 1) / 2 and i > j and use_sym) continue;
-            if (i > j - (N + 1) / 2 and i < j and use_sym) continue;
+    // make a set of tasks
+    // We use symmetry: each pair (i,j) must be used once only. Only j<i
+    // Divide into square blocks, with the diagonal blocks taken at the end (because they are faster to compute)
+    int block_size; // NB: block_size*block_size intermediate exchange results are stored temporarily
+    block_size = static_cast<int>(min(16.0, max(2.0, std::sqrt(N * N / (14 * orb_size)))));
+
+    int iblocks = (N + block_size - 1) / block_size;
+    int ntasksmax = ((iblocks - 1) * iblocks) / 2 + iblocks * (block_size * (block_size - 1) / 2);
+    std::vector<std::vector<int>> itasks(ntasksmax); // the i values (orbitals) of each block
+    std::vector<std::vector<int>> jtasks(ntasksmax); // the j values (orbitals) of each block
+
+    int task = 0;
+    // make a path for tasks that follow diagonals, in order to maximize the spread of orbitals treated
+    for (int ib = 0; ib < (iblocks + 1) / 2; ib++) {
+        for (int ij = 0; ij < iblocks; ij++) {
+            int j0 = ij;
+            int i0 = ib + ij + 1;
+            if (i0 * block_size >= N) {
+                // continue in "symmetrical" part
+                j0 = ij + ib + 1 - iblocks;
+                i0 = ij;
+            }
+            for (int jj = 0; jj < block_size; jj++) {
+                int jjj = j0 * block_size + jj;
+                if (jjj >= N) continue;
+                jtasks[task].push_back(jjj);
+            }
+            for (int ii = 0; ii < block_size; ii++) {
+                int iii = i0 * block_size + ii;
+                if (iii >= N) continue;
+                itasks[task].push_back(iii);
+            }
+            task++;
+            if (task >= (iblocks * (iblocks - 1) / 2)) break;
+        }
+        if (task >= (iblocks * (iblocks - 1) / 2)) break;
+    }
+
+    // add diagonal blocks:
+    // we make those tasks smaller (1x1 blocks), in order to minimize the time wating for the last task.
+    for (int i = 0; i < N; i += block_size) {
+        int j = i;
+        for (int jj = j; jj < j + block_size and jj < N; jj++) {
+            for (int ii = i; ii < i + block_size and ii < N; ii++) {
+                if (ii <= jj) continue; // only jj<ii is computed
+                itasks[task].push_back(ii);
+                jtasks[task].push_back(jj);
+                task++;
+            }
+        }
+    }
+    assert(task <= ntasksmax);
+    int ntasks = task;
+
+    TaskManager tasksMaster(ntasks);
+    int tcnt = 0;
+    int excnt = 0;
+    while (true) {
+        task = tasksMaster.next_task();
+        if (task < 0) break;
+        // we fetch all required i (but only one j at a time)
+        tcnt++;
+        OrbitalVector iorb_vec;
+        int i0 = -1;
+        for (int i = 0; i < itasks[task].size(); i++) {
+            int iorb = itasks[task][i];
+            i0 = iorb;
             Orbital phi_i;
-            PhiBank.get_orb(i, phi_i, 1); // fetch also own orbitals (simpler for clean up, and they are few)
-
-            Orbital ex_jji = phi_i.paramCopy();
-            Orbital ex_iij = phi_j.paramCopy();
-            t_calc.resume();
-            if (use_sym) {
-                // compute K_iij and K_jji in one operation
-                calcExchange_kij(precf, phi_i, phi_i, phi_j, ex_iij, &ex_jji);
+            timerR.resume();
+            if (bank_size > 0) {
+                PhiBank.get_orb(iorb, phi_i, 1); // fetch also own orbitals (simpler for clean up, and they are few)
+                iorb_vec.push_back(phi_i);
             } else {
-                // compute only own contributions (K_jji is not computed)
-                calcExchange_kij(precf, phi_i, phi_i, phi_j, ex_iij);
+                iorb_vec.push_back(Phi[iorb]);
             }
-            t_calc.stop();
-            double j_fac = getSpinFactor(phi_i, phi_j);
-            Ex[j].add(j_fac, ex_iij);
-            ex_iij.release();
+            timerR.stop();
+        }
+        for (int j = 0; j < jtasks[task].size(); j++) {
+            int jorb = jtasks[task][j];
+            Orbital phi_j;
+            timerR.resume();
+            if (bank_size > 0)
+                PhiBank.get_orb(jorb, phi_j, 1);
+            else
+                phi_j = Phi[jorb];
+            timerR.stop();
+            QMFunctionVector iijfunc_vec;
+            ComplexVector coef_vec(N);
+            for (int i = 0; i < iorb_vec.size(); i++) {
+                int iorb = itasks[task][i];
+                if (iorb <= jorb) continue; // only j<i is computed
+                Orbital &phi_i = iorb_vec[i];
+                Orbital ex_jji = phi_i.paramCopy();
+                Orbital ex_iij = phi_j.paramCopy();
 
-            if (ex_jji.hasReal() or ex_jji.hasImag()) {
-                if (not mpi::my_orb(phi_i)) {
-                    // must store contribution to exchange_i in bank
-                    timerS.resume();
-                    totsize += ex_jji.getSizeNodes(NUMBER::Total);
-                    if (ex_jji.norm() > prec) ExBank.put_orb(i + (j + 1) * N + id_shift, ex_jji);
-                    timerS.stop();
-                } else {
-                    // must add contribution to exchange_i
-                    if (ex_jji.norm() > prec) {
-                        double i_fac = getSpinFactor(phi_j, phi_i);
-                        Ex[i].add(i_fac, ex_jji);
-                    }
-                }
-            }
-            ex_jji.release();
-
-            // Periodically the bank is visited and all contributions to own exchange that are stored there
-            // and ready to use are fetched, added to exchange (and deleted from bank).
-            // This must not be done too often for not waisting time, but often enough so that the bank does not fill
-            // too much.
-            if (totsize > maxSize) { // rough estimate of how full the bank is
+                // compute K_iij and K_jji in one operation
+                t_calc.resume();
+                calcExchange_kij(precf, phi_i, phi_i, phi_j, ex_iij, &ex_jji);
+                excnt++;
+                t_calc.stop();
+                double j_fac = getSpinFactor(phi_i, phi_j);
+                if (ex_iij.norm() > prec) coef_vec[iijfunc_vec.size()] = j_fac;
                 timerS.resume();
-                totsize = 0; // reset counter
-                Orbital ex_rcv;
-                for (int jj = 0; jj < N; jj++) {
-                    if (not mpi::my_orb(Phi[jj])) continue; // compute only own j
-                    for (int ii = 0; ii < N; ii++) {
-                        if (ii == jj) continue;
-                        if (mpi::my_orb(Phi[ii])) continue; // fetch only other's i
-                        // Fetch other half of matrix (in band where i-j > size/2 %size)
-                        if ((ii > jj + (N - 1) / 2 and ii > jj) or (ii > jj - (N + 1) / 2 and ii < jj)) {
-                            double j_fac = getSpinFactor(Phi[ii], Phi[jj]);
-                            int found = ExBank.get_orb_del(jj + (ii + 1) * N + id_shift, ex_rcv);
-                            foundcount += found;
-                            if (found) Ex[jj].add(j_fac, ex_rcv);
-                        }
-                    }
-                    Ex[jj].crop(prec);
+                if (bank_size > 0) {
+                    // store ex_jji
+                    if (ex_iij.norm() > prec) iijfunc_vec.push_back(ex_iij);
+                    if (ex_jji.norm() > prec) ExBank.put_orb(iorb + jorb * N, ex_jji);
+                    if (ex_jji.norm() > prec) tasksMaster.put_readytask(iorb, jorb);
+                } else {
+                    Ex[iorb].add(j_fac, ex_jji);
+                    Ex[jorb].add(j_fac, ex_iij);
                 }
-                printout(4, " fetched " << foundcount << " Exchange contributions from bank");
-                printout(4, (int)((float)timerS.elapsed() * 1000) << " ms\n");
+                ex_jji.free(NUMBER::Total);
                 timerS.stop();
             }
-        }
-    }
-
-    mrcpp::print::time(3, "Time exchanges compute", timerT);
-    mpi::barrier(mpi::comm_orb);
-    mrcpp::print::time(3, "Time exchanges all mpi finished", timerT);
-
-    timerS.resume();
-    for (int j = 0; j < N and use_sym; j++) {  // If symmetri is not used, there is nothing to fetch in bank
-        if (not mpi::my_orb(Phi[j])) continue; // fetch only own j
-        Orbital ex_rcv;
-        for (int i = 0; i < N; i++) {
-            if (i == j) continue;
-            if (mpi::my_orb(Phi[i])) continue; // fetch only other's i
-            // Fetch other half of matrix (in band where i-j > size/2 %size)
-            if ((i > j + (N - 1) / 2 and i > j) or (i > j - (N + 1) / 2 and i < j)) {
-                double j_fac = getSpinFactor(Phi[i], Phi[j]);
-                int found = ExBank.get_orb_del(j + (i + 1) * N + id_shift, ex_rcv);
-                foundcount += found;
-                if (found) Ex[j].add(j_fac, ex_rcv);
+            int totnsize = 0;
+            int cnt = 0;
+            Timer timerx;
+            if (tcnt % 3 == 0 and bank_size > 0) { // no need to check too often for new ready exchanges
+                // fetch ready contributions to ex_j from others
+                std::vector<int> iVec = tasksMaster.get_readytask(jorb, 1);
+                for (int iorb : iVec) {
+                    t_get.resume();
+                    Orbital ex_rcv;
+                    int found = ExBank.get_orb_del(jorb + iorb * N, ex_rcv);
+                    t_get.stop();
+                    cnt++;
+                    if (not found) MSG_ERROR("Exchange not fount");
+                    double j_fac = getSpinFactor(ex_rcv, phi_j);
+                    totnsize += ex_rcv.getSizeNodes(NUMBER::Total);
+                    coef_vec[iijfunc_vec.size()] = j_fac;
+                    iijfunc_vec.push_back(ex_rcv);
+                }
+            }
+            // add all contributions to ex_j,
+            if (bank_size > 0) {
+                Orbital ex_j = phi_j.paramCopy();
+                t_add.resume();
+                qmfunction::linear_combination(ex_j, coef_vec, iijfunc_vec, prec);
+                t_add.stop();
+                // ex_j is sent to Bank
+                if (ex_j.hasReal() or ex_j.hasImag()) {
+                    auto tT = timerx.elapsed();
+                    timerS.resume();
+                    ex_j.crop(prec);
+                    if (ex_j.norm() > prec) {
+                        if (i0 < 0) MSG_ERROR("no exchange contributions?");
+                        ExBank.put_orb(jorb + (i0 + N) * N, ex_j);
+                        tasksMaster.put_readytask(jorb, i0 + N);
+                    }
+                    timerS.stop();
+                    ex_j.free(NUMBER::Total);
+                } else if (iijfunc_vec.size() > 0) {
+                    MSG_ERROR("Exchange exists but has no real and no Imag parts");
+                }
+                for (int jj = 0; jj < iijfunc_vec.size(); jj++) iijfunc_vec[jj].free(NUMBER::Total);
             }
         }
-        Ex[j].crop(prec);
     }
-    timerS.stop();
-    println(3, " fetched in total " << foundcount << " Exchange contributions from bank");
-    mrcpp::print::time(3, "Time send/rcv exchanges", timerS);
-    mrcpp::print::time(3, "Time calculate exchanges", t_calc);
+
+    // wait until all echanges pieces are computed and stored in Bank
+    t_wait.resume();
+    mpi::barrier(mpi::comm_orb);
+    t_wait.stop();
+
+    for (int j = 0; j < N; j++) {
+        if (not mpi::my_orb(Phi[j]) or bank_size == 0) continue; // fetch only own j
+        std::vector<int> iVec = tasksMaster.get_readytask(j, 1);
+        QMFunctionVector iijfunc_vec;
+        ComplexVector coef_vec(N);
+        for (int i : iVec) {
+            t_get.resume();
+            Orbital ex_rcv;
+            int found = ExBank.get_orb_del(j + i * N, ex_rcv);
+            t_get.stop();
+            double j_fac = getSpinFactor(ex_rcv, Phi[j]);
+            coef_vec[iijfunc_vec.size()] = j_fac;
+            iijfunc_vec.push_back(ex_rcv);
+            if (not found) MSG_ERROR("My Exchange not found in Bank");
+        }
+        t_add.resume();
+        auto tmp_j = Ex[j].paramCopy();
+        qmfunction::linear_combination(tmp_j, coef_vec, iijfunc_vec, prec);
+        Ex[j].add(1.0, tmp_j);
+        tmp_j.free(NUMBER::Total);
+        for (int jj = 0; jj < iijfunc_vec.size(); jj++) iijfunc_vec[jj].free(NUMBER::Total);
+        Ex[j].crop(prec);
+        t_add.stop();
+    }
+    mrcpp::print::time(4, "Time rcv orbitals", timerR);
+    mrcpp::print::time(4, "Time send exchanges", timerS);
+    mrcpp::print::time(4, "Time rcv exchanges", t_get);
+    mrcpp::print::time(4, "Time wait others finished", t_wait);
+    mrcpp::print::time(4, "Time add exchanges", t_add);
+    mrcpp::print::time(4, "Time calculate exchanges", t_calc);
 
     auto n = orbital::get_n_nodes(Ex);
     auto m = orbital::get_size_nodes(Ex);
     auto t = timerT.elapsed();
     mrcpp::print::tree(2, "Hartree-Fock exchange", n, m, t);
-}
+} // namespace mrchem
 
 /** @brief Computes the exchange potential on the fly
  *
