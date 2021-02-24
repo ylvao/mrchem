@@ -47,8 +47,8 @@ namespace omp {
 extern int n_threads;
 } // namespace omp
 
-class CentralBank;
-extern CentralBank dataBank;
+class Bank;
+extern Bank dataBank;
 
 namespace mpi {
 
@@ -65,8 +65,10 @@ extern int sh_group_rank;
 extern int is_bank;
 extern int is_bankclient;
 extern int bank_size;
+extern int tot_bank_size;
 extern int max_tag;
 extern std::vector<int> bankmaster;
+extern int task_bank;
 
 extern MPI_Comm comm_orb;
 extern MPI_Comm comm_share;

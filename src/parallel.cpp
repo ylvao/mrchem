@@ -59,13 +59,14 @@ int n_threads = mrchem_get_max_threads();
 
 using namespace Eigen;
 
-CentralBank dataBank;
+Bank dataBank;
 
 namespace mpi {
 
 bool numerically_exact = false;
 int shared_memory_size = 1000;
 
+// these parameters set by initialize()
 int world_size = 1;
 int world_rank = 0;
 int orb_size = 1;
@@ -77,9 +78,11 @@ int is_bank = 0;
 int is_centralbank = 0;
 int is_bankclient = 1;
 int is_bankmaster = 0; // only one bankmaster is_bankmaster
-int bank_size = -1;
-int max_tag = 0; // max value allowed by MPI. Set by initialize()
+int bank_size = 0;
+int tot_bank_size = 0; // size of bank, including the task manager
+int max_tag = 0;        // max value allowed by MPI
 std::vector<int> bankmaster;
+int task_bank = -1; // world rank of the task manager
 
 MPI_Comm comm_orb;
 MPI_Comm comm_share;
@@ -115,7 +118,7 @@ void mpi::initialize() {
     if (mpi::world_size < 2) {
         mpi::bank_size = 0;
     } else if (mpi::bank_size < 0) {
-        mpi::bank_size = std::max(mpi::world_size / 4, 1);
+        mpi::bank_size = std::max(mpi::world_size / 3, 1);
     }
     if (mpi::world_size - mpi::bank_size < 1) MSG_ABORT("No MPI ranks left for working!");
     if (mpi::bank_size < 1 and mpi::world_size > 1) MSG_ABORT("Bank size must be at least one when using MPI!");
@@ -160,6 +163,17 @@ void mpi::initialize() {
 
     MPI_Comm_rank(mpi::comm_orb, &mpi::orb_rank);
     MPI_Comm_size(mpi::comm_orb, &mpi::orb_size);
+
+    // if bank_size is large enough, we reserve one as "task manager"
+    mpi::tot_bank_size = mpi::bank_size;
+    if (mpi::bank_size <= 2 and mpi::bank_size > 0) {
+        // use the first bank as task manager
+        mpi::task_bank = mpi::bankmaster[0];
+    } else if (mpi::bank_size > 1) {
+        // reserve one bank for task management only
+        mpi::bank_size--;
+        mpi::task_bank = mpi::bankmaster[mpi::bank_size]; // the last rank is reserved as task manager
+    }
 
     // determine the maximum value alowed for mpi tags
     void *val;
