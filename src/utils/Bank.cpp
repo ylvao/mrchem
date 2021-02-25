@@ -50,7 +50,7 @@ void Bank::open() {
         MPI_Recv(messages, message_size, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, comm_bank, &status);
         if (printinfo)
             std::cout << world_rank << " got message " << messages[0] << " from " << status.MPI_SOURCE << " account "
-                      << messages[1] << std::endl;
+                      << messages[1] << " last account " << max_account_id << std::endl;
         int message = messages[0];
 
         // can be called directly:
@@ -628,6 +628,17 @@ int Bank::openTaskManager(int ntasks, int iclient, MPI_Comm comm) {
     if (iclient == 0) {
         MPI_Send(messages, 2, MPI_INT, task_bank, 0, comm_bank);
         MPI_Recv(&account_id, 1, MPI_INT, task_bank, 1, comm_bank, &status);
+        if (tot_bank_size == bank_size) {
+            // make a dummy account so that all account_id are synchronized
+            int account_id_i;
+            for (int i = 0; i < bank_size; i++) {
+                if (bankmaster[i] != task_bank) {
+                    MPI_Send(messages, 2, MPI_INT, bankmaster[i], 0, comm_bank);
+                    MPI_Recv(&account_id_i, 1, MPI_INT, bankmaster[i], 1, comm_bank, &status);
+                    if (i > 0 and account_id_i != account_id) MSG_ABORT("Account id mismatch!");
+                }
+            }
+        }
         messages[0] = INIT_TASKS;
         messages[1] = account_id;
         messages[2] = ntasks;
@@ -701,7 +712,6 @@ int BankAccount::put_orb(int id, Orbital &orb) {
 #ifdef MRCHEM_HAS_MPI
     // for now we distribute according to id
     int messages[message_size];
-    if (id > max_tag / 2) std::cout << "WARNING: large id " << id << " max:" << max_tag / 2 << std::endl;
     messages[0] = SAVE_ORBITAL;
     messages[1] = account_id;
     messages[2] = id;
