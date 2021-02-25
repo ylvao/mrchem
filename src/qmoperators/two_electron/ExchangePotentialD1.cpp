@@ -126,6 +126,7 @@ void ExchangePotentialD1::setupInternal(double prec) {
     int N = Phi.size();
     // use fixed exchange_prec if set explicitly, otherwise use setup prec
     double precf = (this->exchange_prec > 0.0) ? this->exchange_prec : prec;
+    prec = mpi::numerically_exact ? -1.0 : prec;
     // adjust precision since we sum over orbitals
     precf /= std::min(10.0, std::sqrt(1.0 * Phi.size()));
 
