@@ -17,8 +17,6 @@ using PoissonOperator = mrcpp::PoissonOperator;
 using PoissonOperator_p = std::shared_ptr<mrcpp::PoissonOperator>;
 using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
-using namespace std;
-
 namespace mrchem {
 
 /** @brief constructor
@@ -152,7 +150,7 @@ void ExchangePotentialD1::setupInternal(double prec) {
     // We use symmetry: each pair (i,j) must be used once only. Only j<i
     // Divide into square blocks, with the diagonal blocks taken at the end (because they are faster to compute)
     int block_size; // NB: block_size*block_size intermediate exchange results are stored temporarily
-    block_size = static_cast<int>(min(16.0, max(2.0, std::sqrt(N * N / (14 * orb_size)))));
+    block_size = static_cast<int>(std::min(16.0, std::max(2.0, std::sqrt(N * N / (14 * orb_size)))));
 
     int iblocks = (N + block_size - 1) / block_size;
     int ntasksmax = ((iblocks - 1) * iblocks) / 2 + iblocks * (block_size * (block_size - 1) / 2);
