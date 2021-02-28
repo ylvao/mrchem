@@ -220,20 +220,11 @@ TEST_CASE("OrbitalVector", "[orbital_vector]") {
 
         SECTION("norm overlap") {
             ComplexMatrix S = orbital::calc_overlap_matrix(Phi);
-            ComplexMatrix Snorm = orbital::calc_norm_overlap_matrix(Phi);
+            DoubleMatrix Snorm = orbital::calc_norm_overlap_matrix(Phi);
             for (int i = 0; i < S.rows(); i++) {
                 for (int j = 0; j < S.cols(); j++) {
-                    if (i == j) REQUIRE(Snorm(i, j).real() == Approx(1.0));
-                    if (i != j) REQUIRE(Snorm(i, j).real() >= Approx(std::abs(S(i, j))));
-                }
-            }
-            SECTION("exact norm overlap") {
-                ComplexMatrix Snorm_exact = orbital::calc_norm_overlap_matrix(Phi, true);
-                for (int i = 0; i < S.rows(); i++) {
-                    for (int j = 0; j < S.cols(); j++) {
-                        if (i == j) REQUIRE(Snorm_exact(i, j).real() == Approx(1.0));
-                        if (i != j) REQUIRE(Snorm_exact(i, j).real() >= Approx(std::abs(S(i, j))));
-                    }
+                    if (i == j) REQUIRE(Snorm(i, j) == Approx(1.0));
+                    if (i != j) REQUIRE(Snorm(i, j) >= Approx(std::abs(S(i, j))));
                 }
             }
         }

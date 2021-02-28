@@ -325,8 +325,7 @@ OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double
     // used for serial only:
     std::vector<std::vector<double *>> coeffVec(Neff);
     std::vector<std::vector<int>> indexVec(Neff); // serialIx of the nodes
-    std::map<int, std::vector<int>>
-        node2orbVec; // for each node index, gives a vector with the indices of the orbitals using this node
+    std::map<int, std::vector<int>> node2orbVec; // for each node index, gives a vector with the indices of the orbitals using this node
     std::vector<std::map<int, int>> orb2node(Neff); // for a given orbital and a given node, gives the node index in the
                                                     // orbital given the node index in the reference tree
 
@@ -363,21 +362,17 @@ OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double
 
         // send own nodes to bank, identifying them through the serialIx of refTree
         save_nodes(Phi, refTree, nodesPhi);
-        mrchem::mpi::barrier(
-            mrchem::mpi::comm_orb); // required for now, as the blockdata functionality has no queue yet.
+        mrchem::mpi::barrier(mrchem::mpi::comm_orb); // required for now, as the blockdata functionality has no queue yet.
     }
 
     // 4) rotate all the nodes
     IntMatrix split_serial; // in the serial case all split are store in one array
-    std::vector<double> split(
-        Neff, -1.0); // which orbitals need splitting (at a given node). For now double for compatibilty with bank
+    std::vector<double> split(Neff, -1.0); // which orbitals need splitting (at a given node). For now double for compatibilty with bank
     std::vector<double> needsplit(Neff, 1.0);           // which orbitals need splitting
     std::vector<std::vector<double *>> coeffpVec(Neff); // to put pointers to the rotated coefficient for each orbital
-    std::vector<std::map<int, int>> ix2coef(
-        Neff); // to find the index in for example rotCoeffVec[] corresponding to a serialIx
+    std::vector<std::map<int, int>> ix2coef(Neff); // to find the index in for example rotCoeffVec[] corresponding to a serialIx
     int csize; // size of the current coefficients (different for roots and branches)
-    std::vector<DoubleMatrix>
-        rotatedCoeffVec; // just to ensure that the data from rotatedCoeff is not deleted, since we point to it.
+    std::vector<DoubleMatrix> rotatedCoeffVec; // just to ensure that the data from rotatedCoeff is not deleted, since we point to it.
     // j indices are for unrotated orbitals, i indices are for rotated orbitals
     if (serial) {
         std::map<int, int> ix2coef_ref;   // to find the index n corresponding to a serialIx
@@ -467,26 +462,27 @@ OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double
             nodeReady[n] = 1;
 #pragma omp critical
             {
-                rotatedCoeffVec.push_back(std::move(
-                    rotatedCoeff)); // this ensures that rotatedCoeff is not deleted, when getting out of scope
+                // this ensures that rotatedCoeff is not deleted, when getting out of scope
+                rotatedCoeffVec.push_back(std::move(rotatedCoeff));
             }
         }
 
     } else { // MPI case
 
         // TODO? rotate in bank, so that we do not get and put. Requires clever handling of splits.
-        std::vector<double> split(
-            Neff, -1.0); // which orbitals need splitting (at a given node). For now double for compatibilty with bank
+        std::vector<double> split(Neff, -1.0); // which orbitals need splitting (at a given node). For now double for compatibilty with bank
         std::vector<double> needsplit(Neff, 1.0); // which orbitals need splitting
         BankAccount nodeSplits;
         nodeSplits.set_datasize(Neff);
-        mrchem::mpi::barrier(
-            mrchem::mpi::comm_orb); // required for now, as the blockdata functionality has no queue yet.
+        mrchem::mpi::barrier(mrchem::mpi::comm_orb); // required for now, as the blockdata functionality has no queue yet.
 
         DoubleMatrix coeffBlock(sizecoeff, Neff);
         max_ix++; // largest node index + 1. to store rotated orbitals with different id
-        for (int n = 0; n < max_n; n++) {
-            if (n % mpi::orb_size != mpi::orb_rank) continue; // could use any partitioning
+        TaskManager tasks(max_n);
+        for (int nn = 0; nn < max_n; nn++) {
+            int n = tasks.next_task();
+            if (n < 0) break;
+            // if (n % mpi::orb_size != mpi::orb_rank) continue; // could use any partitioning
             double thres = prec * prec * scalefac_ref[n] * scalefac_ref[n];
             // 4a) make list of orbitals that should split the parent node, i.e. include this node
             int parentid = parindexVec_ref[n];
@@ -888,8 +884,7 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
 
     // only used for serial case:
     std::vector<std::vector<double *>> coeffVec(2 * N);
-    std::map<int, std::vector<int>>
-        node2orbVec; // for each node index, gives a vector with the indices of the orbitals using this node
+    std::map<int, std::vector<int>> node2orbVec; // for each node index, gives a vector with the indices of the orbitals using this node
     std::vector<std::map<int, int>> orb2node(2 * N); // for a given orbital and a given node, gives the node index in
                                                      // the orbital given the node index in the reference tree
 
@@ -936,8 +931,8 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
     int ibank = 0;
 #pragma omp parallel for schedule(dynamic) if (serial)
     for (int n = 0; n < max_n; n++) {
-        int csize;
         if (n % mpi::orb_size != mpi::orb_rank) continue;
+        int csize;
         int node_ix = indexVec_ref[n]; // SerialIx for this node in the reference tree
         std::vector<int> orbVec;       // identifies which orbitals use this node
         if (serial and node2orbVec[node_ix].size() <= 0) continue;
@@ -945,6 +940,7 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &BraKet) {
             csize = sizecoeff;
         else
             csize = sizecoeffW;
+
         // In the serial case we copy the coeff coeffBlock. In the mpi case coeffBlock is provided by the bank
         if (serial) {
             int shift = sizecoeff - sizecoeffW; // to copy only wavelet part
@@ -1047,13 +1043,11 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
 
     // only used for serial case:
     std::vector<std::vector<double *>> coeffVecBra(2 * N);
-    std::map<int, std::vector<int>>
-        node2orbVecBra; // for each node index, gives a vector with the indices of the orbitals using this node
+    std::map<int, std::vector<int>> node2orbVecBra; // for each node index, gives a vector with the indices of the orbitals using this node
     std::vector<std::map<int, int>> orb2nodeBra(2 * N); // for a given orbital and a given node, gives the node index in
                                                         // the orbital given the node index in the reference tree
     std::vector<std::vector<double *>> coeffVecKet(2 * M);
-    std::map<int, std::vector<int>>
-        node2orbVecKet; // for each node index, gives a vector with the indices of the orbitals using this node
+    std::map<int, std::vector<int>> node2orbVecKet; // for each node index, gives a vector with the indices of the orbitals using this node
     std::vector<std::map<int, int>> orb2nodeKet(2 * M); // for a given orbital and a given node, gives the node index in
                                                         // the orbital given the node index in the reference tree
     BankAccount nodesBra;
@@ -1123,6 +1117,7 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
 
     // 3) make dot product for all the nodes and accumulate into S
 
+    int ibank = 0;
 #pragma omp parallel for schedule(dynamic) if (serial)
     for (int n = 0; n < max_n; n++) {
         if (n % mpi::orb_size != mpi::orb_rank) continue;
@@ -1224,68 +1219,154 @@ ComplexMatrix orbital::calc_overlap_matrix(OrbitalVector &Bra, OrbitalVector &Ke
 
 /** @brief Compute the overlap matrix of the absolute value of the functions S_ij = <|bra_i|||ket_j|>
  *
- * If exact is true, exact values are computed. If false only norm of nodes are muliplied, which
- * gives an upper bound.
- * The orbital are put pairwise in a common grid. Returned orbitals are unchanged.
  */
-ComplexMatrix orbital::calc_norm_overlap_matrix(OrbitalVector &BraKet, bool exact) {
-    ComplexMatrix S = ComplexMatrix::Zero(BraKet.size(), BraKet.size());
+DoubleMatrix orbital::calc_norm_overlap_matrix(OrbitalVector &BraKet) {
+    int N = BraKet.size();
+    DoubleMatrix S = DoubleMatrix::Zero(N, N);
+    DoubleMatrix Sreal = DoubleMatrix::Zero(2 * N, 2 * N); // same as S, but stored as 4 blocks, rr,ri,ir,ii
 
-    // Get all ket orbitals belonging to this MPI
-    OrbitalChunk myKet = mpi::get_my_chunk(BraKet);
+    // 1) make union tree without coefficients
+    mrcpp::FunctionTree<3> refTree(*MRA);
+    mpi::allreduce_Tree_noCoeff(refTree, BraKet, mpi::comm_orb);
 
-    for (int i = 0; i < BraKet.size() and mpi::grand_master(); i++) {
-        Orbital bra_i = BraKet[i];
-        if (!mpi::my_orb(BraKet[i])) continue;
-        if (BraKet[i].hasImag()) {
-            MSG_WARN("overlap of complex orbitals will probably not give you what you expect");
-            break;
-        }
-    }
+    int sizecoeff = (1 << refTree.getDim()) * refTree.getKp1_d();
+    int sizecoeffW = ((1 << refTree.getDim()) - 1) * refTree.getKp1_d();
 
-    // Receive ALL orbitals on the bra side, use only MY orbitals on the ket side
-    // Computes the FULL columns associated with MY orbitals on the ket side
-    OrbitalIterator iter(BraKet, true); // use symmetry
-    Timer timer;
-    while (iter.next()) {
-        for (int i = 0; i < iter.get_size(); i++) {
-            int idx_i = iter.idx(i);
-            Orbital &bra_i = iter.orbital(i);
-            for (auto &j : myKet) {
-                int idx_j = std::get<0>(j);
-                Orbital &ket_j = std::get<1>(j);
-                if (mpi::my_orb(bra_i) and idx_j > idx_i) continue;
-                if (mpi::my_unique_orb(ket_j) or mpi::orb_rank == 0) {
-                    // make a deep copy of bra_i and ket_j (if my_orb)
-                    Orbital orbi = bra_i.paramCopy();
-                    qmfunction::deep_copy(orbi, bra_i);
-                    Orbital orbj = ket_j.paramCopy();
-                    if (mpi::my_orb(ket_j)) {
-                        qmfunction::deep_copy(orbj, ket_j);
-                    } else {
-                        // no need to make a copy, as the orbital will be not be reused
-                        orbj = ket_j;
-                    }
-                    // redefine orbitals in a union grid
-                    int nn = 1;
-                    while (nn > 0) nn = mrcpp::refine_grid(orbj.real(), orbi.real());
-                    nn = 1;
-                    while (nn > 0) nn = mrcpp::refine_grid(orbi.real(), orbj.real());
-                    if (orbi.hasImag() or orbj.hasImag()) {
-                        nn = 1;
-                        while (nn > 0) nn = mrcpp::refine_grid(orbj.imag(), orbi.imag());
-                        nn = 1;
-                        while (nn > 0) nn = mrcpp::refine_grid(orbi.imag(), orbj.imag());
-                    }
-                    S(idx_i, idx_j) = orbital::node_norm_dot(orbi, orbj, exact);
-                    S(idx_j, idx_i) = std::conj(S(idx_i, idx_j));
+    // get a list of all nodes in union grid, as defined by their indices
+    std::vector<double> scalefac;
+    std::vector<double *> coeffVec_ref;
+    std::vector<int> indexVec_ref;    // serialIx of the nodes
+    std::vector<int> parindexVec_ref; // serialIx of the parent nodes
+    int max_ix;                       // largest index value (not used here)
+
+    refTree.makeCoeffVector(coeffVec_ref, indexVec_ref, parindexVec_ref, scalefac, max_ix, refTree);
+    int max_n = indexVec_ref.size();
+
+    // only used for serial case:
+    std::vector<std::vector<double *>> coeffVec(2 * N);
+    std::map<int, std::vector<int>> node2orbVec; // for each node index, gives a vector with the indices of the orbitals using this node
+    std::vector<std::map<int, int>> orb2node(2 * N); // for a given orbital and a given node, gives the node index in
+                                                     // the orbital given the node index in the reference tree
+
+    bool serial = mpi::orb_size == 1; // flag for serial/MPI switch
+    BankAccount nodesBraKet;
+
+    // In the serial case we store the coeff pointers in coeffVec. In the mpi case the coeff are stored in the bank
+    if (serial) {
+        // 2) make list of all coefficients, and their reference indices
+        // for different orbitals, indexVec will give the same index for the same node in space
+        std::vector<int> parindexVec; // serialIx of the parent nodes
+        std::vector<int> indexVec;    // serialIx of the nodes
+        for (int j = 0; j < N; j++) {
+            // make vector with all coef pointers and their indices in the union grid
+            if (BraKet[j].hasReal()) {
+                BraKet[j].real().makeCoeffVector(coeffVec[j], indexVec, parindexVec, scalefac, max_ix, refTree);
+                // make a map that gives j from indexVec
+                int orb_node_ix = 0;
+                for (int ix : indexVec) {
+                    orb2node[j][ix] = orb_node_ix++;
+                    if (ix < 0) continue;
+                    node2orbVec[ix].push_back(j);
+                }
+            }
+            if (BraKet[j].hasImag()) {
+                BraKet[j].imag().makeCoeffVector(coeffVec[j + N], indexVec, parindexVec, scalefac, max_ix, refTree);
+                // make a map that gives j from indexVec
+                int orb_node_ix = 0;
+                for (int ix : indexVec) {
+                    orb2node[j + N][ix] = orb_node_ix++;
+                    if (ix < 0) continue;
+                    node2orbVec[ix].push_back(j + N);
                 }
             }
         }
-        timer.start();
+    } else { // MPI case
+        // 2) send own nodes to bank, identifying them through the serialIx of refTree
+        save_nodes(BraKet, refTree, nodesBraKet);
+        mrchem::mpi::barrier(mrchem::mpi::comm_orb); // wait until everything is stored before fetching!
     }
-    // Assumes all MPIs have (only) computed their own part of the matrix
+
+    // 3) make dot product for all the nodes and accumulate into S
+
+    int ibank = 0;
+#pragma omp parallel for schedule(dynamic) if (serial)
+    for (int n = 0; n < max_n; n++) {
+        if (n % mpi::orb_size != mpi::orb_rank) continue;
+        int csize;
+        int node_ix = indexVec_ref[n]; // SerialIx for this node in the reference tree
+        std::vector<int> orbVec;       // identifies which orbitals use this node
+        if (serial and node2orbVec[node_ix].size() <= 0) continue;
+        if (parindexVec_ref[n] < 0)
+            csize = sizecoeff;
+        else
+            csize = sizecoeffW;
+        // In the serial case we copy the coeff coeffBlock. In the mpi case coeffBlock is provided by the bank
+        if (serial) {
+            int shift = sizecoeff - sizecoeffW; // to copy only wavelet part
+            if (parindexVec_ref[n] < 0) shift = 0;
+            DoubleMatrix coeffBlock(csize, node2orbVec[node_ix].size());
+            for (int j : node2orbVec[node_ix]) { // loop over indices of the orbitals using this node
+                int orb_node_ix = orb2node[j][node_ix];
+                for (int k = 0; k < csize; k++) coeffBlock(k, orbVec.size()) = coeffVec[j][orb_node_ix][k + shift];
+                orbVec.push_back(j);
+            }
+            if (orbVec.size() > 0) {
+                DoubleMatrix S_temp(orbVec.size(), orbVec.size());
+                coeffBlock = coeffBlock.cwiseAbs();
+                S_temp.noalias() = coeffBlock.transpose() * coeffBlock;
+                for (int i = 0; i < orbVec.size(); i++) {
+                    for (int j = 0; j < orbVec.size(); j++) {
+                        if (BraKet[orbVec[i] % N].spin() == SPIN::Alpha and BraKet[orbVec[j] % N].spin() == SPIN::Beta)
+                            continue;
+                        if (BraKet[orbVec[i] % N].spin() == SPIN::Beta and BraKet[orbVec[j] % N].spin() == SPIN::Alpha)
+                            continue;
+                        double &Srealij = Sreal(orbVec[i], orbVec[j]);
+                        double &Stempij = S_temp(i, j);
+#pragma omp atomic
+                        Srealij += Stempij;
+                    }
+                }
+            }
+        } else { // MPI case
+            DoubleMatrix coeffBlock(csize, 2 * N);
+            nodesBraKet.get_nodeblock(indexVec_ref[n], coeffBlock.data(), orbVec);
+
+            if (orbVec.size() > 0) {
+                DoubleMatrix S_temp(orbVec.size(), orbVec.size());
+                coeffBlock.conservativeResize(Eigen::NoChange, orbVec.size());
+                coeffBlock = coeffBlock.cwiseAbs();
+                S_temp.noalias() = coeffBlock.transpose() * coeffBlock;
+                for (int i = 0; i < orbVec.size(); i++) {
+                    for (int j = 0; j < orbVec.size(); j++) {
+                        if (BraKet[orbVec[i] % N].spin() == SPIN::Alpha and BraKet[orbVec[j] % N].spin() == SPIN::Beta)
+                            continue;
+                        if (BraKet[orbVec[i] % N].spin() == SPIN::Beta and BraKet[orbVec[j] % N].spin() == SPIN::Alpha)
+                            continue;
+                        Sreal(orbVec[i], orbVec[j]) += S_temp(i, j);
+                    }
+                }
+            }
+        }
+    }
+
+    IntVector conjMat = IntVector::Zero(N);
+    for (int i = 0; i < N; i++) {
+        if (!mpi::my_orb(BraKet[i])) continue;
+        conjMat[i] = (BraKet[i].conjugate()) ? -1 : 1;
+    }
+    mpi::allreduce_vector(conjMat, mpi::comm_orb);
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j <= i; j++) {
+            S(i, j) = Sreal(i, j) + conjMat[i] * conjMat[j] * Sreal(i + N, j + N) + conjMat[j] * Sreal(i, j + N) -
+                      conjMat[i] * Sreal(i + N, j);
+            S(j, i) = S(i, j);
+        }
+    }
+
+    // Assumes linearity: result is sum of all nodes contributions
     mpi::allreduce_matrix(S, mpi::comm_orb);
+
     return S;
 }
 

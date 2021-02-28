@@ -160,7 +160,7 @@ void mrenv::print_header() {
 
     std::stringstream o_bank;
     if (mpi::bank_size > 0) {
-        o_bank << "(" << mpi::bank_size << " bank)";
+        o_bank << "(" << mpi::tot_bank_size << " bank)";
     } else {
         o_bank << "(no bank)";
     }
@@ -195,7 +195,7 @@ void mrenv::print_header() {
     mrcpp::print::separator(0, '-', 1);
     print_utils::scalar(0, "MPI processes  ", mpi::world_size, o_bank.str(), 0, false);
     print_utils::scalar(0, "OpenMP threads ", omp::n_threads, "", 0, false);
-    print_utils::scalar(0, "Total cores    ", mpi::world_size * omp::n_threads, "", 0, false);
+    print_utils::scalar(0, "Total cores    ", (mpi::world_size - mpi::tot_bank_size) * omp::n_threads + mpi::tot_bank_size, "", 0, false);
     mrcpp::print::separator(0, ' ');
     mrcpp::print::separator(0, '-', 1);
     printout(0, xcfun_splash());

@@ -140,9 +140,15 @@ as it will be literally prepended to the ``mrchem.x`` command when the
 Job example (Betzy)
 +++++++++++++++++++
 
-This job will use 4 compute nodes, with 8 MPI processes on each, and each MPI
-process will use 16 OpenMP threads. The flags are optimized for OpenMPI (foss)
-library on Betzy.
+This job will use 4 compute nodes, with 12 MPI processes on each, and the MPI
+process will use up to 15 OpenMP threads. 4 MPI process per node are used for
+the "Bank". The Bank processes are using only one thread, therefore there is
+in practice no overallocation. It is however important that bank_size is set
+to be at least 4*4 = 16 (it is by default set, correctly, to one third of total
+MPI size, i.e. 4*12/3=16).
+It would also be possible to set 16 tasks per node, and set the bank size
+parameter accordingly to 8*4=32.
+The flags are optimized for OpenMPI (foss) library on Betzy.
 
 .. literalinclude:: betzy_example.job
 
@@ -153,7 +159,7 @@ library on Betzy.
 ``--map-by socket``
   Tells the system to map (group) MPI ranks according to socket before distribution
   between nodes. This will ensure that for example two bank cores will access
-  different parts of memory.
+  different parts of memory and be placed as the 16th thread of a numa group.
 
 ``--bind-to numa``
   Tells the system to bind cores to one NUMA (Non Uniform Memory Access) group.
@@ -165,6 +171,10 @@ library on Betzy.
   change the core assigned to a thread/process and, without precautions, it may be
   assigned to any other core, which would result in much reduced performance). The 16
   cores of the group may then be used by the threads initiated by that MPI process.
+
+``--oversubscribe``
+  To tell MPI that it is should accept that the number of MPI processes times
+  the number of threads is larger than the number of available cores.
 
 More examples can be found in the `mrchem-examples <https://github.com/MRChemSoft/mrchem-examples>`_
 repository on GitHub.
