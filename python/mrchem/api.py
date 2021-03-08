@@ -26,7 +26,7 @@
 import math
 
 from .helpers import *
-from .periodictable import PeriodicTable as PT
+from .periodictable import PeriodicTable as PT, PeriodicTableByZ as PT_Z
 
 
 def translate_input(user_dict):
@@ -115,7 +115,14 @@ def write_molecule(user_dict, origin):
     for line in coords_raw.split("\n"):
         sp = line.split()
         if len(sp) > 0:
-            atom = sp[0].lower()
+
+            try:
+                int(sp[0])
+            except:
+                atom = sp[0].lower()
+            else:
+                atom = PT_Z[int(sp[0])].symbol.lower()
+
             xyz = list(map(float, sp[1:]))
             if len(xyz) != 3:
                 raise RuntimeError(f"Invalid coordinate: {atom.upper()} {str(xyz)}")
