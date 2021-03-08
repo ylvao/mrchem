@@ -246,7 +246,8 @@ sections:
       - name: coords
         type: str
         docstring: |
-          Coordinates in xyz format.
+          Coordinates in xyz format. Atoms can be given either using atom symbol or
+          atom number
   - name: WaveFunction
     docstring: |
       Define the wavefunction method.

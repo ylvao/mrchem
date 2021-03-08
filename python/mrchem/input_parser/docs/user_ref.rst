@@ -285,7 +285,7 @@ User input reference
   
     **Default** ``False``
   
-   :coords: Coordinates in xyz format. 
+   :coords: Coordinates in xyz format. Atoms can be given either using atom symbol or atom number 
   
     **Type** ``str``
   
