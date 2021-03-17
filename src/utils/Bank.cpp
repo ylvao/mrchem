@@ -583,7 +583,7 @@ void Bank::remove_account(int account) {
 
 int Bank::openAccount(int iclient, MPI_Comm comm) {
     // NB: this is a collective call, since we need all the accounts to be synchronized
-    int account_id[1];
+    int account_id[1] = {-1};
 #ifdef MRCHEM_HAS_MPI
     MPI_Status status;
     int messages[message_size];
