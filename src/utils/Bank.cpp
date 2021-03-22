@@ -58,11 +58,11 @@ void Bank::open() {
             if (is_bank and printinfo) std::cout << "Bank is closing" << std::endl;
             this->clear_bank();
             break; // close bank, i.e stop listening for incoming messages
-        } else if (message == GETMAXTOTDATA) {
+        } else if (message == GET_MAXTOTDATA) {
             int maxsize_int = maxsize / 1024; // convert into MB
             MPI_Send(&maxsize_int, 1, MPI_INT, status.MPI_SOURCE, 1171, comm_bank);
             continue;
-        } else if (message == GETTOTDATA) {
+        } else if (message == GET_TOTDATA) {
             int maxsize_int = totcurrentsize / 1024; // convert into MB
             MPI_Send(&maxsize_int, 1, MPI_INT, status.MPI_SOURCE, 1172, comm_bank);
             continue;
@@ -672,7 +672,7 @@ int Bank::get_maxtotalsize() {
     MPI_Status status;
     int datasize;
     int messages[message_size];
-    messages[0] = GETMAXTOTDATA;
+    messages[0] = GET_MAXTOTDATA;
     for (int i = 0; i < bank_size; i++) {
         MPI_Send(messages, 1, MPI_INT, bankmaster[i], 0, comm_bank);
         MPI_Recv(&datasize, 1, MPI_INT, bankmaster[i], 1171, comm_bank, &status);
@@ -687,7 +687,7 @@ std::vector<int> Bank::get_totalsize() {
 #ifdef HAVE_MPI
     MPI_Status status;
     int messages[message_size];
-    messages[0] = GETTOTDATA;
+    messages[0] = GET_TOTDATA;
     int datasize;
     for (int i = 0; i < bank_size; i++) {
         MPI_Send(messages, 1, MPI_INT, bankmaster[i], 0, comm_bank);

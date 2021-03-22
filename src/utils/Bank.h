@@ -43,8 +43,8 @@ enum {
     GET_NODEBLOCK,          // 14
     GET_ORBBLOCK,           // 15
     CLEAR_BLOCKS,           // 16
-    GETMAXTOTDATA,          // 17
-    GETTOTDATA,             // 18
+    GET_MAXTOTDATA,         // 17
+    GET_TOTDATA,            // 18
     INIT_TASKS,             // 19
     GET_NEXTTASK,           // 20
     PUT_READYTASK,          // 21
