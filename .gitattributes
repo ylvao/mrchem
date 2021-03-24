@@ -4,12 +4,25 @@
 *.png diff=exif
 
 config.h.in licensefile=.githooks/LICENSE-C++
+version.h.in licensefile=.githooks/LICENSE-C++
 
+src/*.h licensefile=.githooks/LICENSE-C++
+src/*.cpp licensefile=.githooks/LICENSE-C++
 src/*/*.h licensefile=.githooks/LICENSE-C++
 src/*/*.cpp licensefile=.githooks/LICENSE-C++
+src/*/*/*.h licensefile=.githooks/LICENSE-C++
+src/*/*/*.cpp licensefile=.githooks/LICENSE-C++
 
-src/mrchem.in licensefile=.githooks/LICENSE-Python
+python/mrchem.in licensefile=.githooks/LICENSE-Python
+python/mrchem/*.py licensefile=.githooks/LICENSE-Python
+python/mrchem/config.py.in licensefile=.githooks/LICENSE-Python
 
+pilot/*.h licensefile=.githooks/LICENSE-C++
+pilot/*.cpp licensefile=.githooks/LICENSE-C++
+pilot/mrchem.in licensefile=.githooks/LICENSE-Python
+
+tests/*.h licensefile=.githooks/LICENSE-C++
+tests/*.cpp licensefile=.githooks/LICENSE-C++
 tests/*/*.h licensefile=.githooks/LICENSE-C++
 tests/*/*.cpp licensefile=.githooks/LICENSE-C++
 
