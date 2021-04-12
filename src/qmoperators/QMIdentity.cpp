@@ -23,41 +23,35 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "RankTwoTensorOperator.h"
+#include <MRCPP/Printer>
+
+#include "QMIdentity.h"
+
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
+#include "qmfunctions/qmfunction_utils.h"
+
+using QMOperator_p = std::shared_ptr<mrchem::QMOperator>;
 
 namespace mrchem {
 
-template <int I, int J> ComplexMatrix RankTwoTensorOperator<I, J>::operator()(Orbital bra, Orbital ket) {
-    RankTwoTensorOperator<I, J> &O = *this;
-    ComplexMatrix out(I, J);
-    for (int i = 0; i < I; i++) out.row(i) = O[i](bra, ket);
+/** Identity operator is a deep copy */
+Orbital QMIdentity::apply(Orbital inp) {
+    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
+    Orbital out = inp.paramCopy();
+    qmfunction::deep_copy(out, inp);
     return out;
 }
 
-template <int I, int J> ComplexMatrix RankTwoTensorOperator<I, J>::trace(OrbitalVector &phi) {
-    RankTwoTensorOperator<I, J> &O = *this;
-    ComplexMatrix out(I, J);
-    for (int i = 0; i < I; i++) out.row(i) = O[i].trace(phi);
-    return out;
+/** Identity operator is a deep copy */
+Orbital QMIdentity::dagger(Orbital inp) {
+    return apply(inp);
 }
 
-template <int I, int J>
-ComplexMatrix RankTwoTensorOperator<I, J>::trace(OrbitalVector &phi, OrbitalVector &x, OrbitalVector &y) {
-    RankTwoTensorOperator<I, J> &O = *this;
-    ComplexMatrix out(I, J);
-    for (int i = 0; i < I; i++) out.row(i) = O[i].trace(phi, x, y);
-    return out;
-}
-
-template <int I, int J> ComplexMatrix RankTwoTensorOperator<I, J>::trace(const Nuclei &nucs) {
-    RankTwoTensorOperator<I, J> &O = *this;
-    ComplexMatrix out(I, J);
-    for (int i = 0; i < I; i++) out.row(i) = O[i].trace(nucs);
+QMOperatorVector QMIdentity::apply(QMOperator_p &O) {
+    QMOperatorVector out;
+    out.push_back(O);
     return out;
 }
 
 } // namespace mrchem
-
-template class mrchem::RankTwoTensorOperator<3, 3>;

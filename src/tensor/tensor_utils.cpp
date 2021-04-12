@@ -23,53 +23,38 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/MWOperators"
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
+#include "tensor_utils.h"
 
-#include "NablaOperator.h"
-#include "qmfunctions/Orbital.h"
-#include "qmfunctions/orbital_utils.h"
-#include "utils/print_utils.h"
-
-using mrcpp::DerivativeOperator;
-using mrcpp::FunctionTree;
-using mrcpp::Printer;
-using mrcpp::Timer;
+#include "RankOneOperator.h"
+#include "RankTwoOperator.h"
+#include "RankZeroOperator.h"
 
 namespace mrchem {
 
-QMNabla::QMNabla(int d, std::shared_ptr<DerivativeOperator<3>> D)
-        : QMOperator()
-        , apply_dir(d)
-        , derivative(D) {}
-
-Orbital QMNabla::apply(Orbital inp) {
-    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (this->derivative == nullptr) MSG_ERROR("No derivative operator");
-
-    auto dir = this->apply_dir;
-    auto &D = *this->derivative;
-
-    Orbital out = inp.paramCopy();
-
-    // Calc real part
-    if (inp.hasReal()) {
-        out.alloc(NUMBER::Real);
-        mrcpp::apply(out.real(), D, inp.real(), dir);
-    }
-    // Calc imag part
-    if (inp.hasImag()) {
-        out.alloc(NUMBER::Imag);
-        mrcpp::apply(out.imag(), D, inp.imag(), dir);
-        if (inp.conjugate()) out.imag().rescale(-1.0);
-    }
-
+RankOneOperator<3> tensor::cross(RankOneOperator<3> A, RankOneOperator<3> B) {
+    RankOneOperator<3> out;
+    out[0] = A[1](B[2]) - A[2](B[1]);
+    out[1] = A[2](B[0]) - A[0](B[2]);
+    out[2] = A[0](B[1]) - A[1](B[0]);
     return out;
 }
 
-Orbital QMNabla::dagger(Orbital inp) {
-    NOT_IMPLEMENTED_ABORT;
+template <int I> RankZeroOperator tensor::dot(RankOneOperator<I> A, RankOneOperator<I> B) {
+    RankZeroOperator out;
+    for (int i = 0; i < I; i++) out += A[i](B[i]);
+    return out;
 }
+
+template <int I, int J> RankTwoOperator<I, J> tensor::outer(RankOneOperator<I> A, RankOneOperator<J> B) {
+    RankTwoOperator<I, J> out;
+    for (int i = 0; i < I; i++)
+        for (int j = 0; j < J; j++) out[i][j] = A[i](B[j]);
+    return out;
+}
+
+namespace tensor {
+template RankZeroOperator dot<3>(RankOneOperator<3> A, RankOneOperator<3> B);
+template RankTwoOperator<3, 3> outer<3, 3>(RankOneOperator<3> A, RankOneOperator<3> B);
+} // namespace tensor
 
 } // namespace mrchem

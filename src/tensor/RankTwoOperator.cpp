@@ -23,54 +23,41 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/MWOperators"
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
+#include "RankTwoOperator.h"
 
-#include "MomentumOperator.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
-#include "utils/print_utils.h"
-
-using mrcpp::DerivativeOperator;
-using mrcpp::FunctionTree;
-using mrcpp::Printer;
-using mrcpp::Timer;
 
 namespace mrchem {
 
-QMMomentum::QMMomentum(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D)
-        : QMOperator()
-        , apply_dir(d)
-        , derivative(D) {}
-
-Orbital QMMomentum::apply(Orbital inp) {
-    if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
-    if (this->derivative == nullptr) MSG_ERROR("No derivative operator");
-
-    auto dir = this->apply_dir;
-    auto &D = *this->derivative;
-
-    Orbital out = inp.paramCopy();
-
-    // Calc real part
-    if (inp.hasImag()) {
-        out.alloc(NUMBER::Real);
-        mrcpp::apply(out.real(), D, inp.imag(), dir);
-        if (inp.conjugate()) out.real().rescale(-1.0);
-    }
-    // Calc imag part
-    if (inp.hasReal()) {
-        out.alloc(NUMBER::Imag);
-        mrcpp::apply(out.imag(), D, inp.real(), dir);
-        out.imag().rescale(-1.0);
-    }
-
+template <int I, int J> ComplexMatrix RankTwoOperator<I, J>::operator()(Orbital bra, Orbital ket) {
+    RankTwoOperator<I, J> &O = *this;
+    ComplexMatrix out(I, J);
+    for (int i = 0; i < I; i++) out.row(i) = O[i](bra, ket);
     return out;
 }
 
-Orbital QMMomentum::dagger(Orbital inp) {
-    NOT_IMPLEMENTED_ABORT;
+template <int I, int J> ComplexMatrix RankTwoOperator<I, J>::trace(OrbitalVector &phi) {
+    RankTwoOperator<I, J> &O = *this;
+    ComplexMatrix out(I, J);
+    for (int i = 0; i < I; i++) out.row(i) = O[i].trace(phi);
+    return out;
+}
+
+template <int I, int J> ComplexMatrix RankTwoOperator<I, J>::trace(OrbitalVector &phi, OrbitalVector &x, OrbitalVector &y) {
+    RankTwoOperator<I, J> &O = *this;
+    ComplexMatrix out(I, J);
+    for (int i = 0; i < I; i++) out.row(i) = O[i].trace(phi, x, y);
+    return out;
+}
+
+template <int I, int J> ComplexMatrix RankTwoOperator<I, J>::trace(const Nuclei &nucs) {
+    RankTwoOperator<I, J> &O = *this;
+    ComplexMatrix out(I, J);
+    for (int i = 0; i < I; i++) out.row(i) = O[i].trace(nucs);
+    return out;
 }
 
 } // namespace mrchem
+
+template class mrchem::RankTwoOperator<3, 3>;

@@ -23,34 +23,27 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
+#pragma once
 
-#include "NuclearGradientOperator.h"
-#include "qmfunctions/qmfunction_utils.h"
-#include "utils/print_utils.h"
-
-using mrcpp::Printer;
-using mrcpp::Timer;
+#include "QMOperator.h"
 
 namespace mrchem {
 
-void NuclearGradientPotential::setup(double prec) {
-    if (isSetup(prec)) return;
-    setApplyPrec(prec);
+class QMSpin final : public QMOperator {
+public:
+    QMSpin(int d)
+            : D(d) {}
+    QMSpin(const QMSpin &S)
+            : D(S.D) {}
 
-    QMPotential &V = *this;
+private:
+    const int D;
 
-    if (V.hasReal()) MSG_ERROR("Potential not properly cleared");
-    if (V.hasImag()) MSG_ERROR("Potential not properly cleared");
+    ComplexDouble evalf(const mrcpp::Coord<3> &r) const override { return 0.0; }
 
-    Timer timer;
-    qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-}
-
-void NuclearGradientPotential::clear() {
-    free(NUMBER::Total); // delete FunctionTree pointers
-    clearApplyPrec();    // apply_prec = -1
-}
+    Orbital apply(Orbital inp) override;
+    Orbital dagger(Orbital inp) override;
+    QMOperatorVector apply(std::shared_ptr<QMOperator> &O) override;
+};
 
 } // namespace mrchem

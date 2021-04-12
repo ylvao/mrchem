@@ -25,8 +25,9 @@
 
 #pragma once
 
+#include "qmoperators/QMPotential.h"
+
 #include "mrdft/MRDFT.h"
-#include "qmoperators/one_electron/QMPotential.h"
 
 /**
  * @class XCPotential
@@ -83,6 +84,7 @@ protected:
 
     Orbital apply(Orbital phi) override;
     Orbital dagger(Orbital phi) override;
+    QMOperatorVector apply(std::shared_ptr<QMOperator> &O) override;
 };
 
 } // namespace mrchem

@@ -44,10 +44,10 @@ namespace mrchem {
  * operator is applied both to the left and right, thus taking advantage
  * of symmetry and getting away with only first-derivative operators.
  */
-ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
-    RankZeroTensorOperator &p_x = this->p[0];
-    RankZeroTensorOperator &p_y = this->p[1];
-    RankZeroTensorOperator &p_z = this->p[2];
+ComplexMatrix qmoperator::calc_kinetic_matrix(KineticOperator &T, OrbitalVector &bra, OrbitalVector &ket) {
+    RankZeroOperator p_x = T.get(0, 0);
+    RankZeroOperator p_y = T.get(1, 0);
+    RankZeroOperator p_z = T.get(2, 0);
 
     int Ni = bra.size();
     int Nj = ket.size();
@@ -113,17 +113,6 @@ ComplexMatrix KineticOperator::operator()(OrbitalVector &bra, OrbitalVector &ket
     }
 
     return 0.5 * (T_x + T_y + T_z);
-}
-
-/** @brief Expectation value (dagger version)
- *
- * @param bra: orbitals on the lhs
- * @param ket: orbitals on the rhs
- *
- * NOT IMPLEMENTED
- */
-ComplexMatrix KineticOperator::dagger(OrbitalVector &bra, OrbitalVector &ket) {
-    NOT_IMPLEMENTED_ABORT;
 }
 
 } // namespace mrchem

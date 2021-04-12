@@ -25,8 +25,9 @@
 
 #pragma once
 
+#include "tensor/RankOneOperator.h"
+
 #include "PositionOperator.h"
-#include "qmoperators/RankOneTensorOperator.h"
 
 /** Class H_E_dip
  *
@@ -41,12 +42,14 @@
 
 namespace mrchem {
 
-class H_E_dip final : public RankOneTensorOperator<3> {
+class H_E_dip final : public RankOneOperator<3> {
 public:
-    H_E_dip(const mrcpp::Coord<3> &o)
-            : r(o) {
+    explicit H_E_dip(const mrcpp::Coord<3> &o)
+            : H_E_dip(PositionOperator(o)) {}
+
+    explicit H_E_dip(PositionOperator r) {
         // Invoke operator= to assign *this operator
-        RankOneTensorOperator<3> &h = (*this);
+        RankOneOperator<3> &h = (*this);
         h[0] = -1.0 * r[0];
         h[1] = -1.0 * r[1];
         h[2] = -1.0 * r[2];
@@ -54,9 +57,6 @@ public:
         h[1].name() = "h_E_dip[y]";
         h[2].name() = "h_E_dip[z]";
     }
-
-protected:
-    PositionOperator r;
 };
 
 } // namespace mrchem

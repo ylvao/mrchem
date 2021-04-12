@@ -25,34 +25,44 @@
 
 #pragma once
 
-#include "QMPotential.h"
+#include "tensor/RankOneOperator.h"
+
 #include "analyticfunctions/NuclearGradientFunction.h"
-#include "qmoperators/RankOneTensorOperator.h"
+#include "qmfunctions/qmfunction_utils.h"
+#include "qmoperators/QMPotential.h"
 
 namespace mrchem {
 
-class NuclearGradientPotential final : public QMPotential {
+class NuclearGradientOperator final : public RankOneOperator<3> {
 public:
-    NuclearGradientPotential(int d, double z, const mrcpp::Coord<3> &r, double c)
-            : QMPotential(1)
-            , func(d, z, r, c) {}
+    /*!
+     *  @brief NuclearGradientOperator represents the vector potential: Z * hat{r}/|r - o|^3
+     *  @param z: Nuclear charge of nucleus
+     *  @param o: Coordinate of origin
+     *  @param proj_prec: Precision for projection of analytic function
+     *  @param smooth_prec: Precision for smoothing of analytic function
+     */
+    NuclearGradientOperator(double z, const mrcpp::Coord<3> &o, double proj_prec, double smooth_prec = -1.0) {
+        if (proj_prec < 0.0) MSG_ABORT("Negative projection precision");
+        if (smooth_prec < 0.0) smooth_prec = proj_prec;
 
-    void setup(double prec) override;
-    void clear() override;
+        // Define analytic potential
+        double c = detail::nuclear_gradient_smoothing(smooth_prec, z);
+        NuclearGradientFunction f_x(0, z, o, c);
+        NuclearGradientFunction f_y(1, z, o, c);
+        NuclearGradientFunction f_z(2, z, o, c);
 
-private:
-    NuclearGradientFunction func;
-};
+        auto x_rm3 = std::make_shared<QMPotential>(1);
+        auto y_rm3 = std::make_shared<QMPotential>(1);
+        auto z_rm3 = std::make_shared<QMPotential>(1);
 
-class NuclearGradientOperator final : public RankOneTensorOperator<3> {
-public:
-    NuclearGradientOperator(double z, const mrcpp::Coord<3> &r, double c) {
-        x_rm3 = std::make_shared<NuclearGradientPotential>(0, z, r, c);
-        y_rm3 = std::make_shared<NuclearGradientPotential>(1, z, r, c);
-        z_rm3 = std::make_shared<NuclearGradientPotential>(2, z, r, c);
+        // Project analytic potential
+        qmfunction::project(*x_rm3, f_x, NUMBER::Real, proj_prec);
+        qmfunction::project(*y_rm3, f_y, NUMBER::Real, proj_prec);
+        qmfunction::project(*z_rm3, f_z, NUMBER::Real, proj_prec);
 
         // Invoke operator= to assign *this operator
-        RankOneTensorOperator &v = (*this);
+        RankOneOperator &v = (*this);
         v[0] = x_rm3;
         v[1] = y_rm3;
         v[2] = z_rm3;
@@ -60,11 +70,6 @@ public:
         v[1].name() = "y/r^3";
         v[2].name() = "z/r^3";
     }
-
-private:
-    std::shared_ptr<NuclearGradientPotential> x_rm3{nullptr};
-    std::shared_ptr<NuclearGradientPotential> y_rm3{nullptr};
-    std::shared_ptr<NuclearGradientPotential> z_rm3{nullptr};
 };
 
 } // namespace mrchem

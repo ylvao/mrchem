@@ -25,31 +25,35 @@
 
 #pragma once
 
-#include "qmoperators/RankOneTensorOperator.h"
-#include "qmoperators/one_electron/QMPotential.h"
+#include "tensor/RankOneOperator.h"
+
+#include "qmfunctions/qmfunction_utils.h"
+#include "qmoperators/QMPotential.h"
 
 namespace mrchem {
 
-class PositionPotential final : public QMPotential {
+class PositionOperator : public RankOneOperator<3> {
 public:
-    PositionPotential(int d, const mrcpp::Coord<3> &o);
-
-protected:
-    mrcpp::AnalyticFunction<3> func;
-
-    void setup(double prec) override;
-    void clear() override;
-};
-
-class PositionOperator : public RankOneTensorOperator<3> {
-public:
+    /*! @brief PositionOperator represents the vector operator: hat{r} = [r_x - o_x, r_y - o_y, r_z - o_z]
+     *  @param o: Coordinate of origin
+     */
     PositionOperator(const mrcpp::Coord<3> &o = {0.0, 0.0, 0.0}) {
-        r_x = std::make_shared<PositionPotential>(0, o);
-        r_y = std::make_shared<PositionPotential>(1, o);
-        r_z = std::make_shared<PositionPotential>(2, o);
+        // Define analytic potential
+        auto f_x = [o](const mrcpp::Coord<3> &r) -> double { return (r[0] - o[0]); };
+        auto f_y = [o](const mrcpp::Coord<3> &r) -> double { return (r[1] - o[1]); };
+        auto f_z = [o](const mrcpp::Coord<3> &r) -> double { return (r[2] - o[2]); };
+
+        auto r_x = std::make_shared<QMPotential>(1);
+        auto r_y = std::make_shared<QMPotential>(1);
+        auto r_z = std::make_shared<QMPotential>(1);
+
+        // Project analytic potential (exact on root scale, thus no prec)
+        qmfunction::project(*r_x, f_x, NUMBER::Real, -1.0);
+        qmfunction::project(*r_y, f_y, NUMBER::Real, -1.0);
+        qmfunction::project(*r_z, f_z, NUMBER::Real, -1.0);
 
         // Invoke operator= to assign *this operator
-        RankOneTensorOperator &r = (*this);
+        RankOneOperator &r = (*this);
         r[0] = r_x;
         r[1] = r_y;
         r[2] = r_z;
@@ -57,11 +61,6 @@ public:
         r[1].name() = "r[y]";
         r[2].name() = "r[z]";
     }
-
-protected:
-    std::shared_ptr<PositionPotential> r_x{nullptr};
-    std::shared_ptr<PositionPotential> r_y{nullptr};
-    std::shared_ptr<PositionPotential> r_z{nullptr};
 };
 
 } // namespace mrchem

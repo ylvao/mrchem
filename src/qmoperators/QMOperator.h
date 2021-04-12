@@ -25,11 +25,12 @@
 
 #pragma once
 
-#include "MRCPP/Printer"
+#include <memory>
 
-#include "chemistry/chemistry_fwd.h"
+#include <MRCPP/Printer>
+
 #include "mrchem.h"
-#include "qmoperator_fwd.h"
+#include "tensor/tensor_fwd.h"
 
 /** @class QMOperator
  *
@@ -38,7 +39,7 @@
  * Base class to handle operators and their application in the QM sense. Used to
  * build more complicated operators through the TensorOperator classes. This class
  * hierarchy should NOT be used directly, as the most important functionality is
- * protected. A proper interface is provided through RankZeroTensorOperator.
+ * protected. A proper interface is provided through RankZeroOperator.
  *
  * Notes on naming conventions of derived operator classes:
  * Direct decendants of QMOperator should START with "QM", like QMPotential, QMSpin,
@@ -56,12 +57,14 @@ class Orbital;
 
 class QMOperator {
 public:
-    QMOperator(){};
-    virtual ~QMOperator(){};
+    QMOperator() = default;
+    virtual ~QMOperator() {
+        if (prec() > 0.0) MSG_ERROR("Operator not properly cleared");
+    }
 
     double prec() { return this->apply_prec; }
 
-    friend RankZeroTensorOperator;
+    friend RankZeroOperator;
 
 protected:
     double apply_prec{-1.0};
@@ -84,9 +87,11 @@ protected:
     virtual void setup(double prec) { setApplyPrec(prec); }
     virtual void clear() { clearApplyPrec(); }
 
-    virtual ComplexDouble evalf(const mrcpp::Coord<3> &r) const { NOT_REACHED_ABORT; }
+    virtual ComplexDouble evalf(const mrcpp::Coord<3> &r) const = 0;
+
     virtual Orbital apply(Orbital inp) = 0;
     virtual Orbital dagger(Orbital inp) = 0;
+    virtual QMOperatorVector apply(std::shared_ptr<QMOperator> &O) = 0;
 };
 
 } // namespace mrchem

@@ -33,6 +33,8 @@
 #include "parallel.h"
 #include "sad.h"
 
+#include "chemistry/Nucleus.h"
+
 #include "utils/print_utils.h"
 
 #include "qmfunctions/Orbital.h"
@@ -93,7 +95,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     NuclearOperator V_nuc(nucs, prec);
     CoulombOperator J(P_p);
     XCOperator XC(mrdft_p);
-    RankZeroTensorOperator V = V_nuc + J + XC;
+    RankZeroOperator V = V_nuc + J + XC;
     if (plevel == 1) mrcpp::print::time(1, "Projecting nuclear potential", t_lap);
 
     // Compute Coulomb density

@@ -25,8 +25,9 @@
 
 #pragma once
 
+#include "tensor/RankOneOperator.h"
+
 #include "SpinOperator.h"
-#include "qmoperators/RankOneTensorOperator.h"
 
 namespace mrchem {
 
@@ -44,13 +45,16 @@ namespace mrchem {
  * where m_j is the magnetic moment of the electron.
  */
 
-class H_B_spin final : public RankOneTensorOperator<3> {
+class H_B_spin final : public RankOneOperator<3> {
 public:
-    H_B_spin() {
+    H_B_spin()
+            : H_B_spin(SpinOperator()) {}
+
+    explicit H_B_spin(SpinOperator s) {
         const double g_e = PHYSCONST::g_e;
 
         // Invoke operator= to assign *this operator
-        RankOneTensorOperator<3> &h = (*this);
+        RankOneOperator<3> &h = (*this);
         h[0] = (-g_e / 2.0) * s[0];
         h[1] = (-g_e / 2.0) * s[1];
         h[2] = (-g_e / 2.0) * s[2];
@@ -58,9 +62,6 @@ public:
         h[1].name() = "h_B_spin[y]";
         h[2].name() = "h_B_spin[z]";
     }
-
-private:
-    SpinOperator s;
 };
 
 } // namespace mrchem

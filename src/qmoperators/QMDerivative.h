@@ -23,40 +23,32 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "MRCPP/Gaussians"
-#include "MRCPP/Printer"
-#include "MRCPP/Timer"
+#pragma once
 
-#include "DeltaOperator.h"
-#include "qmfunctions/qmfunction_utils.h"
-#include "utils/print_utils.h"
+#include <memory>
 
-using mrcpp::Printer;
-using mrcpp::Timer;
+#include "QMOperator.h"
 
 namespace mrchem {
 
-QMDelta::QMDelta(const mrcpp::Coord<3> &o, double expo)
-        : QMPotential(1)
-        , func(expo, std::pow(expo / MATHCONST::pi, 3.0 / 2.0), o) {}
+class QMDerivative final : public QMOperator {
+public:
+    QMDerivative(int d, std::shared_ptr<mrcpp::DerivativeOperator<3>> D, bool im = false);
+    QMDerivative(const QMDerivative &inp);
 
-void QMDelta::setup(double prec) {
-    if (isSetup(prec)) return;
-    setApplyPrec(prec);
+private:
+    const bool imag;     // add imaginary unit prefactor, for faster application
+    const int apply_dir; // Cartesian direction of derivative
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative;
 
-    QMPotential &V = *this;
+    bool isReal() const { return not(imag); }
+    bool isImag() const { return imag; }
 
-    if (V.hasReal()) MSG_ERROR("Potential not properly cleared");
-    if (V.hasImag()) MSG_ERROR("Potential not properly cleared");
+    ComplexDouble evalf(const mrcpp::Coord<3> &r) const override { return 0.0; }
 
-    Timer timer;
-    qmfunction::project(V, this->func, NUMBER::Real, this->apply_prec);
-    print_utils::qmfunction(1, "Delta operator", V, timer);
-}
-
-void QMDelta::clear() {
-    free(NUMBER::Total);
-    clearApplyPrec();
-}
+    Orbital apply(Orbital inp) override;
+    Orbital dagger(Orbital inp) override;
+    QMOperatorVector apply(std::shared_ptr<QMOperator> &O) override;
+};
 
 } // namespace mrchem
