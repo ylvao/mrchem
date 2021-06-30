@@ -157,9 +157,7 @@ void SCRF::nestedSCRF(QMFunction V_vac) {
     double update = 10;
     double converge_thrs = std::abs(this->mo_residual);
 
-    if (std::abs(this->mo_residual) < this->apply_prec * 10 || this->convergence_criterion == "static") {
-        converge_thrs = this->apply_prec;
-    }
+    if (std::abs(this->mo_residual) < this->apply_prec * 10 || this->convergence_criterion == "static") { converge_thrs = this->apply_prec; }
     for (int iter = 1; update >= converge_thrs && iter <= max_iter; iter++) {
         QMFunction Vr_np1;
         QMFunction V_tot;
@@ -248,28 +246,18 @@ QMFunction &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
 }
 
 double SCRF::getNuclearEnergy() {
-    QMFunction integral_product;
-
-    qmfunction::multiply(integral_product, this->rho_nuc, this->Vr_n, this->apply_prec);
-    return integral_product.integrate().real();
+    return qmfunction::dot(this->rho_nuc, this->Vr_n).real();
 }
 
 double SCRF::getElectronicEnergy() {
-    QMFunction integral_product;
     QMFunction rho_el;
-    integral_product.alloc(NUMBER::Real);
     rho_el.alloc(NUMBER::Real);
     qmfunction::add(rho_el, 1.0, this->rho_tot, -1.0, this->rho_nuc, -1.0);
-    qmfunction::multiply(integral_product, rho_el, this->Vr_n, this->apply_prec);
-    return integral_product.integrate().real();
+    return qmfunction::dot(rho_el, this->Vr_n).real();
 }
 
 double SCRF::getTotalEnergy() {
-    QMFunction integral_product;
-    integral_product.alloc(NUMBER::Real);
-
-    qmfunction::multiply(integral_product, this->rho_tot, this->Vr_n, this->apply_prec);
-    return integral_product.integrate().real();
+    return qmfunction::dot(this->rho_tot, this->Vr_n).real();
 }
 
 void SCRF::resetQMFunction(QMFunction &function) {
