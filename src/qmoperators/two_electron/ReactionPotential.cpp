@@ -27,28 +27,29 @@
 
 #include "qmfunctions/qmfunction_utils.h"
 
+using SCRF_p = std::unique_ptr<mrchem::SCRF>;
 using OrbitalVector_p = std::shared_ptr<mrchem::OrbitalVector>;
 
 namespace mrchem {
 
-ReactionPotential::ReactionPotential(OrbitalVector_p Phi_p, SCRF helper)
+ReactionPotential::ReactionPotential(SCRF_p &scrf_p, OrbitalVector_p Phi_p)
         : QMPotential(1, false)
-        , Phi(Phi_p)
-        , helper(helper) {}
+        , helper(std::move(scrf_p))
+        , Phi(Phi_p) {}
 
 void ReactionPotential::setup(double prec) {
     setApplyPrec(prec);
-    QMFunction &temp = *this;
     if (this->first_iteration) {
         this->first_iteration = false;
         return;
     }
-    qmfunction::deep_copy(temp, this->helper.setup(prec, this->Phi));
+    auto potential = this->helper->setup(prec, this->Phi);
+    qmfunction::deep_copy(*this, potential);
 }
 
 void ReactionPotential::clear() {
     clearApplyPrec();
-    this->helper.clear();
+    this->helper->clear();
 }
 
 } // namespace mrchem

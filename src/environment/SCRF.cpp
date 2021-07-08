@@ -60,6 +60,7 @@ SCRF::SCRF(Permittivity e,
         , max_iter(max_iter)
         , history(kain_hist)
         , apply_prec(orb_prec)
+        , mo_residual(-1.0)
         , epsilon(e)
         , rho_nuc(false)
         , rho_ext(false)
@@ -74,6 +75,10 @@ SCRF::SCRF(Permittivity e,
         , poisson(P) {
     setDCavity();
     rho_nuc = chemistry::compute_nuclear_density(this->apply_prec, N, 1000);
+}
+
+SCRF::~SCRF() {
+    mrcpp::clear(this->d_cavity, true);
 }
 
 void SCRF::clear() {
@@ -104,10 +109,10 @@ void SCRF::computeDensities(OrbitalVector &Phi) {
     }
 }
 
-void SCRF::computeGamma(QMFunction Potential, QMFunction &out_gamma) {
-    auto d_V = mrcpp::gradient(*derivative, Potential.real());
+void SCRF::computeGamma(QMFunction &potential, QMFunction &out_gamma) {
+    auto d_V = mrcpp::gradient(*derivative, potential.real());
     resetQMFunction(out_gamma);
-    mrcpp::dot(this->apply_prec, out_gamma.real(), d_V, d_cavity);
+    mrcpp::dot(this->apply_prec, out_gamma.real(), d_V, this->d_cavity);
     out_gamma.rescale(std::log((epsilon.getEpsIn() / epsilon.getEpsOut())) * (1.0 / (4.0 * MATHCONST::pi)));
     mrcpp::clear(d_V, true);
 }
@@ -153,17 +158,17 @@ void SCRF::accelerateConvergence(QMFunction &dfunc, QMFunction &func, KAIN &kain
 
 void SCRF::nestedSCRF(QMFunction V_vac) {
     print_utils::headline(2, "Calculating Reaction Potential");
+
     KAIN kain(this->history);
-    double update = 10;
-    double converge_thrs = std::abs(this->mo_residual);
 
-    if (std::abs(this->mo_residual) < this->apply_prec * 10 || this->convergence_criterion == "static") { converge_thrs = this->apply_prec; }
+    // converge_thrs should be in the interval [apply_prec, 1.0]
+    double converge_thrs = this->apply_prec;
+    if (this->convergence_criterion == "dynamic" and this->mo_residual > 10 * this->apply_prec) converge_thrs = std::min(1.0, this->mo_residual);
+
+    double update = 10.0;
     for (int iter = 1; update >= converge_thrs && iter <= max_iter; iter++) {
-        QMFunction Vr_np1;
-        QMFunction V_tot;
         // solve the poisson equation
-
-        Vr_np1 = solvePoissonEquation(this->gamma_n);
+        QMFunction Vr_np1 = solvePoissonEquation(this->gamma_n);
 
         // use a convergence accelerator
         resetQMFunction(this->dVr_n);
@@ -177,6 +182,7 @@ void SCRF::nestedSCRF(QMFunction V_vac) {
         }
 
         // set up for next iteration
+        QMFunction V_tot;
         qmfunction::add(V_tot, 1.0, Vr_np1, 1.0, V_vac, -1.0);
         updateCurrentReactionPotential(Vr_np1); // push_back() maybe
 
@@ -241,7 +247,7 @@ QMFunction &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
         temp_gamma_n.free(NUMBER::Real);
     }
 
-    if (this->algorithm == "scrf") { nestedSCRF(V_vac); }
+    if (this->algorithm == "scrf") nestedSCRF(V_vac);
     return this->Vr_n;
 }
 
@@ -281,4 +287,5 @@ void SCRF::updateCurrentGamma(QMFunction &gamma_np1) {
     qmfunction::deep_copy(this->gamma_n, gamma_np1);
     gamma_np1.free(NUMBER::Real);
 }
+
 } // namespace mrchem

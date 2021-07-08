@@ -88,13 +88,14 @@ TEST_CASE("ReactionOperator", "[reaction_operator]") {
     if (mpi::my_orb(Phi[0])) qmfunction::project(Phi[0], f, NUMBER::Real, prec);
 
     int kain = 4;
-    SCRF helper(dielectric_func, molecule, P_p, D_p, prec, kain, 100, true, "dynamic", "scrf", "total");
+    auto scrf_p = std::make_unique<SCRF>(dielectric_func, molecule, P_p, D_p, prec, kain, 100, true, "dynamic", "scrf", "total");
 
-    auto Reo = std::make_shared<ReactionOperator>(Phi_p, helper);
+    auto Reo = std::make_shared<ReactionOperator>(scrf_p, Phi_p);
     Reo->setTesting();
     Reo->setup(prec);
     double total_energy = Reo->getTotalEnergy();
     Reo->clear();
     REQUIRE(total_energy == Approx(-0.191434124263).epsilon(thrs));
 }
+
 } // namespace reaction_operator
