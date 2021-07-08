@@ -48,7 +48,7 @@ public:
          std::string convergence_criterion,
          std::string algorithm,
          std::string density_type);
-    friend class ReactionPotential;
+    ~SCRF();
     void UpdateExternalDensity(Density new_density) { this->rho_ext = new_density; }
 
     QMFunction &getCurrentReactionPotential() { return this->Vr_n; }
@@ -60,6 +60,8 @@ public:
     QMFunction &getCurrentDifferenceGamma() { return this->dgamma_n; }
 
     void updateMOResidual(double const err_t) { this->mo_residual = err_t; }
+
+    friend class ReactionPotential;
 
 protected:
     void clear();
@@ -96,7 +98,7 @@ private:
     void setDCavity();
 
     void computeDensities(OrbitalVector &Phi);
-    void computeGamma(QMFunction Potential, QMFunction &out_gamma);
+    void computeGamma(QMFunction &potential, QMFunction &out_gamma);
 
     QMFunction solvePoissonEquation(const QMFunction &ingamma);
 
