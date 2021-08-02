@@ -133,7 +133,6 @@ Orbital ExchangePotentialD1::dagger(Orbital phi_p) {
     return apply(phi_p);
 }
 
-
 QMOperatorVector ExchangePotentialD1::apply(QMOperator_p &O) {
     NOT_IMPLEMENTED_ABORT;
 }
@@ -279,10 +278,11 @@ void ExchangePotentialD1::setupInternal(double prec) {
                 Orbital ex_iij = phi_j.paramCopy();
 
                 // compute K_iij and K_jji in one operation
+                double j_fac = getSpinFactor(phi_i, phi_j);
+                if (std::abs(j_fac) < mrcpp::MachineZero) continue;
                 t_calc.resume();
                 calcExchange_kij(precf, phi_i, phi_i, phi_j, ex_iij, &ex_jji);
                 t_calc.stop();
-                double j_fac = getSpinFactor(phi_i, phi_j);
                 if (ex_iij.norm() > prec) coef_vec[iijfunc_vec.size()] = j_fac;
                 timerS.resume();
                 if (bank_size > 0) {
