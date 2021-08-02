@@ -69,8 +69,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(II.size(0) == 2);
 
             II.setup(prec);
-            const auto ref = I(Phi, Phi);
-            const auto val = II(Phi, Phi);
+            const ComplexMatrix ref = I(Phi, Phi);
+            const ComplexMatrix val = II(Phi, Phi);
             REQUIRE(val(0, 0).real() == Approx(ref(0, 0).real()).epsilon(thrs));
             REQUIRE(val(0, 0).imag() == Approx(ref(0, 0).imag()).margin(thrs));
             II.clear();
@@ -81,8 +81,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(II.size(0) == 1);
 
             II.setup(prec);
-            const auto ref = I(Phi, Phi);
-            const auto val = II(Phi, Phi);
+            const ComplexMatrix ref = I(Phi, Phi);
+            const ComplexMatrix val = II(Phi, Phi);
             REQUIRE(val(0, 0).real() == Approx(ref(0, 0).real()).epsilon(thrs));
             REQUIRE(val(0, 0).imag() == Approx(ref(0, 0).imag()).margin(thrs));
             II.clear();
@@ -94,8 +94,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(IV.size(0) == 2);
 
             IV.setup(prec);
-            const auto ref = V[0](Phi, Phi);
-            const auto val = IV(Phi, Phi);
+            const ComplexMatrix ref = V[0](Phi, Phi);
+            const ComplexMatrix val = IV(Phi, Phi);
             REQUIRE(val(1, 0).real() == Approx(ref(1, 0).real()).epsilon(thrs));
             REQUIRE(val(1, 0).imag() == Approx(ref(1, 0).imag()).margin(thrs));
             IV.clear();
@@ -107,8 +107,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(IV.size(0) == 1);
 
             IV.setup(prec);
-            const auto ref = V[0](Phi, Phi);
-            const auto val = IV(Phi, Phi);
+            const ComplexMatrix ref = V[0](Phi, Phi);
+            const ComplexMatrix val = IV(Phi, Phi);
             REQUIRE(val(1, 0).real() == Approx(ref(1, 0).real()).epsilon(thrs));
             REQUIRE(val(1, 0).imag() == Approx(ref(1, 0).imag()).margin(thrs));
             IV.clear();
@@ -120,8 +120,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(ID.size(0) == 2);
 
             ID.setup(prec);
-            const auto ref = D[0](Phi, Phi);
-            const auto val = ID(Phi, Phi);
+            const ComplexMatrix ref = D[0](Phi, Phi);
+            const ComplexMatrix val = ID(Phi, Phi);
             REQUIRE(val(0, 1).real() == Approx(ref(0, 1).real()).margin(thrs));
             REQUIRE(val(0, 1).imag() == Approx(ref(0, 1).imag()).epsilon(thrs));
             ID.clear();
@@ -133,8 +133,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(ID.size(0) == 1);
 
             ID.setup(prec);
-            const auto ref = D[0](Phi, Phi);
-            const auto val = ID(Phi, Phi);
+            const ComplexMatrix ref = D[0](Phi, Phi);
+            const ComplexMatrix val = ID(Phi, Phi);
             REQUIRE(val(0, 1).real() == Approx(ref(0, 1).real()).margin(thrs));
             REQUIRE(val(0, 1).imag() == Approx(ref(0, 1).imag()).epsilon(thrs));
             ID.clear();
@@ -146,8 +146,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(IS.size(0) == 2);
 
             IS.setup(prec);
-            const auto ref = S[1](Phi, Phi);
-            const auto val = IS(Phi, Phi);
+            const ComplexMatrix ref = S[1](Phi, Phi);
+            const ComplexMatrix val = IS(Phi, Phi);
             REQUIRE(val(0, 0).real() == Approx(ref(0, 0).real()).margin(thrs));
             REQUIRE(val(0, 0).imag() == Approx(ref(0, 0).imag()).epsilon(thrs));
             IS.clear();
@@ -159,8 +159,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
             REQUIRE(IS.size(0) == 1);
 
             IS.setup(prec);
-            const auto ref = S[1](Phi, Phi);
-            const auto val = IS(Phi, Phi);
+            const ComplexMatrix ref = S[1](Phi, Phi);
+            const ComplexMatrix val = IS(Phi, Phi);
             REQUIRE(val(0, 0).real() == Approx(ref(0, 0).real()).margin(thrs));
             REQUIRE(val(0, 0).imag() == Approx(ref(0, 0).imag()).epsilon(thrs));
             IS.clear();
@@ -514,8 +514,8 @@ TEST_CASE("Operator composition", "[operator_composition]") {
 
             divV.setup(prec);
             OrbitalVector Psi = divV(Phi);
-            const auto ref = orbital::get_integrals(Phi);
-            const auto val = orbital::get_integrals(Psi);
+            const ComplexVector ref = orbital::get_integrals(Phi);
+            const ComplexVector val = orbital::get_integrals(Psi);
             REQUIRE(val(0).real() == Approx(3.0 * ref(0).real()).epsilon(thrs));
             REQUIRE(val(0).imag() == Approx(3.0 * ref(0).imag()).margin(thrs));
             divV.clear();
@@ -529,7 +529,7 @@ TEST_CASE("Operator composition", "[operator_composition]") {
                 REQUIRE(curlV[i].size(0) == 1);
                 REQUIRE(curlV[i].size(1) == 1);
                 OrbitalVector Psi = curlV[i](Phi);
-                const auto val = orbital::get_norms(Psi);
+                const DoubleVector val = orbital::get_norms(Psi);
                 for (int n = 0; n < Psi.size(); n++) REQUIRE(val(n) == Approx(0.0).margin(thrs));
             }
             curlV.clear();
@@ -543,7 +543,7 @@ TEST_CASE("Operator composition", "[operator_composition]") {
                     REQUIRE(jacV_ij.size() == 1);
                     REQUIRE(jacV_ij.size(0) == 1);
                     OrbitalVector Psi = jacV_ij(Phi);
-                    const auto val = orbital::get_norms(Psi);
+                    const DoubleVector val = orbital::get_norms(Psi);
                     for (int n = 0; n < Psi.size(); n++) {
                         if (i == j) {
                             REQUIRE(val(n) == Approx(1.0).epsilon(thrs));
