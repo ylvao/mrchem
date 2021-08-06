@@ -113,11 +113,11 @@ mrcpp::FunctionTreeVector<3> MRDFT::evaluate(mrcpp::FunctionTreeVector<3> &inp) 
         mrchem::BankAccount ctrOutBank; // to put the ctrOutDataVec;
 
         // note that mpi cannot run in multiple omp threads
-        int size = nFcs * nCoefs;
+        int size = nOutCtr * nCoefs;
         for (int n = n_start; n < n_end; n++) ctrOutBank.put_data(n, size, ctrOutDataVec[n - n_start].data());
         // fetch all nodes from bank and postprocess
         for (int n = 0; n < nNodes; n++) {
-            Eigen::MatrixXd ctrOutData(nFcs, nCoefs);
+            Eigen::MatrixXd ctrOutData(nOutCtr, nCoefs);
             ctrOutBank.get_data(n, size, ctrOutData.data());
             auto ctrOutNodes = xc_utils::fetch_nodes(n, ctrOutVec);
             xc_utils::expand_nodes(ctrOutNodes, ctrOutData);
