@@ -260,7 +260,7 @@ OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double
         }
     }
 
-    IntVector PsihasReIm(2);
+    IntVector PsihasReIm = IntVector::Zero(2);
     for (int i = 0; i < N; i++) {
         if (!mpi::my_orb(Phi[i])) continue;
         PsihasReIm[0] = (Phi[i].hasReal()) ? 1 : 0;
