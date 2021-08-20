@@ -62,8 +62,8 @@ protected:
 
 namespace detail {
 /*! @brief Compute nucleus- and precision-dependent smoothing parameter */
-inline auto nuclear_gradient_smoothing(double prec, double Z) -> double {
-    auto tmp = prec / (0.00435 * std::pow(Z, 5));
+inline auto nuclear_gradient_smoothing(double prec, double Z, int N) -> double {
+    auto tmp = prec / (0.00435 * std::pow(Z, 5) * N);
     return std::cbrt(tmp);
 }
 } // namespace detail

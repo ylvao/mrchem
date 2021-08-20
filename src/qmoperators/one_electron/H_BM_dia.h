@@ -64,15 +64,15 @@ public:
 
         // Invoke operator= to assign *this operator
         RankTwoOperator<3, 3> &h = (*this);
-        h[0][0] = -(alpha_2 / 2.0) * (o_y(k_y) + o_z(k_z));
-        h[0][1] = (alpha_2 / 2.0) * o_x(k_y);
-        h[0][2] = (alpha_2 / 2.0) * o_x(k_z);
-        h[1][0] = (alpha_2 / 2.0) * o_y(k_x);
-        h[1][1] = -(alpha_2 / 2.0) * (o_x(k_x) + o_z(k_z));
-        h[1][2] = (alpha_2 / 2.0) * o_y(k_z);
-        h[2][0] = (alpha_2 / 2.0) * o_z(k_x);
-        h[2][1] = (alpha_2 / 2.0) * o_z(k_y);
-        h[2][2] = -(alpha_2 / 2.0) * (o_x(k_x) + o_y(k_y));
+        h[0][0] = (alpha_2 / 2.0) * (o_y(k_y) + o_z(k_z));
+        h[0][1] = -(alpha_2 / 2.0) * o_y(k_x);
+        h[0][2] = -(alpha_2 / 2.0) * o_z(k_x);
+        h[1][0] = -(alpha_2 / 2.0) * o_x(k_y);
+        h[1][1] = (alpha_2 / 2.0) * (o_x(k_x) + o_z(k_z));
+        h[1][2] = -(alpha_2 / 2.0) * o_z(k_y);
+        h[2][0] = -(alpha_2 / 2.0) * o_x(k_z);
+        h[2][1] = -(alpha_2 / 2.0) * o_y(k_z);
+        h[2][2] = (alpha_2 / 2.0) * (o_x(k_x) + o_y(k_y));
         h[0][0].name() = "h_BM_dia[x,x]";
         h[0][1].name() = "h_BM_dia[x,y]";
         h[0][2].name() = "h_BM_dia[x,z]";

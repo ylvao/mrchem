@@ -27,6 +27,7 @@
 
 #include "tensor/RankOneOperator.h"
 
+#include "analyticfunctions/NuclearFunction.h"
 #include "analyticfunctions/NuclearGradientFunction.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/QMPotential.h"
@@ -40,14 +41,12 @@ public:
      *  @param z: Nuclear charge of nucleus
      *  @param o: Coordinate of origin
      *  @param proj_prec: Precision for projection of analytic function
-     *  @param smooth_prec: Precision for smoothing of analytic function
+     *  @param c: Smoothing parameter for analytic function
      */
-    NuclearGradientOperator(double z, const mrcpp::Coord<3> &o, double proj_prec, double smooth_prec = -1.0) {
+    NuclearGradientOperator(double z, const mrcpp::Coord<3> &o, double proj_prec, double c) {
         if (proj_prec < 0.0) MSG_ABORT("Negative projection precision");
-        if (smooth_prec < 0.0) smooth_prec = proj_prec;
 
         // Define analytic potential
-        double c = detail::nuclear_gradient_smoothing(smooth_prec, z);
         NuclearGradientFunction f_x(0, z, o, c);
         NuclearGradientFunction f_y(1, z, o, c);
         NuclearGradientFunction f_z(2, z, o, c);
