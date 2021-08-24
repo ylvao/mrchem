@@ -471,7 +471,8 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
                 const auto nuc_k = nuclei[k];
                 auto Z_k = nuc_k.getCharge();
                 auto R_k = nuc_k.getCoord();
-                NuclearGradientOperator h(Z_k, R_k, prec, smoothing / mol.getNNuclei());
+                double c = detail::nuclear_gradient_smoothing(smoothing, Z_k, mol.getNNuclei());
+                NuclearGradientOperator h(Z_k, R_k, prec, c);
                 h.setup(prec);
                 nuc.row(k) = Eigen::RowVector3d::Zero();
                 for (auto l = 0; l < mol.getNNuclei(); ++l) {
@@ -518,7 +519,7 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
             auto h = driver::get_operator<3, 3>(oper_name, item.value());
             h.setup(prec);
             NMRShielding &sigma = mol.getNMRShielding(id);
-            sigma.getDiamagnetic() = h.trace(Phi).real();
+            sigma.getDiamagnetic() = -h.trace(Phi).real();
             h.clear();
         }
         mrcpp::print::footer(2, t_lap, 2);
@@ -1074,9 +1075,9 @@ template <int I, int J> RankTwoOperator<I, J> driver::get_operator(const std::st
         h = H_E_quad(json_inp["r_O"]);
     } else if (name == "h_bb_dia") {
         h = H_BB_dia(json_inp["r_O"]);
-    } else if (name == "h_bm_dia") {
-        h = H_MB_dia(json_inp["r_O"], json_inp["r_K"], json_inp["precision"], json_inp["smoothing"]);
     } else if (name == "h_mb_dia") {
+        h = H_MB_dia(json_inp["r_O"], json_inp["r_K"], json_inp["precision"], json_inp["smoothing"]);
+    } else if (name == "h_bm_dia") {
         h = H_BM_dia(json_inp["r_O"], json_inp["r_K"], json_inp["precision"], json_inp["smoothing"]);
     } else {
         MSG_ERROR("Invalid operator: " << name);
