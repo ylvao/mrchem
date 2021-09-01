@@ -59,16 +59,25 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     NuclearFunction f_loc;
     setupLocalPotential(f_loc, nucs, smooth_prec);
 
-    // Scale precision by system size
+    // Scale precision by charge, since norm of potential is ~ to charge
     double Z_tot = 1.0 * chemistry::get_total_charge(nucs);
     double Z_loc = 1.0 * chemistry::get_total_charge(f_loc.getNuclei());
     double tot_prec = proj_prec / std::min(1.0 * Z_tot, std::sqrt(2.0 * Z_tot));
-    double loc_prec = proj_prec / std::max(1.0, Z_loc);
+    double loc_prec = proj_prec / std::max(1.0, Z_loc); // relative prec
+
+    // Scale precision by box size, so that accuracy is independent of box size
+    double vol = 1.0;
+    for (int i = 0; i < 3; i++) vol *= MRA->getWorldBox().getBoxLength(i);
+    vol /= 262144;                   // we use as reference a cube 64x64x64
+    vol = std::max(1.0, vol);        // do not scale for smaller boxes
+    loc_prec /= pow(vol, 1.0 / 6.0); // norm of 1/r over the box ~ root_6(Volume)
 
     // Project local potential
     QMFunction V_loc(false);
     qmfunction::project(V_loc, f_loc, NUMBER::Real, loc_prec);
     t_loc.stop();
+    mrcpp::print::separator(2, '-');
+    print_utils::qmfunction(2, "Local potential", V_loc, t_loc);
 
     // Collect local potentials
     Timer t_com;
@@ -77,8 +86,6 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     t_com.stop();
 
     t_tot.stop();
-    mrcpp::print::separator(2, '-');
-    print_utils::qmfunction(2, "Local potential", V_loc, t_loc);
     print_utils::qmfunction(2, "Allreduce potential", *V_tot, t_com);
     mrcpp::print::footer(2, t_tot, 2);
 
