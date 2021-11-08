@@ -27,11 +27,11 @@
 
 #include <fstream>
 
+#include "parallel.h"
 #include <MRCPP/MWFunctions>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
 #include <nlohmann/json.hpp>
-#include "parallel.h"
 
 #include "analyticfunctions/CUBEfunction.h"
 #include "qmfunctions/Orbital.h"
@@ -54,43 +54,42 @@ std::vector<mrchem::CUBEfunction> getCUBEFunction(const json &json_cube);
 } // namespace cube
 } // namespace initial_guess
 
-bool initial_guess::cube::setup(OrbitalVector &Phi, double prec, const std::string &file_p) {
-    // const std::string &file_a,
-    // const std::string &file_b) {
+bool initial_guess::cube::setup(OrbitalVector &Phi, double prec, const std::string &file_p, const std::string &file_a, const std::string &file_b) {
     if (Phi.size() == 0) return false;
 
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation   ", "Compute initial orbitals");
     print_utils::text(0, "Method        ", "Project cube file molecular orbitals");
     print_utils::text(0, "Precision     ", print_utils::dbl_to_str(prec, 5, true));
-    // if (orbital::size_singly(Phi)) {
-    //    print_utils::text(0, "Restricted    ", "False");
-    //    print_utils::text(0, "MO alpha file ", file_a);
-    //    print_utils::text(0, "MO beta file  ", file_b);
-    //} else {
-    print_utils::text(0, "Restricted    ", "True");
-    print_utils::text(0, "MO file ", file_p);
-    //}
+    if (orbital::size_singly(Phi)) {
+        print_utils::text(0, "Restricted    ", "False");
+        print_utils::text(0, "MO alpha file ", file_a);
+        print_utils::text(0, "MO beta file  ", file_b);
+    } else {
+        print_utils::text(0, "Restricted    ", "True");
+        print_utils::text(0, "MO file ", file_p);
+    }
     mrcpp::print::separator(0, '~', 2);
 
     // Separate alpha/beta from paired orbitals
-    // auto Phi_a = orbital::disjoin(Phi, SPIN::Alpha);
-    // auto Phi_b = orbital::disjoin(Phi, SPIN::Beta);
+    auto Phi_a = orbital::disjoin(Phi, SPIN::Alpha);
+    auto Phi_b = orbital::disjoin(Phi, SPIN::Beta);
 
     // Project paired, alpha and beta separately
     auto success = true;
     success &= initial_guess::cube::project_mo(Phi, prec, file_p);
-    // success &= initial_guess::cube::project_mo(Phi_a, prec, file_a);
-    // success &= initial_guess::cube::project_mo(Phi_b, prec, file_b);
+    success &= initial_guess::cube::project_mo(Phi_a, prec, file_a);
+    success &= initial_guess::cube::project_mo(Phi_b, prec, file_b);
 
     // Collect orbitals into one vector
-    // for (auto &phi_a : Phi_a) Phi.push_back(phi_a);
-    // for (auto &phi_b : Phi_b) Phi.push_back(phi_b);
+    for (auto &phi_a : Phi_a) Phi.push_back(phi_a);
+    for (auto &phi_b : Phi_b) Phi.push_back(phi_b);
 
     return success;
 }
 
 bool initial_guess::cube::project_mo(OrbitalVector &Phi, double prec, const std::string &mo_file) {
+    std::cout << __FILE__ << "\n";
     if (Phi.size() == 0) return true;
 
     Timer t_tot;

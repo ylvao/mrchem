@@ -23,8 +23,7 @@
 # For information on the complete list of contributors to MRChem, see:
 # <https://mrchem.readthedocs.io/>
 #
-
-import input_parser.plumbing.pyparsing as pp
+from .input_parser.plumbing import pyparsing as pp
 from json import dump
 
 def write_cube_dict(file_dict):
@@ -35,7 +34,7 @@ def write_cube_dict(file_dict):
         if (len(path_list) != 0):
             for path in path_list:
                 cube_list.append(parse_cube_file(path))
-        all_cube_lists.append(cube_list)
+        all_cube_list.append(cube_list)
 
     with open("CUBE_p_vector.json", "w") as fd:
         dump(all_cube_list[0], fd, indent=2)
@@ -53,7 +52,8 @@ def sort_paths(path_l):
     path_b = []
     if (len(path_l) != 0):
         for path in path_l:
-            path_s = path.split("_")
+            file_name = path.split("/")[-1]
+            path_s = file_name.split("_")
             if ("p" == path_s[1]):
                 path_p.append(path)
             elif("a" == path_s[1]):
@@ -154,7 +154,7 @@ def parse_cube_file(cube_path):
     origin = parsed_cube["ORIGIN"]
 
     # Set the amount of values depending on if the DSET_IDs were present or not
-    if ("DSET_IDS" in parsed_cube.keys):
+    if ("DSET_IDS" in parsed_cube.keys()):
         N_vals = len(parsed_cube["DSET_IDS"])
     else:
         N_vals = parsed_cube["NVAL"]
@@ -176,9 +176,14 @@ def parse_cube_file(cube_path):
     Voxel_axes = [parsed_cube["XAXIS"]["VECTOR"], parsed_cube["YAXIS"]["VECTOR"], parsed_cube["ZAXIS"]["VECTOR"]]
 
     # get the atom coordinates
-    Z_n = [atom["ATOMIC_NUMBER"] for atom in parsed_cube["GEOM"]]
-    atom_charges = [atom["CHARGE"] for atom in parsed_cube["GEOM"]]
-    atom_coords = [atom["POSITION"] for atom in parsed_cube["GEOM"]]
+    if (type(parsed_cube["GEOM"]) == list) :
+        Z_n = [atom["ATOMIC_NUMBER"] for atom in parsed_cube["GEOM"]]
+        atom_charges = [atom["CHARGE"] for atom in parsed_cube["GEOM"]]
+        atom_coords = [atom["POSITION"] for atom in parsed_cube["GEOM"]]
+    else :
+        Z_n = [ parsed_cube["GEOM"]["ATOMIC_NUMBER"] ]
+        atom_charges =  [ parsed_cube["GEOM"]["CHARGE"] ]
+        atom_coords =  [ parsed_cube["GEOM"]["POSITION"] ]
 
     # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
     CUBE_vector = [ [parsed_cube["DATA"][i*N_steps[1]*N_steps[2]*N_vals + j*N_steps[2]*N_vals + k*N_vals + ID] for i in range(N_steps[0]) for j in range(N_steps[1]) for k in range(N_steps[2])]  for ID in range(N_vals)]
@@ -186,7 +191,6 @@ def parse_cube_file(cube_path):
     cube_dict= {
             "CUBE_file": cube_path,
             "Header": {
-                "comments": comments[0]+comments[1],
                 "N_atoms": N_atoms,
                 "origin": origin,
                 "N_steps": N_steps,
