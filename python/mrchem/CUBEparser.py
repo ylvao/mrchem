@@ -161,7 +161,7 @@ def parse_cube_file(cube_path):
 
     # files are given as [phi,rho]_[p,a,b]_[rsp,scf]_#_[re,im]_[x,y].cube
     #test that the file name makes sense
-    path_ids = cube_path.split("_")[3]
+    path_ids = cube_path.split("/")[-1].split("_")[3]
     if ("-" in path_ids):
         from_to = path_ids.split("-")
         orb_ids = list(range(from_to[0], (from_to[1]+1), 1))  # we work as including the from and to, so 4-7 includes 4, 5, 6 and 7.

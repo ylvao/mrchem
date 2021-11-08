@@ -89,7 +89,6 @@ bool initial_guess::cube::setup(OrbitalVector &Phi, double prec, const std::stri
 }
 
 bool initial_guess::cube::project_mo(OrbitalVector &Phi, double prec, const std::string &mo_file) {
-    std::cout << __FILE__ << "\n";
     if (Phi.size() == 0) return true;
 
     Timer t_tot;
