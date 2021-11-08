@@ -24,6 +24,7 @@
 # <https://mrchem.readthedocs.io/>
 #
 from .input_parser.plumbing import pyparsing as pp
+import os
 from json import dump
 
 def write_cube_dict(file_dict):
@@ -36,13 +37,17 @@ def write_cube_dict(file_dict):
                 cube_list.append(parse_cube_file(path))
         all_cube_list.append(cube_list)
 
-    with open("CUBE_p_vector.json", "w") as fd:
+    vector_dir = "cube_vectors"   # to be changed into a user defined variable
+    if (not os.path.isdir(vector_dir)) :
+        os.mkdir(vector_dir)
+
+    with open(f"{vector_dir}/CUBE_p_vector.json", "w") as fd:
         dump(all_cube_list[0], fd, indent=2)
 
-    with open("CUBE_a_vector.json", "w") as fd:
+    with open(f"{vector_dir}/CUBE_a_vector.json", "w") as fd:
         dump(all_cube_list[1], fd, indent=2)
 
-    with open("CUBE_b_vector.json", "w") as fd:
+    with open(f"{vector_dir}/CUBE_b_vector.json", "w") as fd:
         dump(all_cube_list[2], fd, indent=2)
 
 
