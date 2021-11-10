@@ -27,14 +27,20 @@ from .input_parser.plumbing import pyparsing as pp
 import os
 from json import dump
 
-def write_cube_dict(file_dict):
+BOHR_2_METER = 5.29177210903e-11
+"""Conversion from atomic units of length (Bohr) to meter (CODATA 2018)"""
+ANGSTROM_2_BOHR = 1e-10 / BOHR_2_METER
+#ANGSTROM_2_BOHR = 1.889725989
+"""Conversion factor from Angstrom to Bohr"""
+
+def write_cube_dict(file_dict, world_unit):
     all_path_list = sort_paths(file_dict["CUBEfiles"]) # this is a temporary fix until I have decided how to order the different files
     all_cube_list = []
     for path_list in all_path_list:
         cube_list = []
         if (len(path_list) != 0):
             for path in path_list:
-                cube_list.append(parse_cube_file(path))
+                cube_list.append(parse_cube_file(path, world_unit))
         all_cube_list.append(cube_list)
 
     vector_dir = "cube_vectors"   # to be changed into a user defined variable
@@ -72,7 +78,7 @@ def sort_paths(path_l):
 
 #TODO do a sanity check on the naming of the files
 
-def parse_cube_file(cube_path):
+def parse_cube_file(cube_path, world_unit):
 
     """
     Pyparsing CUBE file
@@ -156,7 +162,7 @@ def parse_cube_file(cube_path):
 
     # get cube origin data
     N_atoms = parsed_cube["NATOMS"]
-    origin = parsed_cube["ORIGIN"]
+    origin = parsed_cube["ORIGIN"] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in parsed_cube["ORIGIN"]]
 
     # Set the amount of values depending on if the DSET_IDs were present or not
     if ("DSET_IDS" in parsed_cube.keys()):
@@ -165,7 +171,7 @@ def parse_cube_file(cube_path):
         N_vals = parsed_cube["NVAL"]
 
     # files are given as [phi,rho]_[p,a,b]_[rsp,scf]_#_[re,im]_[x,y].cube
-    #test that the file name makes sense
+    #TODO test that the file name makes sense
     path_ids = cube_path.split("/")[-1].split("_")[3]
     if ("-" in path_ids):
         from_to = path_ids.split("-")
@@ -178,17 +184,23 @@ def parse_cube_file(cube_path):
 
     # get voxel axis data to construct a basis for the cube space.
     N_steps = [parsed_cube["XAXIS"]["NVOXELS"], parsed_cube["YAXIS"]["NVOXELS"], parsed_cube["ZAXIS"]["NVOXELS"]]
-    Voxel_axes = [parsed_cube["XAXIS"]["VECTOR"], parsed_cube["YAXIS"]["VECTOR"], parsed_cube["ZAXIS"]["VECTOR"]]
+    if (world_unit == "bohr"):
+        Voxel_axes = [parsed_cube["XAXIS"]["VECTOR"], parsed_cube["YAXIS"]["VECTOR"], parsed_cube["ZAXIS"]["VECTOR"]]
+    else:
+        X_voxel = [p*ANGSTROM_2_BOHR for p in parsed_cube["XAXIS"]["VECTOR"]]
+        Y_voxel = [p*ANGSTROM_2_BOHR for p in parsed_cube["YAXIS"]["VECTOR"]]
+        Z_voxel = [p*ANGSTROM_2_BOHR for p in parsed_cube["ZAXIS"]["VECTOR"]]
+        Voxel_axes = [X_voxel, Y_voxel, Z_voxel]
 
     # get the atom coordinates
     if (type(parsed_cube["GEOM"]) == list) :
         Z_n = [atom["ATOMIC_NUMBER"] for atom in parsed_cube["GEOM"]]
         atom_charges = [atom["CHARGE"] for atom in parsed_cube["GEOM"]]
-        atom_coords = [atom["POSITION"] for atom in parsed_cube["GEOM"]]
+        atom_coords = [atom["POSITION"] for atom in parsed_cube["GEOM"]] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in [atom["POSITION"]] for atom in parsed_cube["GEOM"]]
     else :
         Z_n = [ parsed_cube["GEOM"]["ATOMIC_NUMBER"] ]
         atom_charges =  [ parsed_cube["GEOM"]["CHARGE"] ]
-        atom_coords =  [ parsed_cube["GEOM"]["POSITION"] ]
+        atom_coords =  [ parsed_cube["GEOM"]["POSITION"] ] if (world_unit == "bohr") else [[p*ANGSTROM_2_BOHR for p in parsed_cube["GEOM"]["POSITION"]]]
 
     # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
     CUBE_vector = [ [parsed_cube["DATA"][i*N_steps[1]*N_steps[2]*N_vals + j*N_steps[2]*N_vals + k*N_vals + ID] for i in range(N_steps[0]) for j in range(N_steps[1]) for k in range(N_steps[2])]  for ID in range(N_vals)]
