@@ -168,7 +168,7 @@ def parse_cube_file(cube_path, world_unit):
     if ("DSET_IDS" in parsed_cube.keys()):
         N_vals = len(parsed_cube["DSET_IDS"])
     else:
-        N_vals = parsed_cube["NVAL"]
+        N_vals = parsed_cube["NVAL"][0]
 
     # files are given as [phi,rho]_[p,a,b]_[rsp,scf]_#_[re,im]_[x,y].cube
     #TODO test that the file name makes sense
@@ -196,12 +196,11 @@ def parse_cube_file(cube_path, world_unit):
     if (type(parsed_cube["GEOM"]) == list) :
         Z_n = [atom["ATOMIC_NUMBER"] for atom in parsed_cube["GEOM"]]
         atom_charges = [atom["CHARGE"] for atom in parsed_cube["GEOM"]]
-        atom_coords = [atom["POSITION"] for atom in parsed_cube["GEOM"]] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in [atom["POSITION"]] for atom in parsed_cube["GEOM"]]
+        atom_coords = [atom["POSITION"] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in atom["POSITION"]] for atom in parsed_cube["GEOM"]]
     else :
         Z_n = [ parsed_cube["GEOM"]["ATOMIC_NUMBER"] ]
         atom_charges =  [ parsed_cube["GEOM"]["CHARGE"] ]
         atom_coords =  [ parsed_cube["GEOM"]["POSITION"] ] if (world_unit == "bohr") else [[p*ANGSTROM_2_BOHR for p in parsed_cube["GEOM"]["POSITION"]]]
-
     # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
     CUBE_vector = [ [parsed_cube["DATA"][i*N_steps[1]*N_steps[2]*N_vals + j*N_steps[2]*N_vals + k*N_vals + ID] for i in range(N_steps[0]) for j in range(N_steps[1]) for k in range(N_steps[2])]  for ID in range(N_vals)]
 
