@@ -114,10 +114,6 @@ def parse_cube_file(cube_path, world_unit):
     # row with molecular geometry
     geom_field_t = pp.Group(nonzero_uint_t("ATOMIC_NUMBER") + float_t("CHARGE") + coords("POSITION"))
 
-    # volumetric data
-    voxel_t = pp.delimitedList(float_t, delim=pp.Empty())("DATA")
-
-
     # specification of cube axes
     def axis_spec_t(d):
         return pp.Group(nonzero_uint_t("NVOXELS") + coords("VECTOR"))(f"{d.upper()}AXIS")
@@ -147,7 +143,7 @@ def parse_cube_file(cube_path, world_unit):
 
         return natoms_t + pre + expr + post
 
-    cube_t = preamble_t(before_t, after_t) + voxel_t
+    cube_t = preamble_t(before_t, after_t)
 
     # parse the whole file and extract both all the values and the header
     with open(cube_path, "r") as cube_file:
@@ -155,7 +151,12 @@ def parse_cube_file(cube_path, world_unit):
         cube_str = "\n".join(cube_file.readlines()[2:])
 
     parsed_cube = cube_t.parseString(cube_str).asDict()
-
+    # manually extracting voxel values
+    if ("DSET_IDS" not in parsed_cube.keys()):
+        parsed_cube["DSET_IDS"] = []
+        
+    cube_s = cube_str.split("\n")
+    parsed_cube["DATA"] = ([float(value) for line in (cube_s[(4 + abs(parsed_cube["NATOMS"])):]) for value in line.split()])[(len(parsed_cube["DSET_IDS"])+1):]
 
     # start extracting the header values
 
@@ -165,7 +166,7 @@ def parse_cube_file(cube_path, world_unit):
     origin = parsed_cube["ORIGIN"] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in parsed_cube["ORIGIN"]]
 
     # Set the amount of values depending on if the DSET_IDs were present or not
-    if ("DSET_IDS" in parsed_cube.keys()):
+    if (len(parsed_cube["DSET_IDS"]) != 0):
         N_vals = len(parsed_cube["DSET_IDS"])
     else:
         N_vals = parsed_cube["NVAL"][0]
