@@ -494,11 +494,29 @@ User input reference
   
     **Default** ``initial_guess/Y_b``
   
-   :CUBEfiles: List of paths for the CUBEfiles. can be only one or many. The file naming format is as follows (0)_(1)_(2)_(3)_(4).cube where:   - (0) must be phi, for orbitals, or rho, for densities.   - (1) must be p, a or b for paired, alpha or beta spin function respectively.   - (2) must be scf or rsp for a SCF calculation or response respectively.   - (3) must be an integer defining the function ID or an interval of the form a-b where we include a, a+1, ..., b-1, b functions.   - (4) re or im for real or imaginary parts of the function. 
+   :guess_cube_p: File name for paired orbitals, used with ``cube`` guess 
   
-    **Type** ``List[str]``
+    **Type** ``str``
   
-    **Default** ``[]``
+    **Default** ``initial_guess/phi_p``
+  
+   :guess_cube_a: File name for alpha orbitals, used with ``cube`` guess 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/phi_a``
+  
+   :guess_cube_b: File name for beta orbitals, used with ``cube`` guess 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/phi_b``
+  
+   :cube_vectors: Directory where cube vectors are stored for mrchem calculation. 
+  
+    **Type** ``str``
+  
+    **Default** ``cube_vectors/``
   
  :SCF: Includes parameters related to the ground state SCF orbital optimization. 
 

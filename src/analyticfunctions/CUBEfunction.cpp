@@ -84,8 +84,9 @@ double CUBEfunction::evalf(const mrcpp::Coord<3> &r) const {
     // do the trilinear interpolation naively without loops or any logic (just plug in the equations)
     // TODO use the linear system form
     double c;
+    // Do a sanity check on the point we are evaluating at is in the cube or not. If not return 0.
     if ((coeff(0) > N_steps[0]) or (coeff(1) > N_steps[1]) or (coeff(2) > N_steps[2]) or (coeff(0) < 0) or (coeff(1) < 0) or (coeff(2) < 0)) {
-        c = 0.0; // this should prohibit the interpolation from giving out trash when evaluating outside the cube.
+        c = 0.0;
     } else {
         auto c000 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (index(2))];
         auto c001 = CUBE[(index(0)) * N_steps[1] * N_steps[2] + (index(1)) * N_steps[2] + (1 + index(2))];

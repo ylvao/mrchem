@@ -34,7 +34,10 @@ ANGSTROM_2_BOHR = 1e-10 / BOHR_2_METER
 """Conversion factor from Angstrom to Bohr"""
 
 def write_cube_dict(file_dict, world_unit):
-    all_path_list = sort_paths(file_dict["CUBEfiles"]) # this is a temporary fix until I have decided how to order the different files
+    all_path_list = []
+    all_path_list.append(sort_paths(file_dict["guess_cube_p"]))
+    all_path_list.append(sort_paths(file_dict["guess_cube_a"]))
+    all_path_list.append(sort_paths(file_dict["guess_cube_b"]))
     all_cube_list = []
     for path_list in all_path_list:
         cube_list = []
@@ -43,7 +46,7 @@ def write_cube_dict(file_dict, world_unit):
                 cube_list.append(parse_cube_file(path, world_unit))
         all_cube_list.append(cube_list)
 
-    vector_dir = "cube_vectors"   # to be changed into a user defined variable
+    vector_dir = file_dict["cube_vectors"]
     if (not os.path.isdir(vector_dir)) :
         os.mkdir(vector_dir)
 
@@ -57,24 +60,15 @@ def write_cube_dict(file_dict, world_unit):
         dump(all_cube_list[2], fd, indent=2)
 
 
-def sort_paths(path_l):
-    path_p = []
-    path_a = []
-    path_b = []
-    if (len(path_l) != 0):
-        for path in path_l:
-            file_name = path.split("/")[-1]
-            path_s = file_name.split("_")
-            if ("p" == path_s[1]):
-                path_p.append(path)
-            elif("a" == path_s[1]):
-                path_a.append(path)
-            elif("b" == path_s[1]):
-                path_b.append(path)
-            else:
-                raise ValueError("Wrong CUBE file name format")
-    return [path_p, path_a, path_b]
-
+def sort_paths(path):
+    path_l = []
+    dir_path = "/".join(path.split("/")[:-1])
+    directory = os.fsencode(dir_path)
+    for file in os.listdir(directory):
+        filename = os.fsdecode(file)
+        if ((filename.startswith(path.split("/")[-1])) and (filename.endswith(".cube"))):
+            path_l.append(dir_path+"/"+filename)
+    return path_l
 
 #TODO do a sanity check on the naming of the files
 

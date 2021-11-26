@@ -154,7 +154,7 @@ def write_scf_guess(user_dict, method_name):
     if (guess_type == 'cube'):
         write_cube_dict(file_dict, user_dict["world_unit"])
 
-    vector_dir = "cube_vectors"   # to be changed into a user defined variable
+    vector_dir = file_dict["cube_vectors"]
     guess_dict = {
         "zeta": zeta,
         "prec": guess_prec,

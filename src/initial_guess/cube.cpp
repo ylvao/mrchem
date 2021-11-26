@@ -148,7 +148,9 @@ std::vector<mrchem::CUBEfunction> initial_guess::cube::getCUBEFunction(const jso
         auto atom_coords = Header["atom_coords"];
         auto N_vals = Header["N_vals"];
         for (const auto &value : item.value()["CUBE_data"].items()) {
-            auto CUBE_data = value.value(); // the data is saved as a vector of vectors indexing as CUBE_data[ID][x_val*n_steps[1]*n_steps[2] + y_val*n_steps[2] + z_val]
+            // the data is saved as a vector of vectors indexing as
+            // CUBE_data[ID][x_val*n_steps[1]*n_steps[2] + y_val*n_steps[2] + z_val]
+            auto CUBE_data = value.value();
             mrchem::CUBEfunction single_cube(N_atoms, N_vals, N_steps, origin, Voxel_axes, Z_n, CUBE_data, atom_charges, atom_coords);
             CUBEVector.push_back(single_cube);
         }
