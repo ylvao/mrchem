@@ -170,9 +170,9 @@ def write_scf_guess(user_dict, method_name):
         "file_phi_p": file_dict["guess_phi_p"] + "_scf",
         "file_phi_a": file_dict["guess_phi_a"] + "_scf",
         "file_phi_b": file_dict["guess_phi_b"] + "_scf",
-        "file_CUBE_p": f"{vector_dir}/CUBE_p_vector.json",
-        "file_CUBE_a": f"{vector_dir}/CUBE_a_vector.json",
-        "file_CUBE_b": f"{vector_dir}/CUBE_b_vector.json"
+        "file_CUBE_p": f"{vector_dir}CUBE_p_vector.json",
+        "file_CUBE_a": f"{vector_dir}CUBE_a_vector.json",
+        "file_CUBE_b": f"{vector_dir}CUBE_b_vector.json"
 
     }
     return guess_dict

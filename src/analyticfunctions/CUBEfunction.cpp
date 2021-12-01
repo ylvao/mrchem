@@ -108,8 +108,6 @@ double CUBEfunction::evalf(const mrcpp::Coord<3> &r) const {
         c = c0 * (1 - d_index(2)) + c1 * d_index(2);
     }
 
-    // Alternativelly i could solve this as a linear system in a (potentially) more effective algorithm
-
     return c;
 }
 

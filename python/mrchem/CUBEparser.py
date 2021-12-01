@@ -50,13 +50,13 @@ def write_cube_dict(file_dict, world_unit):
     if (not os.path.isdir(vector_dir)) :
         os.mkdir(vector_dir)
 
-    with open(f"{vector_dir}/CUBE_p_vector.json", "w") as fd:
+    with open(f"{vector_dir}CUBE_p_vector.json", "w") as fd:
         dump(all_cube_list[0], fd, indent=2)
 
-    with open(f"{vector_dir}/CUBE_a_vector.json", "w") as fd:
+    with open(f"{vector_dir}CUBE_a_vector.json", "w") as fd:
         dump(all_cube_list[1], fd, indent=2)
 
-    with open(f"{vector_dir}/CUBE_b_vector.json", "w") as fd:
+    with open(f"{vector_dir}CUBE_b_vector.json", "w") as fd:
         dump(all_cube_list[2], fd, indent=2)
 
 
@@ -64,10 +64,11 @@ def sort_paths(path):
     path_l = []
     dir_path = "/".join(path.split("/")[:-1])
     directory = os.fsencode(dir_path)
-    for file in os.listdir(directory):
-        filename = os.fsdecode(file)
-        if ((filename.startswith(path.split("/")[-1])) and (filename.endswith(".cube"))):
-            path_l.append(dir_path+"/"+filename)
+    if (os.path.isdir(dir_path)):
+        for file in os.listdir(directory):
+            filename = os.fsdecode(file)
+            if ((filename.startswith(path.split("/")[-1])) and (filename.endswith(".cube"))):
+                path_l.append(dir_path+"/"+filename)
     return path_l
 
 #TODO do a sanity check on the naming of the files
@@ -142,13 +143,13 @@ def parse_cube_file(cube_path, world_unit):
     # parse the whole file and extract both all the values and the header
     with open(cube_path, "r") as cube_file:
         # we skip the first two lines as they are only comments and put the rest of the file in a single string
-        cube_str = "\n".join(cube_file.readlines()[2:])
+        cube_str = "".join(cube_file.readlines()[2:])  # The \n are already included in the string, don't need to double include them
 
     parsed_cube = cube_t.parseString(cube_str).asDict()
     # manually extracting voxel values
     if ("DSET_IDS" not in parsed_cube.keys()):
         parsed_cube["DSET_IDS"] = []
-        
+
     cube_s = cube_str.split("\n")
     parsed_cube["DATA"] = ([float(value) for line in (cube_s[(4 + abs(parsed_cube["NATOMS"])):]) for value in line.split()])[(len(parsed_cube["DSET_IDS"])+1):]
 
