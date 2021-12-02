@@ -47,6 +47,11 @@ def write_cube_dict(file_dict, world_unit):
         all_cube_list.append(cube_list)
 
     vector_dir = file_dict["cube_vectors"]
+
+    for index, x_list in enumerate(all_cube_list):
+        sorted_list = sorted(x_list, key=lambda d: d["ORB_IDS"])
+        all_cube_list[index] = sorted_list
+
     if (not os.path.isdir(vector_dir)) :
         os.mkdir(vector_dir)
 
