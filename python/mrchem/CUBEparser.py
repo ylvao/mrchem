@@ -156,7 +156,19 @@ def parse_cube_file(cube_path, world_unit):
         parsed_cube["DSET_IDS"] = []
 
     cube_s = cube_str.split("\n")
-    parsed_cube["DATA"] = ([float(value) for line in (cube_s[(4 + abs(parsed_cube["NATOMS"])):]) for value in line.split()])[(len(parsed_cube["DSET_IDS"])+1):]
+
+    all_data_list = []
+
+    # parse through a list of lines where the header has been removed, but the ORB_IDS remain, and append each value in a new all_data_list.
+    for line in (cube_s[(4 + abs(parsed_cube["NATOMS"])):]):
+        all_data_list.extend(line.split())
+
+    if (len(parsed_cube["DSET_IDS"]) != 0):
+        voxel_list = all_data_list[(len(parsed_cube["DSET_IDS"]) + 1):] # remove ORB_IDS from the all_data_list
+    else:
+        voxel_list = all_data_list
+
+    parsed_cube["DATA"] = [float(value) for value in voxel_list]
 
     # start extracting the header values
 
@@ -194,16 +206,22 @@ def parse_cube_file(cube_path, world_unit):
         Voxel_axes = [X_voxel, Y_voxel, Z_voxel]
 
     # get the atom coordinates
-    if (type(parsed_cube["GEOM"]) == list) :
-        Z_n = [atom["ATOMIC_NUMBER"] for atom in parsed_cube["GEOM"]]
-        atom_charges = [atom["CHARGE"] for atom in parsed_cube["GEOM"]]
-        atom_coords = [atom["POSITION"] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in atom["POSITION"]] for atom in parsed_cube["GEOM"]]
-    else :
-        Z_n = [ parsed_cube["GEOM"]["ATOMIC_NUMBER"] ]
-        atom_charges =  [ parsed_cube["GEOM"]["CHARGE"] ]
-        atom_coords =  [ parsed_cube["GEOM"]["POSITION"] ] if (world_unit == "bohr") else [[p*ANGSTROM_2_BOHR for p in parsed_cube["GEOM"]["POSITION"]]]
+    if (type(parsed_cube["GEOM"]) != list) :
+        parsed_cube["GEOM"] = [parsed_cube["GEOM"]]
+
+    Z_n = [atom["ATOMIC_NUMBER"] for atom in parsed_cube["GEOM"]]
+    atom_charges = [atom["CHARGE"] for atom in parsed_cube["GEOM"]]
+    atom_coords = [atom["POSITION"] if (world_unit == "bohr") else [p*ANGSTROM_2_BOHR for p in atom["POSITION"]] for atom in parsed_cube["GEOM"]]
+
     # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
-    CUBE_vector = [ [parsed_cube["DATA"][i*N_steps[1]*N_steps[2]*N_vals + j*N_steps[2]*N_vals + k*N_vals + ID] for i in range(N_steps[0]) for j in range(N_steps[1]) for k in range(N_steps[2])]  for ID in range(N_vals)]
+    CUBE_vector = []
+    for ID in range (N_vals):
+        single_function = []
+        for i in range(N_steps[0]):
+            for j in range(N_steps[1]):
+                for k in range(N_steps[2]):
+                    single_function.append(parsed_cube["DATA"][i*N_steps[1]*N_steps[2]*N_vals + j*N_steps[2]*N_vals + k*N_vals + ID])
+        CUBE_vector.append(single_function)
 
     cube_dict= {
             "CUBE_file": cube_path,
