@@ -422,61 +422,73 @@ sections:
         default: "initial_guess/phi_p"
         docstring: |
           File name for paired orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/phi_p_scf_idx_<0...Np>_<re/im>.mw
       - name: guess_phi_a
         type: str
         default: "initial_guess/phi_a"
         docstring: |
           File name for alpha orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/phi_a_scf_idx_<0...Na>_<re/im>.mw
       - name: guess_phi_b
         type: str
         default: "initial_guess/phi_b"
         docstring: |
           File name for beta orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.mw
       - name: guess_x_p
         type: str
         default: "initial_guess/X_p"
         docstring: |
           File name for paired response orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/x_p_rsp_idx_<0...Np>_<re/im>.mw
       - name: guess_x_a
         type: str
         default: "initial_guess/X_a"
         docstring: |
           File name for alpha response orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/x_a_rsp_idx_<0...Na>_<re/im>.mw
       - name: guess_x_b
         type: str
         default: "initial_guess/X_b"
         docstring: |
           File name for beta response orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/x_b_rsp_idx_<0...Nb>_<re/im>.mw
       - name: guess_y_p
         type: str
         default: "initial_guess/Y_p"
         docstring: |
           File name for paired response orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/y_p_rsp_idx_<0...Np>_<re/im>.mw
       - name: guess_y_a
         type: str
         default: "initial_guess/Y_a"
         docstring: |
           File name for alpha response orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/y_a_rsp_idx_<0...Na>_<re/im>.mw
       - name: guess_y_b
         type: str
         default: "initial_guess/Y_b"
         docstring: |
           File name for beta response orbitals, used with ``mw`` guess.
+          Expected path is ``<path_orbitals>/y_b_rsp_idx_<0...Nb>_<re/im>.mw
       - name: guess_cube_p
         type: str
         default: "initial_guess/phi_p"
         docstring: |
-          File name for paired orbitals, used with ``cube`` guess
+          File name for paired orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/phi_p_scf_idx_<0...Np>_<re/im>.cube
       - name: guess_cube_a
         type: str
         default: "initial_guess/phi_a"
         docstring: |
-          File name for alpha orbitals, used with ``cube`` guess
+          File name for alpha orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/phi_a>_scf_idx_<0...Na>_<re/im>.cube
       - name: guess_cube_b
         type: str
         default: "initial_guess/phi_b"
         docstring: |
-          File name for beta orbitals, used with ``cube`` guess
+          File name for beta orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.cube
       - name: cube_vectors
         type: str
         default: "cube_vectors/"
