@@ -34,6 +34,7 @@
 
 #include "initial_guess/chk.h"
 #include "initial_guess/core.h"
+#include "initial_guess/cube.h"
 #include "initial_guess/gto.h"
 #include "initial_guess/mw.h"
 #include "initial_guess/sad.h"
@@ -309,6 +310,9 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
     auto gto_bas = json_guess["file_basis"];
     auto file_chk = json_guess["file_chk"];
     auto restricted = json_guess["restricted"];
+    auto cube_p = json_guess["file_CUBE_p"];
+    auto cube_a = json_guess["file_CUBE_a"];
+    auto cube_b = json_guess["file_CUBE_b"];
 
     // Figure out number of electrons
     int mult = mol.getMultiplicity(); // multiplicity
@@ -344,6 +348,8 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
         success = initial_guess::sad::setup(Phi, prec, nucs, zeta);
     } else if (type == "gto") {
         success = initial_guess::gto::setup(Phi, prec, gto_bas, gto_p, gto_a, gto_b);
+    } else if (type == "cube") {
+        success = initial_guess::cube::setup(Phi, prec, cube_p, cube_a, cube_b);
     } else {
         MSG_ERROR("Invalid initial guess");
         success = false;
@@ -614,7 +620,7 @@ void driver::scf::plot_quantities(const json &json_plot, Molecule &mol) {
                 if (not mpi::my_orb(Phi[i])) continue;
                 t_lap.start();
                 std::stringstream name;
-                name << path << "/phi_" << i;
+                name << path << "/phi_" << Phi[i].printSpin() << "_scf_idx_" << i;
                 if (line) plt.linePlot(npts, Phi[i], name.str());
                 if (surf) plt.surfPlot(npts, Phi[i], name.str());
                 if (cube) plt.cubePlot(npts, Phi[i], name.str());
@@ -626,7 +632,11 @@ void driver::scf::plot_quantities(const json &json_plot, Molecule &mol) {
                 if (not mpi::my_orb(Phi[i])) continue;
                 t_lap.start();
                 std::stringstream name;
-                name << path << "/phi_" << i;
+                auto sp = 'u';
+                if (Phi[i].spin() == SPIN::Paired) sp = 'p';
+                if (Phi[i].spin() == SPIN::Alpha) sp = 'a';
+                if (Phi[i].spin() == SPIN::Beta) sp = 'b';
+                name << path << "/phi_" << sp << "_scf_idx_" << i;
                 if (line) plt.linePlot(npts, Phi[i], name.str());
                 if (surf) plt.surfPlot(npts, Phi[i], name.str());
                 if (cube) plt.cubePlot(npts, Phi[i], name.str());

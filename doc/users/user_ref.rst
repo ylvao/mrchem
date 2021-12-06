@@ -440,59 +440,83 @@ User input reference
   
     **Default** ``initial_guess/mrchem.mob``
   
-   :guess_phi_p: File name for paired orbitals, used with ``mw`` guess. 
+   :guess_phi_p: File name for paired orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/phi_p_scf_idx_<0...Np>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/phi_p``
   
-   :guess_phi_a: File name for alpha orbitals, used with ``mw`` guess. 
+   :guess_phi_a: File name for alpha orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/phi_a_scf_idx_<0...Na>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/phi_a``
   
-   :guess_phi_b: File name for beta orbitals, used with ``mw`` guess. 
+   :guess_phi_b: File name for beta orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/phi_b``
   
-   :guess_x_p: File name for paired response orbitals, used with ``mw`` guess. 
+   :guess_x_p: File name for paired response orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/x_p_rsp_idx_<0...Np>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/X_p``
   
-   :guess_x_a: File name for alpha response orbitals, used with ``mw`` guess. 
+   :guess_x_a: File name for alpha response orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/x_a_rsp_idx_<0...Na>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/X_a``
   
-   :guess_x_b: File name for beta response orbitals, used with ``mw`` guess. 
+   :guess_x_b: File name for beta response orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/x_b_rsp_idx_<0...Nb>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/X_b``
   
-   :guess_y_p: File name for paired response orbitals, used with ``mw`` guess. 
+   :guess_y_p: File name for paired response orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/y_p_rsp_idx_<0...Np>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/Y_p``
   
-   :guess_y_a: File name for alpha response orbitals, used with ``mw`` guess. 
+   :guess_y_a: File name for alpha response orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/y_a_rsp_idx_<0...Na>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/Y_a``
   
-   :guess_y_b: File name for beta response orbitals, used with ``mw`` guess. 
+   :guess_y_b: File name for beta response orbitals, used with ``mw`` guess. Expected path is ``<path_orbitals>/y_b_rsp_idx_<0...Nb>_<re/im>.mw 
   
     **Type** ``str``
   
     **Default** ``initial_guess/Y_b``
+  
+   :guess_cube_p: File name for paired orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/phi_p_scf_idx_<0...Np>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/phi_p``
+  
+   :guess_cube_a: File name for alpha orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/phi_a>_scf_idx_<0...Na>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/phi_a``
+  
+   :guess_cube_b: File name for beta orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/phi_b``
+  
+   :cube_vectors: Directory where cube vectors are stored for mrchem calculation. 
+  
+    **Type** ``str``
+  
+    **Default** ``cube_vectors/``
   
  :SCF: Includes parameters related to the ground state SCF orbital optimization. 
 
@@ -561,7 +585,7 @@ User input reference
     **Default** ``sad_dz``
   
     **Predicates**
-      - ``value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz', 'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz']``
+      - ``value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz', 'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'cube']``
   
    :write_checkpoint: Write orbitals to disk in each iteration, file name ``<path_checkpoint>/phi_scf_idx_<0..N>``. Can be used as ``chk`` initial guess in subsequent calculations. Note: must be given in quotes if there are slashes in the path "path/to/checkpoint". 
   
