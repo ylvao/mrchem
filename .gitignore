@@ -125,3 +125,6 @@ doc/xml/
 .ccls-cache/
 
 Pipfile.lock
+
+#Containers
+*.sif
