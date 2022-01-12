@@ -1,5 +1,5 @@
 name: Singularity Build (docker)
-on: 
+on:
   push:
     branches:
       - master
@@ -20,7 +20,7 @@ jobs:
           - 'mrchem'
         variant:
           - 'nompi'
-          - 'openmpi'
+          - 'openmpi4.0'
 
     container:
       image: quay.io/singularity/singularity:v${{ matrix.singularity_version }}
@@ -34,7 +34,7 @@ jobs:
       - name: Build container
         env:
           image_name: ${{ matrix.program }}_${{ matrix.variant }}
-          recipe_name: ${{ matrix.variant }}.def
+          recipe_name: Singularity.${{ matrix.variant }}
         run: |
           echo "Building ${{ matrix.program }} ${{ matrix.variant }}"
           echo "GITHUB_REF: ${GITHUB_REF}"
@@ -47,18 +47,18 @@ jobs:
 
           # determine release tag
           if [[ ${GITHUB_EVENT_NAME} == "release" ]]; then
-            # give release events tag "vX.Y.Z" (GITHUB_REF=refs/tags/vX.Y.Z) 
+            # give release events tag "vX.Y.Z" (GITHUB_REF=refs/tags/vX.Y.Z)
             tag=$(basename $GITHUB_REF)
           else
-            # give push events on master tag "latest" 
+            # give push events on master tag "latest"
             tag="latest"
           fi
-          
+
           # Build the container and name by tag
           echo "TAG=$tag" >> $GITHUB_ENV
 
       - name: Login and deploy container
-        run: |         
+        run: |
           echo ${{ secrets.GITHUB_TOKEN }} | singularity remote login -u ${{ secrets.GHCR_USERNAME }} --password-stdin oras://ghcr.io
           echo "Pushing $IMAGE_NAME with tag $TAG"
           singularity push container.sif oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:${TAG}
