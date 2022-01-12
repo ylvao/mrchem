@@ -10,11 +10,11 @@
 
 Latest `master` version (here OpenMP variant):
 
-    $ singularity pull oras://ghcr.io/MRChemSoft/mrchem-nompi:latest
+    $ singularity pull oras://ghcr.io/MRChemSoft/mrchem/mrchem-nompi:latest
 
 Tagged version (here MRChem-v1.0.2 using OpenMPI-v4.0):
 
-    $ singularity pull oras://ghcr.io/MRChemSoft/mrchem-openmpi4.0:v1.0.2
+    $ singularity pull oras://ghcr.io/MRChemSoft/mrchem/mrchem-openmpi4.0:v1.0.2
 
 ### Run Singularity container (non MPI)
 
