@@ -92,10 +92,24 @@ for available `<versions>` and `<toolchains>`.
 
 ### Using Singularity
 
-To download MRChem image from Singularity Hub:
+Singularity recipe files are provided under `recipes/` for building local container images using
+the current state of the source. Requires Singularity >= v3.2 as well as `sudo` rights on the
+machine you are building on:
 
-    $ singularity pull --name mrchem-omp.sif shub://MRChemSoft/mrchem-singularity:v1.0.0-nompi
-    $ singularity pull --name mrchem-mpi.sif shub://MRChemSoft/mrchem-singularity:v1.0.0-openmpi4.0.5
+    $ sudo singularity build <image_name>.sif recipes/Singularity.<variant>
+
+Recipes are provided for a pure OpenMP build (`recipes/Singularity.nompi`) and one MPI+OpenMP version,
+using `OpenMPI-4.0` (`recipes/Singularity.openmpi4.0`).
+
+Official MRChem images can also be downloaded from the GitHub Container Registry.
+
+Latest `master` version (here OpenMP variant):
+
+    $ singularity pull oras://ghcr.io/MRChemSoft/mrchem-nompi:latest
+
+Tagged version (here MRChem-v1.0.2 using OpenMPI-v4.0):
+
+    $ singularity pull oras://ghcr.io/MRChemSoft/mrchem-openmpi4.0:v1.0.2
 
 Note that the MPI image requires that a compatible MPI library is installed and
 available on the host. For information on how to launch the container:
