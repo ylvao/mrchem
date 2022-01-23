@@ -35,7 +35,7 @@
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/one_electron/ZoraOperator.h"
-#include "qmoperators/two_electron/FockOperator.h"
+#include "qmoperators/two_electron/FockBuilder.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
 
 using mrcpp::Printer;
@@ -193,7 +193,7 @@ void GroundStateSolver::reset() {
 /** @brief Run orbital optimization
  *
  * @param mol: Molecule to optimize
- * @param F: FockOperator defining the SCF equations
+ * @param F: FockBuilder defining the SCF equations
  *
  * Optimize orbitals until convergence thresholds are met. This algorithm computes
  * the Fock matrix explicitly using the kinetic energy operator, and uses a KAIN
@@ -215,7 +215,7 @@ void GroundStateSolver::reset() {
  * 11) Compute Fock matrix
  *
  */
-json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
+json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
     printParameters("Optimize ground state orbitals");
     Timer t_tot;
     json json_out;
