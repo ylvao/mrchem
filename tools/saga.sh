@@ -17,7 +17,7 @@ if [ -d "${build_dir}" ]; then
     echo "Build directory already exsits, please remove"
     exit 1
 else
-    ./setup --prefix=${install_dir} --omp --mpi --cxx=mpiicpc ${build_dir} && \
+    ./setup --prefix=${install_dir} --omp --mpi --cxx=mpicxx ${build_dir} && \
     cd ${build_dir} && \
     make && \
     OMP_NUM_THREADS=1 ctest -L unit --output-on-failure && \

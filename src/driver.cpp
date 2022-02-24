@@ -314,11 +314,16 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
     auto cube_a = json_guess["file_CUBE_a"];
     auto cube_b = json_guess["file_CUBE_b"];
 
+    int mult = mol.getMultiplicity();
+    if (restricted && mult != 1) {
+        MSG_ERROR("Restricted open-shell not supported");
+        return false;
+    }
+
     // Figure out number of electrons
-    int mult = mol.getMultiplicity(); // multiplicity
-    int Ne = mol.getNElectrons();     // total electrons
-    int Ns = mult - 1;                // single occ electrons
-    int Nd = Ne - Ns;                 // double occ electrons
+    int Ne = mol.getNElectrons(); // total electrons
+    int Ns = mult - 1;            // single occ electrons
+    int Nd = Ne - Ns;             // double occ electrons
     if (Nd % 2 != 0) {
         MSG_ERROR("Invalid multiplicity");
         return false;
