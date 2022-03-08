@@ -142,6 +142,85 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     return true;
 }
 
+bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nucs) {
+    if (Phi.size() == 0) return false;
+
+    auto restricted = (orbital::size_singly(Phi)) ? false : true;
+    mrcpp::print::separator(0, '~');
+    print_utils::text(0, "Calculation ", "Compute initial orbitals");
+    print_utils::text(0, "Method      ", "Diagonalize SAD Hamiltonian");
+    print_utils::text(0, "Precision   ", print_utils::dbl_to_str(prec, 5, true));
+    print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
+    print_utils::text(0, "Functional  ", "LDA (SVWN5)");
+    print_utils::text(0, "AO basis    ", "3-21G");
+    mrcpp::print::separator(0, '~', 2);
+
+    Timer t_tot, t_lap;
+    auto plevel = Printer::getPrintLevel();
+    if (plevel == 1) mrcpp::print::header(1, "SAD Initial Guess");
+
+    // Make Fock operator contributions
+    t_lap.start();
+    auto P_p = std::make_shared<mrcpp::PoissonOperator>(*MRA, prec);
+    auto D_p = std::make_shared<mrcpp::ABGVOperator<3>>(*MRA, 0.0, 0.0);
+
+    mrdft::Factory xc_factory(*MRA);
+    xc_factory.setSpin(false);
+    xc_factory.setFunctional("SLATERX", 1.0);
+    xc_factory.setFunctional("VWN5C", 1.0);
+    auto mrdft_p = xc_factory.build();
+
+    KineticOperator T(D_p);
+    NuclearOperator V_nuc(nucs, prec);
+    CoulombOperator J(P_p);
+    XCOperator XC(mrdft_p);
+    RankZeroOperator V = V_nuc + J + XC;
+    if (plevel == 1) mrcpp::print::time(1, "Projecting nuclear potential", t_lap);
+
+    // Compute Coulomb density
+    t_lap.start();
+    Density &rho_j = J.getDensity();
+    initial_guess::sad::project_atomic_densities(prec, rho_j, nucs);
+
+    // Compute XC density
+    Density &rho_xc = XC.getDensity(DensityType::Total);
+    qmfunction::deep_copy(rho_xc, rho_j);
+    if (plevel == 1) mrcpp::print::time(1, "Projecting GTO density", t_lap);
+
+    // Project AO basis of hydrogen functions
+    t_lap.start();
+    OrbitalVector Psi;
+    initial_guess::gto::project_ao(Psi, prec, nucs);
+    if (plevel == 1) mrcpp::print::time(1, "Projecting Hydrogen AOs", t_lap);
+
+    mrcpp::print::header(2, "Building Fock operator");
+    t_lap.start();
+    T.setup(prec);
+    V.setup(prec);
+    mrcpp::print::footer(2, t_lap, 2);
+    if (plevel == 1) mrcpp::print::time(1, "Building Fock operator", t_lap);
+
+    // Compute Fock matrix
+    mrcpp::print::header(2, "Diagonalizing Fock matrix");
+    ComplexMatrix U = initial_guess::core::diagonalize(Psi, T, V);
+
+    // Rotate orbitals and fill electrons by Aufbau
+    t_lap.start();
+    auto Phi_a = orbital::disjoin(Phi, SPIN::Alpha);
+    auto Phi_b = orbital::disjoin(Phi, SPIN::Beta);
+    initial_guess::core::rotate_orbitals(Phi, prec, U, Psi);
+    initial_guess::core::rotate_orbitals(Phi_a, prec, U, Psi);
+    initial_guess::core::rotate_orbitals(Phi_b, prec, U, Psi);
+    for (auto &phi_a : Phi_a) Phi.push_back(phi_a);
+    for (auto &phi_b : Phi_b) Phi.push_back(phi_b);
+    T.clear();
+    V.clear();
+
+    mrcpp::print::footer(2, t_lap, 2);
+    if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
+    return true;
+}
+
 void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Nuclei &nucs) {
     auto pprec = Printer::getPrecision();
     auto w0 = Printer::getWidth() - 1;

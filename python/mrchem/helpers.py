@@ -146,6 +146,8 @@ def write_scf_guess(user_dict, method_name):
             zeta = 3
         elif zeta_str == 'qz':
             zeta = 4
+        elif zeta_str == 'gto':
+            guess_type = guess_str
         else:
             print("Invalid zeta:" + guess_suffix)
 

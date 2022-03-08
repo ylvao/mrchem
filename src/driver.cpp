@@ -351,6 +351,8 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
     } else if (type == "sad") {
         success = initial_guess::sad::setup(Phi, prec, nucs, zeta);
+    } else if (type == "sad_gto") {
+        success = initial_guess::sad::setup(Phi, prec, nucs);
     } else if (type == "gto") {
         success = initial_guess::gto::setup(Phi, prec, gto_bas, gto_p, gto_a, gto_b);
     } else if (type == "cube") {

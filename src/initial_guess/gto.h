@@ -41,6 +41,7 @@
 // clang-format off
 namespace mrchem {
 class Nucleus;
+class Nuclei;
 
 namespace initial_guess {
 namespace gto {
@@ -57,7 +58,7 @@ void project_mo(OrbitalVector &Phi,
                 const std::string &mo_file);
 void project_ao(OrbitalVector &Phi,
                 double prec,
-                const std::string &bas_file);
+                const Nuclei &nucs);
 Density project_density(double prec,
                         const Nucleus &nuc,
                         const std::string &bas_file,

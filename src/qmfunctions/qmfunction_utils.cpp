@@ -23,6 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include "MRCPP/Gaussians"
 #include "MRCPP/Printer"
 #include "MRCPP/Timer"
 
@@ -114,6 +115,25 @@ void qmfunction::project(QMFunction &out, std::function<double(const mrcpp::Coor
         if (need_to_project) mrcpp::project<3>(prec, out.imag(), f);
     }
     mpi::share_function(out, 0, 123123, mpi::comm_share);
+}
+
+void qmfunction::project(QMFunction &out, mrcpp::GaussExp<3> &f, int type, double prec) {
+    bool need_to_project = not(out.isShared()) or mpi::share_master();
+    if (type == NUMBER::Real or type == NUMBER::Total) {
+        if (not out.hasReal()) out.alloc(NUMBER::Real);
+        if (need_to_project) {
+            for (int i = 0; i < f.size(); i++) mrcpp::build_grid(out.real(), *f[i]);
+        }
+        if (need_to_project) mrcpp::project<3>(prec, out.real(), f);
+    }
+    if (type == NUMBER::Imag or type == NUMBER::Total) {
+        if (not out.hasImag()) out.alloc(NUMBER::Imag);
+        if (need_to_project) {
+            for (int i = 0; i < f.size(); i++) mrcpp::build_grid(out.imag(), *f[i]);
+        }
+        if (need_to_project) mrcpp::project<3>(prec, out.imag(), f);
+    }
+    mpi::share_function(out, 0, 132231, mpi::comm_share);
 }
 
 void qmfunction::project(QMFunction &out, mrcpp::RepresentableFunction<3> &f, int type, double prec) {
