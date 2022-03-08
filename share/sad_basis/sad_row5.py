@@ -9,7 +9,7 @@ from pyscf import gto, scf
 def uncontract_dfunctions(basname='3-21g', atomic_symbol='He'):
     """Fetch 3-21G from basis set exchange and uncontract d-functions if present."""
     # Fetch basis set in NWChem format from BSE.
-    bas = bse.get_basis(name=basname, elements=[atomic_symbol], fmt='nwchem', header=False)
+    bas = bse.get_basis(name=basname, elements=[atomic_symbol], fmt='nwchem', header=True)
     atom = mendeleev.element(atomic_symbol)
     
     # No need to uncontract d-functions when there are none
@@ -43,12 +43,53 @@ def uncontract_dfunctions(basname='3-21g', atomic_symbol='He'):
     return '\n'.join(new)
 
 
-def sad(atom):
+def get_basis_in_mrchem_format(atomic_symbol):
+    bas = bse.convert_formatted_basis_str(uncontract_dfunctions(atomic_symbol=atomic_symbol), 'nwchem', 'dalton')
+    atom = mendeleev.element(atomic_symbol)
+        
+    Z = atom.atomic_number
+    if Z > 20:
+        nshells = 3
+    elif Z > 2:
+        nshells = 2
+    elif Z > 0:
+        nshells = 1
+    else:
+        raise ValueError('Invalid atomic number!')
+    nfuncs = ' '.join(['1' for _ in range(nshells)])
+        
+
+    # Ensure correct formatting for MRChem
+    new = []
+    for line in bas.splitlines():
+        if line.strip().startswith('!'):
+            continue
+        elif line.strip() == '':
+            continue
+        elif line.strip().startswith('a'):
+            continue
+        elif line.strip().startswith('H'):
+            new.append(' '.join(line.split()[1:]))
+        else:
+            new.append(' '.join(list(map(lambda x: f'{float(x):.12e}', line.split()))))
+
+    b = []
+    b.append('Gaussian basis 3-21G\n')
+    b.append('1\n')
+    b.append(f'{Z}. 1 {nshells} {nfuncs}\n')
+    b.append(f'{atomic_symbol} {0:.12f} {0:.12f} {0:.12f}\n')
+    for line in new:
+        b.append(line + '\n')
+
+    return "".join(b)
+
+
+def sad(atomic_symbol):
     """Compute density matrix for passed atom, and write density and basis set to file."""
     # Build molecule input
-    basis = uncontract_dfunctions(atomic_symbol=atom, basname='3-21g')
-    mol = gto.Mole(atom=f'{atom} 0.0 0.0 0.0', basis=basis, symmetry=False, verbose=False)
-    mol.spin = ElectronicConfiguration(mendeleev.element(atom).econf).unpaired_electrons()
+    basis = uncontract_dfunctions(atomic_symbol=atomic_symbol, basname='3-21g')
+    mol = gto.Mole(atom=f'{atomic_symbol} 0.0 0.0 0.0', basis=basis, symmetry=False, verbose=False)
+    mol.spin = ElectronicConfiguration(mendeleev.element(atomic_symbol).econf).unpaired_electrons()
     mol.build()
     
     # Set SCF method
@@ -68,17 +109,17 @@ def sad(atom):
     D[zeros] = 0.0
     dim = D.shape[0]
 
-    # Flatten density matrix and get basis set in dalton format
+    # Flatten density matrix and get basis set in mrchem format
     D_fmt = [f'{x:.12e}' for _ in D.tolist() for x in _]
-    dalton_basis = bse.convert_formatted_basis_str(basis, 'nwchem', 'dalton')
+    basis_mrc = get_basis_in_mrchem_format(atomic_symbol)
 
     # Write files
-    with open(atom + '.dens', 'w') as d, open(atom + '.bas', 'w') as b:
+    with open(atomic_symbol + '.dens', 'w') as d, open(atomic_symbol + '.bas', 'w') as b:
         d.write(f'{dim}\n')
         for line in D_fmt:
             d.write(line + '\n')
 
-        b.write(dalton_basis)
+        b.write(basis_mrc)
         
     return energy
         
