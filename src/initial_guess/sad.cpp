@@ -57,12 +57,12 @@ namespace mrchem {
 namespace initial_guess {
 namespace sad {
 
-void project_atomic_densities(double prec, Density &rho_tot, const Nuclei &nucs);
+void project_atomic_densities(double prec, Density &rho_tot, const Nuclei &nucs, double screen = -1.0);
 
 } // namespace sad
 } // namespace initial_guess
 
-bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nucs, int zeta) {
+bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, double screen, const Nuclei &nucs, int zeta) {
     if (Phi.size() == 0) return false;
 
     auto restricted = (orbital::size_singly(Phi)) ? false : true;
@@ -70,6 +70,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     print_utils::text(0, "Calculation ", "Compute initial orbitals");
     print_utils::text(0, "Method      ", "Diagonalize SAD Hamiltonian");
     print_utils::text(0, "Precision   ", print_utils::dbl_to_str(prec, 5, true));
+    print_utils::text(0, "Screening   ", print_utils::dbl_to_str(screen, 5, true) + " StdDev");
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
     print_utils::text(0, "Functional  ", "LDA (SVWN5)");
     print_utils::text(0, "AO basis    ", "Hydrogenic orbitals");
@@ -101,7 +102,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     // Compute Coulomb density
     t_lap.start();
     Density &rho_j = J.getDensity();
-    initial_guess::sad::project_atomic_densities(prec, rho_j, nucs);
+    initial_guess::sad::project_atomic_densities(prec, rho_j, nucs, screen);
 
     // Compute XC density
     Density &rho_xc = XC.getDensity(DensityType::Total);
@@ -142,7 +143,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     return true;
 }
 
-bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nucs) {
+bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, double screen, const Nuclei &nucs) {
     if (Phi.size() == 0) return false;
 
     auto restricted = (orbital::size_singly(Phi)) ? false : true;
@@ -150,6 +151,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     print_utils::text(0, "Calculation ", "Compute initial orbitals");
     print_utils::text(0, "Method      ", "Diagonalize SAD Hamiltonian");
     print_utils::text(0, "Precision   ", print_utils::dbl_to_str(prec, 5, true));
+    print_utils::text(0, "Screening   ", print_utils::dbl_to_str(screen, 5, true) + " StdDev");
     print_utils::text(0, "Restricted  ", (restricted) ? "True" : "False");
     print_utils::text(0, "Functional  ", "LDA (SVWN5)");
     print_utils::text(0, "AO basis    ", "3-21G");
@@ -180,7 +182,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     // Compute Coulomb density
     t_lap.start();
     Density &rho_j = J.getDensity();
-    initial_guess::sad::project_atomic_densities(prec, rho_j, nucs);
+    initial_guess::sad::project_atomic_densities(prec, rho_j, nucs, screen);
 
     // Compute XC density
     Density &rho_xc = XC.getDensity(DensityType::Total);
@@ -221,7 +223,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, const Nuclei &nu
     return true;
 }
 
-void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Nuclei &nucs) {
+void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot, const Nuclei &nucs, double screen) {
     auto pprec = Printer::getPrecision();
     auto w0 = Printer::getWidth() - 1;
     auto w1 = 5;
@@ -267,7 +269,7 @@ void initial_guess::sad::project_atomic_densities(double prec, Density &rho_tot,
         o_bas << sad_path << "/" << sym << ".bas";
         o_dens << sad_path << "/" << sym << ".dens";
 
-        Density rho_k = initial_guess::gto::project_density(prec, nucs[k], o_bas.str(), o_dens.str());
+        Density rho_k = initial_guess::gto::project_density(prec, nucs[k], o_bas.str(), o_dens.str(), screen);
         rho_loc.add(1.0, rho_k);
         rho_loc.crop(crop_prec);
 

@@ -566,6 +566,12 @@ User input reference
     **Predicates**
       - ``1.0e-10 < value < 1.0``
   
+   :guess_screen: Screening parameter used in GTO evaluations, in number of standard deviations. Every coordinate beyond N StdDev from the Gaussian center is evaluated to zero. Note that too aggressive screening is counter productive, because it leads to a sharp cutoff in the resulting function which requires higher grid refinement. Negative value means no screening. 
+  
+    **Type** ``float``
+  
+    **Default** ``12.0``
+  
    :start_prec: Incremental precision in SCF iterations, initial value. 
   
     **Type** ``float``

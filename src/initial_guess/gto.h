@@ -48,6 +48,7 @@ namespace gto {
 
 bool setup(OrbitalVector &Phi,
            double prec,
+           double screen,
            const std::string &bas_file,
            const std::string &mop_file,
            const std::string &moa_file,
@@ -55,14 +56,17 @@ bool setup(OrbitalVector &Phi,
 void project_mo(OrbitalVector &Phi,
                 double prec,
                 const std::string &bas_file,
-                const std::string &mo_file);
+                const std::string &mo_file,
+                double screen = -1.0);
 void project_ao(OrbitalVector &Phi,
                 double prec,
-                const Nuclei &nucs);
+                const Nuclei &nucs,
+                double screen = -1.0);
 Density project_density(double prec,
                         const Nucleus &nuc,
                         const std::string &bas_file,
-                        const std::string &dens_file);
+                        const std::string &dens_file,
+                        double screen = -1.0);
 
 } // namespace gto
 } // namespace initial_guess

@@ -25,6 +25,7 @@
     },
     "SCF": {
         "run": false,
+        "guess_screen": -1.0,
         "guess_type": "GTO"
     },
     "Response": {

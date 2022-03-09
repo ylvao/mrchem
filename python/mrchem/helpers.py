@@ -162,6 +162,7 @@ def write_scf_guess(user_dict, method_name):
         "prec": guess_prec,
         "type": guess_type,
         "method": method_name,
+        "screen": scf_dict["guess_screen"],
         "localize": scf_dict["localize"],
         "restricted": user_dict["WaveFunction"]["restricted"],
         "file_chk": scf_dict["path_checkpoint"] + "/phi_scf",
