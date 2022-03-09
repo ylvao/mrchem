@@ -541,6 +541,15 @@ sections:
           - '1.0e-10 < value < 1.0'
         docstring: |
           Precision parameter used in construction of initial guess.
+      - name: guess_screen
+        type: float
+        default: 12.0
+        docstring: |
+          Screening parameter used in GTO evaluations, in number of standard deviations.
+          Every coordinate beyond N StdDev from the Gaussian center is evaluated to zero.
+          Note that too aggressive screening is counter productive, because it leads to
+          a sharp cutoff in the resulting function which requires higher grid refinement.
+          Negative value means no screening.
       - name: start_prec
         type: float
         default: -1.0
@@ -567,6 +576,7 @@ sections:
              'sad_dz',
              'sad_tz',
              'sad_qz',
+             'sad_gto',
              'cube']"
         docstring: |
           Type of initial guess for ground state orbitals.

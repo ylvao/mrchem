@@ -52,6 +52,7 @@ namespace mrchem {
  *
  * @param Phi: vector or MW orbitals
  * @param prec: precision used in projection
+ * @param screen: GTO screening in StdDev
  * @param bas_file: basis set file (LSDalton format)
  * @param mop_file: file with paired MO coefficients
  * @param moa_file: file with alpha MO coefficients
@@ -68,6 +69,7 @@ namespace mrchem {
  */
 bool initial_guess::gto::setup(OrbitalVector &Phi,
                                double prec,
+                               double screen,
                                const std::string &bas_file,
                                const std::string &mop_file,
                                const std::string &moa_file,
@@ -78,6 +80,7 @@ bool initial_guess::gto::setup(OrbitalVector &Phi,
     print_utils::text(0, "Calculation   ", "Compute initial orbitals");
     print_utils::text(0, "Method        ", "Project GTO molecular orbitals");
     print_utils::text(0, "Precision     ", print_utils::dbl_to_str(prec, 5, true));
+    print_utils::text(0, "Screening     ", print_utils::dbl_to_str(screen, 5, true) + " StdDev");
     if (orbital::size_singly(Phi)) {
         print_utils::text(0, "Restricted    ", "False");
         print_utils::text(0, "MO alpha file ", moa_file);
@@ -93,9 +96,9 @@ bool initial_guess::gto::setup(OrbitalVector &Phi,
     auto Phi_b = orbital::disjoin(Phi, SPIN::Beta);
 
     // Project paired, alpha and beta separately
-    initial_guess::gto::project_mo(Phi, prec, bas_file, mop_file);
-    initial_guess::gto::project_mo(Phi_a, prec, bas_file, moa_file);
-    initial_guess::gto::project_mo(Phi_b, prec, bas_file, mob_file);
+    initial_guess::gto::project_mo(Phi, prec, bas_file, mop_file, screen);
+    initial_guess::gto::project_mo(Phi_a, prec, bas_file, moa_file, screen);
+    initial_guess::gto::project_mo(Phi_b, prec, bas_file, mob_file, screen);
 
     // Collect orbitals into one vector
     for (auto &phi_a : Phi_a) Phi.push_back(phi_a);
@@ -110,6 +113,7 @@ bool initial_guess::gto::setup(OrbitalVector &Phi,
  * @param prec Precision used in projection
  * @param bas_file String containing basis set file
  * @param mo_file String containing MO matrix file
+ * @param screen GTO screening in StdDev
  *
  * Projects the N first rows of the MO matrix from GTO orbitals into
  * corresponding MW orbitals.
@@ -118,7 +122,8 @@ bool initial_guess::gto::setup(OrbitalVector &Phi,
 void initial_guess::gto::project_mo(OrbitalVector &Phi,
                                     double prec,
                                     const std::string &bas_file,
-                                    const std::string &mo_file) {
+                                    const std::string &mo_file,
+                                    double screen) {
     if (Phi.size() == 0) return;
 
     Timer t_tot;
@@ -156,6 +161,7 @@ void initial_guess::gto::project_mo(OrbitalVector &Phi,
         Timer t_i;
         if (mpi::my_orb(Phi[i])) {
             GaussExp<3> mo_i = gto_exp.getMO(i, MO.transpose());
+            mo_i.calcScreening(screen);
             Phi[i].alloc(NUMBER::Real);
             mrcpp::project(prec, Phi[i].real(), mo_i);
         }
@@ -177,40 +183,83 @@ void initial_guess::gto::project_mo(OrbitalVector &Phi,
  * @param Phi: vector or MW orbitals
  * @param prec Precision used in projection
  * @param bas_file String containing basis set file
+ * @param screen GTO screening in StdDev
  *
  * Projects the N first Gaussian-type AOs into corresponding MW orbitals.
  *
  */
-void initial_guess::gto::project_ao(OrbitalVector &Phi, double prec, const std::string &bas_file) {
-    if (Phi.size() == 0) return;
-    mrcpp::print::header(0, "Setting up Gaussian-type AOs");
-    println(1, "    n  Spin  Occ                           SquareNorm");
-    mrcpp::print::separator(0, '-');
+void initial_guess::gto::project_ao(OrbitalVector &Phi, double prec, const Nuclei &nucs, double screen) {
     Timer timer;
+    auto w0 = Printer::getWidth() - 2;
+    auto w1 = 5;
+    auto w2 = 7;
+    auto w3 = w0 * 2 / 9;
+    auto w4 = w0 - w1 - w2 - 3 * w3;
 
-    // Setup AO basis
-    gto_utils::Intgrl intgrl(bas_file);
-    gto_utils::OrbitalExp gto_exp(intgrl);
-    if (gto_exp.size() < Phi.size()) MSG_ABORT("Size mismatch");
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "n";
+    o_head << std::setw(w4) << "Atom";
+    o_head << std::setw(w2) << "Label";
+    o_head << std::setw(w3 + 1) << "Nodes";
+    o_head << std::setw(w3) << "Size";
+    o_head << std::setw(w3) << "Time";
 
-    for (int i = 0; i < Phi.size(); i++) {
-        GaussExp<3> ao_i = gto_exp.getAO(i);
-        qmfunction::project(Phi[i], ao_i, NUMBER::Real, prec);
-        printout(0, std::setw(5) << i);
-        printout(0, std::setw(5) << Phi[i].printSpin());
-        printout(0, std::setw(5) << Phi[i].occ());
-        printout(0, std::setw(44) << Phi[i].norm() << std::endl);
-        Phi.push_back(Phi[i]);
+    mrcpp::print::header(2, "Projecting Gaussian-type AOs");
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
+
+    const char label[10] = "spdfg";
+
+    for (const auto &nuc : nucs) {
+        std::string sad_path;
+        for (auto n : {sad_basis_source_dir(), sad_basis_install_dir()}) {
+            auto trimmed = print_utils::rtrim_copy(n);
+            if (mrcpp::details::directory_exists(trimmed)) {
+                sad_path = trimmed;
+                break;
+            }
+        }
+        const std::string &sym = nuc.getElement().getSymbol();
+        std::stringstream o_bas;
+        o_bas << sad_path << "/" << sym << ".bas";
+
+        // Setup AO basis
+        gto_utils::Intgrl intgrl(o_bas.str());
+        intgrl.getNucleus(0).setCoord(nuc.getCoord());
+        gto_utils::OrbitalExp gto_exp(intgrl);
+
+        int n = 0;
+        for (int i = 0; i < gto_exp.size(); i++) {
+            Timer t_i;
+            Phi.push_back(Orbital(SPIN::Paired));
+            Phi.back().setRankID(Phi.size() % mpi::orb_size);
+            GaussExp<3> ao_i = gto_exp.getAO(i);
+            ao_i.calcScreening(screen);
+            if (mpi::my_orb(Phi.back())) {
+                qmfunction::project(Phi.back(), ao_i, NUMBER::Real, prec);
+                if (std::abs(Phi.back().norm() - 1.0) > 0.01) MSG_WARN("AO not normalized!");
+            }
+
+            auto l = ao_i.getPower(0);
+            auto L = l[0] + l[1] + l[2];
+
+            std::stringstream o_txt;
+            o_txt << std::setw(w1 - 1) << Phi.size();
+            o_txt << std::setw(w4) << nuc.getElement().getSymbol();
+            o_txt << std::setw(w2 - 1) << label[L];
+            print_utils::qmfunction(2, o_txt.str(), Phi.back(), t_i);
+        }
     }
     mpi::barrier(mpi::comm_orb);
     timer.stop();
-    mrcpp::print::footer(0, timer, 2);
+    mrcpp::print::footer(2, timer, 2);
 }
 
 Density initial_guess::gto::project_density(double prec,
                                             const Nucleus &nuc,
                                             const std::string &bas_file,
-                                            const std::string &dens_file) {
+                                            const std::string &dens_file,
+                                            double screen) {
     // Setup AO basis
     gto_utils::Intgrl intgrl(bas_file);
     intgrl.getNucleus(0).setCoord(nuc.getCoord());
@@ -219,6 +268,7 @@ Density initial_guess::gto::project_density(double prec,
     // Read density matrix file
     DoubleMatrix D = math_utils::read_matrix_file(dens_file);
     GaussExp<3> dens_exp = gto_exp.getDens(D);
+    dens_exp.calcScreening(screen);
 
     Density rho(false);
     density::compute(prec, rho, dens_exp);

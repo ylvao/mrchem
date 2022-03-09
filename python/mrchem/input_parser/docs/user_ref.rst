@@ -566,6 +566,12 @@ User input reference
     **Predicates**
       - ``1.0e-10 < value < 1.0``
   
+   :guess_screen: Screening parameter used in GTO evaluations, in number of standard deviations. Every coordinate beyond N StdDev from the Gaussian center is evaluated to zero. Note that too aggressive screening is counter productive, because it leads to a sharp cutoff in the resulting function which requires higher grid refinement. Negative value means no screening. 
+  
+    **Type** ``float``
+  
+    **Default** ``12.0``
+  
    :start_prec: Incremental precision in SCF iterations, initial value. 
   
     **Type** ``float``
@@ -585,7 +591,7 @@ User input reference
     **Default** ``sad_dz``
   
     **Predicates**
-      - ``value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz', 'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'cube']``
+      - ``value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz', 'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'sad_gto', 'cube']``
   
    :write_checkpoint: Write orbitals to disk in each iteration, file name ``<path_checkpoint>/phi_scf_idx_<0..N>``. Can be used as ``chk`` initial guess in subsequent calculations. Note: must be given in quotes if there are slashes in the path "path/to/checkpoint". 
   

@@ -37,6 +37,7 @@ void deep_copy(QMFunction &out, QMFunction &inp);
 void add(QMFunction &out, ComplexDouble a, QMFunction inp_a, ComplexDouble b, QMFunction inp_b, double prec);
 void project(QMFunction &out, std::function<double(const mrcpp::Coord<3> &r)> f, int type, double prec);
 void project(QMFunction &out, mrcpp::RepresentableFunction<3> &f, int type, double prec);
+void project(QMFunction &out, mrcpp::GaussExp<3> &f, int type, double prec);
 void multiply(QMFunction &out,
               QMFunction inp_a,
               QMFunction inp_b,

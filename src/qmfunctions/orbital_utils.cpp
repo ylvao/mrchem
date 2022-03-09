@@ -268,7 +268,6 @@ OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double
     }
     mpi::allreduce_vector(PsihasReIm, mpi::comm_orb);
     if (not PsihasReIm[0] and not PsihasReIm[1]) {
-        println(2, " Rotate, warning: vector has no real and no imaginary parts!");
         OrbitalVector out = orbital::param_copy(Phi);
         return out;
     }
@@ -277,7 +276,6 @@ OrbitalVector orbital::rotate(OrbitalVector &Phi, const ComplexMatrix &U, double
     bool makeImag = (UhasReal and PsihasReIm[1]) or (UhasImag and PsihasReIm[0]);
 
     if (not makeReal and not makeImag) {
-        println(1, " Rotate, warning: vector has no real and no imaginary parts!");
         OrbitalVector out = orbital::param_copy(Phi);
         return out;
     }

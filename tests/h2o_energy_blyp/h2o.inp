@@ -38,5 +38,6 @@ Properties {
 SCF {
   run = false
   localize = true                   # Use canonical of localized orbitals
+  guess_screen = 16.0               # Screening parameter for projection of GTO MOs
   guess_type = GTO                  # Type of initial guess: none, mw, gto
 }

@@ -146,6 +146,8 @@ def write_scf_guess(user_dict, method_name):
             zeta = 3
         elif zeta_str == 'qz':
             zeta = 4
+        elif zeta_str == 'gto':
+            guess_type = guess_str
         else:
             print("Invalid zeta:" + guess_suffix)
 
@@ -160,6 +162,7 @@ def write_scf_guess(user_dict, method_name):
         "prec": guess_prec,
         "type": guess_type,
         "method": method_name,
+        "screen": scf_dict["guess_screen"],
         "localize": scf_dict["localize"],
         "restricted": user_dict["WaveFunction"]["restricted"],
         "file_chk": scf_dict["path_checkpoint"] + "/phi_scf",

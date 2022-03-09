@@ -301,6 +301,7 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
     auto prec = json_guess["prec"];
     auto zeta = json_guess["zeta"];
     auto type = json_guess["type"];
+    auto screen = json_guess["screen"];
     auto mw_p = json_guess["file_phi_p"];
     auto mw_a = json_guess["file_phi_a"];
     auto mw_b = json_guess["file_phi_b"];
@@ -350,9 +351,11 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
     } else if (type == "core") {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
     } else if (type == "sad") {
-        success = initial_guess::sad::setup(Phi, prec, nucs, zeta);
+        success = initial_guess::sad::setup(Phi, prec, screen, nucs, zeta);
+    } else if (type == "sad_gto") {
+        success = initial_guess::sad::setup(Phi, prec, screen, nucs);
     } else if (type == "gto") {
-        success = initial_guess::gto::setup(Phi, prec, gto_bas, gto_p, gto_a, gto_b);
+        success = initial_guess::gto::setup(Phi, prec, screen, gto_bas, gto_p, gto_a, gto_b);
     } else if (type == "cube") {
         success = initial_guess::cube::setup(Phi, prec, cube_p, cube_a, cube_b);
     } else {
