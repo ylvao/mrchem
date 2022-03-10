@@ -34,6 +34,7 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/two_electron/FockOperator.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
 
@@ -179,6 +180,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     print_utils::text(0, "Helmholtz precision", o_helm.str());
     print_utils::text(0, "Energy threshold   ", o_thrs_p.str());
     print_utils::text(0, "Orbital threshold  ", o_thrs_o.str());
+    print_utils::text(0, "ZORA potential     ", (this->isZora) ? this->zora_base_potential : "Off");
     mrcpp::print::separator(0, '~', 2);
 }
 
@@ -271,9 +273,21 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         if (plevel == 1) mrcpp::print::time(1, "Computing Helmholtz argument", t_arg);
 
         // Apply Helmholtz operator
-        OrbitalVector Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
+        OrbitalVector Harg;
+        OrbitalVector Phi_np1;
+        if (F.isZora()) {
+            Harg = F.buildHelmholtzArgumentTake1(Phi_n, Psi, F_mat.real().diagonal(), orb_prec);
+            Phi_np1 = H(Harg);
+        } else {
+            Harg = F.buildHelmholtzArgument(Phi_n, Psi);
+            Phi_np1 = H(Harg);
+        };
+
+        // Clear operators
         Psi.clear();
         F.clear();
+
+        // Orthonormalize
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 
         // Compute orbital updates

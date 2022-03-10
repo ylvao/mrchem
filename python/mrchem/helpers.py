@@ -55,10 +55,22 @@ SHORTHAND_FUNCTIONALS = [
 def write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs, origin):
     fock_dict = {}
 
+
+    # ZORA
+    if user_dict['WaveFunction']["zora"]:
+        fock_dict["zora_operator"] = {
+            "light_speed": user_dict["ZORA"]["light_speed"],
+            "derivative": user_dict["Derivatives"]["zora"],
+            "base_potential": user_dict["ZORA"]["base_potential"],
+            "shared_memory": user_dict["MPI"]["share_nuclear_potential"],
+            "proj_prec": user_dict["Precisions"]["nuclear_prec"]
+        }
+
     # Kinetic
     fock_dict["kinetic_operator"] = {
         "derivative": user_dict["Derivatives"]["kinetic"]
     }
+
 
     # Nuclear
     fock_dict["nuclear_operator"] = {
@@ -203,7 +215,12 @@ def write_scf_solver(user_dict, method_name):
         "final_prec": final_prec,
         "energy_thrs": scf_dict["energy_thrs"],
         "orbital_thrs": scf_dict["orbital_thrs"],
-        "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
+        "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"],
+        "light_speed": user_dict["ZORA"]["light_speed"],
+        "proj_prec": user_dict["Precisions"]["nuclear_prec"],
+        "smooth_prec": user_dict["Precisions"]["nuclear_prec"],
+        "shared_memory": user_dict["MPI"]["share_nuclear_potential"],
+        "derivative": user_dict["Derivatives"]["kinetic"]
     }
     return solver_dict
 

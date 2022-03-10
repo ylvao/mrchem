@@ -49,15 +49,21 @@
 #include "qmfunctions/orbital_utils.h"
 
 #include "qmoperators/one_electron/ElectricFieldOperator.h"
-#include "qmoperators/one_electron/H_BB_dia.h"
-#include "qmoperators/one_electron/H_BM_dia.h"
-#include "qmoperators/one_electron/H_B_dip.h"
-#include "qmoperators/one_electron/H_E_quad.h"
-#include "qmoperators/one_electron/H_MB_dia.h"
-#include "qmoperators/one_electron/H_M_pso.h"
 #include "qmoperators/one_electron/KineticOperator.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
+#include "qmoperators/one_electron/ZoraKineticOperator.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
+
+#include "qmoperators/one_electron/H_BB_dia.h"
+#include "qmoperators/one_electron/H_BM_dia.h"
+#include "qmoperators/one_electron/H_B_dip.h"
+#include "qmoperators/one_electron/H_B_spin.h"
+#include "qmoperators/one_electron/H_E_dip.h"
+#include "qmoperators/one_electron/H_E_quad.h"
+#include "qmoperators/one_electron/H_MB_dia.h"
+#include "qmoperators/one_electron/H_M_fc.h"
+#include "qmoperators/one_electron/H_M_pso.h"
 
 #include "qmoperators/two_electron/CoulombOperator.h"
 #include "qmoperators/two_electron/ExchangeOperator.h"
@@ -969,6 +975,22 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto shared_memory = json_fock["nuclear_operator"]["shared_memory"];
         auto V_p = std::make_shared<NuclearOperator>(nuclei, proj_prec, smooth_prec, shared_memory);
         F.getNuclearOperator() = V_p;
+    }
+    ///////////////////////////////////////////////////////////
+    //////////////////////   Zora Operator   //////////////////
+    ///////////////////////////////////////////////////////////
+    if (json_fock.contains("zora_operator")) {
+        double c = json_fock["zora_operator"]["light_speed"];
+        if (c <= 0.0) c = PHYSCONST::alpha_inv;
+
+        auto shared_memory = json_fock["zora_operator"]["shared_memory"];
+        auto zora_diff = json_fock["zora_operator"]["derivative"];
+        auto D_p = driver::get_derivative(zora_diff);
+        auto Z_p = std::make_shared<ZoraOperator>(c, D_p, shared_memory);
+
+        int bp = json_fock["zora_operator"]["base_potential"];
+        Z_p->setBasePotential(bp);
+        F.getZoraOperator() = Z_p;
     }
     ///////////////////////////////////////////////////////////
     //////////////////   Coulomb Operator   ///////////////////

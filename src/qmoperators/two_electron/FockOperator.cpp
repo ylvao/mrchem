@@ -40,6 +40,7 @@
 #include "qmoperators/one_electron/NuclearOperator.h"
 #include "qmoperators/one_electron/NablaOperator.h"
 #include "qmoperators/one_electron/IdentityOperator.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/qmoperator_utils.h"
 #include "utils/math_utils.h"
 
@@ -79,6 +80,15 @@ void FockOperator::setup(double prec) {
     if (this->mom != nullptr) this->momentum().setup(prec);
     this->potential().setup(prec);
     this->perturbation().setup(prec);
+
+    if (isZora()) {
+        setZoraBasePotential();
+        zora().kappaPotential().setup(prec);
+        zora().kappaPotentialInverse().setup(prec);
+        zora().kappaPotentialGradient().setup(prec);
+        zora().basePotentialOver2cc().setup(prec);
+    };
+
     t_tot.stop();
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Building Fock operator", t_tot);
@@ -93,6 +103,13 @@ void FockOperator::clear() {
     if (this->mom != nullptr) this->momentum().clear();
     this->potential().clear();
     this->perturbation().clear();
+
+    if (isZora()) {
+        zora().kappaPotential().clear();
+        zora().kappaPotentialInverse().clear();
+        zora().kappaPotentialGradient().clear();
+        zora().basePotentialOver2cc().clear();
+    };
 }
 
 /** @brief rotate orbitals of two-electron operators
@@ -145,7 +162,12 @@ SCFEnergy FockOperator::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     }
 
     // Kinetic part
-    E_kin = qmoperator::calc_kinetic_trace(momentum(), Phi);
+    if (isZora()) {
+        RankZeroOperator kappa = zora().kappaPotential();
+        E_kin = qmoperator::calc_kinetic_trace(momentum(), kappa, Phi).real();
+    } else {
+        E_kin = qmoperator::calc_kinetic_trace(momentum(), Phi);
+    }
 
     // Electronic part
     if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
@@ -165,7 +187,12 @@ ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     mrcpp::print::header(2, "Computing Fock matrix");
 
     ComplexMatrix T_mat = ComplexMatrix::Zero(bra.size(), ket.size());
-    T_mat = qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
+    if (isZora()) {
+        RankZeroOperator kappa = zora().kappaPotential();
+        T_mat = qmoperator::calc_kinetic_matrix(momentum(), kappa, bra, ket);
+    } else {
+        T_mat = qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
+    }
 
     ComplexMatrix V_mat = ComplexMatrix::Zero(bra.size(), ket.size());
     V_mat += potential()(bra, ket);
@@ -177,6 +204,86 @@ ComplexMatrix FockOperator::operator()(OrbitalVector &bra, OrbitalVector &ket) {
 
 ComplexMatrix FockOperator::dagger(OrbitalVector &bra, OrbitalVector &ket) {
     NOT_IMPLEMENTED_ABORT;
+}
+
+// Take 1 in notes on Overleaf
+OrbitalVector FockOperator::buildHelmholtzArgumentTake1(OrbitalVector &Phi, OrbitalVector &Psi, DoubleVector eps, double prec) {
+    // Get necessary operators
+    RankZeroOperator &V = potential();                                  // V
+    RankZeroOperator kappa = zora().kappaPotential();                   // kappa
+    RankZeroOperator divby2cc = zora().basePotentialOver2cc();          // Vz / 2c^2
+    RankZeroOperator invKappa = zora().kappaPotentialInverse();         // 1 / kappa
+    RankOneOperator<3> gradKappa = zora().kappaPotentialGradient();     // gradient of kappa
+    NablaOperator nabla(zora().getDerivative());
+    RankZeroOperator gradKappaGrad = tensor::dot(gradKappa, nabla);
+    gradKappaGrad.setup(prec);
+
+    // Compute transformed orbitals scaled by diagonal Fock elements
+    OrbitalVector epsPhi = orbital::deep_copy(Phi);
+    for (int i = 0; i < epsPhi.size(); i++) {
+        if (not mpi::my_orb(epsPhi[i])) continue;
+        epsPhi[i].rescale(eps[i]);
+    };
+
+    // Compute OrbitalVectors
+    OrbitalVector termOne = (-0.5 * gradKappaGrad)(Phi);
+    OrbitalVector termTwo = V(Phi);
+    OrbitalVector termThree = (kappa * divby2cc)(epsPhi);
+
+    // Add up all the terms
+    OrbitalVector out = orbital::deep_copy(termOne);
+    for (int i = 0; i < out.size(); i++) {
+        if (not mpi::my_orb(out[i])) continue;
+        out[i].add(1.0, termTwo[i]);
+        out[i].add(1.0, termThree[i]);
+        out[i].add(1.0, Psi[i]);
+    };
+
+    gradKappaGrad.clear();
+    return invKappa(out);
+}
+
+// Non-relativistic Helmholtz argument
+OrbitalVector FockOperator::buildHelmholtzArgument(OrbitalVector &Phi, OrbitalVector &Psi) {
+    // Get necessary operators
+    RankZeroOperator &V = this->potential();
+
+    // Compute OrbitalVectors
+    OrbitalVector termOne = V(Phi);
+
+    // Add up all the terms
+    OrbitalVector out = orbital::deep_copy(termOne);
+    for (int i = 0; i < out.size(); i++) {
+        if (not mpi::my_orb(out[i])) continue;
+        out[i].add(1.0, Psi[i]);
+    };
+    return out;
+}
+
+void FockOperator::setZoraBasePotential() {
+    auto &vnuc = static_cast<QMPotential &>(getNuclearOperator()->getRaw(0, 0));
+    auto &coul = static_cast<QMPotential &>(getCoulombOperator()->getRaw(0, 0));
+
+    getXCOperator()->setSpin(SPIN::Alpha);
+    auto &xc = static_cast<QMPotential &>(getXCOperator()->getRaw(0, 0));
+
+    auto vz = std::make_shared<QMPotential>(1, false);
+    switch (zora().base_potential) {
+        case ZoraOperator::NUCLEAR:
+            vz->add(1.0, vnuc);
+            break;
+        case ZoraOperator::NUCLEAR_COULOMB:
+            vz->add(1.0, vnuc);
+            vz->add(1.0, coul);
+            break;
+        case ZoraOperator::NUCLEAR_COULOMB_XC:
+            vz->add(1.0, vnuc);
+            vz->add(1.0, coul);
+            vz->add(1.0, xc);
+            break;
+        }
+    zora().updatePotentials(std::make_shared<RankZeroOperator>(vz));
+    getXCOperator()->clearSpin();
 }
 
 } // namespace mrchem

@@ -264,6 +264,12 @@ User input reference
   
     **Default** ``abgv_00``
   
+   :zora: Derivative used ZORA potential. 
+  
+    **Type** ``str``
+  
+    **Default** ``abgv_00``
+  
  :Molecule: Define molecule. 
 
   :red:`Keywords`
@@ -304,6 +310,33 @@ User input reference
     **Type** ``bool``
   
     **Default** ``True``
+  
+   :zora: Activate scalar relativistic SCF with the ZORA Hamiltonian. 
+  
+    **Type** ``bool``
+  
+    **Default** ``False``
+  
+ :ZORA: Define required parameters for the ZORA Hamiltonian 
+
+  :red:`Keywords`
+   :light_speed: Adjust speed of light. 
+  
+    **Type** ``float``
+  
+    **Default** ``-1.0``
+  
+   :kinetic_algorithm: Algorithms for kinetic energy operator expectation value 
+  
+    **Type** ``int``
+  
+    **Default** ``0``
+  
+   :take_algorithm: Algorithms for Take2 and Take3 in Overleaf notes. 
+  
+    **Type** ``int``
+  
+    **Default** ``0``
   
  :DFT: Define the exchange-correlation functional in case of DFT. 
 

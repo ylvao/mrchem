@@ -264,6 +264,12 @@ User input reference
   
     **Default** ``abgv_00``
   
+   :zora: Derivative used ZORA potential. 
+  
+    **Type** ``str``
+  
+    **Default** ``abgv_00``
+  
  :Molecule: Define molecule. 
 
   :red:`Keywords`
@@ -304,6 +310,27 @@ User input reference
     **Type** ``bool``
   
     **Default** ``True``
+  
+   :zora: Activate scalar relativistic SCF with the ZORA Hamiltonian. 
+  
+    **Type** ``bool``
+  
+    **Default** ``False``
+  
+ :ZORA: Define required parameters for the ZORA Hamiltonian 
+
+  :red:`Keywords`
+   :light_speed: Adjust speed of light. 
+  
+    **Type** ``float``
+  
+    **Default** ``-1.0``
+  
+   :base_potential: Determine how the ZORA potential is built up. 0: Vn, 1: V_n+J, 2: Vn+J+V_xc 
+  
+    **Type** ``int``
+  
+    **Default** ``0``
   
  :DFT: Define the exchange-correlation functional in case of DFT. 
 

@@ -26,6 +26,8 @@
 #pragma once
 
 #include "tensor/RankZeroOperator.h"
+#include "tensor/RankOneOperator.h"
+#include "qmoperators/QMPotential.h"
 
 /** @class FockOperator
  *
@@ -42,6 +44,8 @@ namespace mrchem {
 class SCFEnergy;
 class MomentumOperator;
 class KineticOperator;
+class ZoraKineticOperator;
+class ZoraOperator;
 class NuclearOperator;
 class CoulombOperator;
 class ExchangeOperator;
@@ -51,7 +55,9 @@ class ReactionOperator;
 
 class FockOperator final : public RankZeroOperator {
 public:
+    bool isZora() const { return (this->vz != nullptr); }
     MomentumOperator &momentum() { return *this->mom; }
+    ZoraOperator &zora() { return *this->vz; }
     RankZeroOperator &potential() { return this->V; }
     RankZeroOperator &perturbation() { return this->H_1; }
 
@@ -60,6 +66,7 @@ public:
     std::shared_ptr<CoulombOperator> &getCoulombOperator() { return this->coul; }
     std::shared_ptr<ExchangeOperator> &getExchangeOperator() { return this->ex; }
     std::shared_ptr<XCOperator> &getXCOperator() { return this->xc; }
+    std::shared_ptr<ZoraOperator> &getZoraOperator() { return this->vz; }
     std::shared_ptr<ElectricFieldOperator> &getExtOperator() { return this->ext; }
     std::shared_ptr<ReactionOperator> &getReactionOperator() { return this->Ro; }
 
@@ -69,13 +76,15 @@ public:
     void setup(double prec);
     void clear();
 
+    void setZoraBasePotential();
+
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
 
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
     ComplexMatrix dagger(OrbitalVector &bra, OrbitalVector &ket);
 
-    using RankZeroOperator::operator();
-    using RankZeroOperator::dagger;
+    OrbitalVector buildHelmholtzArgumentTake1(OrbitalVector &Phi, OrbitalVector &Psi, DoubleVector eps, double prec);  // ZORA Take 1
+    OrbitalVector buildHelmholtzArgument(OrbitalVector &Phi, OrbitalVector &Psi);                                      // NR
 
 private:
     double exact_exchange{1.0};
@@ -89,6 +98,7 @@ private:
     std::shared_ptr<XCOperator> xc{nullptr};
     std::shared_ptr<ReactionOperator> Ro{nullptr};           // Reaction field operator
     std::shared_ptr<ElectricFieldOperator> ext{nullptr};     // Total external potential
+    std::shared_ptr<ZoraOperator> vz{nullptr};               // ZORA operator
 };
 
 } // namespace mrchem
