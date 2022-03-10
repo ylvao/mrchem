@@ -270,6 +270,8 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, energy_thrs);
+        solver.setZoraName(F.getZoraName());
+
         json_out["scf_solver"] = solver.optimize(mol, F);
         json_out["success"] = json_out["scf_solver"]["converged"];
     }
@@ -392,7 +394,9 @@ bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockOperat
     auto &F_mat = mol.getFockMatrix();
     F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
     if (localize) orbital::localize(prec, Phi, F_mat);
+
     F.setup(prec);
+
     F_mat = F(Phi, Phi);
     mol.getSCFEnergy() = F.trace(Phi, nucs);
     F.clear();
@@ -948,13 +952,13 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
     auto Y_p = mol.getOrbitalsY_p();
 
     ///////////////////////////////////////////////////////////
-    //////////////////   Kinetic Operator   ///////////////////
+    ///////////////      Momentum Operator    /////////////////
     ///////////////////////////////////////////////////////////
     if (json_fock.contains("kinetic_operator")) {
         auto kin_diff = json_fock["kinetic_operator"]["derivative"];
         auto D_p = driver::get_derivative(kin_diff);
-        auto T_p = std::make_shared<KineticOperator>(D_p);
-        F.getKineticOperator() = T_p;
+        auto P_p = std::make_shared<MomentumOperator>(D_p);
+        F.getMomentumOperator() = P_p;
     }
     ///////////////////////////////////////////////////////////
     //////////////////   Nuclear Operator   ///////////////////
