@@ -80,7 +80,6 @@ OrbitalVector HelmholtzVector::operator()(OrbitalVector &Phi) const {
 
         t_lap.start();
         out[i] = apply(i, Phi[i]);
-        out[i].rescale(-1.0 / (2.0 * MATHCONST::pi));
 
         std::stringstream o_txt;
         o_txt << std::setw(4) << i;
@@ -121,7 +120,6 @@ OrbitalVector HelmholtzVector::apply(RankZeroOperator &V, OrbitalVector &Phi, Or
         t_lap.start();
         Orbital Vphi_i = V(Phi[i]);
         Vphi_i.add(1.0, Psi[i]);
-        Vphi_i.rescale(-1.0 / (2.0 * MATHCONST::pi));
         out[i] = apply(i, Vphi_i);
 
         std::stringstream o_txt;
@@ -139,7 +137,7 @@ OrbitalVector HelmholtzVector::apply(RankZeroOperator &V, OrbitalVector &Phi, Or
  * This will construct a Helmholtz operator with the i-th component of the
  * lambda vector and apply it to the input orbital.
  *
- * Computes output as: out_i = H_i[phi_i]
+ * Computes output as: out_i = -2H_i[phi_i]
  */
 Orbital HelmholtzVector::apply(int i, Orbital &phi) const {
     ComplexDouble mu_i = std::sqrt(-2.0 * this->lambda(i));
@@ -150,11 +148,13 @@ Orbital HelmholtzVector::apply(int i, Orbital &phi) const {
     if (phi.hasReal()) {
         out.alloc(NUMBER::Real);
         mrcpp::apply(this->prec, out.real(), H, phi.real(), -1, true); // Absolute prec
+        out.real().rescale(-1.0 / (2.0 * MATHCONST::pi));
     }
     if (phi.hasImag()) {
         out.alloc(NUMBER::Imag);
         mrcpp::apply(this->prec, out.imag(), H, phi.imag(), -1, true); // Absolute prec
-        if (phi.conjugate()) out.imag().rescale(-1.0);
+        double sign = (phi.conjugate()) ? -1.0 : 1.0;
+        out.imag().rescale(sign / (2.0 * MATHCONST::pi));
     }
     return out;
 }
