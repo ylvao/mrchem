@@ -301,18 +301,28 @@ sections:
           Activate scalar relativistic SCF with the ZORA Hamiltonian.
   - name: ZORA
     docstring: |
-      Define required parameters for the ZORA Hamiltonian
+      Define required parameters for the ZORA Hamiltonian.
     keywords:
       - name: light_speed
         type: float
         default: -1.0
         docstring: |
           Adjust speed of light.
-      - name: base_potential
-        type: int
-        default: 0
+      - name: include_nuclear
+        type: bool
+        default: true
         docstring: |
-          Determine how the ZORA potential is built up. 0: Vn, 1: V_n+J, 2: Vn+J+V_xc
+          Include the nuclear potential ``V_nuc`` in the ZORA potential.
+      - name: include_coulomb
+        type: bool
+        default: true
+        docstring: |
+          Include the Coulomb potential ``J`` in the ZORA potential.
+      - name: include_xc
+        type: bool
+        default: true
+        docstring: |
+          Include the XC potential ``V_xc`` in the ZORA potential.
   - name: DFT
     docstring: |
       Define the exchange-correlation functional in case of DFT.

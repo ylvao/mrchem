@@ -58,10 +58,34 @@ def write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs, origin):
 
     # ZORA
     if user_dict['WaveFunction']["zora"]:
+        # Determine ZORA name label for print outs to the output file
+        include_nuclear = user_dict["ZORA"]["include_nuclear"]
+        include_coulomb = user_dict["ZORA"]["include_coulomb"]
+        include_xc = user_dict["ZORA"]["include_xc"]
+        
+        components = [
+            include_nuclear,
+            include_coulomb,
+            include_xc
+        ]
+        names = [
+            "V_nuc",
+            "J",
+            "V_xc"
+        ]
+        
+        if not any(components):
+            zora_name = "Off"
+        else:
+            zora_name = " + ".join([name for name, comp in zip(names, components) if comp])
+    
         fock_dict["zora_operator"] = {
             "light_speed": user_dict["ZORA"]["light_speed"],
             "derivative": user_dict["Derivatives"]["zora"],
-            "base_potential": user_dict["ZORA"]["base_potential"],
+            "include_nuclear": include_nuclear,
+            "include_coulomb": include_coulomb,
+            "include_xc": include_xc,
+            "zora_name": zora_name,
             "shared_memory": user_dict["MPI"]["share_nuclear_potential"],
             "proj_prec": user_dict["Precisions"]["nuclear_prec"]
         }

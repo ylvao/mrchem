@@ -317,7 +317,7 @@ User input reference
   
     **Default** ``False``
   
- :ZORA: Define required parameters for the ZORA Hamiltonian 
+ :ZORA: Define required parameters for the ZORA Hamiltonian. 
 
   :red:`Keywords`
    :light_speed: Adjust speed of light. 
@@ -326,11 +326,23 @@ User input reference
   
     **Default** ``-1.0``
   
-   :base_potential: Determine how the ZORA potential is built up. 0: Vn, 1: V_n+J, 2: Vn+J+V_xc 
+   :include_nuclear: Include the nuclear potential ``V_nuc`` in the ZORA potential. 
   
-    **Type** ``int``
+    **Type** ``bool``
   
-    **Default** ``0``
+    **Default** ``True``
+  
+   :include_coulomb: Include the Coulomb potential ``J`` in the ZORA potential. 
+  
+    **Type** ``bool``
+  
+    **Default** ``True``
+  
+   :include_xc: Include the XC potential ``V_xc`` in the ZORA potential. 
+  
+    **Type** ``bool``
+  
+    **Default** ``True``
   
  :DFT: Define the exchange-correlation functional in case of DFT. 
 

@@ -287,35 +287,16 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentNREL(OrbitalVector &Phi, Orbita
     return out;
 }
 
-void FockBuilder::setZoraType(int key) {
-    // Set the base potential enum from input integer
-    switch (key) {
-        case 0:
-            this->zora_type = NONE;
-            this->zora_name = "Off";
-            break;
-        case 1:
-            this->zora_type = NUCLEAR;
-            this->zora_name = "V_n";
-            break;
-        case 2:
-            this->zora_type = NUCLEAR_COULOMB;
-            this->zora_name = "V_n + J";
-            break;
-        case 3:
-            this->zora_type = NUCLEAR_COULOMB_XC;
-            this->zora_name = "V_n + J + V_xc";
-            break;
-    }
+void FockBuilder::setZoraType(bool has_nuc, bool has_coul, bool has_xc, std::string name) {
+    this->zora_has_nuc = has_nuc;
+    this->zora_has_coul = has_coul;
+    this->zora_has_xc = has_xc;
+    this->zora_name = name;
 }
 
 std::shared_ptr<QMPotential> FockBuilder::collectZoraBasePotential() {
-    bool has_nuc = (getZoraType() == NUCLEAR or getZoraType() == NUCLEAR_COULOMB or getZoraType() == NUCLEAR_COULOMB_XC);
-    bool has_coul = (getZoraType() == NUCLEAR_COULOMB) or (getZoraType() == NUCLEAR_COULOMB_XC);
-    bool has_xc = (getZoraType() == NUCLEAR_COULOMB_XC);
-
     auto vz = std::make_shared<QMPotential>(1, false);
-    if (has_nuc) {
+    if (zora_has_nuc) {
         if (getNuclearOperator() != nullptr) {
             auto &vnuc = static_cast<QMPotential &>(getNuclearOperator()->getRaw(0, 0));
             if (not vnuc.hasReal()) MSG_ERROR("ZORA: Adding empty nuclear potential");
@@ -324,7 +305,7 @@ std::shared_ptr<QMPotential> FockBuilder::collectZoraBasePotential() {
             MSG_ERROR("ZORA: Nuclear requested but not available");
         }
     }
-    if (has_coul) {
+    if (zora_has_coul) {
         if (getCoulombOperator() != nullptr) {
             auto &coul = static_cast<QMPotential &>(getCoulombOperator()->getRaw(0, 0));
             if (not coul.hasReal()) MSG_INFO("ZORA: Adding empty Coulomb potential");
@@ -333,8 +314,8 @@ std::shared_ptr<QMPotential> FockBuilder::collectZoraBasePotential() {
             MSG_ERROR("ZORA: Coulomb requested but not available");
         }
     }
-    if (has_xc) {
-        if (this->getXCOperator() != nullptr) {
+    if (zora_has_xc) {
+        if (getXCOperator() != nullptr) {
             getXCOperator()->setSpin(SPIN::Alpha);
             auto &xc = static_cast<QMPotential &>(getXCOperator()->getRaw(0, 0));
             if (not xc.hasReal()) MSG_ERROR("ZORA: Adding empty XC potential");

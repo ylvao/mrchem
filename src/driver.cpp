@@ -979,11 +979,15 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
     //////////////////////   Zora Operator   //////////////////
     ///////////////////////////////////////////////////////////
     if (json_fock.contains("zora_operator")) {
-        auto bp = json_fock["zora_operator"]["base_potential"];
         auto c = json_fock["zora_operator"]["light_speed"];
         if (c <= 0.0) c = PHYSCONST::alpha_inv;
-        F.setZoraType(bp);
         F.setLightSpeed(c);
+        
+        auto include_nuclear = json_fock["zora_operator"]["include_nuclear"];
+        auto include_coulomb = json_fock["zora_operator"]["include_coulomb"];
+        auto include_xc = json_fock["zora_operator"]["include_xc"];
+        auto zora_name = json_fock["zora_operator"]["zora_name"];
+        F.setZoraType(include_nuclear, include_coulomb, include_xc, zora_name);
     }
     ///////////////////////////////////////////////////////////
     //////////////////   Coulomb Operator   ///////////////////

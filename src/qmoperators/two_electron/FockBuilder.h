@@ -55,8 +55,7 @@ class ReactionOperator;
 
 class FockBuilder final {
 public:
-    bool isZora() const { return (this->zora_type != NONE); }
-    // ZoraOperator &zora() { return *this->vz; }
+    bool isZora() const { return zora_has_nuc + zora_has_coul + zora_has_xc; }
     MomentumOperator &momentum() { return *this->mom; }
     RankZeroOperator &potential() { return this->V; }
     RankZeroOperator &perturbation() { return this->H_1; }
@@ -78,8 +77,7 @@ public:
     void setLightSpeed(double c) { this->light_speed = c; }
     double getLightSpeed() const { return this->light_speed; }
 
-    void setZoraType(int key);
-    int getZoraType() const { return this->zora_type; }
+    void setZoraType(bool has_nuc, bool has_coul, bool has_xc, std::string name);
     std::string getZoraName() const { return this->zora_name; }
 
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
@@ -88,17 +86,13 @@ public:
     OrbitalVector buildHelmholtzArgument(double prec, OrbitalVector Phi, ComplexMatrix F_mat, ComplexMatrix L_mat);
 
 private:
-    enum ZoraType { 
-        NONE = 0, 
-        NUCLEAR, 
-        NUCLEAR_COULOMB, 
-        NUCLEAR_COULOMB_XC 
-    };
+    bool zora_has_nuc;
+    bool zora_has_coul;
+    bool zora_has_xc;
 
     double light_speed{-1.0};
     double exact_exchange{1.0};
-    ZoraType zora_type{NONE};
-    std::string zora_name{"None"};
+    std::string zora_name{"Off"};
     RankZeroOperator zora_base;
 
     RankZeroOperator V;       ///< Total potential energy operator

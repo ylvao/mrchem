@@ -317,7 +317,7 @@ User input reference
   
     **Default** ``False``
   
- :ZORA: Define required parameters for the ZORA Hamiltonian 
+ :ZORA: Define required parameters for the ZORA Hamiltonian. 
 
   :red:`Keywords`
    :light_speed: Adjust speed of light. 
@@ -326,17 +326,23 @@ User input reference
   
     **Default** ``-1.0``
   
-   :kinetic_algorithm: Algorithms for kinetic energy operator expectation value 
+   :include_nuclear: Include the nuclear potential ``V_nuc`` in the ZORA potential. 
   
-    **Type** ``int``
+    **Type** ``bool``
   
-    **Default** ``0``
+    **Default** ``True``
   
-   :take_algorithm: Algorithms for Take2 and Take3 in Overleaf notes. 
+   :include_coulomb: Include the Coulomb potential ``J`` in the ZORA potential. 
   
-    **Type** ``int``
+    **Type** ``bool``
   
-    **Default** ``0``
+    **Default** ``True``
+  
+   :include_xc: Include the XC potential ``V_xc`` in the ZORA potential. 
+  
+    **Type** ``bool``
+  
+    **Default** ``True``
   
  :DFT: Define the exchange-correlation functional in case of DFT. 
 
