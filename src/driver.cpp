@@ -52,7 +52,6 @@
 #include "qmoperators/one_electron/KineticOperator.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
-#include "qmoperators/one_electron/ZoraKineticOperator.h"
 #include "qmoperators/one_electron/ZoraOperator.h"
 
 #include "qmoperators/one_electron/H_BB_dia.h"

@@ -55,7 +55,7 @@ class ReactionOperator;
 
 class FockBuilder final {
 public:
-    bool isZora() const { return zora_has_nuc + zora_has_coul + zora_has_xc; }
+    bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
     MomentumOperator &momentum() { return *this->mom; }
     RankZeroOperator &potential() { return this->V; }
     RankZeroOperator &perturbation() { return this->H_1; }
@@ -86,9 +86,9 @@ public:
     OrbitalVector buildHelmholtzArgument(double prec, OrbitalVector Phi, ComplexMatrix F_mat, ComplexMatrix L_mat);
 
 private:
-    bool zora_has_nuc;
-    bool zora_has_coul;
-    bool zora_has_xc;
+    bool zora_has_nuc{false};
+    bool zora_has_coul{false};
+    bool zora_has_xc{false};
 
     double light_speed{-1.0};
     double exact_exchange{1.0};
