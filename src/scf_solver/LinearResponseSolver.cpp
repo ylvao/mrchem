@@ -349,6 +349,7 @@ void LinearResponseSolver::printParameters(double omega, const std::string &oper
     print_utils::text(0, "Frequency          ", o_omega.str());
     print_utils::text(0, "Perturbation       ", oper);
     print_utils::text(0, "Method             ", this->methodName);
+    print_utils::text(0, "Relativity         ", this->relativityName);
     print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());

@@ -170,6 +170,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation        ", calculation);
     print_utils::text(0, "Method             ", this->methodName);
+    print_utils::text(0, "Relativity         ", this->relativityName);
     print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());
@@ -180,7 +181,6 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     print_utils::text(0, "Helmholtz precision", o_helm.str());
     print_utils::text(0, "Energy threshold   ", o_thrs_p.str());
     print_utils::text(0, "Orbital threshold  ", o_thrs_o.str());
-    print_utils::text(0, "ZORA potential     ", this->zoraName);
     mrcpp::print::separator(0, '~', 2);
 }
 

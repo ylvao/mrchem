@@ -294,11 +294,19 @@ sections:
         default: true
         docstring: |
           Use spin restricted wavefunction.
-      - name: zora
-        type: bool
-        default: false
+      - name: relativity
+        type: str
+        default: "none"
+        predicates:
+          - "value.lower() in
+             ['none',
+              'zora',
+              'nzora']"
         docstring: |
-          Activate scalar relativistic SCF with the ZORA Hamiltonian.
+          Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default
+          including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section.
+          ``nZORA`` is shortcut for nuclear-ZORA, i.e. only ``V_nuc`` is included (this keyword takes precedence
+          over keywords in the ``ZORA`` section).
   - name: ZORA
     docstring: |
       Define required parameters for the ZORA Hamiltonian.

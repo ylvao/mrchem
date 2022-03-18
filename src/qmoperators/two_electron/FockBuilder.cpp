@@ -287,11 +287,10 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentNREL(OrbitalVector &Phi, Orbita
     return out;
 }
 
-void FockBuilder::setZoraType(bool has_nuc, bool has_coul, bool has_xc, std::string name) {
+void FockBuilder::setZoraType(bool has_nuc, bool has_coul, bool has_xc) {
     this->zora_has_nuc = has_nuc;
     this->zora_has_coul = has_coul;
     this->zora_has_xc = has_xc;
-    this->zora_name = name;
 }
 
 std::shared_ptr<QMPotential> FockBuilder::collectZoraBasePotential() {

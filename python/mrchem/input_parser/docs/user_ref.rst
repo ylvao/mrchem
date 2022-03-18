@@ -311,11 +311,14 @@ User input reference
   
     **Default** ``True``
   
-   :zora: Activate scalar relativistic SCF with the ZORA Hamiltonian. 
+   :relativity: Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section. ``nZORA`` is shortcut for nuclear-ZORA, i.e. only ``V_nuc`` is included (this keyword takes precedence over keywords in the ``ZORA`` section). 
   
-    **Type** ``bool``
+    **Type** ``str``
   
-    **Default** ``False``
+    **Default** ``none``
+  
+    **Predicates**
+      - ``value.lower() in ['none', 'zora', 'nzora']``
   
  :ZORA: Define required parameters for the ZORA Hamiltonian. 
 

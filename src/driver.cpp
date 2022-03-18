@@ -252,6 +252,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     if (json_scf.contains("scf_solver")) {
         auto kain = json_scf["scf_solver"]["kain"];
         auto method = json_scf["scf_solver"]["method"];
+        auto relativity = json_scf["scf_solver"]["relativity"];
         auto max_iter = json_scf["scf_solver"]["max_iter"];
         auto rotation = json_scf["scf_solver"]["rotation"];
         auto localize = json_scf["scf_solver"]["localize"];
@@ -268,13 +269,13 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         solver.setRotation(rotation);
         solver.setLocalize(localize);
         solver.setMethodName(method);
+        solver.setRelativityName(relativity);
         solver.setCheckpoint(checkpoint);
         solver.setCheckpointFile(file_chk);
         solver.setMaxIterations(max_iter);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, energy_thrs);
-        solver.setZoraName(F.getZoraName());
 
         json_out["scf_solver"] = solver.optimize(mol, F);
         json_out["success"] = json_out["scf_solver"]["converged"];
@@ -380,11 +381,13 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
 bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockBuilder &F) {
     auto prec = json_guess["prec"];
     auto method = json_guess["method"];
+    auto relativity = json_guess["relativity"];
     auto localize = json_guess["localize"];
 
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation  ", "Compute initial energy");
     print_utils::text(0, "Method       ", method);
+    print_utils::text(0, "Relativity   ", relativity);
     print_utils::text(0, "Precision    ", print_utils::dbl_to_str(prec, 5, true));
     print_utils::text(0, "Localization ", (localize) ? "On" : "Off");
     mrcpp::print::separator(0, '~', 2);
@@ -985,8 +988,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         auto include_nuclear = json_fock["zora_operator"]["include_nuclear"];
         auto include_coulomb = json_fock["zora_operator"]["include_coulomb"];
         auto include_xc = json_fock["zora_operator"]["include_xc"];
-        auto zora_name = json_fock["zora_operator"]["zora_name"];
-        F.setZoraType(include_nuclear, include_coulomb, include_xc, zora_name);
+        F.setZoraType(include_nuclear, include_coulomb, include_xc);
     }
     ///////////////////////////////////////////////////////////
     //////////////////   Coulomb Operator   ///////////////////

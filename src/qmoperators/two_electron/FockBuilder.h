@@ -55,7 +55,6 @@ class ReactionOperator;
 
 class FockBuilder final {
 public:
-    bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
     MomentumOperator &momentum() { return *this->mom; }
     RankZeroOperator &potential() { return this->V; }
     RankZeroOperator &perturbation() { return this->H_1; }
@@ -77,8 +76,8 @@ public:
     void setLightSpeed(double c) { this->light_speed = c; }
     double getLightSpeed() const { return this->light_speed; }
 
-    void setZoraType(bool has_nuc, bool has_coul, bool has_xc, std::string name);
-    std::string getZoraName() const { return this->zora_name; }
+    bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
+    void setZoraType(bool has_nuc, bool has_coul, bool has_xc);
 
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
@@ -92,7 +91,6 @@ private:
 
     double light_speed{-1.0};
     double exact_exchange{1.0};
-    std::string zora_name{"Off"};
     RankZeroOperator zora_base;
 
     RankZeroOperator V;       ///< Total potential energy operator

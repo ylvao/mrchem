@@ -52,40 +52,17 @@ SHORTHAND_FUNCTIONALS = [
 """List of recognized shorthands for functionals"""
 
 
-def write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs, origin):
+def write_scf_fock(user_dict, wf_dict, origin):
     fock_dict = {}
 
-
     # ZORA
-    if user_dict['WaveFunction']["zora"]:
-        # Determine ZORA name label for print outs to the output file
-        include_nuclear = user_dict["ZORA"]["include_nuclear"]
-        include_coulomb = user_dict["ZORA"]["include_coulomb"]
-        include_xc = user_dict["ZORA"]["include_xc"]
-        
-        components = [
-            include_nuclear,
-            include_coulomb,
-            include_xc
-        ]
-        names = [
-            "V_nuc",
-            "J",
-            "V_xc"
-        ]
-        
-        if not any(components):
-            zora_name = "Off"
-        else:
-            zora_name = " + ".join([name for name, comp in zip(names, components) if comp])
-    
+    if user_dict["WaveFunction"]["relativity"].lower() == "zora":
         fock_dict["zora_operator"] = {
             "light_speed": user_dict["ZORA"]["light_speed"],
             "derivative": user_dict["Derivatives"]["zora"],
-            "include_nuclear": include_nuclear,
-            "include_coulomb": include_coulomb,
-            "include_xc": include_xc,
-            "zora_name": zora_name,
+            "include_nuclear": user_dict["ZORA"]["include_nuclear"],
+            "include_coulomb": user_dict["ZORA"]["include_coulomb"],
+            "include_xc": user_dict["ZORA"]["include_xc"],
             "shared_memory": user_dict["MPI"]["share_nuclear_potential"],
             "proj_prec": user_dict["Precisions"]["nuclear_prec"]
         }
@@ -119,23 +96,23 @@ def write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs, origin):
     }
 
     # Coulomb
-    if wf_method in ['hartree', 'hf', 'dft']:
+    if wf_dict["method_type"] in ['hartree', 'hf', 'dft']:
         fock_dict["coulomb_operator"] = {
             "poisson_prec": user_dict["Precisions"]["poisson_prec"],
             "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
         }
 
     # Exchange
-    if wf_method in ['hf', 'dft']:
+    if wf_dict["method_type"] in ['hf', 'dft']:
         fock_dict["exchange_operator"] = {
             "poisson_prec": user_dict["Precisions"]["poisson_prec"],
             "exchange_prec": user_dict["Precisions"]["exchange_prec"]
         }
 
     # Exchange-Correlation
-    if wf_method in ['dft']:
+    if wf_dict["method_type"] in ['dft']:
         func_dict = []
-        for line in dft_funcs.split('\n'):
+        for line in wf_dict["dft_funcs"].split('\n'):
             sp = line.split()
             if len(sp) > 0:
                 func = sp[0].lower()
@@ -162,7 +139,7 @@ def write_scf_fock(user_dict, mol_dict, wf_method, dft_funcs, origin):
     return fock_dict
 
 
-def write_scf_guess(user_dict, method_name):
+def write_scf_guess(user_dict, wf_dict):
     guess_str = user_dict["SCF"]["guess_type"].lower()
     guess_type = guess_str.split('_')[0]
     zeta = 0
@@ -197,7 +174,8 @@ def write_scf_guess(user_dict, method_name):
         "zeta": zeta,
         "prec": guess_prec,
         "type": guess_type,
-        "method": method_name,
+        "method": wf_dict["method_name"],
+        "relativity": wf_dict["relativity_name"],
         "screen": scf_dict["guess_screen"],
         "localize": scf_dict["localize"],
         "restricted": user_dict["WaveFunction"]["restricted"],
@@ -217,7 +195,7 @@ def write_scf_guess(user_dict, method_name):
     return guess_dict
 
 
-def write_scf_solver(user_dict, method_name):
+def write_scf_solver(user_dict, wf_dict):
     # SCF precisions and thresholds
     start_prec = user_dict["SCF"]["start_prec"]
     final_prec = user_dict["SCF"]["final_prec"]
@@ -228,7 +206,8 @@ def write_scf_solver(user_dict, method_name):
 
     scf_dict = user_dict["SCF"]
     solver_dict = {
-        "method": method_name,
+        "method": wf_dict["method_name"],
+        "relativity": wf_dict["relativity_name"],
         "kain": scf_dict["kain"],
         "max_iter": scf_dict["max_iter"],
         "rotation": scf_dict["rotation"],
@@ -289,8 +268,10 @@ def write_scf_plot(user_dict):
     return plot_dict
 
 
-def write_rsp_calc(omega, user_dict, mol_dict, origin):
-    method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
+def write_rsp_calc(omega, user_dict, origin):
+    wf_dict = parse_wf_method(user_dict)
+    if not wf_dict["relativity_name"] in ["None", "Off"]:
+        raise RuntimeError("Linear response not available: " + wf_dict["relativity_name"])
 
     rsp_dict = user_dict["Response"]
     file_dict = user_dict["Files"]
@@ -298,13 +279,11 @@ def write_rsp_calc(omega, user_dict, mol_dict, origin):
     rsp_calc = {}
     rsp_calc["frequency"] = omega
     rsp_calc["dynamic"] = (omega > 1.0e-12)
-    rsp_calc["fock_operator"] = write_rsp_fock(user_dict, mol_dict, wf_method,
-                                               dft_funcs)
+    rsp_calc["fock_operator"] = write_rsp_fock(user_dict, wf_dict)
     rsp_calc["unperturbed"] = {
         "precision": user_dict["world_prec"],
         "localize": rsp_dict["localize"],
-        "fock_operator": write_scf_fock(user_dict, mol_dict, wf_method,
-                                        dft_funcs, origin)
+        "fock_operator": write_scf_fock(user_dict, wf_dict, origin)
     }
 
     guess_str = rsp_dict["guess_type"].lower()
@@ -339,33 +318,32 @@ def write_rsp_calc(omega, user_dict, mol_dict, origin):
                 "file_y_b": path_orbitals + "/Y_b_rsp_" + str(d)
             }
         if rsp_dict["run"][d]:
-            rsp_comp["rsp_solver"] = write_rsp_solver(user_dict, method_name,
-                                                      d)
+            rsp_comp["rsp_solver"] = write_rsp_solver(user_dict, wf_dict, d)
         rsp_calc["components"].append(rsp_comp)
     return rsp_calc
 
 
-def write_rsp_fock(user_dict, mol_dict, wf_method, dft_funcs):
+def write_rsp_fock(user_dict, wf_dict):
     fock_dict = {}
 
     # Coulomb
-    if wf_method in ['hartree', 'hf', 'dft']:
+    if wf_dict["method_type"] in ['hartree', 'hf', 'dft']:
         fock_dict["coulomb_operator"] = {
             "poisson_prec": user_dict["Precisions"]["poisson_prec"],
             "shared_memory": user_dict["MPI"]["share_coulomb_potential"]
         }
 
     # Exchange
-    if wf_method in ['hf', 'dft']:
+    if wf_dict["method_type"] in ['hf', 'dft']:
         fock_dict["exchange_operator"] = {
             "poisson_prec": user_dict["Precisions"]["poisson_prec"],
             "exchange_prec": user_dict["Precisions"]["exchange_prec"]
         }
 
     # Exchange-Correlation
-    if wf_method in ['dft']:
+    if wf_dict["method_type"] in ['dft']:
         func_dict = []
-        for line in dft_funcs.split('\n'):
+        for line in wf_dict["dft_funcs"].split('\n'):
             sp = line.split()
             if len(sp) > 0:
                 func = sp[0].lower()
@@ -385,7 +363,7 @@ def write_rsp_fock(user_dict, mol_dict, wf_method, dft_funcs):
     return fock_dict
 
 
-def write_rsp_solver(user_dict, method_name, d):
+def write_rsp_solver(user_dict, wf_dict, d):
     # Response precisions and thresholds
     start_prec = user_dict["Response"]["start_prec"]
     final_prec = user_dict["Response"]["final_prec"]
@@ -396,7 +374,7 @@ def write_rsp_solver(user_dict, method_name, d):
 
     rsp_dict = user_dict["Response"]
     solver_dict = {
-        "method": method_name,
+        "method": wf_dict["method_name"],
         "kain": rsp_dict["kain"],
         "max_iter": rsp_dict["max_iter"],
         "file_chk_x": rsp_dict["path_checkpoint"] + "/X_rsp_" + str(d),
@@ -414,30 +392,73 @@ def write_rsp_solver(user_dict, method_name, d):
 
 def parse_wf_method(user_dict):
     method_name = ''
-    wf_method = user_dict["WaveFunction"]["method"].lower()
+    restricted = user_dict["WaveFunction"]["restricted"]
+    method_type = user_dict["WaveFunction"]["method"].lower()
     dft_funcs = user_dict["DFT"]["functionals"].lower()
-    if wf_method in ['core']:
+    if method_type in ['core']:
         method_name = 'Core Hamiltonian'
-    elif wf_method in ['hartree']:
+    elif method_type in ['hartree']:
         method_name = 'Hartree'
-    elif wf_method in ['hf', 'hartree-fock', 'hartreefock']:
+    elif method_type in ['hf', 'hartree-fock', 'hartreefock']:
         method_name = 'Hartree-Fock'
-        wf_method = 'hf'
-    elif wf_method in ['dft']:
+        method_type = 'hf'
+    elif method_type in ['dft']:
         method_name = 'DFT'
-    elif wf_method in ['lda']:
+    elif method_type in ['lda']:
         method_name = 'DFT (SVWN5)'
         dft_funcs = 'svwn5'
-        wf_method = 'dft'
-    elif wf_method in SHORTHAND_FUNCTIONALS:
-        method_name = 'DFT (' + wf_method.upper() + ')'
-        dft_funcs = wf_method
-        wf_method = 'dft'
+        method_type = 'dft'
+    elif method_type in SHORTHAND_FUNCTIONALS:
+        method_name = 'DFT (' + method_type.upper() + ')'
+        dft_funcs = method_type
+        method_type = 'dft'
     else:
         raise RuntimeError(
             f"Invalid wavefunction method {user_dict['WaveFunction']['method']}"
         )
 
-    return method_name, wf_method, dft_funcs
+    # Determine relativity name label for print outs to the output file
+    relativity_name = "None"
+    if user_dict["WaveFunction"]["relativity"].lower() in ["none"]:
+        user_dict["WaveFunction"]["relativity"] = "off"
+        user_dict["ZORA"]["include_nuclear"] = False
+        user_dict["ZORA"]["include_coulomb"] = False
+        user_dict["ZORA"]["include_xc"] = False
+
+    if user_dict["WaveFunction"]["relativity"].lower() in ["nzora"]:
+        user_dict["WaveFunction"]["relativity"] = "zora"
+        user_dict["ZORA"]["include_nuclear"] = True
+        user_dict["ZORA"]["include_coulomb"] = False
+        user_dict["ZORA"]["include_xc"] = False
+
+    if user_dict["WaveFunction"]["relativity"].lower() in ["zora"]:
+        components = [
+            user_dict["ZORA"]["include_nuclear"],
+            user_dict["ZORA"]["include_coulomb"],
+            user_dict["ZORA"]["include_xc"]
+        ]
+        names = [
+            "V_nuc",
+            "J",
+            "V_xc"
+        ]
+
+        if any(components):
+            zora_terms = " + ".join([name for name, comp in zip(names, components) if comp])
+            relativity_name = "ZORA (" + zora_terms + ")"
+        else:
+            raise RuntimeError("ZORA selected, but no ZORA potential included")
+
+        if user_dict["ZORA"]["include_xc"] and not restricted:
+            raise RuntimeError("ZORA (V_xc) not available for unrestricted wavefunctions")
+
+
+    wf_dict = {
+        "relativity_name": relativity_name,
+        "method_name": method_name,
+        "method_type": method_type,
+        "dft_funcs": dft_funcs
+    }
+    return wf_dict
 
 
