@@ -264,6 +264,12 @@ User input reference
   
     **Default** ``abgv_00``
   
+   :zora: Derivative used ZORA potential. 
+  
+    **Type** ``str``
+  
+    **Default** ``abgv_00``
+  
  :Molecule: Define molecule. 
 
   :red:`Keywords`
@@ -300,6 +306,42 @@ User input reference
       - ``value.lower() in ['core', 'hartree', 'hf', 'hartreefock', 'hartree-fock', 'dft', 'lda', 'svwn3', 'svwn5', 'pbe', 'pbe0', 'bpw91', 'bp86', 'b3p86', 'b3p86-g', 'blyp', 'b3lyp', 'b3lyp-g', 'olyp', 'kt1', 'kt2', 'kt3']``
   
    :restricted: Use spin restricted wavefunction. 
+  
+    **Type** ``bool``
+  
+    **Default** ``True``
+  
+   :relativity: Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section. ``nZORA`` is shortcut for nuclear-ZORA, i.e. only ``V_nuc`` is included (this keyword takes precedence over keywords in the ``ZORA`` section). 
+  
+    **Type** ``str``
+  
+    **Default** ``none``
+  
+    **Predicates**
+      - ``value.lower() in ['none', 'zora', 'nzora']``
+  
+ :ZORA: Define required parameters for the ZORA Hamiltonian. 
+
+  :red:`Keywords`
+   :light_speed: Adjust speed of light. 
+  
+    **Type** ``float``
+  
+    **Default** ``-1.0``
+  
+   :include_nuclear: Include the nuclear potential ``V_nuc`` in the ZORA potential. 
+  
+    **Type** ``bool``
+  
+    **Default** ``True``
+  
+   :include_coulomb: Include the Coulomb potential ``J`` in the ZORA potential. 
+  
+    **Type** ``bool``
+  
+    **Default** ``True``
+  
+   :include_xc: Include the XC potential ``V_xc`` in the ZORA potential. 
   
     **Type** ``bool``
   

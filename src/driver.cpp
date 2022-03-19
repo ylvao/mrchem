@@ -49,19 +49,24 @@
 #include "qmfunctions/orbital_utils.h"
 
 #include "qmoperators/one_electron/ElectricFieldOperator.h"
-#include "qmoperators/one_electron/H_BB_dia.h"
-#include "qmoperators/one_electron/H_BM_dia.h"
-#include "qmoperators/one_electron/H_B_dip.h"
-#include "qmoperators/one_electron/H_E_quad.h"
-#include "qmoperators/one_electron/H_MB_dia.h"
-#include "qmoperators/one_electron/H_M_pso.h"
 #include "qmoperators/one_electron/KineticOperator.h"
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
+
+#include "qmoperators/one_electron/H_BB_dia.h"
+#include "qmoperators/one_electron/H_BM_dia.h"
+#include "qmoperators/one_electron/H_B_dip.h"
+#include "qmoperators/one_electron/H_B_spin.h"
+#include "qmoperators/one_electron/H_E_dip.h"
+#include "qmoperators/one_electron/H_E_quad.h"
+#include "qmoperators/one_electron/H_MB_dia.h"
+#include "qmoperators/one_electron/H_M_fc.h"
+#include "qmoperators/one_electron/H_M_pso.h"
 
 #include "qmoperators/two_electron/CoulombOperator.h"
 #include "qmoperators/two_electron/ExchangeOperator.h"
-#include "qmoperators/two_electron/FockOperator.h"
+#include "qmoperators/two_electron/FockBuilder.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
@@ -97,12 +102,12 @@ namespace driver {
 DerivativeOperator_p get_derivative(const std::string &name);
 template <int I> RankOneOperator<I> get_operator(const std::string &name, const json &json_oper);
 template <int I, int J> RankTwoOperator<I, J> get_operator(const std::string &name, const json &json_oper);
-void build_fock_operator(const json &input, Molecule &mol, FockOperator &F, int order);
+void build_fock_operator(const json &input, Molecule &mol, FockBuilder &F, int order);
 void init_properties(const json &json_prop, Molecule &mol);
 
 namespace scf {
 bool guess_orbitals(const json &input, Molecule &mol);
-bool guess_energy(const json &input, Molecule &mol, FockOperator &F);
+bool guess_energy(const json &input, Molecule &mol, FockBuilder &F);
 void write_orbitals(const json &input, Molecule &mol);
 void calc_properties(const json &input, Molecule &mol);
 void plot_quantities(const json &input, Molecule &mol);
@@ -220,8 +225,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     ///////////////////////////////////////////////////////////
     ////////////////   Building Fock Operator   ///////////////
     ///////////////////////////////////////////////////////////
-
-    FockOperator F;
+    FockBuilder F;
     const auto &json_fock = json_scf["fock_operator"];
     driver::build_fock_operator(json_fock, mol, F, 0);
 
@@ -248,6 +252,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     if (json_scf.contains("scf_solver")) {
         auto kain = json_scf["scf_solver"]["kain"];
         auto method = json_scf["scf_solver"]["method"];
+        auto relativity = json_scf["scf_solver"]["relativity"];
         auto max_iter = json_scf["scf_solver"]["max_iter"];
         auto rotation = json_scf["scf_solver"]["rotation"];
         auto localize = json_scf["scf_solver"]["localize"];
@@ -264,12 +269,14 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         solver.setRotation(rotation);
         solver.setLocalize(localize);
         solver.setMethodName(method);
+        solver.setRelativityName(relativity);
         solver.setCheckpoint(checkpoint);
         solver.setCheckpointFile(file_chk);
         solver.setMaxIterations(max_iter);
         solver.setHelmholtzPrec(helmholtz_prec);
         solver.setOrbitalPrec(start_prec, final_prec);
         solver.setThreshold(orbital_thrs, energy_thrs);
+
         json_out["scf_solver"] = solver.optimize(mol, F);
         json_out["success"] = json_out["scf_solver"]["converged"];
     }
@@ -371,14 +378,16 @@ bool driver::scf::guess_orbitals(const json &json_guess, Molecule &mol) {
     return success;
 }
 
-bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockOperator &F) {
+bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockBuilder &F) {
     auto prec = json_guess["prec"];
     auto method = json_guess["method"];
+    auto relativity = json_guess["relativity"];
     auto localize = json_guess["localize"];
 
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation  ", "Compute initial energy");
     print_utils::text(0, "Method       ", method);
+    print_utils::text(0, "Relativity   ", relativity);
     print_utils::text(0, "Precision    ", print_utils::dbl_to_str(prec, 5, true));
     print_utils::text(0, "Localization ", (localize) ? "On" : "Off");
     mrcpp::print::separator(0, '~', 2);
@@ -392,7 +401,9 @@ bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockOperat
     auto &F_mat = mol.getFockMatrix();
     F_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
     if (localize) orbital::localize(prec, Phi, F_mat);
+
     F.setup(prec);
+
     F_mat = F(Phi, Phi);
     mol.getSCFEnergy() = F.trace(Phi, nucs);
     F.clear();
@@ -697,7 +708,7 @@ json driver::rsp::run(const json &json_rsp, Molecule &mol) {
         orbital::diagonalize(unpert_prec, Phi, F_mat);
     }
 
-    FockOperator F_0;
+    FockBuilder F_0;
     driver::build_fock_operator(unpert_fock, mol, F_0, 0);
     F_0.setup(unpert_prec);
     if (plevel == 1) mrcpp::print::footer(1, t_unpert, 2);
@@ -712,7 +723,7 @@ json driver::rsp::run(const json &json_rsp, Molecule &mol) {
     auto dynamic = json_rsp["dynamic"];
     mol.initPerturbedOrbitals(dynamic);
 
-    FockOperator F_1;
+    FockBuilder F_1;
     const auto &json_fock_1 = json_rsp["fock_operator"];
     driver::build_fock_operator(json_fock_1, mol, F_1, 1);
 
@@ -941,20 +952,20 @@ void driver::rsp::calc_properties(const json &json_prop, Molecule &mol, int dir,
  * construct all operator which are present in this input. Option to set
  * perturbation order of the operators.
  */
-void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOperator &F, int order) {
+void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuilder &F, int order) {
     auto &nuclei = mol.getNuclei();
     auto Phi_p = mol.getOrbitals_p();
     auto X_p = mol.getOrbitalsX_p();
     auto Y_p = mol.getOrbitalsY_p();
 
     ///////////////////////////////////////////////////////////
-    //////////////////   Kinetic Operator   ///////////////////
+    ///////////////      Momentum Operator    /////////////////
     ///////////////////////////////////////////////////////////
     if (json_fock.contains("kinetic_operator")) {
         auto kin_diff = json_fock["kinetic_operator"]["derivative"];
         auto D_p = driver::get_derivative(kin_diff);
-        auto T_p = std::make_shared<KineticOperator>(D_p);
-        F.getKineticOperator() = T_p;
+        auto P_p = std::make_shared<MomentumOperator>(D_p);
+        F.getMomentumOperator() = P_p;
     }
     ///////////////////////////////////////////////////////////
     //////////////////   Nuclear Operator   ///////////////////
@@ -965,6 +976,19 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockOpera
         auto shared_memory = json_fock["nuclear_operator"]["shared_memory"];
         auto V_p = std::make_shared<NuclearOperator>(nuclei, proj_prec, smooth_prec, shared_memory);
         F.getNuclearOperator() = V_p;
+    }
+    ///////////////////////////////////////////////////////////
+    //////////////////////   Zora Operator   //////////////////
+    ///////////////////////////////////////////////////////////
+    if (json_fock.contains("zora_operator")) {
+        auto c = json_fock["zora_operator"]["light_speed"];
+        if (c <= 0.0) c = PHYSCONST::alpha_inv;
+        F.setLightSpeed(c);
+        
+        auto include_nuclear = json_fock["zora_operator"]["include_nuclear"];
+        auto include_coulomb = json_fock["zora_operator"]["include_coulomb"];
+        auto include_xc = json_fock["zora_operator"]["include_xc"];
+        F.setZoraType(include_nuclear, include_coulomb, include_xc);
     }
     ///////////////////////////////////////////////////////////
     //////////////////   Coulomb Operator   ///////////////////

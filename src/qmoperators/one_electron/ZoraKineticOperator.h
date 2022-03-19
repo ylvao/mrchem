@@ -25,40 +25,24 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
+#include "tensor/RankZeroOperator.h"
 
-#include "SCFSolver.h"
-
-/** @class LinearResponseSolver
- *
- */
+#include "MomentumOperator.h"
+#include "ZoraOperator.h"
 
 namespace mrchem {
 
-class Molecule;
-class FockBuilder;
-
-class LinearResponseSolver final : public SCFSolver {
+class ZoraKineticOperator final : public RankZeroOperator {
 public:
-    explicit LinearResponseSolver(bool dyn = false)
-            : dynamic(dyn) {}
-    ~LinearResponseSolver() override = default;
+    ZoraKineticOperator(std::shared_ptr<mrcpp::DerivativeOperator<3>> D, ZoraOperator kappa)
+            : ZoraKineticOperator(MomentumOperator(D), kappa) {}
 
-    nlohmann::json optimize(double omega, Molecule &mol, FockBuilder &F_0, FockBuilder &F_1);
-    void setOrthPrec(double prec) { this->orth_prec = prec; }
-    void setCheckpointFile(const std::string &file_x, const std::string &file_y) {
-        this->chkFileX = file_x;
-        this->chkFileY = file_y;
+    ZoraKineticOperator(MomentumOperator p, ZoraOperator kappa) {
+        // Invoke operator= to assign *this operator
+        RankZeroOperator &t = (*this);
+        t = 0.5 * (p[0] * kappa * p[0] + p[1] * kappa * p[1] + p[2] * kappa * p[2]);
+        t.name() = "T_zora";
     }
-
-protected:
-    const bool dynamic;
-    double orth_prec{mrcpp::MachineZero};
-    std::string chkFileX; ///< Name of checkpoint file
-    std::string chkFileY; ///< Name of checkpoint file
-
-    void printProperty() const;
-    void printParameters(double omega, const std::string &oper) const;
 };
 
 } // namespace mrchem

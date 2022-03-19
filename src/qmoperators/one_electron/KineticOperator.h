@@ -55,10 +55,4 @@ public:
     }
 };
 
-namespace qmoperator {
-
-ComplexMatrix calc_kinetic_matrix(KineticOperator &T, OrbitalVector &bra, OrbitalVector &ket);
-
-} // namespace qmoperator
-
 } // namespace mrchem

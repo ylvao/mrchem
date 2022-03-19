@@ -25,40 +25,19 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
-
-#include "SCFSolver.h"
-
-/** @class LinearResponseSolver
- *
- */
+#include "mrchem.h"
+#include "qmfunctions/qmfunction_fwd.h"
+#include "tensor/tensor_fwd.h"
 
 namespace mrchem {
+class MomentumOperator;
 
-class Molecule;
-class FockBuilder;
-
-class LinearResponseSolver final : public SCFSolver {
-public:
-    explicit LinearResponseSolver(bool dyn = false)
-            : dynamic(dyn) {}
-    ~LinearResponseSolver() override = default;
-
-    nlohmann::json optimize(double omega, Molecule &mol, FockBuilder &F_0, FockBuilder &F_1);
-    void setOrthPrec(double prec) { this->orth_prec = prec; }
-    void setCheckpointFile(const std::string &file_x, const std::string &file_y) {
-        this->chkFileX = file_x;
-        this->chkFileY = file_y;
-    }
-
-protected:
-    const bool dynamic;
-    double orth_prec{mrcpp::MachineZero};
-    std::string chkFileX; ///< Name of checkpoint file
-    std::string chkFileY; ///< Name of checkpoint file
-
-    void printProperty() const;
-    void printParameters(double omega, const std::string &oper) const;
-};
+namespace qmoperator {
+double calc_kinetic_trace(MomentumOperator &p, OrbitalVector &Phi);
+ComplexDouble calc_kinetic_trace(MomentumOperator &p, RankZeroOperator &V, OrbitalVector &Phi);
+ComplexMatrix calc_kinetic_matrix(MomentumOperator &p, OrbitalVector &bra, OrbitalVector &ket);
+ComplexMatrix calc_kinetic_matrix(MomentumOperator &p, RankZeroOperator &V, OrbitalVector &bra, OrbitalVector &ket);
+ComplexMatrix calc_kinetic_matrix_symmetrized(MomentumOperator &p, RankZeroOperator &V, OrbitalVector &bra, OrbitalVector &ket);
+} // namespace qmoperator
 
 } // namespace mrchem

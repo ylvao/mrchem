@@ -26,6 +26,8 @@
 #pragma once
 
 #include "tensor/RankZeroOperator.h"
+#include "tensor/RankOneOperator.h"
+#include "qmoperators/QMPotential.h"
 
 /** @class FockOperator
  *
@@ -40,7 +42,10 @@
 namespace mrchem {
 
 class SCFEnergy;
+class MomentumOperator;
 class KineticOperator;
+class ZoraKineticOperator;
+class ZoraOperator;
 class NuclearOperator;
 class CoulombOperator;
 class ExchangeOperator;
@@ -48,21 +53,13 @@ class XCOperator;
 class ElectricFieldOperator;
 class ReactionOperator;
 
-class FockOperator final : public RankZeroOperator {
+class FockBuilder final {
 public:
-    FockOperator(std::shared_ptr<KineticOperator> t = nullptr,
-                 std::shared_ptr<NuclearOperator> v = nullptr,
-                 std::shared_ptr<CoulombOperator> j = nullptr,
-                 std::shared_ptr<ExchangeOperator> k = nullptr,
-                 std::shared_ptr<XCOperator> xc = nullptr,
-                 std::shared_ptr<ElectricFieldOperator> ext = nullptr,
-                 std::shared_ptr<ReactionOperator> reo = nullptr);
-
-    RankZeroOperator &kinetic() { return this->T; }
+    MomentumOperator &momentum() { return *this->mom; }
     RankZeroOperator &potential() { return this->V; }
     RankZeroOperator &perturbation() { return this->H_1; }
 
-    std::shared_ptr<KineticOperator> &getKineticOperator() { return this->kin; }
+    std::shared_ptr<MomentumOperator> &getMomentumOperator() { return this->mom; }
     std::shared_ptr<NuclearOperator> &getNuclearOperator() { return this->nuc; }
     std::shared_ptr<CoulombOperator> &getCoulombOperator() { return this->coul; }
     std::shared_ptr<ExchangeOperator> &getExchangeOperator() { return this->ex; }
@@ -76,27 +73,42 @@ public:
     void setup(double prec);
     void clear();
 
+    void setLightSpeed(double c) { this->light_speed = c; }
+    double getLightSpeed() const { return this->light_speed; }
+
+    bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
+    void setZoraType(bool has_nuc, bool has_coul, bool has_xc);
+
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
-
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
-    ComplexMatrix dagger(OrbitalVector &bra, OrbitalVector &ket);
 
-    using RankZeroOperator::operator();
-    using RankZeroOperator::dagger;
+    OrbitalVector buildHelmholtzArgument(double prec, OrbitalVector Phi, ComplexMatrix F_mat, ComplexMatrix L_mat);
 
 private:
-    double exact_exchange{1.0};
-    RankZeroOperator T;   ///< Total kinetic energy operator
-    RankZeroOperator V;   ///< Total potential energy operator
-    RankZeroOperator H_1; ///< Perturbation operators
+    bool zora_has_nuc{false};
+    bool zora_has_coul{false};
+    bool zora_has_xc{false};
 
-    std::shared_ptr<KineticOperator> kin;
-    std::shared_ptr<NuclearOperator> nuc;
-    std::shared_ptr<CoulombOperator> coul;
-    std::shared_ptr<ExchangeOperator> ex;
-    std::shared_ptr<XCOperator> xc;
-    std::shared_ptr<ElectricFieldOperator> ext; ///< Total external potential
-    std::shared_ptr<ReactionOperator> Ro;       ///< Reaction field operator
+    double light_speed{-1.0};
+    double exact_exchange{1.0};
+    RankZeroOperator zora_base;
+
+    RankZeroOperator V;       ///< Total potential energy operator
+    RankZeroOperator H_1;     ///< Perturbation operators
+
+    std::shared_ptr<MomentumOperator> mom{nullptr};
+    std::shared_ptr<NuclearOperator> nuc{nullptr};
+    std::shared_ptr<CoulombOperator> coul{nullptr};
+    std::shared_ptr<ExchangeOperator> ex{nullptr};
+    std::shared_ptr<XCOperator> xc{nullptr};
+    std::shared_ptr<ReactionOperator> Ro{nullptr};           // Reaction field operator
+    std::shared_ptr<ElectricFieldOperator> ext{nullptr};     // Total external potential
+    std::shared_ptr<ZoraOperator> kappa{nullptr};
+    std::shared_ptr<ZoraOperator> kappa_inv{nullptr};
+
+    std::shared_ptr<QMPotential> collectZoraBasePotential();
+    OrbitalVector buildHelmholtzArgumentZORA(OrbitalVector &Phi, OrbitalVector &Psi, DoubleVector eps, double prec);
+    OrbitalVector buildHelmholtzArgumentNREL(OrbitalVector &Phi, OrbitalVector &Psi);
 };
 
 } // namespace mrchem

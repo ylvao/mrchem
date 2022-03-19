@@ -25,40 +25,39 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
-
-#include "SCFSolver.h"
-
-/** @class LinearResponseSolver
- *
- */
+#include "tensor/RankZeroOperator.h"
+#include "qmoperators/QMPotential.h"
+#include "qmfunctions/qmfunction_utils.h"
 
 namespace mrchem {
 
-class Molecule;
-class FockBuilder;
-
-class LinearResponseSolver final : public SCFSolver {
+class ZoraOperator final : public RankZeroOperator {
 public:
-    explicit LinearResponseSolver(bool dyn = false)
-            : dynamic(dyn) {}
-    ~LinearResponseSolver() override = default;
+    ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inverse = false) {
+        double two_cc = 2.0 * c * c;
 
-    nlohmann::json optimize(double omega, Molecule &mol, FockBuilder &F_0, FockBuilder &F_1);
-    void setOrthPrec(double prec) { this->orth_prec = prec; }
-    void setCheckpointFile(const std::string &file_x, const std::string &file_y) {
-        this->chkFileX = file_x;
-        this->chkFileY = file_y;
+        auto k = std::make_shared<QMPotential>(1);
+        qmfunction::deep_copy(*k, vz);
+
+        if (k->hasImag()) MSG_ERROR("Inverse of complex function");
+        if (k->hasReal()) {
+            mrcpp::refine_grid(k->real(), 1);
+            if (inverse) {
+                k->real().map([two_cc](double val) { return (two_cc - val) / two_cc; });
+            } else {
+                k->real().map([two_cc](double val) { return two_cc / (two_cc - val); });
+            }
+            k->real().crop(proj_prec);
+        }
+
+        RankZeroOperator &kappa = (*this);
+        kappa = k;
+        if (inverse) {
+            kappa.name() = "kappa_m1";
+        } else {
+            kappa.name() = "kappa";
+        }
     }
-
-protected:
-    const bool dynamic;
-    double orth_prec{mrcpp::MachineZero};
-    std::string chkFileX; ///< Name of checkpoint file
-    std::string chkFileY; ///< Name of checkpoint file
-
-    void printProperty() const;
-    void printParameters(double omega, const std::string &oper) const;
 };
-
+   
 } // namespace mrchem

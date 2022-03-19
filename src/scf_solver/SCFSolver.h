@@ -31,6 +31,8 @@
 #include "mrchem.h"
 #include "qmfunctions/qmfunction_fwd.h"
 
+#include "qmoperators/one_electron/ZoraOperator.h"
+
 /** @class SCF
  *
  * @brief Abstract base class for different types of SCF solvers
@@ -55,6 +57,7 @@ public:
     void setHelmholtzPrec(double prec) { this->helmPrec = prec; }
     void setMaxIterations(int iter) { this->maxIter = iter; }
     void setMethodName(const std::string &name) { this->methodName = name; }
+    void setRelativityName(const std::string &name) { this->relativityName = name; }
 
 protected:
     int history{0};                      ///< Maximum length of KAIN history
@@ -65,9 +68,11 @@ protected:
     double helmPrec{-1.0};               ///< Precision for construction of Helmholtz operators
     double orbPrec[3]{-1.0, -1.0, -1.0}; ///< Dynamic precision: [current_prec, start_prec, end_prec]
     std::string methodName;              ///< Name of electronic structure method to appear in output
+    std::string relativityName{"None"};  ///< Name of ZORA method
 
     std::vector<double> error;    ///< Convergence orbital error
     std::vector<double> property; ///< Convergence property error
+
 
     virtual void reset();
 

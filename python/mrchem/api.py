@@ -40,7 +40,7 @@ def translate_input(user_dict):
     mol_dict = write_molecule(user_dict, origin)
     mpi_dict = write_mpi(user_dict)
     mra_dict = write_mra(user_dict, mol_dict)
-    scf_dict = write_scf_calculation(user_dict, mol_dict, origin)
+    scf_dict = write_scf_calculation(user_dict, origin)
     rsp_dict = write_rsp_calculations(user_dict, mol_dict, origin)
 
     # piece everything together
@@ -172,8 +172,7 @@ def write_molecule(user_dict, origin):
                 center = list(map(float, sp[:-1]))
                 radius = float(sp[-1])
                 if len(center) != 3:
-                    print( f"Invalid coordinate: {center}" )
-                    sys.exit(1)
+                    raise RuntimeError(f"Invalid coordinate: {center}")
             cav_coords_dict.append({
                 "center": center,
                 "radius": radius
@@ -210,14 +209,12 @@ def write_molecule(user_dict, origin):
 ############################################################
 
 
-def write_scf_calculation(user_dict, mol_dict, origin):
-    method_name, wf_method, dft_funcs = parse_wf_method(user_dict)
+def write_scf_calculation(user_dict, origin):
+    wf_dict = parse_wf_method(user_dict)
 
     scf_dict = {}
-    scf_dict["fock_operator"] = write_scf_fock(
-        user_dict, mol_dict, wf_method, dft_funcs, origin
-    )
-    scf_dict["initial_guess"] = write_scf_guess(user_dict, method_name)
+    scf_dict["fock_operator"] = write_scf_fock(user_dict, wf_dict, origin)
+    scf_dict["initial_guess"] = write_scf_guess(user_dict, wf_dict)
 
     path_orbitals = user_dict["SCF"]["path_orbitals"]
     if user_dict["SCF"]["write_orbitals"]:
@@ -228,7 +225,7 @@ def write_scf_calculation(user_dict, mol_dict, origin):
         }
 
     if user_dict["SCF"]["run"]:
-        scf_dict["scf_solver"] = write_scf_solver(user_dict, method_name)
+        scf_dict["scf_solver"] = write_scf_solver(user_dict, wf_dict)
 
     prop_dict = write_scf_properties(user_dict, origin)
     if len(prop_dict) > 0:
@@ -257,7 +254,7 @@ def write_rsp_calculations(user_dict, mol_dict, origin):
         for omega in user_dict["Polarizability"]["frequency"]:
             freq_key = f"{omega:6f}"
             pol_key = "pol-" + freq_key
-            rsp_calc = write_rsp_calc(omega, user_dict, mol_dict, origin)
+            rsp_calc = write_rsp_calc(omega, user_dict, origin)
             rsp_calc["perturbation"] = {"operator": "h_e_dip", "r_O": origin}
             rsp_calc["properties"] = {}
             rsp_calc["properties"]["polarizability"] = {}
@@ -274,7 +271,7 @@ def write_rsp_calculations(user_dict, mol_dict, origin):
         omega = 0.0  # only static magnetic response
         freq_key = f"{omega:6f}"
         mag_key = "mag-" + freq_key
-        rsp_calc = write_rsp_calc(0.0, user_dict, mol_dict, origin)
+        rsp_calc = write_rsp_calc(0.0, user_dict, origin)
         rsp_calc["perturbation"] = {
             "operator": "h_b_dip",
             "derivative": user_dict["Derivatives"]["h_b_dip"],
@@ -320,7 +317,7 @@ def write_rsp_calculations(user_dict, mol_dict, origin):
             if (all_nucs) or (k in nuc_vec):
                 atom_key = str(k) + nuclei[k]["atom"]
                 nmr_key = "nmr-" + atom_key
-                rsp_calc = write_rsp_calc(0.0, user_dict, mol_dict, origin)
+                rsp_calc = write_rsp_calc(0.0, user_dict, origin)
                 rsp_calc["perturbation"] = {
                     "operator": "h_m_pso",
                     "smoothing": user_dict["world_prec"],

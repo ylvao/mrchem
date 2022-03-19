@@ -223,6 +223,11 @@ sections:
         default: 'abgv_00'
         docstring: |
           Derivative used in paramagnetic spin-orbit operator.
+      - name: zora
+        type: str
+        default: 'abgv_00'
+        docstring: |
+          Derivative used ZORA potential.
   - name: Molecule
     docstring: |
       Define molecule.
@@ -289,6 +294,43 @@ sections:
         default: true
         docstring: |
           Use spin restricted wavefunction.
+      - name: relativity
+        type: str
+        default: "none"
+        predicates:
+          - "value.lower() in
+             ['none',
+              'zora',
+              'nzora']"
+        docstring: |
+          Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default
+          including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section.
+          ``nZORA`` is shortcut for nuclear-ZORA, i.e. only ``V_nuc`` is included (this keyword takes precedence
+          over keywords in the ``ZORA`` section).
+  - name: ZORA
+    docstring: |
+      Define required parameters for the ZORA Hamiltonian.
+    keywords:
+      - name: light_speed
+        type: float
+        default: -1.0
+        docstring: |
+          Adjust speed of light.
+      - name: include_nuclear
+        type: bool
+        default: true
+        docstring: |
+          Include the nuclear potential ``V_nuc`` in the ZORA potential.
+      - name: include_coulomb
+        type: bool
+        default: true
+        docstring: |
+          Include the Coulomb potential ``J`` in the ZORA potential.
+      - name: include_xc
+        type: bool
+        default: true
+        docstring: |
+          Include the XC potential ``V_xc`` in the ZORA potential.
   - name: DFT
     docstring: |
       Define the exchange-correlation functional in case of DFT.

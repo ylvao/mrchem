@@ -34,8 +34,8 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmfunctions/qmfunction_utils.h"
-#include "qmoperators/one_electron/KineticOperator.h"
-#include "qmoperators/two_electron/FockOperator.h"
+#include "qmoperators/one_electron/ZoraOperator.h"
+#include "qmoperators/two_electron/FockBuilder.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
 
 using mrcpp::Printer;
@@ -170,6 +170,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation        ", calculation);
     print_utils::text(0, "Method             ", this->methodName);
+    print_utils::text(0, "Relativity         ", this->relativityName);
     print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());
@@ -192,7 +193,7 @@ void GroundStateSolver::reset() {
 /** @brief Run orbital optimization
  *
  * @param mol: Molecule to optimize
- * @param F: FockOperator defining the SCF equations
+ * @param F: FockBuilder defining the SCF equations
  *
  * Optimize orbitals until convergence thresholds are met. This algorithm computes
  * the Fock matrix explicitly using the kinetic energy operator, and uses a KAIN
@@ -214,7 +215,7 @@ void GroundStateSolver::reset() {
  * 11) Compute Fock matrix
  *
  */
-json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
+json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
     printParameters("Optimize ground state orbitals");
     Timer t_tot;
     json json_out;
@@ -261,20 +262,15 @@ json GroundStateSolver::optimize(Molecule &mol, FockOperator &F) {
         }
         // Init Helmholtz operator
         HelmholtzVector H(helm_prec, F_mat.real().diagonal());
-
-        // Setup argument
-        Timer t_arg;
-        mrcpp::print::header(2, "Computing Helmholtz argument");
         ComplexMatrix L_mat = H.getLambdaMatrix();
-        OrbitalVector Psi = orbital::rotate(Phi_n, L_mat - F_mat, orb_prec);
-        mrcpp::print::time(2, "Rotating orbitals", t_arg);
-        mrcpp::print::footer(2, t_arg, 2);
-        if (plevel == 1) mrcpp::print::time(1, "Computing Helmholtz argument", t_arg);
 
         // Apply Helmholtz operator
-        OrbitalVector Phi_np1 = H.apply(F.potential(), Phi_n, Psi);
+        OrbitalVector Psi = F.buildHelmholtzArgument(orb_prec, Phi_n, F_mat, L_mat);
+        OrbitalVector Phi_np1 = H(Psi);
         Psi.clear();
         F.clear();
+
+        // Orthonormalize
         orbital::orthonormalize(orb_prec, Phi_np1, F_mat);
 
         // Compute orbital updates
