@@ -193,9 +193,33 @@ def write_molecule(user_dict, origin):
     else:
         cavity_width = user_dict["Environment"]["Cavity"]["cavity_width"]
 
+    # Make sure the specified charge and multiplicity make sense
+    mult = user_dict["Molecule"]["multiplicity"]
+    charge = user_dict["Molecule"]["charge"]
+    restricted = user_dict["WaveFunction"]["restricted"]
+
+    # Collect number of electrons
+    n_electrons = sum([PT[atom["atom"]].Z for atom in coords_dict]) - charge
+    n_unpaired = mult - 1
+
+    # Helper function
+    parity = lambda n: 'even' if n % 2 == 0 else 'odd'
+
+    # Check for unphysical multiplicity (not likely to be much of a problem, but still...)
+    if n_unpaired > n_electrons:
+        raise RuntimeError(f"The specified multiplicity requires more electrons ({mult - 1}) than are present ({n_electrons}))")
+        
+    # Check for restricted open-shell
+    elif restricted and n_unpaired > 0: 
+        raise RuntimeError("Restricted open-shell calculations are not available")
+
+    # Check for invalid spin multiplicity
+    elif parity(n_electrons) == parity(mult): 
+        raise RuntimeError(f"The specified multiplicity ({parity(mult)}) is not compatible with the number of electrons ({parity(n_electrons)})")
+
     mol_dict = {
-        "multiplicity": user_dict["Molecule"]["multiplicity"],
-        "charge": user_dict["Molecule"]["charge"],
+        "multiplicity": mult,
+        "charge": charge,
         "coords": coords_dict,
         "cavity_coords": cav_coords_dict,
         "cavity_width": cavity_width
