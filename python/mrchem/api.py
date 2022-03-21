@@ -207,8 +207,8 @@ def write_molecule(user_dict, origin):
 
     # Check for unphysical multiplicity (not likely to be much of a problem, but still...)
     if n_unpaired > n_electrons:
-        raise RuntimeError(f"The specified multiplicity requires more electrons ({mult - 1}) than are present ({n_electrons}))")
-        
+        raise RuntimeError(f"The specified multiplicity requires more unpaired electrons ({mult - 1}) than are available ({n_electrons}))")
+
     # Check for restricted open-shell
     elif restricted and n_unpaired > 0: 
         raise RuntimeError("Restricted open-shell calculations are not available")
