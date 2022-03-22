@@ -193,7 +193,7 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, double screen, c
     t_lap.start();
     OrbitalVector Psi;
     initial_guess::gto::project_ao(Psi, prec, nucs);
-    if (plevel == 1) mrcpp::print::time(1, "Projecting Hydrogen AOs", t_lap);
+    if (plevel == 1) mrcpp::print::time(1, "Projecting GTO AOs", t_lap);
 
     mrcpp::print::header(2, "Building Fock operator");
     t_lap.start();
