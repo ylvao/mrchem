@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -65,10 +65,7 @@ protected:
 
 class HarmonicOscillatorFunction final : public mrcpp::RepresentableFunction<3> {
 public:
-    HarmonicOscillatorFunction(int n[3],
-                               double m = 1.0,
-                               double *k = nullptr,
-                               const mrcpp::Coord<3> &o = {0.0, 0.0, 0.0})
+    HarmonicOscillatorFunction(int n[3], double m = 1.0, double *k = nullptr, const mrcpp::Coord<3> &o = {0.0, 0.0, 0.0})
             : fx(n[0], m, ((k != nullptr) ? k[0] : 1.0), o[0])
             , fy(n[1], m, ((k != nullptr) ? k[1] : 1.0), o[1])
             , fz(n[2], m, ((k != nullptr) ? k[2] : 1.0), o[2]) {}

@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -52,11 +52,7 @@ namespace mrchem {
 
 class XCPotentialD2 final : public XCPotential {
 public:
-    XCPotentialD2(std::unique_ptr<mrdft::MRDFT> &F,
-                  std::shared_ptr<OrbitalVector> Phi,
-                  std::shared_ptr<OrbitalVector> X,
-                  std::shared_ptr<OrbitalVector> Y,
-                  bool mpi_shared = false);
+    XCPotentialD2(std::unique_ptr<mrdft::MRDFT> &F, std::shared_ptr<OrbitalVector> Phi, std::shared_ptr<OrbitalVector> X, std::shared_ptr<OrbitalVector> Y, bool mpi_shared = false);
 
 private:
     std::shared_ptr<OrbitalVector> orbitals_x; ///< 1st external set of perturbed orbitals used to build the density

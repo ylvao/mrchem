@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -51,9 +51,7 @@ public:
         J = potential;
         J.name() = "J";
     }
-    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
-                    std::shared_ptr<OrbitalVector> Phi,
-                    bool mpi_share = false) {
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, bool mpi_share = false) {
         potential = std::make_shared<CoulombPotentialD1>(P, Phi, mpi_share);
 
         // Invoke operator= to assign *this operator
@@ -61,11 +59,7 @@ public:
         J = potential;
         J.name() = "J";
     }
-    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
-                    std::shared_ptr<OrbitalVector> Phi,
-                    std::shared_ptr<OrbitalVector> X,
-                    std::shared_ptr<OrbitalVector> Y,
-                    bool mpi_share = false) {
+    CoulombOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, std::shared_ptr<OrbitalVector> X, std::shared_ptr<OrbitalVector> Y, bool mpi_share = false) {
         potential = std::make_shared<CoulombPotentialD2>(P, Phi, X, Y, mpi_share);
 
         // Invoke operator= to assign *this operator

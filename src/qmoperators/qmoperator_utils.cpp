@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -154,13 +154,13 @@ ComplexMatrix qmoperator::calc_kinetic_matrix_component_symmetrized(int d, Momen
 
     int nNodes = 0, sNodes = 0;
     if (&bra == &ket) {
-        OrbitalVector dKet = (V*p[d])(ket);
+        OrbitalVector dKet = (V * p[d])(ket);
         nNodes += orbital::get_n_nodes(dKet);
         sNodes += orbital::get_size_nodes(dKet);
         T = orbital::calc_overlap_matrix(dKet, dKet);
     } else {
-        OrbitalVector dBra = (V*p[d])(bra);
-        OrbitalVector dKet = (V*p[d])(ket);
+        OrbitalVector dBra = (V * p[d])(bra);
+        OrbitalVector dKet = (V * p[d])(ket);
         nNodes += orbital::get_n_nodes(dBra);
         nNodes += orbital::get_n_nodes(dKet);
         sNodes += orbital::get_size_nodes(dBra);

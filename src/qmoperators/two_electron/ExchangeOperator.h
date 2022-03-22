@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -46,9 +46,7 @@ namespace mrchem {
 
 class ExchangeOperator final : public RankZeroOperator {
 public:
-    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
-                     std::shared_ptr<OrbitalVector> Phi,
-                     double exchange_prec = -1.0) {
+    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, double exchange_prec = -1.0) {
         exchange = std::make_shared<ExchangePotentialD1>(P, Phi, exchange_prec);
 
         // Invoke operator= to assign *this operator
@@ -57,11 +55,7 @@ public:
         K.name() = "K";
     }
 
-    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P,
-                     std::shared_ptr<OrbitalVector> Phi,
-                     std::shared_ptr<OrbitalVector> X,
-                     std::shared_ptr<OrbitalVector> Y,
-                     double exchange_prec = -1.0) {
+    ExchangeOperator(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, std::shared_ptr<OrbitalVector> X, std::shared_ptr<OrbitalVector> Y, double exchange_prec = -1.0) {
         exchange = std::make_shared<ExchangePotentialD2>(P, Phi, X, Y, exchange_prec);
 
         // Invoke operator= to assign *this operator

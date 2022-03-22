@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -37,10 +37,10 @@
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
 #include "qmoperators/one_electron/ElectricFieldOperator.h"
-#include "qmoperators/one_electron/KineticOperator.h"
-#include "qmoperators/one_electron/NuclearOperator.h"
-#include "qmoperators/one_electron/NablaOperator.h"
 #include "qmoperators/one_electron/IdentityOperator.h"
+#include "qmoperators/one_electron/KineticOperator.h"
+#include "qmoperators/one_electron/NablaOperator.h"
+#include "qmoperators/one_electron/NuclearOperator.h"
 #include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/qmoperator_utils.h"
 #include "utils/math_utils.h"
@@ -243,7 +243,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     OrbitalVector epsPhi = orbital::deep_copy(Phi);
     for (int i = 0; i < epsPhi.size(); i++) {
         if (not mpi::my_orb(epsPhi[i])) continue;
-        epsPhi[i].rescale(eps[i]/two_cc);
+        epsPhi[i].rescale(eps[i] / two_cc);
     }
 
     // Compute OrbitalVectors
@@ -268,7 +268,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     operThree.clear();
     operOne.clear();
     return kappa_m1(out);
-} 
+}
 
 // Non-relativistic Helmholtz argument
 OrbitalVector FockBuilder::buildHelmholtzArgumentNREL(OrbitalVector &Phi, OrbitalVector &Psi) {

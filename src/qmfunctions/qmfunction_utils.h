@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -38,24 +38,9 @@ void add(QMFunction &out, ComplexDouble a, QMFunction inp_a, ComplexDouble b, QM
 void project(QMFunction &out, std::function<double(const mrcpp::Coord<3> &r)> f, int type, double prec);
 void project(QMFunction &out, mrcpp::RepresentableFunction<3> &f, int type, double prec);
 void project(QMFunction &out, mrcpp::GaussExp<3> &f, int type, double prec);
-void multiply(QMFunction &out,
-              QMFunction inp_a,
-              QMFunction inp_b,
-              double prec,
-              bool absPrec = false,
-              bool useMaxNorms = false);
-void multiply_real(QMFunction &out,
-                   QMFunction inp_a,
-                   QMFunction inp_b,
-                   double prec,
-                   bool absPrec = false,
-                   bool useMaxNorms = false);
-void multiply_imag(QMFunction &out,
-                   QMFunction inp_a,
-                   QMFunction inp_b,
-                   double prec,
-                   bool absPrec = false,
-                   bool useMaxNorms = false);
+void multiply(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec, bool absPrec = false, bool useMaxNorms = false);
+void multiply_real(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec, bool absPrec = false, bool useMaxNorms = false);
+void multiply_imag(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec, bool absPrec = false, bool useMaxNorms = false);
 void linear_combination(QMFunction &out, const ComplexVector &c, QMFunctionVector &inp, double prec);
 
 } // namespace qmfunction

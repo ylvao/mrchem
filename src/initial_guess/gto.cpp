@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -67,13 +67,7 @@ namespace mrchem {
  * Projects only the occupied orbitals of each spin.
  *
  */
-bool initial_guess::gto::setup(OrbitalVector &Phi,
-                               double prec,
-                               double screen,
-                               const std::string &bas_file,
-                               const std::string &mop_file,
-                               const std::string &moa_file,
-                               const std::string &mob_file) {
+bool initial_guess::gto::setup(OrbitalVector &Phi, double prec, double screen, const std::string &bas_file, const std::string &mop_file, const std::string &moa_file, const std::string &mob_file) {
     if (Phi.size() == 0) return false;
 
     mrcpp::print::separator(0, '~');
@@ -119,11 +113,7 @@ bool initial_guess::gto::setup(OrbitalVector &Phi,
  * corresponding MW orbitals.
  *
  */
-void initial_guess::gto::project_mo(OrbitalVector &Phi,
-                                    double prec,
-                                    const std::string &bas_file,
-                                    const std::string &mo_file,
-                                    double screen) {
+void initial_guess::gto::project_mo(OrbitalVector &Phi, double prec, const std::string &bas_file, const std::string &mo_file, double screen) {
     if (Phi.size() == 0) return;
 
     Timer t_tot;
@@ -255,11 +245,7 @@ void initial_guess::gto::project_ao(OrbitalVector &Phi, double prec, const Nucle
     mrcpp::print::footer(2, timer, 2);
 }
 
-Density initial_guess::gto::project_density(double prec,
-                                            const Nucleus &nuc,
-                                            const std::string &bas_file,
-                                            const std::string &dens_file,
-                                            double screen) {
+Density initial_guess::gto::project_density(double prec, const Nucleus &nuc, const std::string &bas_file, const std::string &dens_file, double screen) {
     // Setup AO basis
     gto_utils::Intgrl intgrl(bas_file);
     intgrl.getNucleus(0).setCoord(nuc.getCoord());

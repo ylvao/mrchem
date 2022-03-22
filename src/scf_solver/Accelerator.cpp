@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -197,11 +197,7 @@ bool Accelerator::verifyOverlap(OrbitalVector &Phi) {
  * by new ones. If the length of history is _larger_ than maxHistory, the
  * oldest iteration is discarded.
  */
-void Accelerator::accelerate(double prec,
-                             OrbitalVector &Phi,
-                             OrbitalVector &dPhi,
-                             ComplexMatrix *F,
-                             ComplexMatrix *dF) {
+void Accelerator::accelerate(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatrix *F, ComplexMatrix *dF) {
     if (this->maxHistory < 1) return;
 
     Timer t_tot;

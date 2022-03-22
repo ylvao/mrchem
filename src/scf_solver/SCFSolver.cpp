@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -169,11 +169,7 @@ void SCFSolver::printUpdate(int plevel, const std::string &txt, double P, double
  * @param Phi: orbital vector
  * @param flag: interpret epsilon as energy or norm
  */
-void SCFSolver::printOrbitals(const DoubleVector &norms,
-                              const DoubleVector &errors,
-                              OrbitalVector &Phi,
-                              int flag,
-                              bool print_head) const {
+void SCFSolver::printOrbitals(const DoubleVector &norms, const DoubleVector &errors, OrbitalVector &Phi, int flag, bool print_head) const {
     int pprec = Printer::getPrecision();
     int w0 = (Printer::getWidth() - 1);
     int w1 = 5;
@@ -314,8 +310,7 @@ void SCFSolver::printMemory() const {
     mrcpp::print::value(2, "Average memory process", mem_vec.mean(), mem_unit, 2, false);
     if (mpi::bank_size > 0 and mpi::grand_master()) {
         if (mem_unit == "(GB)") {
-            mrcpp::print::value(
-                1, "Maximum data in bank", (double)dataBank.get_maxtotalsize() / 1024, mem_unit, 2, false);
+            mrcpp::print::value(1, "Maximum data in bank", (double)dataBank.get_maxtotalsize() / 1024, mem_unit, 2, false);
         } else {
             mrcpp::print::value(1, "Maximum data in bank", (double)dataBank.get_maxtotalsize(), "(MB)", 2, false);
         }

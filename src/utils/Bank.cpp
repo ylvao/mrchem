@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -50,9 +50,8 @@ struct Blockdata_struct {
     std::map<int, int> id2data; // internal index of the data in the block
     std::vector<int> id;        // the id of each column. Either nodeid, or orbid
 };
-std::map<int, std::map<int, Blockdata_struct *> *>
-    get_nodeid2block; // to get block from its nodeid (all coeff for one node)
-std::map<int, std::map<int, Blockdata_struct *> *> get_orbid2block; // to get block from its orbid
+std::map<int, std::map<int, Blockdata_struct *> *> get_nodeid2block; // to get block from its nodeid (all coeff for one node)
+std::map<int, std::map<int, Blockdata_struct *> *> get_orbid2block;  // to get block from its orbid
 
 void Bank::open() {
 #ifdef MRCHEM_HAS_MPI
@@ -73,9 +72,7 @@ void Bank::open() {
     // The bank never goes out of this loop until it receives a close message!
     while (true) {
         MPI_Recv(messages, message_size, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, comm_bank, &status);
-        if (printinfo)
-            std::cout << world_rank << " got message " << messages[0] << " from " << status.MPI_SOURCE << " account "
-                      << messages[1] << " last account " << max_account_id << std::endl;
+        if (printinfo) std::cout << world_rank << " got message " << messages[0] << " from " << status.MPI_SOURCE << " account " << messages[1] << " last account " << max_account_id << std::endl;
         int message = messages[0];
 
         // can be called directly:
@@ -176,7 +173,7 @@ void Bank::open() {
                 }
                 currentsize[account] -= block.second->BlockData.size() / 128; // converted into kB
                 totcurrentsize -= block.second->BlockData.size() / 128;       // converted into kB
-                block.second->BlockData.resize(0, 0); // NB: the matrix does not clear itself otherwise
+                block.second->BlockData.resize(0, 0);                         // NB: the matrix does not clear itself otherwise
                 assert(currentsize[account] >= 0);
                 this->currentsize[account] = std::max(0ll, currentsize[account]);
                 toeraseVec.push_back(block.first);
@@ -229,13 +226,10 @@ void Bank::open() {
                 } else {
                     // send entire block. First make one contiguous superblock
                     // Prepare the data as one contiguous block
-                    if (block->data.size() == 0)
-                        std::cout << "Zero size blockdata! " << nodeid << " " << block->N_rows.size() << std::endl;
+                    if (block->data.size() == 0) std::cout << "Zero size blockdata! " << nodeid << " " << block->N_rows.size() << std::endl;
                     block->BlockData.resize(block->N_rows[0], block->data.size());
                     size = block->N_rows[0] * block->data.size();
-                    if (printinfo)
-                        std::cout << " rewrite into superblock " << block->data.size() << " " << block->N_rows[0]
-                                  << " nodeid " << nodeid << std::endl;
+                    if (printinfo) std::cout << " rewrite into superblock " << block->data.size() << " " << block->N_rows[0] << " nodeid " << nodeid << std::endl;
                     for (int j = 0; j < block->data.size(); j++) {
                         for (int i = 0; i < block->N_rows[j]; i++) { block->BlockData(i, j) = block->data[j][i]; }
                     }
@@ -288,8 +282,7 @@ void Bank::open() {
                 int size = 0;
                 // send entire block. First make one contiguous superblock
                 // Prepare the data as one contiguous block
-                if (block->data.size() == 0)
-                    std::cout << "Zero size blockdata! C " << orbid << " " << block->N_rows.size() << std::endl;
+                if (block->data.size() == 0) std::cout << "Zero size blockdata! C " << orbid << " " << block->N_rows.size() << std::endl;
                 size = 0;
                 for (int j = 0; j < block->data.size(); j++) size += block->N_rows[j];
 
@@ -307,8 +300,7 @@ void Bank::open() {
                 MPI_Send(coeff.data(), size, MPI_DOUBLE, status.MPI_SOURCE, 3, comm_bank);
             } else {
                 // it is possible and allowed that the block has not been written
-                if (printinfo)
-                    std::cout << " block does not exist " << orbid << " " << orbid2block.count(orbid) << std::endl;
+                if (printinfo) std::cout << " block does not exist " << orbid << " " << orbid2block.count(orbid) << std::endl;
                 // Block with this id does not exist.
                 metadata_block[0] = orbid;
                 metadata_block[1] = 0; // number of columns
@@ -317,8 +309,7 @@ void Bank::open() {
             }
         }
 
-        else if (message == GET_ORBITAL or message == GET_ORBITAL_AND_WAIT or message == GET_ORBITAL_AND_DELETE or
-                 message == GET_FUNCTION or message == GET_DATA) {
+        else if (message == GET_ORBITAL or message == GET_ORBITAL_AND_WAIT or message == GET_ORBITAL_AND_DELETE or message == GET_FUNCTION or message == GET_DATA) {
             // withdrawal
             int id = messages[2];
             int ix = id2ix[id];
@@ -357,9 +348,7 @@ void Bank::open() {
                     }
                 }
                 if (message == GET_FUNCTION) { send_function(*deposits[ix].orb, status.MPI_SOURCE, 1, comm_bank); }
-                if (message == GET_DATA) {
-                    MPI_Send(deposits[ix].data, deposits[ix].datasize, MPI_DOUBLE, status.MPI_SOURCE, 1, comm_bank);
-                }
+                if (message == GET_DATA) { MPI_Send(deposits[ix].data, deposits[ix].datasize, MPI_DOUBLE, status.MPI_SOURCE, 1, comm_bank); }
             }
         } else if (message == SAVE_NODEDATA) {
             int nodeid = messages[2]; // which block to write
@@ -399,9 +388,7 @@ void Bank::open() {
             orbblock->N_rows.push_back(size);
 
             MPI_Recv(data_p, size, MPI_DOUBLE, status.MPI_SOURCE, 1, comm_bank, &status);
-            if (printinfo)
-                std::cout << " written block " << nodeid << " id " << orbid << " subblocks "
-                          << nodeid2block[nodeid]->data.size() << std::endl;
+            if (printinfo) std::cout << " written block " << nodeid << " id " << orbid << " subblocks " << nodeid2block[nodeid]->data.size() << std::endl;
         } else if (message == SAVE_ORBITAL or message == SAVE_FUNCTION or message == SAVE_DATA) {
             // make a new deposit
             int exist_flag = 0;
@@ -454,9 +441,7 @@ void Bank::open() {
                 for (int iqq : queue[iq].clients) {
                     if (message == SAVE_ORBITAL) { send_orbital(*deposits[ix].orb, iqq, 1, comm_bank); }
                     if (message == SAVE_FUNCTION) { send_function(*deposits[ix].orb, iqq, 1, comm_bank); }
-                    if (message == SAVE_DATA) {
-                        MPI_Send(deposits[ix].data, messages[3], MPI_DOUBLE, iqq, 1, comm_bank);
-                    }
+                    if (message == SAVE_DATA) { MPI_Send(deposits[ix].data, messages[3], MPI_DOUBLE, iqq, 1, comm_bank); }
                 }
                 queue[iq].clients.clear(); // cannot erase entire queue[iq], because that would require to shift all the
                                            // id2qu value larger than iq
@@ -487,14 +472,12 @@ void Bank::open() {
             int nready = 0;
             if (readytasks.count(messages[2]) > 0) nready = readytasks[messages[2]].size();
             MPI_Send(&nready, 1, MPI_INT, status.MPI_SOURCE, 844, mpi::comm_bank);
-            if (nready > 0)
-                MPI_Send(readytasks[messages[2]].data(), nready, MPI_INT, status.MPI_SOURCE, 845, mpi::comm_bank);
+            if (nready > 0) MPI_Send(readytasks[messages[2]].data(), nready, MPI_INT, status.MPI_SOURCE, 845, mpi::comm_bank);
         } else if (message == GET_READYTASK_DEL) {
             int nready = 0;
             if (readytasks.count(messages[2]) > 0) { nready = readytasks[messages[2]].size(); }
             MPI_Send(&nready, 1, MPI_INT, status.MPI_SOURCE, 844, mpi::comm_bank);
-            if (nready > 0)
-                MPI_Send(readytasks[messages[2]].data(), nready, MPI_INT, status.MPI_SOURCE, 845, mpi::comm_bank);
+            if (nready > 0) MPI_Send(readytasks[messages[2]].data(), nready, MPI_INT, status.MPI_SOURCE, 845, mpi::comm_bank);
             if (nready > 0) readytasks[messages[2]].resize(0);
         }
     }
@@ -899,8 +882,7 @@ int BankAccount::get_nodeblock(int nodeid, double *data, std::vector<int> &idVec
     MPI_Recv(metadata_block, size_metadata, MPI_INT, bankmaster[nodeid % bank_size], 1, comm_bank, &status);
     idVec.resize(metadata_block[1]);
     int size = metadata_block[2];
-    if (size > 0)
-        MPI_Recv(idVec.data(), metadata_block[1], MPI_INT, bankmaster[nodeid % bank_size], 2, comm_bank, &status);
+    if (size > 0) MPI_Recv(idVec.data(), metadata_block[1], MPI_INT, bankmaster[nodeid % bank_size], 2, comm_bank, &status);
     if (size > 0) MPI_Recv(data, size, MPI_DOUBLE, bankmaster[nodeid % bank_size], 3, comm_bank, &status);
 #endif
     return 1;
@@ -920,8 +902,7 @@ int BankAccount::get_orbblock(int orbid, double *&data, std::vector<int> &nodeid
     MPI_Recv(metadata_block, size_metadata, MPI_INT, bankmaster[nodeid % bank_size], 1, comm_bank, &status);
     nodeidVec.resize(metadata_block[1]);
     int totsize = metadata_block[2];
-    if (totsize > 0)
-        MPI_Recv(nodeidVec.data(), metadata_block[1], MPI_INT, bankmaster[nodeid % bank_size], 2, comm_bank, &status);
+    if (totsize > 0) MPI_Recv(nodeidVec.data(), metadata_block[1], MPI_INT, bankmaster[nodeid % bank_size], 2, comm_bank, &status);
     data = new double[totsize];
     if (totsize > 0) MPI_Recv(data, totsize, MPI_DOUBLE, bankmaster[nodeid % bank_size], 3, comm_bank, &status);
 #endif

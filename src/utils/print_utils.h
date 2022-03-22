@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -43,7 +43,7 @@ std::vector<double> eigen_to_vector(const DoubleVector &inp, double thrs);
 std::vector<double> eigen_to_vector(const DoubleMatrix &inpm, double thrs);
 void ltrim(std::string &s);
 void rtrim(std::string &s);
-void trim(std::string &s); 
+void trim(std::string &s);
 std::string ltrim_copy(std::string s);
 std::string rtrim_copy(std::string s);
 std::string trim_copy(std::string s);

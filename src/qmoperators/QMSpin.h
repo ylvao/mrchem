@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -34,15 +34,15 @@ namespace mrchem {
  * @brief Cartesian spin operator
  *
  * Defined by:
- * 
+ *
  *  S_{x} alpha = (1/2)*beta
  *  S_{y} alpha = (i/2)*beta
  *  S_{z} alpha = (1/2)*alpha
- * 
+ *
  *  S_{x} beta =  (1/2)*alpha
  *  S_{y} beta = -(i/2)*alpha
  *  S_{z} beta = -(1/2)*beta
- * 
+ *
  */
 
 class QMSpin final : public QMOperator {
@@ -62,27 +62,26 @@ private:
     QMOperatorVector apply(std::shared_ptr<QMOperator> &O) override;
 };
 
-
 /** @class QMAlpha
  *
  * @brief Spin alpha operator
  *
  * Operator that acts as Identity when applied on alpha (or paired) orbitals,
  * and as Zero when applid on beta orbitals.
- * 
+ *
  * Can be defined as:
- * 
+ *
  *  S_{alpha} = S_{+} * S_{-},
- * 
+ *
  * using the shift operators:
- * 
+ *
  *  S_{+} = S_{x} + i*S_{y}
  *  S_{-} = S_{x} - i*S_{y}
- * 
- * Could have been implemented using the Cartesian spin operators above, 
+ *
+ * Could have been implemented using the Cartesian spin operators above,
  * but we rather do it explicitly as Identity or Zero, to avoid unnecessary
  * deep copies and addition/subtraction of identical contributions.
- *  
+ *
  */
 
 class QMAlpha final : public QMOperator {
@@ -103,20 +102,20 @@ private:
  *
  * Operator that acts as Identity when applied on beta (or paired) orbitals,
  * and as Zero when applid on alpha orbitals.
- * 
+ *
  * Can be defined as:
- * 
+ *
  *  S_{beta} = S_{-} * S_{+},
- * 
+ *
  * using the shift operators:
- * 
+ *
  *  S_{+} = S_{x} + i*S_{y}
  *  S_{-} = S_{x} - i*S_{y}
- *  
- * Could have been implemented using the Cartesian spin operators above, 
+ *
+ * Could have been implemented using the Cartesian spin operators above,
  * but we rather do it explicitly as Identity or Zero, to avoid unnecessary
  * deep copies and addition/subtraction of identical contributions.
- * 
+ *
  */
 
 class QMBeta final : public QMOperator {

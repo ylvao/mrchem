@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -31,9 +31,7 @@ namespace mrchem {
 
 class CoulombPotentialD1 final : public CoulombPotential {
 public:
-    CoulombPotentialD1(std::shared_ptr<mrcpp::PoissonOperator> P,
-                       std::shared_ptr<OrbitalVector> Phi,
-                       bool mpi_share = false)
+    CoulombPotentialD1(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi, bool mpi_share = false)
             : CoulombPotential(P, Phi, mpi_share) {}
 
 private:
