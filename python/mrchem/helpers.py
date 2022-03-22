@@ -162,7 +162,7 @@ def write_scf_guess(user_dict, wf_dict):
         elif zeta_str == 'gto':
             guess_type = guess_str
         else:
-            print("Invalid zeta:" + guess_suffix)
+            print("Invalid zeta:" + zeta_str)
 
     file_dict = user_dict["Files"]
 
