@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -57,11 +57,7 @@ Cavity::Cavity(std::vector<mrcpp::Coord<3>> &centers, std::vector<double> &radii
  *   @param width A double value describing the width of the transition at the boundary of the spheres.
  *   @return A double number which represents the value of the differential (w.r.t. x, y or z) at point r.
  */
-auto gradCavity(const mrcpp::Coord<3> &r,
-                int index,
-                const std::vector<mrcpp::Coord<3>> &centers,
-                std::vector<double> &radii,
-                double width) -> double {
+auto gradCavity(const mrcpp::Coord<3> &r, int index, const std::vector<mrcpp::Coord<3>> &centers, std::vector<double> &radii, double width) -> double {
     double C = 1.0;
     double DC = 0.0;
     for (int i = 0; i < centers.size(); i++) {
@@ -94,12 +90,9 @@ auto gradCavity(const mrcpp::Coord<3> &r,
 }
 /** @brief Sets the different partial derivatives in the \link #gradvector gradient \endlink of the Cavity. */
 void Cavity::setGradVector() {
-    auto p_gradcavity = [this](const mrcpp::Coord<3> &r, int index) {
-        return gradCavity(r, index, centers, radii, width);
-    };
+    auto p_gradcavity = [this](const mrcpp::Coord<3> &r, int index) { return gradCavity(r, index, centers, radii, width); };
     for (auto i = 0; i < 3; i++) {
-        this->gradvector.push_back(
-            [i, p_gradcavity](const mrcpp::Coord<3> &r) -> double { return p_gradcavity(r, i); });
+        this->gradvector.push_back([i, p_gradcavity](const mrcpp::Coord<3> &r) -> double { return p_gradcavity(r, i); });
     }
 }
 /** @brief Evaluates the value of the cavity at a 3D point \f$\mathbf{r}\f$
@@ -134,9 +127,7 @@ bool Cavity::isZeroOnInterval(const double *a, const double *b) const {
             double cavityMinIn = (this->centers[k][i] - radii[i]) + 3.0 * this->width;
             double cavityMaxIn = (this->centers[k][i] + radii[i]) - 3.0 * this->width;
             double cavityMaxOut = (this->centers[k][i] + radii[i]) + 3.0 * this->width;
-            if (a[i] > cavityMaxOut or (a[i] > cavityMinIn and b[i] < cavityMaxIn) or b[i] < cavityMinOut) {
-                return true;
-            }
+            if (a[i] > cavityMaxOut or (a[i] > cavityMinIn and b[i] < cavityMaxIn) or b[i] < cavityMinOut) { return true; }
         }
     }
     return false;

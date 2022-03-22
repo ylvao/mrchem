@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -187,8 +187,7 @@ void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Ei
  * param[in] inp_func Function to differentiate
  * param[out] out_grad Gradient of input function
  */
-mrcpp::FunctionTreeVector<3> xc_utils::log_gradient(mrcpp::DerivativeOperator<3> &diff_oper,
-                                                    mrcpp::FunctionTree<3> &inp_func) {
+mrcpp::FunctionTreeVector<3> xc_utils::log_gradient(mrcpp::DerivativeOperator<3> &diff_oper, mrcpp::FunctionTree<3> &inp_func) {
     mrcpp::FunctionTree<3> zeta(inp_func.getMRA());
     mrcpp::copy_grid(zeta, inp_func);
     mrcpp::copy_func(zeta, inp_func);

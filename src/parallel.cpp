@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -80,7 +80,7 @@ int is_bankclient = 1;
 int is_bankmaster = 0; // only one bankmaster is_bankmaster
 int bank_size = 0;
 int tot_bank_size = 0; // size of bank, including the task manager
-int max_tag = 0;        // max value allowed by MPI
+int max_tag = 0;       // max value allowed by MPI
 std::vector<int> bankmaster;
 int task_bank = -1; // world rank of the task manager
 

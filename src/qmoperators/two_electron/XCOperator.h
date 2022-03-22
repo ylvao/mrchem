@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -43,9 +43,7 @@ namespace mrchem {
 
 class XCOperator final : public RankZeroOperator {
 public:
-    explicit XCOperator(std::unique_ptr<mrdft::MRDFT> &F,
-                        std::shared_ptr<OrbitalVector> Phi = nullptr,
-                        bool mpi_shared = false) {
+    explicit XCOperator(std::unique_ptr<mrdft::MRDFT> &F, std::shared_ptr<OrbitalVector> Phi = nullptr, bool mpi_shared = false) {
         potential = std::make_shared<XCPotentialD1>(F, Phi, mpi_shared);
 
         // Invoke operator= to assign *this operator
@@ -53,11 +51,7 @@ public:
         XC = potential;
         XC.name() = "V_xc";
     }
-    XCOperator(std::unique_ptr<mrdft::MRDFT> &F,
-               std::shared_ptr<OrbitalVector> Phi,
-               std::shared_ptr<OrbitalVector> X,
-               std::shared_ptr<OrbitalVector> Y,
-               bool mpi_shared = false) {
+    XCOperator(std::unique_ptr<mrdft::MRDFT> &F, std::shared_ptr<OrbitalVector> Phi, std::shared_ptr<OrbitalVector> X, std::shared_ptr<OrbitalVector> Y, bool mpi_shared = false) {
         potential = std::make_shared<XCPotentialD2>(F, Phi, X, Y, mpi_shared);
 
         // Invoke operator= to assign *this operator

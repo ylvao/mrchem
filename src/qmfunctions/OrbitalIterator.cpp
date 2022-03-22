@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -27,7 +27,7 @@
  * Mrchem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -210,8 +210,7 @@ bool OrbitalIterator::next(int max_recv) {
             }
         }
 
-        if ((this->sent_counter >= send_size or not IamSender) and
-            (this->received_counter >= recv_size or not IamReceiver)) {
+        if ((this->sent_counter >= send_size or not IamSender) and (this->received_counter >= recv_size or not IamReceiver)) {
             // all orbitals to be processed during this iteration are ready. Start next iteration
             this->sent_counter = 0;
             this->received_counter = 0;

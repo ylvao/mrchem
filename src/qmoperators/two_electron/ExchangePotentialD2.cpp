@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -50,11 +50,7 @@ namespace mrchem {
  * @param[in] P Poisson operator (does not take ownership)
  * @param[in] Phi vector of orbitals which define the exchange operator
  */
-ExchangePotentialD2::ExchangePotentialD2(PoissonOperator_p P,
-                                         OrbitalVector_p Phi,
-                                         OrbitalVector_p X,
-                                         OrbitalVector_p Y,
-                                         double prec)
+ExchangePotentialD2::ExchangePotentialD2(PoissonOperator_p P, OrbitalVector_p Phi, OrbitalVector_p X, OrbitalVector_p Y, double prec)
         : ExchangePotential(P, Phi, prec)
         , orbitals_x(X)
         , orbitals_y(Y) {
@@ -214,6 +210,5 @@ Orbital ExchangePotentialD2::dagger(Orbital phi_p) {
 QMOperatorVector ExchangePotentialD2::apply(QMOperator_p &O) {
     NOT_IMPLEMENTED_ABORT;
 }
-
 
 } // namespace mrchem

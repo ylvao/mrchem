@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include "tensor/RankZeroOperator.h"
-#include "tensor/RankOneOperator.h"
 #include "qmoperators/QMPotential.h"
+#include "tensor/RankOneOperator.h"
+#include "tensor/RankZeroOperator.h"
 
 /** @class FockOperator
  *
@@ -93,16 +93,16 @@ private:
     double exact_exchange{1.0};
     RankZeroOperator zora_base;
 
-    RankZeroOperator V;       ///< Total potential energy operator
-    RankZeroOperator H_1;     ///< Perturbation operators
+    RankZeroOperator V;   ///< Total potential energy operator
+    RankZeroOperator H_1; ///< Perturbation operators
 
     std::shared_ptr<MomentumOperator> mom{nullptr};
     std::shared_ptr<NuclearOperator> nuc{nullptr};
     std::shared_ptr<CoulombOperator> coul{nullptr};
     std::shared_ptr<ExchangeOperator> ex{nullptr};
     std::shared_ptr<XCOperator> xc{nullptr};
-    std::shared_ptr<ReactionOperator> Ro{nullptr};           // Reaction field operator
-    std::shared_ptr<ElectricFieldOperator> ext{nullptr};     // Total external potential
+    std::shared_ptr<ReactionOperator> Ro{nullptr};       // Reaction field operator
+    std::shared_ptr<ElectricFieldOperator> ext{nullptr}; // Total external potential
     std::shared_ptr<ZoraOperator> kappa{nullptr};
     std::shared_ptr<ZoraOperator> kappa_inv{nullptr};
 

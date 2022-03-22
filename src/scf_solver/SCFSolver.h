@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -73,7 +73,6 @@ protected:
     std::vector<double> error;    ///< Convergence orbital error
     std::vector<double> property; ///< Convergence property error
 
-
     virtual void reset();
 
     double adjustPrecision(double error);
@@ -86,11 +85,7 @@ protected:
     void printConvergence(bool converged, const std::string &txt) const;
     void printConvergenceHeader(const std::string &txt) const;
     void printConvergenceRow(int i) const;
-    void printOrbitals(const DoubleVector &norms,
-                       const DoubleVector &errors,
-                       OrbitalVector &Phi,
-                       int flag,
-                       bool print_head = true) const;
+    void printOrbitals(const DoubleVector &norms, const DoubleVector &errors, OrbitalVector &Phi, int flag, bool print_head = true) const;
     void printResidual(double residual, bool converged) const;
     void printMemory() const;
 };

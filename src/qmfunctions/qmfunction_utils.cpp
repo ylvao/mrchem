@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -156,12 +156,7 @@ void qmfunction::project(QMFunction &out, mrcpp::RepresentableFunction<3> &f, in
  * Recast into linear_combination.
  *
  */
-void qmfunction::add(QMFunction &out,
-                     ComplexDouble a,
-                     QMFunction inp_a,
-                     ComplexDouble b,
-                     QMFunction inp_b,
-                     double prec) {
+void qmfunction::add(QMFunction &out, ComplexDouble a, QMFunction inp_a, ComplexDouble b, QMFunction inp_b, double prec) {
     ComplexVector coefs(2);
     coefs(0) = a;
     coefs(1) = b;
@@ -176,12 +171,7 @@ void qmfunction::add(QMFunction &out,
 /** @brief out = inp_a * inp_b
  *
  */
-void qmfunction::multiply(QMFunction &out,
-                          QMFunction inp_a,
-                          QMFunction inp_b,
-                          double prec,
-                          bool absPrec,
-                          bool useMaxNorms) {
+void qmfunction::multiply(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec, bool absPrec, bool useMaxNorms) {
     multiply_real(out, inp_a, inp_b, prec, absPrec, useMaxNorms);
     multiply_imag(out, inp_a, inp_b, prec, absPrec, useMaxNorms);
 }
@@ -239,12 +229,7 @@ void qmfunction::linear_combination(QMFunction &out, const ComplexVector &c, QMF
 /** @brief out = Re(inp_a * inp_b)
  *
  */
-void qmfunction::multiply_real(QMFunction &out,
-                               QMFunction inp_a,
-                               QMFunction inp_b,
-                               double prec,
-                               bool absPrec,
-                               bool useMaxNorms) {
+void qmfunction::multiply_real(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec, bool absPrec, bool useMaxNorms) {
     double conj_a = (inp_a.conjugate()) ? -1.0 : 1.0;
     double conj_b = (inp_b.conjugate()) ? -1.0 : 1.0;
 
@@ -313,12 +298,7 @@ void qmfunction::multiply_real(QMFunction &out,
 /** @brief out = Im(inp_a * inp_b)
  *
  */
-void qmfunction::multiply_imag(QMFunction &out,
-                               QMFunction inp_a,
-                               QMFunction inp_b,
-                               double prec,
-                               bool absPrec,
-                               bool useMaxNorms) {
+void qmfunction::multiply_imag(QMFunction &out, QMFunction inp_a, QMFunction inp_b, double prec, bool absPrec, bool useMaxNorms) {
     double conj_a = (inp_a.conjugate()) ? -1.0 : 1.0;
     double conj_b = (inp_b.conjugate()) ? -1.0 : 1.0;
 

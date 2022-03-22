@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -147,12 +147,7 @@ void ExchangePotential::clear() {
  * then applies the Poisson operator, and multiplies the result
  * by phi_k (and optionally by phi_j). The result is given in phi_out.
  */
-void ExchangePotential::calcExchange_kij(double prec,
-                                         Orbital phi_k,
-                                         Orbital phi_i,
-                                         Orbital phi_j,
-                                         Orbital &out_kij,
-                                         Orbital *out_jji) {
+void ExchangePotential::calcExchange_kij(double prec, Orbital phi_k, Orbital phi_i, Orbital phi_j, Orbital &out_kij, Orbital *out_jji) {
     Timer timer_tot;
     mrcpp::PoissonOperator &P = *this->poisson;
 
@@ -183,10 +178,8 @@ void ExchangePotential::calcExchange_kij(double prec,
     if (phi_j.hasReal() and &phi_j != &phi_k) phi_opt_vec.push_back(std::make_tuple(1.0, &phi_j.real()));
     if (phi_j.hasImag() and &phi_j != &phi_k) phi_opt_vec.push_back(std::make_tuple(1.0, &phi_j.imag()));
 
-    if (phi_i.hasReal() and &phi_i != &phi_k and &phi_i != &phi_j)
-        phi_opt_vec.push_back(std::make_tuple(1.0, &phi_i.real()));
-    if (phi_i.hasImag() and &phi_i != &phi_k and &phi_i != &phi_j)
-        phi_opt_vec.push_back(std::make_tuple(1.0, &phi_i.imag()));
+    if (phi_i.hasReal() and &phi_i != &phi_k and &phi_i != &phi_j) phi_opt_vec.push_back(std::make_tuple(1.0, &phi_i.real()));
+    if (phi_i.hasImag() and &phi_i != &phi_k and &phi_i != &phi_j) phi_opt_vec.push_back(std::make_tuple(1.0, &phi_i.imag()));
 
     // compute V_ij = P[rho_ij]
     Timer timer_p;
@@ -224,11 +217,9 @@ void ExchangePotential::calcExchange_kij(double prec,
 
     println(4,
             " time " << (int)((float)timer_tot.elapsed() * 1000) << " ms "
-                     << " mult1:" << (int)((float)timer_ij.elapsed() * 1000) << " Pot:"
-                     << (int)((float)timer_p.elapsed() * 1000) << " mult2:" << (int)((float)timer_kij.elapsed() * 1000)
-                     << " " << (int)((float)timer_jji.elapsed() * 1000) << " Nnodes: " << N_i << " " << N_j << " "
-                     << N_ij << " " << N_p << " " << N_kij << " " << N_jji << " norms " << norm_ij << " " << norm_p
-                     << " " << norm_kij << "  " << norm_jji);
+                     << " mult1:" << (int)((float)timer_ij.elapsed() * 1000) << " Pot:" << (int)((float)timer_p.elapsed() * 1000) << " mult2:" << (int)((float)timer_kij.elapsed() * 1000) << " "
+                     << (int)((float)timer_jji.elapsed() * 1000) << " Nnodes: " << N_i << " " << N_j << " " << N_ij << " " << N_p << " " << N_kij << " " << N_jji << " norms " << norm_ij << " "
+                     << norm_p << " " << norm_kij << "  " << norm_jji);
 }
 
 } // namespace mrchem

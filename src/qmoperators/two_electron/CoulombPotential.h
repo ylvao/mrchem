@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -51,9 +51,7 @@ namespace mrchem {
 
 class CoulombPotential : public QMPotential {
 public:
-    explicit CoulombPotential(std::shared_ptr<mrcpp::PoissonOperator> P,
-                              std::shared_ptr<OrbitalVector> Phi = nullptr,
-                              bool mpi_share = false);
+    explicit CoulombPotential(std::shared_ptr<mrcpp::PoissonOperator> P, std::shared_ptr<OrbitalVector> Phi = nullptr, bool mpi_share = false);
     ~CoulombPotential() override = default;
 
     friend class CoulombOperator;
@@ -61,7 +59,7 @@ public:
 protected:
     Density density; ///< Ground-state electron density
 
-    std::shared_ptr<OrbitalVector> orbitals; ///< Unperturbed orbitals defining the ground-state electron density
+    std::shared_ptr<OrbitalVector> orbitals;         ///< Unperturbed orbitals defining the ground-state electron density
     std::shared_ptr<mrcpp::PoissonOperator> poisson; ///< Operator used to compute the potential
 
     auto &getPoisson() { return this->poisson; }

@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -74,9 +74,9 @@ protected:
     void clear();
 
 private:
-    bool first_iteration = true; //!< when this variable is true the reaction potential is not calculated. This is done
-                                 //!< only in the zero-th iteration of the SCF procedure, after that it is set to false.
-    std::unique_ptr<SCRF> helper; //!< A SCRF instance used to compute the ReactionPotential.
+    bool first_iteration = true;                //!< when this variable is true the reaction potential is not calculated. This is done
+                                                //!< only in the zero-th iteration of the SCF procedure, after that it is set to false.
+    std::unique_ptr<SCRF> helper;               //!< A SCRF instance used to compute the ReactionPotential.
     std::shared_ptr<mrchem::OrbitalVector> Phi; //!< holds the Orbitals needed to compute the electronic density for the SCRF procedure.
 
     void setup(double prec);

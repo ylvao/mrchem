@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -52,8 +52,7 @@ int NonlinearMaximizer::maximize() {
     double old_norm, new_norm, gradient_norm, value_functional, expected_change, relative_change;
     double value_functional_old, step_norm2, first_order, second_order, valdiff;
 
-    int print =
-        0; // 0: print nothing, 1: print only one line, 2: print one line per iteration; >50 print entire matrices
+    int print = 0;      // 0: print nothing, 1: print only one line, 2: print one line per iteration; >50 print entire matrices
     int maxIter = 150;  // max number of iterations
     int CG_maxiter = 5; // max number of iterations for the Conjugated Gradient solver for Newton step
     bool converged = false;
@@ -97,15 +96,12 @@ int NonlinearMaximizer::maximize() {
         // To find mu, the trust radius is approximated using only the largest contribution in the series
         mu = mu_min;
         for (i = 0; i < N2h; i++) {
-            if (eiVal(i) + std::abs(this->gradient(i)) / h > mu)
-                mu = eiVal(i) + std::abs(this->gradient(i)) / h + 1.E-16;
+            if (eiVal(i) + std::abs(this->gradient(i)) / h > mu) mu = eiVal(i) + std::abs(this->gradient(i)) / h + 1.E-16;
         }
 
         diag = DoubleVector::Constant(N2h, -mu);
         diag += eiVal; // shifted eigenvalues of Hessian
-        if (print > 100 and mpi::orb_rank == 0) {
-            cout << "mu and The shifted eigenvalues of H are: " << mu << " h= " << h << "  " << diag << endl;
-        }
+        if (print > 100 and mpi::orb_rank == 0) { cout << "mu and The shifted eigenvalues of H are: " << mu << " h= " << h << "  " << diag << endl; }
         if (print > 10 and mpi::orb_rank == 0) cout << "largest eigenvalues of H: " << maxEiVal << endl;
 
         for (i = 0; i < N2h; i++) { step(i) = -this->gradient(i) / diag(i); }
@@ -135,8 +131,7 @@ int NonlinearMaximizer::maximize() {
         first_order = this->gradient.transpose() * step;
         second_order = 0.0; // step.transpose()*this->hessian*step;
         for (i = 0; i < N2h; i++) { second_order += step(i) * step(i) * eiVal(i); }
-        if (print > 10 and mpi::orb_rank == 0)
-            cout << " gradient magnitude: " << first_order * first_order / step_norm2 << endl;
+        if (print > 10 and mpi::orb_rank == 0) cout << " gradient magnitude: " << first_order * first_order / step_norm2 << endl;
 
         // Newton step when all eigenvalues are <0, and gradient/h sufficiently small
         newton_step = 0;
@@ -204,9 +199,7 @@ int NonlinearMaximizer::maximize() {
                 mu_Newton = mu_Newton_init;
             }
 
-            if (print == 20 and mpi::orb_rank == 0)
-                cout << endl
-                     << " 2nd  " << second_order << " fi*fi/d  " << x << " s g " << step.transpose() * gradient << endl;
+            if (print == 20 and mpi::orb_rank == 0) cout << endl << " 2nd  " << second_order << " fi*fi/d  " << x << " s g " << step.transpose() * gradient << endl;
         } else {
             N_newton_step = 0;
             newton_step_exact = 0;
@@ -224,21 +217,18 @@ int NonlinearMaximizer::maximize() {
 
         if (print > 10 and mpi::orb_rank == 0) cout << "step size  " << std::sqrt(step_norm2) << endl;
         if (print > 10 and mpi::orb_rank == 0) cout << "expected first, second order and total change in r*r  ";
-        if (print > 10 and mpi::orb_rank == 0)
-            cout << first_order << " " << 0.5 * second_order << " " << expected_change << endl;
+        if (print > 10 and mpi::orb_rank == 0) cout << first_order << " " << 0.5 * second_order << " " << expected_change << endl;
 
         t_step.resume();
         this->do_step(step);
         t_step.stop();
         value_functional = this->functional();
         valdiff = value_functional - value_functional_old;
-        if (print > 10 and mpi::orb_rank == 0)
-            cout << " r*r  " << value_functional << " change in r*r  " << valdiff << endl;
+        if (print > 10 and mpi::orb_rank == 0) cout << " r*r  " << value_functional << " change in r*r  " << valdiff << endl;
 
         // relative_change is the size of  second order change compared to actual change
         // = 0 if no higher order contributions
-        relative_change = std::abs(expected_change - (value_functional - value_functional_old)) /
-                          (1.0E-25 + std::abs(value_functional - value_functional_old));
+        relative_change = std::abs(expected_change - (value_functional - value_functional_old)) / (1.0E-25 + std::abs(value_functional - value_functional_old));
         gradient_norm = this->make_gradient() / value_functional / N2h; // update gradient
         direction = 0.0;
         old_norm = 0.0;
@@ -294,9 +284,7 @@ int NonlinearMaximizer::maximize() {
             }
             if (h < 1.E-8) h = 1.E-8;
         }
-        if (print > 10 and mpi::orb_rank == 0)
-            cout << "trust radius set  to " << h << " test: " << relative_change << " mu: " << mu
-                 << " maxeival: " << maxEiVal << endl;
+        if (print > 10 and mpi::orb_rank == 0) cout << "trust radius set  to " << h << " test: " << relative_change << " mu: " << mu << " maxeival: " << maxEiVal << endl;
         if (print > 10 and mpi::orb_rank == 0) cout << "gradient norm " << gradient_norm << endl;
 
         if (gradient_norm < threshold && maxEiVal < 10 * std::sqrt(std::abs(threshold))) {

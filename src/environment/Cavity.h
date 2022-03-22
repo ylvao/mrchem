@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -53,9 +53,9 @@ public:
     friend class Permittivity;
 
 protected:
-    double width;                         //!< width of the Cavity boundary.
-    std::vector<double> radii;            //!< Contains the radius of each sphere in #Center.
-    std::vector<mrcpp::Coord<3>> centers; //!< Contains each of the spheres centered on the nuclei of the Molecule.
+    double width;                                                            //!< width of the Cavity boundary.
+    std::vector<double> radii;                                               //!< Contains the radius of each sphere in #Center.
+    std::vector<mrcpp::Coord<3>> centers;                                    //!< Contains each of the spheres centered on the nuclei of the Molecule.
     std::vector<std::function<double(const mrcpp::Coord<3> &r)>> gradvector; //< Analytical derivatives of the Cavity.
 
     void setGradVector();

@@ -2,7 +2,7 @@
 # MRChem, a numerical real-space code for molecular electronic structure
 # calculations within the self-consistent field (SCF) approximations of quantum
 # chemistry (Hartree-Fock and Density Functional Theory).
-# Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+# Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
 #
 # This file is part of MRChem.
 #
@@ -162,7 +162,7 @@ def write_scf_guess(user_dict, wf_dict):
         elif zeta_str == 'gto':
             guess_type = guess_str
         else:
-            print("Invalid zeta:" + guess_suffix)
+            print("Invalid zeta:" + zeta_str)
 
     file_dict = user_dict["Files"]
 

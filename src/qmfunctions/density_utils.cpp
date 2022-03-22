@@ -2,7 +2,7 @@
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
  * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2021 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
+ * Copyright (C) 2022 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
  *
  * This file is part of MRChem.
  *
@@ -51,12 +51,7 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 namespace density {
 Density compute(double prec, Orbital phi, DensityType spin);
 void compute_local_X(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, DensityType spin);
-void compute_local_XY(double prec,
-                      Density &rho,
-                      OrbitalVector &Phi,
-                      OrbitalVector &X,
-                      OrbitalVector &Y,
-                      DensityType spin);
+void compute_local_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, DensityType spin);
 double compute_occupation(Orbital &phi, DensityType dens_spin);
 } // namespace density
 
@@ -120,12 +115,7 @@ void density::compute(double prec, Density &rho, OrbitalVector &Phi, DensityType
  *      and X/Y must be the same.
  *
  */
-void density::compute(double prec,
-                      Density &rho,
-                      OrbitalVector &Phi,
-                      OrbitalVector &X,
-                      OrbitalVector &Y,
-                      DensityType spin) {
+void density::compute(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, DensityType spin) {
     int N_el = orbital::get_electron_number(Phi);
     double rel_prec = prec;        // prec for rho_i = |x_i><phi_i| + |phi_i><x_i|
     double abs_prec = prec / N_el; // prec for rho = sum_i rho_i
@@ -162,12 +152,7 @@ void density::compute_local(double prec, Density &rho, OrbitalVector &Phi, Densi
 
 /** @brief Compute local density as the sum of own (MPI) orbitals
  */
-void density::compute_local(double prec,
-                            Density &rho,
-                            OrbitalVector &Phi,
-                            OrbitalVector &X,
-                            OrbitalVector &Y,
-                            DensityType spin) {
+void density::compute_local(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, DensityType spin) {
     if (&X == &Y) {
         density::compute_local_X(prec, rho, Phi, X, spin);
     } else {
@@ -200,12 +185,7 @@ void density::compute_local_X(double prec, Density &rho, OrbitalVector &Phi, Orb
     }
 }
 
-void density::compute_local_XY(double prec,
-                               Density &rho,
-                               OrbitalVector &Phi,
-                               OrbitalVector &X,
-                               OrbitalVector &Y,
-                               DensityType spin) {
+void density::compute_local_XY(double prec, Density &rho, OrbitalVector &Phi, OrbitalVector &X, OrbitalVector &Y, DensityType spin) {
     int N_el = orbital::get_electron_number(Phi);
     double mult_prec = prec;       // prec for rho_i = |x_i><phi_i| + |phi_i><y_i|
     double add_prec = prec / N_el; // prec for rho = sum_i rho_i
