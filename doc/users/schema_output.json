@@ -40,7 +40,7 @@
       "E_tot": float,                        # Sum of all contributions
       "Er_el": float,                        # Electronic reaction energy
       "Er_nuc": float,                       # Nuclear reaction energy
-      "Er_tot": float                        # Total reaction energy
+      "Er_tot": float                        # Sum of all reaction energy contributions
     },
     "dipole_moment": {                       # Collection of electric dipole moments
       id (string): {                         # Unique id: 'dip-${number}'
