@@ -3,13 +3,20 @@
   "schema_version": int,                     # Version of the input schema
   "molecule": {                              # Section for Molecule specification
     "charge": int,                           # Total molecular charge
-    "multiplicity": int                      # Total spin multiplicity
+    "multiplicity": int,                     # Total spin multiplicity
     "coords": array[                         # Array of atoms
       {                                      # (one entry per atom)
         "atom": string,                      # Atomic symbol
         "xyz": array[float]                  # Nuclear Cartesian coordinate
       }                                      
     ],                                       
+    "cavity_coords": array[                  # Array of solvation cavities
+      {                                      # (one entry per cavity)
+        "center": array[float],              # Cartesian coordinate for cavities
+        "radius": float                      # Radius of cavity sphere
+      }                                      
+    ],                                       
+    "cavity_width": float                    # Width of cavity boundary
   },                                         
   "mpi": {                                   # Section for MPI specification
     "bank_size": int,                        # Number of MPI ranks in memory bank
@@ -49,6 +56,18 @@
         "poisson_prec": float,               # Build prec for Poisson operator
         "screen": bool                       # Use screening in Exchange operator
       },                                     
+      "reaction_operator": {                 # Add Reaction operator to Fock
+        "accelerate_Vr": bool,               # Extrapolate on the reaction potential
+        "algorithm": string,                 # Reaction field algorithm
+        "convergence_criterion": string,     # Criterion for when convergence is signaled
+        "density_type": string,              # Type of total molecular charge
+        "epsilon_in": float,                 # Permittivity inside the cavity
+        "epsilon_out": float,                # Permittivity outside the cavity
+        "formulation": string,               # Formulation of the permittivity function
+        "kain": int,                         # Length of KAIN history in nested SCRF procedure
+        "max_iter": int,                     # Maximum number of iterations in nested SCRF procedure
+        "poisson_prec": float                # Precision for Poisson operator
+      },
       "xc_operator": {                       # Add XC operator to Fock
         "shared_memory": bool,               # Use shared memory for potential
         "xc_functional": {                   # XC functional specification
@@ -74,6 +93,8 @@
       "method": string,                      # Name of method for initial energy
       "localize": bool,                      # Use localized orbitals
       "restricted": bool,                    # Use spin restricted orbitals
+      "relativity": string,                  # Relativistic Hamiltonian
+      "screen": float,                       # Screening used in GTO evaluations
       "file_chk": string,                    # Path to checkpoint file
       "file_basis": string,                  # Path to GTO basis file
       "file_gto_a": string,                  # Path to GTO MO file (alpha)
@@ -81,7 +102,10 @@
       "file_gto_p": string,                  # Path to GTO MO file (paired)
       "file_phi_a": string,                  # Path to MW orbital file (alpha)
       "file_phi_b": string,                  # Path to MW orbital file (beta)
-      "file_phi_p": string                   # Path to MW orbital file (paired)
+      "file_phi_p": string,                  # Path to MW orbital file (paired)
+      "file_CUBE_a": str,
+      "file_CUBE_b": str,
+      "file_CUBE_p": str,
     },                                       
     "scf_solver": {                          # SCF solver specification
       "kain": int,                           # Length of KAIN history
