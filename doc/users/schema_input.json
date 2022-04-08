@@ -11,7 +11,7 @@
       }                                      
     ],                                       
     "cavity_coords": array[                  # Array of solvation cavities
-      {                                      # (one entry per cavity)
+      {                                      # (one entry per sphere)
         "center": array[float],              # Cartesian coordinate for cavities
         "radius": float                      # Radius of cavity sphere
       }                                      
