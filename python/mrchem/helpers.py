@@ -59,12 +59,9 @@ def write_scf_fock(user_dict, wf_dict, origin):
     if user_dict["WaveFunction"]["relativity"].lower() == "zora":
         fock_dict["zora_operator"] = {
             "light_speed": user_dict["ZORA"]["light_speed"],
-            "derivative": user_dict["Derivatives"]["zora"],
             "include_nuclear": user_dict["ZORA"]["include_nuclear"],
             "include_coulomb": user_dict["ZORA"]["include_coulomb"],
-            "include_xc": user_dict["ZORA"]["include_xc"],
-            "shared_memory": user_dict["MPI"]["share_nuclear_potential"],
-            "proj_prec": user_dict["Precisions"]["nuclear_prec"]
+            "include_xc": user_dict["ZORA"]["include_xc"]
         }
 
     # Kinetic
@@ -218,12 +215,7 @@ def write_scf_solver(user_dict, wf_dict):
         "final_prec": final_prec,
         "energy_thrs": scf_dict["energy_thrs"],
         "orbital_thrs": scf_dict["orbital_thrs"],
-        "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"],
-        "light_speed": user_dict["ZORA"]["light_speed"],
-        "proj_prec": user_dict["Precisions"]["nuclear_prec"],
-        "smooth_prec": user_dict["Precisions"]["nuclear_prec"],
-        "shared_memory": user_dict["MPI"]["share_nuclear_potential"],
-        "derivative": user_dict["Derivatives"]["kinetic"]
+        "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
     }
     return solver_dict
 
