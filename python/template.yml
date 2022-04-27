@@ -2,23 +2,23 @@ keywords:
   - name: world_prec
     type: float
     predicates:
-      - '1.0e-10 < value < 1.0'
+      - 1.0e-10 < value < 1.0
     docstring: |
       Overall relative precision in the calculation.
   - name: world_size
     type: int
     default: -1
     predicates:
-      - 'value <= 10'
+      - value <= 10
     docstring: |
       Total size of computational domain given as 2**(``world_size``). Always cubic
       and symmetric around the origin. Negative value means it will be computed
       from the molecular geometry.
   - name: world_unit
     type: str
-    default: "bohr"
+    default: bohr
     predicates:
-      - 'value.lower() in ["bohr", "angstrom"]'
+      - value.lower() in ["bohr", "angstrom"]
     docstring: |
       Length unit for *all* coordinates given in user input. Everything will be
       converted to atomic units (bohr) before the main executable is launched,
@@ -27,7 +27,7 @@ keywords:
     type: List[float]
     default: [0.0, 0.0, 0.0]
     predicates:
-      - 'len(value) == 3'
+      - len(value) == 3
     docstring: |
       Global gauge origin of the calculation.
 sections:
@@ -37,16 +37,16 @@ sections:
     keywords:
       - name: nuclear_prec
         type: float
-        default: "user['world_prec']"
+        default: user['world_prec']
         predicates:
-          - '1.0e-10 < value < 1.0'
+          - 1.0e-10 < value < 1.0
         docstring: |
           Precision parameter used in smoothing and projection of nuclear potential.
       - name: poisson_prec
         type: float
-        default: "user['world_prec']"
+        default: user['world_prec']
         predicates:
-          - '1.0e-10 < value < 1.0'
+          - 1.0e-10 < value < 1.0
         docstring: |
           Precision parameter used in construction of Poisson operators.
       - name: exchange_prec
@@ -80,7 +80,7 @@ sections:
         type: int
         default: 6
         predicates:
-          - '0 < value < 10'
+          - 0 < value < 10
         docstring: |
           Number of digits in property output (energies will get twice this
           number of digits).
@@ -88,9 +88,14 @@ sections:
         type: int
         default: 75
         predicates:
-          - '50 < value < 100'
+          - 50 < value < 100
         docstring: |
           Line width of printed output (in number of characters).
+      - name: print_constants
+        type: bool
+        default: false
+        docstring: |
+          Print table of physical constants used by MRChem.
   - name: Plotter
     docstring: |
       Give details regarding the density and orbital plots. Three types of
@@ -102,54 +107,54 @@ sections:
     keywords:
       - name: path
         type: str
-        default: "plots"
+        default: plots
         predicates:
-          - "value[-1] != '/'"
+          - value[-1] != '/'
         docstring: |
           File path to plot directory.
       - name: type
         type: str
-        default: "cube"
+        default: cube
         predicates:
-          - "value.lower() in ['line', 'surf', 'cube']"
+          - value.lower() in ['line', 'surf', 'cube']
         docstring: |
           Type of plot: line (1D), surface (2D) or cube (3D).
       - name: points
         type: List[int]
         default: [20, 20, 20]
         predicates:
-          - "all(p > 0 for p in value)"
-          - "not (user['Plotter']['type'] == 'line' and len(value) < 1)"
-          - "not (user['Plotter']['type'] == 'surf' and len(value) < 2)"
-          - "not (user['Plotter']['type'] == 'cube' and len(value) < 3)"
+          - all(p > 0 for p in value)
+          - not (user['Plotter']['type'] == 'line' and len(value) < 1)
+          - not (user['Plotter']['type'] == 'surf' and len(value) < 2)
+          - not (user['Plotter']['type'] == 'cube' and len(value) < 3)
         docstring: |
           Number of points in each direction on the cube grid.
       - name: O
         type: List[float]
         default: [0.0, 0.0, 0.0]
         predicates:
-          - 'len(value) == 3'
+          - len(value) == 3
         docstring: |
           Origin of plotting ranges.
       - name: A
         type: List[float]
         default: [1.0, 0.0, 0.0]
         predicates:
-          - 'len(value) == 3'
+          - len(value) == 3
         docstring: |
           First boundary vector for plot.
       - name: B
         type: List[float]
         default: [0.0, 1.0, 0.0]
         predicates:
-          - 'len(value) == 3'
+          - len(value) == 3
         docstring: |
           Second boundary vector for plot.
       - name: C
         type: List[float]
         default: [0.0, 0.0, 1.0]
         predicates:
-          - 'len(value) == 3'
+          - len(value) == 3
         docstring: |
           Third boundary vector for plot.
   - name: MPI
@@ -199,9 +204,9 @@ sections:
           be set automatically based on the world precision.
       - name: type
         type: str
-        default: 'interpolating'
+        default: interpolating
         predicates:
-          - "value.lower() in ['interpolating', 'legendre']"
+          - value.lower() in ['interpolating', 'legendre']
         docstring: |
           Polynomial type of multiwavelet basis.
   - name: Derivatives
@@ -210,22 +215,22 @@ sections:
     keywords:
       - name: kinetic
         type: str
-        default: 'abgv_55'
+        default: abgv_55
         docstring: |
           Derivative used in kinetic operator.
       - name: h_b_dip
         type: str
-        default: 'abgv_00'
+        default: abgv_00
         docstring: |
           Derivative used in magnetic dipole operator.
       - name: h_m_pso
         type: str
-        default: 'abgv_00'
+        default: abgv_00
         docstring: |
           Derivative used in paramagnetic spin-orbit operator.
       - name: zora
         type: str
-        default: 'abgv_00'
+        default: abgv_00
         docstring: |
           Derivative used ZORA potential.
   - name: Molecule
@@ -240,6 +245,8 @@ sections:
       - name: multiplicity
         type: int
         default: 1
+        predicates:
+          - value > 0
         docstring: |
           Spin multiplicity of molecule.
       - name: translate
@@ -260,29 +267,9 @@ sections:
       - name: method
         type: str
         predicates:
-          - "value.lower() in
-             ['core',
-              'hartree',
-              'hf',
-              'hartreefock',
-              'hartree-fock',
-              'dft',
-              'lda',
-              'svwn3',
-              'svwn5',
-              'pbe',
-              'pbe0',
-              'bpw91',
-              'bp86',
-              'b3p86',
-              'b3p86-g',
-              'blyp',
-              'b3lyp',
-              'b3lyp-g',
-              'olyp',
-              'kt1',
-              'kt2',
-              'kt3']"
+          - value.lower() in ['core', 'hartree', 'hf', 'hartreefock', 'hartree-fock',
+            'dft', 'lda', 'svwn3', 'svwn5', 'pbe', 'pbe0', 'bpw91', 'bp86', 'b3p86',
+            'b3p86-g', 'blyp', 'b3lyp', 'b3lyp-g', 'olyp', 'kt1', 'kt2', 'kt3']
         docstring: |
           Wavefunction method. See predicates for valid methods. ``hf``,
           ``hartreefock`` and ``hartree-fock`` all mean the same thing, while ``lda``
@@ -296,12 +283,9 @@ sections:
           Use spin restricted wavefunction.
       - name: relativity
         type: str
-        default: "none"
+        default: none
         predicates:
-          - "value.lower() in
-             ['none',
-              'zora',
-              'nzora']"
+          - value.lower() in ['none', 'zora', 'nzora']
         docstring: |
           Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default
           including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section.
@@ -311,11 +295,6 @@ sections:
     docstring: |
       Define required parameters for the ZORA Hamiltonian.
     keywords:
-      - name: light_speed
-        type: float
-        default: -1.0
-        docstring: |
-          Adjust speed of light.
       - name: include_nuclear
         type: bool
         default: true
@@ -337,7 +316,7 @@ sections:
     keywords:
       - name: spin
         type: bool
-        default: "not(user['WaveFunction']['restricted'])"
+        default: not(user['WaveFunction']['restricted'])
         docstring: |
           Use spin separated density functionals.
       - name: density_cutoff
@@ -407,7 +386,7 @@ sections:
         type: List[float]
         default: []
         predicates:
-          - 'len(value) == 0 or len(value) == 3'
+          - len(value) == 0 or len(value) == 3
         docstring: |
           Strength of external electric field.
   - name: Polarizability
@@ -441,102 +420,102 @@ sections:
     keywords:
       - name: guess_basis
         type: str
-        default: "initial_guess/mrchem.bas"
+        default: initial_guess/mrchem.bas
         docstring: |
           File name for GTO basis set, used with ``gto`` guess.
       - name: guess_gto_p
         type: str
-        default: "initial_guess/mrchem.mop"
+        default: initial_guess/mrchem.mop
         docstring: |
           File name for paired orbitals, used with ``gto`` guess.
       - name: guess_gto_a
         type: str
-        default: "initial_guess/mrchem.moa"
+        default: initial_guess/mrchem.moa
         docstring: |
           File name for alpha orbitals, used with ``gto`` guess.
       - name: guess_gto_b
         type: str
-        default: "initial_guess/mrchem.mob"
+        default: initial_guess/mrchem.mob
         docstring: |
           File name for beta orbitals, used with ``gto`` guess.
       - name: guess_phi_p
         type: str
-        default: "initial_guess/phi_p"
+        default: initial_guess/phi_p
         docstring: |
           File name for paired orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/phi_p_scf_idx_<0...Np>_<re/im>.mw
       - name: guess_phi_a
         type: str
-        default: "initial_guess/phi_a"
+        default: initial_guess/phi_a
         docstring: |
           File name for alpha orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/phi_a_scf_idx_<0...Na>_<re/im>.mw
       - name: guess_phi_b
         type: str
-        default: "initial_guess/phi_b"
+        default: initial_guess/phi_b
         docstring: |
           File name for beta orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.mw
       - name: guess_x_p
         type: str
-        default: "initial_guess/X_p"
+        default: initial_guess/X_p
         docstring: |
           File name for paired response orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/x_p_rsp_idx_<0...Np>_<re/im>.mw
       - name: guess_x_a
         type: str
-        default: "initial_guess/X_a"
+        default: initial_guess/X_a
         docstring: |
           File name for alpha response orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/x_a_rsp_idx_<0...Na>_<re/im>.mw
       - name: guess_x_b
         type: str
-        default: "initial_guess/X_b"
+        default: initial_guess/X_b
         docstring: |
           File name for beta response orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/x_b_rsp_idx_<0...Nb>_<re/im>.mw
       - name: guess_y_p
         type: str
-        default: "initial_guess/Y_p"
+        default: initial_guess/Y_p
         docstring: |
           File name for paired response orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/y_p_rsp_idx_<0...Np>_<re/im>.mw
       - name: guess_y_a
         type: str
-        default: "initial_guess/Y_a"
+        default: initial_guess/Y_a
         docstring: |
           File name for alpha response orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/y_a_rsp_idx_<0...Na>_<re/im>.mw
       - name: guess_y_b
         type: str
-        default: "initial_guess/Y_b"
+        default: initial_guess/Y_b
         docstring: |
           File name for beta response orbitals, used with ``mw`` guess.
           Expected path is ``<path_orbitals>/y_b_rsp_idx_<0...Nb>_<re/im>.mw
       - name: guess_cube_p
         type: str
-        default: "initial_guess/phi_p"
+        default: initial_guess/phi_p
         docstring: |
           File name for paired orbitals, used with ``cube`` guess.
           Expected path is ``<path_orbitals>/phi_p_scf_idx_<0...Np>_<re/im>.cube
       - name: guess_cube_a
         type: str
-        default: "initial_guess/phi_a"
+        default: initial_guess/phi_a
         docstring: |
           File name for alpha orbitals, used with ``cube`` guess.
           Expected path is ``<path_orbitals>/phi_a>_scf_idx_<0...Na>_<re/im>.cube
       - name: guess_cube_b
         type: str
-        default: "initial_guess/phi_b"
+        default: initial_guess/phi_b
         docstring: |
           File name for beta orbitals, used with ``cube`` guess.
           Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.cube
       - name: cube_vectors
         type: str
-        default: "cube_vectors/"
+        default: cube_vectors/
         docstring: |
           Directory where cube vectors are stored for mrchem calculation.
-          
+
   - name: SCF
     docstring: |
       Includes parameters related to the ground state SCF orbital optimization.
@@ -568,7 +547,7 @@ sections:
           Use canonical or localized orbitals.
       - name: orbital_thrs
         type: float
-        default: "10 * user['world_prec']"
+        default: 10 * user['world_prec']
         docstring: |
           Convergence threshold for orbital residuals.
       - name: energy_thrs
@@ -580,7 +559,7 @@ sections:
         type: float
         default: 1.0e-3
         predicates:
-          - '1.0e-10 < value < 1.0'
+          - 1.0e-10 < value < 1.0
         docstring: |
           Precision parameter used in construction of initial guess.
       - name: guess_screen
@@ -604,22 +583,10 @@ sections:
           Incremental precision in SCF iterations, final value.
       - name: guess_type
         type: str
-        default: 'sad_dz'
+        default: sad_dz
         predicates:
-          - "value.lower() in
-            ['mw',
-             'chk',
-             'gto',
-             'core_sz',
-             'core_dz',
-             'core_tz',
-             'core_qz',
-             'sad_sz',
-             'sad_dz',
-             'sad_tz',
-             'sad_qz',
-             'sad_gto',
-             'cube']"
+          - value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz',
+            'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'sad_gto', 'cube']
         docstring: |
           Type of initial guess for ground state orbitals.
           ``chk`` restarts a previous calculation which was dumped using the
@@ -645,9 +612,9 @@ sections:
           there are slashes in the path "path/to/checkpoint".
       - name: path_checkpoint
         type: str
-        default: "checkpoint"
+        default: checkpoint
         predicates:
-          - "value[-1] != '/'"
+          - value[-1] != '/'
         docstring: |
           Path to checkpoint files during SCF, used with ``write_checkpoint``
           and ``chk`` guess.
@@ -660,9 +627,9 @@ sections:
           Can be used as ``mw`` initial guess in subsequent calculations.
       - name: path_orbitals
         type: str
-        default: "orbitals"
+        default: orbitals
         predicates:
-          - "value[-1] != '/'"
+          - value[-1] != '/'
         docstring: |
           Path to where converged orbitals will be written in connection with
           the ``write_orbitals`` keyword. Note: must be given in quotes if
@@ -688,12 +655,12 @@ sections:
           Length of KAIN iterative history.
       - name: localize
         type: bool
-        default: "user['SCF']['localize']"
+        default: user['SCF']['localize']
         docstring: |
           Use canonical or localized unperturbed orbitals.
       - name: orbital_thrs
         type: float
-        default: "10 * user['world_prec']"
+        default: 10 * user['world_prec']
         docstring: |
           Convergence threshold for orbital residuals.
       - name: property_thrs
@@ -720,17 +687,14 @@ sections:
         type: float
         default: 1.0e-3
         predicates:
-          - '1.0e-10 < value < 1.0'
+          - 1.0e-10 < value < 1.0
         docstring: |
           Precision parameter used in construction of initial guess.
       - name: guess_type
         type: str
-        default: 'none'
+        default: none
         predicates:
-          - "value.lower() in
-            ['none',
-             'chk',
-             'mw']"
+          - value.lower() in ['none', 'chk', 'mw']
         docstring: |
           Type of initial guess for response.
           ``none`` will start from a zero guess for the response functions.
@@ -748,9 +712,9 @@ sections:
           initial guess in subsequent calculations.
       - name: path_checkpoint
         type: str
-        default: "checkpoint"
+        default: checkpoint
         predicates:
-          - "value[-1] != '/'"
+          - value[-1] != '/'
         docstring: |
           Path to checkpoint files during SCF, used with ``write_checkpoint``
           and ``chk`` guess.
@@ -763,9 +727,9 @@ sections:
           Can be used as ``mw`` initial guess in subsequent calculations.
       - name: path_orbitals
         type: str
-        default: "orbitals"
+        default: orbitals
         predicates:
-          - "value[-1] != '/'"
+          - value[-1] != '/'
         docstring: |
           Path to where converged orbitals will be written in connection with
           the ``write_orbitals`` keyword.
@@ -787,9 +751,9 @@ sections:
           interaction between environment and molecule. 
       - name: algorithm
         type: str
-        default: "scrf"
+        default: scrf
         predicates:
-            - "value.lower() in ['scrf']"
+          - value.lower() in ['scrf']
         docstring: |
           What algorithm to use for the reaction field
           ``scrf`` runs a nested algorithm where the generalized Poisson
@@ -797,9 +761,9 @@ sections:
           convergence threshold.
       - name: convergence_criterion
         type: str
-        default: "dynamic"
+        default: dynamic
         predicates:
-          - "value.lower() in ['dynamic', 'static']"
+          - value.lower() in ['dynamic', 'static']
         docstring: |
           Adjust the convergence threshold for the nested procedure.
           ``dynamic`` Uses the absolute value of the latest orbital update as
@@ -815,15 +779,15 @@ sections:
           charge distribution in the convergence acceleration.
       - name: kain
         type: int
-        default: "user['SCF']['kain']"
+        default: user['SCF']['kain']
         docstring: |
           Number of previous reaction field iterates kept for convergence
           acceleration during the nested precedure.
       - name: density_type
         type: str
-        default: "total"
+        default: total
         predicates:
-          - "value.lower() in ['total', 'nuclear', 'electronic']"
+          - value.lower() in ['total', 'nuclear', 'electronic']
         docstring: |
           What part of the total molecular charge density to use in the algorithm.
           ``total`` uses the total charge density.
@@ -836,7 +800,7 @@ sections:
         keywords:
           - name: spheres
             type: str
-            default: ""
+            default: ''
             docstring: |
               Coordinates and radii  of the spheres written as
               $spheres
@@ -868,10 +832,65 @@ sections:
               solvent used.
           - name: formulation
             type: str
-            default: "exponential"
+            default: exponential
             predicates:
-              - "value.lower() in ['exponential']"
+              - value.lower() in ['exponential']
             docstring: |
               Formulation of the Permittivity function. Currently only the
               exponential is used.
-              
+
+  - name: Constants
+    docstring: Physical and mathematical constants used by MRChem
+    keywords:
+      - name: hartree2simagnetizability
+        default: 78.9451185
+        type: float
+        docstring: '| Conversion factor for magnetizability from atomic units to SI
+          units  (unit: J T^-2). Affected code: Printed value of the magnetizability
+          property.'
+      - name: light_speed
+        default: 137.035999084
+        type: float
+        docstring: '| Speed of light in atomic units  (unit: au). Affected code: Relativistic
+          Hamiltonians (ZORA, etc.)'
+      - name: angstrom2bohrs
+        default: 1.8897261246257702
+        type: float
+        docstring: '| Conversion factor for Cartesian coordinates from Angstrom to
+          Bohr  (unit: Å^-1). Affected code: Parsing of input coordinates, printed
+          coordinates'
+      - name: hartree2kjmol
+        default: 2625.4996394798254
+        type: float
+        docstring: '| Conversion factor from Hartree to kJ/mol  (unit: kJ mol^-1).
+          Affected code: Printed value of energies.'
+      - name: hartree2kcalmol
+        default: 627.5094740630558
+        type: float
+        docstring: '| Conversion factor from Hartree to kcal/mol  (unit: kcal mol^-1).
+          Affected code: Printed value of energies.'
+      - name: hartree2ev
+        default: 27.211386245988
+        type: float
+        docstring: '| Conversion factor from Hartree to eV  (unit: ev). Affected code:
+          Printed value of energies.'
+      - name: hartree2wavenumbers
+        default: 219474.6313632
+        type: float
+        docstring: '| Conversion factor from Hartree to wavenumbers (unit: cm^-1).
+          Affected code: Printed value of frequencies.'
+      - name: fine_structure_constant
+        default: 0.0072973525693
+        type: float
+        docstring: '| Fine-structure constant in atomic units (unit: au). Affected
+          code: Certain magnetic interaction operators.'
+      - name: electron_g_factor
+        default: -2.00231930436256
+        type: float
+        docstring: '| Electron g factor in atomic units (unit: au). Affected code:
+          Certain magnetic interaction operators.'
+      - name: dipmom_au2debye
+        default: 2.5417464739297717
+        type: float
+        docstring: '| Conversion factor for dipoles from atomic units to Debye (unit:
+          ?). Affected code: Printed value of dipole moments.'

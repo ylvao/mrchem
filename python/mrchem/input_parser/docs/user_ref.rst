@@ -117,6 +117,12 @@ User input reference
     **Predicates**
       - ``50 < value < 100``
   
+   :print_constants: Print table of physical constants used by MRChem. 
+  
+    **Type** ``bool``
+  
+    **Default** ``False``
+  
  :Plotter: Give details regarding the density and orbital plots. Three types of plots are available, line, surface and cube, and the plotting ranges are defined by three vectors (A, B and C) and an origin (O): ``line``: plots on line spanned by A, starting from O. ``surf``: plots on surface spanned by A and B, starting from O. ``cube``: plots on volume spanned by A, B and C, starting from O. 
 
   :red:`Keywords`
@@ -285,6 +291,9 @@ User input reference
   
     **Default** ``1``
   
+    **Predicates**
+      - ``value > 0``
+  
    :translate: Translate coordinates such that center of mass coincides with the global gauge origin. 
   
     **Type** ``bool``
@@ -323,12 +332,6 @@ User input reference
  :ZORA: Define required parameters for the ZORA Hamiltonian. 
 
   :red:`Keywords`
-   :light_speed: Adjust speed of light. 
-  
-    **Type** ``float``
-  
-    **Default** ``-1.0``
-  
    :include_nuclear: Include the nuclear potential ``V_nuc`` in the ZORA potential. 
   
     **Type** ``bool``
@@ -864,3 +867,66 @@ User input reference
         **Predicates**
           - ``value.lower() in ['exponential']``
       
+ :Constants: Physical and mathematical constants used by MRChem
+
+  :red:`Keywords`
+   :hartree2simagnetizability: | Conversion factor for magnetizability from atomic units to SI units  (unit: J T^-2). Affected code: Printed value of the magnetizability property.
+  
+    **Type** ``float``
+  
+    **Default** ``78.9451185``
+  
+   :light_speed: | Speed of light in atomic units  (unit: au). Affected code: Relativistic Hamiltonians (ZORA, etc.)
+  
+    **Type** ``float``
+  
+    **Default** ``137.035999084``
+  
+   :angstrom2bohrs: | Conversion factor for Cartesian coordinates from Angstrom to Bohr  (unit: Å^-1). Affected code: Parsing of input coordinates, printed coordinates
+  
+    **Type** ``float``
+  
+    **Default** ``1.8897261246257702``
+  
+   :hartree2kjmol: | Conversion factor from Hartree to kJ/mol  (unit: kJ mol^-1). Affected code: Printed value of energies.
+  
+    **Type** ``float``
+  
+    **Default** ``2625.4996394798254``
+  
+   :hartree2kcalmol: | Conversion factor from Hartree to kcal/mol  (unit: kcal mol^-1). Affected code: Printed value of energies.
+  
+    **Type** ``float``
+  
+    **Default** ``627.5094740630558``
+  
+   :hartree2ev: | Conversion factor from Hartree to eV  (unit: ev). Affected code: Printed value of energies.
+  
+    **Type** ``float``
+  
+    **Default** ``27.211386245988``
+  
+   :hartree2wavenumbers: | Conversion factor from Hartree to wavenumbers (unit: cm^-1). Affected code: Printed value of frequencies.
+  
+    **Type** ``float``
+  
+    **Default** ``219474.6313632``
+  
+   :fine_structure_constant: | Fine-structure constant in atomic units (unit: au). Affected code: Certain magnetic interaction operators.
+  
+    **Type** ``float``
+  
+    **Default** ``0.0072973525693``
+  
+   :electron_g_factor: | Electron g factor in atomic units (unit: au). Affected code: Certain magnetic interaction operators.
+  
+    **Type** ``float``
+  
+    **Default** ``-2.00231930436256``
+  
+   :dipmom_au2debye: | Conversion factor for dipoles from atomic units to Debye (unit: ?). Affected code: Printed value of dipole moments.
+  
+    **Type** ``float``
+  
+    **Default** ``2.5417464739297717``
+  

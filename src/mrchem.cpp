@@ -35,6 +35,7 @@
 #include "version.h"
 
 #include "chemistry/Molecule.h"
+#include "chemistry/PhysicalConstants.h"
 
 // Initializing global variables
 mrcpp::MultiResolutionAnalysis<3> *mrchem::MRA;
@@ -55,6 +56,11 @@ int main(int argc, char **argv) {
     const auto &mol_inp = json_inp["molecule"];
     const auto &scf_inp = json_inp["scf_calculation"];
     const auto &rsp_inp = json_inp["rsp_calculations"];
+    const auto &con_inp = json_inp["constants"];
+
+    // Instantiate the physical constants singleton
+    PhysicalConstants::Initialize(con_inp);
+    if (json_inp["printer"]["print_constants"]) PhysicalConstants::Print();
 
     Timer timer;
     Molecule mol;

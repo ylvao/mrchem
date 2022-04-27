@@ -23,46 +23,44 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#pragma once
+#include "PhysicalConstants.h"
+#include "MRCPP/Printer"
+#include "utils/print_utils.h"
+#include <nlohmann/json.hpp>
 
-#include "chemistry/PhysicalConstants.h"
-#include "tensor/RankOneOperator.h"
-
-#include "SpinOperator.h"
+using json = nlohmann::json;
 
 namespace mrchem {
 
-/** @class H_B_spin
- *
- * @brief Magnetic spin operator
- *
- * Interaction operator obtained by differentiating the spin Hamiltonian wrt
- * the external magnetic field B:
- *
- * dH/dB = H_B_dip + H_B_spin
- *
- * H_B_spin = -\sum_j m_j
- *
- * where m_j is the magnetic moment of the electron.
- */
+bool PhysicalConstants::initialized = false;
+json PhysicalConstants::constants_ = json();
 
-class H_B_spin final : public RankOneOperator<3> {
-public:
-    H_B_spin()
-            : H_B_spin(SpinOperator()) {}
-
-    explicit H_B_spin(SpinOperator s) {
-        const double g_e = PhysicalConstants::get("electron_g_factor");
-
-        // Invoke operator= to assign *this operator
-        RankOneOperator<3> &h = (*this);
-        h[0] = (g_e / 2.0) * s[0];
-        h[1] = (g_e / 2.0) * s[1];
-        h[2] = (g_e / 2.0) * s[2];
-        h[0].name() = "h_B_spin[x]";
-        h[1].name() = "h_B_spin[y]";
-        h[2].name() = "h_B_spin[z]";
-    }
+// clang-format off
+json PhysicalConstants::testConstants = {
+    {"angstrom2bohrs", 1.8897261246257702},
+    {"dipmom_au2debye", 2.5417464739297717},
+    {"electron_g_factor", -2.00231930436256},
+    {"fine_structure_constant", 0.0072973525693},
+    {"hartree2ev", 27.211386245988},
+    {"hartree2kcalmol", 627.5094740630558},
+    {"hartree2kjmol", 2625.4996394798254},
+    {"hartree2simagnetizability", 78.9451185},
+    {"hartree2wavenumbers", 219474.6313632},
+    {"light_speed", 137.035999084}
 };
+// clang-format on
+
+PhysicalConstants &PhysicalConstants::Initialize(const json &constants) {
+    initialized = true;
+    static PhysicalConstants obj(constants);
+    return obj;
+}
+
+/** @brief Pretty print physical constants */
+void PhysicalConstants::Print() {
+    mrcpp::print::header(0, "Physical Constants");
+    print_utils::json(0, constants_, true);
+    mrcpp::print::separator(0, '=', 2);
+}
 
 } // namespace mrchem

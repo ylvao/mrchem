@@ -27,7 +27,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include "chemistry/PhysicalConstants.h"
 #include "mrchem.h"
+
 #include "utils/print_utils.h"
 
 /** @class SCFEnergy
@@ -68,9 +70,9 @@ public:
 
     void print(const std::string &id) const {
         auto E_au = E_nuc + E_el;
-        auto E_eV = E_au * PHYSCONST::eV;
-        auto E_kJ = E_au * PHYSCONST::kJ;
-        auto E_kcal = E_au * PHYSCONST::kcal;
+        auto E_eV = E_au * PhysicalConstants::get("hartree2ev");
+        auto E_kJ = E_au * PhysicalConstants::get("hartree2kjmol");
+        auto E_kcal = E_au * PhysicalConstants::get("hartree2kcalmol");
 
         auto pprec = 2 * mrcpp::Printer::getPrecision();
         mrcpp::print::header(0, "Molecular Energy (" + id + ")");

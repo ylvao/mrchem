@@ -25,16 +25,25 @@
 
 import math
 
-from .helpers import *
-from .CUBEparser import *
+from .helpers import (
+    write_scf_fock,
+    write_scf_guess,
+    write_scf_solver,
+    write_scf_properties,
+    write_scf_plot,
+    write_rsp_calc,
+    parse_wf_method
+)
 from .periodictable import PeriodicTable as PT, PeriodicTableByZ as PT_Z
+from .validators import MoleculeValidator
 
 
 def translate_input(user_dict):
     # get the origin in the desired units of measure
     origin = user_dict["world_origin"]
+    pc = user_dict['Constants']
     if user_dict["world_unit"] == "angstrom":
-        origin = [ANGSTROM_2_BOHR * r for r in origin]
+        origin = [pc['angstrom2bohrs'] * r for r in origin]
 
     # prepare bits and pieces
     mol_dict = write_molecule(user_dict, origin)
@@ -53,6 +62,7 @@ def translate_input(user_dict):
         "molecule": mol_dict,
         "scf_calculation": scf_dict,
         "rsp_calculations": rsp_dict,
+        "constants": user_dict["Constants"]
     }
     return program_dict
 
@@ -111,119 +121,17 @@ def write_mra(user_dict, mol_dict):
 
 def write_molecule(user_dict, origin):
     # Translate into program syntax
-    coords_raw = user_dict["Molecule"]["coords"]
-    coords_dict = []
-    for line in coords_raw.split("\n"):
-        sp = line.split()
-        if len(sp) > 0:
-
-            try:
-                int(sp[0])
-            except:
-                atom = sp[0].lower()
-            else:
-                atom = PT_Z[int(sp[0])].symbol.lower()
-
-            xyz = list(map(float, sp[1:]))
-            if len(xyz) != 3:
-                raise RuntimeError(f"Invalid coordinate: {atom.upper()} {str(xyz)}")
-            coords_dict.append({"atom": atom, "xyz": xyz})
-
-    # Convert angstrom -> bohr
-    if user_dict["world_unit"] == "angstrom":
-        for coord in coords_dict:
-            coord["xyz"] = [ANGSTROM_2_BOHR * r for r in coord["xyz"]]
-
-    # Check for singularity
-    for a in range(len(coords_dict)):
-        for b in range(a + 1, len(coords_dict)):
-            A = coords_dict[a]
-            B = coords_dict[b]
-            R = math.sqrt(sum([(a - b) ** 2 for a, b in zip(A["xyz"], B["xyz"])]))
-            if R < 1.0e-6:
-                msg = f"ABORT: Atoms are too close\n {A['atom']}: {str(A['xyz'])}\n {B['atom']}: {str(B['xyz'])}"
-                raise RuntimeError(msg)
-            elif R < 1.0e-3:
-                msg = f"WARNING: Atoms are too close\n {A['atom']}: {str(A['xyz'])}\n {B['atom']}: {str(B['xyz'])}"
-                print(msg)
-
-    # Translate center of mass to origin
-    if user_dict["Molecule"]["translate"]:
-        # Calc center of mass
-        M = 0.0
-        CoM = [0.0, 0.0, 0.0]
-        for coord in coords_dict:
-            m = PT[coord["atom"]].mass
-            M += m
-            CoM = [m * r + o for r, o in zip(coord["xyz"], CoM)]
-        CoM = [x / M - o for x, o in zip(CoM, origin)]
-
-        # Translate coords
-        for coord in coords_dict:
-            coord["xyz"] = [r - o for r, o in zip(coord["xyz"], CoM)]
-
-    # initialize the cavity
-    cav_coords_dict = []
-    if len(user_dict["Environment"]["Cavity"]["spheres"]) > 0:
-        cav_coords_raw = user_dict["Environment"]["Cavity"]["spheres"]
-        for line in cav_coords_raw.split('\n'):
-            sp = line.split()
-            if len(sp) > 0:
-                center = list(map(float, sp[:-1]))
-                radius = float(sp[-1])
-                if len(center) != 3:
-                    raise RuntimeError(f"Invalid coordinate: {center}")
-            cav_coords_dict.append({
-                "center": center,
-                "radius": radius
-            })
-    else:
-        for atom in coords_dict:
-            radius = float(PT[atom["atom"]].radius)
-            cav_coords_dict.append({
-                "center": atom["xyz"],
-                "radius": radius
-            })
-
-    if user_dict["world_unit"] == "angstrom" :
-        for coord in cav_coords_dict:
-            coord["center"] = [ANGSTROM_2_BOHR * r for r in coord["center"]]
-            coord["radius"] *= ANGSTROM_2_BOHR
-        cavity_width = user_dict["Environment"]["Cavity"]["cavity_width"]*ANGSTROM_2_BOHR
-    else:
-        cavity_width = user_dict["Environment"]["Cavity"]["cavity_width"]
-
-    # Make sure the specified charge and multiplicity make sense
-    mult = user_dict["Molecule"]["multiplicity"]
-    charge = user_dict["Molecule"]["charge"]
-    restricted = user_dict["WaveFunction"]["restricted"]
-
-    # Collect number of electrons
-    n_electrons = sum([PT[atom["atom"]].Z for atom in coords_dict]) - charge
-    n_unpaired = mult - 1
-
-    # Helper function
-    parity = lambda n: 'even' if n % 2 == 0 else 'odd'
-
-    # Check for unphysical multiplicity (not likely to be much of a problem, but still...)
-    if n_unpaired > n_electrons:
-        raise RuntimeError(f"The specified multiplicity requires more unpaired electrons ({mult - 1}) than are available ({n_electrons}))")
-
-    # Check for restricted open-shell
-    elif restricted and n_unpaired > 0: 
-        raise RuntimeError("Restricted open-shell calculations are not available")
-
-    # Check for invalid spin multiplicity
-    elif parity(n_electrons) == parity(mult): 
-        raise RuntimeError(f"The specified multiplicity ({parity(mult)}) is not compatible with the number of electrons ({parity(n_electrons)})")
-
+    mol = MoleculeValidator(user_dict, origin)
     mol_dict = {
-        "multiplicity": mult,
-        "charge": charge,
-        "coords": coords_dict,
-        "cavity_coords": cav_coords_dict,
-        "cavity_width": cavity_width
+        "multiplicity": mol.mult,
+        "charge": mol.charge,
+        "coords": mol.get_coords_in_program_syntax(),
     }
+    if user_dict["Environment"]["run_environment"]:
+        mol_dict["cavity"] = {
+            "spheres": mol.get_cavity_in_program_syntax(),
+            "width": mol.cavity_width,
+        }
 
     return mol_dict
 

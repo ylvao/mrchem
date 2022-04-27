@@ -28,6 +28,7 @@
 #include <array>
 
 #include "MRCPP/MWFunctions"
+#include "chemistry/PhysicalConstants.h"
 
 #include "mrchem.h"
 
@@ -42,7 +43,7 @@ public:
 
     double operator()(double x) const {
         double ax = this->alpha * (x - this->origin);
-        double ap = std::sqrt(this->alpha / MATHCONST::sqrt_pi);
+        double ap = std::sqrt(this->alpha / std::sqrt(mrcpp::pi));
         double N_nu = std::sqrt(N2(this->nu));
         return ap * N_nu * H(this->nu, ax) * exp(-ax * ax / 2.0);
     }

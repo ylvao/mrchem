@@ -23,6 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 #include "Cavity.h"
+#include "chemistry/PhysicalConstants.h"
 #include "utils/math_utils.h"
 
 namespace mrchem {
@@ -60,6 +61,7 @@ Cavity::Cavity(std::vector<mrcpp::Coord<3>> &centers, std::vector<double> &radii
 auto gradCavity(const mrcpp::Coord<3> &r, int index, const std::vector<mrcpp::Coord<3>> &centers, std::vector<double> &radii, double width) -> double {
     double C = 1.0;
     double DC = 0.0;
+    double sqrt_pi = std::sqrt(mrcpp::pi);
     for (int i = 0; i < centers.size(); i++) {
         double s = math_utils::calc_distance(centers[i], r) - radii[i];
         double ds = (r[index] - centers[i][index]) / (math_utils::calc_distance(centers[i], r));
@@ -67,7 +69,7 @@ auto gradCavity(const mrcpp::Coord<3> &r, int index, const std::vector<mrcpp::Co
         double Ci = 1.0 - Theta;
         C *= 1.0 - Ci;
 
-        double DCi = -(1.0 / (width * std::sqrt(MATHCONST::pi))) * std::exp(-std::pow(s / width, 2.0)) * ds;
+        double DCi = -(1.0 / (width * sqrt_pi)) * std::exp(-std::pow(s / width, 2.0)) * ds;
 
         double numerator = DCi;
         double denominator = 1.0 - Ci;

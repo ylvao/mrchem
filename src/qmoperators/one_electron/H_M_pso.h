@@ -25,6 +25,7 @@
 
 #pragma once
 
+#include "chemistry/PhysicalConstants.h"
 #include "tensor/RankOneOperator.h"
 
 #include "MomentumOperator.h"
@@ -52,7 +53,7 @@ public:
             : H_M_pso(MomentumOperator(D), NuclearGradientOperator(1.0, k, proj_prec, smooth_prec)) {}
 
     H_M_pso(MomentumOperator p, NuclearGradientOperator r_rm3) {
-        const double alpha_2 = PHYSCONST::alpha * PHYSCONST::alpha;
+        const double alpha_2 = PhysicalConstants::get("fine_structure_constant") * PhysicalConstants::get("fine_structure_constant") * 1000000.0;
 
         RankZeroOperator &p_x = p[0];
         RankZeroOperator &p_y = p[1];

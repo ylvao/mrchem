@@ -23,13 +23,8 @@
 # <https://mrchem.readthedocs.io/>
 #
 
-from .CUBEparser import *
+from .CUBEparser import write_cube_dict
 
-BOHR_2_METER = 5.29177210903e-11
-"""Conversion from atomic units of length (Bohr) to meter (CODATA 2018)"""
-ANGSTROM_2_BOHR = 1e-10 / BOHR_2_METER
-#ANGSTROM_2_BOHR = 1.889725989
-"""Conversion factor from Angstrom to Bohr"""
 # yapf: disable
 SHORTHAND_FUNCTIONALS = [
     'svwn3',
@@ -58,7 +53,6 @@ def write_scf_fock(user_dict, wf_dict, origin):
     # ZORA
     if user_dict["WaveFunction"]["relativity"].lower() == "zora":
         fock_dict["zora_operator"] = {
-            "light_speed": user_dict["ZORA"]["light_speed"],
             "include_nuclear": user_dict["ZORA"]["include_nuclear"],
             "include_coulomb": user_dict["ZORA"]["include_coulomb"],
             "include_xc": user_dict["ZORA"]["include_xc"]
@@ -164,7 +158,7 @@ def write_scf_guess(user_dict, wf_dict):
     file_dict = user_dict["Files"]
 
     if (guess_type == 'cube'):
-        write_cube_dict(file_dict, user_dict["world_unit"])
+        write_cube_dict(user_dict)
 
     vector_dir = file_dict["cube_vectors"]
     guess_dict = {
@@ -254,7 +248,7 @@ def write_scf_plot(user_dict):
         plot_dict["plotter"] = user_dict["Plotter"]
         if user_dict["world_unit"] == "angstrom":
             plot_dict["plotter"] = {
-                k: [ANGSTROM_2_BOHR * r for r in plot_dict["plotter"][k]]
+                k: [user_dict['Constants']['angstrom2bohrs'] * r for r in plot_dict["plotter"][k]]
                 for k in plot_dict["plotter"].keys()
             }
     return plot_dict

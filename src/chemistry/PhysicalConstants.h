@@ -24,45 +24,42 @@
  */
 
 #pragma once
+#include "MRCPP/Printer"
+#include <nlohmann/json.hpp>
 
-#include "chemistry/PhysicalConstants.h"
-#include "tensor/RankOneOperator.h"
-
-#include "SpinOperator.h"
+using json = nlohmann::json;
 
 namespace mrchem {
 
-/** @class H_B_spin
- *
- * @brief Magnetic spin operator
- *
- * Interaction operator obtained by differentiating the spin Hamiltonian wrt
- * the external magnetic field B:
- *
- * dH/dB = H_B_dip + H_B_spin
- *
- * H_B_spin = -\sum_j m_j
- *
- * where m_j is the magnetic moment of the electron.
- */
-
-class H_B_spin final : public RankOneOperator<3> {
+class PhysicalConstants {
 public:
-    H_B_spin()
-            : H_B_spin(SpinOperator()) {}
-
-    explicit H_B_spin(SpinOperator s) {
-        const double g_e = PhysicalConstants::get("electron_g_factor");
-
-        // Invoke operator= to assign *this operator
-        RankOneOperator<3> &h = (*this);
-        h[0] = (g_e / 2.0) * s[0];
-        h[1] = (g_e / 2.0) * s[1];
-        h[2] = (g_e / 2.0) * s[2];
-        h[0].name() = "h_B_spin[x]";
-        h[1].name() = "h_B_spin[y]";
-        h[2].name() = "h_B_spin[z]";
+    static PhysicalConstants &Initialize(const json &constants);
+    static double get(const std::string &key) {
+        try {
+            if (initialized) {
+                return constants_[key];
+            } else {
+                return testConstants[key];
+            }
+        } catch (...) { MSG_ABORT("Error getting constant with name: " + key); }
     }
+
+    static void Print();
+
+    PhysicalConstants() = default;
+    ~PhysicalConstants() = default;
+
+    PhysicalConstants(const PhysicalConstants &) = delete;
+    PhysicalConstants &operator=(const PhysicalConstants &) = delete;
+    PhysicalConstants &operator=(const PhysicalConstants &&) = delete;
+    PhysicalConstants(PhysicalConstants &&) = delete;
+
+    static bool initialized;
+
+private:
+    PhysicalConstants(const json &constants) { constants_ = constants; }
+    static json constants_;
+    static json testConstants;
 };
 
 } // namespace mrchem
