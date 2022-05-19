@@ -107,13 +107,14 @@ class MoleculeValidator:
 
         # Validate atomic coordinates
         self.atomic_symbols, self.atomic_coords = self.validate_atomic_coordinates()
+        self.n_atoms = len(self.atomic_coords)
 
         # Translate center of mass if requested
         # We must test for translation before validating the cavity, 
         # in case the nuclear coordinates are to be used for the
         # sphere centers
         if self.do_translate:
-            self.atomic_coords = self.translate_com_to_origin()
+            self.translate_com_to_origin()
 
         # Validate cavity spheres
         self.cavity_radii, self.cavity_coords = self.validate_cavity()
@@ -312,10 +313,22 @@ class MoleculeValidator:
             raise RuntimeError(self.ERROR_RESTRICTED_OPEN_SHELL)
 
     def translate_com_to_origin(self):
-        """Translate center of mass to the origin."""
+        """Translate center of mass to the origin (in-place)."""
         masses = [PeriodicTable[label.lower()].mass for label in self.atomic_symbols]
         M = sum(masses)
-        return [masses[i] * (self.atomic_coords[i] - self.origin[i]) / M for i in range(3)]
+
+        # Compute center of mass
+        com = []
+        for dim in range(3):
+            component = 0.0
+            for atom in range(self.n_atoms):
+                component += self.atomic_coords[atom][dim] * masses[atom]
+            com.append(component / M - self.origin[dim])
+
+        # Translate coordinates
+        for dim in range(3):
+            for atom in range(self.n_atoms):
+                self.atomic_coords[atom][dim] -= com[dim]
 
     @staticmethod
     def euclidian_distance(a, b):
