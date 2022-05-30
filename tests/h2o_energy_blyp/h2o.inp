@@ -2,7 +2,6 @@
 
 world_prec = 1.0e-3                 # Overall relative precision
 world_size = 6                      # Size of simulation box 2^n
-world_origin = [0.0, 0.0, 0.003683] # CoM in order to get correct quadrupole
 
 MPI {
   numerically_exact = true          # Guarantee identical results in MPI
@@ -13,6 +12,7 @@ Basis {
 }
 
 Molecule {
+translate = true
 $coords
 O       0.0000  0.0000  -0.1250
 H      -1.4375  0.0000   1.0250
