@@ -112,7 +112,6 @@ bool initial_guess::core::setup(OrbitalVector &Phi, double prec, const Nuclei &n
     t_lap.start();
     OrbitalVector Psi;
     initial_guess::core::project_ao(Psi, prec, nucs, zeta);
-    ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Psi);
     if (plevel == 1) mrcpp::print::time(1, "Projecting Hydrogen AOs", t_lap);
 
     p.setup(prec);
@@ -134,7 +133,7 @@ bool initial_guess::core::setup(OrbitalVector &Phi, double prec, const Nuclei &n
     V.clear();
     p.clear();
 
-    mrcpp::print::footer(2, t_lap, 2);
+    mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::footer(1, t_tot, 2);
     return true;
 }
@@ -258,10 +257,12 @@ void initial_guess::core::rotate_orbitals(OrbitalVector &Psi, double prec, Compl
 ComplexMatrix initial_guess::core::diagonalize(OrbitalVector &Phi, MomentumOperator &p, RankZeroOperator &V) {
     Timer t1;
     ComplexMatrix S_m12 = orbital::calc_lowdin_matrix(Phi);
+    mrcpp::print::separator(2, '-');
     ComplexMatrix t_tilde = qmoperator::calc_kinetic_matrix(p, Phi, Phi);
     ComplexMatrix v_tilde = V(Phi, Phi);
     ComplexMatrix f_tilde = t_tilde + v_tilde;
     ComplexMatrix f = S_m12.adjoint() * f_tilde * S_m12;
+    mrcpp::print::separator(2, '-');
     mrcpp::print::time(1, "Computing Fock matrix", t1);
 
     Timer t2;

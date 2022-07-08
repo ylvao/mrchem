@@ -33,8 +33,9 @@
 namespace mrchem {
 namespace print_utils {
 
+void centered_text(int level, const std::string &txt);
 void headline(int level, const std::string &txt);
-void text(int level, const std::string &txt, const std::string &val);
+void text(int level, const std::string &txt, const std::string &val, bool ralign = false);
 void json(int level, const nlohmann::json &j, bool ralign = false);
 void coord(int level, const std::string &txt, const mrcpp::Coord<3> &val, int p = -1, bool s = false);
 void scalar(int level, const std::string &txt, double val, const std::string &unit = "", int p = -1, bool s = false);

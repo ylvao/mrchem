@@ -72,6 +72,13 @@ std::string print_utils::dbl_to_str(double d, int p, bool sci) {
     }
     return o_dbl.str();
 }
+/** @brief Prints text centered according to current print width */
+void print_utils::centered_text(int level, const std::string &txt) {
+    int pwidth = Printer::getWidth();
+    int txt_width = txt.size();
+    int pre_spaces = (pwidth - txt_width) / 2;
+    println(level, std::string(pre_spaces, ' ') << txt);
+}
 
 void print_utils::headline(int level, const std::string &txt) {
     auto pwidth = Printer::getWidth();
@@ -91,18 +98,23 @@ void print_utils::headline(int level, const std::string &txt) {
     mrcpp::print::separator(level, ' ');
 }
 
-void print_utils::text(int level, const std::string &txt, const std::string &val) {
+void print_utils::text(int level, const std::string &txt, const std::string &val, bool ralign) {
     int w0 = Printer::getWidth() - 2;
     int w1 = w0 * 2 / 9;
     int w2 = w0 - 3 * w1;
     int w3 = w2 - (txt.size() + 1);
 
+    // Right-aligning
+    int shift;
+    shift = (ralign) ? w0 - w2 - val.size() - 1 : 0;
+
     std::stringstream o;
-    o << " " << txt << std::string(w3, ' ') << ": " << val;
+    o << " " << txt << std::string(w3, ' ') << ": " << std::string(shift, ' ') << val;
     println(level, o.str());
 }
 
 void print_utils::json(int level, const nlohmann::json &j, bool ralign) {
+    if (level > mrcpp::Printer::getPrintLevel()) return;
     // Determine longest name
     // This will be used for the spacing left of :
     // if the name is too long to be aligned with
@@ -127,7 +139,7 @@ void print_utils::json(int level, const nlohmann::json &j, bool ralign) {
         int w0 = Printer::getWidth() - 2; // Defines the printable width
         int w1 = w0 * 2 / 9;              // Space dedicated to the json key
         int w2 = w0 - 3 * w1;
-        int w3 = w2 - (val.size() + 1);
+        // int w3 = w2 - (val.size() + 1);
 
         // Some paddings for book keeping
         int frontEndPadding = 2; // Empty space at beginning and end

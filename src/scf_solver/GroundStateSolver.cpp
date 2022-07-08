@@ -171,6 +171,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     print_utils::text(0, "Calculation        ", calculation);
     print_utils::text(0, "Method             ", this->methodName);
     print_utils::text(0, "Relativity         ", this->relativityName);
+    print_utils::text(0, "Environment        ", this->environmentName);
     print_utils::text(0, "Checkpointing      ", (this->checkpoint) ? "On" : "Off");
     print_utils::text(0, "Max iterations     ", o_iter.str());
     print_utils::text(0, "KAIN solver        ", o_kain.str());
@@ -217,6 +218,7 @@ void GroundStateSolver::reset() {
  */
 json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
     printParameters("Optimize ground state orbitals");
+
     Timer t_tot;
     json json_out;
 

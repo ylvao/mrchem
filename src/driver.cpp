@@ -141,6 +141,7 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
         auto xyz = coord["xyz"];
         nuclei.push_back(atom, xyz);
     }
+    mol.printGeometry();
 
     if (json_mol.contains("cavity")) {
         auto json_cavity = json_mol["cavity"];
@@ -153,8 +154,8 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
         auto width = json_cavity["width"];
 
         mol.initCavity(coords, radii, width);
+        // mol.printCavity();
     }
-    mol.printGeometry();
 }
 
 void driver::init_properties(const json &json_prop, Molecule &mol) {
@@ -222,7 +223,7 @@ void driver::init_properties(const json &json_prop, Molecule &mol) {
  * This function expects the "scf_calculation" subsection of the input.
  */
 json driver::scf::run(const json &json_scf, Molecule &mol) {
-    print_utils::headline(0, "Computing Ground State Wavefunction");
+    // print_utils::headline(0, "Computing Ground State Wavefunction");
     json json_out = {{"success", true}};
 
     if (json_scf.contains("properties")) driver::init_properties(json_scf["properties"], mol);
@@ -240,6 +241,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     ///////////////////////////////////////////////////////////
     ///////////////   Setting Up Initial Guess   //////////////
     ///////////////////////////////////////////////////////////
+    print_utils::headline(0, "Computing Initial Guess Wavefunction");
     const auto &json_guess = json_scf["initial_guess"];
     if (scf::guess_orbitals(json_guess, mol)) {
         scf::guess_energy(json_guess, mol, F);
@@ -255,9 +257,12 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
 
     // Run GroundStateSolver if present in input JSON
     if (json_scf.contains("scf_solver")) {
+        print_utils::headline(0, "Computing Ground State Wavefunction");
+
         auto kain = json_scf["scf_solver"]["kain"];
         auto method = json_scf["scf_solver"]["method"];
         auto relativity = json_scf["scf_solver"]["relativity"];
+        auto environment = json_scf["scf_solver"]["environment"];
         auto max_iter = json_scf["scf_solver"]["max_iter"];
         auto rotation = json_scf["scf_solver"]["rotation"];
         auto localize = json_scf["scf_solver"]["localize"];
@@ -275,6 +280,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         solver.setLocalize(localize);
         solver.setMethodName(method);
         solver.setRelativityName(relativity);
+        solver.setEnvironmentName(environment);
         solver.setCheckpoint(checkpoint);
         solver.setCheckpointFile(file_chk);
         solver.setMaxIterations(max_iter);
@@ -1032,9 +1038,10 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         auto formulation = json_fock["reaction_operator"]["formulation"];
         auto density_type = json_fock["reaction_operator"]["density_type"];
         Permittivity dielectric_func(*cavity_r, eps_in_r, eps_out_r, formulation);
+        dielectric_func.printParameters();
 
         auto scrf_p = std::make_unique<SCRF>(dielectric_func, nuclei, P_r, D_r, poisson_prec, hist_r, max_iter, accelerate_Vr, convergence_criterion, algorithm, density_type);
-        auto V_R = std::make_shared<ReactionOperator>(scrf_p, Phi_p);
+        auto V_R = std::make_shared<ReactionOperator>(std::move(scrf_p), Phi_p);
         F.getReactionOperator() = V_R;
     }
     ///////////////////////////////////////////////////////////
