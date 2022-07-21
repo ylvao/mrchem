@@ -825,7 +825,7 @@ sections:
               $spheres
               i R [alpha] [beta] [sigma]
               $end
-              to specify that the ``i`` atom in the molecule (1-based indexing) should use radius ``R`` instead of the pre-tabulated vdW radius.
+              to specify that the ``i`` atom in the molecule (0-based indexing) should use radius ``R`` instead of the pre-tabulated vdW radius.
               To *add* a sphere, include a line like:
               $spheres
               x y z R [alpha] [beta] [sigma]
@@ -843,7 +843,7 @@ sections:
               $spheres
               i R [alpha] [beta] [sigma]
               $end
-              to specify that the ``i`` atom in the molecule (1-based indexing) should use radius ``R``.
+              to specify that the ``i`` atom in the molecule (0-based indexing) should use radius ``R``.
               Spheres added in this way are aware of their parent atom. They will contribute to the molecular gradient.
           - name: alpha
             type: float

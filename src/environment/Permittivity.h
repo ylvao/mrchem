@@ -92,7 +92,7 @@ public:
     std::string getFormulation() const { return this->formulation; }
 
     /** @brief Print parameters */
-    void printParameters();
+    void printParameters() const;
 
 private:
     bool inverse = false;    //!< State of #evalf

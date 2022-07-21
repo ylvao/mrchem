@@ -291,8 +291,8 @@ class MoleculeValidator:
             p_match = p.match(sphere)
             q_match = q.match(sphere)
             if p_match:
-                # the indexing of the atoms is 1-based in the user input!
-                index = int(p_match.group("index")) - 1
+                # the indexing of the atoms is 0-based in the user input!
+                index = int(p_match.group("index"))
 
                 if self.cavity_mode == "atoms":
                     radii[index] = float(p_match.group("radius"))

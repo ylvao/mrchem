@@ -44,10 +44,14 @@ double Permittivity::evalf(const mrcpp::Coord<3> &r) const {
     }
 }
 
-void Permittivity::printParameters() {
+void Permittivity::printParameters() const {
     // Collect relevant quantities
     auto coords = this->cavity.getCoordinates();
     auto radii = this->cavity.getRadii();
+    auto radii_0 = this->cavity.getOriginalRadii();
+    auto alphas = this->cavity.getRadiiScalings();
+    auto sigmas = this->cavity.getWidths();
+    auto betas = this->cavity.getWidthScalings();
 
     // Set widths
     auto w0 = mrcpp::Printer::getWidth() - 1;
@@ -60,6 +64,10 @@ void Permittivity::printParameters() {
     std::stringstream o_head;
     o_head << std::setw(w1) << "N";
     o_head << std::setw(w2) << "Radius";
+    o_head << std::setw(w2) << "R_0";
+    o_head << std::setw(w2) << "Alpha";
+    o_head << std::setw(w2) << "Beta";
+    o_head << std::setw(w2) << "Sigma";
     o_head << std::string(w4 - 1, ' ') << ':';
     o_head << std::setw(w3) << "x";
     o_head << std::setw(w3) << "y";
@@ -68,22 +76,29 @@ void Permittivity::printParameters() {
     // Print
     mrcpp::print::header(0, "Solvation Cavity");
     print_utils::text(0, "Formulation", getFormulation(), true);
-    print_utils::scalar(0, "Cavity width", cavity.getWidth(), "", 6);
     print_utils::scalar(0, "Dielectric constant", getEpsIn(), "(in)", 6);
     print_utils::scalar(0, "", getEpsOut(), "(out)", 6);
     mrcpp::print::separator(0, '-');
     println(0, o_head.str());
     mrcpp::print::separator(0, '-');
-    for (int i = 0; i < coords.size(); i++) {
-        mrcpp::Coord<3> coord = coords[i];
-        double r = radii[i];
-        double x = coord[0];
-        double y = coord[1];
-        double z = coord[2];
+    for (auto i = 0; i < coords.size(); i++) {
+        auto coord = coords[i];
+        auto x = coord[0];
+        auto y = coord[1];
+        auto z = coord[2];
+        auto r = radii[i];
+        auto r_0 = radii_0[i];
+        auto alpha = alphas[i];
+        auto beta = betas[i];
+        auto sigma = sigmas[i];
 
         std::stringstream o_coord;
         o_coord << std::setw(w1) << i;
-        o_coord << std::setw(w2) << std::setprecision(6) << std::fixed << r;
+        o_coord << std::setw(w2) << std::setprecision(4) << std::fixed << r;
+        o_coord << std::setw(w2) << std::setprecision(4) << std::fixed << r_0;
+        o_coord << std::setw(w2) << std::setprecision(2) << std::fixed << alpha;
+        o_coord << std::setw(w2) << std::setprecision(2) << std::fixed << beta;
+        o_coord << std::setw(w2) << std::setprecision(2) << std::fixed << sigma;
         o_coord << std::string(w4 - 1, ' ') << ':';
         o_coord << std::setw(w3) << std::setprecision(6) << std::fixed << x;
         o_coord << std::setw(w3) << std::setprecision(6) << std::fixed << y;

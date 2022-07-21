@@ -20,7 +20,7 @@
     "optimizer": "potential"
   },
   "Cavity": {
-    "spheres": "1 4.0 1.0 0.0 0.5"
+    "spheres": "0 4.0 1.0 0.0 0.5"
   },
   "Permittivity": {
     "epsilon_in": 1.0,

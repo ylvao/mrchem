@@ -69,7 +69,7 @@ public:
     double evalf(const mrcpp::Coord<3> &r) const override;
     auto getGradVector() const { return this->gradvector; }
     std::vector<mrcpp::Coord<3>> getCoordinates() const { return this->centers; } //!< Returns #centers.
-    std::vector<double> getRadiiOriginal() const { return this->radii_0; }        //!< Returns #radii_0.
+    std::vector<double> getOriginalRadii() const { return this->radii_0; }        //!< Returns #radii_0.
     std::vector<double> getRadii() const { return this->radii; }                  //!< Returns #radii.
     std::vector<double> getRadiiScalings() const { return this->alphas; }         //!< Returns #alphas.
     std::vector<double> getWidths() const { return this->sigmas; }                //!< Returns #sigmas.
