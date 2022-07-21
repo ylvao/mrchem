@@ -294,16 +294,41 @@ class MoleculeValidator:
                 # the indexing of the atoms is 1-based in the user input!
                 index = int(p_match.group("index")) - 1
 
-                radii[index] = float(p_match.group("radius"))
+                if self.cavity_mode == "atoms":
+                    radii[index] = float(p_match.group("radius"))
 
-                if p_match.group("alpha"):
-                    alphas[index] = float(p_match.group("alpha"))
+                    if p_match.group("alpha"):
+                        alphas[index] = float(p_match.group("alpha"))
 
-                if p_match.group("beta"):
-                    betas[index] = float(p_match.group("beta"))
+                    if p_match.group("beta"):
+                        betas[index] = float(p_match.group("beta"))
 
-                if p_match.group("sigma"):
-                    sigmas[index] = float(p_match.group("sigma"))
+                    if p_match.group("sigma"):
+                        sigmas[index] = float(p_match.group("sigma"))
+                else:
+                    coords.append(self.atomic_coords[index])
+                    radii.append(float(p_match.group("radius")))
+                    alphas.append(
+                        (
+                            float(p_match.group("alpha"))
+                            if p_match.group("alpha")
+                            else self.cavity_alpha
+                        )
+                    )
+                    betas.append(
+                        (
+                            float(p_match.group("beta"))
+                            if p_match.group("beta")
+                            else self.cavity_beta
+                        )
+                    )
+                    sigmas.append(
+                        (
+                            float(p_match.group("sigma"))
+                            if p_match.group("sigma")
+                            else self.cavity_sigma
+                        )
+                    )
             elif q_match:
                 coords.append(
                     [
@@ -313,7 +338,6 @@ class MoleculeValidator:
                     ]
                 )
                 radii.append(float(q_match.group("radius")))
-
                 alphas.append(
                     (
                         float(q_match.group("alpha"))
@@ -321,7 +345,6 @@ class MoleculeValidator:
                         else self.cavity_alpha
                     )
                 )
-
                 betas.append(
                     (
                         float(q_match.group("beta"))
@@ -329,7 +352,6 @@ class MoleculeValidator:
                         else self.cavity_beta
                     )
                 )
-
                 sigmas.append(
                     (
                         float(q_match.group("sigma"))
@@ -339,8 +361,6 @@ class MoleculeValidator:
                 )
             else:
                 bad_spheres.append(sphere)
-
-        print(f"{coords=}\n{radii=}\n{alphas=}\n{betas=}\n{sigmas=}")
 
         if bad_spheres:
             newline = "\n"

@@ -46,9 +46,8 @@ double Permittivity::evalf(const mrcpp::Coord<3> &r) const {
 
 void Permittivity::printParameters() {
     // Collect relevant quantities
-    Cavity cavity = getCavity();
-    std::vector<mrcpp::Coord<3>> coords = cavity.getCoordinates();
-    std::vector<double> radii = cavity.getRadii();
+    auto coords = this->cavity.getCoordinates();
+    auto radii = this->cavity.getRadii();
 
     // Set widths
     auto w0 = mrcpp::Printer::getWidth() - 1;
