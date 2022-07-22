@@ -255,7 +255,49 @@ class MoleculeValidator:
         return labels, coords
 
     def validate_cavity(self):
-        """Parse the $spheres block and ensure correct formatting."""
+        """Parse the $spheres block and ensure correct formatting.
+
+        - Each sphere "object" in the JSON will contain:
+
+          * Position in Cartesian coordinates :math:`x_{i}, y_{i}, z_{i}`
+          * **Unscaled** radius :math:`R_{i}^{\mathrm{vdW}}`
+          * Radius scaling factor :math:`\alpha_{i}`
+          * Width scaling factor :math:`\beta_{i}`
+          * Width :math:`\sigma_{i}`
+
+          Inside MRChem, the radius to be used will be computed as
+          :math:`R_{i} = \alpha_{i}R_{i}^{\mathrm{vdW}} + \beta_{i}\sigma_{i}`.
+        - In `atoms` mode, we first create the list of spheres from the atomic
+          coordinates and built-in radii, alpha (1.1), beta (0.5), and
+          sigma (0.2) values. We then read the `$spheres`/`$end` blob of text
+          and amend this list. Spheres can be given in two syntaxes:
+
+          * **substitution**: `index radius [alpha] [beta] [sigma]`, and
+          * **addition**: `x y z radius [alpha] [beta] [sigma]`
+
+          These lines are parsed by two regexes. The "substitution" regex (`p`
+          in the code) has higher priority: it is run and post-processed first.
+          Note that the `index` in "substitution" syntax **starts from 1**, but
+          it's easy to go to 0-based indexing.
+        - In `explicit` mode, we start from an empty list of spheres. We then
+          read the `$spheres`/`$end` blob of text and amend this list. Spheres can
+          be given in two syntaxes:
+
+          * **centered**: `index radius [alpha] [beta] [sigma]`, and
+          * **free**: `x y z radius [alpha] [beta] [sigma]`
+
+          These lines are parsed by the same two regexes, with same priority and
+          ordering considerations, as above.
+        - "Centered" and "substituted" spheres can be aware of their parent
+          atom (I believe this needs some change in the C++ code though!) which
+          means we can track their contribution to the molecular gradient. "Added"
+          and "free" spheres are always treated as not atom-centered, so they will
+          never contribute to the molecular gradient.
+        - After discussions with @ilfreddy, I decided that it's less surprising
+          for the user if the default values of `alpha`, `beta`, and `sigma`
+          are **always** applied. If special behavior is desired, then it needs to
+          be requested *explicitly* in the input.
+        """
         # Regex components
         integer = r"[0-9]+"
         decimal = r"[+-]?[0-9]+\.?[0-9]*|\.[0-9]+"

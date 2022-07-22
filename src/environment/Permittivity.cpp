@@ -56,7 +56,7 @@ void Permittivity::printParameters() const {
     // Set widths
     auto w0 = mrcpp::Printer::getWidth() - 1;
     auto w1 = 5;
-    auto w2 = 12;
+    auto w2 = 9;
     auto w3 = 2 * w0 / 9;
     auto w4 = w0 - w1 - w2 - 3 * w3;
 
