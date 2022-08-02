@@ -28,9 +28,8 @@
 #
 
 import re
-from typing import Any, Callable, List, Optional, Tuple, Union
-
 from typing import Dict  # noqa: F401; noqa: F401
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 RunCallable = Callable[[Any, str], Tuple[str, Any]]
 
@@ -54,13 +53,12 @@ def type_matches(value: AllowedTypes, expected_type: str) -> Optional[bool]:
     Parameters
     ----------
     value : AllowedTypes
-        Value whose type needs to be checked
+      Value whose type needs to be checked
     expected_type : str
 
     Notes
     -----
-    Allowed types T are: `str`, `int`, `float`, `complex`, `bool`,
-    as well as `List[T]`.
+    Allowed types T are: `str`, `int`, `float`, `complex`, `bool`, as well as `List[T]`.
 
     Returns
     -------
@@ -69,18 +67,18 @@ def type_matches(value: AllowedTypes, expected_type: str) -> Optional[bool]:
     Raises
     ------
     ValueError
-        If expected_type is not among the allowed types.
+      If `expected_type` is not among the allowed types.
 
     Notes
     -----
     Complex numbers are a tad more fastidious, as they *might be* read in as
     strings. To avoid false negatives, we have a nasty hack, for which RDR will
-    forever burn in hell. For complex and List[complex] we will re-run type
-    checking after type
-    casting if and only if:
-      - We expected complex and List[complex].
-      - We got a str or List[str].
-      - The string are in the right format for the type casting operator.
+    forever burn in hell. For `complex` and `List[complex]` we will re-run type
+    checking after type casting if and only if:
+
+    - We expected `complex` and `List[complex]`.
+    - We got a `str` or `List[str]`.
+    - The string are in the right format for the type casting operator.
     """
 
     # first verify whether expected_type is allowed
