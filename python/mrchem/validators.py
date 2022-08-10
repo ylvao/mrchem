@@ -55,6 +55,9 @@ class MoleculeValidator:
     ERROR_MESSAGE_CAVITY_RADII = (
         lambda self, details: f"ABORT: INVALID CAVITY RADII: {details}"
     )
+    ERROR_MESSAGE_CAVITY_ALPHAS = (
+        lambda self, details: f"ABORT: INVALID CAVITY SCALING FACTORS: {details}"
+    )
 
     ERROR_MESSAGE_NUCLEAR_SINGULARITY = (
         lambda self, details: f"ABORT: SOME ATOMS TOO CLOSE (norm < {MoleculeValidator.THRESHOLD_NUCLEAR_SINGULARITY_ERROR}):\n{details}"
@@ -412,10 +415,35 @@ class MoleculeValidator:
                 )
             )
 
-        # Check for negative radii
-        if any([r < 0 for r in radii]):
+        # Check for negative or zero radii
+        invalid_radii = {
+            i: r for i, r in enumerate(radii) if ((r < 0) or math.isclose(r, 0.0))
+        }
+        if invalid_radii:
+            invalid = "\n".join(
+                [f"Sphere {i} has invalid radius {r}" for i, r in invalid_radii.items()]
+            )
             raise RuntimeError(
-                self.ERROR_MESSAGE_CAVITY_RADII("Cavity radii cannot be negative")
+                self.ERROR_MESSAGE_CAVITY_RADII(
+                    f"Cavity radii cannot be negative or zero:\n{invalid}"
+                )
+            )
+
+        # Check for negative or zero scaling factors
+        invalid_alphas = {
+            i: a for i, a in enumerate(alphas) if ((a < 0) or math.isclose(a, 0.0))
+        }
+        if invalid_alphas:
+            invalid = "\n".join(
+                [
+                    f"Sphere {i} has invalid radius {a}"
+                    for i, a in invalid_alphas.items()
+                ]
+            )
+            raise RuntimeError(
+                self.ERROR_MESSAGE_CAVITY_ALPHAS(
+                    f"Cavity radii scaling factors cannot be negative or zero:\n{invalid}"
+                )
             )
 
         return radii, coords, alphas, betas, sigmas
