@@ -106,10 +106,9 @@ public:
     void printGeometry() const;
     void printEnergies(const std::string &txt) const;
     void printProperties() const;
-    void printCavity();
 
     void initPerturbedOrbitals(bool dynamic);
-    void initCavity(std::vector<mrcpp::Coord<3>> &coords, std::vector<double> &R, double slope);
+    void initCavity(const std::vector<mrcpp::Coord<3>> &coords, const std::vector<double> &R, const std::vector<double> &alphas, const std::vector<double> &betas, const std::vector<double> &sigmas);
 
     SCFEnergy &getSCFEnergy() { return this->energy; }
     OrbitalEnergies &getOrbitalEnergies() { return this->epsilon; }

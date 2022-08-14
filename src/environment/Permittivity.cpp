@@ -44,51 +44,64 @@ double Permittivity::evalf(const mrcpp::Coord<3> &r) const {
     }
 }
 
-void Permittivity::printParameters() {
+void Permittivity::printParameters() const {
     // Collect relevant quantities
-    Cavity cavity = getCavity();
-    std::vector<mrcpp::Coord<3>> coords = cavity.getCoordinates();
-    std::vector<double> radii = cavity.getRadii();
+    auto coords = this->cavity.getCoordinates();
+    auto radii = this->cavity.getRadii();
+    auto radii_0 = this->cavity.getOriginalRadii();
+    auto alphas = this->cavity.getRadiiScalings();
+    auto sigmas = this->cavity.getWidths();
+    auto betas = this->cavity.getWidthScalings();
 
     // Set widths
     auto w0 = mrcpp::Printer::getWidth() - 1;
     auto w1 = 5;
-    auto w2 = 12;
-    auto w3 = 2 * w0 / 9;
-    auto w4 = w0 - w1 - w2 - 3 * w3;
+    auto w2 = 9;
+    auto w3 = 6;
+    auto w4 = 10;
+    auto w5 = w0 - w1 - w2 - 3 * w3 - 3 * w4;
 
     // Build table column headers
     std::stringstream o_head;
     o_head << std::setw(w1) << "N";
-    o_head << std::setw(w2) << "Radius";
-    o_head << std::string(w4 - 1, ' ') << ':';
-    o_head << std::setw(w3) << "x";
-    o_head << std::setw(w3) << "y";
-    o_head << std::setw(w3) << "z";
+    o_head << std::setw(w2) << "R_0";
+    o_head << std::setw(w3+1) << "Alpha";
+    o_head << std::setw(w3-1) << "Beta";
+    o_head << std::setw(w3) << "Sigma";
+    o_head << std::setw(w5) << "Radius";
+    o_head << std::setw(w4) << "x";
+    o_head << std::setw(w4) << "y";
+    o_head << std::setw(w4) << "z";
 
     // Print
     mrcpp::print::header(0, "Solvation Cavity");
-    print_utils::scalar(0, "Cavity width", cavity.getWidth(), "", 6);
-    print_utils::scalar(0, "Dielec. Const. (in)", getEpsIn(), "", 6);
-    print_utils::scalar(0, "Dielec. Const. (out)", getEpsOut(), "", 6);
     print_utils::text(0, "Formulation", getFormulation(), true);
+    print_utils::scalar(0, "Dielectric constant", getEpsIn(), "(in)", 6);
+    print_utils::scalar(0, "", getEpsOut(), "(out)", 6);
     mrcpp::print::separator(0, '-');
     println(0, o_head.str());
     mrcpp::print::separator(0, '-');
-    for (int i = 0; i < coords.size(); i++) {
-        mrcpp::Coord<3> coord = coords[i];
-        double r = radii[i];
-        double x = coord[0];
-        double y = coord[1];
-        double z = coord[2];
+    for (auto i = 0; i < coords.size(); i++) {
+        auto coord = coords[i];
+        auto x = coord[0];
+        auto y = coord[1];
+        auto z = coord[2];
+        auto r = radii[i];
+        auto r_0 = radii_0[i];
+        auto alpha = alphas[i];
+        auto beta = betas[i];
+        auto sigma = sigmas[i];
 
         std::stringstream o_coord;
         o_coord << std::setw(w1) << i;
-        o_coord << std::setw(w2) << std::setprecision(6) << std::fixed << r;
-        o_coord << std::string(w4 - 1, ' ') << ':';
-        o_coord << std::setw(w3) << std::setprecision(6) << std::fixed << x;
-        o_coord << std::setw(w3) << std::setprecision(6) << std::fixed << y;
-        o_coord << std::setw(w3) << std::setprecision(6) << std::fixed << z;
+        o_coord << std::setw(w2) << std::setprecision(4) << std::fixed << r_0;
+        o_coord << std::setw(w3) << std::setprecision(2) << std::fixed << alpha;
+        o_coord << std::setw(w3) << std::setprecision(2) << std::fixed << beta;
+        o_coord << std::setw(w3) << std::setprecision(2) << std::fixed << sigma << "  ->";
+        o_coord << std::setw(w5-4) << std::setprecision(4) << std::fixed << r;
+        o_coord << std::setw(w4) << std::setprecision(6) << std::fixed << x;
+        o_coord << std::setw(w4) << std::setprecision(6) << std::fixed << y;
+        o_coord << std::setw(w4) << std::setprecision(6) << std::fixed << z;
         println(0, o_coord.str());
     }
     mrcpp::print::separator(0, '=', 2);

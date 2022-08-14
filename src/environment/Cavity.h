@@ -25,42 +25,70 @@
 
 #pragma once
 
+#include <functional>
+#include <vector>
+
 #include <MRCPP/MWFunctions>
+#include <MRCPP/mrcpp_declarations.h>
 
 namespace mrchem {
 /** @class Cavity
  * @brief Interlocking spheres cavity centered on the nuclei of the molecule.
  * The Cavity class represents the following function \cite Fosso-Tande2013
+ *
  * \f[
  *    C(\mathbf{r})   = 1 - \prod^N_{i=1} (1-C_i(\mathbf{r})) \\
  *    C_i(\mathbf{r}) = 1 - \frac{1}{2}\left( 1 + \textrm{erf}\left(\frac{|\mathbf{r} - \mathbf{r}_i| -
- *    R_i}{\sigma}\right) \right)
+ *    R_i}{\sigma_i}\right) \right)
  * \f]
+ *
  * where \f$\mathbf{r}\f$ is the coordinate of a point in 3D space, \f$\mathbf{r}_i\f$
- * is the coordinate of the i-th nucleus, \f$R_i\f$ is the radius of the i-th sphere, and \f$\sigma\f$ is the #width of
+ * is the coordinate of the i-th nucleus, \f$R_i\f$ is the radius of the i-th sphere, and \f$\sigma_i\f$ is the width of
  * the transition between the inside and outside of the cavity. The transition has a sigmoidal shape, such that the
  * boundary is a smooth function instead of sharp boundaries often seen in other continuum models. This function is
  * \f$1\f$ inside and \f$0\f$ outside the cavity.
+ *
+ * The radii are computed as:
+ *
+ * \f[
+ *   R_{i} =  \alpha_{i} R_{0,i} + \beta_{i}\sigma_{i}
+ * \f]
+ *
+ * where:
+ *
+ *  - \f$R_{0,i}\f$ is the atomic radius. By default, the van der Waals radius.
+ *  - \f$\alpha_{i}\f$ is a scaling factor. By default, 1.1
+ *  - \f$\beta_{i}\f$ is a width scaling factor. By default, 0.5
+ *  - \f$\sigma_{i}\f$ is the width. By default, 0.2
  */
 
 class Cavity final : public mrcpp::RepresentableFunction<3> {
 public:
-    Cavity(std::vector<mrcpp::Coord<3>> &centers, std::vector<double> &radii, double width);
+    Cavity(const std::vector<mrcpp::Coord<3>> &coords, const std::vector<double> &R, const std::vector<double> &alphas, const std::vector<double> &betas, const std::vector<double> &sigmas);
+    Cavity(const std::vector<mrcpp::Coord<3>> &coords, const std::vector<double> &R, double sigma);
     double evalf(const mrcpp::Coord<3> &r) const override;
     auto getGradVector() const { return this->gradvector; }
-    std::vector<mrcpp::Coord<3>> getCoordinates() const { return centers; } //!< Returns #centers.
-    std::vector<double> getRadii() const { return radii; }                  //!< Returns #radii.
-    double getWidth() { return width; }                                     //!< Returns #width.
-    friend class Permittivity;
+    std::vector<mrcpp::Coord<3>> getCoordinates() const { return this->centers; } //!< Returns #centers.
+    std::vector<double> getOriginalRadii() const { return this->radii_0; }        //!< Returns #radii_0.
+    std::vector<double> getRadii() const { return this->radii; }                  //!< Returns #radii.
+    std::vector<double> getRadiiScalings() const { return this->alphas; }         //!< Returns #alphas.
+    std::vector<double> getWidths() const { return this->sigmas; }                //!< Returns #sigmas.
+    std::vector<double> getWidthScalings() const { return this->betas; }          //!< Returns #betas.
 
 protected:
-    double width;                                                            //!< width of the Cavity boundary.
-    std::vector<double> radii;                                               //!< Contains the radius of each sphere in #Center.
+    std::vector<double> radii_0;                                             //!< Contains the *unscaled* radius of each sphere in #Center.
+    std::vector<double> alphas;                                              //!< The radius scaling factor for each sphere.
+    std::vector<double> betas;                                               //!< The width scaling factor for each sphere.
+    std::vector<double> sigmas;                                              //!< The width for each sphere.
+    std::vector<double> radii;                                               //!< Contains the radius of each sphere in #Center. \f$R_i = \alpha_{i} R_{0,i} + \beta_{i}\sigma_{i}\f$
     std::vector<mrcpp::Coord<3>> centers;                                    //!< Contains each of the spheres centered on the nuclei of the Molecule.
     std::vector<std::function<double(const mrcpp::Coord<3> &r)>> gradvector; //< Analytical derivatives of the Cavity.
 
-    void setGradVector();
     bool isVisibleAtScale(int scale, int nQuadPts) const override;
     bool isZeroOnInterval(const double *a, const double *b) const override;
 };
+
+namespace detail {
+auto gradCavity(const mrcpp::Coord<3> &r, int index, const std::vector<mrcpp::Coord<3>> &centers, const std::vector<double> &radii, const std::vector<double> &width) -> double;
+} // namespace detail
 } // namespace mrchem
