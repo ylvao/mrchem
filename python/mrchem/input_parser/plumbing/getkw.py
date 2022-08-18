@@ -131,4 +131,3 @@ def parse_string_to_dict(lexer: "pp.ParserElement", s: str) -> JSONDict:
     if flatten_list(tokens_list) != flatten_list(dict_to_list(tokens_dict)):
         raise ParselglossyError("A keyword is repeated. Please check your input.")
     return tokens_dict
-
