@@ -29,42 +29,51 @@ from json import dump
 from .input_parser.plumbing import pyparsing as pp
 
 global pc
+global world_unit
+
+def make_cube_vector(file_key, file_val, vector_dir):
+    data_type = "_".join(file_key.split("_")[2:])
+    path_list = sort_paths(file_val)
+    cube_list = []
+    
+    if not os.path.isdir(vector_dir):
+        os.mkdir(vector_dir)
+
+    if len(path_list) != 0:
+        for path in path_list:
+            cube_list.append(parse_cube_file(path, world_unit))
+    
+    cube_list = sorted(cube_list, key=lambda d: d["FUNC_IDS"])
+    with open(f"{vector_dir}CUBE_{data_type}_vector.json", "w") as fd:
+        dump(cube_list, fd, indent=2)
 
 
 def write_cube_dict(user_dict):
     file_dict = user_dict["Files"]
     world_unit = user_dict["world_unit"]
     pc = user_dict["Constants"]
-
-    all_path_list = []
-    all_path_list.append(sort_paths(file_dict["guess_cube_p"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_a"]))
-    all_path_list.append(sort_paths(file_dict["guess_cube_b"]))
-    all_cube_list = []
-    for path_list in all_path_list:
-        cube_list = []
-        if len(path_list) != 0:
-            for path in path_list:
-                cube_list.append(parse_cube_file(path, world_unit))
-        all_cube_list.append(cube_list)
-
     vector_dir = file_dict["cube_vectors"]
+    
+    for key, val in file_dict.items():
+        if ("cube" in key):
+            make_cube_vector(key, val, vector_dir)
 
-    for index, x_list in enumerate(all_cube_list):
-        sorted_list = sorted(x_list, key=lambda d: d["ORB_IDS"])
-        all_cube_list[index] = sorted_list
 
-    if not os.path.isdir(vector_dir):
-        os.mkdir(vector_dir)
+def sort_paths(path):
+    path_l = []
+    dir_path = "/".join(path.split("/")[:-1])
+    directory = os.fsencode(dir_path)
+    if os.path.isdir(dir_path):
+        for file in os.listdir(directory):
+            filename = os.fsdecode(file)
+            if (filename.startswith(path.split("/")[-1])) and (
+                filename.endswith(".cube")
+            ):
+                path_l.append(dir_path + "/" + filename)
+    return path_l
 
-    with open(f"{vector_dir}CUBE_p_vector.json", "w") as fd:
-        dump(all_cube_list[0], fd, indent=2)
+# TODO do a sanity check on the naming of the files
 
-    with open(f"{vector_dir}CUBE_a_vector.json", "w") as fd:
-        dump(all_cube_list[1], fd, indent=2)
-
-    with open(f"{vector_dir}CUBE_b_vector.json", "w") as fd:
-        dump(all_cube_list[2], fd, indent=2)
 
 
 def sort_paths(path):
