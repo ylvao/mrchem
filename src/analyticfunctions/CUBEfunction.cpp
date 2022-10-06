@@ -55,8 +55,8 @@ CUBEfunction::CUBEfunction(const int N_atoms,
         , atom_charges(atom_charges)
         , atom_coords(atom_coords) {
     Eigen::Map<const Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> voxel_axes(&Voxel_axes[0][0]);
-    Eigen::Matrix3d basis = voxel_axes.transpose();
-    inv_basis = basis.inverse();
+    inv_basis = voxel_axes.transpose().inverse();
+    
 }
 
 // Do a quadrature of the file

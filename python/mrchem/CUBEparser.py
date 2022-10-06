@@ -23,70 +23,54 @@
 # <https://mrchem.readthedocs.io/>
 #
 
-import os
-from json import dump
+from json import dumps
+from pathlib import Path
 
 from .input_parser.plumbing import pyparsing as pp
 
 global pc
 global world_unit
 
-def make_cube_vector(file_key, file_val, vector_dir):
-    data_type = "_".join(file_key.split("_")[2:])
-    path_list = sort_paths(file_val)
-    cube_list = []
-    
-    if not os.path.isdir(vector_dir):
-        os.mkdir(vector_dir)
 
-    if len(path_list) != 0:
-        for path in path_list:
-            cube_list.append(parse_cube_file(path, world_unit))
-    
-    cube_list = sorted(cube_list, key=lambda d: d["FUNC_IDS"])
-    with open(f"{vector_dir}CUBE_{data_type}_vector.json", "w") as fd:
-        dump(cube_list, fd, indent=2)
-
-
-def write_cube_dict(user_dict):
+def write_cube_vectors(user_dict):
+    global pc
+    global world_unit
     file_dict = user_dict["Files"]
     world_unit = user_dict["world_unit"]
     pc = user_dict["Constants"]
-    vector_dir = file_dict["cube_vectors"]
+    vector_dir = Path(file_dict["cube_vectors"])
     
     for key, val in file_dict.items():
         if ("cube" in key):
-            make_cube_vector(key, val, vector_dir)
+            data_type = "_".join(key.split("_")[2:])
+            path_list = sort_paths(Path(val))
+            cube_list = []
+            
+            if not vector_dir.is_dir():
+                vector_dir.mkdir()
+
+            if len(path_list) != 0:
+                for path in path_list:
+                    cube_list.append(parse_cube_file(path, world_unit))
+            
+            for d in cube_list:
+                print(d.keys())
+            
+            cube_list = sorted(cube_list, key=lambda d: d["ORB_IDS"])   # This might not work with multiple functions per cubefile
+            vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
+            with vector_file.open(mode='w') as fd:
+                fd.write(dumps(cube_list, indent=2))
+
 
 
 def sort_paths(path):
-    path_l = []
-    dir_path = "/".join(path.split("/")[:-1])
-    directory = os.fsencode(dir_path)
-    if os.path.isdir(dir_path):
-        for file in os.listdir(directory):
-            filename = os.fsdecode(file)
-            if (filename.startswith(path.split("/")[-1])) and (
-                filename.endswith(".cube")
-            ):
-                path_l.append(dir_path + "/" + filename)
-    return path_l
-
-# TODO do a sanity check on the naming of the files
-
-
-
-def sort_paths(path):
-    path_l = []
-    dir_path = "/".join(path.split("/")[:-1])
-    directory = os.fsencode(dir_path)
-    if os.path.isdir(dir_path):
-        for file in os.listdir(directory):
-            filename = os.fsdecode(file)
-            if (filename.startswith(path.split("/")[-1])) and (
-                filename.endswith(".cube")
-            ):
-                path_l.append(dir_path + "/" + filename)
+    directory = path.parent
+    prefix = path.name
+    
+    if directory.is_dir():
+        path_l = sorted([ file.resolve() for file in directory.glob(f"{prefix}*.cube")])
+    else:
+        path_l = []
     return path_l
 
 
@@ -187,7 +171,6 @@ def parse_cube_file(cube_path, world_unit):
     # manually extracting voxel values
     if "DSET_IDS" not in parsed_cube.keys():
         parsed_cube["DSET_IDS"] = []
-
     cube_s = cube_str.split("\n")
 
     all_data_list = []
@@ -196,12 +179,17 @@ def parse_cube_file(cube_path, world_unit):
     for line in cube_s[(4 + abs(parsed_cube["NATOMS"])) :]:
         all_data_list.extend(line.split())
 
-    if len(parsed_cube["DSET_IDS"]) != 0:
-        voxel_list = all_data_list[
+    voxel_list = all_data_list
+    N_vals = parsed_cube["NVAL"][0]
+
+    if isinstance(parsed_cube["DSET_IDS"], list):
+        if len(parsed_cube["DSET_IDS"]) != 0:
+            voxel_list = all_data_list[
             (len(parsed_cube["DSET_IDS"]) + 1) :
-        ]  # remove ORB_IDS from the all_data_list
-    else:
-        voxel_list = all_data_list
+            ]  # remove ORB_IDS from the all_data_list
+            # Set the amount of values depending on if the DSET_IDs were present or not
+            N_vals = len(parsed_cube["DSET_IDS"])
+
 
     parsed_cube["DATA"] = [float(value) for value in voxel_list]
 
@@ -215,15 +203,13 @@ def parse_cube_file(cube_path, world_unit):
         else [p * pc["angstrom2bohrs"] for p in parsed_cube["ORIGIN"]]
     )
 
-    # Set the amount of values depending on if the DSET_IDs were present or not
-    if len(parsed_cube["DSET_IDS"]) != 0:
-        N_vals = len(parsed_cube["DSET_IDS"])
-    else:
-        N_vals = parsed_cube["NVAL"][0]
+    
+    
+        
 
     # files are given as [phi,rho,x,y]_[p,a,b]_[rsp,scf]_idx_#_[re,im].cube
     # TODO test that the file name makes sense
-    path_ids = cube_path.split("/")[-1].split("_")[4]
+    path_ids = cube_path.name.split("_")[4]
     if "-" in path_ids:
         from_to = path_ids.split("-")
         orb_ids = list(
@@ -269,15 +255,19 @@ def parse_cube_file(cube_path, world_unit):
 
     # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
     CUBE_vector = []
+    parsed_cube_data = parsed_cube["DATA"]
+    N_steps_x = N_steps[0]
+    N_steps_y = N_steps[1]
+    N_steps_z = N_steps[2]
     for ID in range(N_vals):
         single_function = []
-        for i in range(N_steps[0]):
-            for j in range(N_steps[1]):
-                for k in range(N_steps[2]):
+        for i in range(N_steps_x):
+            for j in range(N_steps_y):
+                for k in range(N_steps_z):
                     single_function.append(
-                        parsed_cube["DATA"][
-                            i * N_steps[1] * N_steps[2] * N_vals
-                            + j * N_steps[2] * N_vals
+                        parsed_cube_data[
+                            i * N_steps_y * N_steps_z * N_vals
+                            + j * N_steps_z * N_vals
                             + k * N_vals
                             + ID
                         ]
@@ -285,7 +275,7 @@ def parse_cube_file(cube_path, world_unit):
         CUBE_vector.append(single_function)
 
     cube_dict = {
-        "CUBE_file": cube_path,
+        "CUBE_file": cube_path.as_posix(),
         "Header": {
             "N_atoms": N_atoms,
             "origin": origin,
