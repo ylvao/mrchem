@@ -43,7 +43,7 @@ def write_cube_vectors(user_dict):
     for key, val in file_dict.items():
         if ("cube" in key):
             data_type = "_".join(key.split("_")[2:])
-            path_list = sort_paths(Path(val))
+            path_list = get_paths(Path(val))
             cube_list = []
             
             if not vector_dir.is_dir():
@@ -53,9 +53,6 @@ def write_cube_vectors(user_dict):
                 for path in path_list:
                     cube_list.append(parse_cube_file(path, world_unit))
             
-            for d in cube_list:
-                print(d.keys())
-            
             cube_list = sorted(cube_list, key=lambda d: d["ORB_IDS"])   # This might not work with multiple functions per cubefile
             vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
             with vector_file.open(mode='w') as fd:
@@ -63,12 +60,12 @@ def write_cube_vectors(user_dict):
 
 
 
-def sort_paths(path):
+def get_paths(path):
     directory = path.parent
     prefix = path.name
     
     if directory.is_dir():
-        path_l = sorted([ file.resolve() for file in directory.glob(f"{prefix}*.cube")])
+        path_l = [ file.resolve() for file in directory.glob(f"{prefix}*.cube")]
     else:
         path_l = []
     return path_l
@@ -135,7 +132,8 @@ def parse_cube_file(cube_path, world_unit):
     # the parse action flattens the list
     after_t = pp.Optional(pp.countedArray(pp.pyparsing_common.integer))(
         "DSET_IDS"
-    ).setParseAction(lambda t: t[0] if len(t) != 0 else t)
+    ).setParseAction(lambda t:  t)     
+    # this gets the whole array of DSET_IDS which give me the orbital ids and the number of orbitals per cubefile
 
     # The molecular geometry is a variable-length list of `geom_field_t` tokens.
     # We use a modified implementation of `pyparsing`'s `countedArray` to define
@@ -161,18 +159,22 @@ def parse_cube_file(cube_path, world_unit):
     cube_t = preamble_t(before_t, after_t)
 
     # parse the whole file and extract both all the values and the header
-    with open(cube_path, "r") as cube_file:
+    with cube_path.open(mode="r") as cube_file:
         # we skip the first two lines as they are only comments and put the rest of the file in a single string
         cube_str = "".join(
             cube_file.readlines()[2:]
         )  # The \n are already included in the string, don't need to double include them
 
     parsed_cube = cube_t.parseString(cube_str).asDict()
+
     # manually extracting voxel values
+
     if "DSET_IDS" not in parsed_cube.keys():
         parsed_cube["DSET_IDS"] = []
+    
+    
     cube_s = cube_str.split("\n")
-
+    
     all_data_list = []
 
     # parse through a list of lines where the header has been removed, but the ORB_IDS remain, and append each value in a new all_data_list.
@@ -182,13 +184,12 @@ def parse_cube_file(cube_path, world_unit):
     voxel_list = all_data_list
     N_vals = parsed_cube["NVAL"][0]
 
-    if isinstance(parsed_cube["DSET_IDS"], list):
-        if len(parsed_cube["DSET_IDS"]) != 0:
-            voxel_list = all_data_list[
-            (len(parsed_cube["DSET_IDS"]) + 1) :
-            ]  # remove ORB_IDS from the all_data_list
-            # Set the amount of values depending on if the DSET_IDs were present or not
-            N_vals = len(parsed_cube["DSET_IDS"])
+    if len(parsed_cube["DSET_IDS"]) != 0:
+        voxel_list = all_data_list[
+        (len(parsed_cube["DSET_IDS"]) + 1) :
+        ]  # remove ORB_IDS from the all_data_list
+        # Set the amount of values depending on if the DSET_IDs were present or not
+        N_vals = len(parsed_cube["DSET_IDS"])
 
 
     parsed_cube["DATA"] = [float(value) for value in voxel_list]
@@ -253,7 +254,9 @@ def parse_cube_file(cube_path, world_unit):
         for atom in parsed_cube["GEOM"]
     ]
 
-    # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the X, Y and Z voxel axes directions respectively.
+    # construct the CUBE vector. Indexing is CUBE_vector[MO_ID][i*N_vals[1]*
+    # N_vals[2] + j*N_vals[2] + k] where i, j and k correspond to steps in the
+    # X, Y and Z voxel axes directions respectively.
     CUBE_vector = []
     parsed_cube_data = parsed_cube["DATA"]
     N_steps_x = N_steps[0]
