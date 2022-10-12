@@ -26,15 +26,11 @@
 from json import dumps
 from pathlib import Path
 
-from .input_parser.plumbing import pyparsing as pp
-
-global pc
-global world_unit
+from input_parser.plumbing import pyparsing as pp
 
 
 def write_cube_vectors(user_dict):
-    global pc
-    global world_unit
+    
     file_dict = user_dict["Files"]
     world_unit = user_dict["world_unit"]
     pc = user_dict["Constants"]
@@ -51,7 +47,7 @@ def write_cube_vectors(user_dict):
 
             if len(path_list) != 0:
                 for path in path_list:
-                    cube_list.append(parse_cube_file(path, world_unit))
+                    cube_list.append(parse_cube_file(path, world_unit, pc))
             
             cube_list = sorted(cube_list, key=lambda d: d["ORB_IDS"])   # This might not work with multiple functions per cubefile
             vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
@@ -74,7 +70,7 @@ def get_paths(path):
 # TODO do a sanity check on the naming of the files
 
 
-def parse_cube_file(cube_path, world_unit):
+def parse_cube_file(cube_path, world_unit, pc):
 
     """
     Pyparsing CUBE file
