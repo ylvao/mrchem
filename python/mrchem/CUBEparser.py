@@ -30,38 +30,39 @@ from .input_parser.plumbing import pyparsing as pp
 
 
 def write_cube_vectors(user_dict):
-    
+
     file_dict = user_dict["Files"]
     world_unit = user_dict["world_unit"]
     pc = user_dict["Constants"]
     vector_dir = Path(file_dict["cube_vectors"])
-    
+
     for key, val in file_dict.items():
-        if ("cube" in key):
+        if "cube" in key:
             data_type = "_".join(key.split("_")[2:])
             path_list = get_paths(Path(val))
             cube_list = []
-            
+
             if not vector_dir.is_dir():
                 vector_dir.mkdir()
 
             if len(path_list) != 0:
                 for path in path_list:
                     cube_list.append(parse_cube_file(path, world_unit, pc))
-            
-            cube_list = sorted(cube_list, key=lambda d: d["ORB_IDS"])   # This might not work with multiple functions per cubefile
-            vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
-            with vector_file.open(mode='w') as fd:
-                fd.write(dumps(cube_list, indent=2))
 
+            cube_list = sorted(
+                cube_list, key=lambda d: d["ORB_IDS"]
+            )  # This might not work with multiple functions per cubefile
+            vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
+            with vector_file.open(mode="w") as fd:
+                fd.write(dumps(cube_list, indent=2))
 
 
 def get_paths(path):
     directory = path.parent
     prefix = path.name
-    
+
     if directory.is_dir():
-        path_l = [ file.resolve() for file in directory.glob(f"{prefix}*.cube")]
+        path_l = [file.resolve() for file in directory.glob(f"{prefix}*.cube")]
     else:
         path_l = []
     return path_l
@@ -128,7 +129,7 @@ def parse_cube_file(cube_path, world_unit, pc):
     # the parse action flattens the list
     after_t = pp.Optional(pp.countedArray(pp.pyparsing_common.integer))(
         "DSET_IDS"
-    ).setParseAction(lambda t:  t)     
+    ).setParseAction(lambda t: t)
     # this gets the whole array of DSET_IDS which give me the orbital ids and the number of orbitals per cubefile
 
     # The molecular geometry is a variable-length list of `geom_field_t` tokens.
@@ -167,10 +168,9 @@ def parse_cube_file(cube_path, world_unit, pc):
 
     if "DSET_IDS" not in parsed_cube.keys():
         parsed_cube["DSET_IDS"] = []
-    
-    
+
     cube_s = cube_str.split("\n")
-    
+
     all_data_list = []
 
     # parse through a list of lines where the header has been removed, but the ORB_IDS remain, and append each value in a new all_data_list.
@@ -182,11 +182,10 @@ def parse_cube_file(cube_path, world_unit, pc):
 
     if len(parsed_cube["DSET_IDS"]) != 0:
         voxel_list = all_data_list[
-        (len(parsed_cube["DSET_IDS"]) + 1) :
+            (len(parsed_cube["DSET_IDS"]) + 1) :
         ]  # remove ORB_IDS from the all_data_list
         # Set the amount of values depending on if the DSET_IDs were present or not
         N_vals = len(parsed_cube["DSET_IDS"])
-
 
     parsed_cube["DATA"] = [float(value) for value in voxel_list]
 
@@ -199,10 +198,6 @@ def parse_cube_file(cube_path, world_unit, pc):
         if (world_unit == "bohr")
         else [p * pc["angstrom2bohrs"] for p in parsed_cube["ORIGIN"]]
     )
-
-    
-    
-        
 
     # files are given as [phi,rho,x,y]_[p,a,b]_[rsp,scf]_idx_#_[re,im].cube
     # TODO test that the file name makes sense
