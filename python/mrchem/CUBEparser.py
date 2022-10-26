@@ -81,7 +81,7 @@ def write_cube_vectors(user_dict):
 
 def get_paths(path, rsp=False, direction=None):
     directory = path.parent
-    prefix = path.name if rsp else path.name + "_rsp_" + str(direction) 
+    prefix = path.name if (not rsp) else path.name + "_rsp_" + str(direction) 
 
     if directory.is_dir():
         path_l = [file.resolve() for file in directory.glob(f"{prefix}*.cube")]
