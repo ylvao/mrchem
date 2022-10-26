@@ -519,6 +519,42 @@ sections:
         docstring: |
           File name for beta orbitals, used with ``cube`` guess.
           Expected path is ``<path_orbitals>/phi_b_scf_idx_<0...Nb>_<re/im>.cube
+      - name: guess_cube_x_p
+        type: str
+        default: initial_guess/x_p
+        docstring: |
+          File name for paired response orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/x_p_rsp_<0,1,2>_<0...Np>_<re/im>.cube
+      - name: guess_cube_x_a
+        type: str
+        default: initial_guess/x_a
+        docstring: |
+          File name for alpha response orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/x_a_rsp_<0,1,2>_<0...Na>_<re/im>.cube
+      - name: guess_cube_x_b
+        type: str
+        default: initial_guess/x_b
+        docstring: |
+          File name for beta response orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/x_b_rsp_<0,1,2>_<0...Nb>_<re/im>.cube
+      - name: guess_cube_y_p
+        type: str
+        default: initial_guess/y_p
+        docstring: |
+          File name for paired response orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/y_p_rsp_<0,1,2>_<0...Np>_<re/im>.cube
+      - name: guess_cube_y_a
+        type: str
+        default: initial_guess/y_a
+        docstring: |
+          File name for alpha response orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/y_a_rsp_<0,1,2>_<0...Na>_<re/im>.cube
+      - name: guess_cube_y_b
+        type: str
+        default: initial_guess/y_b
+        docstring: |
+          File name for beta response orbitals, used with ``cube`` guess.
+          Expected path is ``<path_orbitals>/y_b_rsp_<0,1,2>_<0...Nb>_<re/im>.cube
       - name: cube_vectors
         type: str
         default: cube_vectors/
@@ -703,7 +739,7 @@ sections:
         type: str
         default: none
         predicates:
-          - value.lower() in ['none', 'chk', 'mw']
+          - value.lower() in ['none', 'chk', 'mw', 'cube']
         docstring: |
           Type of initial guess for response.
           ``none`` will start from a zero guess for the response functions.
@@ -905,40 +941,4 @@ sections:
         default: 1.8897261246257702
         type: float
         docstring: '| Conversion factor for Cartesian coordinates from Angstrom to
-          Bohr  (unit: Å^-1). Affected code: Parsing of input coordinates, printed
-          coordinates'
-      - name: hartree2kjmol
-        default: 2625.4996394798254
-        type: float
-        docstring: '| Conversion factor from Hartree to kJ/mol  (unit: kJ mol^-1).
-          Affected code: Printed value of energies.'
-      - name: hartree2kcalmol
-        default: 627.5094740630558
-        type: float
-        docstring: '| Conversion factor from Hartree to kcal/mol  (unit: kcal mol^-1).
-          Affected code: Printed value of energies.'
-      - name: hartree2ev
-        default: 27.211386245988
-        type: float
-        docstring: '| Conversion factor from Hartree to eV  (unit: ev). Affected code:
-          Printed value of energies.'
-      - name: hartree2wavenumbers
-        default: 219474.6313632
-        type: float
-        docstring: '| Conversion factor from Hartree to wavenumbers (unit: cm^-1).
-          Affected code: Printed value of frequencies.'
-      - name: fine_structure_constant
-        default: 0.0072973525693
-        type: float
-        docstring: '| Fine-structure constant in atomic units (unit: au). Affected
-          code: Certain magnetic interaction operators.'
-      - name: electron_g_factor
-        default: -2.00231930436256
-        type: float
-        docstring: '| Electron g factor in atomic units (unit: au). Affected code:
-          Certain magnetic interaction operators.'
-      - name: dipmom_au2debye
-        default: 2.5417464739297717
-        type: float
-        docstring: '| Conversion factor for dipoles from atomic units to Debye (unit:
-          ?). Affected code: Printed value of dipole moments.'
+          Bohr  (unit: 
