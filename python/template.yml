@@ -922,7 +922,6 @@ sections:
             docstring: |
               Formulation of the Permittivity function. Currently only the
               exponential is used.
-
   - name: Constants
     docstring: Physical and mathematical constants used by MRChem
     keywords:
@@ -941,4 +940,40 @@ sections:
         default: 1.8897261246257702
         type: float
         docstring: '| Conversion factor for Cartesian coordinates from Angstrom to
-          Bohr  (unit: 
+          Bohr  (unit: Å^-1). Affected code: Parsing of input coordinates, printed
+          coordinates'
+      - name: hartree2kjmol
+        default: 2625.4996394798254
+        type: float
+        docstring: '| Conversion factor from Hartree to kJ/mol  (unit: kJ mol^-1).
+          Affected code: Printed value of energies.'
+      - name: hartree2kcalmol
+        default: 627.5094740630558
+        type: float
+        docstring: '| Conversion factor from Hartree to kcal/mol  (unit: kcal mol^-1).
+          Affected code: Printed value of energies.'
+      - name: hartree2ev
+        default: 27.211386245988
+        type: float
+        docstring: '| Conversion factor from Hartree to eV  (unit: ev). Affected code:
+          Printed value of energies.'
+      - name: hartree2wavenumbers
+        default: 219474.6313632
+        type: float
+        docstring: '| Conversion factor from Hartree to wavenumbers (unit: cm^-1).
+          Affected code: Printed value of frequencies.'
+      - name: fine_structure_constant
+        default: 0.0072973525693
+        type: float
+        docstring: '| Fine-structure constant in atomic units (unit: au). Affected
+          code: Certain magnetic interaction operators.'
+      - name: electron_g_factor
+        default: -2.00231930436256
+        type: float
+        docstring: '| Electron g factor in atomic units (unit: au). Affected code:
+          Certain magnetic interaction operators.'
+      - name: dipmom_au2debye
+        default: 2.5417464739297717
+        type: float
+        docstring: '| Conversion factor for dipoles from atomic units to Debye (unit:
+          ?). Affected code: Printed value of dipole moments.'

@@ -566,6 +566,42 @@ User input reference
   
     **Default** ``initial_guess/phi_b``
   
+   :guess_cube_x_p: File name for paired response orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/x_p_rsp_<0,1,2>_<0...Np>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/x_p``
+  
+   :guess_cube_x_a: File name for alpha response orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/x_a_rsp_<0,1,2>_<0...Na>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/x_a``
+  
+   :guess_cube_x_b: File name for beta response orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/x_b_rsp_<0,1,2>_<0...Nb>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/x_b``
+  
+   :guess_cube_y_p: File name for paired response orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/y_p_rsp_<0,1,2>_<0...Np>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/y_p``
+  
+   :guess_cube_y_a: File name for alpha response orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/y_a_rsp_<0,1,2>_<0...Na>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/y_a``
+  
+   :guess_cube_y_b: File name for beta response orbitals, used with ``cube`` guess. Expected path is ``<path_orbitals>/y_b_rsp_<0,1,2>_<0...Nb>_<re/im>.cube 
+  
+    **Type** ``str``
+  
+    **Default** ``initial_guess/y_b``
+  
    :cube_vectors: Directory where cube vectors are stored for mrchem calculation. 
   
     **Type** ``str``
@@ -642,7 +678,7 @@ User input reference
   
     **Type** ``str``
   
-    **Default** ``sad_dz``
+    **Default** ``sad_gto``
   
     **Predicates**
       - ``value.lower() in ['mw', 'chk', 'gto', 'core_sz', 'core_dz', 'core_tz', 'core_qz', 'sad_sz', 'sad_dz', 'sad_tz', 'sad_qz', 'sad_gto', 'cube']``
@@ -738,7 +774,7 @@ User input reference
     **Default** ``none``
   
     **Predicates**
-      - ``value.lower() in ['none', 'chk', 'mw']``
+      - ``value.lower() in ['none', 'chk', 'mw', 'cube']``
   
    :write_checkpoint: Write perturbed orbitals to disk in each iteration, file name ``<path_checkpoint>/<X/Y>_rsp_<direction>_idx_<0..N>``. Can be used as ``chk`` initial guess in subsequent calculations. 
   
