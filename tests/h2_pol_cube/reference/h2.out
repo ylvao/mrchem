@@ -12,9 +12,9 @@
 ***         VERSION            1.2.0-alpha                              ***
 ***                                                                     ***
 ***         Git branch         cube_guess_rsp                           ***
-***         Git commit hash    60e30ef5e7e906bd2411-dirty               ***
+***         Git commit hash    5039ab9ab990e18d6ce5                     ***
 ***         Git commit author  ggerez                                   ***
-***         Git commit date    Wed Oct 26 21:46:01 2022 +0200           ***
+***         Git commit date    Wed Oct 26 23:27:15 2022 +0200           ***
 ***                                                                     ***
 ***         Contact: luca.frediani@uit.no                               ***
 ***                                                                     ***
@@ -181,7 +181,6 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ***************************************************************************
                                                                            
                                                                            
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 862: guess type cube
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Calculation             : Compute initial orbitals
  Method                  : Project cube file molecular orbitals
@@ -191,7 +190,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 862: gue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 864: 1
 ===========================================================================
                             Molecular Orbitals
 ---------------------------------------------------------------------------
@@ -205,8 +203,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 864: 1
 ===========================================================================
 
 
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: run(), line 767: false
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 862: guess type cube
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Calculation             : Compute initial orbitals
  Method                  : Project cube file molecular orbitals
@@ -216,7 +212,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 862: gue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 864: 1
 ===========================================================================
                             Molecular Orbitals
 ---------------------------------------------------------------------------
@@ -230,8 +225,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 864: 1
 ===========================================================================
 
 
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: run(), line 767: false
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 862: guess type cube
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Calculation             : Compute initial orbitals
  Method                  : Project cube file molecular orbitals
@@ -241,7 +234,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 862: gue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 864: 1
 ===========================================================================
                             Molecular Orbitals
 ---------------------------------------------------------------------------
@@ -255,7 +247,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: guess_orbitals(), line 864: 1
 ===========================================================================
 
 
-Info: /Users/gsa017/repos/mrchem/src/driver.cpp: run(), line 767: false
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  Calculation             : Optimize linear response orbitals
  Frequency               : Static field
@@ -273,7 +264,6 @@ Info: /Users/gsa017/repos/mrchem/src/driver.cpp: run(), line 767: false
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Info: /Users/gsa017/repos/mrchem/src/scf_solver/LinearResponseSolver.cpp: optimize(), line 73: (-1.717327e+00,0.000000e+00)
 ===========================================================================
  Iter           MO residual       Symmetric property                Update
 ---------------------------------------------------------------------------
@@ -380,7 +370,7 @@ Info: /Users/gsa017/repos/mrchem/src/scf_solver/LinearResponseSolver.cpp: optimi
 ***                                                                     ***
 ***                            Exiting MRChem                           ***
 ***                                                                     ***
-***                       Wall time :  0h  0m 30s                       ***
+***                       Wall time :  0h  0m 44s                       ***
 ***                                                                     ***
 ***************************************************************************
                                                                            
