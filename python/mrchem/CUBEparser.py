@@ -29,8 +29,7 @@ from pathlib import Path
 from .input_parser.plumbing import pyparsing as pp
 
 
-def write_cube_vectors(user_dict):
-
+def parse_files(user_dict):
     file_dict = user_dict["Files"]
     world_unit = user_dict["world_unit"]
     pc = user_dict["Constants"]
@@ -42,41 +41,30 @@ def write_cube_vectors(user_dict):
                 for i in range(3):
                     data_type = "_".join(key.split("_")[2:]) + f"_{str(i)}"
                     path_list = get_paths(Path(val), rsp=True, direction=i)
-                    cube_list = []
-
-                    if not vector_dir.is_dir():
-                        vector_dir.mkdir()
-
-                    if len(path_list) != 0:
-                        for path in path_list:
-                            cube_list.append(parse_cube_file(path, world_unit, pc))
-
-                    cube_list = sorted(
-                        cube_list, key=lambda d: d["ORB_IDS"]
-                    )  # This might not work with multiple functions per cubefile
-                    vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
-                    if len(cube_list) != 0:
-                        with vector_file.open(mode="w") as fd:
-                            fd.write(dumps(cube_list, indent=2))
+                    write_cube_vectors(path_list, data_type, world_unit, pc, vector_dir)
             else:
                 data_type = "_".join(key.split("_")[2:])
                 path_list = get_paths(Path(val))
-                cube_list = []
+                write_cube_vectors(path_list, data_type, world_unit, pc, vector_dir)
 
-                if not vector_dir.is_dir():
-                    vector_dir.mkdir()
 
-                if len(path_list) != 0:
-                    for path in path_list:
-                        cube_list.append(parse_cube_file(path, world_unit, pc))
+def write_cube_vectors(path_list, data_type, world_unit, pc, vector_dir):
+    cube_list = []
 
-                cube_list = sorted(
-                    cube_list, key=lambda d: d["ORB_IDS"]
-                )  # This might not work with multiple functions per cubefile
-                vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
-                if len(cube_list) != 0:
-                    with vector_file.open(mode="w") as fd:
-                        fd.write(dumps(cube_list, indent=2))
+    if not vector_dir.is_dir():
+        vector_dir.mkdir()
+
+    if len(path_list) != 0:
+        for path in path_list:
+            cube_list.append(parse_cube_file(path, world_unit, pc))
+
+    cube_list = sorted(
+        cube_list, key=lambda d: d["ORB_IDS"]
+    )  # This might not work with multiple functions per cubefile
+    vector_file = vector_dir / f"CUBE_{data_type}_vector.json"
+    if len(cube_list) != 0:
+        with vector_file.open(mode="w") as fd:
+            fd.write(dumps(cube_list, indent=2))
 
 
 def get_paths(path, rsp=False, direction=None):
