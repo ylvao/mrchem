@@ -1,5 +1,5 @@
 {
-    "world_prec": 0.00001,
+    "world_prec": 0.001,
     "world_size": 5,
     "world_unit": "angstrom",
     "MPI": {
@@ -10,7 +10,7 @@
     },
     "WaveFunction": {
         "method": "DFT",
-        "restricted": true
+        "restricted": false
     },
     "Properties": {
         "polarizability": true
@@ -22,7 +22,8 @@
     },
     "SCF": {
         "run": false,
-        "guess_type": "sad_dz"
+        "guess_screen": -1.0,
+        "guess_type": "GTO"
     },
     "Response": {
         "kain": 3,
