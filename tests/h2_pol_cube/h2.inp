@@ -10,7 +10,7 @@
     },
     "WaveFunction": {
         "method": "DFT",
-        "restricted": false
+        "restricted": true
     },
     "Properties": {
         "polarizability": true
@@ -22,8 +22,7 @@
     },
     "SCF": {
         "run": false,
-        "guess_screen": -1.0,
-        "guess_type": "GTO"
+        "guess_type": "sad_dz"
     },
     "Response": {
         "kain": 3,

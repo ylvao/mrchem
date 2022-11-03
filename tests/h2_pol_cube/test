@@ -3,7 +3,8 @@
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[1]))
+FILE = Path(__file__).resolve()
+sys.path.append(str(FILE.parents[1]))
 
 from tester import *  # isort:skip
 
@@ -23,5 +24,25 @@ filters = {
 }
 
 ierr = run(options, input_file="h2", filters=filters, extra_args=["--json"])
+
+freq = 0.0
+
+# now compare against output from similar calculation, but starting from a zero guess
+with (FILE.parents[0] / "reference/h2_zero_guess.json").open("r") as fh:
+    zero_guess_alpha_zz = json.load(fh)["output"]["properties"]["polarizability"][f"pol-{freq:1.6f}"]["tensor"][8]
+
+with Path("h2.json").open("r") as fh:
+    cube_guess_alpha_zz = json.load(fh)["output"]["properties"]["polarizability"][f"pol-{freq:1.6f}"]["tensor"][8]
+
+# compare up to `world_prec` of calculations
+passed, message = compare_values(
+    cube_guess_alpha_zz,
+    zero_guess_alpha_zz,
+    "Cube guess vs. zero guess for alpha zz",
+    atol=1.0e-2,
+    rtol=0.0,
+)
+sys.stdout.write(f"{message}\n")
+ierr += 0 if passed else 137
 
 sys.exit(ierr)

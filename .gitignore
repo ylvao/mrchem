@@ -132,3 +132,5 @@ Pipfile.lock
 
 #Visual Studio Code
 .vscode
+
+cube_vectors/
