@@ -17,7 +17,8 @@
     },
     "Polarizability": {
         "frequency": [
-            0.0
+            0.0, 
+            0.001
         ]
     },
     "SCF": {
@@ -27,7 +28,7 @@
     "Response": {
         "kain": 3,
         "max_iter": 10,
-        "orbital_thrs": 0.01,
+        "orbital_thrs": 0.001,
         "run": [
             false,
             false,
