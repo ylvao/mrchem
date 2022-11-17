@@ -281,23 +281,45 @@ def write_rsp_calc(omega, user_dict, origin):
     }
 
     guess_str = rsp_dict["guess_type"].lower()
-    guess_type = guess_str.split("_")[0]
-    guess_prec = rsp_dict["guess_prec"]
-    if guess_type == "chk":
-        guess_prec = user_dict["world_prec"]
+    user_guess_type = guess_str.split("_")[0]
+    user_guess_prec = rsp_dict["guess_prec"]
 
-    if guess_type == "cube":
-        parse_files(user_dict)
-    
     vector_dir = file_dict["cube_vectors"]
 
     rsp_calc["components"] = []
     for dir in [0, 1, 2]:
 
         rsp_comp = {}
+
+        program_guess_type = user_guess_type
+        program_guess_prec = user_guess_prec
+
+        # check that initial guess files exist
+        if user_guess_type == "chk":
+            chk_X = Path(f"{rsp_dict['path_checkpoint']}/X_rsp_{dir:d}")
+            chk_Y = Path(f"{rsp_dict['path_checkpoint']}/Y_rsp_{dir:d}")
+            if not (chk_X.is_file() and chk_Y.is_file()):
+                print(
+                    f"No checkpoint guess found in {rsp_dict['path_checkpoint']} for direction {dir:d}, falling back to zero initial guess"
+                )
+                program_guess_type = "none"
+            else:
+                # adjust guess precision if checkpoint files are present
+                program_guess_prec = user_dict["world_prec"]
+        elif user_guess_type == "cube":
+            found = parse_files(user_dict, dir)
+            if not found:
+                print(
+                    f"No CUBE guess found in any of the 'initial_guess' sub-folders for direction {dir:d}, falling back to zero initial guess"
+                )
+                program_guess_type = "none"
+        else:
+            # do no checks on other types of guess
+            pass
+
         rsp_comp["initial_guess"] = {
-            "prec": guess_prec,
-            "type": guess_type,
+            "prec": program_guess_prec,
+            "type": program_guess_type,
             "file_chk_x": f"{rsp_dict['path_checkpoint']}/X_rsp_{dir:d}",
             "file_chk_y": f"{rsp_dict['path_checkpoint']}/Y_rsp_{dir:d}",
             "file_x_p": f"{file_dict['guess_x_p']}_rsp_{dir:d}",

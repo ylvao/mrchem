@@ -758,18 +758,18 @@ json driver::rsp::run(const json &json_rsp, Molecule &mol) {
         const auto &json_comp = json_rsp["components"][d];
         F_1.perturbation() = h_1[d];
 
+        ///////////////////////////////////////////////////////////
+        ///////////////   Setting Up Initial Guess   //////////////
+        ///////////////////////////////////////////////////////////
+
+        const auto &json_guess = json_comp["initial_guess"];
+        json_out["success"] = rsp::guess_orbitals(json_guess, mol);
+
+        ///////////////////////////////////////////////////////////
+        /////////////   Optimizing Perturbed Orbitals  ////////////
+        ///////////////////////////////////////////////////////////
+
         if (json_comp.contains("rsp_solver")) {
-            ///////////////////////////////////////////////////////////
-            ///////////////   Setting Up Initial Guess   //////////////
-            ///////////////////////////////////////////////////////////
-
-            const auto &json_guess = json_comp["initial_guess"];
-            json_out["success"] = rsp::guess_orbitals(json_guess, mol);
-
-            ///////////////////////////////////////////////////////////
-            /////////////   Optimizing Perturbed Orbitals  ////////////
-            ///////////////////////////////////////////////////////////
-
             auto kain = json_comp["rsp_solver"]["kain"];
             auto method = json_comp["rsp_solver"]["method"];
             auto max_iter = json_comp["rsp_solver"]["max_iter"];
@@ -796,19 +796,19 @@ json driver::rsp::run(const json &json_rsp, Molecule &mol) {
 
             comp_out["rsp_solver"] = solver.optimize(omega, mol, F_0, F_1);
             json_out["success"] = comp_out["rsp_solver"]["converged"];
-
-            ///////////////////////////////////////////////////////////
-            ////////////   Compute Response Properties   //////////////
-            ///////////////////////////////////////////////////////////
-
-            if (json_out["success"]) {
-                if (json_comp.contains("write_orbitals")) rsp::write_orbitals(json_comp["write_orbitals"], mol, dynamic);
-                if (json_rsp.contains("properties")) rsp::calc_properties(json_rsp["properties"], mol, d, omega);
-            }
-            mol.getOrbitalsX().clear(); // Clear orbital vector
-            mol.getOrbitalsY().clear(); // Clear orbital vector
-            json_out["components"].push_back(comp_out);
         }
+
+        ///////////////////////////////////////////////////////////
+        ////////////   Compute Response Properties   //////////////
+        ///////////////////////////////////////////////////////////
+
+        if (json_out["success"]) {
+            if (json_comp.contains("write_orbitals")) rsp::write_orbitals(json_comp["write_orbitals"], mol, dynamic);
+            if (json_rsp.contains("properties")) rsp::calc_properties(json_rsp["properties"], mol, d, omega);
+        }
+        mol.getOrbitalsX().clear(); // Clear orbital vector
+        mol.getOrbitalsY().clear(); // Clear orbital vector
+        json_out["components"].push_back(comp_out);
     }
     F_0.clear();
     mpi::barrier(mpi::comm_orb);
