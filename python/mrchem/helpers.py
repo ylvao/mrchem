@@ -23,6 +23,7 @@
 # <https://mrchem.readthedocs.io/>
 #
 
+from pathlib import Path
 from .CUBEparser import parse_files
 
 # yapf: disable
@@ -291,38 +292,39 @@ def write_rsp_calc(omega, user_dict, origin):
     vector_dir = file_dict["cube_vectors"]
 
     rsp_calc["components"] = []
-    for d in [0, 1, 2]:
+    for dir in [0, 1, 2]:
+
         rsp_comp = {}
         rsp_comp["initial_guess"] = {
             "prec": guess_prec,
             "type": guess_type,
-            "file_chk_x": rsp_dict["path_checkpoint"] + "/X_rsp_" + str(d),
-            "file_chk_y": rsp_dict["path_checkpoint"] + "/Y_rsp_" + str(d),
-            "file_x_p": file_dict["guess_x_p"] + "_rsp_" + str(d),
-            "file_x_a": file_dict["guess_x_a"] + "_rsp_" + str(d),
-            "file_x_b": file_dict["guess_x_b"] + "_rsp_" + str(d),
-            "file_y_p": file_dict["guess_y_p"] + "_rsp_" + str(d),
-            "file_y_a": file_dict["guess_y_a"] + "_rsp_" + str(d),
-            "file_y_b": file_dict["guess_y_b"] + "_rsp_" + str(d),
-            "file_CUBE_x_p": f"{vector_dir}CUBE_x_p_" + str(d) + "_vector.json",
-            "file_CUBE_x_a": f"{vector_dir}CUBE_x_a_" + str(d) + "_vector.json",
-            "file_CUBE_x_b": f"{vector_dir}CUBE_x_b_" + str(d) + "_vector.json",
-            "file_CUBE_y_p": f"{vector_dir}CUBE_y_p_" + str(d) + "_vector.json",
-            "file_CUBE_y_a": f"{vector_dir}CUBE_y_a_" + str(d) + "_vector.json",
-            "file_CUBE_y_b": f"{vector_dir}CUBE_y_b_" + str(d) + "_vector.json",
+            "file_chk_x": f"{rsp_dict['path_checkpoint']}/X_rsp_{dir:d}",
+            "file_chk_y": f"{rsp_dict['path_checkpoint']}/Y_rsp_{dir:d}",
+            "file_x_p": f"{file_dict['guess_x_p']}_rsp_{dir:d}",
+            "file_x_a": f"{file_dict['guess_x_a']}_rsp_{dir:d}",
+            "file_x_b": f"{file_dict['guess_x_b']}_rsp_{dir:d}",
+            "file_y_p": f"{file_dict['guess_y_p']}_rsp_{dir:d}",
+            "file_y_a": f"{file_dict['guess_y_a']}_rsp_{dir:d}",
+            "file_y_b": f"{file_dict['guess_y_b']}_rsp_{dir:d}",
+            "file_CUBE_x_p": f"{vector_dir}CUBE_x_p_{dir:d}_vector.json",
+            "file_CUBE_x_a": f"{vector_dir}CUBE_x_a_{dir:d}_vector.json",
+            "file_CUBE_x_b": f"{vector_dir}CUBE_x_b_{dir:d}_vector.json",
+            "file_CUBE_y_p": f"{vector_dir}CUBE_y_p_{dir:d}_vector.json",
+            "file_CUBE_y_a": f"{vector_dir}CUBE_y_a_{dir:d}_vector.json",
+            "file_CUBE_y_b": f"{vector_dir}CUBE_y_b_{dir:d}_vector.json",
         }
         if rsp_dict["write_orbitals"]:
             path_orbitals = rsp_dict["path_orbitals"]
             rsp_comp["write_orbitals"] = {
-                "file_x_p": path_orbitals + "/X_p_rsp_" + str(d),
-                "file_x_a": path_orbitals + "/X_a_rsp_" + str(d),
-                "file_x_b": path_orbitals + "/X_b_rsp_" + str(d),
-                "file_y_p": path_orbitals + "/Y_p_rsp_" + str(d),
-                "file_y_a": path_orbitals + "/Y_a_rsp_" + str(d),
-                "file_y_b": path_orbitals + "/Y_b_rsp_" + str(d),
+                "file_x_p": f"{path_orbitals}/X_p_rsp_{dir:d}",
+                "file_x_a": f"{path_orbitals}/X_a_rsp_{dir:d}",
+                "file_x_b": f"{path_orbitals}/X_b_rsp_{dir:d}",
+                "file_y_p": f"{path_orbitals}/Y_p_rsp_{dir:d}",
+                "file_y_a": f"{path_orbitals}/Y_a_rsp_{dir:d}",
+                "file_y_b": f"{path_orbitals}/Y_b_rsp_{dir:d}",
             }
-        if rsp_dict["run"][d]:
-            rsp_comp["rsp_solver"] = write_rsp_solver(user_dict, wf_dict, d)
+        if rsp_dict["run"][dir]:
+            rsp_comp["rsp_solver"] = write_rsp_solver(user_dict, wf_dict, dir)
         rsp_calc["components"].append(rsp_comp)
     return rsp_calc
 
