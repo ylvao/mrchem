@@ -24,6 +24,7 @@
 #
 
 from pathlib import Path
+
 from .CUBEparser import parse_files
 
 # yapf: disable
