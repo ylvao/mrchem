@@ -26,6 +26,7 @@
 #pragma once
 
 #include "tensor/RankZeroOperator.h"
+#include "analyticfunctions/NuclearFunction.h"
 
 namespace mrchem {
 
@@ -34,7 +35,9 @@ class NuclearFunction;
 class NuclearOperator final : public RankZeroOperator {
 public:
     NuclearOperator(const Nuclei &nucs, double proj_prec, double smooth_prec = -1.0, bool mpi_share = false);
-
+    Nuclei nucs;
+    NuclearFunction Nuc_func; // The analytic function of the potential
+    mrcpp::CplxFunc V_func; // The MW Function representation of the potential
 private:
     void setupLocalPotential(NuclearFunction &f_loc, const Nuclei &nucs, double smooth_prec) const;
     void allreducePotential(double prec, mrcpp::CplxFunc &V_tot, mrcpp::CplxFunc &V_loc) const;

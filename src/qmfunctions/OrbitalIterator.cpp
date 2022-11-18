@@ -43,7 +43,7 @@ OrbitalIterator::OrbitalIterator(OrbitalVector &Phi, bool sym)
         std::vector<int> orb_ix;
         for (int i = 0; i < this->orbitals->size(); i++) {
             Orbital &phi_i = (*this->orbitals)[i];
-            int phi_rank = phi_i.rankID();
+            int phi_rank = phi_i.getRank();
             if (mrcpp::mpi::my_orb(i)) orb_ix.push_back(i);
             // if (impi == my_mpi_rank and phi_rank < 0) orb_ix.push_back(i);
         }

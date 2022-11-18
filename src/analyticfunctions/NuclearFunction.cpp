@@ -23,27 +23,81 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <MRCPP/Printer>
 #include "NuclearFunction.h"
 #include "chemistry/Nucleus.h"
 #include "utils/math_utils.h"
+#include "utils/print_utils.h"
+
+using mrcpp::Printer;
 
 namespace mrchem {
+
+NuclearFunction::NuclearFunction(const Nuclei &nucs, double smooth_prec, double prec) {
+    int pprec = Printer::getPrecision();
+    int w0 = Printer::getWidth() - 1;
+    int w1 = 5;
+    int w2 = 8;
+    int w3 = 2 * w0 / 9;
+    int w4 = w0 - w1 - w2 - 3 * w3;
+
+    std::stringstream o_head;
+    o_head << std::setw(w1) << "N";
+    o_head << std::setw(w2) << "Atom";
+    o_head << std::string(w4, ' ');
+    o_head << std::setw(w3) << "Charge";
+    o_head << std::setw(w3) << "Precision";
+    o_head << std::setw(w3) << "Smoothing";
+
+    println(2, o_head.str());
+    mrcpp::print::separator(2, '-');
+    this->prec = prec;
+
+    for (int k = 0; k < nucs.size(); k++) {
+        const Nucleus &nuc = nucs[k];
+        double Z = nuc.getCharge();
+        double c = detail::nuclear_potential_smoothing(smooth_prec, Z);
+        this->push_back(nuc, c);
+
+        std::stringstream o_row;
+        o_row << std::setw(w1) << k;
+        o_row << std::setw(w2) << nuc.getElement().getSymbol();
+        o_row << std::string(w4, ' ');
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << Z;
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth_prec;
+        o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << c;
+        println(2, o_row.str());
+    }
+}
+
+void NuclearFunction::push_back(const std::string &atom, const mrcpp::Coord<3> &r, double c) {
+    PeriodicTable pt;
+    Nucleus nuc(pt.getElement(atom.c_str()), r);
+    push_back(nuc, c);
+}
 
 void NuclearFunction::push_back(const Nucleus &nuc, double c) {
     this->nuclei.push_back(nuc);
     this->smooth.push_back(c);
+    double Z = nuc.getCharge();
+    double minPot = - Z / (c * 3.0 * mrcpp::root_pi); // compatibility with older definition
+    this->minPot.push_back(minPot);
 }
 
 double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
-    double c = -1.0 / (3.0 * mrcpp::root_pi);
+    //double c = -1.0 / (3.0 * mrcpp::root_pi);
     double result = 0.0;
     for (int i = 0; i < this->nuclei.size(); i++) {
-        double S_i = this->smooth[i];
+        //double S_i = this->smooth[i];
         double Z_i = this->nuclei[i].getCharge();
         const mrcpp::Coord<3> &R = this->nuclei[i].getCoord();
-        double R1 = math_utils::calc_distance(R, r) / S_i;
-        double partResult = -std::erf(R1) / R1 + c * (std::exp(-R1 * R1) + 16.0 * std::exp(-4.0 * R1 * R1));
-        result += Z_i * partResult / S_i;
+        //double R1 = math_utils::calc_distance(R, r) / S_i;
+        //double partResult = -std::erf(R1) / R1 + c * (std::exp(-R1 * R1) + 16.0 * std::exp(-4.0 * R1 * R1));
+        //result += Z_i * partResult / S_i;
+        double R1 = math_utils::calc_distance(R, r);
+        result -= std::max(Z_i / R1, this->minPot[i]) ;
+                 double tt=0.0000001;
+                 //if(abs(r[0])<tt and abs(r[1])<tt and abs(r[2])<tt)std::cout<<std::setprecision(20)<<R1<<" ev "<<r[0]<<" "<<r[1]<<" "<<r[2]<<" "<<result<<std::endl;
     }
     return result;
 }

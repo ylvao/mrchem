@@ -58,7 +58,7 @@ struct OrbitalData {
 };
 OrbitalData getOrbitalData(const Orbital &orb) {
     OrbitalData orb_data;
-    orb_data.rank_id = orb.rankID();
+    orb_data.rank_id = orb.getRank();
     orb_data.spin = orb.spin();
     orb_data.occ = orb.occ();
     return orb_data;
@@ -98,8 +98,8 @@ ComplexVector orbital::dot(OrbitalVector &Bra, OrbitalVector &Ket) {
         // The bra is sent to the owner of the ket
         if (mrcpp::mpi::my_orb(Bra[i]) != mrcpp::mpi::my_orb(Ket[i])) {
             int tag = 8765 + i;
-            int src = (Bra[i].rankID()) % mrcpp::mpi::wrk_size;
-            int dst = (Ket[i].rankID()) % mrcpp::mpi::wrk_size;
+            int src = (Bra[i].getRank()) % mrcpp::mpi::wrk_size;
+            int dst = (Ket[i].getRank()) % mrcpp::mpi::wrk_size;
             if (mrcpp::mpi::my_orb(Bra[i])) mrcpp::mpi::send_function(Bra[i], dst, tag, mrcpp::mpi::comm_wrk);
             if (mrcpp::mpi::my_orb(Ket[i])) mrcpp::mpi::recv_function(Bra[i], src, tag, mrcpp::mpi::comm_wrk);
         }
@@ -301,7 +301,7 @@ void orbital::save_nodes(OrbitalVector Phi, mrcpp::FunctionTree<3> &refTree, mrc
 OrbitalVector orbital::deep_copy(OrbitalVector &Phi) {
     OrbitalVector out;
     for (auto &i : Phi) {
-        Orbital out_i(i.spin(), i.occ(), i.rankID());
+        Orbital out_i(i.spin(), i.occ(), i.getRank());
         if (mrcpp::mpi::my_orb(out_i)) mrcpp::cplxfunc::deep_copy(out_i, i);
         out.push_back(out_i);
     }
@@ -316,7 +316,7 @@ OrbitalVector orbital::deep_copy(OrbitalVector &Phi) {
 OrbitalVector orbital::param_copy(const OrbitalVector &Phi) {
     OrbitalVector out;
     for (const auto &i : Phi) {
-        Orbital out_i(i.spin(), i.occ(), i.rankID());
+        Orbital out_i(i.spin(), i.occ(), i.getRank());
         out.push_back(out_i);
     }
     return out;
@@ -350,10 +350,10 @@ OrbitalVector orbital::disjoin(OrbitalVector &Phi, int spin) {
     OrbitalVector tmp;
     for (auto &i : Phi) {
         if (i.spin() == spin) {
-            i.setRankID(out.size());
+            i.setRank(out.size());
             out.push_back(i);
         } else {
-            i.setRankID(tmp.size());
+            i.setRank(tmp.size());
             tmp.push_back(i);
         }
     }
@@ -422,7 +422,7 @@ OrbitalVector orbital::load_orbitals(const std::string &file, int n_orbs) {
         std::stringstream orbname;
         orbname << file << "_idx_" << i;
         loadOrbital(orbname.str(), phi_i);
-        phi_i.setRankID(i);
+        phi_i.setRank(i);
         if (phi_i.hasReal() or phi_i.hasImag()) {
             Phi.push_back(phi_i);
             print_utils::qmfunction(2, "'" + orbname.str() + "'", phi_i, t1);
@@ -460,8 +460,8 @@ void orbital::orthogonalize(double prec, OrbitalVector &Phi) {
     for (int i = 0; i < Phi.size(); i++) {
         for (int j = 0; j < i; j++) {
             int tag = 7632 * i + j;
-            int src = (Phi[j].rankID()) % mrcpp::mpi::wrk_size;
-            int dst = (Phi[i].rankID()) % mrcpp::mpi::wrk_size;
+            int src = (Phi[j].getRank()) % mrcpp::mpi::wrk_size;
+            int dst = (Phi[i].getRank()) % mrcpp::mpi::wrk_size;
             if (mrcpp::mpi::my_orb(Phi[i]) and mrcpp::mpi::my_orb(Phi[j])) {
                 orbital::orthogonalize(prec / Phi.size(), Phi[i], Phi[j]);
             } else {

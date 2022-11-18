@@ -44,6 +44,7 @@
 #include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/qmoperator_utils.h"
 #include "utils/math_utils.h"
+#include "analyticfunctions/NuclearFunction.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;
@@ -57,7 +58,7 @@ void FockBuilder::build(double exx) {
     this->exact_exchange = exx;
 
     this->V = RankZeroOperator();
-    if (this->nuc != nullptr) this->V += (*this->nuc);
+    // Included separately for now: if (this->nuc != nullptr) this->V += (*this->nuc);
     if (this->coul != nullptr) this->V += (*this->coul);
     if (this->ex != nullptr) this->V -= this->exact_exchange * (*this->ex);
     if (this->xc != nullptr) this->V += (*this->xc);
@@ -74,12 +75,14 @@ void FockBuilder::build(double exx) {
  */
 void FockBuilder::setup(double prec) {
     Timer t_tot;
+
     auto plevel = Printer::getPrintLevel();
     if (plevel == 2) {
         mrcpp::print::header(2, "Building Fock operator");
         mrcpp::print::value(2, "Precision", prec, "(rel)", 5);
         mrcpp::print::separator(2, '-');
     }
+    this->prec = prec;
     if (this->mom != nullptr) this->momentum().setup(prec);
     this->potential().setup(prec);
     this->perturbation().setup(prec);
@@ -179,7 +182,15 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     }
 
     // Electronic part
-    if (this->nuc != nullptr) E_en = this->nuc->trace(Phi).real();
+    if (this->nuc != nullptr) {
+        OrbitalVector NucVec = mrcpp::mpifuncvec::multiply(Phi, nuc->Nuc_func, prec, &nuc->V_func);
+        ComplexMatrix Vnuc_mat = ComplexMatrix::Zero(Phi.size(), Phi.size());
+        Vnuc_mat += orbital::calc_overlap_matrix(Phi, NucVec);
+        ComplexVector eta = orbital::get_occupations(Phi).cast<ComplexDouble>();
+        ComplexVector phi_vec = orbital::dot(Phi, NucVec);
+        E_en = eta.dot(phi_vec).real();
+    }
+
     if (this->coul != nullptr) E_ee = 0.5 * this->coul->trace(Phi).real();
     if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
     if (this->xc != nullptr) E_xc = this->xc->getEnergy();
@@ -204,6 +215,13 @@ ComplexMatrix FockBuilder::operator()(OrbitalVector &bra, OrbitalVector &ket) {
 
     ComplexMatrix V_mat = ComplexMatrix::Zero(bra.size(), ket.size());
     V_mat += potential()(bra, ket);
+
+    if (this->nuc != nullptr) {
+        OrbitalVector Vnucket = mrcpp::mpifuncvec::multiply(ket, nuc->Nuc_func, prec, &nuc->V_func);
+        ComplexMatrix Vnuc_mat = ComplexMatrix::Zero(bra.size(), ket.size());
+        Vnuc_mat += orbital::calc_overlap_matrix(bra, Vnucket);
+        V_mat += Vnuc_mat;
+    }
 
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Computing Fock matrix", t_tot);
@@ -300,6 +318,8 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentNREL(OrbitalVector &Phi, Orbita
     // Compute OrbitalVectors
     Timer t_pot;
     OrbitalVector termOne = V(Phi);
+    OrbitalVector VnucPhi = mrcpp::mpifuncvec::multiply(Phi, nuc->Nuc_func, prec, &nuc->V_func);
+
     mrcpp::print::time(2, "Computing potential term", t_pot);
 
     // Add up all the terms
@@ -307,6 +327,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentNREL(OrbitalVector &Phi, Orbita
     OrbitalVector out = orbital::deep_copy(termOne);
     for (int i = 0; i < out.size(); i++) {
         if (not mrcpp::mpi::my_orb(out[i])) continue;
+        out[i].add(1.0, VnucPhi[i]);
         out[i].add(1.0, Psi[i]);
     };
     mrcpp::print::time(2, "Adding contributions", t_add);

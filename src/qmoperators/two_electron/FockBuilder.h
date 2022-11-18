@@ -93,6 +93,8 @@ private:
     double exact_exchange{1.0};
     RankZeroOperator zora_base;
 
+    double prec;
+
     RankZeroOperator V;   ///< Total potential energy operator
     RankZeroOperator H_1; ///< Perturbation operators
 

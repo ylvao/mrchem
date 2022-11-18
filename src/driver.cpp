@@ -247,7 +247,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     print_utils::headline(0, "Computing Initial Guess Wavefunction");
     const auto &json_guess = json_scf["initial_guess"];
     if (scf::guess_orbitals(json_guess, mol)) {
-        scf::guess_energy(json_guess, mol, F);
+       scf::guess_energy(json_guess, mol, F);
        json_out["initial_energy"] = mol.getSCFEnergy().json();
     } else {
         json_out["success"] = false;

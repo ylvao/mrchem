@@ -203,7 +203,7 @@ void initial_guess::core::project_ao(OrbitalVector &Phi, double prec, const Nucl
                 Timer t_i;
                 HydrogenFunction h_func(n, l, m, Z, R);
                 Phi.push_back(Orbital(SPIN::Paired));
-                Phi.back().setRankID(Phi.size()-1);
+                Phi.back().setRank(Phi.size()-1);
                 if (mrcpp::mpi::my_orb(Phi.back())) {
                     mrcpp::cplxfunc::project(Phi.back(), h_func, NUMBER::Real, prec);
                     if (std::abs(Phi.back().norm() - 1.0) > 0.01) MSG_WARN("AO not normalized!");

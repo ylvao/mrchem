@@ -36,30 +36,33 @@ namespace mrchem {
 
 class NuclearFunction final : public mrcpp::RepresentableFunction<3> {
 public:
+    NuclearFunction() {};
+    NuclearFunction(const Nuclei &nucs, double smooth_prec = -1.0, double prec = -1.0);
+
     double evalf(const mrcpp::Coord<3> &r) const override;
 
+    void push_back(const std::string &atom, const mrcpp::Coord<3> &r, double c);
     void push_back(const Nucleus &nuc, double c);
-    void push_back(const std::string &atom, const mrcpp::Coord<3> &r, double c) {
-        PeriodicTable pt;
-        Nucleus nuc(pt.getElement(atom.c_str()), r);
-        push_back(nuc, c);
-    }
 
     Nuclei &getNuclei() { return this->nuclei; }
     const Nuclei &getNuclei() const { return this->nuclei; }
+
+    double getPrec() { return this->prec; }
 
     bool isVisibleAtScale(int scale, int nQuadPts) const override;
     bool isZeroOnInterval(const double *a, const double *b) const override;
 
 protected:
     Nuclei nuclei;
+    double prec;
     std::vector<double> smooth;
+    std::vector<double> minPot;
 };
 
 namespace detail {
 /*! @brief Compute nucleus- and precision-dependent smoothing parameter */
-inline auto nuclear_potential_smoothing(double prec, double Z) -> double {
-    double tmp = 0.00435 * prec / std::pow(Z, 5.0);
+inline auto nuclear_potential_smoothing(double smooth_prec, double Z) -> double {
+    double tmp = 0.00435 * smooth_prec / std::pow(Z, 5.0);
     return std::cbrt(tmp);
 }
 } // namespace detail

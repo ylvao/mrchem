@@ -48,6 +48,7 @@ namespace mrchem {
 NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double smooth_prec, bool mpi_share) {
     if (proj_prec < 0.0) MSG_ABORT("Negative projection precision");
     if (smooth_prec < 0.0) smooth_prec = proj_prec;
+    this->nucs = nucs;
 
     Timer t_tot;
     mrcpp::print::header(2, "Projecting nuclear potential");
@@ -56,6 +57,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     Timer t_loc;
     NuclearFunction f_loc;
     setupLocalPotential(f_loc, nucs, smooth_prec);
+    Nuc_func=NuclearFunction(nucs, smooth_prec);
 
     // Scale precision by charge, since norm of potential is ~ to charge
     double Z_tot = 1.0 * chemistry::get_total_charge(nucs);
@@ -81,6 +83,8 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     Timer t_com;
     auto V_tot = std::make_shared<QMPotential>(1, mpi_share);
     allreducePotential(tot_prec, *V_tot, V_loc);
+    V_func = *V_tot;
+
     t_com.stop();
 
     t_tot.stop();

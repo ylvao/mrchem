@@ -105,7 +105,7 @@ QMOperatorVector QMSpin::apply(QMOperator_p &O) {
 Orbital QMAlpha::apply(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
-    Orbital out(SPIN::Alpha, 1, inp.rankID());
+    Orbital out(SPIN::Alpha, 1, inp.getRank());
     if (inp.spin() == SPIN::Alpha || inp.spin() == SPIN::Paired) mrcpp::cplxfunc::deep_copy(out, inp);
     return out;
 }
@@ -114,7 +114,7 @@ Orbital QMAlpha::apply(Orbital inp) {
 Orbital QMAlpha::dagger(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
-    Orbital out(SPIN::Alpha, 1, inp.rankID());
+    Orbital out(SPIN::Alpha, 1, inp.getRank());
     if (inp.spin() == SPIN::Alpha || inp.spin() == SPIN::Paired) mrcpp::cplxfunc::deep_copy(out, inp);
     return out;
 }
@@ -145,7 +145,7 @@ QMOperatorVector QMAlpha::apply(QMOperator_p &O) {
 Orbital QMBeta::apply(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
-    Orbital out(SPIN::Beta, 1, inp.rankID());
+    Orbital out(SPIN::Beta, 1, inp.getRank());
     if (inp.spin() == SPIN::Beta || inp.spin() == SPIN::Paired) mrcpp::cplxfunc::deep_copy(out, inp);
     return out;
 }
@@ -154,7 +154,7 @@ Orbital QMBeta::apply(Orbital inp) {
 Orbital QMBeta::dagger(Orbital inp) {
     if (this->apply_prec < 0.0) MSG_ERROR("Uninitialized operator");
 
-    Orbital out(SPIN::Beta, 1, inp.rankID());
+    Orbital out(SPIN::Beta, 1, inp.getRank());
     if (inp.spin() == SPIN::Beta || inp.spin() == SPIN::Paired) mrcpp::cplxfunc::deep_copy(out, inp);
     return out;
 }
