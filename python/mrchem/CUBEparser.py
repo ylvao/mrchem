@@ -40,7 +40,7 @@ def parse_files(user_dict, direction=None):
 
     found = False
     for key, val in cube_guess_dict.items():
-        if ("x" in key) or ("y" in key):
+        if (direction is not None):
             data_type = "_".join(key.split("_")[2:]) + f"_{direction:d}"
             path_list = _get_paths(Path(val), rsp=True, direction=direction)
         else:
@@ -64,7 +64,7 @@ def _write_cube_vectors(path_list, data_type, world_unit, pc, vector_dir):
 
     if len(path_list) != 0:
         for path in path_list:
-            cube_list.append(_parse_cube_file(path, world_unit, pc))
+            cube_list.append(parse_cube_file(path, world_unit, pc))
 
     cube_list = sorted(
         cube_list, key=lambda d: d["ORB_IDS"]
@@ -90,7 +90,7 @@ def _get_paths(path, rsp=False, direction=None):
 # TODO do a sanity check on the naming of the files
 
 
-def _parse_cube_file(cube_path, world_unit, pc):
+def parse_cube_file(cube_path, world_unit, pc):
 
     """
     Pyparsing CUBE file

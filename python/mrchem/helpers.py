@@ -134,9 +134,19 @@ def write_scf_guess(user_dict, wf_dict):
     zeta = 0
 
     scf_dict = user_dict["SCF"]
+
     guess_prec = scf_dict["guess_prec"]
+
     if guess_type == "chk":
-        guess_prec = user_dict["world_prec"]
+        chk_Phi = Path(f"{scf_dict['path_checkpoint']}/phi_scf")
+        if not chk_Phi.is_file():
+            print(
+                f"No checkpoint guess found in {scf_dict['path_checkpoint']}, falling back to 'sad_gto' initial guess"
+            )
+            guess_type = "sad_gto"
+        else:
+            # adjust guess precision if checkpoint files are present
+            guess_prec = user_dict["world_prec"]
 
     if guess_type in ["core", "sad"]:
         zeta_str = guess_str.split("_")[1]
@@ -156,7 +166,12 @@ def write_scf_guess(user_dict, wf_dict):
     file_dict = user_dict["Files"]
 
     if guess_type == "cube":
-        parse_files(user_dict)
+        found = parse_files(user_dict)
+        if not found:
+            print(
+                f"No CUBE guess found in any of the 'initial_guess' sub-folders, falling back to 'sad_gto' initial guess"
+            )
+            guess_type = "sad_gto"
 
     vector_dir = file_dict["cube_vectors"]
     guess_dict = {
@@ -170,7 +185,7 @@ def write_scf_guess(user_dict, wf_dict):
         "screen": scf_dict["guess_screen"],
         "localize": scf_dict["localize"],
         "restricted": user_dict["WaveFunction"]["restricted"],
-        "file_chk": scf_dict["path_checkpoint"] + "/phi_scf",
+        "file_chk": f"{scf_dict['path_checkpoint']}/phi_scf",
         "file_basis": file_dict["guess_basis"],
         "file_gto_p": file_dict["guess_gto_p"],
         "file_gto_a": file_dict["guess_gto_a"],
