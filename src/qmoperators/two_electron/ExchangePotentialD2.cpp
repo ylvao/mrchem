@@ -111,7 +111,7 @@ Orbital ExchangePotentialD2::apply(Orbital phi_p) {
     // adjust precision since we sum over orbitals
     precf /= std::sqrt(1 * Phi.size());
 
-    std::vector<mrcpp::CplxFunc> func_vec;
+    std::vector<mrcpp::ComplexFunction> func_vec;
     std::vector<ComplexDouble> coef_vec;
     for (int i = 0; i < Phi.size(); i++) {
         Orbital &phi_i = Phi[i];
@@ -170,7 +170,7 @@ Orbital ExchangePotentialD2::dagger(Orbital phi_p) {
     // adjust precision since we sum over orbitals
     precf /= std::min(10.0, std::sqrt(1.0 * Phi.size()));
 
-    std::vector<mrcpp::CplxFunc> func_vec;
+    std::vector<mrcpp::ComplexFunction> func_vec;
     std::vector<ComplexDouble> coef_vec;
     for (int i = 0; i < Phi.size(); i++) {
         Orbital &phi_i = Phi[i];

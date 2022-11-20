@@ -23,18 +23,18 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include <vector>
 #include <MRCPP/Parallel>
+#include <vector>
 
 #pragma once
 
 /** Notes on vectors:
  * The OrbitalVector (std::vector<Orbital>) is conceptually different from the
- * mrcpp::CplxFuncVector (std::vector<mrcpp::CplxFunc>). The former should be a collection
+ * mrcpp::ComplexFunctionVector (std::vector<mrcpp::ComplexFunction>). The former should be a collection
  * of orbitals defining a proper Slater determinant, while the latter is any
  * arbitrary collection of functions (could also be orbitals) used e.g. when
  * adding several orbitals into one. The difference is important when MPI is
- * considered, as OrbitalVectors are distributed while mrcpp::CplxFuncVectors are
+ * considered, as OrbitalVectors are distributed while mrcpp::ComplexFunctionVectors are
  * not. This is reflected in the functionality that is available for the
  * different vectors, where OrbitalVectors should always be treated as a whole,
  * e.g. in an orbital rotation Psi = orbital::rotate(U, Phi), where U is a
@@ -48,12 +48,12 @@ namespace mrchem {
 
 class ComplexFunction;
 
-//class Orbital;
-using Orbital=mrcpp::CplxFunc;
+// class Orbital;
+using Orbital = mrcpp::ComplexFunction;
 using OrbitalChunk = std::vector<std::tuple<int, Orbital>>;
 
-    using OrbitalVector=mrcpp::MPI_FuncVector;
-//class OrbitalVector;
+using OrbitalVector = mrcpp::MPI_FuncVector;
+// class OrbitalVector;
 
 class Density;
 

@@ -36,7 +36,7 @@ namespace mrchem {
 
 class NuclearFunction final : public mrcpp::RepresentableFunction<3> {
 public:
-    NuclearFunction() {};
+    NuclearFunction(){};
     NuclearFunction(const Nuclei &nucs, double smooth_prec = -1.0, double prec = -1.0);
 
     double evalf(const mrcpp::Coord<3> &r) const override;

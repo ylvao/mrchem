@@ -87,7 +87,7 @@ void CoulombPotential::setup(double prec) {
         // Keep each local contribution a bit
         // more precise than strictly necessary
         setupLocalDensity(0.1 * prec);
-        mrcpp::CplxFunc V = setupLocalPotential(0.1 * prec);
+        mrcpp::ComplexFunction V = setupLocalPotential(0.1 * prec);
         allreducePotential(0.1 * prec, V);
     }
     if (plevel == 2) print_utils::qmfunction(2, "Coulomb operator", *this, timer);
@@ -100,9 +100,9 @@ void CoulombPotential::setup(double prec) {
  * The operator can now be reused after another setup.
  */
 void CoulombPotential::clear() {
-    mrcpp::CplxFunc::free(NUMBER::Total);   // delete FunctionTree pointers
-    this->density.free(NUMBER::Total); // delete FunctionTree pointers
-    clearApplyPrec();                  // apply_prec = -1
+    mrcpp::ComplexFunction::free(NUMBER::Total); // delete FunctionTree pointers
+    this->density.free(NUMBER::Total);           // delete FunctionTree pointers
+    clearApplyPrec();                            // apply_prec = -1
 }
 
 /** @brief compute Coulomb potential
@@ -116,8 +116,8 @@ void CoulombPotential::setupGlobalPotential(double prec) {
     if (this->poisson == nullptr) MSG_ERROR("Poisson operator not initialized");
 
     PoissonOperator &P = *this->poisson;
-    mrcpp::CplxFunc &V = *this;
-    mrcpp::CplxFunc &rho = this->density;
+    mrcpp::ComplexFunction &V = *this;
+    mrcpp::ComplexFunction &rho = this->density;
 
     if (V.hasReal()) MSG_ERROR("Potential not properly cleared");
     if (V.hasImag()) MSG_ERROR("Potential not properly cleared");
@@ -140,18 +140,18 @@ void CoulombPotential::setupGlobalPotential(double prec) {
  * This will compute the Coulomb potential by application o the Poisson operator
  * to the precomputed electron density.
  */
-mrcpp::CplxFunc CoulombPotential::setupLocalPotential(double prec) {
+mrcpp::ComplexFunction CoulombPotential::setupLocalPotential(double prec) {
     if (this->poisson == nullptr) MSG_ERROR("Poisson operator not initialized");
 
     PoissonOperator &P = *this->poisson;
     OrbitalVector &Phi = *this->orbitals;
-    mrcpp::CplxFunc &rho = this->density;
+    mrcpp::ComplexFunction &rho = this->density;
 
     // Adjust precision by system size
     double abs_prec = prec / orbital::get_electron_number(Phi);
 
     Timer timer;
-    mrcpp::CplxFunc V(false);
+    mrcpp::ComplexFunction V(false);
     V.alloc(NUMBER::Real);
     mrcpp::apply(abs_prec, V.real(), P, rho.real());
     print_utils::qmfunction(3, "Compute local potential", V, timer);
@@ -159,10 +159,10 @@ mrcpp::CplxFunc CoulombPotential::setupLocalPotential(double prec) {
     return V;
 }
 
-void CoulombPotential::allreducePotential(double prec, mrcpp::CplxFunc &V_loc) {
+void CoulombPotential::allreducePotential(double prec, mrcpp::ComplexFunction &V_loc) {
     Timer t_com;
 
-    mrcpp::CplxFunc &V_tot = *this;
+    mrcpp::ComplexFunction &V_tot = *this;
     OrbitalVector &Phi = *this->orbitals;
 
     double abs_prec = prec / orbital::get_electron_number(Phi);

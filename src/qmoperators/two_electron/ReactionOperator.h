@@ -60,13 +60,13 @@ public:
     std::shared_ptr<ReactionPotential> getPotential() { return this->potential; }
     void updateMOResidual(double const err_t) { this->potential->updateMOResidual(err_t); }
 
-    mrcpp::CplxFunc &getCurrentReactionPotential() { return this->potential->getCurrentReactionPotential(); }
-    mrcpp::CplxFunc &getPreviousReactionPotential() { return this->potential->getPreviousReactionPotential(); }
-    mrcpp::CplxFunc &getCurrentDifferenceReactionPotential() { return this->potential->getCurrentDifferenceReactionPotential(); }
+    mrcpp::ComplexFunction &getCurrentReactionPotential() { return this->potential->getCurrentReactionPotential(); }
+    mrcpp::ComplexFunction &getPreviousReactionPotential() { return this->potential->getPreviousReactionPotential(); }
+    mrcpp::ComplexFunction &getCurrentDifferenceReactionPotential() { return this->potential->getCurrentDifferenceReactionPotential(); }
 
-    mrcpp::CplxFunc &getCurrentGamma() { return this->potential->getCurrentGamma(); }
-    mrcpp::CplxFunc &getPreviousGamma() { return this->potential->getPreviousGamma(); }
-    mrcpp::CplxFunc &getCurrentDifferenceGamma() { return this->potential->getCurrentDifferenceGamma(); }
+    mrcpp::ComplexFunction &getCurrentGamma() { return this->potential->getCurrentGamma(); }
+    mrcpp::ComplexFunction &getPreviousGamma() { return this->potential->getPreviousGamma(); }
+    mrcpp::ComplexFunction &getCurrentDifferenceGamma() { return this->potential->getCurrentDifferenceGamma(); }
 
 private:
     std::shared_ptr<ReactionPotential> potential{nullptr};

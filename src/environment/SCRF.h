@@ -52,13 +52,13 @@ public:
 
     double setConvergenceThreshold(double prec);
 
-    mrcpp::CplxFunc &getCurrentReactionPotential() { return this->Vr_n; }
-    mrcpp::CplxFunc &getPreviousReactionPotential() { return this->Vr_nm1; }
-    mrcpp::CplxFunc &getCurrentDifferenceReactionPotential() { return this->dVr_n; }
+    mrcpp::ComplexFunction &getCurrentReactionPotential() { return this->Vr_n; }
+    mrcpp::ComplexFunction &getPreviousReactionPotential() { return this->Vr_nm1; }
+    mrcpp::ComplexFunction &getCurrentDifferenceReactionPotential() { return this->dVr_n; }
 
-    mrcpp::CplxFunc &getCurrentGamma() { return this->gamma_n; }
-    mrcpp::CplxFunc &getPreviousGamma() { return this->gamma_nm1; }
-    mrcpp::CplxFunc &getCurrentDifferenceGamma() { return this->dgamma_n; }
+    mrcpp::ComplexFunction &getCurrentGamma() { return this->gamma_n; }
+    mrcpp::ComplexFunction &getPreviousGamma() { return this->gamma_nm1; }
+    mrcpp::ComplexFunction &getCurrentDifferenceGamma() { return this->dgamma_n; }
 
     Permittivity &getPermittivity() { return this->epsilon; }
 
@@ -86,13 +86,13 @@ private:
     Density rho_ext;
     Density rho_tot;
 
-    mrcpp::CplxFunc Vr_n;
-    mrcpp::CplxFunc dVr_n;
-    mrcpp::CplxFunc Vr_nm1;
+    mrcpp::ComplexFunction Vr_n;
+    mrcpp::ComplexFunction dVr_n;
+    mrcpp::ComplexFunction Vr_nm1;
 
-    mrcpp::CplxFunc gamma_n;
-    mrcpp::CplxFunc dgamma_n;
-    mrcpp::CplxFunc gamma_nm1;
+    mrcpp::ComplexFunction gamma_n;
+    mrcpp::ComplexFunction dgamma_n;
+    mrcpp::ComplexFunction gamma_nm1;
 
     mrcpp::FunctionTreeVector<3> d_cavity; //!< Vector containing the 3 partial derivatives of the cavity function
     std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative;
@@ -101,22 +101,22 @@ private:
     void setDCavity();
 
     void computeDensities(OrbitalVector &Phi);
-    void computeGamma(mrcpp::CplxFunc &potential, mrcpp::CplxFunc &out_gamma);
+    void computeGamma(mrcpp::ComplexFunction &potential, mrcpp::ComplexFunction &out_gamma);
 
-    mrcpp::CplxFunc solvePoissonEquation(const mrcpp::CplxFunc &ingamma);
+    mrcpp::ComplexFunction solvePoissonEquation(const mrcpp::ComplexFunction &ingamma);
 
-    void accelerateConvergence(mrcpp::CplxFunc &dfunc, mrcpp::CplxFunc &func, KAIN &kain);
+    void accelerateConvergence(mrcpp::ComplexFunction &dfunc, mrcpp::ComplexFunction &func, KAIN &kain);
 
-    // TODO    void variationalSCRF(mrcpp::CplxFunc V_vac);
-    void nestedSCRF(mrcpp::CplxFunc V_vac);
-    mrcpp::CplxFunc &setup(double prec, const std::shared_ptr<mrchem::OrbitalVector> &Phi);
+    // TODO    void variationalSCRF(mrcpp::ComplexFunction V_vac);
+    void nestedSCRF(mrcpp::ComplexFunction V_vac);
+    mrcpp::ComplexFunction &setup(double prec, const std::shared_ptr<mrchem::OrbitalVector> &Phi);
 
     double getNuclearEnergy();
     double getElectronicEnergy();
     double getTotalEnergy();
-    void resetCplxFunc(mrcpp::CplxFunc &function);
-    void updateCurrentReactionPotential(mrcpp::CplxFunc &Vr_np1);
-    void updateCurrentGamma(mrcpp::CplxFunc &gamma_np1);
+    void resetComplexFunction(mrcpp::ComplexFunction &function);
+    void updateCurrentReactionPotential(mrcpp::ComplexFunction &Vr_np1);
+    void updateCurrentGamma(mrcpp::ComplexFunction &gamma_np1);
 
     void printParameters() const;
     void printConvergenceRow(int i, double norm, double update, double time) const;

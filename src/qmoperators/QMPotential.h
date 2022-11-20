@@ -33,7 +33,7 @@
  *
  * @brief Operator defining a multiplicative potential
  *
- * Inherits the general features of a complex function from mrcpp::CplxFunc and
+ * Inherits the general features of a complex function from mrcpp::ComplexFunction and
  * implements the multiplication of this function with an Orbital. The actual
  * function representing the operator needs to be implemented in the derived
  * classes, where the *re and *im FunctionTree pointers should be assigned in
@@ -43,7 +43,7 @@
 
 namespace mrchem {
 
-class QMPotential : public mrcpp::CplxFunc, public QMOperator {
+class QMPotential : public mrcpp::ComplexFunction, public QMOperator {
 public:
     explicit QMPotential(int adap, bool shared = false);
     QMPotential(const QMPotential &pot);
@@ -64,8 +64,8 @@ protected:
     Orbital dagger(Orbital inp) override;
     QMOperatorVector apply(std::shared_ptr<QMOperator> &O) override;
 
-    void calcRealPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool dagger);
-    void calcImagPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool dagger);
+    void calcRealPart(mrcpp::ComplexFunction &out, mrcpp::ComplexFunction &inp, bool dagger);
+    void calcImagPart(mrcpp::ComplexFunction &out, mrcpp::ComplexFunction &inp, bool dagger);
 };
 
 } // namespace mrchem

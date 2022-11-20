@@ -74,8 +74,8 @@ protected:
     virtual void setupLocalDensity(double prec) {}
 
     void setupGlobalPotential(double prec);
-    mrcpp::CplxFunc setupLocalPotential(double prec);
-    void allreducePotential(double prec, mrcpp::CplxFunc &V_loc);
+    mrcpp::ComplexFunction setupLocalPotential(double prec);
+    void allreducePotential(double prec, mrcpp::ComplexFunction &V_loc);
 };
 
 } // namespace mrchem

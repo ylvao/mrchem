@@ -47,19 +47,19 @@ namespace mrchem {
  *
  * @param adap: extra refinement in output
  *
- * Initializes the mrcpp::CplxFunc with NULL pointers for both real and imaginary part.
+ * Initializes the mrcpp::ComplexFunction with NULL pointers for both real and imaginary part.
  * These must be computed in setup() of derived classes. The initial output grid
  * in application will be a copy of the input orbital but NOT a copy of the
  * potential grid. The argument sets how many extra refinement levels is allowed
  * beyond this initial refinement.
  */
 QMPotential::QMPotential(int adap, bool shared)
-        : mrcpp::CplxFunc(shared)
+        : mrcpp::ComplexFunction(shared)
         , QMOperator()
         , adap_build(adap) {}
 
 QMPotential::QMPotential(const QMPotential &inp)
-        : mrcpp::CplxFunc(inp.isShared())
+        : mrcpp::ComplexFunction(inp.isShared())
         , QMOperator()
         , adap_build(inp.adap_build) {}
 
@@ -131,17 +131,17 @@ QMOperatorVector QMPotential::apply(QMOperator_p &O) {
  * Computes the real part of the output orbital. The initial output grid is a
  * copy of the input orbital grid but NOT a copy of the potential grid.
  */
-void QMPotential::calcRealPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool dagger) {
+void QMPotential::calcRealPart(mrcpp::ComplexFunction &out, mrcpp::ComplexFunction &inp, bool dagger) {
     int adap = this->adap_build;
     double prec = this->apply_prec;
 
     if (out.hasReal()) MSG_ABORT("Output not empty");
     if (out.isShared()) MSG_ABORT("Cannot share this function");
 
-    mrcpp::CplxFunc &V = *this;
+    mrcpp::ComplexFunction &V = *this;
     if (V.hasReal() and inp.hasReal()) {
         double coef = 1.0;
-        mrcpp::CplxFunc tmp(false);
+        mrcpp::ComplexFunction tmp(false);
         tmp.alloc(NUMBER::Real);
         mrcpp::copy_grid(tmp.real(), inp.real());
         mrcpp::multiply(prec, tmp.real(), coef, V.real(), inp.real(), adap);
@@ -151,7 +151,7 @@ void QMPotential::calcRealPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool 
         double coef = -1.0;
         if (dagger) coef *= -1.0;
         if (inp.conjugate()) coef *= -1.0;
-        mrcpp::CplxFunc tmp(false);
+        mrcpp::ComplexFunction tmp(false);
         tmp.alloc(NUMBER::Real);
         mrcpp::copy_grid(tmp.real(), inp.imag());
         mrcpp::multiply(prec, tmp.real(), coef, V.imag(), inp.imag(), adap);
@@ -167,18 +167,18 @@ void QMPotential::calcRealPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool 
  * Computes the imaginary part of the output orbital. The initial output grid is a
  * copy of the input orbital grid but NOT a copy of the potential grid.
  */
-void QMPotential::calcImagPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool dagger) {
+void QMPotential::calcImagPart(mrcpp::ComplexFunction &out, mrcpp::ComplexFunction &inp, bool dagger) {
     int adap = this->adap_build;
     double prec = this->apply_prec;
 
     if (out.hasImag()) MSG_ABORT("Output not empty");
     if (out.isShared()) MSG_ABORT("Cannot share this function");
 
-    mrcpp::CplxFunc &V = *this;
+    mrcpp::ComplexFunction &V = *this;
     if (V.hasReal() and inp.hasImag()) {
         double coef = 1.0;
         if (inp.conjugate()) coef *= -1.0;
-        mrcpp::CplxFunc tmp(false);
+        mrcpp::ComplexFunction tmp(false);
         tmp.alloc(NUMBER::Imag);
         mrcpp::copy_grid(tmp.imag(), inp.imag());
         mrcpp::multiply(prec, tmp.imag(), coef, V.real(), inp.imag(), adap);
@@ -187,7 +187,7 @@ void QMPotential::calcImagPart(mrcpp::CplxFunc &out, mrcpp::CplxFunc &inp, bool 
     if (V.hasImag() and inp.hasReal()) {
         double coef = 1.0;
         if (dagger) coef *= -1.0;
-        mrcpp::CplxFunc tmp(false);
+        mrcpp::ComplexFunction tmp(false);
         tmp.alloc(NUMBER::Imag);
         mrcpp::copy_grid(tmp.imag(), inp.real());
         mrcpp::multiply(prec, tmp.imag(), coef, V.imag(), inp.real(), adap);

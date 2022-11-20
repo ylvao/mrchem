@@ -23,11 +23,11 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include <MRCPP/Printer>
 #include "NuclearFunction.h"
 #include "chemistry/Nucleus.h"
 #include "utils/math_utils.h"
 #include "utils/print_utils.h"
+#include <MRCPP/Printer>
 
 using mrcpp::Printer;
 
@@ -80,24 +80,17 @@ void NuclearFunction::push_back(const Nucleus &nuc, double c) {
     this->nuclei.push_back(nuc);
     this->smooth.push_back(c);
     double Z = nuc.getCharge();
-    double minPot = - Z / (c * 3.0 * mrcpp::root_pi); // compatibility with older definition
+    double minPot = -Z * 23 / (c * 3.0 * mrcpp::root_pi); // compatibility with older definition
     this->minPot.push_back(minPot);
 }
 
 double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
-    //double c = -1.0 / (3.0 * mrcpp::root_pi);
     double result = 0.0;
     for (int i = 0; i < this->nuclei.size(); i++) {
-        //double S_i = this->smooth[i];
         double Z_i = this->nuclei[i].getCharge();
         const mrcpp::Coord<3> &R = this->nuclei[i].getCoord();
-        //double R1 = math_utils::calc_distance(R, r) / S_i;
-        //double partResult = -std::erf(R1) / R1 + c * (std::exp(-R1 * R1) + 16.0 * std::exp(-4.0 * R1 * R1));
-        //result += Z_i * partResult / S_i;
         double R1 = math_utils::calc_distance(R, r);
-        result -= std::max(Z_i / R1, this->minPot[i]) ;
-                 double tt=0.0000001;
-                 //if(abs(r[0])<tt and abs(r[1])<tt and abs(r[2])<tt)std::cout<<std::setprecision(20)<<R1<<" ev "<<r[0]<<" "<<r[1]<<" "<<r[2]<<" "<<result<<std::endl;
+        result += std::max(-Z_i / R1, this->minPot[i]);
     }
     return result;
 }

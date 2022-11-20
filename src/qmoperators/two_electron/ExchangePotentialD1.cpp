@@ -156,7 +156,7 @@ void ExchangePotentialD1::setupInternal(double prec) {
     Timer t_diag;
     int i = 0;
     for (auto &phi_i : Phi) {
-        Orbital ex_iii(phi_i.spin(),phi_i.occ(),phi_i.getRank());
+        Orbital ex_iii(phi_i.spin(), phi_i.occ(), phi_i.getRank());
         t_calc.resume();
         if (mrcpp::mpi::my_orb(i)) calcExchange_kij(precf, phi_i, phi_i, phi_i, ex_iii);
         t_calc.stop();
@@ -263,12 +263,12 @@ void ExchangePotentialD1::setupInternal(double prec) {
             int jorb = jtasks[task][j];
             Orbital phi_j;
             t_orb.resume();
-            if (mrcpp::mpi::bank_size > 0){
-              PhiBank.get_func(jorb, phi_j, 1);
-            }else
+            if (mrcpp::mpi::bank_size > 0) {
+                PhiBank.get_func(jorb, phi_j, 1);
+            } else
                 phi_j = Phi[jorb];
             t_orb.stop();
-            std::vector<mrcpp::CplxFunc> iijfunc_vec;
+            std::vector<mrcpp::ComplexFunction> iijfunc_vec;
             ComplexVector coef_vec(N);
             for (int i = 0; i < iorb_vec.size(); i++) {
                 int iorb = itasks[task][i];
@@ -344,7 +344,7 @@ void ExchangePotentialD1::setupInternal(double prec) {
     for (int j = 0; j < N; j++) {
         if (not mrcpp::mpi::my_orb(j) or mrcpp::mpi::bank_size == 0) continue; // fetch only own j
         std::vector<int> iVec = tasksMaster.get_readytask(j, 1);
-        std::vector<mrcpp::CplxFunc> iijfunc_vec;
+        std::vector<mrcpp::ComplexFunction> iijfunc_vec;
         ComplexVector coef_vec(N);
         int tot = 0;
         int totmax = 2 * block_size;
@@ -419,7 +419,7 @@ Orbital ExchangePotentialD1::calcExchange(Orbital phi_p) {
     // adjust precision since we sum over orbitals
     precf /= std::min(10.0, std::sqrt(1.0 * Phi.size()));
 
-    std::vector<mrcpp::CplxFunc> func_vec;
+    std::vector<mrcpp::ComplexFunction> func_vec;
     std::vector<ComplexDouble> coef_vec;
     for (int i = 0; i < Phi.size(); i++) {
         Orbital &phi_i = Phi[i];

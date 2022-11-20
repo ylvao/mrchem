@@ -23,9 +23,9 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <MRCPP/Parallel>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
-#include <MRCPP/Parallel>
 
 #include "KAIN.h"
 #include "qmfunctions/Orbital.h"
@@ -138,7 +138,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
         if (this->sepOrbitals) m = n;
         if (mrcpp::mpi::my_orb(Phi[n])) {
             std::vector<ComplexDouble> totCoefs;
-            std::vector<mrcpp::CplxFunc> totOrbs;
+            std::vector<mrcpp::ComplexFunction> totOrbs;
 
             auto &phi_m = this->orbitals[nHistory][n];
             auto &fPhi_m = this->dOrbitals[nHistory][n];
@@ -150,7 +150,7 @@ void KAIN::expandSolution(double prec, OrbitalVector &Phi, OrbitalVector &dPhi, 
             // (but not the orbitals themselves).
             for (int j = 0; j < nHistory; j++) {
                 ComplexVector partCoefs(4);
-                std::vector<mrcpp::CplxFunc>  partOrbs;
+                std::vector<mrcpp::ComplexFunction> partOrbs;
 
                 partCoefs(0) = {1.0, 0.0};
                 auto &phi_j = this->orbitals[j][n];

@@ -23,9 +23,9 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <MRCPP/Parallel>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
-#include <MRCPP/Parallel>
 
 #include "NuclearOperator.h"
 
@@ -57,7 +57,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     Timer t_loc;
     NuclearFunction f_loc;
     setupLocalPotential(f_loc, nucs, smooth_prec);
-    Nuc_func=NuclearFunction(nucs, smooth_prec);
+    Nuc_func = NuclearFunction(nucs, smooth_prec);
 
     // Scale precision by charge, since norm of potential is ~ to charge
     double Z_tot = 1.0 * chemistry::get_total_charge(nucs);
@@ -73,7 +73,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     loc_prec /= pow(vol, 1.0 / 6.0); // norm of 1/r over the box ~ root_6(Volume)
 
     // Project local potential
-    mrcpp::CplxFunc V_loc(false);
+    mrcpp::ComplexFunction V_loc(false);
     mrcpp::cplxfunc::project(V_loc, f_loc, NUMBER::Real, loc_prec);
     t_loc.stop();
     mrcpp::print::separator(2, '-');
@@ -136,7 +136,7 @@ void NuclearOperator::setupLocalPotential(NuclearFunction &f_loc, const Nuclei &
     }
 }
 
-void NuclearOperator::allreducePotential(double prec, mrcpp::CplxFunc &V_tot, mrcpp::CplxFunc &V_loc) const {
+void NuclearOperator::allreducePotential(double prec, mrcpp::ComplexFunction &V_tot, mrcpp::ComplexFunction &V_loc) const {
     // Add up local contributions into the grand master
     mrcpp::mpi::reduce_function(prec, V_loc, mrcpp::mpi::comm_wrk);
     if (mrcpp::mpi::grand_master()) {

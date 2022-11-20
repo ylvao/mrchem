@@ -247,8 +247,8 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     print_utils::headline(0, "Computing Initial Guess Wavefunction");
     const auto &json_guess = json_scf["initial_guess"];
     if (scf::guess_orbitals(json_guess, mol)) {
-       scf::guess_energy(json_guess, mol, F);
-       json_out["initial_energy"] = mol.getSCFEnergy().json();
+        scf::guess_energy(json_guess, mol, F);
+        json_out["initial_energy"] = mol.getSCFEnergy().json();
     } else {
         json_out["success"] = false;
         return json_out;
@@ -1000,7 +1000,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
     //////////////////   Nuclear Operator   ///////////////////
     ///////////////////////////////////////////////////////////
     if (json_fock.contains("nuclear_operator")) {
-         auto proj_prec = json_fock["nuclear_operator"]["proj_prec"];
+        auto proj_prec = json_fock["nuclear_operator"]["proj_prec"];
         auto smooth_prec = json_fock["nuclear_operator"]["smooth_prec"];
         auto shared_memory = json_fock["nuclear_operator"]["shared_memory"];
         auto V_p = std::make_shared<NuclearOperator>(nuclei, proj_prec, smooth_prec, shared_memory);
@@ -1034,7 +1034,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         } else {
             MSG_ABORT("Invalid perturbation order");
         }
-  }
+    }
     ///////////////////////////////////////////////////////////
     //////////////////   Reaction Operator   ///////////////////
     ///////////////////////////////////////////////////////////

@@ -32,7 +32,7 @@
  *
  * @brief General complex-valued function with spin
  *
- * Inherits the general features of a complex function from mrcpp::CplxFunc which
+ * Inherits the general features of a complex function from mrcpp::ComplexFunction which
  * means separate MW function representations for the real and imaginary parts.
  * Note that there are several options for copying/assignment: the proper copy
  * constructor and assignment operator are *shallow* copies, which means that
@@ -48,7 +48,7 @@
 
 namespace mrchem {
 
-using Orbital = mrcpp::CplxFunc;
+using Orbital = mrcpp::ComplexFunction;
 using OrbitalVector = mrcpp::MPI_FuncVector;
 
 } // namespace mrchem

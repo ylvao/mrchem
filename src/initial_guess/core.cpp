@@ -98,7 +98,7 @@ bool initial_guess::core::setup(OrbitalVector &Phi, double prec, const Nuclei &n
 
     Timer t_tot, t_lap;
     auto plevel = Printer::getPrintLevel();
-    plevel=1;
+    plevel = 1;
     if (plevel == 1) mrcpp::print::header(1, "Core-Hamiltonian Initial Guess");
 
     // Make Fock operator contributions
@@ -203,7 +203,7 @@ void initial_guess::core::project_ao(OrbitalVector &Phi, double prec, const Nucl
                 Timer t_i;
                 HydrogenFunction h_func(n, l, m, Z, R);
                 Phi.push_back(Orbital(SPIN::Paired));
-                Phi.back().setRank(Phi.size()-1);
+                Phi.back().setRank(Phi.size() - 1);
                 if (mrcpp::mpi::my_orb(Phi.back())) {
                     mrcpp::cplxfunc::project(Phi.back(), h_func, NUMBER::Real, prec);
                     if (std::abs(Phi.back().norm() - 1.0) > 0.01) MSG_WARN("AO not normalized!");
@@ -232,15 +232,15 @@ void initial_guess::core::rotate_orbitals(OrbitalVector &Psi, double prec, Compl
 
     OrbitalIterator iter(Phi);
     while (true) {
-        //for some unknown reason, iter.next() does not work here for the parallel version
-        if(mrcpp::mpi::wrk_size==1){
-            if(iter.next() < 1) break;
+        // for some unknown reason, iter.next() does not work here for the parallel version
+        if (mrcpp::mpi::wrk_size == 1) {
+            if (iter.next() < 1) break;
         } else {
-            if(iter.bank_next() < 1) break;
+            if (iter.bank_next() < 1) break;
         }
         for (auto j = 0; j < Psi.size(); j++) {
             if (not mrcpp::mpi::my_orb(j)) continue;
-            std::vector<mrcpp::CplxFunc> func_vec;
+            std::vector<mrcpp::ComplexFunction> func_vec;
             ComplexVector coef_vec(iter.get_size());
             for (auto i = 0; i < iter.get_size(); i++) {
                 auto idx_i = iter.idx(i);

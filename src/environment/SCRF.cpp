@@ -25,10 +25,10 @@
 
 #include "SCRF.h"
 
+#include <MRCPP/MWFunctions>
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
-#include <MRCPP/MWFunctions>
 
 #include "chemistry/PhysicalConstants.h"
 #include "chemistry/chemistry_utils.h"
@@ -100,7 +100,7 @@ void SCRF::setDCavity() {
 
 void SCRF::computeDensities(OrbitalVector &Phi) {
     Timer timer;
-    resetCplxFunc(this->rho_tot);
+    resetComplexFunction(this->rho_tot);
     Density rho_el(false);
     density::compute(this->apply_prec, rho_el, Phi, DensityType::Total);
     rho_el.rescale(-1.0);
@@ -114,20 +114,20 @@ void SCRF::computeDensities(OrbitalVector &Phi) {
     print_utils::qmfunction(3, "Vacuum density", this->rho_tot, timer);
 }
 
-void SCRF::computeGamma(mrcpp::CplxFunc &potential, mrcpp::CplxFunc &out_gamma) {
+void SCRF::computeGamma(mrcpp::ComplexFunction &potential, mrcpp::ComplexFunction &out_gamma) {
     auto d_V = mrcpp::gradient(*derivative, potential.real());
-    resetCplxFunc(out_gamma);
+    resetComplexFunction(out_gamma);
     mrcpp::dot(this->apply_prec, out_gamma.real(), d_V, this->d_cavity);
     out_gamma.rescale(std::log((epsilon.getEpsIn() / epsilon.getEpsOut())) * (1.0 / (4.0 * mrcpp::pi)));
     mrcpp::clear(d_V, true);
 }
 
-mrcpp::CplxFunc SCRF::solvePoissonEquation(const mrcpp::CplxFunc &in_gamma) {
-    mrcpp::CplxFunc Poisson_func;
-    mrcpp::CplxFunc rho_eff;
-    mrcpp::CplxFunc first_term;
-    mrcpp::CplxFunc Vr;
-    mrcpp::CplxFunc eps_inv;
+mrcpp::ComplexFunction SCRF::solvePoissonEquation(const mrcpp::ComplexFunction &in_gamma) {
+    mrcpp::ComplexFunction Poisson_func;
+    mrcpp::ComplexFunction rho_eff;
+    mrcpp::ComplexFunction first_term;
+    mrcpp::ComplexFunction Vr;
+    mrcpp::ComplexFunction eps_inv;
     eps_inv.alloc(NUMBER::Real);
     Vr.alloc(NUMBER::Real);
 
@@ -143,7 +143,7 @@ mrcpp::CplxFunc SCRF::solvePoissonEquation(const mrcpp::CplxFunc &in_gamma) {
     return Vr;
 }
 
-void SCRF::accelerateConvergence(mrcpp::CplxFunc &dfunc, mrcpp::CplxFunc &func, KAIN &kain) {
+void SCRF::accelerateConvergence(mrcpp::ComplexFunction &dfunc, mrcpp::ComplexFunction &func, KAIN &kain) {
     OrbitalVector phi_n(0);
     OrbitalVector dPhi_n(0);
     phi_n.push_back(Orbital(SPIN::Paired));
@@ -161,7 +161,7 @@ void SCRF::accelerateConvergence(mrcpp::CplxFunc &dfunc, mrcpp::CplxFunc &func, 
     dPhi_n.clear();
 }
 
-void SCRF::nestedSCRF(mrcpp::CplxFunc V_vac) {
+void SCRF::nestedSCRF(mrcpp::ComplexFunction V_vac) {
     KAIN kain(this->history);
     kain.setLocalPrintLevel(10);
 
@@ -172,11 +172,11 @@ void SCRF::nestedSCRF(mrcpp::CplxFunc V_vac) {
     while (update >= this->conv_thrs && iter <= max_iter) {
         Timer t_iter;
         // solve the poisson equation
-        mrcpp::CplxFunc Vr_np1 = solvePoissonEquation(this->gamma_n);
+        mrcpp::ComplexFunction Vr_np1 = solvePoissonEquation(this->gamma_n);
         norm = Vr_np1.norm();
 
         // use a convergence accelerator
-        resetCplxFunc(this->dVr_n);
+        resetComplexFunction(this->dVr_n);
         mrcpp::cplxfunc::add(this->dVr_n, 1.0, Vr_np1, -1.0, this->Vr_n, -1.0);
         update = dVr_n.norm();
 
@@ -187,14 +187,14 @@ void SCRF::nestedSCRF(mrcpp::CplxFunc V_vac) {
         }
 
         // set up for next iteration
-        mrcpp::CplxFunc V_tot;
+        mrcpp::ComplexFunction V_tot;
         mrcpp::cplxfunc::add(V_tot, 1.0, Vr_np1, 1.0, V_vac, -1.0);
         updateCurrentReactionPotential(Vr_np1); // push_back() maybe
 
-        mrcpp::CplxFunc gamma_np1;
+        mrcpp::ComplexFunction gamma_np1;
         computeGamma(V_tot, gamma_np1);
 
-        resetCplxFunc(dgamma_n);
+        resetComplexFunction(dgamma_n);
         mrcpp::cplxfunc::add(this->dgamma_n, 1.0, gamma_np1, -1.0, this->gamma_n, -1.0);
 
         if (iter > 1 and this->history > 0 and (not this->accelerate_Vr)) {
@@ -240,11 +240,11 @@ void SCRF::printConvergenceRow(int i, double norm, double update, double time) c
     println(3, o_txt.str());
 }
 
-mrcpp::CplxFunc &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
+mrcpp::ComplexFunction &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
     this->apply_prec = prec;
     computeDensities(*Phi);
     Timer t_vac;
-    mrcpp::CplxFunc V_vac;
+    mrcpp::ComplexFunction V_vac;
     V_vac.alloc(NUMBER::Real);
     mrcpp::apply(this->apply_prec, V_vac.real(), *poisson, this->rho_tot.real());
     print_utils::qmfunction(3, "Vacuum potential", V_vac, t_vac);
@@ -253,8 +253,8 @@ mrcpp::CplxFunc &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
 
     Timer t_gamma;
     if ((not this->Vr_n.hasReal()) or (not this->gamma_n.hasReal())) {
-        mrcpp::CplxFunc gamma_0;
-        mrcpp::CplxFunc V_tot;
+        mrcpp::ComplexFunction gamma_0;
+        mrcpp::ComplexFunction V_tot;
         computeGamma(V_vac, gamma_0);
         this->Vr_n = solvePoissonEquation(gamma_0);
         mrcpp::cplxfunc::add(V_tot, 1.0, V_vac, 1.0, this->Vr_n, -1.0);
@@ -264,16 +264,16 @@ mrcpp::CplxFunc &SCRF::setup(double prec, const OrbitalVector_p &Phi) {
     // update the potential/gamma before doing anything with them
 
     if (accelerate_Vr) {
-        mrcpp::CplxFunc temp_Vr_n;
+        mrcpp::ComplexFunction temp_Vr_n;
         mrcpp::cplxfunc::add(temp_Vr_n, 1.0, this->Vr_n, 1.0, this->dVr_n, -1.0);
         mrcpp::cplxfunc::deep_copy(this->Vr_n, temp_Vr_n);
         temp_Vr_n.free(NUMBER::Real);
-        mrcpp::CplxFunc V_tot;
+        mrcpp::ComplexFunction V_tot;
         mrcpp::cplxfunc::add(V_tot, 1.0, this->Vr_n, 1.0, V_vac, -1.0);
-        resetCplxFunc(this->gamma_n);
+        resetComplexFunction(this->gamma_n);
         computeGamma(V_tot, this->gamma_n);
     } else {
-        mrcpp::CplxFunc temp_gamma_n;
+        mrcpp::ComplexFunction temp_gamma_n;
         mrcpp::cplxfunc::add(temp_gamma_n, 1.0, this->gamma_n, 1.0, this->dgamma_n, -1.0);
         mrcpp::cplxfunc::deep_copy(this->gamma_n, temp_gamma_n);
         temp_gamma_n.free(NUMBER::Real);
@@ -291,7 +291,7 @@ double SCRF::getNuclearEnergy() {
 }
 
 double SCRF::getElectronicEnergy() {
-    mrcpp::CplxFunc rho_el;
+    mrcpp::ComplexFunction rho_el;
     rho_el.alloc(NUMBER::Real);
     mrcpp::cplxfunc::add(rho_el, 1.0, this->rho_tot, -1.0, this->rho_nuc, -1.0);
     return mrcpp::cplxfunc::dot(rho_el, this->Vr_n).real();
@@ -301,24 +301,24 @@ double SCRF::getTotalEnergy() {
     return mrcpp::cplxfunc::dot(this->rho_tot, this->Vr_n).real();
 }
 
-void SCRF::resetCplxFunc(mrcpp::CplxFunc &function) {
+void SCRF::resetComplexFunction(mrcpp::ComplexFunction &function) {
     if (function.hasReal()) function.free(NUMBER::Real);
     if (function.hasImag()) function.free(NUMBER::Imag);
     function.alloc(NUMBER::Real);
 }
 
-void SCRF::updateCurrentReactionPotential(mrcpp::CplxFunc &Vr_np1) {
-    resetCplxFunc(this->Vr_nm1);
+void SCRF::updateCurrentReactionPotential(mrcpp::ComplexFunction &Vr_np1) {
+    resetComplexFunction(this->Vr_nm1);
     mrcpp::cplxfunc::deep_copy(this->Vr_nm1, this->Vr_n);
-    resetCplxFunc(this->Vr_n);
+    resetComplexFunction(this->Vr_n);
     mrcpp::cplxfunc::deep_copy(this->Vr_n, Vr_np1);
     Vr_np1.free(NUMBER::Real);
 }
 
-void SCRF::updateCurrentGamma(mrcpp::CplxFunc &gamma_np1) {
-    resetCplxFunc(this->gamma_nm1);
+void SCRF::updateCurrentGamma(mrcpp::ComplexFunction &gamma_np1) {
+    resetComplexFunction(this->gamma_nm1);
     mrcpp::cplxfunc::deep_copy(this->gamma_nm1, this->gamma_n);
-    resetCplxFunc(this->gamma_n);
+    resetComplexFunction(this->gamma_n);
     mrcpp::cplxfunc::deep_copy(this->gamma_n, gamma_np1);
     gamma_np1.free(NUMBER::Real);
 }

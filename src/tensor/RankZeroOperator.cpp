@@ -244,7 +244,7 @@ Orbital RankZeroOperator::operator()(Orbital inp) {
     if (not mrcpp::mpi::my_orb(inp)) return inp.paramCopy();
 
     RankZeroOperator &O = *this;
-    std::vector<mrcpp::CplxFunc> func_vec;
+    std::vector<mrcpp::ComplexFunction> func_vec;
     ComplexVector coef_vec = getCoefVector();
     for (int n = 0; n < O.size(); n++) {
         Orbital out_n = O.applyOperTerm(n, inp);
@@ -265,7 +265,7 @@ Orbital RankZeroOperator::dagger(Orbital inp) {
     if (not mrcpp::mpi::my_orb(inp)) return inp.paramCopy();
 
     RankZeroOperator &O = *this;
-    std::vector<mrcpp::CplxFunc> func_vec;
+    std::vector<mrcpp::ComplexFunction> func_vec;
     ComplexVector coef_vec = getCoefVector();
     for (int n = 0; n < O.size(); n++) {
         Orbital out_n = O.daggerOperTerm(n, inp);

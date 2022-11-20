@@ -32,6 +32,7 @@
 #include "ExchangeOperator.h"
 #include "ReactionOperator.h"
 #include "XCOperator.h"
+#include "analyticfunctions/NuclearFunction.h"
 #include "chemistry/chemistry_utils.h"
 #include "properties/SCFEnergy.h"
 #include "qmfunctions/Orbital.h"
@@ -44,7 +45,6 @@
 #include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/qmoperator_utils.h"
 #include "utils/math_utils.h"
-#include "analyticfunctions/NuclearFunction.h"
 
 using mrcpp::Printer;
 using mrcpp::Timer;

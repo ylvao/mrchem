@@ -27,8 +27,8 @@
 
 #include "MRCPP/Printer"
 
-#include "mrchem.h"
 #include "Density.h"
+#include "mrchem.h"
 
 namespace mrchem {
 
@@ -40,7 +40,7 @@ namespace mrchem {
  * NO transfer of ownership.
  */
 Density &Density::operator=(const Density &dens) {
-    if (this != &dens) mrcpp::CplxFunc::operator=(dens);
+    if (this != &dens) mrcpp::ComplexFunction::operator=(dens);
     return *this;
 }
 
@@ -58,7 +58,7 @@ void Density::saveDensity(const std::string &file) {
     metafile << file << ".meta";
 
     // this flushes tree sizes
-    mrcpp::FunctionData &func_data = mrcpp::CplxFunc::getFunctionData();
+    mrcpp::FunctionData &func_data = mrcpp::ComplexFunction::getFunctionData();
 
     std::fstream f;
     f.open(metafile.str(), std::ios::out | std::ios::binary);
@@ -98,7 +98,7 @@ void Density::loadDensity(const std::string &file) {
     fmeta << file << ".meta";
 
     // this flushes tree sizes
-    mrcpp::FunctionData &func_data = mrcpp::CplxFunc::getFunctionData();
+    mrcpp::FunctionData &func_data = mrcpp::ComplexFunction::getFunctionData();
 
     std::fstream f;
     f.open(fmeta.str(), std::ios::in | std::ios::binary);
