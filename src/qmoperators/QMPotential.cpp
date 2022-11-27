@@ -54,7 +54,7 @@ namespace mrchem {
  * beyond this initial refinement.
  */
 QMPotential::QMPotential(int adap, bool shared)
-        : mrcpp::ComplexFunction(shared)
+        : mrcpp::ComplexFunction(0, -1, -1, shared)
         , QMOperator()
         , adap_build(adap) {}
 

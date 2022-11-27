@@ -39,7 +39,7 @@ public:
     NuclearFunction Nuc_func;      // The analytic function of the potential
     mrcpp::ComplexFunction V_func; // The MW Function representation of the potential
 private:
-    void setupLocalPotential(NuclearFunction &f_loc, const Nuclei &nucs, double smooth_prec) const;
+    void setupLocalPotential(NuclearFunction &f_loc, const Nuclei &nucs, double smooth_prec, bool print = true) const;
     void allreducePotential(double prec, mrcpp::ComplexFunction &V_tot, mrcpp::ComplexFunction &V_loc) const;
 };
 

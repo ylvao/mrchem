@@ -86,11 +86,31 @@ void NuclearFunction::push_back(const Nucleus &nuc, double c) {
 
 double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
     double result = 0.0;
+    // all three method have same lowest value at r = 0
     for (int i = 0; i < this->nuclei.size(); i++) {
         double Z_i = this->nuclei[i].getCharge();
         const mrcpp::Coord<3> &R = this->nuclei[i].getCoord();
         double R1 = math_utils::calc_distance(R, r);
-        result += std::max(-Z_i / R1, this->minPot[i]);
+        if (smooth_method == "parabola") {
+            // second order, the value and first derivative are equal at R0
+            double a = -this->minPot[i];
+            double R0 = 1.5 * Z_i / a;
+            double b = 0.5 * Z_i / (R0 * R0 * R0);
+            if (R1 < R0)
+                result += -a + b * R1 * R1;
+            else
+                result += -Z_i / R1;
+        } else if (smooth_method == "minimum") {
+            // zero order, just take constant
+            result += std::max(-Z_i / R1, this->minPot[i]);
+        } else if (smooth_method == "very_smooth") {
+            // expensive smoothing that conserve moments
+            double c = -1.0 / (3.0 * mrcpp::root_pi);
+            double S_i = this->smooth[i];
+            double partResult = -std::erf(R1) / R1 + c * (std::exp(-R1 * R1) + 16.0 * std::exp(-4.0 * R1 * R1));
+            result += Z_i * partResult / S_i;
+        } else
+            MSG_ABORT("smoothing method not recognized");
     }
     return result;
 }

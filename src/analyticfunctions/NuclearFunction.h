@@ -57,6 +57,7 @@ protected:
     double prec;
     std::vector<double> smooth;
     std::vector<double> minPot;
+    std::string smooth_method = "parabola"; // can be: parabola, minimum or very_smooth
 };
 
 namespace detail {

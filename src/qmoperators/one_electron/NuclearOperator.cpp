@@ -56,7 +56,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     // Setup local analytic function
     Timer t_loc;
     NuclearFunction f_loc;
-    setupLocalPotential(f_loc, nucs, smooth_prec);
+    setupLocalPotential(f_loc, nucs, smooth_prec, false);
     Nuc_func = NuclearFunction(nucs, smooth_prec);
 
     // Scale precision by charge, since norm of potential is ~ to charge
@@ -81,6 +81,8 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
 
     // Collect local potentials
     Timer t_com;
+    if (mpi_share and mrcpp::mpi::wrk_rank == 0) std::cout << " Warning: mpi share disabled for nuclear potential" << std::endl;
+    mpi_share = false;
     auto V_tot = std::make_shared<QMPotential>(1, mpi_share);
     allreducePotential(tot_prec, *V_tot, V_loc);
     V_func = *V_tot;
@@ -97,7 +99,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     O.name() = "V_nuc";
 }
 
-void NuclearOperator::setupLocalPotential(NuclearFunction &f_loc, const Nuclei &nucs, double smooth_prec) const {
+void NuclearOperator::setupLocalPotential(NuclearFunction &f_loc, const Nuclei &nucs, double smooth_prec, bool print) const {
     int pprec = Printer::getPrecision();
     int w0 = Printer::getWidth() - 1;
     int w1 = 5;
@@ -113,8 +115,8 @@ void NuclearOperator::setupLocalPotential(NuclearFunction &f_loc, const Nuclei &
     o_head << std::setw(w3) << "Precision";
     o_head << std::setw(w3) << "Smoothing";
 
-    println(2, o_head.str());
-    mrcpp::print::separator(2, '-');
+    if (print) println(2, o_head.str());
+    if (print) mrcpp::print::separator(2, '-');
 
     for (int k = 0; k < nucs.size(); k++) {
         const Nucleus &nuc = nucs[k];
@@ -132,7 +134,7 @@ void NuclearOperator::setupLocalPotential(NuclearFunction &f_loc, const Nuclei &
         o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << Z;
         o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << smooth_prec;
         o_row << std::setw(w3) << std::setprecision(pprec) << std::scientific << c;
-        println(2, o_row.str());
+        if (print) println(2, o_row.str());
     }
 }
 
