@@ -273,6 +273,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
 
     Timer t_2;
     OrbitalVector termTwo = V(Phi);
+    OrbitalVector VnucPhi = mrcpp::mpifuncvec::multiply(Phi, nuc->Nuc_func, prec, &nuc->V_func);
     mrcpp::print::time(2, "Computing potential term", t_2);
 
     // Compute transformed orbitals scaled by diagonal Fock elements
@@ -295,6 +296,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     OrbitalVector arg = orbital::deep_copy(termOne);
     for (int i = 0; i < arg.size(); i++) {
         if (not mrcpp::mpi::my_orb(arg[i])) continue;
+        arg[i].add(1.0, VnucPhi[i]);
         arg[i].add(1.0, termTwo[i]);
         arg[i].add(1.0, termThree[i]);
         arg[i].add(1.0, Psi[i]);
