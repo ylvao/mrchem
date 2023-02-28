@@ -107,6 +107,7 @@ double NuclearFunction::evalf(const mrcpp::Coord<3> &r) const {
             // expensive smoothing that conserve moments
             double c = -1.0 / (3.0 * mrcpp::root_pi);
             double S_i = this->smooth[i];
+            R1 /= S_i;
             double partResult = -std::erf(R1) / R1 + c * (std::exp(-R1 * R1) + 16.0 * std::exp(-4.0 * R1 * R1));
             result += Z_i * partResult / S_i;
         } else
