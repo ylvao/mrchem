@@ -81,8 +81,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
 
     // Collect local potentials
     Timer t_com;
-    if (mpi_share and mrcpp::mpi::wrk_rank == 0) std::cout << " Warning: mpi share disabled for nuclear potential" << std::endl;
-    mpi_share = false;
+
     auto V_tot = std::make_shared<QMPotential>(1, mpi_share);
     allreducePotential(tot_prec, *V_tot, V_loc);
     V_func = *V_tot;
