@@ -59,7 +59,7 @@ QMPotential::QMPotential(int adap, bool shared)
         , adap_build(adap) {}
 
 QMPotential::QMPotential(const QMPotential &inp)
-        : mrcpp::ComplexFunction(inp.isShared())
+        : mrcpp::ComplexFunction(0, -1, -1, inp.isShared())
         , QMOperator()
         , adap_build(inp.adap_build) {}
 
