@@ -33,7 +33,7 @@ class OrbitalIterator final {
 public:
     OrbitalIterator(OrbitalVector &Phi, bool sym = false);
 
-    BankAccount orbBank;
+    mrcpp::BankAccount orbBank;
     bool next(int max_recv = -1);
     bool bank_next(int max_recv = 1);
 
@@ -55,7 +55,7 @@ protected:
     OrbitalVector received_orbitals;
     std::vector<int> received_orbital_index;  // index of the orbitals received
     std::vector<int> sent_orbital_index;      // indices of the orbitals sent out
-    std::vector<int> sent_orbital_mpirank;    // mpi rank (=rankID) of the orbitals sent out
+    std::vector<int> sent_orbital_mpirank;    // mpi rank (=rank) of the orbitals sent out
     std::vector<int> rcv_step;                // for symmetric treatment: if the send was at step=0 or 1
     std::vector<std::vector<int>> orb_ix_map; // indices in the original orbital vector for each MPI
 };

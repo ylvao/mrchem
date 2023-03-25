@@ -30,7 +30,7 @@
 
 namespace mrchem {
 
-class Orbital;
+using Orbital = mrcpp::ComplexFunction;
 
 /** @class RankOneOperator
  *

@@ -33,7 +33,6 @@
 #include "chemistry/Molecule.h"
 #include "qmfunctions/Orbital.h"
 #include "qmfunctions/orbital_utils.h"
-#include "qmfunctions/qmfunction_utils.h"
 #include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/two_electron/FockBuilder.h"
 #include "qmoperators/two_electron/ReactionOperator.h"
@@ -288,6 +287,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
             if (F.getReactionOperator() != nullptr) F.getReactionOperator()->updateMOResidual(err_t);
             F.setup(orb_prec);
         }
+
         // Init Helmholtz operator
         HelmholtzVector H(helm_prec, F_mat.real().diagonal());
         ComplexMatrix L_mat = H.getLambdaMatrix();
@@ -368,7 +368,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
     }
 
     F.clear();
-    mpi::barrier(mpi::comm_orb);
+    mrcpp::mpi::barrier(mrcpp::mpi::comm_wrk);
 
     printConvergence(converged, "Total energy");
     reset();

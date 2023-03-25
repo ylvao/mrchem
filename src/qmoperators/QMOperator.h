@@ -53,7 +53,7 @@
  */
 namespace mrchem {
 
-class Orbital;
+using Orbital = mrcpp::ComplexFunction;
 
 class QMOperator {
 public:
