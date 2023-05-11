@@ -338,6 +338,12 @@ User input reference
     **Predicates**
       - ``value.lower() in ['none', 'pcm']``
   
+   :nuclear_model: Type of nucleus model. 0,1=numerically smoothed, 2=finite homogeneous sphere, 2=finite Gaussian 
+  
+    **Type** ``int``
+  
+    **Default** ``0``
+  
  :ZORA: Define required parameters for the ZORA Hamiltonian. 
 
   :red:`Keywords`

@@ -23,21 +23,198 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <MRCPP/MWOperators>
 #include <MRCPP/Parallel>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
 
 #include "NuclearOperator.h"
 
+#include<fstream>
+#include<limits>
+#include<nlohmann/json.hpp>
+
 #include "analyticfunctions/NuclearFunction.h"
 #include "chemistry/chemistry_utils.h"
+#include "qmfunctions/Density.h"
 #include "qmoperators/QMPotential.h"
 #include "utils/print_utils.h"
+#include "utils/math_utils.h"
+
 
 using mrcpp::Printer;
 using mrcpp::Timer;
 
 namespace mrchem {
+
+
+NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, bool mpi_share, int nuc_model) {
+    if (nuc_model == 1) {
+        projectHFYGB(nucs, proj_prec, mpi_share);
+    } else if (nuc_model == 2) {
+        projectHomogeneusSphere(nucs, proj_prec, mpi_share);
+    } else if (nuc_model == 3) {
+        projectGaussian(nucs, proj_prec, mpi_share);
+    } else {
+        NOT_REACHED_ABORT("Invalid nuclear type");
+    }
+}
+
+/** Compute finite nucleus potential by projecting analytic expression for the potential.
+*/
+void NuclearOperator::projectHFYGB(const Nuclei &nucs, double proj_prec, bool mpi_share) {
+    Timer t_tot;
+    mrcpp::print::header(0, "Projecting HFYGB Nuclear Potential");
+ 
+    auto f_smooth = [&nucs,proj_prec] (const mrcpp::Coord<3> &r) -> double {
+        double c = -1.0 / (3.0 * mrcpp::root_pi);
+        double tmp_sum = 0.0;
+        for (auto &nuc : nucs) {
+            const auto Z_I = nuc.getCharge();
+            const auto &R_I = nuc.getCoord();
+            const double Z_I_2 = Z_I * Z_I;
+            const double Z_I_5 = Z_I_2 * Z_I_2 * Z_I;
+            const double factor = std::cbrt(0.00435 * proj_prec / Z_I_5);
+            const double R = math_utils::calc_distance(r, R_I) / factor;
+            const double u = -std::erf(R)/R + c*(std::exp(-(R*R)) + 16.0*std::exp(-4.0*R*R));
+            tmp_sum += (Z_I * u) / factor;
+        }
+        return tmp_sum;
+    };
+
+    Timer t_pot;
+    auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
+    mrcpp::cplxfunc::project(*V_nuc, f_smooth, NUMBER::Real, proj_prec);
+    t_pot.stop();
+
+    // Invoke operator= to assign *this operator
+    RankZeroOperator &O = (*this);
+    O = V_nuc;
+    O.name() = "V_nuc";
+}
+
+void NuclearOperator::projectHomogeneusSphere(const Nuclei &nucs, double proj_prec, bool mpi_share) {
+    Timer t_tot;
+    mrcpp::print::header(0, "Projecting Homogeneous Sphere Nuclear Potential");
+
+    std::ifstream f("param_V.json");
+    while (f.peek() == '#') f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+    nlohmann::json param_V = nlohmann::json::parse(f);
+    f.close();
+ 
+    auto f_sphere = [&nucs,&param_V] (const mrcpp::Coord<3> &r) -> double {
+        double tmp_sum = 0.0;
+        for (auto &nuc : nucs) {
+            const auto &A = nuc.getElement().getSymbol();
+            double RMS = 0.0;
+            for (auto item : param_V["element"]) {
+                const auto name = item["name"];
+                if (name == A) {
+                    RMS = item["rms"];
+                    break;
+                }
+            }
+            const auto RMS2 = RMS*RMS;
+            const auto Z_I = nuc.getCharge();
+            const auto &R_I = nuc.getCoord();
+            double R = math_utils::calc_distance(r, R_I);
+            double R0 = std::sqrt(RMS2*(5.0/3.0));
+            double prec, factor;
+            if (R <= R0) {
+                prec = -Z_I / (2.0*R0);
+                factor = 3.0 - (R*R)/(R0*R0);
+            } else { 
+                prec = -Z_I / R;
+                factor = 1.0;
+            }
+            tmp_sum += prec * factor;
+        }
+        return tmp_sum;
+    };
+
+    Timer t_pot;
+    auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
+    mrcpp::cplxfunc::project(*V_nuc, f_sphere, NUMBER::Real, proj_prec);
+    t_pot.stop();
+
+    // Invoke operator= to assign *this operator
+    RankZeroOperator &O = (*this);
+    O = V_nuc;
+    O.name() = "V_nuc";
+}
+
+void NuclearOperator::projectGaussian(const Nuclei &nucs, double proj_prec, bool mpi_share) {
+    Timer t_tot;
+    mrcpp::print::header(0, "Projecting Gaussian Nuclear Potential");
+
+    std::ifstream f("param_V.json");
+    while (f.peek() == '#') f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+    nlohmann::json param_V = nlohmann::json::parse(f);
+    f.close();
+ 
+    auto f_smooth = [&nucs,&param_V] (const mrcpp::Coord<3> &r) -> double {
+        double tmp_sum = 0.0;
+        for (auto &nuc : nucs) {
+            const auto &A = nuc.getElement().getSymbol();
+            double epsilon = 0.0;
+            for (auto item : param_V["element"]) {
+                const auto name = item["name"];
+                if (name == A) {
+                    epsilon = item["xi"];
+                    break;
+                }
+            }
+            const auto Z_I = nuc.getCharge();
+            const auto &R_I = nuc.getCoord();
+            const double R = math_utils::calc_distance(r, R_I);
+            const double prec = -Z_I / R;
+            const double u = std::erf(std::sqrt(epsilon) * R);
+            tmp_sum += prec * u;
+        }
+        return tmp_sum;
+    };
+
+    Timer t_pot;
+    auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
+    mrcpp::cplxfunc::project(*V_nuc, f_smooth, NUMBER::Real, proj_prec);
+    t_pot.stop();
+
+    // Invoke operator= to assign *this operator
+    RankZeroOperator &O = (*this);
+    O = V_nuc;
+    O.name() = "V_nuc";
+}
+
+/** Compute finite nucleus potential by projecting Gaussian charge distribution and then apply Poisson.
+*   Should work for any number of nuclei, but all get the same exponent.
+*/
+void NuclearOperator::applyGaussian(const Nuclei &nucs, double proj_prec, double apply_prec, double exponent, bool mpi_share) {
+    Timer t_tot;
+    mrcpp::print::header(2, "Projecting nuclear density");
+    println(0, "Nuclear exponent: " << exponent);
+
+    mrcpp::PoissonOperator P(*MRA, proj_prec);
+
+    Timer t_rho;
+    auto rho_nuc = chemistry::compute_nuclear_density(proj_prec, nucs, exponent);
+    rho_nuc.rescale(-1.0);
+    t_rho.stop();
+
+    Timer t_pot;
+    auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
+    V_nuc->alloc(NUMBER::Real);
+    mrcpp::apply(apply_prec, V_nuc->real(), P, rho_nuc.real());
+    t_pot.stop();
+
+    t_tot.stop();
+    print_utils::qmfunction(2, "Apply Poisson", *V_nuc, t_pot);
+    mrcpp::print::footer(2, t_tot, 2);
+
+    // Invoke operator= to assign *this operator
+    RankZeroOperator &O = (*this);
+    O = V_nuc;
+    O.name() = "V_nuc";
+}
 
 /*! @brief NuclearOperator represents the function: sum_i Z_i/|r - R_i|
  *  @param nucs: Collection of nuclei that defines the potential
