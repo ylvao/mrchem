@@ -64,7 +64,7 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, bool mpi_
 */
 void NuclearOperator::projectHFYGB(const Nuclei &nucs, double proj_prec, bool mpi_share) {
     Timer t_tot;
-    mrcpp::print::header(0, "Projecting HFYGB Nuclear Potential");
+    mrcpp::print::header(2, "Projecting HFYGB Nuclear Potential");
  
     auto f_smooth = [&nucs,proj_prec] (const mrcpp::Coord<3> &r) -> double {
         double c = -1.0 / (3.0 * mrcpp::root_pi);
@@ -82,10 +82,10 @@ void NuclearOperator::projectHFYGB(const Nuclei &nucs, double proj_prec, bool mp
         return tmp_sum;
     };
 
-    Timer t_pot;
     auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
     mrcpp::cplxfunc::project(*V_nuc, f_smooth, NUMBER::Real, proj_prec);
-    t_pot.stop();
+    t_tot.stop();
+    mrcpp::print::footer(2, t_tot, 2);
 
     // Invoke operator= to assign *this operator
     RankZeroOperator &O = (*this);
@@ -95,47 +95,30 @@ void NuclearOperator::projectHFYGB(const Nuclei &nucs, double proj_prec, bool mp
 
 void NuclearOperator::projectHomogeneusSphere(const Nuclei &nucs, double proj_prec, bool mpi_share) {
     Timer t_tot;
-    mrcpp::print::header(0, "Projecting Homogeneous Sphere Nuclear Potential");
+    mrcpp::print::header(2, "Projecting Homogeneous Sphere Nuclear Potential");
 
-    std::ifstream f("param_V.json");
-    while (f.peek() == '#') f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-    nlohmann::json param_V = nlohmann::json::parse(f);
-    f.close();
- 
-    auto f_sphere = [&nucs,&param_V] (const mrcpp::Coord<3> &r) -> double {
+    auto f_sphere = [&nucs] (const mrcpp::Coord<3> &r) -> double {
         double tmp_sum = 0.0;
         for (auto &nuc : nucs) {
-            const auto &A = nuc.getElement().getSymbol();
-            double RMS = 0.0;
-            for (auto item : param_V["element"]) {
-                const auto name = item["name"];
-                if (name == A) {
-                    RMS = item["rms"];
-                    break;
-                }
-            }
-            const auto RMS2 = RMS*RMS;
-            const auto Z_I = nuc.getCharge();
-            const auto &R_I = nuc.getCoord();
-            double R = math_utils::calc_distance(r, R_I);
-            double R0 = std::sqrt(RMS2*(5.0/3.0));
-            double prec, factor;
+            auto Z = nuc.getCharge();
+            auto R = math_utils::calc_distance(r, nuc.getCoord());
+            auto RMS = nuc.getRMSRadius();
+            if (RMS < 0.0) MSG_ABORT("Invalid RMS radius : " << RMS);
+            auto RMS2 = RMS*RMS;
+            auto R0 = std::sqrt(RMS2*(5.0/3.0));
             if (R <= R0) {
-                prec = -Z_I / (2.0*R0);
-                factor = 3.0 - (R*R)/(R0*R0);
+                tmp_sum += -(Z / (2.0*R0)) * (3.0 - (R*R)/(R0*R0));
             } else { 
-                prec = -Z_I / R;
-                factor = 1.0;
+                tmp_sum += -(Z / R);
             }
-            tmp_sum += prec * factor;
         }
         return tmp_sum;
     };
 
-    Timer t_pot;
     auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
     mrcpp::cplxfunc::project(*V_nuc, f_sphere, NUMBER::Real, proj_prec);
-    t_pot.stop();
+    t_tot.stop();
+    mrcpp::print::footer(2, t_tot, 2);
 
     // Invoke operator= to assign *this operator
     RankZeroOperator &O = (*this);
@@ -145,39 +128,26 @@ void NuclearOperator::projectHomogeneusSphere(const Nuclei &nucs, double proj_pr
 
 void NuclearOperator::projectGaussian(const Nuclei &nucs, double proj_prec, bool mpi_share) {
     Timer t_tot;
-    mrcpp::print::header(0, "Projecting Gaussian Nuclear Potential");
-
-    std::ifstream f("param_V.json");
-    while (f.peek() == '#') f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-    nlohmann::json param_V = nlohmann::json::parse(f);
-    f.close();
+    mrcpp::print::header(2, "Projecting Gaussian Nuclear Potential");
  
-    auto f_smooth = [&nucs,&param_V] (const mrcpp::Coord<3> &r) -> double {
+    auto f_gauss = [&nucs] (const mrcpp::Coord<3> &r) -> double {
         double tmp_sum = 0.0;
         for (auto &nuc : nucs) {
-            const auto &A = nuc.getElement().getSymbol();
-            double epsilon = 0.0;
-            for (auto item : param_V["element"]) {
-                const auto name = item["name"];
-                if (name == A) {
-                    epsilon = item["xi"];
-                    break;
-                }
-            }
-            const auto Z_I = nuc.getCharge();
-            const auto &R_I = nuc.getCoord();
-            const double R = math_utils::calc_distance(r, R_I);
-            const double prec = -Z_I / R;
-            const double u = std::erf(std::sqrt(epsilon) * R);
-            tmp_sum += prec * u;
+            auto Z = nuc.getCharge();
+            auto R = math_utils::calc_distance(r, nuc.getCoord());
+            auto RMS = nuc.getRMSRadius();
+            if (RMS < 0.0) MSG_ABORT("Invalid RMS radius : " << RMS);
+            auto RMS2 = RMS*RMS;
+            auto xi = 3.0 / (2.0 * RMS2);
+            tmp_sum += -(Z / R) * std::erf(std::sqrt(xi) * R);
         }
         return tmp_sum;
     };
 
-    Timer t_pot;
     auto V_nuc = std::make_shared<QMPotential>(1, mpi_share);
-    mrcpp::cplxfunc::project(*V_nuc, f_smooth, NUMBER::Real, proj_prec);
-    t_pot.stop();
+    mrcpp::cplxfunc::project(*V_nuc, f_gauss, NUMBER::Real, proj_prec);
+    t_tot.stop();
+    mrcpp::print::footer(2, t_tot, 2);
 
     // Invoke operator= to assign *this operator
     RankZeroOperator &O = (*this);

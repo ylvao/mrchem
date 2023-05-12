@@ -139,7 +139,8 @@ void driver::init_molecule(const json &json_mol, Molecule &mol) {
     for (const auto &coord : json_mol["coords"]) {
         auto atom = coord["atom"];
         auto xyz = coord["xyz"];
-        nuclei.push_back(atom, xyz);
+        auto rms = coord["r_rms"];
+        nuclei.push_back(atom, xyz, rms);
     }
     mol.printGeometry();
 
