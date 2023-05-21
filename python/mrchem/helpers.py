@@ -139,7 +139,8 @@ def write_scf_guess(user_dict, wf_dict):
     guess_prec = scf_dict["guess_prec"]
 
     if guess_type == "chk":
-        chk_Phi = Path(f"{scf_dict['path_checkpoint']}/phi_scf")
+        # At least one orbital must be present in the checkpoint folder
+        chk_Phi = Path(f"{scf_dict['path_checkpoint']}/phi_scf_idx_0.meta")
         if not chk_Phi.is_file():
             print(
                 f"No checkpoint guess found in {scf_dict['path_checkpoint']}, falling back to 'sad_gto' initial guess"
