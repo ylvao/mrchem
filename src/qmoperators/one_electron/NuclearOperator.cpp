@@ -68,26 +68,22 @@ NuclearOperator::NuclearOperator(const Nuclei &nucs, double proj_prec, double sm
     if (model == "point_like") {
         mrcpp::print::header(1, "Projecting nuclear potential (point-like HFYGB)");
         f_loc = new PointNucleusHFYGB();
-        setupLocalPotential(*f_loc, nucs, smooth_prec);
     } else if (model == "point_parabola") {
         mrcpp::print::header(1, "Projecting nuclear potential (point-like parabola)");
         f_loc = new PointNucleusParabola();
-        setupLocalPotential(*f_loc, nucs, smooth_prec);
     } else if (model == "point_minimum") {
         mrcpp::print::header(1, "Projecting nuclear potential (point-like minimum)");
         f_loc = new PointNucleusMinimum();
-        setupLocalPotential(*f_loc, nucs, smooth_prec);
     } else if (model == "finite_gaussian") {
         mrcpp::print::header(1, "Projecting nuclear potential (finite Gaussian)");
         f_loc = new FiniteNucleusGaussian();
-        setupLocalPotential(*f_loc, nucs, smooth_prec);
     } else if (model == "finite_sphere") {
         mrcpp::print::header(1, "Projecting nuclear potential (finite homogeneous sphere)");
         f_loc = new FiniteNucleusSphere();
-        setupLocalPotential(*f_loc, nucs, smooth_prec);
     } else {
         MSG_ABORT("Invalid nuclear model : " << model);
     }
+    setupLocalPotential(*f_loc, nucs, smooth_prec);
 
     // Scale precision by charge, since norm of potential is ~ to charge
     double Z_tot = 1.0 * chemistry::get_total_charge(nucs);
