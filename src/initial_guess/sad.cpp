@@ -131,7 +131,8 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, double screen, c
     initial_guess::core::rotate_orbitals(Phi, prec, U, Psi);
     initial_guess::core::rotate_orbitals(Phi_a, prec, U, Psi);
     initial_guess::core::rotate_orbitals(Phi_b, prec, U, Psi);
-    Phi = orbital::adjoin(Phi_a, Phi_b);
+    Phi = orbital::adjoin(Phi, Phi_a);
+    Phi = orbital::adjoin(Phi, Phi_b);
     p.clear();
     V.clear();
 
@@ -207,7 +208,8 @@ bool initial_guess::sad::setup(OrbitalVector &Phi, double prec, double screen, c
     initial_guess::core::rotate_orbitals(Phi, prec, U, Psi);
     initial_guess::core::rotate_orbitals(Phi_a, prec, U, Psi);
     initial_guess::core::rotate_orbitals(Phi_b, prec, U, Psi);
-    Phi = orbital::adjoin(Phi_a, Phi_b);
+    Phi = orbital::adjoin(Phi, Phi_a);
+    Phi = orbital::adjoin(Phi, Phi_b);
     p.clear();
     V.clear();
 

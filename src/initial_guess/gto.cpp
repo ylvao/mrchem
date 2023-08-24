@@ -94,7 +94,8 @@ bool initial_guess::gto::setup(OrbitalVector &Phi, double prec, double screen, c
     initial_guess::gto::project_mo(Phi_b, prec, bas_file, mob_file, screen);
 
     // Collect orbitals into one vector
-    Phi = orbital::adjoin(Phi_a, Phi_b);
+    Phi = orbital::adjoin(Phi, Phi_a);
+    Phi = orbital::adjoin(Phi, Phi_b);
 
     return true;
 }

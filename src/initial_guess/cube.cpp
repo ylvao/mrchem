@@ -81,7 +81,8 @@ bool initial_guess::cube::setup(OrbitalVector &Phi, double prec, const std::stri
     success &= initial_guess::cube::project_mo(Phi_b, prec, file_b);
 
     // Collect orbitals into one vector
-    Phi = orbital::adjoin(Phi_a, Phi_b);
+    Phi = orbital::adjoin(Phi, Phi_a);
+    Phi = orbital::adjoin(Phi, Phi_b);
 
     return success;
 }
