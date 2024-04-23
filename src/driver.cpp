@@ -551,7 +551,7 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol, const js
                 h.clear();
             }
 
-            surface_force::surface_forces(mol, Phi, prec, json_fock);
+            Eigen::MatrixXd forces = surface_force::surface_forces(mol, Phi, prec, json_fock);
 
 
         }
