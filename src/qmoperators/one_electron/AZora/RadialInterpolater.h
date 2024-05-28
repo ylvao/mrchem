@@ -4,12 +4,19 @@
 #include <unsupported/Eigen/Splines>
 #include <string>
 #include <iostream>
+#include <filesystem>
 
 typedef Eigen::Spline<double, 1, 3> Spline1D;
 typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
 void readZoraPotential(const std::string path, Eigen::VectorXd &rGrid, Eigen::VectorXd &vZora, Eigen::VectorXd &kappa){
     std::vector<double> r, v, k;
+    bool file_exists = std::filesystem::exists(path);
+    if (!file_exists) {
+        std::cerr << "File " << path << " does not exist." << std::endl;
+        std::cout << "File " << path << " does not exist." << std::endl;
+        exit(1);
+    }
     std::ifstream file(path);
     std::string line;
     double r_, v_, k_;
