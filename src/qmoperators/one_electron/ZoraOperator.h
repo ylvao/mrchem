@@ -26,6 +26,7 @@
 #pragma once
 
 #include "tensor/RankZeroOperator.h"
+#include <string>
 
 namespace mrchem {
 
@@ -34,6 +35,9 @@ class QMPotential;
 class ZoraOperator final : public RankZeroOperator {
 public:
     ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inverse = false);
+
+    ZoraOperator(std::shared_ptr<QMPotential> &relativisticDampening, std::string name);
+
 };
 
 } // namespace mrchem
