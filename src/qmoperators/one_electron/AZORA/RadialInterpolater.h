@@ -43,7 +43,7 @@ class RadInterpolater {
         Eigen::VectorXd kappa;
 
         this->mode = mode;
-        std::string filename = data_dir + '/' + element + ".dat";
+        std::string filename = data_dir + '/' + element + ".txt";
 
         readZoraPotential(filename, rGrid, vZora, kappa);
         if (mode == "kappa") {
