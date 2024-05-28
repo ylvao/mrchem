@@ -76,8 +76,9 @@ public:
     void setLightSpeed(double c) { this->light_speed = c; }
     double getLightSpeed() const { return this->light_speed; }
 
+    bool isAzora() const { return zora_is_azora; }
     bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
-    void setZoraType(bool has_nuc, bool has_coul, bool has_xc);
+    void setZoraType(bool has_nuc, bool has_coul, bool has_xc, bool is_azora);
 
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
@@ -88,6 +89,7 @@ private:
     bool zora_has_nuc{false};
     bool zora_has_coul{false};
     bool zora_has_xc{false};
+    bool zora_is_azora{false};
 
     double light_speed{-1.0};
     double exact_exchange{1.0};
