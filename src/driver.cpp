@@ -1025,6 +1025,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         F.setZoraType(include_nuclear, include_coulomb, include_xc, is_azora);
         if (is_azora) {
             F.setAZORADirectory(json_fock["zora_operator"]["azora_potential_path"]);
+            F.setNucs(mol.getNuclei());
         }
     }
     ///////////////////////////////////////////////////////////

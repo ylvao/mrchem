@@ -1,3 +1,4 @@
+
 /*
  * MRChem, a numerical real-space code for molecular electronic structure
  * calculations within the self-consistent field (SCF) approximations of quantum
@@ -29,6 +30,7 @@
 #include "tensor/RankOneOperator.h"
 #include "tensor/RankZeroOperator.h"
 #include <string>
+#include "chemistry/Nucleus.h"
 
 /** @class FockOperator
  *
@@ -47,6 +49,7 @@ class MomentumOperator;
 class KineticOperator;
 class ZoraKineticOperator;
 class ZoraOperator;
+class AZoraPotential;
 class NuclearOperator;
 class CoulombOperator;
 class ExchangeOperator;
@@ -77,10 +80,11 @@ public:
     void setLightSpeed(double c) { this->light_speed = c; }
     double getLightSpeed() const { return this->light_speed; }
 
-    bool isAzora() const { return zora_is_azora; }
+    bool isAZora() const { return zora_is_azora; }
     bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
     void setZoraType(bool has_nuc, bool has_coul, bool has_xc, bool is_azora);
     void setAZORADirectory(const std::string &dir) {azora_dir = dir;}
+    void setNucs(const Nuclei &nucs) { this->nucs = nucs;}
 
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
@@ -99,6 +103,7 @@ private:
     RankZeroOperator zora_base;
 
     double prec;
+    Nuclei nucs;
 
     RankZeroOperator V;   ///< Total potential energy operator
     RankZeroOperator H_1; ///< Perturbation operators
@@ -116,6 +121,8 @@ private:
     std::shared_ptr<QMPotential> collectZoraBasePotential();
     OrbitalVector buildHelmholtzArgumentZORA(OrbitalVector &Phi, OrbitalVector &Psi, DoubleVector eps, double prec);
     OrbitalVector buildHelmholtzArgumentNREL(OrbitalVector &Phi, OrbitalVector &Psi);
+    std::shared_ptr<QMPotential> kappaPot{nullptr};
+    std::shared_ptr<QMPotential> kappaInvPot{nullptr};
 };
 
 } // namespace mrchem
