@@ -28,6 +28,7 @@
 #include "qmoperators/QMPotential.h"
 #include "tensor/RankOneOperator.h"
 #include "tensor/RankZeroOperator.h"
+#include <string>
 
 /** @class FockOperator
  *
@@ -79,6 +80,7 @@ public:
     bool isAzora() const { return zora_is_azora; }
     bool isZora() const { return (zora_has_nuc || zora_has_coul || zora_has_xc); }
     void setZoraType(bool has_nuc, bool has_coul, bool has_xc, bool is_azora);
+    void setAZORADirectory(const std::string &dir) {azora_dir = dir;}
 
     SCFEnergy trace(OrbitalVector &Phi, const Nuclei &nucs);
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
@@ -90,6 +92,7 @@ private:
     bool zora_has_coul{false};
     bool zora_has_xc{false};
     bool zora_is_azora{false};
+    std::string azora_dir = "";
 
     double light_speed{-1.0};
     double exact_exchange{1.0};
