@@ -29,11 +29,12 @@ public:
      * @param prec Precision parameter from base class.
      * @param shared Determines if the base potential is shared.
      */
-    AZoraPotential(Nuclei nucs, int adap, double prec, bool shared = false, double c = 137.035999084) 
+    AZoraPotential(Nuclei nucs, int adap, double prec, std::string azora_dir, bool shared = false, double c = 137.035999084) 
         : QMPotential(adap, shared) {
         this->nucs = nucs;
         this->prec = prec;
         this->c = c;
+        this->azora_dir = azora_dir;
         initAzoraPotential();
     }
 
@@ -46,6 +47,7 @@ public:
         this->nucs = other.nucs;
         this->prec = other.prec;
         this->c = other.c;
+        this->azora_dir = other.azora_dir;
         initAzoraPotential();
     }
 
@@ -61,6 +63,7 @@ protected:
     Nuclei nucs; // The nuclei of the molecule
     double prec; // The precision parameter
     double c;    // The speed of light
+    std::string azora_dir; // The directory containing the azora potential data
 
     /**
      * Initialize the azora potential based on the molecule.
@@ -76,7 +79,7 @@ protected:
 
         std::string mode = "potential";
         for (int i = 0; i < n; i++) {
-            RadInterpolater potentialSpline(nucs[i].getElement().getSymbol(), mode);
+            RadInterpolater potentialSpline(nucs[i].getElement().getSymbol(), this->azora_dir, mode);
             atomicPotentials.push_back(potentialSpline);
         }
 
