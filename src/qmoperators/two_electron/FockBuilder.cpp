@@ -92,7 +92,7 @@ void FockBuilder::setup(double prec) {
 
     if (isZora()) {
         Timer t_zora;
-        auto c = getLightSpeed();
+        double c = getLightSpeed();
         mrcpp::print::header(3, "Building ZORA operators");
         mrcpp::print::value(3, "Precision", prec, "(rel)", 5);
         mrcpp::print::value(3, "Light speed", c, "(au)", 5);
@@ -105,7 +105,31 @@ void FockBuilder::setup(double prec) {
         this->kappa_inv->setup(prec);
         this->zora_base.setup(prec);
         mrcpp::print::footer(3, t_zora, 2);
-    };
+    }
+    if (isAZora()) {
+        Timer t_zora;
+        double c = getLightSpeed();
+        mrcpp::print::header(3, "Building AZORA operators");
+        mrcpp::print::value(3, "Precision", prec, "(rel)", 5);
+        mrcpp::print::value(3, "Light speed", c, "(au)", 5);
+        mrcpp::print::separator(3, '-');
+        int adap = 0;
+        bool share = false;
+        kappaPot = std::make_shared<AZoraPotential>(nucs, adap, prec, this->azora_dir);
+
+        kappaInvPot = std::make_shared<QMPotential>(adap);
+
+        mrcpp::cplxfunc::deep_copy(*kappaInvPot, *kappaPot);
+
+        kappaInvPot->real().map([](double val) { return 1.0 / val; });
+
+        this->kappa = std::make_shared<ZoraOperator>(kappaPot, "kappa");
+        this->kappa_inv = std::make_shared<ZoraOperator>(kappaInvPot, "kappa_inv");
+        this->kappa->setup(prec);
+        this->kappa_inv->setup(prec);
+
+        mrcpp::print::footer(3, t_zora, 2);
+    }
 
     t_tot.stop();
     if (plevel == 2) mrcpp::print::footer(2, t_tot, 2);
@@ -125,6 +149,10 @@ void FockBuilder::clear() {
         this->kappa->clear();
         this->kappa_inv->clear();
         this->zora_base.clear();
+    }
+    if (isAZora()) {
+        kappa->clear();
+        kappa_inv->clear();
     }
 }
 
@@ -181,7 +209,7 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     }
 
     // Kinetic part
-    if (isZora()) {
+    if (isZora() || isAZora()) {
         E_kin = qmoperator::calc_kinetic_trace(momentum(), *this->kappa, Phi).real();
     } else {
         E_kin = qmoperator::calc_kinetic_trace(momentum(), Phi);
@@ -206,7 +234,7 @@ ComplexMatrix FockBuilder::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     mrcpp::print::header(2, "Computing Fock matrix");
 
     ComplexMatrix T_mat = ComplexMatrix::Zero(bra.size(), ket.size());
-    if (isZora()) {
+    if (isZora() || isAZora()) {
         T_mat = qmoperator::calc_kinetic_matrix(momentum(), *this->kappa, bra, ket);
     } else {
         T_mat = qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
@@ -230,7 +258,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgument(double prec, OrbitalVector Phi
     mrcpp::print::time(2, "Rotating orbitals", t_rot);
 
     OrbitalVector out;
-    if (isZora()) {
+    if (isZora() || isAZora()) {
         out = buildHelmholtzArgumentZORA(Phi, Psi, F_mat.real().diagonal(), prec);
     } else {
         out = buildHelmholtzArgumentNREL(Phi, Psi);
@@ -251,10 +279,24 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     RankZeroOperator &V = potential();
     RankZeroOperator &kappa = *this->kappa;
     RankZeroOperator &kappa_m1 = *this->kappa_inv;
-    RankZeroOperator &V_zora = this->zora_base;
-
     RankZeroOperator operOne = 0.5 * tensor::dot(p(kappa), p);
-    RankZeroOperator operThree = kappa * V_zora;
+
+    std::shared_ptr<RankZeroOperator> operThreePtr = nullptr;
+
+    if (isZora()) {
+        RankZeroOperator &V_zora = this->zora_base;
+        operThreePtr = std::make_shared<RankZeroOperator>(V_zora * kappa);
+    } else if (isAZora()) { 
+        std::shared_ptr<QMPotential> vTimesKappa = std::make_shared<QMPotential>(0);
+        mrcpp::cplxfunc::deep_copy(*vTimesKappa, *kappaPot);
+        vTimesKappa->real().map([two_cc](double val) { return two_cc * (val - 1); });
+        operThreePtr = std::make_shared<RankZeroOperator>(vTimesKappa);
+    } else {
+        MSG_ABORT("At this point, the ZORA or AZORA operator should be set. Exiting.");
+    }
+
+    RankZeroOperator operThree = *operThreePtr;
+    
     operOne.setup(prec);
     operThree.setup(prec);
 
