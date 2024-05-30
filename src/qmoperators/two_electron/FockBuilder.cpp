@@ -294,7 +294,9 @@ OrbitalVector FockBuilder::buildHelmholtzArgument(double prec, OrbitalVector Phi
     return out;
 }
 
-// Take 1 in notes on Overleaf
+/**
+ * @brief Build the Helmholtz argument for the ZORA operator. Eq. 17 in J. Chem. Theory and Comput. 2024, 20, 728-737
+*/
 OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, OrbitalVector &Psi, DoubleVector eps, double prec) {
     // Get necessary operators
     double c = getLightSpeed();
@@ -311,6 +313,10 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
         RankZeroOperator &V_zora = this->zora_base;
         operThreePtr = std::make_shared<RankZeroOperator>(V_zora * kappa);
     } else if (isAZora()) { 
+        /*
+        Note that V_z * kappa = 2 c^2 * (kappa - 1)
+        With this trick, the expensive projection of the potential is avoided
+        */
         std::shared_ptr<QMPotential> vTimesKappa = std::make_shared<QMPotential>(0);
         mrcpp::cplxfunc::deep_copy(*vTimesKappa, *kappaPot);
         vTimesKappa->real().map([two_cc](double val) { return two_cc * (val - 1); });
