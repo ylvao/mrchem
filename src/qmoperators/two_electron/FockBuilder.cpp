@@ -136,11 +136,10 @@ void FockBuilder::setup(double prec) {
                     MSG_ABORT("AZORA: No directory provided and no default directories found.");
                 }
             }
-
         }
 
 
-        kappaPot = std::make_shared<AZoraPotential>(nucs, adap, prec, this->azora_dir);
+        kappaPot = std::make_shared<AZoraPotential>(nucs, adap, prec, azora_dir_final, share, c);
 
         kappaInvPot = std::make_shared<QMPotential>(adap);
 

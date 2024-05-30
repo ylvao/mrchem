@@ -68,9 +68,10 @@ def write_scf_fock(user_dict, wf_dict, origin):
             "include_nuclear": False,
             "include_coulomb": False,
             "include_xc": False,
-            "isAZORA": True,
-            "azora_potential_path": user_dict["ZORA"]["azora_potential_path"]
+            "isAZORA": True
         }
+        if user_dict["ZORA"]["azora_potential_path"].lower() != "none":
+            fock_dict["zora_operator"]["azora_potential_path"] = user_dict["ZORA"]["azora_potential_path"]
 
     # Kinetic
     fock_dict["kinetic_operator"] = {"derivative": user_dict["Derivatives"]["kinetic"]}
@@ -531,7 +532,6 @@ def parse_wf_method(user_dict):
         user_dict["ZORA"]["include_coulomb"] = False
         user_dict["ZORA"]["include_xc"] = False
         user_dict["ZORA"]["isAZORA"] = True
-        wf_dict['azora_potential_path'] = user_dict["ZORA"]["azora_potential_path"]
 
     if user_dict["WaveFunction"]["relativity"].lower() in ["nzora"]:
         user_dict["WaveFunction"]["relativity"] = "zora"
