@@ -3,12 +3,18 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/Splines>
 #include <string>
-#include <iostream>
 #include <filesystem>
 
 typedef Eigen::Spline<double, 1, 3> Spline1D;
 typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
+/**
+ * @brief Read ZORA potential from file. Check if file exists and abort if it does not.
+ * @param path Path to the file containing the ZORA potential
+ * @param rGrid Vector containing the radial grid
+ * @param vZora Vector containing the ZORA potential
+ * @param kappa Vector containing the kappa parameter
+*/
 void readZoraPotential(const std::string path, Eigen::VectorXd &rGrid, Eigen::VectorXd &vZora, Eigen::VectorXd &kappa){
     std::vector<double> r, v, k;
     bool file_exists = std::filesystem::exists(path);
@@ -31,8 +37,9 @@ void readZoraPotential(const std::string path, Eigen::VectorXd &rGrid, Eigen::Ve
     rGrid = Eigen::Map<Eigen::VectorXd>(r.data(), r.size());
     vZora = Eigen::Map<Eigen::VectorXd>(v.data(), v.size());
     kappa = Eigen::Map<Eigen::VectorXd>(k.data(), k.size());
-    // Add factor of 2 to kappa to be consistent with Lucas paper.
-    // kappa = kappa * 2.0;
+    // The kappa function is half of what is defined in the paper Scalar 
+    // Relativistic Effects with Multiwavelets: Implementation and Benchmark
+    // it is not used in the code, only the potential is used
 }
 
 class RadInterpolater {
