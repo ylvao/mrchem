@@ -374,11 +374,11 @@ User input reference
   
     **Default** ``True``
   
-   :azora_potential_path: Path to the directory containing the AZORA potentials. 
+   :azora_potential_path: Path to the directory containing the AZORA potentials. If not specified, the default potentials will be used. Look into the readme file in the share/azora_potentials directory for information about the potential file format. 
   
     **Type** ``str``
   
-    **Default** ``/home/moritz/Documents/mrchem/share/azora_potentials/``
+    **Default** ``none``
   
  :DFT: Define the exchange-correlation functional in case of DFT. 
 
