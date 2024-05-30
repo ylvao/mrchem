@@ -339,9 +339,10 @@ sections:
           Include the XC potential ``V_xc`` in the ZORA potential.
       - name: azora_potential_path
         type: str
-        default: /home/moritz/Documents/mrchem/share/azora_potentials/
+        default: none
         docstring: |
-          Path to the directory containing the AZORA potentials.
+          Path to the directory containing the AZORA potentials. If not specified, the default potentials will be used.
+          Look into the readme file in the share/azora_potentials directory for information about the potential file format.
   - name: DFT
     docstring: |
       Define the exchange-correlation functional in case of DFT.
