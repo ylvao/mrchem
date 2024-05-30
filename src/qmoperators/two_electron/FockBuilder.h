@@ -97,6 +97,8 @@ private:
     bool zora_has_xc{false};
     bool zora_is_azora{false};
     std::string azora_dir = "";
+    std::string azora_dir_src = "";
+    std::string azora_dir_install = "";
 
     double light_speed{-1.0};
     double exact_exchange{1.0};

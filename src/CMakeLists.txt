@@ -38,6 +38,11 @@ add_subdirectory(scf_solver)
 add_subdirectory(tensor)
 add_subdirectory(utils)
 
+target_compile_definitions(mrchem PRIVATE 
+    AZORA_POTENTIALS_SOURCE_DIR="${AZORA_POTENTIALS_SOURCE_DIR}"
+    AZORA_POTENTIALS_INSTALL_DIR="${AZORA_POTENTIALS_INSTALL_DIR}"
+)
+
 target_link_libraries(mrchem
   PRIVATE
     Eigen3::Eigen

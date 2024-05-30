@@ -49,6 +49,8 @@
 
 #include "qmoperators/one_electron/AZoraPotential.h"
 
+#include <filesystem>
+
 using mrcpp::Printer;
 using mrcpp::Timer;
 
@@ -115,6 +117,29 @@ void FockBuilder::setup(double prec) {
         mrcpp::print::separator(3, '-');
         int adap = 0;
         bool share = false;
+
+        azora_dir_src = AZORA_POTENTIALS_SOURCE_DIR;
+        azora_dir_install = AZORA_POTENTIALS_INSTALL_DIR;
+
+        std::string azora_dir_final;
+        if (azora_dir != "") {
+            azora_dir_final = azora_dir;
+        } else {
+            // check if azora_dir_install directory exists using cpp standard library
+            if (std::filesystem::exists(azora_dir_install)) {
+                azora_dir_final = azora_dir_install;
+            } else {
+                // check if azora_dir_src directory exists using cpp standard library
+                if (std::filesystem::exists(azora_dir_src)) {
+                    azora_dir_final = azora_dir_src;
+                } else {
+                    MSG_ABORT("AZORA: No directory provided and no default directories found.");
+                }
+            }
+
+        }
+
+
         kappaPot = std::make_shared<AZoraPotential>(nucs, adap, prec, this->azora_dir);
 
         kappaInvPot = std::make_shared<QMPotential>(adap);
