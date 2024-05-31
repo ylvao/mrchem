@@ -370,6 +370,28 @@ def stencil() -> JSONDict:
                                             'name': 'geometric_derivative',
                                             'type': 'bool'}],
                         'name': 'Properties'},
+                    {   'keywords': [   {   'default': 'surface_integrals',
+                                            'name': 'method',
+                                            'predicates': [   'value.lower() '
+                                                              'in '
+                                                              "['surface_integrals', "
+                                                              "'hellmann_feynman']"],
+                                            'type': 'str'},
+                                        {   'default': 'medium',
+                                            'name': 'surface_integral_precision',
+                                            'predicates': [   'value.lower() '
+                                                              "in ['low', "
+                                                              "'medium', "
+                                                              "'high']"],
+                                            'type': 'str'},
+                                        {   'default': 'shift',
+                                            'name': 'sphere_averaging',
+                                            'predicates': [   'value.lower() '
+                                                              "in ['shift', "
+                                                              "'radial', "
+                                                              "'none']"],
+                                            'type': 'str'}],
+                        'name': 'Forces'},
                     {   'keywords': [   {   'default': [],
                                             'name': 'electric_field',
                                             'predicates': [   'len(value) == 0 '
