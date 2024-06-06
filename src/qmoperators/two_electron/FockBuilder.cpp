@@ -47,6 +47,8 @@
 #include "qmoperators/qmoperator_utils.h"
 #include "utils/math_utils.h"
 
+#include "qmoperators/one_electron/NablaOperator.h"
+
 using mrcpp::Printer;
 using mrcpp::Timer;
 
@@ -251,7 +253,11 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     RankZeroOperator &kappa_m1 = *this->kappa_inv;
     RankZeroOperator &V_zora = this->zora_base;
 
-    RankZeroOperator operOne = 0.5 * tensor::dot(p(kappa), p);
+    std::shared_ptr<mrcpp::BSOperator<3>> dd = std::make_shared<mrcpp::BSOperator<3>>(*MRA, true);
+    NablaOperator nabla(dd, true);
+    nabla.setup(prec);
+
+    RankZeroOperator operOne = 0.5 * tensor::dot(nabla(kappa), p);
     RankZeroOperator operThree = kappa * V_zora;
     operOne.setup(prec);
     operThree.setup(prec);
@@ -298,6 +304,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     Timer t_kappa;
     auto out = kappa_m1(arg);
     mrcpp::print::time(2, "Applying kappa inverse", t_kappa);
+    nabla.clear();
     return out;
 }
 
