@@ -390,6 +390,13 @@ def stencil() -> JSONDict:
                                                               "in ['shift', "
                                                               "'radial', "
                                                               "'none']"],
+                                            'type': 'str'},
+                                        {   'default': 'medium',
+                                            'name': 'sphere_averaging_precision',
+                                            'predicates': [   'value.lower() '
+                                                              "in ['low', "
+                                                              "'medium', "
+                                                              "'high']"],
                                             'type': 'str'}],
                         'name': 'Forces'},
                     {   'keywords': [   {   'default': [],
