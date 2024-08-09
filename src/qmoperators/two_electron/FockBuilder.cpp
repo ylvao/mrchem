@@ -182,7 +182,7 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
 
     // Kinetic part
     if (isZora()) {
-        E_kin = qmoperator::calc_kinetic_trace(momentum(), *this->kappa, Phi).real();
+        E_kin = qmoperator::calc_kinetic_trace(momentum(), *this->kappa, Phi).real() + qmoperator::calc_kinetic_trace(momentum(), Phi);
     } else {
         E_kin = qmoperator::calc_kinetic_trace(momentum(), Phi);
     }
@@ -207,7 +207,7 @@ ComplexMatrix FockBuilder::operator()(OrbitalVector &bra, OrbitalVector &ket) {
 
     ComplexMatrix T_mat = ComplexMatrix::Zero(bra.size(), ket.size());
     if (isZora()) {
-        T_mat = qmoperator::calc_kinetic_matrix(momentum(), *this->kappa, bra, ket);
+        T_mat = qmoperator::calc_kinetic_matrix(momentum(), *this->kappa, bra, ket) + qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
     } else {
         T_mat = qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
     }
@@ -258,7 +258,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     nabla.setup(prec);
 
     RankZeroOperator operOne = 0.5 * tensor::dot(nabla(kappa), p);
-    RankZeroOperator operThree = kappa * V_zora;
+    RankZeroOperator operThree = kappa * V_zora + V_zora;
     operOne.setup(prec);
     operThree.setup(prec);
 
@@ -302,7 +302,11 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     operOne.clear();
 
     Timer t_kappa;
-    auto out = kappa_m1(arg);
+    mrchem::OrbitalVector out = kappa_m1(arg);
+    for (int i = 0; i < arg.size(); i++) {
+        if (not mrcpp::mpi::my_orb(out[i])) continue;
+        out[i].add(1.0, arg[i]);
+    }
     mrcpp::print::time(2, "Applying kappa inverse", t_kappa);
     nabla.clear();
     return out;

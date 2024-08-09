@@ -40,7 +40,7 @@ public:
     ZoraKineticOperator(MomentumOperator p, ZoraOperator kappa) {
         // Invoke operator= to assign *this operator
         RankZeroOperator &t = (*this);
-        t = 0.5 * (p[0] * kappa * p[0] + p[1] * kappa * p[1] + p[2] * kappa * p[2]);
+        t = 0.5 * (p[0] * kappa * p[0] + p[1] * kappa * p[1] + p[2] * kappa * p[2]) + 0.5 * (p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
         t.name() = "T_zora";
     }
 };
