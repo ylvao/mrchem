@@ -45,7 +45,7 @@ ZoraOperator::ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inv
 
     if (k->hasImag()) MSG_ERROR("Inverse of complex function");
     if (k->hasReal()) {
-        // mrcpp::refine_grid(k->real(), 1);
+        mrcpp::refine_grid(k->real(), 1);
         if (inverse) {
             k->real().map([two_cc](double val) { return (two_cc - val) / two_cc - 1.0; });
         } else {
