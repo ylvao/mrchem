@@ -575,6 +575,10 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
         if (plevel == 1) mrcpp::print::time(1, "NMR shielding (dia)", t_lap);
     }
 
+    if (json_prop.contains("hirshfeld_charges")) {
+        MSG_ERROR("Hirshfeld charges not implemented");
+    }
+
     if (json_prop.contains("hyperpolarizability")) MSG_ERROR("Hyperpolarizability not implemented");
     if (json_prop.contains("hyperfine_coupling")) MSG_ERROR("Hyperfine coupling not implemented");
     if (json_prop.contains("spin_spin_coupling")) MSG_ERROR("Spin-spin coupling not implemented");
