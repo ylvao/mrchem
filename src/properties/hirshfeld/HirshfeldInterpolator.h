@@ -29,8 +29,6 @@ class HirshfeldRadInterpolater {
      * @brief Construct a new Rad Interpolater object
      * @param element The element for which the ZORA potential is to be interpolated
      * @param data_dir The directory containing the ZORA potential data
-     * @param mode The mode of interpolation. Either "potential" or "kappa"
-     * @param deriv If true, the derivative of the potential is returned
     */
     RadInterpolater(const std::string element, std::string data_dir){
         Eigen::VectorXd rGrid;
@@ -39,7 +37,6 @@ class HirshfeldRadInterpolater {
 
         this->mode = mode;
         std::string filename = data_dir + '/' + element + ".dat";
-        this->deriv = deriv;
 
         readAtomicDensity(filename, rGrid, rhoGrid);
 
