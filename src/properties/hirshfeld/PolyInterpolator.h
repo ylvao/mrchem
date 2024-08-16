@@ -35,12 +35,8 @@ class PolyInterpolator {
     
     double evalf(const double &x) const {
         double y;
-        if (x < xmin || x > xmax) {
-            if (x < xmin) {
-                y = this->y(0);
-            } else { // linear extrapolation
+        if (x > xmax) { // linear extrapolation
                 y = this->y(n - 1) + ypxmax*(x - xmax);
-            }
             return y;
         }
 
