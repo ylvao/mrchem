@@ -35,10 +35,22 @@ HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, st
     rhoGrid = rhoGrid.array().log() / (4 * M_PI); // todo multiply by 4pi*r^2 or some other magic number
 
     lnRho = std::make_shared<PolyInterpolator>(rGrid, rhoGrid);
+    writeInterpolatedDensity(element + ".interpolated");
+
 }
 
 // Function to evaluate the interpolated function
 double HirshfeldRadInterpolater::evalf(const double &r) const {
     double y;
     return lnRho->evalf(r);
+}
+
+void HirshfeldRadInterpolater::writeInterpolatedDensity(const std::string path) {
+    std::ofstream file;
+    file.open(path);
+    for (double r = 0.0; r < 50.0; r += 0.01) {
+        double rho = this->evalf(r);
+        file << r << " " << rho << std::endl;
+    }
+    file.close();
 }

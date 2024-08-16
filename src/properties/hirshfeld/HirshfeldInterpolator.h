@@ -35,4 +35,5 @@ public:
 
 protected:
     std::shared_ptr<PolyInterpolator> lnRho = nullptr;
+    void writeInterpolatedDensity(const std::string path);
 };
