@@ -83,6 +83,8 @@
 #include "environment/PBESolver.h"
 #include "environment/Permittivity.h"
 
+#include "properties/hirshfeld/HirshfeldPartition.h"
+
 #include "mrdft/Factory.h"
 
 using mrcpp::ABGVOperator;
@@ -588,8 +590,18 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
         } else {
             MSG_ABORT("Hirshfeld data directory not found");
         }
-        std::cout << "Hirshfeld data directory: " << data_dir << std::endl;
-        MSG_ERROR("Hirshfeld charges not implemented");
+        HirshfeldPartition partitioner(mol, data_dir);
+        double prec = json_prop["hirshfeld_charges"]["precision"];
+        mrchem::Density rho(false);
+        mrchem::density::compute(prec, rho, Phi, DensityType::Total);
+        std::shared_ptr<mrcpp::ComplexFunction> rho_ptr = std::make_shared<mrcpp::ComplexFunction>(rho);
+        for (int i = 0; i < mol.getNNuclei(); i++) {
+            mrcpp::ComplexFunction w_i = partitioner.getHirshfeldPartitionFunction(i, prec);
+            mrcpp::ComplexFunction w_i_rho;
+            mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, *rho_ptr);
+            double charge = result.real() - mol.getNuclei()[i].getCharge();
+            std::cout << "Atom " << i << " charge: " << charge << std::endl;
+        }
     }
 
     if (json_prop.contains("hyperpolarizability")) MSG_ERROR("Hyperpolarizability not implemented");
