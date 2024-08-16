@@ -594,11 +594,10 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
         double prec = json_prop["hirshfeld_charges"]["precision"];
         mrchem::Density rho(false);
         mrchem::density::compute(prec, rho, Phi, DensityType::Total);
-        std::shared_ptr<mrcpp::ComplexFunction> rho_ptr = std::make_shared<mrcpp::ComplexFunction>(rho);
         for (int i = 0; i < mol.getNNuclei(); i++) {
             mrcpp::ComplexFunction w_i = partitioner.getHirshfeldPartitionFunction(i, prec);
             mrcpp::ComplexFunction w_i_rho;
-            mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, *rho_ptr);
+            mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, rho);
             double charge = result.real() - mol.getNuclei()[i].getCharge();
             std::cout << "Atom " << i << " charge: " << charge << std::endl;
         }
