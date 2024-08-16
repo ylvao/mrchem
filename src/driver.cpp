@@ -220,6 +220,13 @@ void driver::init_properties(const json &json_prop, Molecule &mol) {
             if (not geom_map.count(id)) geom_map.insert({id, GeometricDerivative(mol.getNNuclei())});
         }
     }
+    if (json_prop.contains("hirshfeld_charges")) {
+        for (const auto &item : json_prop["hirshfeld_charges"].items()) {
+            const auto &id = item.key();
+            auto &hir_map = mol.getHirshfeldCharges();
+            if (not hir_map.count(id)) hir_map.insert({id, HirshfeldCharges()});
+        }
+    }
 }
 
 /** @brief Run ground-state SCF calculation
@@ -590,16 +597,24 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
         } else {
             MSG_ABORT("Hirshfeld data directory not found");
         }
-        HirshfeldPartition partitioner(mol, data_dir);
-        double prec = json_prop["hirshfeld_charges"]["precision"];
-        mrchem::Density rho(false);
-        mrchem::density::compute(prec, rho, Phi, DensityType::Total);
-        for (int i = 0; i < mol.getNNuclei(); i++) {
-            mrcpp::ComplexFunction w_i = partitioner.getHirshfeldPartitionFunction(i, prec);
-            mrcpp::ComplexFunction w_i_rho;
-            mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, rho);
-            double charge = result.real() - mol.getNuclei()[i].getCharge();
-            std::cout << "Atom " << i << " charge: " << charge << std::endl;
+        for (const auto &item : json_prop["hirshfeld_charges"].items()) {
+            const auto &id = item.key();
+            double prec = item.value()["precision"];
+
+            HirshfeldPartition partitioner(mol, data_dir);
+            mrchem::Density rho(false);
+            mrchem::density::compute(prec, rho, Phi, DensityType::Total);
+            Eigen::VectorXd charges(mol.getNNuclei());
+            for (int i = 0; i < mol.getNNuclei(); i++) {
+                mrcpp::ComplexFunction w_i = partitioner.getHirshfeldPartitionFunction(i, prec);
+                mrcpp::ComplexFunction w_i_rho;
+                mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, rho);
+                double charge = result.real() - mol.getNuclei()[i].getCharge();
+                std::cout << "Atom " << i << " charge: " << charge << std::endl;
+                charges(i) = charge;
+            }
+            HirshfeldCharges &hir = mol.getHirshfeldCharges(id);
+            hir.setVector(charges);
         }
     }
 

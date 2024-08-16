@@ -226,6 +226,7 @@ void Molecule::printProperties() const {
     for (const auto &mag : magnetizability) mag.second.print(mag.first);
     for (const auto &nmr : nmr_shielding) nmr.second.print(nmr.first);
     for (const auto &geo : geometric_derivative) geo.second.print(geo.first);
+    for (const auto &hir : hirshfeld_charges) hir.second.print(hir.first);
 }
 
 nlohmann::json Molecule::json() const {
