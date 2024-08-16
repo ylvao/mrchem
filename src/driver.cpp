@@ -27,6 +27,7 @@
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
 
+#include <filesystem>
 #include "driver.h"
 
 #include "chemistry/Molecule.h"
@@ -576,6 +577,18 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
     }
 
     if (json_prop.contains("hirshfeld_charges")) {
+        std::string source_dir = HIRSHFELD_SOURCE_DIR;
+        std::string install_dir = HIRSHFELD_INSTALL_DIR;
+        std::string data_dir = "";
+        // check if data_dir exists
+        if (std::filesystem::exists(install_dir)) {
+            data_dir = install_dir + "/lda/";
+        } else if (std::filesystem::exists(source_dir)) {
+            data_dir = source_dir + "/lda/";
+        } else {
+            MSG_ABORT("Hirshfeld data directory not found");
+        }
+        std::cout << "Hirshfeld data directory: " << data_dir << std::endl;
         MSG_ERROR("Hirshfeld charges not implemented");
     }
 
