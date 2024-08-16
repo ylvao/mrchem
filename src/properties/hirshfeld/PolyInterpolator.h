@@ -26,9 +26,11 @@ class PolyInterpolator {
         xmax = x_in(x_in.size() - 1);
 
         Eigen::VectorXd x_in_poly(5), y_in_poly(5);
+        int j = 0;
         for (int i = n - 5; i < n; i++) {
-            x_in_poly(i) = x(i);
-            y_in_poly(i) = y(i);
+            x_in_poly(j) = x(i);
+            y_in_poly(j) = y(i);
+            j++;
         }
         ypxmax = polynomialInterpolate5_deriv(x_in_poly, y_in_poly, xmax);
     }
