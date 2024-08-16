@@ -13,8 +13,10 @@ void readAtomicDensity(const std::string path, Eigen::VectorXd &rGrid, Eigen::Ve
     while (std::getline(file, line)) {
         std::istringstream iss(line);
         iss >> r_ >> rho_;
-        r.push_back(r_);
-        rho.push_back(rho_);
+        if (rho_ > 0) {
+            r.push_back(r_);
+            rho.push_back(rho_);
+        }
     }
     file.close();
     rGrid = Eigen::Map<Eigen::VectorXd>(r.data(), r.size());
