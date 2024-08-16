@@ -13,13 +13,16 @@ HirshfeldPartition::HirshfeldPartition(const mrchem::Molecule &mol, std::string 
 
 }
 
-
-
 mrcpp::ComplexFunction HirshfeldPartition::getHirshfeldPartitionFunction(int index, double prec) const {
-    
+    auto w_i_analytic = [index, this](const mrcpp::Coord<3> &r) {
+        return this->evalf(r, index);
+    };
+    mrcpp::ComplexFunction w_i_MW;
+    mrcpp::cplxfunc::project(w_i_MW, w_i_analytic, mrcpp::NUMBER::Real, prec);
+    return w_i_MW;
 }
 
-double HirshfeldPartition::lseLogDens(mrcpp::Coord<3> &r) const {
+double HirshfeldPartition::lseLogDens(const mrcpp::Coord<3> &r) const {
     Eigen::VectorXd lseLogDens_r(this->nNucs);
     double rr;
     mrcpp::Coord<3> nucPos;
@@ -33,7 +36,7 @@ double HirshfeldPartition::lseLogDens(mrcpp::Coord<3> &r) const {
     return logsumexp(lseLogDens_r);
 }
 
-double HirshfeldPartition::evalf(mrcpp::Coord<3> &r, int iAt) const {
+double HirshfeldPartition::evalf(const mrcpp::Coord<3> &r, int iAt) const {
     mrcpp::Coord<3> nucPos = this->nucs->at(iAt).getCoord();
     double rr = std::sqrt((r[0] - nucPos[0]) * (r[0] - nucPos[0])
         + (r[1] - nucPos[1]) * (r[1] - nucPos[1])

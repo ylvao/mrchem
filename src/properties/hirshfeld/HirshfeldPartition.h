@@ -16,8 +16,8 @@ class HirshfeldPartition{
 
     protected:
 
-    double evalf(mrcpp::Coord<3> &r, int iAt) const;
-    double lseLogDens(mrcpp::Coord<3> &r) const;
+    double evalf(const mrcpp::Coord<3> &r, int iAt) const;
+    double lseLogDens(const mrcpp::Coord<3> &r) const;
 
     std::shared_ptr<mrchem::Nuclei> nucs{nullptr};
 
