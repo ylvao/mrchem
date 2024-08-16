@@ -6,6 +6,11 @@ HirshfeldPartition::HirshfeldPartition(const mrchem::Molecule &mol, std::string 
     this->nucs = std::make_shared<mrchem::Nuclei>(mol.getNuclei());
     this->nNucs = this->nucs->size();
 
+    for (int i = 0; i < this->nNucs; i++) {
+        std::string element = this->nucs->at(i).getElement().getSymbol();
+        this->logDensities.push_back(HirshfeldRadInterpolater(element, data_dir));
+    }
+
 }
 
 

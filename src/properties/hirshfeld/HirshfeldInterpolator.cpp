@@ -28,7 +28,7 @@ HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, st
     Eigen::VectorXd rGrid;
     Eigen::VectorXd rhoGrid;
 
-    std::string filename = data_dir + '/' + element + ".dat";
+    std::string filename = data_dir + '/' + element + ".density";
 
     readAtomicDensity(filename, rGrid, rhoGrid);
 
