@@ -254,20 +254,13 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     RankZeroOperator &V_zora = this->zora_base;
 
     std::shared_ptr<mrcpp::BSOperator<3>> dd = std::make_shared<mrcpp::BSOperator<3>>(*MRA, 1);
-    std::shared_ptr<mrcpp::BSOperator<3>> dd2 = std::make_shared<mrcpp::BSOperator<3>>(*MRA, 2);
 
     NablaOperator nabla(dd, false); // gradient operator
-    NablaOperator nabla2(dd2, false); // containts second derivatives
     nabla.setup(prec);
-    nabla2.setup(prec);
 
     RankOneOperator nabla_kappa = nabla(kappa);
-    RankZeroOperator operOne = 0.5 * (nabla_kappa[0] * nabla[0] + nabla_kappa[1] * nabla[1] + nabla_kappa[2] * nabla[2] 
-        + kappa * nabla2[0] + kappa * nabla2[1] + kappa * nabla2[2]);
-        // + nabla2[0] + nabla2[1] + nabla2[2]);
 
-    // this works much better than the above. Also, removing the laplacian terms on line 266 appears to be equivalent to the line below but why?
-    // RankZeroOperator operOne = 0.5 * (nabla_kappa[0](nabla[0]) + nabla_kappa[1](nabla[1]) + nabla_kappa[2](nabla[2]));
+    RankZeroOperator operOne = 0.5 * (nabla_kappa[0](nabla[0]) + nabla_kappa[1](nabla[1]) + nabla_kappa[2](nabla[2]));
     RankZeroOperator operThree = kappa * V_zora + V_zora;
     operOne.setup(prec);
     operThree.setup(prec);
@@ -319,7 +312,6 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     }
     mrcpp::print::time(2, "Applying kappa inverse", t_kappa);
     nabla.clear();
-    nabla2.clear();
     return out;
 }
 
