@@ -39,6 +39,11 @@ add_subdirectory(scf_solver)
 add_subdirectory(tensor)
 add_subdirectory(utils)
 
+target_compile_definitions(mrchem PRIVATE 
+    HIRSHFELD_SOURCE_DIR="${HIRSHFELD_SOURCE_DIR}"
+    HIRSHFELD_INSTALL_DIR="${HIRSHFELD_INSTALL_DIR}"
+)
+
 target_link_libraries(mrchem
   PRIVATE
     Eigen3::Eigen
