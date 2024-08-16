@@ -610,7 +610,6 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
                 mrcpp::ComplexFunction w_i_rho;
                 mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, rho);
                 double charge = - result.real() + mol.getNuclei()[i].getCharge();
-                // std::cout << "Atom " << i << " charge: " << charge << std::endl;
                 charges(i) = charge;
             }
             HirshfeldCharges &hir = mol.getHirshfeldCharges(id);

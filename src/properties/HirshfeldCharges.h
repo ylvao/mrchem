@@ -18,9 +18,9 @@ public:
 
     void print(const std::string &id) const {
         mrcpp::print::header(0, "Hirshfeld Charges (" + id + ")");
-        print_utils::vector(0, "Hirshfeld Charges", getVector(), 1e-12);
+        print_utils::vector(0, "Hirshfeld Charges", getVector());
         mrcpp::print::separator(0, '-');
-        print_utils::scalar(0, "Sum of Hirshfeld charges", getVector().sum(), "(au)", 1e-12);
+        print_utils::scalar(0, "Sum of Hirshfeld charges", getVector().sum(), "(au)");
     }
 
     nlohmann::json json() const {
