@@ -604,14 +604,16 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
             HirshfeldPartition partitioner(mol, data_dir);
             mrchem::Density rho(false);
             mrchem::density::compute(prec, rho, Phi, DensityType::Total);
-            Eigen::VectorXd charges(mol.getNNuclei());
+            Eigen::VectorXd charges = Eigen::VectorXd::Zero(mol.getNNuclei());
             for (int i = 0; i < mol.getNNuclei(); i++) {
+                if ( ! mrcpp::mpi::my_orb(i) ) continue; // my_orb also works for atoms.
                 mrcpp::ComplexFunction w_i = partitioner.getHirshfeldPartitionFunction(i, prec);
                 mrcpp::ComplexFunction w_i_rho;
                 mrcpp::ComplexDouble result = mrcpp::cplxfunc::dot(w_i, rho);
                 double charge = - result.real() + mol.getNuclei()[i].getCharge();
                 charges(i) = charge;
             }
+            mrcpp::mpi::allreduce_vector(charges, mrcpp::mpi::comm_wrk);
             HirshfeldCharges &hir = mol.getHirshfeldCharges(id);
             hir.setVector(charges);
         }
