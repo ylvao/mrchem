@@ -24,7 +24,7 @@ void readAtomicDensity(const std::string path, Eigen::VectorXd &rGrid, Eigen::Ve
 }
 
 // Constructor
-HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, std::string data_dir) {
+HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, std::string data_dir, bool writeToFile) {
     Eigen::VectorXd rGrid;
     Eigen::VectorXd rhoGrid;
 
@@ -36,8 +36,9 @@ HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, st
     rhoGrid = rhoGrid.array().log();
 
     lnRho = std::make_shared<PolyInterpolator>(rGrid, rhoGrid);
-    writeInterpolatedDensity(element + ".interpolated");
-
+    if (writeToFile) {
+        writeInterpolatedDensity(element + ".interpolated");
+    }
 }
 
 // Function to evaluate the interpolated function

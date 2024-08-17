@@ -24,7 +24,7 @@ public:
      * @param element The element for which the ZORA potential is to be interpolated
      * @param data_dir The directory containing the ZORA potential data
     */
-    HirshfeldRadInterpolater(const std::string element, std::string data_dir);
+    HirshfeldRadInterpolater(const std::string element, std::string data_dir, bool writeToFile = false);
 
     /**
      * @brief Evaluate the interpolated function at a given point
@@ -34,6 +34,13 @@ public:
     double evalf(const double &r) const;
 
 protected:
+    /**
+     * @brief The interpolator for the atomic density
+     */
     std::shared_ptr<PolyInterpolator> lnRho = nullptr;
+    /**
+     * @brief Write the interpolated density to a file for debugging.
+     * @param path The path to the file to write the interpolated density to.
+     */
     void writeInterpolatedDensity(const std::string path);
 };
