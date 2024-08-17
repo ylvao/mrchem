@@ -33,6 +33,12 @@ public:
     */
     double evalf(const double &r) const;
 
+    /**
+     * @brief Integrates the atomic charge density to get the charge of the tabulated 
+     * atomic density. The numeric is performed from 0 to 20 bohr. Only useful for debugging.
+     */
+    double getNorm() const;
+
 protected:
     /**
      * @brief The interpolator for the atomic density

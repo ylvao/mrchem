@@ -23,6 +23,20 @@ void readAtomicDensity(const std::string path, Eigen::VectorXd &rGrid, Eigen::Ve
     rhoGrid = Eigen::Map<Eigen::VectorXd>(rho.data(), rho.size());
 }
 
+double HirshfeldRadInterpolater::getNorm() const {
+    double norm = 0.0;
+    double xmax = 20;
+    int n = 1000;
+    double dx = xmax / n;
+    for (int i = 0; i < n; i++) {
+        double x = i * dx;
+        double y = std::exp(evalf(x));
+        norm += y * x * x;
+    }
+    norm *= dx * 4 * M_PI;
+    return norm;
+}
+
 // Constructor
 HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, std::string data_dir, bool writeToFile) {
     Eigen::VectorXd rGrid;
