@@ -586,6 +586,7 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
     }
 
     if (json_prop.contains("hirshfeld_charges")) {
+        t_lap.start();
         std::string source_dir = HIRSHFELD_SOURCE_DIR;
         std::string install_dir = HIRSHFELD_INSTALL_DIR;
         std::string data_dir = "";
@@ -617,6 +618,8 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol) {
             HirshfeldCharges &hir = mol.getHirshfeldCharges(id);
             hir.setVector(charges);
         }
+        mrcpp::print::footer(2, t_lap, 2);
+        if (plevel == 1) mrcpp::print::time(1, "Computing Hirshfeld charges", t_lap);
     }
 
     if (json_prop.contains("hyperpolarizability")) MSG_ERROR("Hyperpolarizability not implemented");
