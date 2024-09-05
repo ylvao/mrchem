@@ -535,10 +535,10 @@ def parse_wf_method(user_dict):
         else:
             raise RuntimeError("ZORA selected, but no ZORA potential included")
 
-        if user_dict["ZORA"]["include_xc"] and not restricted:
-            raise RuntimeError(
-                "ZORA (V_xc) not available for unrestricted wavefunctions"
-            )
+        # if user_dict["ZORA"]["include_xc"] and not restricted:
+        #     raise RuntimeError(
+        #         "ZORA (V_xc) not available for unrestricted wavefunctions"
+        #     )
 
     # Determine environment name label for print outs to the output file
     environment_name = "None"

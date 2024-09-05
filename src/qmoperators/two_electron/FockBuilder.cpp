@@ -357,7 +357,7 @@ std::shared_ptr<QMPotential> FockBuilder::collectZoraBasePotential() {
     }
     if (zora_has_xc) {
         if (getXCOperator() != nullptr) {
-            getXCOperator()->setSpin(SPIN::Alpha);
+            getXCOperator()->setSpin(SPIN::Paired);
             auto &xc = static_cast<QMPotential &>(getXCOperator()->getRaw(0, 0));
             if (not xc.hasReal()) MSG_ERROR("ZORA: Adding empty XC potential");
             vz->add(1.0, xc);
