@@ -15,13 +15,17 @@ HirshfeldPartition::HirshfeldPartition(const mrchem::Molecule &mol, std::string 
 
 }
 
-mrcpp::ComplexFunction HirshfeldPartition::getHirshfeldPartitionFunction(int index, double prec) const {
+double HirshfeldPartition::getHirshfeldPartitionIntegral(int index, mrcpp::ComplexFunction &rho, double prec) const {
     auto w_i_analytic = [index, this](const mrcpp::Coord<3> &r) {
         return this->evalf(r, index);
     };
     mrcpp::ComplexFunction w_i_MW;
-    mrcpp::cplxfunc::project(w_i_MW, w_i_analytic, mrcpp::NUMBER::Real, prec);
-    return w_i_MW;
+    mrcpp::AnalyticFunction<3> w_i_analytic_func(w_i_analytic);
+    mrcpp::cplxfunc::multiply(w_i_MW, rho.real(), w_i_analytic_func, prec);
+    mrcpp::ComplexDouble c_complex = w_i_MW.integrate();
+    double charge = c_complex.real();
+
+    return charge;
 }
 
 double HirshfeldPartition::lseLogDens(const mrcpp::Coord<3> &r) const {

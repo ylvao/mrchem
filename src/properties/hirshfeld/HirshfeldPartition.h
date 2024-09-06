@@ -22,9 +22,9 @@ class HirshfeldPartition{
     HirshfeldPartition(const mrchem::Molecule &mol, std::string data_dir);
 
     /**
-     * @brief Get the MW representation Hirshfeld partitioning function for a given atom
+     * @brief Get the integral rho * w_i for a given atom i
      */
-    mrcpp::ComplexFunction getHirshfeldPartitionFunction(int index, double prec) const;
+    double getHirshfeldPartitionIntegral(int index, mrcpp::ComplexFunction &rho, double prec) const;
 
     protected:
 
