@@ -46,7 +46,6 @@ HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, st
 
     readAtomicDensity(filename, rGrid, rhoGrid);
 
-    rhoGrid = rhoGrid.array()/ (4 * M_PI); // todo multiply by 4pi*r^2 or some other magic number
     rhoGrid = rhoGrid.array().log();
 
     lnRho = std::make_shared<PolyInterpolator>(rGrid, rhoGrid);
