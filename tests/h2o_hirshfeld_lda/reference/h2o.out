@@ -12,9 +12,9 @@
 ***         VERSION            1.2.0-alpha                              ***
 ***                                                                     ***
 ***         Git branch         property/hirshfeld                       ***
-***         Git commit hash    94cee015a0f73f384c4e-dirty               ***
+***         Git commit hash    84e27336386ba1947ebb                     ***
 ***         Git commit author  moritzgubler                             ***
-***         Git commit date    Fri Sep 6 14:39:40 2024 +0200            ***
+***         Git commit date    Fri Sep 20 14:49:43 2024 +0200           ***
 ***                                                                     ***
 ***         Contact: luca.frediani@uit.no                               ***
 ***                                                                     ***
@@ -29,8 +29,8 @@
 ---------------------------------------------------------------------------
 
  MPI processes           :       (no bank)                               1
- OpenMP threads          :                                               4
- Total cores             :                                               4
+ OpenMP threads          :                                               8
+ Total cores             :                                               8
                                                                            
 ---------------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
  Git commit date       : Thu Feb 15 13:44:31 2024 +0100
 
  Linear algebra        : EIGEN v3.4.0
- Parallelization       : MPI/OpenMP (4 threads)
+ Parallelization       : MPI/OpenMP (8 threads)
 
 ---------------------------------------------------------------------------
 
@@ -244,7 +244,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ---------------------------------------------------------------------------
  r_O                     :        0.000000        0.000000        0.000000
 ---------------------------------------------------------------------------
- Electronic vector       :        0.000001        0.000000       -0.270712
+ Electronic vector       :        0.000001       -0.000000       -0.270712
  Magnitude               :            (au)                        0.270712
                          :         (Debye)                        0.688082
 ---------------------------------------------------------------------------
@@ -262,9 +262,9 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
                       Hirshfeld Charges (hirshfeld-1)
 ---------------------------------------------------------------------------
 ---------------------------------------------------------------------------
- Charge of atom 0        :                                       -1.230783
- Charge of atom 1        :                                        0.615391
- Charge of atom 2        :                                        0.615392
+ Charge of atom 0        :                                       -1.225651
+ Charge of atom 1        :                                        0.612825
+ Charge of atom 2        :                                        0.612826
 ---------------------------------------------------------------------------
  Sum of Hirshfeld charges:            (au)                    1.133417e-07
 ===========================================================================
@@ -274,7 +274,7 @@ J.Chem.Theor.Comp. 2010, DOI: 10.1021/ct100117s
 ***                                                                     ***
 ***                            Exiting MRChem                           ***
 ***                                                                     ***
-***                       Wall time :  0h  0m  6s                       ***
+***                       Wall time :  0h  0m  2s                       ***
 ***                                                                     ***
 ***************************************************************************
                                                                            
