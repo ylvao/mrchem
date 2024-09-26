@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include "PolyInterpolator.h"
 
+namespace interpolation_utils{
 double polynomialInterpolate5(Eigen::VectorXd &x_in, Eigen::VectorXd &y_in, double x){
     double xm2 = x_in(0);
     double xm1 = x_in(1);
@@ -78,3 +79,4 @@ int binarySearch(const Eigen::VectorXd &x, const double &x0) {
     }
     return i;
 }
+} // namespace interpolation_utils

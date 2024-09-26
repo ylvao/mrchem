@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <iostream>
 
+namespace interpolation_utils{
+
 /**
  * @brief Interpolate a 5th order polynomial through 5 points and evaluate at x.
  * @param x_in x values of the 5 points
@@ -130,4 +132,5 @@ class PolyInterpolator {
         if (i == n - 2) j = n - 3;
         return j;
     }
-};
+};    
+} // namespace interpolation_utils

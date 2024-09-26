@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <Eigen/Dense>
-#include "PolyInterpolator.h"
+#include "utils/PolyInterpolator.h"
 
 class HirshfeldRadInterpolater {
 
@@ -31,7 +31,7 @@ protected:
     /**
      * @brief The interpolator for the atomic density
      */
-    std::shared_ptr<PolyInterpolator> lnRho = nullptr;
+    std::shared_ptr<interpolation_utils::PolyInterpolator> lnRho = nullptr;
     /**
      * @brief Write the interpolated density to a file for debugging.
      * @param path The path to the file to write the interpolated density to.
