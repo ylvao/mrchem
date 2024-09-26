@@ -1,5 +1,5 @@
 #include "HirshfeldPartition.h"
-#include "properties/hirshfeld/logsumexp.h"
+#include "utils/math_utils.h"
 
 HirshfeldPartition::HirshfeldPartition(const mrchem::Molecule &mol, std::string data_dir) {
 
@@ -39,7 +39,7 @@ double HirshfeldPartition::lseLogDens(const mrcpp::Coord<3> &r) const {
             + (r[2] - nucPos[2]) * (r[2] - nucPos[2]));
         lseLogDens_r(i) = this->logDensities[i].evalf(rr);
     }
-    return logsumexp(lseLogDens_r);
+    return mrchem::math_utils::logsumexp(lseLogDens_r);
 }
 
 double HirshfeldPartition::evalf(const mrcpp::Coord<3> &r, int iAt) const {
