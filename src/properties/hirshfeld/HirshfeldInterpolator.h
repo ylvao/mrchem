@@ -1,20 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <fstream>
 #include <Eigen/Dense>
-#include <Eigen/Core>
-#include <string>
-#include <memory>
 #include "PolyInterpolator.h"
-
-/**
- * @brief Reads atomic density data from a file
- * @param path The path to the file containing the data
- * @param rGrid The grid for the radial distances
- * @param rhoGrid The grid for the atomic density values
- */
-void readAtomicDensity(const std::string path, Eigen::VectorXd &rGrid, Eigen::VectorXd &rhoGrid);
 
 class HirshfeldRadInterpolater {
 

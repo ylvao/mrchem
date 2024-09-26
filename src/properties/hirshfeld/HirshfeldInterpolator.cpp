@@ -1,27 +1,5 @@
 #include "HirshfeldInterpolator.h"
-#include <filesystem>
-#include <iostream>
-#include <Eigen/Dense>
-#include <Eigen/Core>
-
-// Function to read atomic density data from a file
-void readAtomicDensity(const std::string path, Eigen::VectorXd &rGrid, Eigen::VectorXd &rhoGrid) {
-    std::vector<double> r, rho;
-    std::ifstream file(path);
-    std::string line;
-    double r_, rho_;
-    while (std::getline(file, line)) {
-        std::istringstream iss(line);
-        iss >> r_ >> rho_;
-        if (rho_ > 0) {
-            r.push_back(r_);
-            rho.push_back(rho_);
-        }
-    }
-    file.close();
-    rGrid = Eigen::Map<Eigen::VectorXd>(r.data(), r.size());
-    rhoGrid = Eigen::Map<Eigen::VectorXd>(rho.data(), rho.size());
-}
+#include "qmfunctions/density_utils.h"
 
 double HirshfeldRadInterpolater::getNorm() const {
     double norm = 0.0;
@@ -44,7 +22,7 @@ HirshfeldRadInterpolater::HirshfeldRadInterpolater(const std::string element, st
 
     std::string filename = data_dir + '/' + element + ".density";
 
-    readAtomicDensity(filename, rGrid, rhoGrid);
+    mrchem::density::readAtomicDensity(filename, rGrid, rhoGrid);
 
     rhoGrid = rhoGrid.array().log();
 
