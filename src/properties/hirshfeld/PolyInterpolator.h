@@ -23,6 +23,13 @@ double polynomialInterpolate5(Eigen::VectorXd &x_in, Eigen::VectorXd &y_in, doub
 double polynomialInterpolate5_deriv(Eigen::VectorXd &x_in, Eigen::VectorXd &y_in, double x);
 
 /**
+ * @brief Binary search for the index of the largest element in x that is smaller than x0.
+ * @param x Vector to search in
+ * @param x0 Value to search for
+ */
+int binarySearch(const Eigen::VectorXd &x, const double &x0);
+
+/**
  * @brief Class to interpolate a functions using a 5th order polynomials.
  */
 class PolyInterpolator {
@@ -31,7 +38,19 @@ class PolyInterpolator {
     int n;
     double xmin;
     double xmax;
+    /**
+     * @brief Derivative of the interpolated function at xmax. Used for linear extrapolation.
+     */
     double ypxmax;
+
+    /**
+     * @brief Derivative of the interpolated function at xmin. Used for linear extrapolation.
+     */
+    double ypxmin;
+
+    Eigen::VectorXd x_in_poly = Eigen::VectorXd(5);
+    Eigen::VectorXd y_in_poly = Eigen::VectorXd(5);
+
     public:
     /**
      * @brief Constructor
@@ -45,7 +64,6 @@ class PolyInterpolator {
         xmin = x_in(0);
         xmax = x_in(x_in.size() - 1);
 
-        Eigen::VectorXd x_in_poly(5), y_in_poly(5);
         int j = 0;
         for (int i = n - 5; i < n; i++) {
             x_in_poly(j) = x(i);
@@ -53,40 +71,39 @@ class PolyInterpolator {
             j++;
         }
         ypxmax = polynomialInterpolate5_deriv(x_in_poly, y_in_poly, xmax);
+        for (int i = 0; i < 5; i++) {
+            x_in_poly(i) = x(i);
+            y_in_poly(i) = y(i);
+        }
+        ypxmin = polynomialInterpolate5_deriv(x_in_poly, y_in_poly, xmin);
     }
     
     /**
      * @brief Evaluate the interpolated function at x. No extrapolation for x < xmin, linear extrapolation for x > xmax.
      * @param x x value at which to evaluate the function
      */
-    double evalf(const double &x) const {
+    double evalf(const double &xval) {
         double y;
-        if (x > xmax) { // linear extrapolation
-                y = this->y(n - 1) + ypxmax*(x - xmax);
+        if (xval > xmax) { // linear extrapolation
+                y = this->y(n - 1) + ypxmax*(xval - xmax);
             return y;
         }
 
-        // Find the interval in which x lies using binary search
-        int i = 0;
-        int j = this->x.size() - 1;
-        while (j - i > 1) {
-            int k = (i + j)/2;
-            if (x < this->x(k)) {
-                j = k;
-            } else {
-                i = k;
-            }
-        }
-        Eigen::VectorXd x_in(5), y_in(5);
-        if (i == 0) i = 2;
-        if (i == 1) i = 2;
-        if (i == this->x.size() - 1) i = this->x.size() - 3;
-        if (i == this->x.size() - 2) i = this->x.size() - 3;
+        int i = adjustIndexToBoundaries(binarySearch(this->x, xval));
         for (int k = 0; k < 5; k++) {
-            x_in(k) = this->x(i - 2 + k);
-            y_in(k) = this->y(i - 2 + k);
+            x_in_poly(k) = this->x(i - 2 + k);
+            y_in_poly(k) = this->y(i - 2 + k);
         }
-        y = polynomialInterpolate5(x_in, y_in, x);
+        y = polynomialInterpolate5(x_in_poly, y_in_poly, xval);
         return y;
+    }
+    private: 
+    int adjustIndexToBoundaries(int i) const {
+        int j = i;
+        if (i == 0) j = 2;
+        if (i == 1) i = 2;
+        if (i == n - 1) j = n - 3;
+        if (i == n - 2) j = n - 3;
+        return j;
     }
 };

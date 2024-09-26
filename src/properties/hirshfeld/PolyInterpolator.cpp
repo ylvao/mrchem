@@ -63,3 +63,18 @@ double polynomialInterpolate5_deriv(Eigen::VectorXd &x_in, Eigen::VectorXd &y_in
                    (-(((-y00 + ym1)/(x00 - xm1) + (y00 - yp1)/(x00 - xp1))/(-xm1 + xp1)) +
                       ((-y00 + yp1)/(x00 - xp1) + (yp1 - yp2)/(xp1 - xp2))/(-x00 + xp2))/(-xm1 + xp2)))/(-xm2 + xp2)));
 }
+
+int binarySearch(const Eigen::VectorXd &x, const double &x0) {
+    int i = 0;
+    int j = x.size() - 1;
+    int k;
+    while (j - i > 1) {
+        k = (i + j)/2;
+        if (x0 < x(k)) {
+            j = k;
+        } else {
+            i = k;
+        }
+    }
+    return i;
+}
