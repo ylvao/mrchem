@@ -79,13 +79,37 @@ class PolyInterpolator {
     }
     
     /**
-     * @brief Evaluate the interpolated function at x. No extrapolation for x < xmin, linear extrapolation for x > xmax.
+     * @brief Evaluate the interpolated function at x. 
+     * No extrapolation for x < xmin (meaning that the polynomial is evaluated at x < xmin), linear extrapolation for x > xmax.
+     * Useful when the logarithm of the density is interpolated.
      * @param x x value at which to evaluate the function
      */
-    double evalf(const double &xval) {
+    double evalfLeftNoRightLinear(const double &xval) {
         double y;
         if (xval > xmax) { // linear extrapolation
                 y = this->y(n - 1) + ypxmax*(xval - xmax);
+            return y;
+        }
+
+        int i = adjustIndexToBoundaries(binarySearch(this->x, xval));
+        for (int k = 0; k < 5; k++) {
+            x_in_poly(k) = this->x(i - 2 + k);
+            y_in_poly(k) = this->y(i - 2 + k);
+        }
+        y = polynomialInterpolate5(x_in_poly, y_in_poly, xval);
+        return y;
+    }
+
+    /**
+     * @brief Evaluate the interpolated function at x.
+     * No extrapolation for x < xmin (meaning that the polynomial is evaluated at x < xmin), zero is returned for x > xmax.
+     * Useful when the density is interpolated.
+     * @param x x value at which to evaluate the function
+     */
+    double evalfLeftNoRightZero(const double &xval) {
+        double y;
+        if (xval > xmax) { // linear extrapolation
+            y = 0.0;
             return y;
         }
 
