@@ -56,6 +56,7 @@ class ExchangeOperator;
 class XCOperator;
 class ElectricFieldOperator;
 class ReactionOperator;
+class AZoraPotential;
 
 class FockBuilder final {
 public:
@@ -70,6 +71,7 @@ public:
     std::shared_ptr<XCOperator> &getXCOperator() { return this->xc; }
     std::shared_ptr<ElectricFieldOperator> &getExtOperator() { return this->ext; }
     std::shared_ptr<ReactionOperator> &getReactionOperator() { return this->Ro; }
+    std::shared_ptr<AZoraPotential> &getAZoraChiPotential() { return this->chiPot; }
 
     void rotate(const ComplexMatrix &U);
 
@@ -123,8 +125,8 @@ private:
     std::shared_ptr<QMPotential> collectZoraBasePotential();
     OrbitalVector buildHelmholtzArgumentZORA(OrbitalVector &Phi, OrbitalVector &Psi, DoubleVector eps, double prec);
     OrbitalVector buildHelmholtzArgumentNREL(OrbitalVector &Phi, OrbitalVector &Psi);
-    std::shared_ptr<QMPotential> chiPot{nullptr};
-    std::shared_ptr<QMPotential> chiInvPot{nullptr};
+    std::shared_ptr<AZoraPotential> chiPot{nullptr}; // Potential for AZORA chi operator
+    std::shared_ptr<QMPotential> chiInvPot{nullptr}; // Potential for AZORA chi_inv operator
 };
 
 } // namespace mrchem

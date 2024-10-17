@@ -56,6 +56,7 @@
 #include "qmoperators/one_electron/NuclearGradientOperator.h"
 #include "qmoperators/one_electron/NuclearOperator.h"
 #include "qmoperators/one_electron/ZoraOperator.h"
+#include "qmoperators/one_electron/AZoraPotential.h"
 
 #include "qmoperators/one_electron/H_BB_dia.h"
 #include "qmoperators/one_electron/H_BM_dia.h"
@@ -1070,10 +1071,33 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         bool is_azora = json_fock["zora_operator"]["isAZORA"];
         F.setZoraType(include_nuclear, include_coulomb, include_xc, is_azora);
         if (is_azora) {
+            std::string azora_dir_src = AZORA_POTENTIALS_SOURCE_DIR;
+            std::string azora_dir_install = AZORA_POTENTIALS_INSTALL_DIR;
+            std::string azora_dir = "";
             if (json_fock["zora_operator"].contains("azora_potential_path")) {
-                F.setAZORADirectory(json_fock["zora_operator"]["azora_potential_path"]);
+                azora_dir = json_fock["zora_operator"]["azora_potential_path"];
             }
-            F.setNucs(mol.getNuclei());
+
+            std::string azora_dir_final;
+            if (azora_dir != "") {
+                azora_dir_final = azora_dir;
+            } else {
+                if (std::filesystem::exists(azora_dir_install)) {
+                    azora_dir_final = azora_dir_install;
+                } else {
+                    if (std::filesystem::exists(azora_dir_src)) {
+                        azora_dir_final = azora_dir_src;
+                    } else {
+                        MSG_ABORT("AZORA: No directory provided and no default directories found.");
+                    }
+                }
+            }
+            int adap = 0;
+            bool share = false;
+
+            mrchem::Nuclei nuclei = mol.getNuclei();
+            F.getAZoraChiPotential() = std::make_shared<AZoraPotential>(nuclei, adap, azora_dir_final, share, c);
+            F.setNucs(nuclei);
         }
     }
     ///////////////////////////////////////////////////////////
