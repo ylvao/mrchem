@@ -56,7 +56,6 @@ class ExchangeOperator;
 class XCOperator;
 class ElectricFieldOperator;
 class ReactionOperator;
-class AZoraPotential;
 
 class FockBuilder final {
 public:
