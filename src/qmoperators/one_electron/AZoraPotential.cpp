@@ -5,7 +5,7 @@
 #include "chemistry/Nucleus.h"
 #include <vector>
 #include <fstream>
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <string>
 #include "utils/PolyInterpolator.h"
 #include "qmoperators/QMOperator.h"
