@@ -1,12 +1,9 @@
 #include <vector>
 #include <fstream>
 #include <Eigen/Dense>
-#include <unsupported/Eigen/Splines>
+#include "utils/PolyInterpolator.h"
 #include <string>
 #include <filesystem>
-
-typedef Eigen::Spline<double, 1, 3> Spline1D;
-typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
 /**
  * @brief Read ZORA potential from file. Check if file exists and abort if it does not.
@@ -61,45 +58,19 @@ class RadInterpolater {
 
         readZoraPotential(filename, rGrid, vZora, kappa);
         if (mode == "kappa") {
-            const auto fitV = SplineFitting1D::Interpolate(kappa.transpose(), 3, rGrid.transpose());
-            Spline1D temp (fitV);
-            splineAZora = temp;
+            interpolator = std::make_shared<interpolation_utils::PolyInterpolator>(rGrid, kappa);
         } else if (mode == "potential") {
-            const auto fitV = SplineFitting1D::Interpolate(vZora.transpose(), 3, rGrid.transpose());
-            Spline1D temp (fitV);
-            splineAZora = temp;
+            interpolator = std::make_shared<interpolation_utils::PolyInterpolator>(rGrid, vZora);
         }
 
     }
 
     double evalf(const double &r) const {
-        return splineAZora(r).coeff(0);
+        return interpolator->evalfLeftNoRightConstant(r);
     }
 
     protected:
-    Spline1D splineAZora;
+    std::shared_ptr<interpolation_utils::PolyInterpolator> interpolator;
     std::string mode;
 
 };
-
-// int main() {
-
-//     RadInterpolater spline_V("Ar");
-
-//     Eigen::VectorXd xgrid = Eigen::VectorXd::LinSpaced(100000, 00, 1);
-//     Eigen::VectorXd ygrid(xgrid.size());
-//     for (int i = 0; i < xgrid.size(); i++) {
-//         ygrid(i) = spline_V.evalf(xgrid(i));
-//     }
-
-//     // open interpol.txt for writing spline
-//     std::ofstream file("interpol.txt");
-//     for (int i = 0; i < xgrid.size(); i++) {
-//         // write xgrid and ygrid to file using ten digits precision
-//         file << std::setprecision(10) << xgrid(i) << " " << ygrid(i) << std::endl;
-
-//     }
-//     file.close();
-
-//     return 0;
-// }

@@ -124,6 +124,28 @@ class PolyInterpolator {
         y = polynomialInterpolate5(x_in_poly, y_in_poly, xval);
         return y;
     }
+
+    /**
+     * @brief Evaluate the interpolated function at x.
+     * No extrapolation for x < xmin (meaning that the polynomial is evaluated at x < xmin), the last value is returned for x > xmax.
+     */
+    double evalfLeftNoRightConstant(const double &xval){
+        double y;
+        if (xval > xmax) { // constant
+            y = this->y(n - 1);
+            return y;
+        }
+
+        Eigen::VectorXd x_in_poly(5), y_in_poly(5);
+        int i = adjustIndexToBoundaries(binarySearch(this->x, xval));
+        for (int k = 0; k < 5; k++) {
+            x_in_poly(k) = this->x(i - 2 + k);
+            y_in_poly(k) = this->y(i - 2 + k);
+        }
+        y = polynomialInterpolate5(x_in_poly, y_in_poly, xval);
+        return y;
+    }
+
     private: 
     int adjustIndexToBoundaries(int i) const {
         int j = i;
