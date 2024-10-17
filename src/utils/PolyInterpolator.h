@@ -129,7 +129,7 @@ class PolyInterpolator {
      * @brief Evaluate the interpolated function at x.
      * No extrapolation for x < xmin (meaning that the polynomial is evaluated at x < xmin), the last value is returned for x > xmax.
      */
-    double evalfLeftNoRightConstant(const double &xval){
+    double evalfLeftNoRightConstant(const double &xval) const {
         double y;
         if (xval > xmax) { // constant
             y = this->y(n - 1);
