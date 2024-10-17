@@ -50,7 +50,7 @@ public:
      */
     ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inverse = false);
 
-    ZoraOperator(std::shared_ptr<QMPotential> &relativisticDampening, std::string name);
+    ZoraOperator(std::shared_ptr<QMPotential> relativisticDampening, std::string name);
 
 };
 

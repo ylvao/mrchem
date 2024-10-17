@@ -71,7 +71,7 @@ ZoraOperator::ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inv
  * @param relativisticDampening shared pointer to QMPotential that contains the precompouted kappa function
  * @param name name of the operator should be either "kappa" or "kappa_inv"
 */
-ZoraOperator::ZoraOperator(std::shared_ptr<QMPotential> &relativisticDampening, std::string name) {
+ZoraOperator::ZoraOperator(std::shared_ptr<QMPotential> relativisticDampening, std::string name) {
     RankZeroOperator &kappa = (*this);
     kappa = relativisticDampening;
     kappa.name() = name;
