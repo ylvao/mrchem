@@ -44,14 +44,12 @@ ZoraOperator::ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inv
     std::shared_ptr<QMPotential> k = std::make_shared<QMPotential>(1);
     mrcpp::cplxfunc::deep_copy(*k, vz);
 
-    if (k->hasImag()) MSG_ERROR("Inverse of complex function");
+    if (k->hasImag()) MSG_ERROR("Inverse of complex function in zora potential");
     if (k->hasReal()) {
         mrcpp::refine_grid(k->real(), 1);
         if (inverse) {
             k->real().map([two_cc](double val) { return (two_cc - val) / two_cc - 1.0; });
-            k->real().map([two_cc](double val) { return (two_cc - val) / two_cc - 1.0; });
         } else {
-            k->real().map([two_cc](double val) { return (val) / (two_cc - val); });
             k->real().map([two_cc](double val) { return (val) / (two_cc - val); });
         }
         k->real().crop(proj_prec);
@@ -59,13 +57,9 @@ ZoraOperator::ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inv
 
     RankZeroOperator &chi = (*this);
     chi = k;
-    RankZeroOperator &chi = (*this);
-    chi = k;
     if (inverse) {
         chi.name() = "chi_inv";
-        chi.name() = "chi_inv";
     } else {
-        chi.name() = "chi";
         chi.name() = "chi";
     }
     auto plevel = Printer::getPrintLevel();
