@@ -352,7 +352,7 @@ def write_rsp_calc(omega, user_dict, origin):
     rsp_calc["unperturbed"] = {
         "precision": user_dict["world_prec"],
         "localize": rsp_dict["localize"],
-        "fock_operator": (user_dict, wf_dict, origin),
+        "fock_operator": write_scf_fock(user_dict, wf_dict, origin),
     }
 
     guess_str = rsp_dict["guess_type"].lower()
