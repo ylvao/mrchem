@@ -326,14 +326,14 @@ User input reference
   
     **Default** ``True``
   
-   :relativity: Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section. ``nZORA`` is shortcut for nuclear-ZORA, i.e. only ``V_nuc`` is included (this keyword takes precedence over keywords in the ``ZORA`` section). 
+   :relativity: Set method for relativistic treatment. ``ZORA`` for fully self-consistent ZORA potential, by default including all potentials (``V_nuc``, ``J``, ``V_xc``) but this can be overwritten in the ``ZORA`` section. ``nZORA`` is shortcut for nuclear-ZORA, i.e. only ``V_nuc`` is included (this keyword takes precedence over keywords in the ``ZORA`` section). ``azora`` uses atomic ZORA potentials, which are precomputed and read from the directory  specified in the ``azora_potential_path`` keyword. 
   
     **Type** ``str``
   
     **Default** ``none``
   
     **Predicates**
-      - ``value.lower() in ['none', 'zora', 'nzora']``
+      - ``value.lower() in ['none', 'zora', 'nzora', 'azora']``
   
    :environment: Set method for treatment of environment. ``none`` for vacuum calculation. ``PCM`` for Polarizable Continuum Model, which will activate the ``PCM`` input section for further parametrization options. The ``PB`` and ``LPB`` variants add the Poisson-Boltzmann and Linearized Poisson-Boltzmann solvers, respectively. 
   
@@ -373,6 +373,12 @@ User input reference
     **Type** ``bool``
   
     **Default** ``True``
+  
+   :azora_potential_path: Path to the directory containing the AZORA potentials. If not specified, the default potentials will be used. Look into the readme file in the share/azora_potentials directory for information about the potential file format. 
+  
+    **Type** ``str``
+  
+    **Default** ``none``
   
  :DFT: Define the exchange-correlation functional in case of DFT. 
 

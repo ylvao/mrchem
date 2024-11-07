@@ -44,6 +44,11 @@ target_compile_definitions(mrchem PRIVATE
     HIRSHFELD_INSTALL_DIR="${HIRSHFELD_INSTALL_DIR}"
 )
 
+target_compile_definitions(mrchem PRIVATE 
+    AZORA_POTENTIALS_SOURCE_DIR="${AZORA_POTENTIALS_SOURCE_DIR}"
+    AZORA_POTENTIALS_INSTALL_DIR="${AZORA_POTENTIALS_INSTALL_DIR}"
+)
+
 target_link_libraries(mrchem
   PRIVATE
     Eigen3::Eigen

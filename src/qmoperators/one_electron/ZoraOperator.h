@@ -26,6 +26,7 @@
 #pragma once
 
 #include "tensor/RankZeroOperator.h"
+#include <string>
 
 namespace mrchem {
 
@@ -48,6 +49,9 @@ public:
      * @param inverse If true, the inverse of the chi function is calculated.
      */
     ZoraOperator(QMPotential &vz, double c, double proj_prec, bool inverse = false);
+
+    ZoraOperator(std::shared_ptr<QMPotential> relativisticDampening, std::string name);
+
 };
 
 } // namespace mrchem

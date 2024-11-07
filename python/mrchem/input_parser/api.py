@@ -297,7 +297,8 @@ def stencil() -> JSONDict:
                                             'predicates': [   'value.lower() '
                                                               "in ['none', "
                                                               "'zora', "
-                                                              "'nzora']"],
+                                                              "'nzora', "
+                                                              "'azora']"],
                                             'type': 'str'},
                                         {   'default': 'none',
                                             'name': 'environment',
@@ -326,7 +327,10 @@ def stencil() -> JSONDict:
                                             'type': 'bool'},
                                         {   'default': True,
                                             'name': 'include_xc',
-                                            'type': 'bool'}],
+                                            'type': 'bool'},
+                                        {   'default': 'none',
+                                            'name': 'azora_potential_path',
+                                            'type': 'str'}],
                         'name': 'ZORA'},
                     {   'keywords': [   {   'default': 0.0,
                                             'name': 'density_cutoff',
