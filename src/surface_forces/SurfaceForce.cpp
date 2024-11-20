@@ -236,13 +236,17 @@ VectorXd distanceToNearestNeighbour(MatrixXd pos){
     int n = pos.rows();
     VectorXd dist(n);
     double temp;
-    for (int i = 0; i < n; i++){
-        dist(i) = (pos.row(i) - pos.row((i + 1) % n)).norm();
-        for (int j = 0; j < n; j++){
-            if (i != j){
-                temp = (pos.row(i) - pos.row(j)).norm();
-                if (temp < dist(i)){
-                    dist(i) = temp;
+    if (n == 1){
+        dist(0) = 1.0;
+    } else {
+        for (int i = 0; i < n; i++){
+            dist(i) = (pos.row(i) - pos.row((i + 1) % n)).norm();
+            for (int j = 0; j < n; j++){
+                if (i != j){
+                    temp = (pos.row(i) - pos.row(j)).norm();
+                    if (temp < dist(i)){
+                        dist(i) = temp;
+                    }
                 }
             }
         }

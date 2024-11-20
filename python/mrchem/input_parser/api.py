@@ -384,7 +384,7 @@ def stencil() -> JSONDict:
                                                               "'medium', "
                                                               "'high']"],
                                             'type': 'str'},
-                                        {   'default': 0.6,
+                                        {   'default': 0.5,
                                             'name': 'radius_factor',
                                             'type': 'float'}],
                         'name': 'Forces'},
