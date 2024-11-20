@@ -16,6 +16,7 @@ translate = false
 
 Forces {
     method = 'surface_integrals'
+    radius_factor = 0.6
 }
 
 WaveFunction {
