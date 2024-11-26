@@ -57,7 +57,6 @@
 #include "qmoperators/one_electron/NuclearOperator.h"
 #include "qmoperators/one_electron/ZoraOperator.h"
 #include "qmoperators/one_electron/AZoraPotential.h"
-#include "qmoperators/one_electron/NablaOperator.h"
 
 #include "qmoperators/one_electron/H_BB_dia.h"
 #include "qmoperators/one_electron/H_BM_dia.h"
@@ -86,8 +85,6 @@
 #include "environment/Permittivity.h"
 #include "surface_forces/SurfaceForce.h"
 #include "properties/hirshfeld/HirshfeldPartition.h"
-#include <fstream>
-#include <filesystem>
 
 #include "mrdft/Factory.h"
 
