@@ -483,7 +483,7 @@ User input reference
   
     **Type** ``float``
   
-    **Default** ``0.6``
+    **Default** ``0.5``
   
  :ExternalFields: Define external electromagnetic fields. 
 
