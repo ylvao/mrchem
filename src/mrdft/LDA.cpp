@@ -95,6 +95,12 @@ void LDA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     if (inp_vec.size() != this->order) MSG_ERROR("Invalid input length");
     if (this->rho.size() > 0) MSG_ERROR("Density not empty");
 
+    // for (auto &x : rho) {
+    //     std::cout << std::get<0>(x) << std::endl;
+    // }
+
+    std::cout << "hei - LDA.cpp.cpp 1" << std::endl;
+    
     for (auto i = 0; i < this->order; i++) this->rho.push_back(inp_vec[i]);
 }
 
@@ -111,6 +117,8 @@ mrcpp::FunctionTreeVector<3> LDA::postprocess(mrcpp::FunctionTreeVector<3> &inp_
     mrcpp::FunctionTree<3> &f_xc = mrcpp::get_func(inp_vec, 0);
     inp_vec[0] = std::make_tuple<double, mrcpp::FunctionTree<3> *>(1.0, nullptr);
 
+    std::cout << "hei LDA.cpp collect input" << std::get<0>(rho[0]) << std::endl;
+    
     // XC potential
     mrcpp::FunctionTree<3> &v_xc = mrcpp::get_func(inp_vec, 1);
     inp_vec[1] = std::make_tuple<double, mrcpp::FunctionTree<3> *>(1.0, nullptr);

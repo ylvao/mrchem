@@ -32,7 +32,7 @@ add_subdirectory(analyticfunctions)
 add_subdirectory(chemistry)
 add_subdirectory(environment)
 add_subdirectory(mrdft)
-add_subdirectory(properties)
+add_subdirectory(properties)øø
 add_subdirectory(qmfunctions)
 add_subdirectory(qmoperators)
 add_subdirectory(scf_solver)
@@ -52,6 +52,7 @@ target_link_libraries(mrchem
     Eigen3::Eigen
   PUBLIC
     XCFun::xcfun
+    Libxc::libxc
     MRCPP::mrcpp
     nlohmann_json::nlohmann_json
     $<$<AND:$<TARGET_EXISTS:OpenMP::OpenMP_CXX>,$<BOOL:${ENABLE_OPENMP}>>:OpenMP::OpenMP_CXX>
