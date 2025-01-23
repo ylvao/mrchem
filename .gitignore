@@ -134,3 +134,5 @@ Pipfile.lock
 .vscode
 
 cube_vectors/
+
+mrchem_install
