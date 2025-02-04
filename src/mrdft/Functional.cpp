@@ -40,8 +40,6 @@ Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
     int nInp = xcfun_input_length(xcfun.get());  // Input parameters to XCFun
     int nOut = xcfun_output_length(xcfun.get()); // Input parameters to XCFun
     int nPts = inp.cols();
-    std::cout << "hei - functional.cpp 1 " << nInp << std::endl;
-    std::cout << "New out functional.cpp" << xcfun->get() << std::endl;
     if (nInp != inp.rows()) MSG_ABORT("Invalid input");
 
     Eigen::MatrixXd out = Eigen::MatrixXd::Zero(nOut, nPts);
@@ -55,7 +53,6 @@ Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
         // NB: the data is stored colomn major, i.e. two consecutive points of for example energy density, are not consecutive in memory
         // That means that we cannot extract the energy density data with out.row(0).data() for example.
         if (calc) xcfun_eval(xcfun.get(), inp.col(i).data(), out.col(i).data()); 
-        std::cout << "New out functional.cpp" << xcfun.get() << std::endl;
     }
 
     return out;
@@ -76,7 +73,7 @@ Eigen::MatrixXd Functional::evaluate_transposed(Eigen::MatrixXd &inp) const {
     int nOut = xcfun_output_length(xcfun.get()); // Input parameters to XCFun
     int nPts = inp.rows();
 
-    std::cout << "hei - functional.cpp 2" << xcfun.get() << std::endl;
+
 
 
     if (nInp != inp.cols()) MSG_ABORT("Invalid input");
