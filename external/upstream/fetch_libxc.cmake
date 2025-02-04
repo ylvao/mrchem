@@ -1,10 +1,14 @@
 cmake_policy(SET CMP0144 NEW)
 
 add_library(Libxc::xc STATIC IMPORTED)
+set_target_properties(Libxc::xc PROPERTIES
+    IMPORTED_LOCATION "/home/ylva/work/libxc-mrchem/libxc/libxc_install/lib/libxc.a"
+)
+
 
 # set(export LIBXC_DIR=/home/ylva/work/libxc-mrchem/libxc/libxc_install)
 
-find_package(Libxc CONFIG QUIET
+find_package(Libxc REQUIRED CONFIG QUIET
 NO_CMAKE_PATH
 NO_CMAKE_PACKAGE_REGISTRY
 NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
@@ -28,12 +32,12 @@ set(ENABLE_TESTALL FALSE CACHE BOOL "")
 set(LIBXC_MAX_ORDER 3)  # TODO Maybe as a user-facing option?
 set(LIBXC_PYTHON_INTERFACE FALSE CACHE BOOL "")
 
-if(NOT libxc_sources_POPULATED)
-  FetchContent_Populate(libxc_sources)
+  if(NOT libxc_sources_POPULATED)
+    FetchContent_Populate(libxc_sources)
 
-  add_subdirectory(
-    ${libxc_sources_SOURCE_DIR}
-    ${libxc_sources_BINARY_DIR}
-    )
+    add_subdirectory(
+      ${libxc_sources_SOURCE_DIR}
+      ${libxc_sources_BINARY_DIR}
+      )
+  endif()
 endif()
-# endif()
