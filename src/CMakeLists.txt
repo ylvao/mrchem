@@ -11,9 +11,13 @@ target_compile_definitions(mrchem
   PUBLIC
     $<$<AND:$<TARGET_EXISTS:OpenMP::OpenMP_CXX>,$<BOOL:${ENABLE_OPENMP}>>:MRCHEM_HAS_OMP>
     $<$<AND:$<TARGET_EXISTS:MPI::MPI_CXX>,$<BOOL:${ENABLE_MPI}>>:MRCHEM_HAS_MPI>
+  PRIVATE USING_Libxc
+    $<TARGET_PROPERTY:Libxc::xc,INTERFACE_COMPILE_DEFINITIONS>
   )
 
 target_include_directories(mrchem
+  PRIVATE 
+    $<TARGET_PROPERTY:Libxc::xc,INTERFACE_INCLUDE_DIRECTORIES> # ask why this should be private when the others are public?
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>

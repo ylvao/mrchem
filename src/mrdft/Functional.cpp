@@ -26,6 +26,8 @@
 #include <MRCPP/Printer>
 
 #include "Functional.h"
+#include "xc.h"
+#include "xc_funcs.h"
 
 namespace mrdft {
 
@@ -73,7 +75,20 @@ Eigen::MatrixXd Functional::evaluate_transposed(Eigen::MatrixXd &inp) const {
     int nOut = xcfun_output_length(xcfun.get()); // Input parameters to XCFun
     int nPts = inp.rows();
 
-
+    std::cout << "BEFORE libxc is called" << std::endl;
+    
+    xc_func_type func;
+    int i, vmajor, vminor, vmicro, func_id = 1; /* func_id = 1 => LDA */
+    /* Get the libxc version */
+    xc_version(&vmajor, &vminor, &vmicro);
+    printf("Libxc version: %d.%d.%d\n", vmajor, vminor, vmicro);
+    /* Initialize the functional */
+    if(xc_func_init(&func, func_id, XC_UNPOLARIZED) != 0){
+      fprintf(stderr, "Functional '%d' not found\n", func_id);
+      return Eigen::MatrixXd::Constant(1, 1, func_id);
+    }
+    
+    std::cout << "AFTER libxc is called" << std::endl;
 
 
     if (nInp != inp.cols()) MSG_ABORT("Invalid input");
