@@ -135,4 +135,5 @@ Pipfile.lock
 
 cube_vectors/
 
-mrchem_install
+#Personal
+recompile.sh
