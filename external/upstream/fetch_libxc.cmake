@@ -1,4 +1,4 @@
-set(Libxc_pinned "7.0.0")
+#set(Libxc_pinned "7.0.0")
 cmake_policy(SET CMP0144 NEW)
 find_package(Libxc CONFIG QUIET COMPONENTS C
 NO_CMAKE_PATH
@@ -15,7 +15,8 @@ FetchContent_Declare(Libxc
   QUIET
   DOWNLOAD_EXTRACT_TIMESTAMP ON
   URL
-    https://gitlab.com/libxc/libxc/-/archive/${Libxc_pinned}/libxc-${Libxc_pinned}.tar.gz
+    # https://gitlab.com/libxc/libxc/-/archive/${Libxc_pinned}/libxc-${Libxc_pinned}.tar.gz
+    https://gitlab.com/libxc/libxc/-/archive/release-6.2.0/libxc-release-6.2.0.tar.gz
   )
 
 enable_language(C)
