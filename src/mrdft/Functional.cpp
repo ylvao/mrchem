@@ -24,10 +24,10 @@
  */
 
 #include <MRCPP/Printer>
+#include <xc.h>
+#include <xc_funcs.h>
 
 #include "Functional.h"
-#include "xc.h"
-#include "xc_funcs.h"
 
 namespace mrdft {
 
