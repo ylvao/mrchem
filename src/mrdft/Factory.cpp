@@ -1,33 +1,7 @@
-/*
- * MRChem, a numerical real-space code for molecular electronic structure
- * calculations within the self-consistent field (SCF) approximations of quantum
- * chemistry (Hartree-Fock and Density Functional Theory).
- * Copyright (C) 2023 Stig Rune Jensen, Luca Frediani, Peter Wind and contributors.
- *
- * This file is part of MRChem.
- *
- * MRChem is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * MRChem is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with MRChem.  If not, see <https://www.gnu.org/licenses/>.
- *
- * For information on the complete list of contributors to MRChem, see:
- * <https://mrchem.readthedocs.io/>
- */
-
 #include "Factory.h"
 
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
-#include <XCFun/xcfun.h>
 
 #include "GGA.h"
 #include "Grid.h"
@@ -39,49 +13,158 @@
 namespace mrdft {
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
-        : mra(MRA)
-        , xcfun_p(xcfun_new(), xcfun_delete) {}
+        : mra(MRA) {}
+
+Factory::~Factory() {
+    cleanupFunctionals();
+}
+
+void Factory::cleanupFunctionals() {
+    for (auto &func_data : functionals) {
+        if (func_data.initialized) {
+            xc_func_end(&func_data.func);
+            func_data.initialized = false;
+        }
+    }
+    functionals.clear();
+}
+
+int Factory::mapFunctionalName(const std::string &name) const {
+    // Map common functional names to LibXC IDs
+    if (name == "LDA" || name == "LDA_X") return XC_LDA_X;
+    if (name == "VWN" || name == "LDA_C_VWN") return XC_LDA_C_VWN;
+    if (name == "PBE_X") return XC_GGA_X_PBE;
+    if (name == "PBE_C") return XC_GGA_C_PBE;
+    if (name == "B88") return XC_GGA_X_B88;
+    if (name == "LYP") return XC_GGA_C_LYP;
+    if (name == "B3LYP") return XC_HYB_GGA_XC_B3LYP;
+    
+    // If not a common name, try to get it directly from LibXC
+    int func_id = xc_functional_get_number(name.c_str());
+    if (func_id <= 0) {
+        std::string msg = "Unknown functional: " + name;
+        MSG_ABORT(msg.c_str());
+    }
+    return func_id;
+}
+
+void Factory::setFunctional(const std::string &name, double weight) {
+    int func_id = mapFunctionalName(name);
+    
+    LibXCData func_data;
+    func_data.func_id = func_id;
+    func_data.weight = weight;
+    func_data.initialized = false;
+    
+    functionals.push_back(func_data);
+}
+
+bool Factory::isGGA() const {
+    for (const auto &func_data : functionals) {
+        const xc_func_type *func_ptr = &func_data.func;
+        if (func_data.initialized) {
+            if (func_ptr->info->family == XC_FAMILY_GGA || 
+                func_ptr->info->family == XC_FAMILY_HYB_GGA) {
+                return true;
+            }
+        } else {
+            // If not initialized, check the family based on ID
+            xc_func_type temp_func;
+            if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
+                bool is_gga = (temp_func.info->family == XC_FAMILY_GGA || 
+                              temp_func.info->family == XC_FAMILY_HYB_GGA);
+                xc_func_end(&temp_func);
+                if (is_gga) return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Factory::isHybrid() const {
+    for (const auto &func_data : functionals) {
+        if (func_data.initialized) {
+            if (xc_hyb_type(&func_data.func) != XC_HYB_NONE) {
+                return true;
+            }
+        } else {
+            // Check if it's a hybrid by temporarily initializing
+            xc_func_type temp_func;
+            if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
+                bool is_hybrid = (xc_hyb_type(&temp_func) != XC_HYB_NONE);
+                xc_func_end(&temp_func);
+                if (is_hybrid) return true;
+            }
+        }
+    }
+    return false;
+}
+
+double Factory::getHybridCoeff() const {
+    double coeff = 0.0;
+    for (const auto &func_data : functionals) {
+        if (func_data.initialized) {
+            if (xc_hyb_type(&func_data.func) != XC_HYB_NONE) {
+                coeff += func_data.weight * xc_hyb_exx_coef(&func_data.func);
+            }
+        } else {
+            // Get hybrid coefficient by temporarily initializing
+            xc_func_type temp_func;
+            if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
+                if (xc_hyb_type(&temp_func) != XC_HYB_NONE) {
+                    coeff += func_data.weight * xc_hyb_exx_coef(&temp_func);
+                }
+                xc_func_end(&temp_func);
+            }
+        }
+    }
+    return coeff;
+}
 
 /** @brief Build a MRDFT object from the currently defined parameters */
 std::unique_ptr<MRDFT> Factory::build() {
     // Init DFT grid
     auto grid_p = std::make_unique<Grid>(mra);
-
-    // Init XCFun
-    bool gga = xcfun_is_gga(xcfun_p.get());
-    bool lda = not(gga);
-    unsigned int mode = 1;                    //!< only partial derivative mode implemented
-    unsigned int func_type = (gga) ? 1 : 0;   //!< only LDA and GGA supported for now
-    unsigned int dens_type = 1 + spin;        //!< only n (dens_type = 1) or alpha & beta (denst_type = 2) supported now.
-    unsigned int laplacian = 0;               //!< no laplacian
-    unsigned int kinetic = 0;                 //!< no kinetic energy density
-    unsigned int current = 0;                 //!< no current density
-    unsigned int exp_derivative = not(gamma); //!< use gamma or explicit derivatives
-    if (not(gga)) exp_derivative = 0;         //!< fall back to gamma-type derivatives if LDA
-    xcfun_user_eval_setup(xcfun_p.get(), order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
-
+    
+    // Initialize LibXC functionals
+    for (auto &func_data : functionals) {
+        int polarization = spin ? XC_POLARIZED : XC_UNPOLARIZED;
+        if (xc_func_init(&func_data.func, func_data.func_id, polarization) != 0) {
+            std::string msg = "Error initializing LibXC functional";
+            MSG_ABORT(msg.c_str());
+        }
+        func_data.initialized = true;
+    }
+    
+    // Check if we have any functionals
+    if (functionals.empty()) {
+        MSG_ABORT("No functionals defined");
+    }
+    
     // Init MW derivative
+    bool gga = isGGA();
     if (gga) {
         if (diff_s == "bspline") diff_p = std::make_unique<mrcpp::BSOperator<3>>(mra, 1);
         if (diff_s == "abgv_00") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
         if (diff_s == "abgv_55") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
     }
-
+    
     // Init XC functional
     std::unique_ptr<Functional> func_p{nullptr};
+    bool lda = !gga;
     if (spin) {
-        if (gga) func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
-        if (lda) func_p = std::make_unique<SpinLDA>(order, xcfun_p);
+        if (gga) func_p = std::make_unique<SpinGGA>(order, functionals, diff_p);
+        if (lda) func_p = std::make_unique<SpinLDA>(order, functionals);
     } else {
-        if (gga) func_p = std::make_unique<GGA>(order, xcfun_p, diff_p);
-        if (lda) func_p = std::make_unique<LDA>(order, xcfun_p);
+        if (gga) func_p = std::make_unique<GGA>(order, functionals, diff_p);
+        if (lda) func_p = std::make_unique<LDA>(order, functionals);
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
     diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
     func_p->setDerivOp(diff_p);
     func_p->setLogGradient(log_grad);
     func_p->setDensityCutoff(cutoff);
-
+    
     auto mrdft_p = std::make_unique<MRDFT>(grid_p, func_p);
     return mrdft_p;
 }

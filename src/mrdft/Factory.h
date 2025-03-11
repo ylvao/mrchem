@@ -26,16 +26,30 @@
 #pragma once
 
 #include <MRCPP/MWOperators>
-#include <XCFun/xcfun.h>
+#include <memory> // added for use of libxc
+#include <string> // added for use of libxc
+#include <map> // added for use of libxc
+#include <vector> // added for use of libxc
+#include <xc.h> // added for use of libxc
+// #include <XCFun/xcfun.h>
 
 #include "MRDFT.h"
 
 namespace mrdft {
 
+// Structure to hold LibXC functional data
+struct LibXCData {
+    int func_id;             // Functional ID in LibXC
+    double weight;           // Weight for this functional
+    xc_func_type func;       // LibXC function type
+    bool initialized;        // If the functional is initialized
+};
+
 class Factory final {
 public:
     Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA);
-    ~Factory() = default;
+    // ~Factory() = default;
+    ~Factory()
 
     void setSpin(bool s) { spin = s; }
     void setOrder(int k) { order = k; }
@@ -43,7 +57,13 @@ public:
     void setLogGradient(bool lg) { log_grad = lg; }
     void setDensityCutoff(double c) { cutoff = c; }
     void setDerivative(const std::string &n) { diff_s = n; }
-    void setFunctional(const std::string &n, double c = 1.0) { xcfun_set(xcfun_p.get(), n.c_str(), c); }
+    // void setFunctional(const std::string &n, double c = 1.0) { xcfun_set(xcfun_p.get(), n.c_str(), c); }
+
+    // added for use of libxc
+    void setFunctional(const std::string &name, double weight = 1.0);
+    bool isGGA() const;
+    bool isHybrid() const;
+    bool getHybridCoeff() const;
 
     std::unique_ptr<MRDFT> build();
 
@@ -56,7 +76,12 @@ private:
     std::string diff_s{"abgv_00"};
     const mrcpp::MultiResolutionAnalysis<3> mra;
 
-    XC_p xcfun_p;
+    // added for use of libxc
+    std::vector<LibXCData> functionals;
+    int mapFunctionalName(const std::string &name) const;
+    void cleanupFunctionals();
+
+    // XC_p xcfun_p;
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p;
 };
 
