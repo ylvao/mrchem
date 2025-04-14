@@ -1,7 +1,9 @@
 #include "Factory.h"
-
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
+
+#include "LibXC.h"
+#include "LibXC.cpp"
 
 #include "GGA.h"
 #include "Grid.h"
@@ -152,6 +154,7 @@ std::unique_ptr<MRDFT> Factory::build() {
     // Init XC functional
     std::unique_ptr<Functional> func_p{nullptr};
     bool lda = !gga;
+    
     if (spin) {
         if (gga) func_p = std::make_unique<SpinGGA>(order, functionals, diff_p);
         if (lda) func_p = std::make_unique<SpinLDA>(order, functionals);
@@ -159,7 +162,9 @@ std::unique_ptr<MRDFT> Factory::build() {
         if (gga) func_p = std::make_unique<GGA>(order, functionals, diff_p);
         if (lda) func_p = std::make_unique<LDA>(order, functionals);
     }
+    
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
+    
     diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
     func_p->setDerivOp(diff_p);
     func_p->setLogGradient(log_grad);
