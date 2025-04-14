@@ -64,11 +64,11 @@
          
          // Hybrid functionals
          {"b3lyp", XC_HYB_GGA_XC_B3LYP},
-         {"pbe0", XC_HYB_GGA_XC_PBE0},
+         {"pbe0", XC_HYB_GGA_XC_APBE0},
          
          // Meta-GGA functionals
-         {"tpss", XC_MGGA_XC_TPSS},
-         {"m06l", XC_MGGA_XC_M06_L}
+         {"tpss", XC_MGGA_X_TPSS},
+         {"m06l", XC_MGGA_X_M06_L}
      };
      
      auto it = func_map.find(name);
