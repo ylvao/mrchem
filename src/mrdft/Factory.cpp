@@ -1,9 +1,10 @@
 #include "Factory.h"
+
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
-
 #include "LibXC.h"
-#include "LibXC.cpp"
+// #include "LibXC.cpp"
+
 
 #include "GGA.h"
 #include "Grid.h"
@@ -17,9 +18,9 @@ namespace mrdft {
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         : mra(MRA) {}
 
-Factory::~Factory() {
-    cleanupFunctionals();
-}
+// Factory::~Factory() {
+//     cleanupFunctionals();
+// }
 
 void Factory::cleanupFunctionals() {
     for (auto &func_data : functionals) {
@@ -31,35 +32,35 @@ void Factory::cleanupFunctionals() {
     functionals.clear();
 }
 
-int Factory::mapFunctionalName(const std::string &name) const {
-    // Map common functional names to LibXC IDs
-    if (name == "LDA" || name == "LDA_X") return XC_LDA_X;
-    if (name == "VWN" || name == "LDA_C_VWN") return XC_LDA_C_VWN;
-    if (name == "PBE_X") return XC_GGA_X_PBE;
-    if (name == "PBE_C") return XC_GGA_C_PBE;
-    if (name == "B88") return XC_GGA_X_B88;
-    if (name == "LYP") return XC_GGA_C_LYP;
-    if (name == "B3LYP") return XC_HYB_GGA_XC_B3LYP;
+// int Factory::mapFunctionalName(const std::string &name) const {
+//     // Map common functional names to LibXC IDs
+//     if (name == "LDA" || name == "LDA_X") return XC_LDA_X;
+//     if (name == "VWN" || name == "LDA_C_VWN") return XC_LDA_C_VWN;
+//     if (name == "PBE_X") return XC_GGA_X_PBE;
+//     if (name == "PBE_C") return XC_GGA_C_PBE;
+//     if (name == "B88") return XC_GGA_X_B88;
+//     if (name == "LYP") return XC_GGA_C_LYP;
+//     if (name == "B3LYP") return XC_HYB_GGA_XC_B3LYP;
     
-    // If not a common name, try to get it directly from LibXC
-    int func_id = xc_functional_get_number(name.c_str());
-    if (func_id <= 0) {
-        std::string msg = "Unknown functional: " + name;
-        MSG_ABORT(msg.c_str());
-    }
-    return func_id;
-}
+//     // If not a common name, try to get it directly from LibXC
+//     int func_id = xc_functional_get_number(name.c_str());
+//     if (func_id <= 0) {
+//         std::string msg = "Unknown functional: " + name;
+//         MSG_ABORT(msg.c_str());
+//     }
+//     return func_id;
+// }
 
-void Factory::setFunctional(const std::string &name, double weight) {
-    int func_id = mapFunctionalName(name);
+// void Factory::setFunctional(const std::string &name, double weight) {
+//     int func_id = mapFunctionalName(name);
     
-    LibXCData func_data;
-    func_data.func_id = func_id;
-    func_data.weight = weight;
-    func_data.initialized = false;
+//     LibXCData func_data;
+//     func_data.func_id = func_id;
+//     func_data.weight = weight;
+//     func_data.initialized = false;
     
-    functionals.push_back(func_data);
-}
+//     functionals.push_back(func_data);
+// }
 
 bool Factory::isGGA() const {
     for (const auto &func_data : functionals) {
@@ -83,17 +84,38 @@ bool Factory::isGGA() const {
     return false;
 }
 
+// bool Factory::isHybrid() const {
+//     for (const auto &func_data : functionals) {
+//         if (func_data.initialized) {
+//             if (xc_hyb_type(&func_data.func) != XC_HYB_NONE) {
+//                 return true;
+//             }
+//         } else {
+//             // Check if it's a hybrid by temporarily initializing
+//             xc_func_type temp_func;
+//             if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
+//                 bool is_hybrid = (xc_hyb_type(&temp_func) != XC_HYB_NONE);
+//                 xc_func_end(&temp_func);
+//                 if (is_hybrid) return true;
+//             }
+//         }
+//     }
+//     return false;
+// }
+
 bool Factory::isHybrid() const {
     for (const auto &func_data : functionals) {
+        const xc_func_type *func_ptr = &func_data.func;
         if (func_data.initialized) {
-            if (xc_hyb_type(&func_data.func) != XC_HYB_NONE) {
+            if (func_ptr->info->family == XC_FAMILY_HYB_GGA ||
+                func_ptr->info->family == XC_FAMILY_HYB_MGGA) {
                 return true;
             }
         } else {
-            // Check if it's a hybrid by temporarily initializing
             xc_func_type temp_func;
             if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
-                bool is_hybrid = (xc_hyb_type(&temp_func) != XC_HYB_NONE);
+                bool is_hybrid = (temp_func.info->family == XC_FAMILY_HYB_GGA ||
+                                  temp_func.info->family == XC_FAMILY_HYB_MGGA);
                 xc_func_end(&temp_func);
                 if (is_hybrid) return true;
             }
@@ -102,18 +124,43 @@ bool Factory::isHybrid() const {
     return false;
 }
 
+
+
+// double Factory::getHybridCoeff() const {
+//     double coeff = 0.0;
+//     for (const auto &func_data : functionals) {
+//         if (func_data.initialized) {
+//             if (xc_hyb_type(&func_data.func) != XC_HYB_NONE) {
+//                 coeff += func_data.weight * xc_hyb_exx_coef(&func_data.func);
+//             }
+//         } else {
+//             // Get hybrid coefficient by temporarily initializing
+//             xc_func_type temp_func;
+//             if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
+//                 if (xc_hyb_type(&temp_func) != XC_HYB_NONE) {
+//                     coeff += func_data.weight * xc_hyb_exx_coef(&temp_func);
+//                 }
+//                 xc_func_end(&temp_func);
+//             }
+//         }
+//     }
+//     return coeff;
+// }
+
+
 double Factory::getHybridCoeff() const {
     double coeff = 0.0;
     for (const auto &func_data : functionals) {
         if (func_data.initialized) {
-            if (xc_hyb_type(&func_data.func) != XC_HYB_NONE) {
+            if (func_data.func.info->family == XC_FAMILY_HYB_GGA ||
+                func_data.func.info->family == XC_FAMILY_HYB_MGGA) {
                 coeff += func_data.weight * xc_hyb_exx_coef(&func_data.func);
             }
         } else {
-            // Get hybrid coefficient by temporarily initializing
             xc_func_type temp_func;
             if (xc_func_init(&temp_func, func_data.func_id, XC_UNPOLARIZED) == 0) {
-                if (xc_hyb_type(&temp_func) != XC_HYB_NONE) {
+                if (temp_func.info->family == XC_FAMILY_HYB_GGA ||
+                    temp_func.info->family == XC_FAMILY_HYB_MGGA) {
                     coeff += func_data.weight * xc_hyb_exx_coef(&temp_func);
                 }
                 xc_func_end(&temp_func);
@@ -122,6 +169,7 @@ double Factory::getHybridCoeff() const {
     }
     return coeff;
 }
+
 
 /** @brief Build a MRDFT object from the currently defined parameters */
 std::unique_ptr<MRDFT> Factory::build() {
@@ -155,13 +203,16 @@ std::unique_ptr<MRDFT> Factory::build() {
     std::unique_ptr<Functional> func_p{nullptr};
     bool lda = !gga;
     
-    if (spin) {
-        if (gga) func_p = std::make_unique<SpinGGA>(order, functionals, diff_p);
-        if (lda) func_p = std::make_unique<SpinLDA>(order, functionals);
-    } else {
-        if (gga) func_p = std::make_unique<GGA>(order, functionals, diff_p);
-        if (lda) func_p = std::make_unique<LDA>(order, functionals);
-    }
+
+    // Had some error with the way these constructors are defined -- Dont need spin yet
+
+    // if (spin) {
+    //     if (gga) func_p = std::make_unique<SpinGGA>(order, functionals, diff_p);
+    //     if (lda) func_p = std::make_unique<SpinLDA>(order, functionals);
+    // } else {
+    //     if (gga) func_p = std::make_unique<GGA>(order, functionals, diff_p);
+    //     if (lda) func_p = std::make_unique<LDA>(order, functionals);
+    // }
     
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
     

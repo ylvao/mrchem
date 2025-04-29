@@ -30,7 +30,8 @@
  #include <vector>
  #include <xc.h>
  
- namespace mrchem {
+ 
+//  namespace mrchem {
  namespace mrdft {
  
  // Wrapper class for LibXC functionality
@@ -98,4 +99,4 @@
  };
  
  } // namespace mrdft
- } // namespace mrchem
+//  } // namespace mrchem

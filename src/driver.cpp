@@ -26,6 +26,7 @@
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
+#include <mrdft/MRDFT.h> // libxc debug
 
 #include <filesystem>
 #include "driver.h"

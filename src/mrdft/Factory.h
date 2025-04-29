@@ -1,4 +1,3 @@
-#pragma once
 #include <MRCPP/MWOperators>
 #include <memory>
 #include <string>
@@ -8,7 +7,7 @@
 #include "MRDFT.h"
 
 #include "LibXC.h"
-#include "LibXC.cpp"
+// #include "LibXC.cpp"
 
 namespace mrdft {
 
@@ -59,4 +58,4 @@ private:
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p;
 };
 
-} // namespace mrdft
+} // namespace mrdf
