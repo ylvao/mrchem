@@ -54,7 +54,7 @@ private:
     // Helper methods
     int mapFunctionalName(const std::string &name) const;
     void cleanupFunctionals();
-    
+ 
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p;
 };
 

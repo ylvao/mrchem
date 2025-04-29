@@ -199,13 +199,11 @@ std::unique_ptr<MRDFT> Factory::build() {
         if (diff_s == "abgv_55") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
     }
     
+    // Had some error with the way these constructors are defined -- Dont need spin yet
+    
     // Init XC functional
     std::unique_ptr<Functional> func_p{nullptr};
     bool lda = !gga;
-    
-
-    // Had some error with the way these constructors are defined -- Dont need spin yet
-
     // if (spin) {
     //     if (gga) func_p = std::make_unique<SpinGGA>(order, functionals, diff_p);
     //     if (lda) func_p = std::make_unique<SpinLDA>(order, functionals);
