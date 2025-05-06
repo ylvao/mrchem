@@ -18,9 +18,9 @@ namespace mrdft {
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         : mra(MRA) {}
 
-// Factory::~Factory() {
-//     cleanupFunctionals();
-// }
+Factory::~Factory() {
+    cleanupFunctionals();
+}
 
 void Factory::cleanupFunctionals() {
     for (auto &func_data : functionals) {
@@ -32,35 +32,35 @@ void Factory::cleanupFunctionals() {
     functionals.clear();
 }
 
-// int Factory::mapFunctionalName(const std::string &name) const {
-//     // Map common functional names to LibXC IDs
-//     if (name == "LDA" || name == "LDA_X") return XC_LDA_X;
-//     if (name == "VWN" || name == "LDA_C_VWN") return XC_LDA_C_VWN;
-//     if (name == "PBE_X") return XC_GGA_X_PBE;
-//     if (name == "PBE_C") return XC_GGA_C_PBE;
-//     if (name == "B88") return XC_GGA_X_B88;
-//     if (name == "LYP") return XC_GGA_C_LYP;
-//     if (name == "B3LYP") return XC_HYB_GGA_XC_B3LYP;
+int Factory::mapFunctionalName(const std::string &name) const {
+    // Map common functional names to LibXC IDs
+    if (name == "LDA" || name == "LDA_X") return XC_LDA_X;
+    if (name == "VWN" || name == "LDA_C_VWN") return XC_LDA_C_VWN;
+    if (name == "PBE_X") return XC_GGA_X_PBE;
+    if (name == "PBE_C") return XC_GGA_C_PBE;
+    if (name == "B88") return XC_GGA_X_B88;
+    if (name == "LYP") return XC_GGA_C_LYP;
+    if (name == "B3LYP") return XC_HYB_GGA_XC_B3LYP;
     
-//     // If not a common name, try to get it directly from LibXC
-//     int func_id = xc_functional_get_number(name.c_str());
-//     if (func_id <= 0) {
-//         std::string msg = "Unknown functional: " + name;
-//         MSG_ABORT(msg.c_str());
-//     }
-//     return func_id;
-// }
+    // If not a common name, try to get it directly from LibXC
+    int func_id = xc_functional_get_number(name.c_str());
+    if (func_id <= 0) {
+        std::string msg = "Unknown functional: " + name;
+        MSG_ABORT(msg.c_str());
+    }
+    return func_id;
+}
 
-// void Factory::setFunctional(const std::string &name, double weight) {
-//     int func_id = mapFunctionalName(name);
+void Factory::setFunctional(const std::string &name, double weight) {
+    int func_id = mapFunctionalName(name);
     
-//     LibXCData func_data;
-//     func_data.func_id = func_id;
-//     func_data.weight = weight;
-//     func_data.initialized = false;
+    LibXCData func_data;
+    func_data.func_id = func_id;
+    func_data.weight = weight;
+    func_data.initialized = false;
     
-//     functionals.push_back(func_data);
-// }
+    functionals.push_back(func_data);
+}
 
 bool Factory::isGGA() const {
     for (const auto &func_data : functionals) {
