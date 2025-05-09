@@ -3,17 +3,11 @@
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
 #include "LibXC.h"
-// #include "LibXC.cpp"
 
 
-#include "GGA.h"
-#include "Grid.h"
-#include "LDA.h"
-#include "MRDFT.h"
-#include "SpinGGA.h"
-#include "SpinLDA.h"
 
-namespace mrdft {
+
+namespace mrlibxc {
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         : mra(MRA) {}
@@ -172,9 +166,9 @@ double Factory::getHybridCoeff() const {
 
 
 /** @brief Build a MRDFT object from the currently defined parameters */
-std::unique_ptr<MRDFT> Factory::build() {
+std::unique_ptr<mrdft::MRDFT> Factory::build() {
     // Init DFT grid
-    auto grid_p = std::make_unique<Grid>(mra);
+    auto grid_p = std::make_unique<mrdft::Grid>(mra);
     
     // Initialize LibXC functionals
     for (auto &func_data : functionals) {
@@ -202,7 +196,7 @@ std::unique_ptr<MRDFT> Factory::build() {
     // Had some error with the way these constructors are defined -- Dont need spin yet
     
     // Init XC functional
-    std::unique_ptr<Functional> func_p{nullptr};
+    std::unique_ptr<mrdft::Functional> func_p{nullptr};
     bool lda = !gga;
     // if (spin) {
     //     if (gga) func_p = std::make_unique<SpinGGA>(order, functionals, diff_p);
@@ -219,7 +213,7 @@ std::unique_ptr<MRDFT> Factory::build() {
     func_p->setLogGradient(log_grad);
     func_p->setDensityCutoff(cutoff);
     
-    auto mrdft_p = std::make_unique<MRDFT>(grid_p, func_p);
+    auto mrdft_p = std::make_unique<mrdft::MRDFT>(grid_p, func_p);
     return mrdft_p;
 }
 

@@ -4,12 +4,12 @@
 #include <map>
 #include <vector>
 #include <xc.h>  // The addition of LibXC header
-#include "MRDFT.h"
+#include "mrdft/MRDFT.h"
 
 #include "LibXC.h"
 // #include "LibXC.cpp"
 
-namespace mrdft {
+namespace mrlibxc {
 
 // Structure to hold LibXC functional data
 struct LibXCData {
@@ -37,7 +37,7 @@ public:
     bool isHybrid() const;
     double getHybridCoeff() const;
     
-    std::unique_ptr<MRDFT> build();
+    std::unique_ptr<mrdft::MRDFT> build();
     
 private:
     int order{1};

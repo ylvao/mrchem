@@ -73,27 +73,9 @@ Eigen::MatrixXd Functional::evaluate_transposed(Eigen::MatrixXd &inp) const {
     int nInp = xcfun_input_length(xcfun.get());  // Input parameters to XCFun
     int nOut = xcfun_output_length(xcfun.get()); // Input parameters to XCFun
     int nPts = inp.rows();
-    std::cout << "nInp(should be 1): " << nInp << std::endl;
-    std::cout << "nOut(should be 2): " << nOut << std::endl;
-    std::cout << "nPts(should be ?): " << nPts << std::endl;
 
 
 
-
-    std::cout << "BEFORE libxc is called" << std::endl;
-    
-    xc_func_type func;
-    int i, vmajor, vminor, vmicro, func_id = 1; /* func_id = 1 => LDA */
-    /* Get the libxc version */
-    xc_version(&vmajor, &vminor, &vmicro);
-    printf("Libxc version: %d.%d.%d\n", vmajor, vminor, vmicro);
-    /* Initialize the functional */
-    if(xc_func_init(&func, func_id, XC_UNPOLARIZED) != 0){
-      fprintf(stderr, "Functional '%d' not found\n", func_id);
-      return Eigen::MatrixXd::Constant(1, 1, func_id);
-    }
-    
-    std::cout << "AFTER libxc is called" << std::endl;
 
     xc_func_type xfunc;
     xc_func_init(&xfunc, 1, XC_UNPOLARIZED);

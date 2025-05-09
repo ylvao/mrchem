@@ -35,7 +35,7 @@
 #include "qmfunctions/orbital_utils.h"
 #include "qmoperators/two_electron/XCOperator.h"
 
-#include "mrdft/Factory.h"
+#include "mrdft/Factory-orig.h"
 
 using namespace mrchem;
 using namespace orbital;

@@ -87,7 +87,7 @@
 #include "surface_forces/SurfaceForce.h"
 #include "properties/hirshfeld/HirshfeldPartition.h"
 
-#include "mrdft/Factory.h"
+#include "mrlibxc/Factory.h"
 
 using mrcpp::ABGVOperator;
 using mrcpp::Coord;
@@ -1253,7 +1253,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         auto xc_funcs = json_xcfunc["functionals"];
         auto xc_order = order + 1;
 
-        ::mrdft::Factory xc_factory(*MRA); // libxc (added :: in front of mrdft)
+        mrlibxc::Factory xc_factory(*MRA); 
         xc_factory.setSpin(xc_spin);
         xc_factory.setOrder(xc_order);
         xc_factory.setDensityCutoff(xc_cutoff);

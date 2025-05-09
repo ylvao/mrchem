@@ -23,7 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "Factory.h"
+#include "Factory-orig.h"
 
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
