@@ -3,7 +3,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <xc.h>  // The addition of LibXC header
 #include "mrdft/MRDFT.h"
 
 #include "LibXC.h"
