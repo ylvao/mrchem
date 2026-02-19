@@ -80,9 +80,11 @@ void GroundStateSolver::printProperty() const {
     double Er_el_1 = scf_1.getElectronReactionEnergy();
     double Er_nuc_0 = scf_0.getNuclearReactionEnergy();
     double Er_nuc_1 = scf_1.getNuclearReactionEnergy();
+    double E_disp_1 = scf_1.getDispersionCorrectionEnergy();
 
     bool has_react = (std::abs(Er_el_1) > mrcpp::MachineZero) || (std::abs(Er_nuc_1) > mrcpp::MachineZero);
     bool has_ext = (std::abs(E_eext_1) > mrcpp::MachineZero) || (std::abs(E_next_1) > mrcpp::MachineZero);
+    bool has_disp = (std::abs(E_disp_1) > mrcpp::MachineZero);
 
     int w0 = (Printer::getWidth() - 1);
     int w1 = 20;
@@ -323,6 +325,14 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
         if (F.getReactionOperator() != nullptr) F.getReactionOperator()->updateMOResidual(err_t);
         F.setup(orb_prec);
         F_mat = F(Phi_n, Phi_n);
+
+
+        // TODO ADD DISPERSION HERE
+
+
+        mol.printDispersionForMolecule();
+
+        F.setDispersionCorrection(3.14);
         E_n = F.trace(Phi_n, nucs);
 
         // Collect convergence data

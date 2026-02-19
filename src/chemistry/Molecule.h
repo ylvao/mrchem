@@ -129,6 +129,9 @@ public:
     PropertyMap<GeometricDerivative> &getGeometricDerivatives() { return this->geometric_derivative; }
     PropertyMap<HirshfeldCharges> &getHirshfeldCharges() { return this->hirshfeld_charges; }
 
+
+    void printDispersionForMolecule();
+
 protected:
     int charge{0};
     int multiplicity{1};

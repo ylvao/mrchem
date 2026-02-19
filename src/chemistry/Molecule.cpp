@@ -31,6 +31,8 @@
 #include "environment/Cavity.h"
 #include "qmfunctions/orbital_utils.h"
 
+#include "dispersion_params.h"
+
 using mrcpp::Coord;
 using mrcpp::Printer;
 
@@ -270,5 +272,45 @@ void Molecule::initCavity(const std::vector<mrcpp::Coord<3>> &coords,
     if (cavity) MSG_ABORT("Cavity already initialized");
     this->cavity = std::make_shared<Cavity>(coords, R, alphas, betas, sigmas);
 }
+
+/**
+  * @brief Helper function to find a C6 coefficient for a pair of atoms
+  * based on their atomic numbers and coordination numbers.
+  */
+ void Molecule::printDispersionForMolecule() {
+
+     std::cout << "--- Dispersion Coefficient Lookup for Molecule ---" << std::endl;
+
+     // Iterate over all unique pairs of atoms (i, j)
+     for (auto i = 0; i < getNNuclei(); i++) {
+         for (auto j = 0; j < getNNuclei(); j++) {
+             int z1 = getNuclei()[i].getElement().getZ(); // Get Z from Molecule
+             int z2 = getNuclei()[j].getElement().getZ(); // Get Z from Molecule
+
+             bool pairFound = false;
+
+             // Search the parsed DISPERSION_DATA array
+             for (int k = 0; k < DISPERSION_DATA_SIZE; ++k) {
+                 const auto& entry = DISPERSION_DATA[k];
+
+                 // Check for matching atomic numbers (order independent)
+                 if ((entry.z1 == z1 && entry.z2 == z2) || (entry.z1 == z2 && entry.z2 == z1)) {
+                     std::cout << "Pair " << i << "(" << getNuclei()[i].getElement().getSymbol() << ") - "
+                               << j << "(" << getNuclei()[j].getElement().getSymbol() << "): "
+                               << "C6 = " << entry.c6 << " (at ref CN1=" << entry.cn1 
+                               << ", CN2=" << entry.cn2 << ")" << std::endl;
+                     pairFound = true;
+                 }
+             }
+
+             if (!pairFound) {
+                 std::cout << "No D3 parameters found for pair Z=(" << z1 << "," << z2 << ")" << std::endl;
+             }
+         }
+     }
+ }
+
+
+
 
 } // namespace mrchem

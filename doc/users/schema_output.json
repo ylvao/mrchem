@@ -37,6 +37,7 @@
       "E_xc": float,                         # DFT exchange-correlation energy
       "E_el": float,                         # Sum of electronic contributions
       "E_nuc": float,                        # Sum of nuclear contributions
+      "E_disp": float,                       # Dispersion correction
       "E_tot": float,                        # Sum of all contributions
       "Er_el": float,                        # Electronic reaction energy
       "Er_nuc": float,                       # Nuclear reaction energy
@@ -113,6 +114,7 @@
       "E_xc": float,                         # DFT exchange-correlation energy
       "E_el": float,                         # Sum of electronic contributions
       "E_nuc": float,                        # Sum of nuclear contributions
+      "E_disp": float,                       # Dispersion correction
       "E_tot": float,                        # Sum of all contributions
       "Er_el": float,                        # Electronic reaction energy
       "Er_nuc": float,                       # Nuclear reaction energy
@@ -138,6 +140,7 @@
             "E_xc": float,                   # DFT exchange-correlation energy
             "E_el": float,                   # Sum of electronic contributions
             "E_nuc": float,                  # Sum of nuclear contributions
+            "E_disp": float,                 # Dispersion correction
             "E_tot": float,                  # Sum of all contributions
             "Er_el": float,                  # Electronic reaction energy
             "Er_nuc": float,                 # Nuclear reaction energy
