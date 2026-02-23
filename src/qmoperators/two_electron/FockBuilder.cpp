@@ -195,7 +195,7 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     double E_xc = 0.0;   // Exchange and Correlation
     double E_eext = 0.0; // External field contribution to the electronic energy
     double E_next = 0.0; // External field contribution to the nuclear energy
-    // double E_disp = 0.0; // D3 dispersion correction
+    double E_disp = 0.0; // D3 dispersion correction
     double Er_nuc = 0.0; // Nuclear reaction energy
     double Er_el = 0.0;  // Electronic reaction energy
     double Er_tot = 0.0; // Total reaction energy
@@ -227,7 +227,8 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     if (this->coul != nullptr) E_ee = 0.5 * this->coul->trace(Phi).real();
     if (this->ex != nullptr) E_x = -this->exact_exchange * this->ex->trace(Phi).real();
     if (this->xc != nullptr) E_xc = this->xc->getEnergy();
-    // if (this->disp != nullptr) E_disp = this->disp->getEnergy();
+    // use stored dispersion correction
+    E_disp = this->disp;
     if (this->ext != nullptr) E_eext = this->ext->trace(Phi).real();
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Computing molecular energy", t_tot);
@@ -425,10 +426,5 @@ std::shared_ptr<QMPotential> FockBuilder::collectZoraBasePotential() {
     print_utils::qmfunction(2, "ZORA operator (base)", *vz, timer);
     return vz;
 }
-
-void FockBuilder::setDispersionCorrection(double disp) {
-    E_disp = disp;
-}
-
 
 } // namespace mrchem

@@ -1,35 +1,48 @@
-# include(FetchContent)
+include(FetchContent)
 
-# # 1. Essential: Make sure Fortran is enabled at the top level
-# # If this isn't in your main CMakeLists.txt, the fetch will fail to create targets.
-# get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
-# if(NOT "Fortran" IN_LIST languages)
-#     message(FATAL_ERROR "LibDftD3 requires Fortran. Please add Fortran to your project() call in the main CMakeLists.txt.")
-# endif()
+FetchContent_Declare(libdftd3
+  GIT_REPOSITORY https://github.com/cuanto/libdftd3.git
+  GIT_TAG        master
+)
 
-# find_package(LibDftD3 CONFIG QUIET)
+FetchContent_GetProperties(libdftd3)
+if(NOT libdftd3_POPULATED)
+  FetchContent_Populate(libdftd3)
+endif()
 
-# if(NOT TARGET LibDftD3::libdftd3)
-#   # Use lowercase consistently
-#   FetchContent_Declare(
-#     libdftd3
-#     GIT_REPOSITORY https://github.com/cuanto/libdftd3.git
-#     GIT_TAG        master
-#   )
+# new libdftd3 version places Fortran sources under lib/
+# verify that at least one expected file is present
+if(NOT EXISTS "${libdftd3_SOURCE_DIR}/lib/common.f90")
+    message(FATAL_ERROR "libdftd3 sources not available; check network/git")
+endif()
+
+# gather all Fortran source files from the lib directory
+file(GLOB dftd3_sources
+    "${libdftd3_SOURCE_DIR}/lib/*.f90"
+)
+
+# alternatively, could list them explicitly:
+# set(dftd3_sources
+#     "${libdftd3_SOURCE_DIR}/lib/common.f90"
+#     "${libdftd3_SOURCE_DIR}/lib/sizes.f90"
+#     "${libdftd3_SOURCE_DIR}/lib/pars.f90"
+#     "${libdftd3_SOURCE_DIR}/lib/core.f90"
+#     "${libdftd3_SOURCE_DIR}/lib/wrapper.f90"
+#     "${libdftd3_SOURCE_DIR}/lib/api.f90"
+#     # extras.f90 lives in prg/ not lib; may not be needed for library
+# )
+
+# 1. Create the library target (using a simple name)
+  add_library(dftd3_lib STATIC ${dftd3_sources})
   
-#   # Manual population to ensure we have the source directory variable
-#   FetchContent_GetProperties(libdftd3)
-#   if(NOT libdftd3_POPULATED)
-#     FetchContent_Populate(libdftd3)
-#     add_subdirectory(${libdftd3_SOURCE_DIR} ${libdftd3_BINARY_DIR})
-#   endif()
+  # 2. IMPORTANT: Create the Alias that MRChem is looking for
+  # This stops the linker from looking for a literal "-lLibDftD3::libdftd3"
+  add_library(LibDftD3::libdftd3 ALIAS dftd3_lib)
 
-#   # Based on the 'cuanto/libdftd3' repo, the target name is exactly 'dftd3'
-#   if(TARGET dftd3)
-#       add_library(LibDftD3::libdftd3 ALIAS dftd3)
-#       message(STATUS "SUCCESS: Aliased dftd3 to LibDftD3::libdftd3")
-#   else()
-#       # If we reach here, the subdirectory was added but 'dftd3' doesn't exist.
-#       message(FATAL_ERROR "Fetched LibDftD3 but target 'dftd3' was not found in ${libdftd3_SOURCE_DIR}")
-#   endif()
-# endif()
+  # 3. Set standard properties
+  set_target_properties(dftd3_lib PROPERTIES 
+    POSITION_INDEPENDENT_CODE ON
+    Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fortran_modules"
+  )
+  
+  target_include_directories(dftd3_lib PUBLIC "${libdftd3_SOURCE_DIR}/src")

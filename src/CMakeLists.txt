@@ -30,6 +30,7 @@ list(APPEND _public_headers
 
 add_subdirectory(analyticfunctions)
 add_subdirectory(chemistry)
+add_subdirectory(d3)
 add_subdirectory(environment)
 add_subdirectory(mrdft)
 add_subdirectory(properties)
@@ -53,7 +54,7 @@ target_link_libraries(mrchem
   PUBLIC
     XCFun::xcfun
     MRCPP::mrcpp
-    # LibDftD3::libdftd3
+    LibDftD3::libdftd3
     nlohmann_json::nlohmann_json
     $<$<AND:$<TARGET_EXISTS:OpenMP::OpenMP_CXX>,$<BOOL:${ENABLE_OPENMP}>>:OpenMP::OpenMP_CXX>
     $<$<AND:$<TARGET_EXISTS:MPI::MPI_CXX>,$<BOOL:${ENABLE_MPI}>>:MPI::MPI_CXX>

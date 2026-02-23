@@ -148,10 +148,10 @@ private:
     double E_xc{0.0};
     double E_next{0.0};
     double E_eext{0.0};
+    double E_disp{0.0};
     double Er_tot{0.0};
     double Er_nuc{0.0};
     double Er_el{0.0};
-    double E_disp{0.0};
 };
 // clang-format on
 

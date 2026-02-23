@@ -23,12 +23,17 @@
  * <https://mrchem.readthedocs.io/>
  */
 
+#include <iostream>
+#include <vector>
 #include <MRCPP/Printer>
 #include <MRCPP/Timer>
 
 #include "GroundStateSolver.h"
 #include "HelmholtzVector.h"
 #include "KAIN.h"
+
+// interface to external D3 library
+#include "d3/libd3_interface.h"
 
 #include "chemistry/Molecule.h"
 #include "qmfunctions/Orbital.h"
@@ -327,12 +332,56 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
         F_mat = F(Phi_n, Phi_n);
 
 
-        // TODO ADD DISPERSION HERE
+        // compute dispersion correction with external D3 library
+        
+            int natom = static_cast<int>(nucs.size());
+            std::vector<int> iz(natom);
+            std::vector<double> coords(3 * natom);
+            for (int i = 0; i < natom; ++i) {
+                iz[i] = nucs[i].getElement().getZ();
+                const auto &c = nucs[i].getCoord();
+                coords[3 * i + 0] = c[0];
+                coords[3 * i + 1] = c[1];
+                coords[3 * i + 2] = c[2];
+            }
+
+            // parameters for the C wrapper defined in libd3_interface.h
+            double energy_d3;
+            std::vector<double> gradient(3 * natom);
+            // version selects the parametrisation used by the D3 library.  a
+            // value of 0 means "no version" and causes setfuncpar() to leave
+            // all coefficients zero – hence the dispersion energy/gradients are
+            // identically zero.  the Python examples use 4 (D3BJ variant) so we
+            // follow suit here; the value could later be exposed as a user
+            // option if desired.
+            int version = 3;              // non‑zero -> use real parameters, 4 = BJ damping, zero damping = 3
+            int tz = 0;                    // no tz scaling
+            const char funcname[] = "pbe";  // currently hardcoded to PBE
+
+            // call the Fortran-C wrapper
+            // note: the interface uses value semantics for the scalar
+            // integers (see updated libd3_interface.h), so pass them directly
+            wrapper(natom,
+                    coords.data(),      // array natoms-by-3 in row-major order
+                    iz.data(),          // atomic numbers
+                    funcname,            // functional name string (null terminated)
+                    version,            // functional version
+                    tz,                 // zero/one for tz flag
+                    &energy_d3,         // output energy
+                    gradient.data());   // output gradients (3 x natoms)
+
+            F.setDispersionCorrection(energy_d3);
+            std::cout << "[D3] dispersion energy = " << energy_d3
+                      << " au (functional='" << funcname << "', version="
+                      << version << ")\n";
+            std::cout << "Vector elements: ";
+                for (const auto& element : gradient) {
+                    std::cout << element << " ";
+                }
+            std::cout << std::endl;
 
 
-        mol.printDispersionForMolecule();
-
-        F.setDispersionCorrection(3.14);
+        // F.setDispersionCorrection(3.14);  // replaced by D3 call above
         E_n = F.trace(Phi_n, nucs);
 
         // Collect convergence data

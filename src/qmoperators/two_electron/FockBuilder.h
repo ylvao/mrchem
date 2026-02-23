@@ -91,7 +91,7 @@ public:
     ComplexMatrix operator()(OrbitalVector &bra, OrbitalVector &ket);
 
     OrbitalVector buildHelmholtzArgument(double prec, OrbitalVector Phi, ComplexMatrix F_mat, ComplexMatrix L_mat);
-    void setDispersionCorrection(double disp);
+    void setDispersionCorrection(double disp) { this->disp = disp; }
 
 private:
     bool zora_has_nuc{false};
@@ -104,11 +104,12 @@ private:
 
     double light_speed{-1.0};
     double exact_exchange{1.0};
-    double E_disp{0.0};
     RankZeroOperator zora_base;
 
     double prec;
     Nuclei nucs;
+
+    double disp{0.0}; ///< Stored dispersion correction energy
 
     RankZeroOperator V;   ///< Total potential energy operator
     RankZeroOperator H_1; ///< Perturbation operators
