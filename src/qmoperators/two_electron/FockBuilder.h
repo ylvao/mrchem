@@ -109,7 +109,7 @@ private:
     double prec;
     Nuclei nucs;
 
-    double disp{0.0}; ///< Stored dispersion correction energy
+    double disp; ///< Stored dispersion correction energy
 
     RankZeroOperator V;   ///< Total potential energy operator
     RankZeroOperator H_1; ///< Perturbation operators

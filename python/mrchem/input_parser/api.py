@@ -553,7 +553,10 @@ def stencil() -> JSONDict:
                                         {   'default': '10 * '
                                                        "user['world_prec']",
                                             'name': 'orbital_thrs',
-                                            'type': 'float'}],
+                                            'type': 'float'},
+                                        {   'default': 'None',
+                                            'name': 'dispersion_correction',
+                                            'type': 'str'}],
                         'name': 'SCF'},
                     {   'keywords': [   {   'default': [True, True, True],
                                             'name': 'run',

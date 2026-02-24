@@ -60,7 +60,6 @@ public:
     void setRelativityName(const std::string &name) { this->relativityName = name; }
     void setEnvironmentName(const std::string &name) { this->environmentName = name; }
     void setExternalFieldName(const std::string &name) { this->externalFieldName = name; }
-    void setDispersionCorrection(double disp) { this->disp = disp; }
 
 protected:
     int history{0};                        ///< Maximum length of KAIN history
@@ -74,7 +73,6 @@ protected:
     std::string relativityName{"None"};    ///< Name of ZORA method
     std::string environmentName{"None"};   ///< Name for external environment
     std::string externalFieldName{"None"}; ///< Name for external fields
-    double disp{0.0};                       ///< Dispersion correction energy
 
     std::vector<double> error;    ///< Convergence orbital error
     std::vector<double> property; ///< Convergence property error

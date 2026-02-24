@@ -293,6 +293,9 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         auto energy_thrs = json_scf["scf_solver"]["energy_thrs"];
         auto orbital_thrs = json_scf["scf_solver"]["orbital_thrs"];
         auto helmholtz_prec = json_scf["scf_solver"]["helmholtz_prec"];
+        auto disp_corr = json_scf["scf_solver"]["disp_corr"];
+
+        std::cout << "print disp_corr: " << disp_corr << std::endl;
 
         GroundStateSolver solver;
         solver.setHistory(kain);
@@ -506,7 +509,6 @@ void driver::scf::calc_properties(const json &json_prop, Molecule &mol, const js
         mrcpp::print::footer(2, t_lap, 2);
         if (plevel == 1) mrcpp::print::time(1, "Dipole moment", t_lap);
     }
-
     if (json_prop.contains("quadrupole_moment")) {
         t_lap.start();
         mrcpp::print::header(2, "Computing quadrupole moment");
