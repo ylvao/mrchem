@@ -23,59 +23,72 @@
 //  * <https://mrchem.readthedocs.io/>
 //  */
 
-// #pragma once
+#pragma once
 
-// #include <nlohmann/json.hpp>
+#include <nlohmann/json.hpp>
 
-// #include "mrchem.h"
+#include "mrchem.h"
 
-// #include "utils/math_utils.h"
-// #include "utils/print_utils.h"
+#include "utils/math_utils.h"
+#include "utils/print_utils.h"
 
-// namespace mrchem {
+namespace mrchem {
 
-// class DispersionCorrection final {
-// public:
+class DispersionCorrection final {
+public:
+    explicit DispersionCorrection(int k = 1)
+        : Nuclei nuc = this->getNuclei()),
+          electronic(math_utils::init_nan(k, 3)) {}
+        // // compute dispersion correction with external D3 library
+        //     const Nuclei &nucs = this->getNuclei();
+        //     int natom = static_cast<int>(nucs.size());
+        //     std::vector<int> iz(natom);
+        //     std::vector<double> coords(3 * natom);
+        //     for (int i = 0; i < natom; ++i) {
+        //         iz[i] = nucs[i].getElement().getZ();
+        //         const auto &c = nucs[i].getCoord();
+        //         coords[3 * i + 0] = c[0];
+        //         coords[3 * i + 1] = c[1];
+        //         coords[3 * i + 2] = c[2];
+        //     }
 
-// /**
-//   * @brief Helper function to find a C6 coefficient for a pair of atoms
-//   * based on their atomic numbers and coordination numbers.
-//   */
-//  void Molecule::printDispersionForMolecule() {
-//      const auto& nuclei = mol.getNuclei();
-//      int nAtoms = mol.getNNuclei();
+        //     // parameters for the C wrapper defined in libd3_interface.h
+        //     double energy_d3;
+        //     std::vector<double> gradient(3 * natom);
+        //     // version selects the parametrisation used by the D3 library.  a
+        //     // value of 0 means "no version" and causes setfuncpar() to leave
+        //     // all coefficients zero – hence the dispersion energy/gradients are
+        //     // identically zero.  the Python examples use 4 (D3BJ variant) so we
+        //     // follow suit here; the value could later be exposed as a user
+        //     // option if desired.
+        //     int version = 3;              // non‑zero -> use real parameters, 4 = BJ damping, zero damping = 3
+        //     int tz = 0;                    // no tz scaling
+        //     const char funcname[] = "pbe";  // currently hardcoded to PBE
 
-//      std::cout << "--- Dispersion Coefficient Lookup for Molecule ---" << std::endl;
+         // call the Fortran-C wrapper
+         // note: the interface uses value semantics for the scalar
+         // integers (see updated libd3_interface.h), so pass them directly
+         wrapper(natom,
+                 coords.data(),      // array natoms-by-3 in row-major order
+                 iz.data(),          // atomic numbers
+                 funcname,            // functional name string (null terminated)
+                 version,            // functional version
+                 tz,                 // zero/one for tz flag
+                 &energy_d3,         // output energy
+                 gradient.data());   // output gradients (3 x natoms)
 
-//      // Iterate over all unique pairs of atoms (i, j)
-//      for (int i = 0; i < nAtoms; ++i) {
-//          for (int j = i + 1; j < nAtoms; ++j) {
-//              int z1 = nuclei[i].getElement().getZ(); // Get Z from Molecule
-//              int z2 = nuclei[j].getElement().getZ(); // Get Z from Molecule
-
-//              bool pairFound = false;
-
-//              // Search the parsed DISPERSION_DATA array
-//              for (int k = 0; k < DISPERSION_DATA_SIZE; ++k) {
-//                  const auto& entry = DISPERSION_DATA[k];
-
-//                  // Check for matching atomic numbers (order independent)
-//                  if ((entry.z1 == z1 && entry.z2 == z2) || (entry.z1 == z2 && entry.z2 == z1)) {
-//                      std::cout << "Pair " << i << "(" << nuclei[i].getElement().getSymbol() << ") - "
-//                                << j << "(" << nuclei[j].getElement().getSymbol() << "): "
-//                                << "C6 = " << entry.c6 << " (at ref CN1=" << entry.cn1 
-//                                << ", CN2=" << entry.cn2 << ")" << std::endl;
-//                      pairFound = true;
-//                  }
-//              }
-
-//              if (!pairFound) {
-//                  std::cout << "No D3 parameters found for pair Z=(" << z1 << "," << z2 << ")" << std::endl;
-//              }
-//          }
-//      }
-//  }
+        //     // F.setDispersionCorrection(energy_d3);
+        //     // std::cout << "[D3] dispersion energy = " << energy_d3
+        //     //           << " au (functional='" << funcname << "', version="
+        //     //           << version << ")\n";
+        //     // std::cout << "Vector elements: ";
+        //     //     for (const auto& element : gradient) {
+        //     //         std::cout << element << " ";
+        //     //     }
+        //     // std::cout << std::endl;
 
 
-// }
-// }
+        // // F.setDispersionCorrection(3.14);  // replaced by D3 call above
+        // E_n = F.trace(Phi_n, nucs);
+}
+}

@@ -85,11 +85,11 @@ void GroundStateSolver::printProperty() const {
     double Er_el_1 = scf_1.getElectronReactionEnergy();
     double Er_nuc_0 = scf_0.getNuclearReactionEnergy();
     double Er_nuc_1 = scf_1.getNuclearReactionEnergy();
-    double E_disp_1 = scf_1.getDispersionCorrectionEnergy();
+    // double E_disp_1 = scf_1.getDispersionCorrectionEnergy();
 
     bool has_react = (std::abs(Er_el_1) > mrcpp::MachineZero) || (std::abs(Er_nuc_1) > mrcpp::MachineZero);
     bool has_ext = (std::abs(E_eext_1) > mrcpp::MachineZero) || (std::abs(E_next_1) > mrcpp::MachineZero);
-    bool has_disp = (std::abs(E_disp_1) > mrcpp::MachineZero);
+    // bool has_disp = (std::abs(E_disp_1) > mrcpp::MachineZero);
 
     int w0 = (Printer::getWidth() - 1);
     int w1 = 20;
@@ -194,6 +194,13 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
         o_helm << std::setprecision(5) << std::scientific << this->helmPrec;
     }
 
+    // std::stringstream o_disp_o;
+    // if (this->orbThrs < 0.0) {
+    //     o_thrs_o << "Off";
+    // } else {
+    //     o_thrs_o << std::setprecision(5) << std::scientific << this->dispCorrType;
+    // }
+
     std::stringstream o_prec_0, o_prec_1;
     o_prec_0 << std::setprecision(5) << std::scientific << this->orbPrec[1];
     o_prec_1 << std::setprecision(5) << std::scientific << this->orbPrec[2];
@@ -214,6 +221,7 @@ void GroundStateSolver::printParameters(const std::string &calculation) const {
     print_utils::text(0, "Helmholtz precision", o_helm.str());
     print_utils::text(0, "Energy threshold   ", o_thrs_p.str());
     print_utils::text(0, "Orbital threshold  ", o_thrs_o.str());
+    // print_utils::text(0, "Dispersion correction", o_disp_o.str());
     mrcpp::print::separator(0, '~', 2);
 }
 
@@ -258,6 +266,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
     const Nuclei &nucs = mol.getNuclei();
     OrbitalVector &Phi_n = mol.getOrbitals();
     ComplexMatrix &F_mat = mol.getFockMatrix();
+    // DispersionCorrection &E_disp = mol.getDispersionCorrection();
 
     auto scaling = std::vector<double>(Phi_n.size(), 1.0);
     KAIN kain(this->history, 0, false, scaling);
@@ -267,6 +276,7 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
     double err_t = errors.norm();
 
     this->error.push_back(err_t);
+    // this->energy.push_back(E_disp);
     this->energy.push_back(E_n);
     this->property.push_back(E_n.getTotalEnergy());
 
@@ -330,59 +340,6 @@ json GroundStateSolver::optimize(Molecule &mol, FockBuilder &F) {
         if (F.getReactionOperator() != nullptr) F.getReactionOperator()->updateMOResidual(err_t);
         F.setup(orb_prec);
         F_mat = F(Phi_n, Phi_n);
-
-
-        // compute dispersion correction with external D3 library
-        
-            int natom = static_cast<int>(nucs.size());
-            std::vector<int> iz(natom);
-            std::vector<double> coords(3 * natom);
-            for (int i = 0; i < natom; ++i) {
-                iz[i] = nucs[i].getElement().getZ();
-                const auto &c = nucs[i].getCoord();
-                coords[3 * i + 0] = c[0];
-                coords[3 * i + 1] = c[1];
-                coords[3 * i + 2] = c[2];
-            }
-
-            // parameters for the C wrapper defined in libd3_interface.h
-            double energy_d3;
-            std::vector<double> gradient(3 * natom);
-            // version selects the parametrisation used by the D3 library.  a
-            // value of 0 means "no version" and causes setfuncpar() to leave
-            // all coefficients zero – hence the dispersion energy/gradients are
-            // identically zero.  the Python examples use 4 (D3BJ variant) so we
-            // follow suit here; the value could later be exposed as a user
-            // option if desired.
-            int version = 3;              // non‑zero -> use real parameters, 4 = BJ damping, zero damping = 3
-            int tz = 0;                    // no tz scaling
-            const char funcname[] = "pbe";  // currently hardcoded to PBE
-
-            // call the Fortran-C wrapper
-            // note: the interface uses value semantics for the scalar
-            // integers (see updated libd3_interface.h), so pass them directly
-            wrapper(natom,
-                    coords.data(),      // array natoms-by-3 in row-major order
-                    iz.data(),          // atomic numbers
-                    funcname,            // functional name string (null terminated)
-                    version,            // functional version
-                    tz,                 // zero/one for tz flag
-                    &energy_d3,         // output energy
-                    gradient.data());   // output gradients (3 x natoms)
-
-            F.setDispersionCorrection(energy_d3);
-            std::cout << "[D3] dispersion energy = " << energy_d3
-                      << " au (functional='" << funcname << "', version="
-                      << version << ")\n";
-            std::cout << "Vector elements: ";
-                for (const auto& element : gradient) {
-                    std::cout << element << " ";
-                }
-            std::cout << std::endl;
-
-
-        // F.setDispersionCorrection(3.14);  // replaced by D3 call above
-        E_n = F.trace(Phi_n, nucs);
 
         // Collect convergence data
         this->error.push_back(err_t);

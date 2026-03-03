@@ -278,8 +278,7 @@ def write_scf_solver(user_dict, wf_dict):
         "final_prec": final_prec,
         "energy_thrs": scf_dict["energy_thrs"],
         "orbital_thrs": scf_dict["orbital_thrs"],
-        "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"],
-        "disp_corr": scf_dict["dispersion_correction"],
+        "helmholtz_prec": user_dict["Precisions"]["helmholtz_prec"]
     }
 
     return solver_dict
@@ -315,6 +314,11 @@ def write_scf_properties(user_dict, origin):
         prop_dict["hirshfeld_charges"] = {}
         prop_dict["hirshfeld_charges"]["hirshfeld-1"] = {
             'precision': user_dict["world_prec"]
+        }
+    if user_dict["Properties"]["dispersion_correction"]:
+        prop_dict["dispersion_correction"] = {}
+        prop_dict["dispersion_correction"]["hirshfeld-1"] = {
+            'disp_corr': ["Properties"]["dispersion_correction"]
         }
 
     return prop_dict

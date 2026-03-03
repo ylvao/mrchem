@@ -229,7 +229,23 @@ void driver::init_properties(const json &json_prop, Molecule &mol) {
             if (not hir_map.count(id)) hir_map.insert({id, HirshfeldCharges()});
         }
     }
+    if (json_prop.contains("dispersion_correction")) {
+        for (const auto &item : json_prop["dispersion_correction"].items()) {
+            const auto &id = item.key();
+            auto &disp_corr_map = mol.getDispersionCorrection();
+            if (not disp_corr_map.count(id)) disp_corr_map.insert({id, DispersionCorrection()});
+        }
+    }
 }
+
+
+        // auto disp_corr = json_scf["scf_solver"]["disp_corr"];
+
+        // std::cout << "print disp_corr: " << disp_corr << std::endl;
+
+
+
+
 
 /** @brief Run ground-state SCF calculation
  *
@@ -293,9 +309,6 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         auto energy_thrs = json_scf["scf_solver"]["energy_thrs"];
         auto orbital_thrs = json_scf["scf_solver"]["orbital_thrs"];
         auto helmholtz_prec = json_scf["scf_solver"]["helmholtz_prec"];
-        auto disp_corr = json_scf["scf_solver"]["disp_corr"];
-
-        std::cout << "print disp_corr: " << disp_corr << std::endl;
 
         GroundStateSolver solver;
         solver.setHistory(kain);

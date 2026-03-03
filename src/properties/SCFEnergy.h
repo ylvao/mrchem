@@ -67,10 +67,10 @@ public:
     double getNuclearExternalEnergy() const { return this->E_next; }
     double getExchangeCorrelationEnergy() const { return this->E_xc; }
     double getExchangeEnergy() const { return this->E_x; }
+    double getDispersionCorrectionEnergy() const { return E_disp; }
     double getReactionEnergy() const { return this->Er_tot; }
     double getElectronReactionEnergy() const { return this->Er_el; }
     double getNuclearReactionEnergy() const { return this->Er_nuc; }
-    double getDispersionCorrectionEnergy() const { return E_disp; }
 
     void print(const std::string &id) const {
         auto E_au = E_nuc + E_el;
