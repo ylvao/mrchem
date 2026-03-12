@@ -52,6 +52,8 @@
 
 #include <filesystem>
 
+#include "pseudopotential/projectorOperator.h"
+
 using mrcpp::Printer;
 using mrcpp::Timer;
 
@@ -70,6 +72,7 @@ void FockBuilder::build(double exx) {
     if (this->xc != nullptr) this->V += (*this->xc);
     if (this->ext != nullptr) this->V += (*this->ext);
     if (this->Ro != nullptr) this->V -= (*this->Ro);
+    if (this->pp_projector != nullptr) this->V += (*this->pp_projector);
 }
 
 /** @brief prepare operator for application
@@ -199,6 +202,7 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     double Er_nuc = 0.0; // Nuclear reaction energy
     double Er_el = 0.0;  // Electronic reaction energy
     double Er_tot = 0.0; // Total reaction energy
+    double E_nl = 0.0;   // Non-local pseudopotential energy
 
     // Nuclear part
     if (this->nuc != nullptr) E_nn = chemistry::compute_nuclear_repulsion(nucs);
@@ -231,10 +235,14 @@ SCFEnergy FockBuilder::trace(OrbitalVector &Phi, const Nuclei &nucs) {
     // E_disp = this->disp;
     E_disp = ()
     if (this->ext != nullptr) E_eext = this->ext->trace(Phi).real();
+    if (getProjectorOperator() != nullptr) {
+        E_nl = this->pp_projector->trace(Phi).real();
+    }
+
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Computing molecular energy", t_tot);
 
-    return SCFEnergy{E_kin, E_nn, E_en, E_ee, E_x, E_xc, E_next, E_eext, E_disp, Er_tot, Er_nuc, Er_el};
+    return SCFEnergy{E_kin, E_nn, E_en, E_ee, E_x, E_xc, E_next, E_eext, E_disp, Er_tot, Er_nuc, Er_el, E_nl};
 }
 
 ComplexMatrix FockBuilder::operator()(OrbitalVector &bra, OrbitalVector &ket) {
@@ -255,6 +263,18 @@ ComplexMatrix FockBuilder::operator()(OrbitalVector &bra, OrbitalVector &ket) {
     mrcpp::print::footer(2, t_tot, 2);
     if (plevel == 1) mrcpp::print::time(1, "Computing Fock matrix", t_tot);
     return T_mat + V_mat;
+}
+
+ComplexMatrix FockBuilder::kineticMatrix(OrbitalVector &bra, OrbitalVector &ket) {
+    if (isZora() || isAZora()) {
+        return qmoperator::calc_kinetic_matrix(momentum(), *this->chi, bra, ket) + qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
+    } else {
+        return qmoperator::calc_kinetic_matrix(momentum(), bra, ket);
+    }
+}
+
+ComplexMatrix FockBuilder::potentialMatrix(OrbitalVector &bra, OrbitalVector &ket) {
+    return potential()(bra, ket);
 }
 
 OrbitalVector FockBuilder::buildHelmholtzArgument(double prec, OrbitalVector Phi, ComplexMatrix F_mat, ComplexMatrix L_mat) {
@@ -318,6 +338,7 @@ OrbitalVector FockBuilder::buildHelmholtzArgumentZORA(OrbitalVector &Phi, Orbita
     // Compute OrbitalVectors
     Timer t_1;
     OrbitalVector termOne = operOne(Phi);
+
     mrcpp::print::time(2, "Computing gradient term", t_1);
 
     Timer t_2;

@@ -56,6 +56,7 @@ set(_build_type ${CMAKE_BUILD_TYPE})
 # Order IS important here!
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_nlohmann_json.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_xcfun.cmake)
+include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_libxc.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_eigen3.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_mrcpp.cmake)
 include(${PROJECT_SOURCE_DIR}/external/upstream/fetch_libdftd3.cmake)
