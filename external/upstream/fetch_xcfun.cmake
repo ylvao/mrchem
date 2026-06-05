@@ -1,4 +1,4 @@
-find_package(XCFun CONFIG QUIET
+find_package(XCFun 2.1 CONFIG QUIET
   NO_CMAKE_PATH
   NO_CMAKE_PACKAGE_REGISTRY
   NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
@@ -13,24 +13,21 @@ else()
     QUIET
     URL
       https://github.com/dftlibs/xcfun/archive/v2.1.0.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
 
-  FetchContent_GetProperties(xcfun_sources)
-
   set(CMAKE_BUILD_TYPE Release)
-  set(ENABLE_TESTALL FALSE CACHE BOOL "")
-  set(XCFUN_MAX_ORDER 3)  # TODO Maybe as a user-facing option?
-  set(XCFUN_PYTHON_INTERFACE FALSE CACHE BOOL "")
+  set(ENABLE_TESTALL FALSE CACHE BOOL "" FORCE)
+  set(XCFUN_MAX_ORDER 3)
+  set(XCFUN_PYTHON_INTERFACE FALSE CACHE BOOL "" FORCE)
 
   # Remove this line to restore the "old" pbe behaviour when using XCFun
   add_compile_definitions(XCFUN_REF_PBEX_MU)
 
-  if(NOT xcfun_sources_POPULATED)
-    FetchContent_Populate(xcfun_sources)
+  FetchContent_MakeAvailable(xcfun_sources)
 
-    add_subdirectory(
-      ${xcfun_sources_SOURCE_DIR}
-      ${xcfun_sources_BINARY_DIR}
-      )
+  if(TARGET xcfun)
+    # Suppress all warnings from XCFun's own compilation (-w overrides any -Wall/-Wextra from CMAKE_CXX_FLAGS)
+    target_compile_options(xcfun PRIVATE -w)
   endif()
 endif()

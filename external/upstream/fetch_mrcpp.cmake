@@ -21,7 +21,7 @@ if(TARGET MRCPP::mrcpp)
       )
   endif()
 
-  # 1. MPI MRChem + non-MPI MRCPP will lead to runtime failures.
+  # 2. MPI MRChem + non-MPI MRCPP will lead to runtime failures.
   #    Fail configuration with a fatal error.
   get_target_property(MRCPP_HAS_MPI MRCPP::mrcpp MRCPP_HAS_MPI)
   if(ENABLE_MPI AND NOT MRCPP_HAS_MPI)
@@ -37,12 +37,10 @@ else()
   FetchContent_Declare(mrcpp_sources
     QUIET
     GIT_REPOSITORY
-    https://github.com/msnik1999/mrcpp.git
+      https://github.com/msnik1999/mrcpp.git
     GIT_TAG
-    f2afeee65065a9e98146b56741d106394a952cbc
-  )
-
-  FetchContent_GetProperties(mrcpp_sources)
+      f2afeee65065a9e98146b56741d106394a952cbc
+    )
 
   set(CMAKE_BUILD_TYPE Release)
   set(ENABLE_OPENMP ${ENABLE_OPENMP})
@@ -52,12 +50,5 @@ else()
   set(ENABLE_TESTS OFF CACHE BOOL "" FORCE)
   set(ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-  if(NOT mrcpp_sources_POPULATED)
-    FetchContent_Populate(mrcpp_sources)
-
-    add_subdirectory(
-      ${mrcpp_sources_SOURCE_DIR}
-      ${mrcpp_sources_BINARY_DIR}
-      )
-  endif()
+  FetchContent_MakeAvailable(mrcpp_sources)
 endif()
