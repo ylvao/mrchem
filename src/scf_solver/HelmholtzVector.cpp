@@ -51,7 +51,7 @@ extern mrcpp::MultiResolutionAnalysis<3> *MRA; // Global MRA
 HelmholtzVector::HelmholtzVector(double pr, const DoubleVector &l)
         : prec(pr) {
     this->lambda = l;
-    for (size_t i = 0; i < this->lambda.size(); i++) {
+    for (int i = 0; i < this->lambda.size(); i++) {
         if (this->lambda(i) > 0.0) this->lambda(i) = -0.5;
     }
 }

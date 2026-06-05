@@ -136,7 +136,7 @@ Eigen::Tensor<std::complex<double>, 4> calc_2elintegrals(double prec, OrbitalVec
         if (task < 0) break;
         // we fetch all required i (but only one j at a time)
         std::vector<Orbital> iorb_vec;
-        for (int i = 0; i < itasks[task].size(); i++) {
+        for (size_t i = 0; i < itasks[task].size(); i++) {
             int iorb = itasks[task][i];
             Orbital phi_i;
             t_get.resume();
@@ -149,7 +149,7 @@ Eigen::Tensor<std::complex<double>, 4> calc_2elintegrals(double prec, OrbitalVec
             t_get.stop();
         }
 
-        for (int j = 0; j < jtasks[task].size(); j++) {
+        for (size_t j = 0; j < jtasks[task].size(); j++) {
             int jorb = jtasks[task][j];
             Orbital phi_j;
             t_get.resume();

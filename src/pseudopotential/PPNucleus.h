@@ -50,7 +50,7 @@ public:
      * @param pps The pseudopotential data. (One for each nucleus)
      */
     PPNucleus(const Nuclei &nucs) : NuclearFunction(){
-        for(int i = 0; i < nucs.size(); i++) {
+        for(size_t i = 0; i < nucs.size(); i++) {
             if (! nucs[i].hasPseudopotential()) {
                 MSG_ABORT("Nucleus has no pseudopotential data in constructor of PPNucleus");
             }

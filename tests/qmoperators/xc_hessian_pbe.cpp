@@ -145,7 +145,7 @@ TEST_CASE("XCHessianPBE", "[xc_hessian_pbe]") {
     SECTION("expectation matrix ") {
         ComplexMatrix v = V(Phi, Phi);
         for (size_t i = 0; i < Phi.size(); i++) {
-            for (int j = 0; j <= i; j++) {
+            for (size_t j = 0; j <= i; j++) {
                 // printf("V_%d%d: %.12e + %.12e i\n", i, j, v(i, j).real(), v(i, j).imag());
                 if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Catch::Approx(E_P(i, j)).epsilon(thrs));
                 //                REQUIRE(v(i, j).real() == v(i, j).real());

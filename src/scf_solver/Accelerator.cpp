@@ -124,12 +124,12 @@ void Accelerator::rotate(const ComplexMatrix &U, bool all) {
  */
 void Accelerator::push_back(OrbitalVector &Phi, OrbitalVector &dPhi, ComplexMatrix *F, ComplexMatrix *dF) {
     Timer t_tot;
-    int nHistory = this->orbitals.size();
+    size_t nHistory = this->orbitals.size();
     if (F != nullptr) {
         if (dF == nullptr) MSG_ERROR("Need to give both F and dF");
         if (this->fock.size() != nHistory) MSG_ERROR("Size mismatch orbitals vs matrices");
     }
-    auto historyIsFull = (nHistory >= this->maxHistory);
+    auto historyIsFull = (nHistory >= static_cast<size_t>(this->maxHistory));
     if (historyIsFull and this->orbitals.size() > 0) this->orbitals.pop_front();
     if (historyIsFull and this->dOrbitals.size() > 0) this->dOrbitals.pop_front();
     if (historyIsFull and this->fock.size() > 0) this->fock.pop_front();

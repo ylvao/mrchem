@@ -148,7 +148,7 @@ Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &
     if (nNodes > 0) {
         auto nCoefs = inp_nodes[0]->getNCoefs();
         out_data = Eigen::MatrixXd::Zero(nNodes, nCoefs);
-        for (auto i = 0; i < nNodes; i++) {
+        for (size_t i = 0; i < nNodes; i++) {
             auto &node = inp_nodes[i];
             Eigen::VectorXd row_i;
             node->getValues(row_i);
@@ -170,9 +170,9 @@ Eigen::MatrixXd xc_utils::compress_nodes(std::vector<mrcpp::FunctionNode<3> *> &
  */
 void xc_utils::expand_nodes(std::vector<mrcpp::FunctionNode<3> *> &out_nodes, Eigen::MatrixXd &inp_data) {
     auto nFuncs = out_nodes.size();
-    if (inp_data.rows() != nFuncs) MSG_ERROR("Size mismatch " << inp_data.rows() << " vs " << nFuncs);
+    if (static_cast<size_t>(inp_data.rows()) != nFuncs) MSG_ERROR("Size mismatch " << inp_data.rows() << " vs " << nFuncs);
 
-    for (auto i = 0; i < nFuncs; i++) {
+    for (size_t i = 0; i < nFuncs; i++) {
         auto &node = out_nodes[i];
         node->setValues(inp_data.row(i));
     }

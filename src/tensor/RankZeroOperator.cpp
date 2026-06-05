@@ -52,7 +52,7 @@ std::vector<ComplexDouble> RankZeroOperator::getCoefVector() const {
 
 /** @brief return the i-th term (c_i*q_i1*q_i2*...) in the expansion: sum_i c_i * prod_j q_ij */
 RankZeroOperator RankZeroOperator::get(int i) {
-    if (i < 0 or i >= this->size()) MSG_ABORT("Invalid operator term (i): " << i);
+    if (i < 0 or static_cast<size_t>(i) >= this->size()) MSG_ABORT("Invalid operator term (i): " << i);
     RankZeroOperator out;
     out.name() = this->name();
     auto c_i = this->coef_exp[i];
@@ -65,8 +65,8 @@ RankZeroOperator RankZeroOperator::get(int i) {
 
 /** @brief return ij-the operator (q_ij) in the expansion: sum_i c_i * prod_j q_ij */
 RankZeroOperator RankZeroOperator::get(int i, int j) {
-    if (i < 0 or i >= this->size()) MSG_ABORT("Invalid operator term (i): " << i);
-    if (j < 0 or j >= this->size(i)) MSG_ABORT("Invalid operator term (j): " << i);
+    if (i < 0 or static_cast<size_t>(i) >= this->size()) MSG_ABORT("Invalid operator term (i): " << i);
+    if (j < 0 or static_cast<size_t>(j) >= this->size(i)) MSG_ABORT("Invalid operator term (j): " << i);
     return this->oper_exp[i][j];
 }
 
@@ -489,7 +489,7 @@ ComplexDouble RankZeroOperator::trace(const Nuclei &nucs) {
  * expansion to the input orbital.
  */
 Orbital RankZeroOperator::applyOperTerm(int n, const Orbital &inp) {
-    if (n >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
+    if (static_cast<size_t>(n) >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
     Orbital out = inp.paramCopy(true);
 
     if (inp.getNNodes() == 0) return out;
@@ -507,7 +507,7 @@ Orbital RankZeroOperator::applyOperTerm(int n, const Orbital &inp) {
 }
 
 Orbital RankZeroOperator::daggerOperTerm(int n, const Orbital &inp) {
-    if (n >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
+    if (static_cast<size_t>(n) >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
     Orbital out;
     mrcpp::deep_copy(out, inp);
     if (inp.getNNodes() == 0) return out;
@@ -521,7 +521,7 @@ Orbital RankZeroOperator::daggerOperTerm(int n, const Orbital &inp) {
 }
 
 ComplexDouble RankZeroOperator::traceOperTerm(int n, const Nuclei &nucs) {
-    if (n >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
+    if (static_cast<size_t>(n) >= this->oper_exp.size()) MSG_ABORT("Invalid oper term");
 
     ComplexDouble out = 0.0;
     for (const auto &nuc_k : nucs) {

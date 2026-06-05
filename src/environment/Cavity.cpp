@@ -61,7 +61,7 @@ auto gradCavity(const mrcpp::Coord<3> &r, int index, const std::vector<mrcpp::Co
     auto DC = 0.0;
     auto sqrt_pi = std::sqrt(mrcpp::pi);
 
-    for (int i = 0; i < centers.size(); ++i) {
+    for (size_t i = 0; i < centers.size(); ++i) {
         auto center = centers[i];
         auto radius = radii[i];
         auto sigma = widths[i];
@@ -103,10 +103,10 @@ Cavity::Cavity(const std::vector<mrcpp::Coord<3>> &coords, const std::vector<dou
         , sigmas{S}
         , centers{coords} {
     // compute the radii
-    for (auto i = 0; i < this->radii_0.size(); ++i) { this->radii.push_back(this->radii_0[i] * this->alphas[i] + this->betas[i] * this->sigmas[i]); }
+    for (size_t i = 0; i < this->radii_0.size(); ++i) { this->radii.push_back(this->radii_0[i] * this->alphas[i] + this->betas[i] * this->sigmas[i]); }
 
     auto p_gradcavity = [&cs = this->centers, &rs = this->radii, &ws = this->sigmas](const mrcpp::Coord<3> &r, int index) { return detail::gradCavity(r, index, cs, rs, ws); };
-    for (auto i = 0; i < 3; i++) {
+    for (size_t i = 0; i < 3; i++) {
         this->gradvector.push_back([i, p_gradcavity](const mrcpp::Coord<3> &r) -> double { return p_gradcavity(r, i); });
     }
 }
@@ -199,11 +199,11 @@ bool Cavity::isVisibleAtScale(int scale, int nQuadPts) const {
 }
 
 bool Cavity::isZeroOnInterval(const double *a, const double *b) const {
-    for (int k = 0; k < this->centers.size(); ++k) {
+    for (size_t k = 0; k < this->centers.size(); ++k) {
         auto center = this->centers[k];
         auto radius = this->radii[k];
         auto sigma = this->sigmas[k];
-        for (int i = 0; i < 3; ++i) {
+        for (size_t i = 0; i < 3; ++i) {
             auto cavityMinOut = (center[i] - radius) - 3.0 * sigma;
             auto cavityMinIn = (center[i] - radius) + 3.0 * sigma;
             auto cavityMaxIn = (center[i] + radius) - 3.0 * sigma;

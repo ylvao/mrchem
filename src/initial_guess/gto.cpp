@@ -142,7 +142,7 @@ void initial_guess::gto::project_mo(OrbitalVector &Phi, double prec, const std::
     // Read MO file (transpose)
     Timer t2;
     DoubleMatrix MO = math_utils::read_matrix_file(mo_file);
-    if (MO.cols() < Phi.size()) MSG_ABORT("Size mismatch");
+    if (static_cast<size_t>(MO.cols()) < Phi.size()) MSG_ABORT("Size mismatch");
     t2.stop();
 
     Timer t3;

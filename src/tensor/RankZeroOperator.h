@@ -68,8 +68,8 @@ public:
     RankZeroOperator(const RankZeroOperator &O) { *this = O; }
     virtual ~RankZeroOperator() {}
 
-    int size() const { return this->oper_exp.size(); }
-    int size(int i) const { return this->oper_exp[i].size(); }
+    size_t size() const { return this->oper_exp.size(); }
+    size_t size(int i) const { return this->oper_exp[i].size(); }
 
     std::string &name() { return this->oper_name; }
     const std::string &name() const { return this->oper_name; }

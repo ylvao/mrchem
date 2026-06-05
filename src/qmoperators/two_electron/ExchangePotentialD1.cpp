@@ -247,7 +247,7 @@ void ExchangePotentialD1::setupInternal(double prec) {
         // we fetch all required i (but only one j at a time)
         std::vector<Orbital> iorb_vec;
         int i0 = -1;
-        for (int i = 0; i < itasks[task].size(); i++) {
+        for (size_t i = 0; i < itasks[task].size(); i++) {
             int iorb = itasks[task][i];
             i0 = iorb;
             Orbital phi_i;
@@ -262,7 +262,7 @@ void ExchangePotentialD1::setupInternal(double prec) {
             t_orb.stop();
         }
 
-        for (int j = 0; j < jtasks[task].size(); j++) {
+        for (size_t j = 0; j < jtasks[task].size(); j++) {
             int jorb = jtasks[task][j];
             Orbital phi_j;
             t_orb.resume();

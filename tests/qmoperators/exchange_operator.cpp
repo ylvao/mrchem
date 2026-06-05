@@ -114,7 +114,7 @@ TEST_CASE("ExchangeOperator", "[exchange_operator]") {
     SECTION("expectation matrix ") {
         ComplexMatrix v = V(Phi, Phi);
         for (size_t i = 0; i < Phi.size(); i++) {
-            for (int j = 0; j <= i; j++) {
+            for (size_t j = 0; j <= i; j++) {
                 if (std::abs(v(i, j).real()) > thrs) REQUIRE(v(i, j).real() == Catch::Approx(E_P(i, j)).epsilon(thrs));
                 REQUIRE(v(i, j).imag() < thrs);
             }

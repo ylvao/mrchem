@@ -128,7 +128,7 @@ bool SCFSolver::checkConvergence(double err_o, double err_p) const {
  * Returns the difference between the i-th and (i-1)-th entry of the convergence vector.
  */
 double SCFSolver::getUpdate(const std::vector<double> &vec, int i, bool absPrec) const {
-    if (i < 1 or i > vec.size()) MSG_ERROR("Invalid argument");
+    if (i < 1 or static_cast<size_t>(i) > vec.size()) MSG_ERROR("Invalid argument");
     double E_i = vec[i - 1];
     double E_im1 = 0.0;
     if (i > 1) { E_im1 = vec[i - 2]; }
@@ -273,7 +273,7 @@ void SCFSolver::printConvergence(bool converged, const std::string &txt) const {
     auto nIter = this->error.size();
     if (plevel > 0) {
         printConvergenceHeader(txt);
-        for (int i = 0; i < nIter; i++) printConvergenceRow(i);
+        for (size_t i = 0; i < nIter; i++) printConvergenceRow(i);
     }
     mrcpp::print::separator(0, '-');
     if (converged) {
