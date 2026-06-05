@@ -4,6 +4,12 @@
 # set minimum cmake version
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
+# CMake 4+ tightened compatibility checks for dependencies that declare old minimum versions.
+# Setting this allows those dependencies to still configure correctly.
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
 # project name
 project(MRChem LANGUAGES CXX)
 
