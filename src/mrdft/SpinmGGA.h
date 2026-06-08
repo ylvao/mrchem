@@ -32,16 +32,23 @@
 
 namespace mrdft {
 
-class SpinGGA final : public Functional {
+class SpinmGGA final : public Functional {
 public:
-    SpinGGA(int k, XC_p &f, std::shared_ptr<mrcpp::DerivativeOperator<3>> &d);
-    ~SpinGGA() override = default;
+    SpinmGGA(int k, XC_p &f, std::shared_ptr<mrcpp::DerivativeOperator<3>> &d);
+    ~SpinmGGA() override = default;
 
     bool isSpin() const override { return true; }
     bool isGGA() const override { return true; }
-    bool isMetaGGA() const override { return false; }
-    int numIn() const override { return 8; }
-    int numOut() const override { if (Factory::libxc) {return 9;} else {return xcfun_output_length(xcfun.get());} }
+    bool isMetaGGA() const override { return true; }
+    int numIn() const override { return 10; }  // rho_a, rho_b, grad_a×3, grad_b×3, tau_a, tau_b
+    int numOut() const override { 
+        if (Factory::libxc) {
+            // f_xc, v_rho_a, v_rho_b, grad_a×3, grad_b×3, v_tau_a, v_tau_b
+            return 11;
+        } else {
+            return xcfun_output_length(xcfun.get());
+        }
+    }
 
 private:
     std::shared_ptr<mrcpp::DerivativeOperator<3>> derivative{nullptr};
@@ -49,9 +56,11 @@ private:
     mrcpp::FunctionTreeVector<3> rho_b;
     mrcpp::FunctionTreeVector<3> grad_a;
     mrcpp::FunctionTreeVector<3> grad_b;
+    mrcpp::FunctionTreeVector<3> tau_a;
+    mrcpp::FunctionTreeVector<3> tau_b;
 
     int getCtrInputLength() const override;
-    int getCtrOutputLength() const override { return 9; }
+    int getCtrOutputLength() const override { return 11; }
 
     void clear() override;
     virtual mrcpp::FunctionTreeVector<3> setupXCInput() override;
