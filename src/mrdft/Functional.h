@@ -31,10 +31,12 @@
 #include <XCFun/xcfun.h>
 #include <xc_funcs.h>
 #include <xc.h>
+#include "qmoperators/one_electron/KineticOperator.h"
 
 namespace mrdft {
 
 using XC_p = std::unique_ptr<xcfun_t, decltype(&xcfun_delete)>;
+using mrchem::KineticOperator;
 
 /**
  * @class Functional
@@ -109,9 +111,16 @@ public:
      * Setters
      */
     void setLogGradient(bool log) { log_grad = log; }    ///< @brief Set whether to use logarithmic gradient transformations
+    bool getLogGradient() const { return log_grad; }     ///< @brief Query whether logarithmic gradient is enabled
     void setDensityCutoff(double cut) { cutoff = cut; }  ///< @brief Set the density threshold below which density is set to 0
-    void setDerivOp(std::unique_ptr<mrcpp::DerivativeOperator<3>> &d) { derivOp = std::move(d); }   ///< @brief Set the numerical derivative operator for gradient-based functionals
-    void setCustomExx(double exx) {customExx = exx; }    /// <@brief Set custom exact exchange
+    void setDerivOp(std::shared_ptr<mrcpp::DerivativeOperator<3>> &d) { derivOp = d; }     ///< @brief Set the numerical derivative operator for gradient-based functionals
+
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> getDerivOp() const { return derivOp; }    ///< @brief Access the derivative operator (read-only)
+    void setKinOp(std::unique_ptr<KineticOperator> &d) { kinOp = std::move(d); }           ///< @brief Set the numerical kinetic energy operator for mGGAs
+
+
+    const KineticOperator* getKinOp() const { return kinOp.get(); }    ///< @brief Access the kinetic operator (read-only) – needed e.g. by XCPotentialD1
+    void setCustomExx(double exx) {customExx = exx; }    /// < @brief Set custom exact exchange
     /**
      * @brief Transfers ownership of Libxc functional objects and their scaling 
      * coefficients to the Functional instance
@@ -187,7 +196,9 @@ protected:
     Eigen::VectorXi d_mask;     ///< @brief density and derivative(s) mask vector for response calculations
     Eigen::MatrixXi xc_mask;    ///< @brief functional and derivative(s) mask vector for response calculations
     XC_p xcfun;                 ///< @brief XCFun library handle
-    std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr};  ///< @brief Operator used to compute gradients
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr};  ///< @brief Operator used to compute gradients
+    std::unique_ptr<KineticOperator> kinOp{nullptr};                 ///< @brief Operator used to compute gradients
+
 
     /**
      * @brief Run a collection of grid points through Libxc or XCFun

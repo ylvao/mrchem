@@ -29,12 +29,14 @@
 #include <MRCPP/Printer>
 #include <XCFun/xcfun.h>
 
-#include "GGA.h"
+#include "MRDFT.h"
 #include "Grid.h"
 #include "LDA.h"
-#include "MRDFT.h"
+#include "GGA.h"
+#include "mGGA.h"
 #include "SpinGGA.h"
 #include "SpinLDA.h"
+#include "SpinmGGA.h"
 
 namespace mrdft {
 
@@ -80,7 +82,9 @@ std::unique_ptr<MRDFT> Factory::build() {
     setLibxc(libxc);
 
     // Init XCFun or Libxc
+    bool lda = false;
     bool gga = false;
+    bool mgga = false;
     if (libxc) {
         for (const auto *f : libxc_objects) {
 
@@ -89,6 +93,7 @@ std::unique_ptr<MRDFT> Factory::build() {
 #ifdef XC_FAMILY_HYB_GGA
                 case XC_FAMILY_HYB_LDA:
 #endif
+                    lda = true;
                     break;
 
                 case XC_FAMILY_GGA:
@@ -100,7 +105,8 @@ std::unique_ptr<MRDFT> Factory::build() {
 
                 case XC_FAMILY_MGGA:
                 case XC_FAMILY_HYB_MGGA:
-                    MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
+                    mgga = true;
+                    break;
 
                 default:
                     MSG_ABORT("Libxc functional family not handled in MRChem!\n");
@@ -112,43 +118,72 @@ std::unique_ptr<MRDFT> Factory::build() {
         }
     } else {
         gga = xcfun_is_gga(xcfun_p.get());
+        mgga = xcfun_is_metagga(xcfun_p.get());
+        if (not(gga)) { if (not(mgga)) {lda = true; } }
         unsigned int mode = 1;                    //!< only partial derivative mode implemented
-        unsigned int func_type = (gga) ? 1 : 0;   //!< only LDA and GGA supported for now
         unsigned int dens_type = 1 + spin;        //!< only n (dens_type = 1) or alpha & beta (denst_type = 2) supported now.
         unsigned int laplacian = 0;               //!< no laplacian
-        unsigned int kinetic = 0;                 //!< no kinetic energy density
+        unsigned int kinetic = mgga ? 1u : 0u;    //!< request kinetic energy density for meta-GGAs
         unsigned int current = 0;                 //!< no current density
         unsigned int exp_derivative = not(gamma); //!< use gamma or explicit derivatives
-        if (not(gga)) exp_derivative = 0;         //!< fall back to gamma-type derivatives if LDA
+        if (lda) exp_derivative = 0;              //!< fall back to gamma-type derivatives if LDA
+        unsigned int func_type = 0;               //!< LDA = 0, GGA = 1, mGGA = 2
+        if (mgga) {
+            func_type = 2;
+        } else if (gga) {
+            func_type = 1;
+        } else {
+            func_type = 0;
+        }
         xcfun_user_eval_setup(xcfun_p.get(), order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
     }
 
-    bool lda = not gga;
+    // bool lda = not gga;
 
     // Init MW derivative
     if (gga) {
-        if (diff_s == "bspline") diff_p = std::make_unique<mrcpp::BSOperator<3>>(mra, 1);
-        if (diff_s == "abgv_00") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
-        if (diff_s == "abgv_55") diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
+        // make shared pointer???
+        if (diff_s == "bspline") diff_p = std::make_shared<mrcpp::BSOperator<3>>(mra, 1);
+        if (diff_s == "abgv_00") diff_p = std::make_shared<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
+        if (diff_s == "abgv_55") diff_p = std::make_shared<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
     }
 
-    // Init XC functional
+    if (mgga) {
+        kin_p = std::make_unique<mrchem::KineticOperator>(mrchem::KineticOperator(diff_p));
+    }
     std::unique_ptr<Functional> func_p{nullptr};
     if (spin) {
-        if (gga) func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
-        else if (lda) func_p = std::make_unique<SpinLDA>(order, xcfun_p);
-        else MSG_ABORT("Case not handled");
+        if (mgga) {
+            // TODO: Spin-mGGA class analogous to SpinGGA
+            // MSG_ABORT("Spin-polarized meta-GGA class not implemented yet.");
+            func_p = std::make_unique<SpinmGGA>(order, xcfun_p, diff_p);
+        } else if (gga) {
+            func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
+        } else if (lda) {
+            func_p = std::make_unique<SpinLDA>(order, xcfun_p);
+        } else {
+            MSG_ABORT("Case not handled");
+        }
     } else {
-        if (gga) func_p = std::make_unique<GGA>(order, xcfun_p, diff_p);
-        else if (lda) func_p = std::make_unique<LDA>(order, xcfun_p);
-        else MSG_ABORT("Case not handled");
+        if (mgga) {
+            func_p = std::make_unique<mGGA>(order, xcfun_p, diff_p);
+        } else if (gga) {
+            func_p = std::make_unique<GGA>(order, xcfun_p, diff_p);
+        } else if (lda) {
+            func_p = std::make_unique<LDA>(order, xcfun_p);
+        } else {
+            MSG_ABORT("Case not handled");
+        }
     }
+
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
     if (libxc) { func_p->setLibxcFunctionalObject(libxc_objects, libxc_coefs); }
     if (not libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
     diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
     func_p->setCustomExx(customExx);
+    // Is this ever used?????:
     func_p->setDerivOp(diff_p);
+    func_p->setKinOp(kin_p);
     func_p->setLogGradient(log_grad);
     func_p->setDensityCutoff(cutoff);
 
