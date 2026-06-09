@@ -120,14 +120,24 @@ void SpinGGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
         this->rho_b.push_back(inp_vec[n++]);
     }
 
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> D = this->derivative;
+    if (!D) {
+        D = this->getDerivOp();
+    }
+    if (!D) {
+        MSG_ABORT("SpinGGA::preprocess: derivative operator not set.");
+    }
+
     for (int i = 0; i < this->order; i++) {
         mrcpp::FunctionTreeVector<3> tmp_a, tmp_b;
+        auto &rho_ai = mrcpp::get_func(this->rho_a, i);
+        auto &rho_bi = mrcpp::get_func(this->rho_b, i);
         if (this->log_grad and i == 0) {
-            tmp_a = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho_a, i));
-            tmp_b = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho_b, i));
+            tmp_a = xc_utils::log_gradient(*D, rho_ai);
+            tmp_b = xc_utils::log_gradient(*D, rho_bi);
         } else {
-            tmp_a = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho_a, i));
-            tmp_b = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho_b, i));
+            tmp_a = mrcpp::gradient(*D, rho_ai);
+            tmp_b = mrcpp::gradient(*D, rho_bi);
         }
         this->grad_a.insert(this->grad_a.end(), tmp_a.begin(), tmp_a.end());
         this->grad_b.insert(this->grad_b.end(), tmp_b.begin(), tmp_b.end());
@@ -153,7 +163,14 @@ mrcpp::FunctionTreeVector<3> SpinGGA::postprocess(mrcpp::FunctionTreeVector<3> &
     mrcpp::FunctionTreeVector<3> df_dga(inp_vec.begin() + 3, inp_vec.begin() + 6);
 
     auto *tmp_a = new mrcpp::FunctionTree<3>(df_da.getMRA());
-    mrcpp::divergence(*tmp_a, *this->derivative, df_dga);
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> D = this->derivative;
+    if (!D) {
+        D = this->getDerivOp();
+    }
+    if (!D) {
+        MSG_ABORT("SpinGGA::postprocess: derivative operator not set.");
+    }
+    mrcpp::divergence(*tmp_a, *D, df_dga);
 
     auto *v_a = new mrcpp::FunctionTree<3>(df_da.getMRA());
     mrcpp::build_grid(*v_a, df_da);
@@ -166,7 +183,7 @@ mrcpp::FunctionTreeVector<3> SpinGGA::postprocess(mrcpp::FunctionTreeVector<3> &
     mrcpp::FunctionTreeVector<3> df_dgb(inp_vec.begin() + 6, inp_vec.begin() + 9);
 
     auto *tmp_b = new mrcpp::FunctionTree<3>(df_db.getMRA());
-    mrcpp::divergence(*tmp_b, *this->derivative, df_dgb);
+    mrcpp::divergence(*tmp_b, *D, df_dgb);
 
     auto *v_b = new mrcpp::FunctionTree<3>(df_db.getMRA());
     mrcpp::build_grid(*v_b, df_db);

@@ -36,7 +36,6 @@
 #include "mGGA.h"
 #include "SpinGGA.h"
 #include "SpinLDA.h"
-#include "SpinmGGA.h"
 
 namespace mrdft {
 
@@ -141,22 +140,33 @@ std::unique_ptr<MRDFT> Factory::build() {
     // bool lda = not gga;
 
     // Init MW derivative
-    if (gga) {
-        // make shared pointer???
-        if (diff_s == "bspline") diff_p = std::make_shared<mrcpp::BSOperator<3>>(mra, 1);
-        if (diff_s == "abgv_00") diff_p = std::make_shared<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
-        if (diff_s == "abgv_55") diff_p = std::make_shared<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
+    // We always need a non-null derivative operator for GGA and mGGA,
+    // since it is used in preprocess()/postprocess() and for building tau.
+    if (gga || mgga) {
+        if (!diff_p) {
+            if (diff_s == "bspline") {
+                diff_p = std::make_shared<mrcpp::BSOperator<3>>(mra, 1);
+            } else if (diff_s == "abgv_00") {
+                diff_p = std::make_shared<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
+            } else if (diff_s == "abgv_55") {
+                diff_p = std::make_shared<mrcpp::ABGVOperator<3>>(mra, 0.5, 0.5);
+            } else {
+                MSG_ABORT("Factory::build: unknown derivative operator '" + diff_s + "'");
+            }
+        }
     }
 
     if (mgga) {
+        if (!diff_p) {
+            MSG_ABORT("Factory::build: derivative operator not initialized for mGGA.");
+        }
         kin_p = std::make_unique<mrchem::KineticOperator>(mrchem::KineticOperator(diff_p));
     }
     std::unique_ptr<Functional> func_p{nullptr};
     if (spin) {
         if (mgga) {
             // TODO: Spin-mGGA class analogous to SpinGGA
-            // MSG_ABORT("Spin-polarized meta-GGA class not implemented yet.");
-            func_p = std::make_unique<SpinmGGA>(order, xcfun_p, diff_p);
+            MSG_ABORT("Spin-polarized meta-GGA class not implemented yet.");
         } else if (gga) {
             func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
         } else if (lda) {
@@ -179,10 +189,16 @@ std::unique_ptr<MRDFT> Factory::build() {
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
     if (libxc) { func_p->setLibxcFunctionalObject(libxc_objects, libxc_coefs); }
     if (not libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
-    diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
+
+    // Ensure the functional sees the same derivative operator used above
+    if (gga || mgga) {
+        if (!diff_p) {
+            MSG_ABORT("Factory::build: diff_p unexpectedly null when setting functional derivative operator.");
+        }
+        func_p->setDerivOp(diff_p);
+    }
+
     func_p->setCustomExx(customExx);
-    // Is this ever used?????:
-    func_p->setDerivOp(diff_p);
     func_p->setKinOp(kin_p);
     func_p->setLogGradient(log_grad);
     func_p->setDensityCutoff(cutoff);

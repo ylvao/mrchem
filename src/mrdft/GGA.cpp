@@ -107,12 +107,21 @@ void GGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
     int n = 0;
     for (int i = 0; i < this->order; i++) this->rho.push_back(inp_vec[n++]);
 
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> D = this->derivative;
+    if (!D) {
+        D = this->getDerivOp();
+    }
+    if (!D) {
+        MSG_ABORT("GGA::preprocess: derivative operator not set.");
+    }
+
     for (int i = 0; i < this->order; i++) {
         mrcpp::FunctionTreeVector<3> tmp;
+        auto &rho_i = mrcpp::get_func(this->rho, i);
         if (this->log_grad and i == 0) {
-            tmp = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+            tmp = xc_utils::log_gradient(*D, rho_i);
         } else {
-            tmp = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+            tmp = mrcpp::gradient(*D, rho_i);
         }
         this->grad.insert(this->grad.end(), tmp.begin(), tmp.end());
     }
@@ -136,7 +145,14 @@ mrcpp::FunctionTreeVector<3> GGA::postprocess(mrcpp::FunctionTreeVector<3> &inp_
     mrcpp::FunctionTreeVector<3> df_dg(inp_vec.begin() + 2, inp_vec.begin() + 5);
 
     auto *tmp = new mrcpp::FunctionTree<3>(df_dr.getMRA());
-    mrcpp::divergence(*tmp, *this->derivative, df_dg);
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> D = this->derivative;
+    if (!D) {
+        D = this->getDerivOp();
+    }
+    if (!D) {
+        MSG_ABORT("GGA::postprocess: derivative operator not set.");
+    }
+    mrcpp::divergence(*tmp, *D, df_dg);
 
     auto *v_xc = new mrcpp::FunctionTree<3>(df_dr.getMRA());
     mrcpp::build_grid(*v_xc, df_dr);
@@ -148,7 +164,7 @@ mrcpp::FunctionTreeVector<3> GGA::postprocess(mrcpp::FunctionTreeVector<3> &inp_
     mrcpp::FunctionTreeVector<3> out_vec;
     out_vec.push_back(std::make_tuple(1.0, &f_xc));
     out_vec.push_back(std::make_tuple(1.0, v_xc));
-    v_xc = nullptr;
+    // v_xc lifetime is managed by the caller that receives out_vec
 
     return out_vec;
 }

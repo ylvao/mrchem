@@ -61,7 +61,7 @@ private:
     mrcpp::FunctionTreeVector<3> tau;  ///< Kinetic energy density for meta-GGA
 
     int getCtrInputLength() const override;
-    int getCtrOutputLength() const override { return 5; }
+    int getCtrOutputLength() const override { return 6; }
 
     void clear() override;
     virtual mrcpp::FunctionTreeVector<3> setupXCInput() override;

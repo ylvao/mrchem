@@ -46,7 +46,7 @@ mGGA::mGGA(int k, XC_p &f, std::shared_ptr<mrcpp::DerivativeOperator<3>> &d)
 void mGGA::clear() {
     mrcpp::clear(this->rho, false);
     mrcpp::clear(this->grad, true);
-    mrcpp::clear(this->tau, true);
+    mrcpp::clear(this->tau, false);
 }
 
 /** @brief Number of function involved in contraction step */
@@ -118,26 +118,43 @@ mrcpp::FunctionTreeVector<3> mGGA::setupCtrInput() {
  */
 // Why does this exist??? is never called in mrchem
 void mGGA::preprocess(mrcpp::FunctionTreeVector<3> &inp_vec) {
-    if (inp_vec.size() != this->order) MSG_ERROR("Invalid input length");
-    if (this->rho.size() > 0) MSG_ERROR("Density not empty");
-    if (this->grad.size() > 0) MSG_ERROR("Gradient not empty");
-
-    int n = 0;
-    // For meta-GGA, expect alternating densities and tau: [rho_0, tau_0, rho_1, tau_1, ...]
-    // For now, only support non-spin: [rho_0, tau_0] or [rho_0, tau_0, rho_1, tau_1]
-    for (int i = 0; i < this->order; i++) {
-        this->rho.push_back(inp_vec[n++]);
-        if (n < static_cast<int>(inp_vec.size())) {
-            this->tau.push_back(inp_vec[n++]);  // tau for each order
-        }
+    // Non-spin meta-GGA:
+    // order == 1 (ground state):  [rho_0, tau_0]
+    // order == 2 (lin. response): [rho_0, tau_0, rho_1, tau_1]
+    if (static_cast<int>(inp_vec.size()) != 2 * this->order) {
+        MSG_ERROR("mGGA::preprocess: expected 2*order inputs [rho_i, tau_i]");
     }
 
-    for (int i = 0; i < this->order; i++) {
+    // Reset internal state: rho is owned by caller, grad and tau by mGGA
+    mrcpp::clear(this->rho, false);
+    mrcpp::clear(this->grad, true);
+    mrcpp::clear(this->tau, true);
+
+    int n = 0;
+    for (int i = 0; i < this->order; ++i) {
+        // rho_i
+        this->rho.push_back(inp_vec[n++]);
+        // tau_i
+        this->tau.push_back(inp_vec[n++]);
+    }
+
+    // Build gradients of each rho_i
+    // Prefer the local derivative pointer if set, otherwise use the one from the base class.
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> D = this->derivative;
+    if (!D) {
+        D = this->getDerivOp();
+    }
+    if (!D) {
+        MSG_ABORT("mGGA::preprocess: derivative operator not set.");
+    }
+
+    for (int i = 0; i < this->order; ++i) {
         mrcpp::FunctionTreeVector<3> tmp;
-        if (this->log_grad and i == 0) {
-            tmp = xc_utils::log_gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+        auto &rho_i = mrcpp::get_func(this->rho, i);
+        if (this->log_grad && i == 0) {
+            tmp = xc_utils::log_gradient(*D, rho_i);
         } else {
-            tmp = mrcpp::gradient(*this->derivative, mrcpp::get_func(this->rho, i));
+            tmp = mrcpp::gradient(*D, rho_i);
         }
         this->grad.insert(this->grad.end(), tmp.begin(), tmp.end());
     }
@@ -159,12 +176,29 @@ mrcpp::FunctionTreeVector<3> mGGA::postprocess(mrcpp::FunctionTreeVector<3> &inp
     mrcpp::FunctionTree<3> &f_xc = mrcpp::get_func(inp_vec, 0);
     inp_vec[0] = std::make_tuple<double, mrcpp::FunctionTree<3> *>(1.0, nullptr);
 
-    // Potential part
+    // Potential part: we expect at least
+    //  inp_vec[0] : f_xc
+    //  inp_vec[1] : df_xc / d rho
+    //  inp_vec[2-4] : df_xc / d (grad rho)_x,y,z
+    // and optionally
+    //  inp_vec[5] : v_tau (derivative w.r.t. tau), LibXC case.
+    if (inp_vec.size() < 5) {
+        MSG_ABORT("mGGA::postprocess: expected at least 5 input fields.");
+    }
+
     mrcpp::FunctionTree<3> &df_dr = mrcpp::get_func(inp_vec, 1);
     mrcpp::FunctionTreeVector<3> df_dg(inp_vec.begin() + 2, inp_vec.begin() + 5);
 
     auto *tmp = new mrcpp::FunctionTree<3>(df_dr.getMRA());
-    mrcpp::divergence(*tmp, *this->derivative, df_dg);
+    // Use available derivative operator (local or from base class)
+    std::shared_ptr<mrcpp::DerivativeOperator<3>> D = this->derivative;
+    if (!D) {
+        D = this->getDerivOp();
+    }
+    if (!D) {
+        MSG_ABORT("mGGA::postprocess: derivative operator not set.");
+    }
+    mrcpp::divergence(*tmp, *D, df_dg);
 
     auto *v_xc = new mrcpp::FunctionTree<3>(df_dr.getMRA());
     mrcpp::build_grid(*v_xc, df_dr);
@@ -172,18 +206,19 @@ mrcpp::FunctionTreeVector<3> mGGA::postprocess(mrcpp::FunctionTreeVector<3> &inp
     mrcpp::add(-1.0, *v_xc, 1.0, df_dr, -1.0, *tmp);
     delete tmp;
 
-    // Add v_tau contribution (local term, no divergence needed)
+    // Add v_tau contribution (local term, no divergence needed).
+    // With LibXC mGGA we have inp_vec[5] = v_tau.
     if (inp_vec.size() > 5) {
         mrcpp::FunctionTree<3> &v_tau = mrcpp::get_func(inp_vec, 5);
         mrcpp::build_grid(*v_xc, v_tau);
-        mrcpp::add(1.0, *v_xc, 1.0, v_tau);
+        mrcpp::add(-1.0, *v_xc, 1.0, *v_xc, 1.0, v_tau);
     }
 
     // Collect output
     mrcpp::FunctionTreeVector<3> out_vec;
     out_vec.push_back(std::make_tuple(1.0, &f_xc));
     out_vec.push_back(std::make_tuple(1.0, v_xc));
-    v_xc = nullptr;
+    // v_xc lifetime is managed by the caller that receives out_vec
 
     return out_vec;
 }

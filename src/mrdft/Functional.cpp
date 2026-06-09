@@ -273,68 +273,7 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                 case XC_FAMILY_MGGA:
                 case XC_FAMILY_HYB_MGGA:
                     if (isSpin()) {
-                        // Spin-polarized meta-GGA
-                        // Input ordering:
-                        // rows 0-1: rho_alpha, rho_beta
-                        // rows 2-4: grad rho_alpha (x, y, z)
-                        // rows 5-7: grad rho_beta (x, y, z)
-                        // rows 8-9: tau_alpha, tau_beta
-                        
-                        Eigen::MatrixXd rho   = Eigen::MatrixXd::Zero(2, nPts);
-                        Eigen::MatrixXd sigma = Eigen::MatrixXd::Zero(3, nPts);
-                        Eigen::MatrixXd tau   = Eigen::MatrixXd::Zero(2, nPts);
-                        
-                        exc = Eigen::MatrixXd::Zero(1, nPts);
-                        vxc = Eigen::MatrixXd::Zero(2, nPts);
-                        sxc = Eigen::MatrixXd::Zero(3, nPts);
-                        Eigen::MatrixXd vtau = Eigen::MatrixXd::Zero(2, nPts);
-                        
-                        for (size_t j = 0; j < nPts; j++) {
-                            rho(0, j) = inp(0, j);  // alpha
-                            rho(1, j) = inp(1, j);  // beta
-                            
-                            // Libxc takes in reduced gradients: up-up, up-down, down-down
-                            sigma(0, j) = inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j) + inp(4, j) * inp(4, j);
-                            sigma(1, j) = inp(2, j) * inp(5, j) + inp(3, j) * inp(6, j) + inp(4, j) * inp(7, j);
-                            sigma(2, j) = inp(5, j) * inp(5, j) + inp(6, j) * inp(6, j) + inp(7, j) * inp(7, j);
-                            
-                            tau(0, j) = inp(8, j);  // tau_alpha
-                            tau(1, j) = inp(9, j);  // tau_beta
-                        }
-                        
-                        // Call LibXC meta-GGA
-                        xc_mgga_exc_vxc(libxc_objects[i], nPts,
-                                        rho.data(), sigma.data(),
-                                        nullptr,      // laplacian
-                                        tau.data(),
-                                        exc.data(),   // e_xc / rho
-                                        vxc.data(),   // v_rho (alpha, beta)
-                                        sxc.data(),   // v_sigma (aa, ab, bb)
-                                        nullptr,      // v_laplacian
-                                        vtau.data()); // v_tau (alpha, beta)
-                        
-                        for (size_t j = 0; j < nPts; ++j) {
-                            // Energy density per particle, multiply by total density
-                            out(0, j) += exc(0, j) * libxc_coefs[i] * (inp(0, j) + inp(1, j));
-                            
-                            // v_rho contributions
-                            out(1, j) += vxc(0, j) * libxc_coefs[i];
-                            out(2, j) += vxc(1, j) * libxc_coefs[i];
-                            
-                            // alpha gradient contributions: 2*vaa*grad_a + vab*grad_b
-                            out(3, j) += libxc_coefs[i] * (2 * sxc(0, j) * inp(2, j) + sxc(1, j) * inp(5, j));
-                            out(4, j) += libxc_coefs[i] * (2 * sxc(0, j) * inp(3, j) + sxc(1, j) * inp(6, j));
-                            out(5, j) += libxc_coefs[i] * (2 * sxc(0, j) * inp(4, j) + sxc(1, j) * inp(7, j));
-                            
-                            // beta gradient contributions: 2*vbb*grad_b + vab*grad_a
-                            out(6, j) += libxc_coefs[i] * (2 * sxc(2, j) * inp(5, j) + sxc(1, j) * inp(2, j));
-                            out(7, j) += libxc_coefs[i] * (2 * sxc(2, j) * inp(6, j) + sxc(1, j) * inp(3, j));
-                            out(8, j) += libxc_coefs[i] * (2 * sxc(2, j) * inp(7, j) + sxc(1, j) * inp(4, j));
-                            
-                            // v_tau contributions (rows 9-10)
-                            out(9, j) += vtau(0, j) * libxc_coefs[i];
-                            out(10, j) += vtau(1, j) * libxc_coefs[i];
-                        }
+                        MSG_ABORT("Spin-polarized meta-GGA not supported in Functional::evaluate_data.");
                     } else {
                         Eigen::MatrixXd rho   = inp.row(0).transpose();
                         exc   = Eigen::MatrixXd::Zero(1, nPts);
@@ -355,7 +294,6 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                                      + inp(3, j) * inp(3, j);
                             tau(j)   = inp(4, j);
                         }
-
 
                         // Call LibXC meta-GGA: compute energy density, v_rho, v_sigma and v_tau.
                         xc_mgga_exc_vxc(libxc_objects[i], nPts,
@@ -465,8 +403,7 @@ Eigen::MatrixXd Functional::contract_transposed(Eigen::MatrixXd &xc_data, Eigen:
     }
     return out_data;
 }
-
-void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::FunctionNode<3> *> xcNodes) const {
+void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::FunctionNode<3> *> xcNodes)  const {
     if (this->log_grad){
         MSG_ERROR("log_grad not implemented");
     }
@@ -476,21 +413,17 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     mrcpp::MWNode<3> node(rho0->getNode(nodeIdx),true,false); //copy node from rho, but do not copy coef
     int ncoefs = rho0->getTDim() * rho0->getKp1_d();
     int xcfun_inpsize = 1; // rho
-    int spinsize = 1; // paired
-    if (isSpin()) spinsize = 2; // alpha, beta
+    int spinsize = isSpin() ? 2 : 1; // 1 for unpolarized, 2 for polarized
     xcfun_inpsize *= spinsize; // alpha and beta
-    if (isGGA()) xcfun_inpsize *= 4; // add gradient (3 components for each spin)
-    if (isMetaGGA()) {
-        xcfun_inpsize *= 4;  // add gradient (3 components for each spin)
-        xcfun_inpsize += spinsize; // tau (and tau^alpha/tau^beta later)
-    }
+    if (isGGA() || isMetaGGA()) xcfun_inpsize *= 4; // add gradient (3 components for each spin)
+    if(isMetaGGA()) xcfun_inpsize += spinsize;      // add tau (1 for each spin)
 
-    Eigen::MatrixXd xcfun_inp(ncoefs, xcfun_inpsize); // input for xcfun
+    Eigen::MatrixXd xcfun_inp(ncoefs, xcfun_inpsize); //input for xcfun
     double* coef = node.getCoefs();
 
     for (int i = 0; i < spinsize; i++) {
         // make cv representation of density
-        mrcpp::FunctionTree<3>* rho = std::get<1>(inp[i]);
+        mrcpp::FunctionTree<3>* rho=std::get<1>(inp[i]);
         // we link into the node, in order to be able to do a mwtransform without copying the data back and forth
         node.attachCoefs(xcfun_inp.col(i).data());
         for (int j = 0; j < ncoefs; j++) xcfun_inp(j,i) = rho->getNode(nodeIdx).getCoefs()[j];
@@ -547,10 +480,14 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     // drho_b_1/dy
     // drho_b_1/dz
     int ctrsize = inp.size()-spinsize; //number of higher order inputs
-    if (isMetaGGA()) {
-        // subtract the tau entries from the count
-        ctrsize -= spinsize;
-        if (ctrsize < 0) ctrsize = 0;
+    int d_datasize = ctrsize;
+    if (isGGA()) d_datasize *= 4; // add gradient (3 components for each higher order rho)
+    if (isMetaGGA() && !isSpin()) {
+        // No contraction needed yet as we only do non-spin/ground state
+        ctrsize    = 0; //
+        d_datasize = 0; //
+    } else if (isMetaGGA() && isSpin()) {
+        MSG_ABORT("Functional::makepot: spin-polarized meta-GGA not supported.");
     }
     if (ctrsize != getCtrInputLength()) {
         std::ostringstream oss;
@@ -558,8 +495,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
             << ctrsize << ") and expected (" << getCtrInputLength() << ").\n" << " spinsize: " << spinsize << " inp.size(): " << inp.size();
         MSG_ABORT(oss.str());
     }
-    int d_datasize = ctrsize;
-    if (isGGA()) d_datasize *= 4; // add gradient (3 components for each higher order rho)
+
     Eigen::MatrixXd d_data = Eigen::MatrixXd::Zero(ncoefs, d_datasize);
     if (d_datasize > 0) {
         for (int i = 0; i < ctrsize; i++) {
@@ -570,7 +506,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
             for (int j = 0; j < ncoefs; j++) d_data(j,i) = rho->getNode(nodeIdx).getCoefs()[j];
             node.mwTransform(mrcpp::Reconstruction);
             node.cvTransform(mrcpp::Forward);
-            if (isGGA()) {
+            if (isGGA() or isMetaGGA()) {
                 //make gradient of input
                 for (int d = 0; d < 3; d++) {
                     node.attachCoefs(d_data.col(ctrsize + 3*i + d).data());
@@ -616,4 +552,5 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     }
     node.attachCoefs(coef); // restablish the original link (for proper destructor behaviour)
 }
+
 } // namespace mrdft
