@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2020 by Radovan Bast, Roberto Di Remigio, Jonas Juselius, and contributors.
 
 # set minimum cmake version
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 # CMake 4+ tightened compatibility checks for dependencies that declare old minimum versions.
 # Setting this allows those dependencies to still configure correctly.

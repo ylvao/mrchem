@@ -6,9 +6,9 @@ Installation
 Build prerequisites
 -------------------
 
-- Python-3.9 (or later)
-- CMake-3.14 (or later)
-- GNU-5.4 or Intel-17 (or later) compilers (C++14 standard)
+- Python-3.10 (or later)
+- CMake-3.22 (or later)
+- GNU-11.2, Clang-14.0 or IntelLLVM-2022.1 (or later) compilers (C++17 standard)
 
 .. hint::
     We have collected the recommended modules for the different Norwegian HPC
@@ -22,10 +22,10 @@ C++ dependencies
 
 The MRChem program depends on the following C++ libraries:
 
-- Input handling: `nlohmann/json-3.6  <https://github.com/nlohmann/json>`_
+- Input handling: `nlohmann/json-3.12  <https://github.com/nlohmann/json>`_
 - Multiwavelets: `MRCPP-1.4  <https://github.com/MRChemSoft/mrcpp>`_
 - Linear algebra: `Eigen-3.4  <https://gitlab.com/libeigen/eigen>`_
-- DFT functionals: `XCFun-2.0  <https://github.com/dftlibs/xcfun>`_
+- DFT functionals: `XCFun-2.1  <https://github.com/dftlibs/xcfun>`_
 
 All these dependencies will be downloaded automatically at configure time by
 CMake, but can also be linked manually by setting the variables::
@@ -193,11 +193,11 @@ Please refer to the :ref:`User's Manual` for instructions for how to run the pro
     version on the different Norwegian HPC systems under ``tools/<machine>.sh``.
     These scripts will build the current version under ``build-${version}``,
     run the unit tests and install under ``install-${version}``, e.g. to build
-    version v1.0.0 on Fram::
+    version v1.1.4 on Olivia::
 
         $ cd mrchem
-        $ git checkout v1.0.0
-        $ tools/fram.sh
+        $ git checkout v1.1.4
+        $ tools/olivia.sh
 
     The configure step requires internet access, so the scripts must be run on
     the login nodes, and it will run on a single core, so it might take some

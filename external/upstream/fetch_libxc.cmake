@@ -16,7 +16,6 @@ else()
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
 
-  set(CMAKE_INSTALL_INCLUDEDIR "include" CACHE STRING "" FORCE)
   set(BUILD_TESTING     OFF CACHE BOOL "Build LibXC tests"          FORCE)
   set(ENABLE_TESTS      OFF CACHE BOOL "Enable LibXC tests"         FORCE)
   set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build LibXC shared libs"    FORCE)
@@ -25,7 +24,12 @@ else()
   set(DISABLE_KXC       ON  CACHE BOOL "Disable 3rd derivatives (Kxc)" FORCE)
   set(DISABLE_LXC       ON  CACHE BOOL "Disable 4th derivatives (Lxc)" FORCE)
 
+  # LibXC installs headers flat (no own subdirectory), so we redirect its
+  # install include dir to a namespaced folder and restore afterward.
+  set(_saved_install_includedir "${CMAKE_INSTALL_INCLUDEDIR}")
+  set(CMAKE_INSTALL_INCLUDEDIR "include/LibXC" CACHE STRING "" FORCE)
   FetchContent_MakeAvailable(libxc_sources)
+  set(CMAKE_INSTALL_INCLUDEDIR "${_saved_install_includedir}" CACHE STRING "" FORCE)
 
   if(TARGET xc)
     if(NOT TARGET Libxc::xc)
@@ -36,7 +40,7 @@ else()
       INTERFACE
         $<BUILD_INTERFACE:${libxc_sources_SOURCE_DIR}/src>
         $<BUILD_INTERFACE:${libxc_sources_BINARY_DIR}>
-        $<INSTALL_INTERFACE:include/Libxc>
+        $<INSTALL_INTERFACE:include/LibXC>
       )
   endif()
 endif()
