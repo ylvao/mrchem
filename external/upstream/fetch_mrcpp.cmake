@@ -39,7 +39,7 @@ else()
     GIT_REPOSITORY
       https://github.com/msnik1999/mrcpp.git
     GIT_TAG
-      4648b3549a1b4cca2f7104bd876bc54258b4cb76
+      d48039dacd1d415f15bb95ab3f7631345d1e6378
     )
 
   set(CMAKE_BUILD_TYPE Release)
