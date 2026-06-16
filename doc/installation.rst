@@ -2,6 +2,23 @@
 Installation
 ============
 
+------------------
+Obtaining the code
+------------------
+
+The latest development version of MRChem can be found on the ``master``
+branch on GitHub::
+
+    $ git clone https://github.com/MRChemSoft/mrchem.git
+
+The released versions can be found from Git tags ``vX.Y.Z`` under the
+``release/X.Y`` branches in the same repository, or a zip file can be
+downloaded from `Zenodo <https://doi.org/10.5281/zenodo.3606658>`_.
+
+By default, all dependencies will be **fetched** at configure time if they are
+not already available.
+
+
 -------------------
 Build prerequisites
 -------------------
@@ -66,22 +83,9 @@ doing::
     $ pipenv run python -c "print('Hello, world')"
 
 
--------------------------------
-Obtaining and building the code
--------------------------------
-
-The latest development version of MRChem can be found on the ``master``
-branch on GitHub::
-
-    $ git clone https://github.com/MRChemSoft/mrchem.git
-
-The released versions can be found from Git tags ``vX.Y.Z`` under the
-``release/X.Y`` branches in the same repository, or a zip file can be
-downloaded from `Zenodo <https://doi.org/10.5281/zenodo.3606658>`_.
-
-By default, all dependencies will be **fetched** at configure time if they are
-not already available.
-
+-----------------
+Building the code
+-----------------
 
 Configure
 ---------
@@ -121,9 +125,9 @@ The default build is *without* parallelization and using GNU compilers::
 
     $ ./setup --prefix=<install-dir> <build-dir>
 
-To use Intel compilers you need to specify the ``--cxx`` option::
+To use clang compilers you need to specify the ``--cxx`` option::
 
-    $ ./setup --prefix=<install-dir> --cxx=icpc <build-dir>
+    $ ./setup --prefix=<install-dir> --cxx=clang++ <build-dir>
 
 To build the code with shared memory (OpenMP) parallelization,
 add the ``--omp`` option::
@@ -132,7 +136,7 @@ add the ``--omp`` option::
 
 To build the code with distributed memory (MPI) parallelization, add the
 ``--mpi`` option *and* change to the respective MPI compilers (``--cxx=mpicxx``
-for GNU and ``--cxx=mpiicpc`` for Intel)::
+for GNU)::
 
     $ ./setup --prefix=<install-dir> --omp --mpi --cxx=mpicxx <build-dir>
 
