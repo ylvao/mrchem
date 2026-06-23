@@ -112,8 +112,8 @@ std::unique_ptr<MRDFT> Factory::build() {
             }
 
             // Check if functional is range separated
-            if ((f->info->flags & XC_FLAGS_HYB_CAM)  || (f->info->flags & XC_FLAGS_HYB_LC)) MSG_ABORT("Coulomb attenuated functionals not supported in MRChem!\n");
-            if ((f->info->flags & XC_FLAGS_HYB_CAMY) || (f->info->flags & XC_FLAGS_HYB_LCY)) MSG_ABORT("Yukawa attenuated functionals not supported in MRChem!\n");
+            if ((f->info->flags & XC_FLAGS_HYB_CAM)  || (f->info->flags & XC_FLAGS_HYB_LC)) MSG_ABORT("Coulomb attenuated functionals not supported in MRChem yet\n");
+            if ((f->info->flags & XC_FLAGS_HYB_CAMY) || (f->info->flags & XC_FLAGS_HYB_LCY)) MSG_ABORT("Yukawa attenuated functionals not supported in MRChem yet\n");
         }
     } else {
         gga = xcfun_is_gga(xcfun_p.get());
@@ -137,11 +137,7 @@ std::unique_ptr<MRDFT> Factory::build() {
         xcfun_user_eval_setup(xcfun_p.get(), order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
     }
 
-    // bool lda = not gga;
-
     // Init MW derivative
-    // We always need a non-null derivative operator for GGA and mGGA,
-    // since it is used in preprocess()/postprocess() and for building tau.
     if (gga || mgga) {
         if (!diff_p) {
             if (diff_s == "bspline") {
@@ -155,18 +151,19 @@ std::unique_ptr<MRDFT> Factory::build() {
             }
         }
     }
-
+    
     if (mgga) {
-        if (!diff_p) {
-            MSG_ABORT("Factory::build: derivative operator not initialized for mGGA.");
-        }
+        // Used for debug
+        // if (!diff_p) {
+            //     MSG_ABORT("Factory::build: derivative operator not initialized for mGGA");
+            // }
         kin_p = std::make_unique<mrchem::KineticOperator>(mrchem::KineticOperator(diff_p));
     }
     std::unique_ptr<Functional> func_p{nullptr};
     if (spin) {
         if (mgga) {
             // TODO: Spin-mGGA class analogous to SpinGGA
-            MSG_ABORT("Spin-polarized meta-GGA class not implemented yet.");
+            MSG_ABORT("Spin-polarized meta-GGA class not implemented yet");
         } else if (gga) {
             func_p = std::make_unique<SpinGGA>(order, xcfun_p, diff_p);
         } else if (lda) {
@@ -190,14 +187,7 @@ std::unique_ptr<MRDFT> Factory::build() {
     if (libxc) { func_p->setLibxcFunctionalObject(libxc_objects, libxc_coefs); }
     if (not libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
 
-    // Ensure the functional sees the same derivative operator used above
-    if (gga || mgga) {
-        if (!diff_p) {
-            MSG_ABORT("Factory::build: diff_p unexpectedly null when setting functional derivative operator.");
-        }
-        func_p->setDerivOp(diff_p);
-    }
-
+    func_p->setDerivOp(diff_p);
     func_p->setCustomExx(customExx);
     func_p->setKinOp(kin_p);
     func_p->setLogGradient(log_grad);

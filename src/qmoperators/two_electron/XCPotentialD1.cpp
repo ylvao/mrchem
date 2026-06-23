@@ -83,26 +83,30 @@ mrcpp::FunctionTreeVector<3> XCPotentialD1::setupDensities(double prec, mrcpp::F
             }
 
             // Temporary trees on the XC grid
-            mrcpp::FunctionTree<3> tmp(grid.getMRA());
-            mrcpp::copy_grid(tmp, grid);
+            mrcpp::FunctionTree<3> tau_phi(grid.getMRA());
+            mrcpp::copy_grid(tau_phi, grid);
 
-            mrcpp::FunctionTree<3> tmp_y(grid.getMRA());
-            mrcpp::copy_grid(tmp_y, grid);
+            mrcpp::FunctionTree<3> d2phi_x(grid.getMRA());
+            mrcpp::copy_grid(d2phi_x, grid);
 
-            mrcpp::FunctionTree<3> tmp_z(grid.getMRA());
-            mrcpp::copy_grid(tmp_z, grid);
+            mrcpp::FunctionTree<3> d2phi_y(grid.getMRA());
+            mrcpp::copy_grid(d2phi_y, grid);
 
-            // Loop over orbitals: tau += 1/2 * |∇phi_i|^2
+            mrcpp::FunctionTree<3> d2phi_z(grid.getMRA());
+            mrcpp::copy_grid(d2phi_z, grid);
+
+            // Loop over orbitals: tau += 1/2 * tau_phi = - 1/2 * |∇phi_i|^2
             for (int i = 0; i < static_cast<int>(orbitals->size()); ++i) {
                 const mrcpp::CompFunction<3> &phi_i = (*orbitals)[i];
                 mrcpp::FunctionTree<3> &phi_r =
                     const_cast<mrcpp::FunctionTree<3>&>(phi_i.real());
 
-                tmp.clear();
-                tmp_y.clear();
-                tmp_z.clear();
+                tau_phi.clear();
+                d2phi_x.clear();
+                d2phi_y.clear();
+                d2phi_z.clear();
 
-                // gradient(phi_i) using the standard helper as in GGA/mGGA
+                // Getting the gradient of orbitals
                 mrcpp::FunctionTreeVector<3> grad_vec =
                     this->mrdft->functional().getLogGradient()
                         ? mrdft::xc_utils::log_gradient(*derivOp, phi_r)
@@ -112,19 +116,40 @@ mrcpp::FunctionTreeVector<3> XCPotentialD1::setupDensities(double prec, mrcpp::F
                 mrcpp::FunctionTree<3> &dphi_y = mrcpp::get_func(grad_vec, 1);
                 mrcpp::FunctionTree<3> &dphi_z = mrcpp::get_func(grad_vec, 2);
 
-                // tmp = (dphi_x)^2
-                mrcpp::power(prec, tmp, dphi_x, 2.0);
+                // mrcpp::FunctionTreeVector<3> hess_x_vec =
+                //     this->mrdft->functional().getLogGradient()
+                //         ? mrdft::xc_utils::log_gradient(*derivOp, dphi_x)
+                //         : mrcpp::gradient(*derivOp, dphi_x);
+                // mrcpp::FunctionTreeVector<3> hess_y_vec =
+                //     this->mrdft->functional().getLogGradient()
+                //         ? mrdft::xc_utils::log_gradient(*derivOp, dphi_y)
+                //         : mrcpp::gradient(*derivOp, dphi_y);
+                // mrcpp::FunctionTreeVector<3> hess_z_vec =
+                //     this->mrdft->functional().getLogGradient()
+                //         ? mrdft::xc_utils::log_gradient(*derivOp, dphi_z)
+                //         : mrcpp::gradient(*derivOp, dphi_z);
 
-                // tmp_y = (dphi_y)^2, tmp += tmp_y
-                mrcpp::power(prec, tmp_y, dphi_y, 2.0);
-                mrcpp::add(prec, tmp, 1.0, tmp, 1.0, tmp_y);
+                // mrcpp::FunctionTree<3> &d2phi_x = mrcpp::get_func(hess_x_vec, 0);
+                // mrcpp::FunctionTree<3> &d2phi_y = mrcpp::get_func(hess_y_vec, 1);
+                // mrcpp::FunctionTree<3> &d2phi_z = mrcpp::get_func(hess_z_vec, 2);
 
-                // tmp_z = (dphi_z)^2, tmp += tmp_z
-                mrcpp::power(prec, tmp_z, dphi_z, 2.0);
-                mrcpp::add(prec, tmp, 1.0, tmp, 1.0, tmp_z);
 
-                // tau.real() += 1/2 * tmp
-                mrcpp::add(prec, tau.real(), 1.0, tau.real(), 0.5, tmp);
+                // mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_x);  // tau_phi += d2phi_x
+                // mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_y);  // tau_phi += d2phi_y
+                // mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_z);  // tau_phi += d2phi_z
+
+
+                // Constructing tau_phi as sum_i=xyz dphi_i^2
+                mrcpp::power(prec, d2phi_x, dphi_x, 2.0);              // d2phi_x = (dphi_x)^2
+                mrcpp::power(prec, d2phi_y, dphi_y, 2.0);              // d2phi_y = (dphi_y)^2
+                mrcpp::power(prec, d2phi_z, dphi_z, 2.0);              // d2phi_z = (dphi_z)^2
+
+                mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_x);  // d2phi_ += d2phi_x
+                mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_y);  // d2phi_ += d2phi_y
+                mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_z);  // d2phi_ += d2phi_z
+
+                // tau += 1/2 tau_phi
+                mrcpp::add(prec, tau.real(), 1.0, tau.real(), 0.5, tau_phi);
             }
 
             print_utils::qmfunction(3, "Compute tau", tau, timer);

@@ -125,7 +125,6 @@ void XCPotential::setup(double prec) {
         }
     }
 
-
     mrcpp::FunctionTreeVector<3> xc_out = this->mrdft->evaluate(xc_inp);
 
     // Fetch energy

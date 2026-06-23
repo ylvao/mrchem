@@ -180,6 +180,10 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                 case XC_FAMILY_LDA:
                 case XC_FAMILY_HYB_LDA:
                     if (isSpin()) {
+                        // Input:
+                        // row 0 : rho_a
+                        // row 1 : rho_b
+
                         Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
                         exc = Eigen::MatrixXd::Zero(1, nPts);
                         vxc = Eigen::MatrixXd::Zero(2, nPts);
@@ -199,6 +203,9 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                             out(2, j) += vxc(1, j) * libxc_coefs[i];
                         }
                     } else {
+                        // Input:
+                        // row 0 : rho
+
                         exc = Eigen::MatrixXd::Zero(1, nPts);
                         vxc = Eigen::MatrixXd::Zero(1, nPts);
                         xc_lda_exc_vxc(libxc_objects[i], nPts, inp.data(), exc.data(), vxc.data());
@@ -213,6 +220,16 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                 case XC_FAMILY_GGA:
                 case XC_FAMILY_HYB_GGA:
                     if (isSpin()) {
+                        // Input:
+                        // row 0 : rho_a
+                        // row 1 : rho_b
+                        // row 2 : drho_a / dx
+                        // row 3 : drho_b / dx
+                        // row 4 : drho_a / dy
+                        // row 5 : drho_b / dy
+                        // row 6 : drho_a / dz
+                        // row 7 : drho_b / dz
+
                         Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
                         exc = Eigen::MatrixXd::Zero(1, nPts);
                         vxc = Eigen::MatrixXd::Zero(2, nPts);
@@ -224,7 +241,6 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                             rho(1, j) = inp(1, j);
                         }
                         for (size_t j = 0; j < nPts; j++) {
-                            // clang-format off
                             // Libxc takes in reduced gradients: up-up, up-down, down-down
                             sigma(0, j) = inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j) + inp(4, j) * inp(4, j);
                             sigma(1, j) = inp(2, j) * inp(5, j) + inp(3, j) * inp(6, j) + inp(4, j) * inp(7, j);
@@ -233,24 +249,28 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                         xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
 
                         for (size_t j = 0; j < nPts; ++j) {
-                            // clang-format off
                             //    xcfun calculates energy density per volume while libxc calculates
                             //    energy density per electron, so we multiply by the density here
                             out(0, j) += exc(0, j) * libxc_coefs[i] * (inp(0, j) + inp(1, j));
                             out(1, j) += vxc(0, j) * libxc_coefs[i];
                             out(2, j) += vxc(1, j) * libxc_coefs[i];
 
-                            // alpha_i,     coef         * ( 2 * vaa               * grad_a_i  + vab       * grad_b_i ), i = x, y, z
+                            // alpha_i,     coef        * ( 2 * vaa       * grad_a_i  + vab       * grad_b_i ), i = x, y, z
                             out(3, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(2, j) + sxc(1, j) * inp(5, j) );
                             out(4, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(3, j) + sxc(1, j) * inp(6, j) );
                             out(5, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(4, j) + sxc(1, j) * inp(7, j) );
-                            // beta_i,       coef        * ( 2 * vbb               * grad_b_i  + vab               * grad_a_i ), i = x, y, z
+                            // beta_i,       coef       * ( 2 * vbb       * grad_b_i  + vab       * grad_a_i ), i = x, y, z
                             out(6, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(5, j) + sxc(1, j) * inp(2, j) );
                             out(7, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(6, j) + sxc(1, j) * inp(3, j) );
                             out(8, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(7, j) + sxc(1, j) * inp(4, j) );
-                            // clang-format on
                         }
                     } else {
+                        // Input:
+                        // row 0 : rho
+                        // row 1 : drho / dx
+                        // row 2 : drho / dy
+                        // row 3 : drho / dz
+
                         Eigen::MatrixXd rho = inp.row(0).transpose();
                         exc = Eigen::MatrixXd::Zero(1, nPts);
                         vxc = Eigen::MatrixXd::Zero(1, nPts);
@@ -273,8 +293,27 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                 case XC_FAMILY_MGGA:
                 case XC_FAMILY_HYB_MGGA:
                     if (isSpin()) {
+                        // Input:
+                        // row 0 : rho_a
+                        // row 1 : rho_b
+                        // row 2 : drho_a / dx
+                        // row 3 : drho_b / dx
+                        // row 4 : drho_a / dy
+                        // row 5 : drho_b / dy
+                        // row 6 : drho_a / dz
+                        // row 7 : drho_b / dz
+                        // row 8 : tau_a
+                        // row 9 : tau_b
+
                         MSG_ABORT("Spin-polarized meta-GGA not supported in Functional::evaluate_data.");
                     } else {
+                        // Input:
+                        // row 0 : rho
+                        // row 1 : drho / dx
+                        // row 2 : drho / dy
+                        // row 3 : drho / dz
+                        // row 4 : tau
+
                         Eigen::MatrixXd rho   = inp.row(0).transpose();
                         exc   = Eigen::MatrixXd::Zero(1, nPts);
                         vxc   = Eigen::MatrixXd::Zero(1, nPts);
@@ -283,11 +322,6 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                         Eigen::MatrixXd tau   = Eigen::MatrixXd::Zero(1, nPts);
                         Eigen::MatrixXd vtau  = Eigen::MatrixXd::Zero(1, nPts);
 
-                        // row 0 : rho
-                        // row 1 : d rho / dx
-                        // row 2 : d rho / dy
-                        // row 3 : d rho / dz
-                        // row 4 : tau
                         for (size_t j = 0; j < nPts; j++) {
                             sigma(j) = inp(1, j) * inp(1, j)
                                      + inp(2, j) * inp(2, j)
@@ -295,28 +329,23 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                             tau(j)   = inp(4, j);
                         }
 
-                        // Call LibXC meta-GGA: compute energy density, v_rho, v_sigma and v_tau.
                         xc_mgga_exc_vxc(libxc_objects[i], nPts,
                                         rho.data(), sigma.data(),
-                                        nullptr,      // laplacian
+                                        nullptr,      // TODO: laplacian
                                         tau.data(),
-                                        exc.data(),   // e_xc / rho
-                                        vxc.data(),   // v_rho
-                                        sxc.data(),   // v_sigma
+                                        exc.data(),
+                                        vxc.data(),
+                                        sxc.data(),
                                         nullptr,      // v_laplacian
-                                        vtau.data()); // v_tau
+                                        vtau.data());
 
                         for (size_t j = 0; j < nPts; ++j) {
                             // Libxc energy density is per particle, multiply by rho
                             out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
                             out(1, j) += vxc(0, j) * libxc_coefs[i];
-
-                            // gradient contribution: 2 * v_sigma * grad rho
                             out(2, j) += 2 * sxc(0, j) * inp(1, j) * libxc_coefs[i];
                             out(3, j) += 2 * sxc(0, j) * inp(2, j) * libxc_coefs[i];
                             out(4, j) += 2 * sxc(0, j) * inp(3, j) * libxc_coefs[i];
-
-                            // store v_tau as its own row (scaled)
                             out(5, j) += vtau(0, j) * libxc_coefs[i];
                         }
                     }
@@ -458,9 +487,11 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
             }
 
             node.attachCoefs(xcfun_inp.col(tau_col).data());
+            // get tau and put result into xcfun_inp aka node
             for (int j = 0; j < ncoefs; j++) {
                 xcfun_inp(j, tau_col) = tau->getNode(nodeIdx).getCoefs()[j];
             }
+            // make cv representation of kinetic energy density
             node.mwTransform(mrcpp::Reconstruction);
             node.cvTransform(mrcpp::Forward);
         }
