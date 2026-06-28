@@ -15,7 +15,7 @@ install_dir=${mrchem_dir}/install
 
 if [ -d "${build_dir}" ]; then
     echo "Build directory already exists."
-    read -p "\nWould you like to delete the existing build and install folders and continue? (y/N): " response
+    read -p $'\nWould you like to delete the existing build and install folders and continue? (y/N): ' response
     case "${response,}" in
         y|yes)
             echo "Removing old build and install directories..."
