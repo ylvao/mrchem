@@ -12,7 +12,6 @@ cd ${mrchem_dir}
 build_dir=${mrchem_dir}/build
 install_dir=${mrchem_dir}/install
 
-
 if [ -d "${build_dir}" ]; then
     echo "Build directory already exists."
     read -p $'\nWould you like to delete the existing build and install folders and continue? (y/N): ' response
