@@ -34,14 +34,14 @@ namespace mrdft {
 
 class SpinLDA final : public Functional {
 public:
-    SpinLDA(int k, XC_p &f);
+    SpinLDA(int k, XClib &f);
     ~SpinLDA() override = default;
 
     bool isSpin() const override { return true; }
     bool isGGA() const override { return false; }
     bool isMetaGGA() const override { return false; }
     int numIn() const override { return 2; }
-    int numOut() const override { if (Factory::libxc) {return 3;} else {return xcfun_output_length(xcfun.get());} }
+    int numOut() const override { if (Factory::libxc) {return 3;} else {return xcfun_output_length(xclib.xcfun);} }
 
 private:
     mrcpp::FunctionTreeVector<3> rho_a;

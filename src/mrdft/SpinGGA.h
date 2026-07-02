@@ -34,14 +34,14 @@ namespace mrdft {
 
 class SpinGGA final : public Functional {
 public:
-    SpinGGA(int k, XC_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
+    SpinGGA(int k, XClib &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
     ~SpinGGA() override = default;
 
     bool isSpin() const override { return true; }
     bool isGGA() const override { return true; }
     bool isMetaGGA() const override { return false; }
     int numIn() const override { return 8; }
-    int numOut() const override { if (Factory::libxc) {return 9;} else {return xcfun_output_length(xcfun.get());} }
+    int numOut() const override { if (Factory::libxc) {return 9;} else {return xcfun_output_length(xclib.xcfun);} }
 
 private:
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivative{nullptr};

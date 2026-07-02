@@ -31,7 +31,7 @@
 
 namespace mrdft {
 
-LDA::LDA(int k, XC_p &f)
+LDA::LDA(int k, XClib &f)
         : Functional(k, f) {
     xc_mask = xc_utils::build_output_mask(true, false, this->order);
     d_mask = xc_utils::build_density_mask(true, false, this->order);

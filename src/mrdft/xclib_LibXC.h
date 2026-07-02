@@ -25,31 +25,24 @@
 
 #pragma once
 
-#include <XCFun/xcfun.h>
-
-#include "Functional.h"
-#include "Factory.h" // only to call Factory::libxc
+#include <memory>
+#include <MRCPP/MWOperators>
+#include <MRCPP/trees/FunctionNode.h>
+#include <xc_funcs.h>
+#include <xc.h>
 
 namespace mrdft {
 
-class LDA final : public Functional {
-public:
-    LDA(int k, XClib &f);
-    ~LDA() override = default;
+using XC_p = std::unique_ptr<xcfun_t, decltype(&xcfun_delete)>;
 
-    bool isSpin() const override { return false; }
-    bool isGGA() const override { return false; }
-    bool isMetaGGA() const override { return false; }
-    int numIn() const override { return 1; }
-    int numOut() const override { if (Factory::libxc) {return 2;} else {return xcfun_output_length(xclib.xcfun);} }
-
-private:
-    mrcpp::FunctionTreeVector<3> rho;
-
-    int getCtrOutputLength() const override { return 2; }
-
-    void clear() override;
+/**
+ * @class Libxc
+ * @brief Class for Exchange-Correlation functionals using LibXC
+ * @details Provides the interface for evaluating XC potentials
+ * on the Multi-Resolution Analysis (MRA) grid using Libxc
+ */
+class Libxc final : public XClib {
 
 };
 
-} // namespace mrdft
+} // mrdft

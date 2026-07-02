@@ -31,6 +31,7 @@
 #include <XCFun/xcfun.h>
 #include <xc_funcs.h>
 #include <xc.h>
+#include "xclib_backend.h"
 
 namespace mrdft {
 
@@ -49,9 +50,9 @@ public:
      * @param[in] k The polynomial order for the MRA basis
      * @param[in] f The XCFun handle (ownership is transferred)
      */
-    Functional(int k, XC_p &f)
+    Functional(int k, XClib &f)
             : order(k)
-            , xcfun(std::move(f)) {}
+            , xclib(f) {}
     virtual ~Functional() = default;
 
     /** @brief  Evaluates XC functional and derivatives for a given NodeIndex
@@ -165,10 +166,7 @@ public:
     Eigen::MatrixXd evaluate_transposed(Eigen::MatrixXd &inp) const;
 
     std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
-    bool libxc;                                   ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
-    std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
-    std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
-    
+
     /**
      * @brief Prints the splash screens, version info, and references for the 
      * active xc libraries and functionals
@@ -176,7 +174,6 @@ public:
      * all initialized functional objects to print their specific DOIs
      */
     void print_functional_references() const;
-    
 
     friend class MRDFT;
 
@@ -186,8 +183,8 @@ protected:
     double cutoff{-1.0};        ///< @brief Density threshold
     Eigen::VectorXi d_mask;     ///< @brief density and derivative(s) mask vector for response calculations
     Eigen::MatrixXi xc_mask;    ///< @brief functional and derivative(s) mask vector for response calculations
-    XC_p xcfun;                 ///< @brief XCFun library handle
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr};  ///< @brief Operator used to compute gradients
+    XClib xclib;
 
     /**
      * @brief Run a collection of grid points through Libxc or XCFun
@@ -217,11 +214,8 @@ protected:
      */
     Eigen::MatrixXd contract_transposed(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const;
 
-    // virtual int getCtrInputLength() const = 0;                          ///< @brief Expected number of input components for the contraction step
     virtual int getCtrOutputLength() const = 0;                         ///< @brief Expected number of output components for the contraction step
     virtual void clear() = 0;                                           ///< @brief Clears internal functions
-    // virtual mrcpp::FunctionTreeVector<3> setupXCInput() = 0;            ///< @brief Configures input for evaluation
-    // virtual mrcpp::FunctionTreeVector<3> setupCtrInput() = 0;           ///< @brief Configures input for contraction
 
 };
 

@@ -34,14 +34,14 @@ namespace mrdft {
 
 class GGA final : public Functional {
 public:
-    GGA(int k, XC_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
+    GGA(int k, XClib &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
     ~GGA() override = default;
 
     bool isSpin() const override { return false; }
     bool isGGA() const override { return true; }
     bool isMetaGGA() const override { return false; }
     int numIn() const override { return 4; }
-    int numOut() const override { if (Factory::libxc) {return 5;} else {return xcfun_output_length(xcfun.get());} }
+    int numOut() const override { if (Factory::libxc) {return 5;} else {return xcfun_output_length(xclib.xcfun);} }
 
 private:
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivative{nullptr};

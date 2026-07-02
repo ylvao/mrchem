@@ -32,6 +32,7 @@
 
 #include "xc_func_alias.h"
 #include "MRDFT.h"
+#include "xclib_backend.h"
 
 namespace mrdft {
 
@@ -107,11 +108,9 @@ private:
 
     const mrcpp::MultiResolutionAnalysis<3> mra;          ///< @brief Reference to the 3D Multi-Resolution Analysis grid structure
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p; ///< @brief Pointer to the numerical derivative operator used for GGA gradients
-    XC_p xcfun_p;                                         ///< @brief Pointer to the XCFun library handle
+    XClib xclib;
 
     std::vector<std::string> xcfun_func_names;      ///< @brief Vector for storing used XCFun functional names
-    std::vector<xc_func_type*> libxc_objects;       ///< @brief Vector of initialized Libxc functionals
-    std::vector<double> libxc_coefs;                ///< @brief Vector scaling coefficients for each functional in libxc_objects
 };
 
 } // namespace mrdft
