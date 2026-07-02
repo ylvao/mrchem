@@ -383,7 +383,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
                 node.mwTransform(mrcpp::Reconstruction);
                 node.cvTransform(mrcpp::Forward);
             }
-       }
+        }
     }
 
     // send rho and grad rho to xcfun/libxc
