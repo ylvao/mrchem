@@ -145,7 +145,6 @@ std::unique_ptr<MRDFT> Factory::build() {
         else MSG_ABORT("Case not handled");
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
-    // if (libxc) { func_p->setLibxcFunctionalObject(xclib.libxc_objects, xclib.libxc_coefs); }
     if (not libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
     diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
     func_p->setCustomExx(customExx);
