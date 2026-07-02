@@ -28,7 +28,7 @@
 #include <XCFun/xcfun.h>
 
 #include "Functional.h"
-#include "Factory.h" // only to call Factory::libxc
+#include "Factory.h" // only to call XClib::libxc
 
 namespace mrdft {
 
@@ -41,7 +41,7 @@ public:
     bool isGGA() const override { return false; }
     bool isMetaGGA() const override { return false; }
     int numIn() const override { return 2; }
-    int numOut() const override { if (Factory::libxc) {return 3;} else {return xcfun_output_length(xclib.xcfun);} }
+    int numOut() const override { if (XClib::libxc) {return 3;} else {return xcfun_output_length(xclib.xcfun);} }
 
 private:
     mrcpp::FunctionTreeVector<3> rho_a;

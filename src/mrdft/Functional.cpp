@@ -86,7 +86,7 @@ void Functional::print_functional_references() const {
 
     auto outfile_txt_width = 75;
     // XCFun is used
-    if (not Factory::libxc) {
+    if (not XClib::libxc) {
         printout(0, xcfun_splash());
         std::cout << "\nXCFun functionals used in this calculation:\n";
         for (const auto &func_name : xcfun_func_names) {
@@ -136,7 +136,7 @@ void Functional::setLibxcFunctionalObject(std::vector<xc_func_type*> &libxc_obje
 
 double Functional::amountEXX() const {
     double exx = customExx;
-    if (Factory::libxc) {
+    if (XClib::libxc) {
         for (std::size_t i = 0; i < xclib.libxc_objects.size(); ++i) {
             const xc_func_type *f = xclib.libxc_objects[i];
             double frac = xc_hyb_exx_coef(f);
@@ -164,7 +164,7 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
     }
     out.setZero();
 
-    if (Factory::libxc) {
+    if (XClib::libxc) {
         Eigen::MatrixXd exc, vxc, sxc, sigma;
         for (size_t i = 0; i < xclib.libxc_objects.size(); i++) {
             switch (xclib.libxc_objects[i]->info->family) {

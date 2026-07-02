@@ -36,8 +36,9 @@ namespace mrdft {
 
 class XClib {
 public:
+    static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
+
     xcfun_t *xcfun;                               ///< @brief XCFun library handle
-    bool libxc;                                   ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
 

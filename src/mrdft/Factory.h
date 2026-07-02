@@ -61,7 +61,7 @@ public:
     void setUseGamma(bool g) { gamma = g; }                   ///< Toggle between gamma-type and explicit derivatives
     void setLogGradient(bool lg) { log_grad = lg; }           ///< Toggle the use of logarithmic gradients
     void setDensityCutoff(double c) { cutoff = c; }           ///< Set the threshold for neglecting low-density regions
-    void setLibxc(bool libxc_) {libxc = libxc_; }             ///< Toggle between Libxc (true) and XCFun (false) backends
+    void setLibxc(bool libxc_) {XClib::libxc = libxc_; }             ///< Toggle between Libxc (true) and XCFun (false) backends
     void setDerivative(const std::string &n) { diff_s = n; }  ///< Set derivative operator type (e.g., "bspline", "abgv_00")
 
     /**
@@ -94,8 +94,6 @@ public:
      * (eg. meta-GGAs and range separated functionals)
      */
     std::unique_ptr<MRDFT> build();
-
-    static bool libxc;     ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file). False by default
 
 private:
     int order{1};                  ///< Polynomial order of the Multi-Resolution Analysis (MRA) basis

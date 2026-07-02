@@ -38,7 +38,7 @@
 
 namespace mrdft {
 
-bool Factory::libxc = false;
+bool XClib::libxc = false;
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         : mra(MRA) {
@@ -46,9 +46,9 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         }
 
 void Factory::setFunctional(const std::string &name, double c) {
-    setLibxc(libxc); // should probably be where setFunctional is called
+    setLibxc(XClib::libxc); // should probably be where setFunctional is called
 
-    if (libxc) {
+    if (XClib::libxc) {
         std::vector<int> ids;
         std::vector<double> coefs;
         double scaled_custom_exx = 0.0;
@@ -78,11 +78,11 @@ void Factory::setFunctional(const std::string &name, double c) {
 std::unique_ptr<MRDFT> Factory::build() {
     // Init DFT grid
     auto grid_p = std::make_unique<Grid>(mra);
-    setLibxc(libxc);
+    setLibxc(XClib::libxc);
 
     // Init XCFun or Libxc
     bool gga = false;
-    if (libxc) {
+    if (XClib::libxc) {
         for (const auto *f : xclib.libxc_objects) {
 
             switch (f->info->family) {
@@ -145,7 +145,7 @@ std::unique_ptr<MRDFT> Factory::build() {
         else MSG_ABORT("Case not handled");
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
-    if (not libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
+    if (not XClib::libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
     diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
     func_p->setCustomExx(customExx);
     func_p->setDerivOp(diff_p);
