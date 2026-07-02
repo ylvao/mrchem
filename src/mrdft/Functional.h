@@ -153,7 +153,14 @@ public:
      */
     double amountEXX() const;
     double customExx = 0.0;         ///< @brief Used in mapfunctionalName to set exx for custom functionals
-    double XCenergy = 0.0;          ///< @brief Stores calculated xc energy for the current state
+    double XCenergy  = 0.0;         ///< @brief Stores calculated xc energy for the current state
+    double XCenergy_vtau = 0.0;     ///< @brief Optional: store an explicit vtau-related energy contribution
+
+    /// @brief reset vtau-related energy accumulator
+    void reset_vtau_energy() { XCenergy_vtau = 0.0; }
+
+    /// @brief accumulate vtau-related energy contribution
+    void add_vtau_energy(double e) { XCenergy_vtau += e; }
 
     /**
      * @brief Evaluates the functional on a set of grid points

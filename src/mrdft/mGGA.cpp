@@ -208,11 +208,11 @@ mrcpp::FunctionTreeVector<3> mGGA::postprocess(mrcpp::FunctionTreeVector<3> &inp
 
     // Add v_tau contribution (local term, no divergence needed).
     // With LibXC mGGA we have inp_vec[5] = v_tau.
-    if (inp_vec.size() > 5) {
-        mrcpp::FunctionTree<3> &v_tau = mrcpp::get_func(inp_vec, 5);
-        mrcpp::build_grid(*v_xc, v_tau);
-        mrcpp::add(-1.0, *v_xc, 1.0, *v_xc, 1.0, v_tau);
-    }
+    // if (inp_vec.size() > 5) {
+    //     mrcpp::FunctionTree<3> &v_tau = mrcpp::get_func(inp_vec, 5);
+    //     mrcpp::build_grid(*v_xc, v_tau);
+    //     mrcpp::add(-1.0, *v_xc, 1.0, *v_xc, 1.0, v_tau);
+    // }
 
     // Collect output
     mrcpp::FunctionTreeVector<3> out_vec;

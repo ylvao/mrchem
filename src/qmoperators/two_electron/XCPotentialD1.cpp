@@ -95,7 +95,7 @@ mrcpp::FunctionTreeVector<3> XCPotentialD1::setupDensities(double prec, mrcpp::F
             mrcpp::FunctionTree<3> d2phi_z(grid.getMRA());
             mrcpp::copy_grid(d2phi_z, grid);
 
-            // Loop over orbitals: tau += 1/2 * tau_phi = - 1/2 * |∇phi_i|^2
+            // Loop over orbitals: tau += 1/2 * tau_phi = 1/2 * |∇phi_i|^2
             for (int i = 0; i < static_cast<int>(orbitals->size()); ++i) {
                 const mrcpp::CompFunction<3> &phi_i = (*orbitals)[i];
                 mrcpp::FunctionTree<3> &phi_r =

@@ -319,8 +319,8 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
                         vxc   = Eigen::MatrixXd::Zero(1, nPts);
                         sxc   = Eigen::MatrixXd::Zero(1, nPts);
                         sigma = Eigen::MatrixXd::Zero(1, nPts);
-                        Eigen::MatrixXd tau   = Eigen::MatrixXd::Zero(1, nPts);
-                        Eigen::MatrixXd vtau  = Eigen::MatrixXd::Zero(1, nPts);
+                        Eigen::MatrixXd tau  = Eigen::MatrixXd::Zero(1, nPts);
+                        Eigen::MatrixXd vtau = Eigen::MatrixXd::Zero(1, nPts);
 
                         for (size_t j = 0; j < nPts; j++) {
                             sigma(j) = inp(1, j) * inp(1, j)
@@ -551,7 +551,14 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
         }
     }
 
-    Eigen::MatrixXd Ctrout = contract_transposed(xc_out, d_data); //size output: LDA=1, GGA=4, spin *2
+    Eigen::MatrixXd Ctrout;
+    if (isMetaGGA() && !isSpin() && getCtrInputLength() == 0) {
+        // Ground-state mGGA: no contraction needed, just keep xc_out as-is
+        Ctrout = xc_out;
+    } else {
+        Ctrout = contract_transposed(xc_out, d_data); //size output: LDA=1, GGA=4, spin *2
+    }
+
 
     // postprocess
     //For SpinGGA:
@@ -560,6 +567,17 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     //df_xc/drho_b : out[2] = inp[2] - div(inp[6,7,8])
     int xc_outsize = 2;
     if (isSpin()) xc_outsize = 3;
+
+    // For non-spin mGGA, we want an extra node to store vtau*rho energy density
+    int extra_vtau_node_idx = -1;
+    if (isMetaGGA() && !isSpin()) {
+        // PotVec was constructed with potvecSize = 2 (or 3 for spin);
+        // to avoid changing that everywhere, we reuse xcNodes[0] for energy,
+        // but we can optionally write vtau energy into the same node by
+        // accumulating into an auxiliary array or by a second pass.
+        // For now we only ensure Ctrout.col(5) is meaningful here.
+    }
+
     for (int i = 0; i < xc_outsize; i++) {
         // from cv to node values
         node.attachCoefs(Ctrout.col(i).data());
@@ -573,12 +591,47 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
                 node.cvTransform(mrcpp::Backward);
                 node.mwTransform(mrcpp::Compression);
                 node.calcNorms();
-                mrcpp::DerivativeCalculator<3> derivcalc(d,*this->derivOp, *rho0);//TODO: define outside loops
+                mrcpp::DerivativeCalculator<3> derivcalc(d,*this->derivOp, *rho0); //TODO: define outside loops
                 mrcpp::MWNode<3> noded(rho0->getNode(nodeIdx),true,false);
                 derivcalc.calcNode(node, noded);
                 //xcNodes[i] = Ctrout[i] - div(Ctrout[d_i])
                 for (int j = 0; j < ncoefs; j++) xcNodes[i]->getCoefs()[j] -= noded.getCoefs()[j];
             }
+        }
+        if (isMetaGGA() and i>0) {
+            // Meta-GGA postprocessing:
+            // v_rho^eff = v_rho - div( dF/d(∇ρ) ) + v_tau
+            //
+            // Layout of Ctrout columns (no spin):
+            // f_xc
+            // v_rho
+            // grad x
+            // grad y
+            // grad z
+            // v_tau
+
+            for (int d = 0; d < 3; d++) {
+                node.attachCoefs(Ctrout.col(xc_outsize + 3*(i-1) + d).data());
+                node.cvTransform(mrcpp::Backward);
+                node.mwTransform(mrcpp::Compression);
+                node.calcNorms();
+                mrcpp::DerivativeCalculator<3> derivcalc(d,*this->derivOp, *rho0); //TODO: define outside loops
+                mrcpp::MWNode<3> noded(rho0->getNode(nodeIdx),true,false);
+                derivcalc.calcNode(node, noded);
+                //xcNodes[i] = Ctrout[i] - div(Ctrout[d_i])
+                for (int j = 0; j < ncoefs; j++) xcNodes[i]->getCoefs()[j] -= noded.getCoefs()[j];
+            }
+
+            // if (Ctrout.cols() > 5) {
+            //     node.attachCoefs(Ctrout.col(5).data());
+            //     node.cvTransform(mrcpp::Backward);
+            //     node.mwTransform(mrcpp::Compression);
+            //     node.calcNorms();
+
+            //     for (int j = 0; j < ncoefs; j++) {
+            //         xcNodes[i]->getCoefs()[j] += node.getCoefs()[j];
+            //     }
+            // }
         }
     }
     node.attachCoefs(coef); // restablish the original link (for proper destructor behaviour)
