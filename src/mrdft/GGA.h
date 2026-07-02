@@ -52,6 +52,8 @@ private:
     int getCtrOutputLength() const override { return 5; }
 
     void clear() override;
+    virtual mrcpp::FunctionTreeVector<3> setupXCInput() override;
+    virtual mrcpp::FunctionTreeVector<3> setupCtrInput() override;
 };
 
 } // namespace mrdft
