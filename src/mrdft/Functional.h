@@ -222,8 +222,6 @@ protected:
     virtual void clear() = 0;                                           ///< @brief Clears internal functions
     virtual mrcpp::FunctionTreeVector<3> setupXCInput() = 0;            ///< @brief Configures input for evaluation
     virtual mrcpp::FunctionTreeVector<3> setupCtrInput() = 0;           ///< @brief Configures input for contraction
-    virtual void preprocess(mrcpp::FunctionTreeVector<3> &inp) = 0;     ///< @brief Collects input functions for evaluation
-    virtual mrcpp::FunctionTreeVector<3> postprocess(mrcpp::FunctionTreeVector<3> &inp) = 0; ///< @brief Computes final output functions
 
 };
 

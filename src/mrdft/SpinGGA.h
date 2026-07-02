@@ -56,9 +56,6 @@ private:
     void clear() override;
     virtual mrcpp::FunctionTreeVector<3> setupXCInput() override;
     virtual mrcpp::FunctionTreeVector<3> setupCtrInput() override;
-
-    void preprocess(mrcpp::FunctionTreeVector<3> &inp) override;
-    mrcpp::FunctionTreeVector<3> postprocess(mrcpp::FunctionTreeVector<3> &inp) override;
 };
 
 } // namespace mrdft
