@@ -35,7 +35,6 @@
 
 namespace mrdft {
 
-using XC_p = std::unique_ptr<xcfun_t, decltype(&xcfun_delete)>;
 
 /**
  * @class Functional
