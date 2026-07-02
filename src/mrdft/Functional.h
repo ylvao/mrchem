@@ -217,11 +217,11 @@ protected:
      */
     Eigen::MatrixXd contract_transposed(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const;
 
-    virtual int getCtrInputLength() const = 0;                          ///< @brief Expected number of input components for the contraction step
+    // virtual int getCtrInputLength() const = 0;                          ///< @brief Expected number of input components for the contraction step
     virtual int getCtrOutputLength() const = 0;                         ///< @brief Expected number of output components for the contraction step
     virtual void clear() = 0;                                           ///< @brief Clears internal functions
-    virtual mrcpp::FunctionTreeVector<3> setupXCInput() = 0;            ///< @brief Configures input for evaluation
-    virtual mrcpp::FunctionTreeVector<3> setupCtrInput() = 0;           ///< @brief Configures input for contraction
+    // virtual mrcpp::FunctionTreeVector<3> setupXCInput() = 0;            ///< @brief Configures input for evaluation
+    // virtual mrcpp::FunctionTreeVector<3> setupCtrInput() = 0;           ///< @brief Configures input for contraction
 
 };
 

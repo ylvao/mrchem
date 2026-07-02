@@ -46,12 +46,9 @@ public:
 private:
     mrcpp::FunctionTreeVector<3> rho;
 
-    int getCtrInputLength() const override;
     int getCtrOutputLength() const override { return 2; }
 
     void clear() override;
-    mrcpp::FunctionTreeVector<3> setupXCInput() override;
-    mrcpp::FunctionTreeVector<3> setupCtrInput() override;
 
 };
 

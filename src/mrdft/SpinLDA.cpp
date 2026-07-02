@@ -47,44 +47,4 @@ void SpinLDA::clear() {
     mrcpp::clear(this->rho_b, false);
 }
 
-/** @brief Number of function involved in contraction step */
-int SpinLDA::getCtrInputLength() const {
-    int length = -1;
-    if (this->order < 2) length = 0;
-    if (this->order == 2) length = 2;
-    if (this->order > 2) NOT_IMPLEMENTED_ABORT;
-    return length;
-}
-
-/** @brief Collect input functions to xcfun evaluation step
- *
- * For SpinLDA : [alpha_0, beta_0]
- */
-mrcpp::FunctionTreeVector<3> SpinLDA::setupXCInput() {
-    if (this->rho_a.size() < 1) MSG_ERROR("Alpha density not initialized");
-    if (this->rho_b.size() < 1) MSG_ERROR("Beta density not initialized");
-
-    mrcpp::FunctionTreeVector<3> out_vec;
-    out_vec.push_back(this->rho_a[0]);
-    out_vec.push_back(this->rho_b[0]);
-    return out_vec;
-}
-
-/** @brief Collect input functions to contraction step
- *
- * For SpinLDA:
- * Ground State: No contraction, empty vector
- * Linear Response: [alpha_1, beta_1]
- * Higher Response: NOT_IMPLEMENTED
- */
-mrcpp::FunctionTreeVector<3> SpinLDA::setupCtrInput() {
-    if (this->order > 2) NOT_IMPLEMENTED_ABORT;
-    mrcpp::FunctionTreeVector<3> out_vec;
-    if (order == 2) {
-        out_vec.push_back(this->rho_a[1]);
-        out_vec.push_back(this->rho_b[1]);
-    }
-    return out_vec;
-}
-
 } // namespace mrdft

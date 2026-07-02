@@ -48,44 +48,4 @@ void GGA::clear() {
     mrcpp::clear(this->grad, true);
 }
 
-/** @brief Number of function involved in contraction step */
-int GGA::getCtrInputLength() const {
-    int length = -1;
-    if (this->order < 2) length = 0;
-    if (this->order == 2) length = 4;
-    if (this->order > 2) NOT_IMPLEMENTED_ABORT;
-    return length;
-}
-
-/** @brief Collect input functions to xcfun evaluation step
- *
- * For GGA : [rho_0, grad(rho_0)]
- */
-mrcpp::FunctionTreeVector<3> GGA::setupXCInput() {
-    if (this->rho.size() < 1) MSG_ERROR("Density not initialized");
-    if (this->grad.size() < 3) MSG_ERROR("Gradient not initialized");
-
-    mrcpp::FunctionTreeVector<3> out_vec;
-    out_vec.push_back(this->rho[0]);
-    out_vec.insert(out_vec.end(), this->grad.begin(), this->grad.begin() + 3);
-    return out_vec;
-}
-
-/** @brief Collect input functions to contraction step
- *
- * For GGA:
- * Ground State: No contraction, empty vector
- * Linear Response: [rho_1, grad(rho_1)]
- * Higher Response: NOT_IMPLEMENTED
- */
-mrcpp::FunctionTreeVector<3> GGA::setupCtrInput() {
-    if (this->order > 2) NOT_IMPLEMENTED_ABORT;
-    mrcpp::FunctionTreeVector<3> out_vec;
-    if (this->order == 2) {
-        out_vec.push_back(this->rho[1]);
-        out_vec.insert(out_vec.end(), this->grad.begin() + 3, this->grad.begin() + 6);
-    }
-    return out_vec;
-}
-
 } // namespace mrdft

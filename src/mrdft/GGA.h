@@ -48,12 +48,9 @@ private:
     mrcpp::FunctionTreeVector<3> rho;
     mrcpp::FunctionTreeVector<3> grad;
 
-    int getCtrInputLength() const override;
     int getCtrOutputLength() const override { return 5; }
 
     void clear() override;
-    virtual mrcpp::FunctionTreeVector<3> setupXCInput() override;
-    virtual mrcpp::FunctionTreeVector<3> setupCtrInput() override;
 };
 
 } // namespace mrdft
