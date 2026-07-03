@@ -32,7 +32,7 @@
 
 #include "xc_func_alias.h"
 #include "MRDFT.h"
-#include "xclib_backend.h"
+#include "xclib.h"
 
 namespace mrdft {
 
@@ -108,6 +108,7 @@ private:
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p; ///< @brief Pointer to the numerical derivative operator used for GGA gradients
     XClib xclib;
 
+    // move to xc_lib
     std::vector<std::string> xcfun_func_names;      ///< @brief Vector for storing used XCFun functional names
 };
 

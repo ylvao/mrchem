@@ -31,7 +31,7 @@
 #include <XCFun/xcfun.h>
 #include <xc_funcs.h>
 #include <xc.h>
-#include "xclib_backend.h"
+#include "xclib.h"
 
 namespace mrdft {
 

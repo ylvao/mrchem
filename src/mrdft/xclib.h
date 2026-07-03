@@ -42,6 +42,12 @@ public:
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
 
+    bool use_gamma_derivatives{false};
+
+    double setFunctional(const std::string &name, double c, double cutoff, bool spin);
+    double getAmountExx() const;
+    void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma);
+    void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const;
 };
 
 } // mrdft
