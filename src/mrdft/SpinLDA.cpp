@@ -31,20 +31,5 @@
 
 namespace mrdft {
 
-SpinLDA::SpinLDA(int k, XClib_p &f)
-        : Functional(k, f) {
-    xc_mask = xc_utils::build_output_mask(true, true, this->order);
-    d_mask = xc_utils::build_density_mask(true, true, this->order);
-}
-
-/** @brief Clear internal functions
- *
- * Ownership of densities is outside MRDFT -> clear
- * Ownership of gradients is inside MRDFT -> free
- */
-void SpinLDA::clear() {
-    mrcpp::clear(this->rho_a, false);
-    mrcpp::clear(this->rho_b, false);
-}
 
 } // namespace mrdft

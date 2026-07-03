@@ -31,21 +31,5 @@
 
 namespace mrdft {
 
-GGA::GGA(int k, XClib_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
-        : Functional(k, f)
-        , derivative(std::move(d)) {
-    xc_mask = xc_utils::build_output_mask(false, false, this->order);
-    d_mask = xc_utils::build_density_mask(false, false, this->order);
-}
-
-/** @brief Clear internal functions
- *
- * Ownership of densities is outside MRDFT -> clear
- * Ownership of gradients is inside MRDFT -> free
- */
-void GGA::clear() {
-    mrcpp::clear(this->rho, false);
-    mrcpp::clear(this->grad, true);
-}
 
 } // namespace mrdft

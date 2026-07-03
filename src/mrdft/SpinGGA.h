@@ -28,13 +28,21 @@
 #include <XCFun/xcfun.h>
 
 #include "Functional.h"
-#include "Factory.h" // only to call XClib::libxc
+#include "MRCPP/MWOperators"
+#include "MRCPP/Printer"
+
+#include "xc_utils.h"
 
 namespace mrdft {
 
 class SpinGGA final : public Functional {
 public:
-    SpinGGA(int k, XClib_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d);
+    SpinGGA(int k, XClib_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
+        : Functional(k, f)
+        , derivative(std::move(d)) {
+        xc_mask = xc_utils::build_output_mask(false, true, this->order);
+        d_mask = xc_utils::build_density_mask(false, true, this->order);
+    }
     ~SpinGGA() override = default;
 
     bool isSpin() const override { return true; }
@@ -52,7 +60,20 @@ private:
 
     int getCtrOutputLength() const override { return 9; }
 
-    void clear() override;
+    /** @brief Clear internal functions
+     *
+     * Ownership of densities is outside MRDFT -> clear
+     * Ownership of gradients is inside MRDFT -> free
+     */
+    void clear() {
+        mrcpp::clear(this->rho_a, false);
+        mrcpp::clear(this->rho_b, false);
+        mrcpp::clear(this->grad_a, true);
+        mrcpp::clear(this->grad_b, true);
+    }
 };
 
 } // namespace mrdft
+
+
+

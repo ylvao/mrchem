@@ -27,14 +27,20 @@
 
 #include <XCFun/xcfun.h>
 
+#include "MRCPP/MWFunctions"
+#include "MRCPP/Printer"
+#include "xc_utils.h"
 #include "Functional.h"
-#include "Factory.h" // only to call XClib::libxc
 
 namespace mrdft {
 
 class LDA final : public Functional {
 public:
-    LDA(int k, XClib_p &f);
+    LDA(int k, XClib_p &f)
+    : Functional(k, f) {
+    xc_mask = xc_utils::build_output_mask(true, false, this->order);
+    d_mask = xc_utils::build_density_mask(true, false, this->order);
+    }
     ~LDA() override = default;
 
     bool isSpin() const override { return false; }
@@ -48,7 +54,14 @@ private:
 
     int getCtrOutputLength() const override { return 2; }
 
-    void clear() override;
+    /** @brief Clear internal functions
+     *
+     * Ownership of densities is outside MRDFT -> clear
+     * Ownership of gradients is inside MRDFT -> free
+     */
+    void clear() {
+    mrcpp::clear(this->rho, false);
+    }
 
 };
 
