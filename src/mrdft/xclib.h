@@ -42,12 +42,13 @@ public:
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
 
-    bool use_gamma_derivatives{false};
+    bool use_gamma_derivatives{false}; // from old code: remove???
 
     double setFunctional(const std::string &name, double c, double cutoff, bool spin);
     double getAmountExx() const;
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma);
     void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const;
+    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const;
 };
 
 } // mrdft
