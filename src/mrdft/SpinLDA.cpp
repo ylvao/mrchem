@@ -31,7 +31,7 @@
 
 namespace mrdft {
 
-SpinLDA::SpinLDA(int k, XClib &f)
+SpinLDA::SpinLDA(int k, XClib_p &f)
         : Functional(k, f) {
     xc_mask = xc_utils::build_output_mask(true, true, this->order);
     d_mask = xc_utils::build_density_mask(true, true, this->order);

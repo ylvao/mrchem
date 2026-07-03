@@ -27,7 +27,7 @@
 
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
-#include <XCFun/xcfun.h>
+// #include <XCFun/xcfun.h>
 
 #include "GGA.h"
 #include "Grid.h"
@@ -35,6 +35,8 @@
 #include "MRDFT.h"
 #include "SpinGGA.h"
 #include "SpinLDA.h"
+#include "xclib_Libxc.h"
+#include "xclib_XCFun.h"
 
 namespace mrdft {
 
@@ -42,14 +44,18 @@ bool XClib::libxc = false;
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         : mra(MRA) {
-            xclib.xcfun = xcfun_new();
-        }
+    if (XClib::libxc) {
+        xclib = std::make_unique<Libxc>();
+    } else {
+        xclib = std::make_unique<XCFun>();
+    }
+}
 
 void Factory::setFunctional(const std::string &name, double c) {
     setLibxc(XClib::libxc); // should probably be where setFunctional is called
 
-    customExx = xclib.setFunctional(name, c, cutoff, spin); // customExx should be moved to xclib_Libxc
-    if (!XClib::libxc) {xcfun_func_names.push_back(name);}
+    customExx = xclib->setFunctional(name, c, cutoff, spin); // customExx should be moved to xclib_Libxc
+    if (!XClib::libxc) { xcfun_func_names.push_back(name); }
 }
 
 std::unique_ptr<MRDFT> Factory::build() {
@@ -57,14 +63,12 @@ std::unique_ptr<MRDFT> Factory::build() {
     auto grid_p = std::make_unique<Grid>(mra);
     setLibxc(XClib::libxc);
 
-    // Init XCFun or Libxc
+    // Init XCFun or Libxc if not already created
     bool gga = false;
     bool lda = false;
     bool mgga = false;
 
-    xclib.initFunctionalLibrary(lda, gga, mgga, spin, order, gamma);
-
-    // bool lda = not gga;
+    xclib->initFunctionalLibrary(lda, gga, mgga, spin, order, gamma);
 
     // Init MW derivative
     if (gga) {
@@ -76,13 +80,19 @@ std::unique_ptr<MRDFT> Factory::build() {
     // Init XC functional
     std::unique_ptr<Functional> func_p{nullptr};
     if (spin) {
-        if (gga) func_p = std::make_unique<SpinGGA>(order, xclib, diff_p);
-        else if (lda) func_p = std::make_unique<SpinLDA>(order, xclib);
-        else MSG_ABORT("Case not handled");
+        if (gga)
+            func_p = std::make_unique<SpinGGA>(order, xclib, diff_p);
+        else if (lda)
+            func_p = std::make_unique<SpinLDA>(order, xclib);
+        else
+            MSG_ABORT("Case not handled");
     } else {
-        if (gga) func_p = std::make_unique<GGA>(order, xclib, diff_p);
-        else if (lda) func_p = std::make_unique<LDA>(order, xclib);
-        else MSG_ABORT("Case not handled");
+        if (gga)
+            func_p = std::make_unique<GGA>(order, xclib, diff_p);
+        else if (lda)
+            func_p = std::make_unique<LDA>(order, xclib);
+        else
+            MSG_ABORT("Case not handled");
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
     if (not XClib::libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }

@@ -35,6 +35,7 @@
 
 namespace mrdft {
 
+using XClib_p = std::unique_ptr<XClib>;
 
 /**
  * @class Functional
@@ -49,9 +50,9 @@ public:
      * @param[in] k The polynomial order for the MRA basis
      * @param[in] f The XCFun handle (ownership is transferred)
      */
-    Functional(int k, XClib &f)
+    Functional(int k, XClib_p &f)
             : order(k)
-            , xclib(f) {}
+            , xclib(std::move(f)) {}
     virtual ~Functional() = default;
 
     /** @brief  Evaluates XC functional and derivatives for a given NodeIndex
@@ -183,7 +184,7 @@ protected:
     Eigen::VectorXi d_mask;     ///< @brief density and derivative(s) mask vector for response calculations
     Eigen::MatrixXi xc_mask;    ///< @brief functional and derivative(s) mask vector for response calculations
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr};  ///< @brief Operator used to compute gradients
-    XClib xclib;
+    std::unique_ptr<XClib> xclib;
 
     /**
      * @brief Run a collection of grid points through Libxc or XCFun

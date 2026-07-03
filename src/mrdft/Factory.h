@@ -106,7 +106,7 @@ private:
 
     const mrcpp::MultiResolutionAnalysis<3> mra;          ///< @brief Reference to the 3D Multi-Resolution Analysis grid structure
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p; ///< @brief Pointer to the numerical derivative operator used for GGA gradients
-    XClib xclib;
+    std::unique_ptr<XClib> xclib;
 
     // move to xc_lib
     std::vector<std::string> xcfun_func_names;      ///< @brief Vector for storing used XCFun functional names

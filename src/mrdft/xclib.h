@@ -36,6 +36,8 @@ namespace mrdft {
 
 class XClib {
 public:
+    XClib();
+
     static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
 
     xcfun_t *xcfun;                               ///< @brief XCFun library handle
@@ -44,11 +46,11 @@ public:
 
     bool use_gamma_derivatives{false}; // from old code: remove???
 
-    double setFunctional(const std::string &name, double c, double cutoff, bool spin);
-    double getAmountExx() const;
-    void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma);
-    void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const;
-    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const;
+    virtual double setFunctional(const std::string &name, double c, double cutoff, bool spin) = 0;
+    virtual double getAmountExx() const = 0;
+    virtual void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) = 0;
+    virtual void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const = 0;
+    virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const = 0;
 };
 
 } // mrdft

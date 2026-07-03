@@ -31,7 +31,7 @@
 
 namespace mrdft {
 
-SpinGGA::SpinGGA(int k, XClib &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
+SpinGGA::SpinGGA(int k, XClib_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
         : Functional(k, f)
         , derivative(std::move(d)) {
     xc_mask = xc_utils::build_output_mask(false, true, this->order);

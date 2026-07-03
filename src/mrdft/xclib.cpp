@@ -35,305 +35,309 @@
 
 namespace mrdft {
 
-double XClib::setFunctional(const std::string &name, double c, double cutoff, bool spin) {
-    double customExx = 0.0;
-    if (libxc) {
-        std::vector<int> ids;
-        std::vector<double> coefs;
-        double scaled_custom_exx = 0.0;
-
-        mapFunctionalName(name, ids, coefs, scaled_custom_exx);
-        customExx += c * scaled_custom_exx;
-        xc_func_type *libxc_obj;
-        for (size_t i = 0; i < ids.size(); i++) {
-            libxc_obj = xc_func_alloc();
-            auto return_code = xc_func_init(libxc_obj, ids[i], spin ? XC_POLARIZED : XC_UNPOLARIZED);
-            if (return_code != 0) {
-                std::ostringstream oss;
-                oss << "Functional id = " << ids[i] << " not found in the employed version of Libxc.\n";
-                MSG_ABORT(oss.str());
-            }
-            xc_func_set_dens_threshold(libxc_obj, cutoff);
-            libxc_objects.push_back(libxc_obj);
-            libxc_coefs.push_back(c * coefs[i]);
-        }
-    } else {
-        xcfun_set(xcfun, name.c_str(), c);
-    }
-    return customExx;
+XClib::XClib() {
+    xcfun = xcfun_new();
 }
 
-void XClib::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) {
-    if (libxc) {
-        for (const auto *f : libxc_objects) {
+// double XClib::setFunctional(const std::string &name, double c, double cutoff, bool spin) {
+//     double customExx = 0.0;
+//     if (libxc) {
+//         std::vector<int> ids;
+//         std::vector<double> coefs;
+//         double scaled_custom_exx = 0.0;
 
-            switch (f->info->family) {
-                case XC_FAMILY_LDA:
-#ifdef XC_FAMILY_HYB_GGA
-                case XC_FAMILY_HYB_LDA:
-#endif
-                    lda = true;
-                    break;
+//         mapFunctionalName(name, ids, coefs, scaled_custom_exx);
+//         customExx += c * scaled_custom_exx;
+//         xc_func_type *libxc_obj;
+//         for (size_t i = 0; i < ids.size(); i++) {
+//             libxc_obj = xc_func_alloc();
+//             auto return_code = xc_func_init(libxc_obj, ids[i], spin ? XC_POLARIZED : XC_UNPOLARIZED);
+//             if (return_code != 0) {
+//                 std::ostringstream oss;
+//                 oss << "Functional id = " << ids[i] << " not found in the employed version of Libxc.\n";
+//                 MSG_ABORT(oss.str());
+//             }
+//             xc_func_set_dens_threshold(libxc_obj, cutoff);
+//             libxc_objects.push_back(libxc_obj);
+//             libxc_coefs.push_back(c * coefs[i]);
+//         }
+//     } else {
+//         xcfun_set(xcfun, name.c_str(), c);
+//     }
+//     return customExx;
+// }
 
-                case XC_FAMILY_GGA:
-#ifdef XC_FAMILY_HYB_GGA
-                case XC_FAMILY_HYB_GGA:
-#endif
-                    gga = true;
-                    break;
+// void XClib::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) {
+//     if (libxc) {
+//         for (const auto *f : libxc_objects) {
 
-                case XC_FAMILY_MGGA:
-                case XC_FAMILY_HYB_MGGA:
-                    MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
-                    mgga = true;
+//             switch (f->info->family) {
+//                 case XC_FAMILY_LDA:
+// #ifdef XC_FAMILY_HYB_GGA
+//                 case XC_FAMILY_HYB_LDA:
+// #endif
+//                     lda = true;
+//                     break;
 
-                default:
-                    MSG_ABORT("Libxc functional family not handled in MRChem!\n");
-            }
+//                 case XC_FAMILY_GGA:
+// #ifdef XC_FAMILY_HYB_GGA
+//                 case XC_FAMILY_HYB_GGA:
+// #endif
+//                     gga = true;
+//                     break;
 
-            // Check if functional is range separated
-            if ((f->info->flags & XC_FLAGS_HYB_CAM)  || (f->info->flags & XC_FLAGS_HYB_LC)) MSG_ABORT("Coulomb attenuated functionals not supported in MRChem!\n");
-            if ((f->info->flags & XC_FLAGS_HYB_CAMY) || (f->info->flags & XC_FLAGS_HYB_LCY)) MSG_ABORT("Yukawa attenuated functionals not supported in MRChem!\n");
-        }
-    } else {
-        gga = xcfun_is_gga(xcfun);
-        lda = not gga;
-        unsigned int mode = 1;                    //!< only partial derivative mode implemented
-        unsigned int func_type = (gga) ? 1 : 0;   //!< only LDA and GGA supported for now
-        unsigned int dens_type = 1 + spin;        //!< only n (dens_type = 1) or alpha & beta (denst_type = 2) supported now.
-        unsigned int laplacian = 0;               //!< no laplacian
-        unsigned int kinetic = 0;                 //!< no kinetic energy density
-        unsigned int current = 0;                 //!< no current density
-        unsigned int exp_derivative = not(gamma); //!< use gamma or explicit derivatives
-        if (not(gga)) exp_derivative = 0;         //!< fall back to gamma-type derivatives if LDA
-        xcfun_user_eval_setup(xcfun, order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
-    }
-}
+//                 case XC_FAMILY_MGGA:
+//                 case XC_FAMILY_HYB_MGGA:
+//                     MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
+//                     mgga = true;
 
-double XClib::getAmountExx() const {
-    double exx = 0;
-    if (libxc) {
-        for (std::size_t i = 0; i < libxc_objects.size(); ++i) {
-            const xc_func_type *f = libxc_objects[i];
-            double frac = xc_hyb_exx_coef(f);
-            exx += libxc_coefs[i] * frac;
-        }
-    } else {
-        xcfun_get(xcfun, "exx", &exx);
-    }
-    return exx;
-}
+//                 default:
+//                     MSG_ABORT("Libxc functional family not handled in MRChem!\n");
+//             }
 
-void XClib::printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const {
-    // Only run on main thread
-    if (mrcpp::mpi::world_rank != 0) {
-        return;
-    }
+//             // Check if functional is range separated
+//             if ((f->info->flags & XC_FLAGS_HYB_CAM)  || (f->info->flags & XC_FLAGS_HYB_LC)) MSG_ABORT("Coulomb attenuated functionals not supported in MRChem!\n");
+//             if ((f->info->flags & XC_FLAGS_HYB_CAMY) || (f->info->flags & XC_FLAGS_HYB_LCY)) MSG_ABORT("Yukawa attenuated functionals not supported in MRChem!\n");
+//         }
+//     } else {
+//         gga = xcfun_is_gga(xcfun);
+//         lda = not gga;
+//         unsigned int mode = 1;                    //!< only partial derivative mode implemented
+//         unsigned int func_type = (gga) ? 1 : 0;   //!< only LDA and GGA supported for now
+//         unsigned int dens_type = 1 + spin;        //!< only n (dens_type = 1) or alpha & beta (denst_type = 2) supported now.
+//         unsigned int laplacian = 0;               //!< no laplacian
+//         unsigned int kinetic = 0;                 //!< no kinetic energy density
+//         unsigned int current = 0;                 //!< no current density
+//         unsigned int exp_derivative = not(gamma); //!< use gamma or explicit derivatives
+//         if (not(gga)) exp_derivative = 0;         //!< fall back to gamma-type derivatives if LDA
+//         xcfun_user_eval_setup(xcfun, order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
+//     }
+// }
 
-    auto pwidth = mrcpp::Printer::getWidth();
-    int txt_width = 50;
-    auto pre_spaces = (pwidth - 6 - txt_width) / 2;
-    auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
-    std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
-    std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
+// double XClib::getAmountExx() const {
+//     double exx = 0;
+//     if (libxc) {
+//         for (std::size_t i = 0; i < libxc_objects.size(); ++i) {
+//             const xc_func_type *f = libxc_objects[i];
+//             double frac = xc_hyb_exx_coef(f);
+//             exx += libxc_coefs[i] * frac;
+//         }
+//     } else {
+//         xcfun_get(xcfun, "exx", &exx);
+//     }
+//     return exx;
+// }
 
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, '*');
-    println(0, pre_str << "                                                  " << post_str);
-    println(0, pre_str << "                  XC Functional                   " << post_str);
-    println(0, pre_str << "                                                  " << post_str);
-    mrcpp::print::separator(0, '*', 1);
+// void XClib::printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const {
+//     // Only run on main thread
+//     if (mrcpp::mpi::world_rank != 0) {
+//         return;
+//     }
+
+//     auto pwidth = mrcpp::Printer::getWidth();
+//     int txt_width = 50;
+//     auto pre_spaces = (pwidth - 6 - txt_width) / 2;
+//     auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
+//     std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
+//     std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
+
+//     mrcpp::print::separator(0, ' ');
+//     mrcpp::print::separator(0, ' ');
+//     mrcpp::print::separator(0, '*');
+//     println(0, pre_str << "                                                  " << post_str);
+//     println(0, pre_str << "                  XC Functional                   " << post_str);
+//     println(0, pre_str << "                                                  " << post_str);
+//     mrcpp::print::separator(0, '*', 1);
 
 
-    // Conditional reference printing
-    auto print_wrap = [&](std::string str, std::size_t txt_width, int indent = 0) {
-        const std::string continuation_indent(indent, ' ');
-        size_t offset = 0;
-        while (offset + txt_width < str.size()) {
-            // Is the line already sufficiently short?
-            size_t newline_pos = str.find('\n', offset);
-            if (newline_pos < offset + txt_width) {
-                if (newline_pos != std::string::npos && newline_pos + 1 < str.size()) {
-                    str.insert(newline_pos + 1, continuation_indent);
-                    offset = newline_pos + 1 + continuation_indent.size();
-                } else {
-                    offset = newline_pos + 1;
-                }
-                continue;
-            }
+//     // Conditional reference printing
+//     auto print_wrap = [&](std::string str, std::size_t txt_width, int indent = 0) {
+//         const std::string continuation_indent(indent, ' ');
+//         size_t offset = 0;
+//         while (offset + txt_width < str.size()) {
+//             // Is the line already sufficiently short?
+//             size_t newline_pos = str.find('\n', offset);
+//             if (newline_pos < offset + txt_width) {
+//                 if (newline_pos != std::string::npos && newline_pos + 1 < str.size()) {
+//                     str.insert(newline_pos + 1, continuation_indent);
+//                     offset = newline_pos + 1 + continuation_indent.size();
+//                 } else {
+//                     offset = newline_pos + 1;
+//                 }
+//                 continue;
+//             }
 
-            size_t space_pos = str.rfind(' ', offset + txt_width);
-            // If the string doesn't have a space, or it is too far out, hard insert a newline
-            if (space_pos == std::string::npos || space_pos - offset > txt_width) {
-                space_pos = offset + txt_width;
-                str.insert(space_pos, "\n" + continuation_indent);
-            } else {
-                str[space_pos] = '\n';
-                str.insert(space_pos + 1, continuation_indent);
-            }
-            offset = space_pos + 1 + continuation_indent.size();
-        }
-        std::cout << str;
-    };
+//             size_t space_pos = str.rfind(' ', offset + txt_width);
+//             // If the string doesn't have a space, or it is too far out, hard insert a newline
+//             if (space_pos == std::string::npos || space_pos - offset > txt_width) {
+//                 space_pos = offset + txt_width;
+//                 str.insert(space_pos, "\n" + continuation_indent);
+//             } else {
+//                 str[space_pos] = '\n';
+//                 str.insert(space_pos + 1, continuation_indent);
+//             }
+//             offset = space_pos + 1 + continuation_indent.size();
+//         }
+//         std::cout << str;
+//     };
 
-    if (libxc) {
-        std::string libxc_ref_str = "Using Libxc (version " + std::string(xc_version_string()) + ") to evaluate density functionals. Libxc is free software. It is " +
-                                    "distributed under the Mozilla Public License, version 2.0. For " + "more information, please check the Libxc manual. You should cite\n\n" +
-                                    xc_reference() + " DOI: " + xc_reference_doi() + "\n\nwhen " + "reporting the results of your calculation in a scientific article.\n";
-        print_wrap(libxc_ref_str, out_txt_width);
+//     if (libxc) {
+//         std::string libxc_ref_str = "Using Libxc (version " + std::string(xc_version_string()) + ") to evaluate density functionals. Libxc is free software. It is " +
+//                                     "distributed under the Mozilla Public License, version 2.0. For " + "more information, please check the Libxc manual. You should cite\n\n" +
+//                                     xc_reference() + " DOI: " + xc_reference_doi() + "\n\nwhen " + "reporting the results of your calculation in a scientific article.\n";
+//         print_wrap(libxc_ref_str, out_txt_width);
 
-        // Avoid printing the same LibXC functional multiple times
-        std::set<int> printed_ids;
-        std::cout << "\nLibxc functionals used in this calculation:\n";
-        for (const auto *func : libxc_objects) {
-            if (func->info == nullptr) continue; // safety
+//         // Avoid printing the same LibXC functional multiple times
+//         std::set<int> printed_ids;
+//         std::cout << "\nLibxc functionals used in this calculation:\n";
+//         for (const auto *func : libxc_objects) {
+//             if (func->info == nullptr) continue; // safety
 
-            int id = func->info->number;
-            if (!printed_ids.insert(id).second) {
-                // Already printed this ID
-                continue;
-            }
+//             int id = func->info->number;
+//             if (!printed_ids.insert(id).second) {
+//                 // Already printed this ID
+//                 continue;
+//             }
 
-            char *name = xc_functional_get_name(id);
-            std::string func_id_str = "  - " + std::string(name) + " (ID " + std::to_string(id) + "): " + func->info->name + "\n";
-            print_wrap(func_id_str, out_txt_width);
-            free(name);
+//             char *name = xc_functional_get_name(id);
+//             std::string func_id_str = "  - " + std::string(name) + " (ID " + std::to_string(id) + "): " + func->info->name + "\n";
+//             print_wrap(func_id_str, out_txt_width);
+//             free(name);
 
-            for (int number = 0; number < XC_MAX_REFERENCES; number++) {
-                auto reference = xc_func_info_get_references(func->info, number);
-                if (reference == nullptr) break;
-                std::string func_ref_str = "     * " + std::string(xc_func_reference_get_ref(reference)) + ", DOI:" + xc_func_reference_get_doi(reference) + "\n";
-                print_wrap(func_ref_str, out_txt_width, 7);
-            }
-        }
-    }
-    if (not libxc) {
-        printout(0, xcfun_splash());
-        std::cout << "\nXCFun functionals used in this calculation:\n";
-        for (const auto &func_name : xcfun_func_names) {
-            std::string xcfun_ref = xcfun_describe_long(func_name.c_str());
-            std::string xcfun_ref_str = "  - " + xcfun_ref;
-            print_wrap(xcfun_ref_str, out_txt_width, 4);
-        }
-        return;
-    }
-}
+//             for (int number = 0; number < XC_MAX_REFERENCES; number++) {
+//                 auto reference = xc_func_info_get_references(func->info, number);
+//                 if (reference == nullptr) break;
+//                 std::string func_ref_str = "     * " + std::string(xc_func_reference_get_ref(reference)) + ", DOI:" + xc_func_reference_get_doi(reference) + "\n";
+//                 print_wrap(func_ref_str, out_txt_width, 7);
+//             }
+//         }
+//     }
+//     if (not libxc) {
+//         printout(0, xcfun_splash());
+//         std::cout << "\nXCFun functionals used in this calculation:\n";
+//         for (const auto &func_name : xcfun_func_names) {
+//             std::string xcfun_ref = xcfun_describe_long(func_name.c_str());
+//             std::string xcfun_ref_str = "  - " + xcfun_ref;
+//             print_wrap(xcfun_ref_str, out_txt_width, 4);
+//         }
+//         return;
+//     }
+// }
 
-void XClib::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const {
-    if (libxc) {
-        Eigen::MatrixXd exc, vxc, sxc, sigma;
-        for (size_t i = 0; i < libxc_objects.size(); i++) {
-            switch (libxc_objects[i]->info->family) {
-                case XC_FAMILY_LDA:
-                case XC_FAMILY_HYB_LDA:
-                    if (spin) {
-                        Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
-                        exc = Eigen::MatrixXd::Zero(1, nPts);
-                        vxc = Eigen::MatrixXd::Zero(2, nPts);
-                        for (size_t j = 0; j < nPts; j++) {
-                            // alpha_1, beta_1, alpha_2, beta_2, ..
-                            rho(0, j) = inp(0, j);
-                            rho(1, j) = inp(1, j);
-                        }
-                        xc_lda_exc_vxc(libxc_objects[i], nPts, rho.data(), exc.data(), vxc.data());
-                        for (size_t j = 0; j < nPts; ++j) {
-                            //    xcfun calculates actual energy density while libxc calculates
-                            //    energy density per electron density
+// void XClib::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const {
+//     if (libxc) {
+//         Eigen::MatrixXd exc, vxc, sxc, sigma;
+//         for (size_t i = 0; i < libxc_objects.size(); i++) {
+//             switch (libxc_objects[i]->info->family) {
+//                 case XC_FAMILY_LDA:
+//                 case XC_FAMILY_HYB_LDA:
+//                     if (spin) {
+//                         Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
+//                         exc = Eigen::MatrixXd::Zero(1, nPts);
+//                         vxc = Eigen::MatrixXd::Zero(2, nPts);
+//                         for (size_t j = 0; j < nPts; j++) {
+//                             // alpha_1, beta_1, alpha_2, beta_2, ..
+//                             rho(0, j) = inp(0, j);
+//                             rho(1, j) = inp(1, j);
+//                         }
+//                         xc_lda_exc_vxc(libxc_objects[i], nPts, rho.data(), exc.data(), vxc.data());
+//                         for (size_t j = 0; j < nPts; ++j) {
+//                             //    xcfun calculates actual energy density while libxc calculates
+//                             //    energy density per electron density
 
-                            // rho = rho_alpha + rho_beta
-                            out(0, j) += exc(0, j) * libxc_coefs[i] * (inp(0, j) + inp(1, j));
-                            out(1, j) += vxc(0, j) * libxc_coefs[i];
-                            out(2, j) += vxc(1, j) * libxc_coefs[i];
-                        }
-                    } else {
-                        exc = Eigen::MatrixXd::Zero(1, nPts);
-                        vxc = Eigen::MatrixXd::Zero(1, nPts);
-                        xc_lda_exc_vxc(libxc_objects[i], nPts, inp.data(), exc.data(), vxc.data());
-                        for (size_t j = 0; j < nPts; ++j) {
-                            //    xcfun calculates actual energy density while libxc calculates
-                            //    energy density per electron density
-                            out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
-                            out(1, j) += vxc(0, j) * libxc_coefs[i];
-                        }
-                    }
-                    break;
-                case XC_FAMILY_GGA:
-                case XC_FAMILY_HYB_GGA:
-                    if (spin) {
-                        Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
-                        exc = Eigen::MatrixXd::Zero(1, nPts);
-                        vxc = Eigen::MatrixXd::Zero(2, nPts);
-                        sxc = Eigen::MatrixXd::Zero(3, nPts);
-                        sigma = Eigen::MatrixXd::Zero(3, nPts);
-                        for (size_t j = 0; j < nPts; j++) {
-                            // alpha_1, beta_1, alpha_2, beta_2, ..
-                            rho(0, j) = inp(0, j);
-                            rho(1, j) = inp(1, j);
-                        }
-                        for (size_t j = 0; j < nPts; j++) {
-                            // clang-format off
-                            // Libxc takes in reduced gradients: up-up, up-down, down-down
-                            sigma(0, j) = inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j) + inp(4, j) * inp(4, j);
-                            sigma(1, j) = inp(2, j) * inp(5, j) + inp(3, j) * inp(6, j) + inp(4, j) * inp(7, j);
-                            sigma(2, j) = inp(5, j) * inp(5, j) + inp(6, j) * inp(6, j) + inp(7, j) * inp(7, j);
-                        }
-                        xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
+//                             // rho = rho_alpha + rho_beta
+//                             out(0, j) += exc(0, j) * libxc_coefs[i] * (inp(0, j) + inp(1, j));
+//                             out(1, j) += vxc(0, j) * libxc_coefs[i];
+//                             out(2, j) += vxc(1, j) * libxc_coefs[i];
+//                         }
+//                     } else {
+//                         exc = Eigen::MatrixXd::Zero(1, nPts);
+//                         vxc = Eigen::MatrixXd::Zero(1, nPts);
+//                         xc_lda_exc_vxc(libxc_objects[i], nPts, inp.data(), exc.data(), vxc.data());
+//                         for (size_t j = 0; j < nPts; ++j) {
+//                             //    xcfun calculates actual energy density while libxc calculates
+//                             //    energy density per electron density
+//                             out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
+//                             out(1, j) += vxc(0, j) * libxc_coefs[i];
+//                         }
+//                     }
+//                     break;
+//                 case XC_FAMILY_GGA:
+//                 case XC_FAMILY_HYB_GGA:
+//                     if (spin) {
+//                         Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
+//                         exc = Eigen::MatrixXd::Zero(1, nPts);
+//                         vxc = Eigen::MatrixXd::Zero(2, nPts);
+//                         sxc = Eigen::MatrixXd::Zero(3, nPts);
+//                         sigma = Eigen::MatrixXd::Zero(3, nPts);
+//                         for (size_t j = 0; j < nPts; j++) {
+//                             // alpha_1, beta_1, alpha_2, beta_2, ..
+//                             rho(0, j) = inp(0, j);
+//                             rho(1, j) = inp(1, j);
+//                         }
+//                         for (size_t j = 0; j < nPts; j++) {
+//                             // clang-format off
+//                             // Libxc takes in reduced gradients: up-up, up-down, down-down
+//                             sigma(0, j) = inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j) + inp(4, j) * inp(4, j);
+//                             sigma(1, j) = inp(2, j) * inp(5, j) + inp(3, j) * inp(6, j) + inp(4, j) * inp(7, j);
+//                             sigma(2, j) = inp(5, j) * inp(5, j) + inp(6, j) * inp(6, j) + inp(7, j) * inp(7, j);
+//                         }
+//                         xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
 
-                        for (size_t j = 0; j < nPts; ++j) {
-                            // clang-format off
-                            //    xcfun calculates energy density per volume while libxc calculates
-                            //    energy density per electron, so we multiply by the density here
-                            out(0, j) += exc(0, j) * libxc_coefs[i] * (inp(0, j) + inp(1, j));
-                            out(1, j) += vxc(0, j) * libxc_coefs[i];
-                            out(2, j) += vxc(1, j) * libxc_coefs[i];
+//                         for (size_t j = 0; j < nPts; ++j) {
+//                             // clang-format off
+//                             //    xcfun calculates energy density per volume while libxc calculates
+//                             //    energy density per electron, so we multiply by the density here
+//                             out(0, j) += exc(0, j) * libxc_coefs[i] * (inp(0, j) + inp(1, j));
+//                             out(1, j) += vxc(0, j) * libxc_coefs[i];
+//                             out(2, j) += vxc(1, j) * libxc_coefs[i];
 
-                            // alpha_i,     coef         * ( 2 * vaa               * grad_a_i  + vab       * grad_b_i ), i = x, y, z
-                            out(3, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(2, j) + sxc(1, j) * inp(5, j) );
-                            out(4, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(3, j) + sxc(1, j) * inp(6, j) );
-                            out(5, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(4, j) + sxc(1, j) * inp(7, j) );
-                            // beta_i,       coef        * ( 2 * vbb               * grad_b_i  + vab               * grad_a_i ), i = x, y, z
-                            out(6, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(5, j) + sxc(1, j) * inp(2, j) );
-                            out(7, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(6, j) + sxc(1, j) * inp(3, j) );
-                            out(8, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(7, j) + sxc(1, j) * inp(4, j) );
-                            // clang-format on
-                        }
-                    } else {
-                        Eigen::MatrixXd rho = inp.row(0).transpose();
-                        exc = Eigen::MatrixXd::Zero(1, nPts);
-                        vxc = Eigen::MatrixXd::Zero(1, nPts);
-                        sxc = Eigen::MatrixXd::Zero(1, nPts);
-                        sigma = Eigen::MatrixXd::Zero(1, nPts);
-                        for (size_t j = 0; j < nPts; j++) { sigma(j) = inp(1, j) * inp(1, j) + inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j); }
-                        xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
+//                             // alpha_i,     coef         * ( 2 * vaa               * grad_a_i  + vab       * grad_b_i ), i = x, y, z
+//                             out(3, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(2, j) + sxc(1, j) * inp(5, j) );
+//                             out(4, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(3, j) + sxc(1, j) * inp(6, j) );
+//                             out(5, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(4, j) + sxc(1, j) * inp(7, j) );
+//                             // beta_i,       coef        * ( 2 * vbb               * grad_b_i  + vab               * grad_a_i ), i = x, y, z
+//                             out(6, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(5, j) + sxc(1, j) * inp(2, j) );
+//                             out(7, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(6, j) + sxc(1, j) * inp(3, j) );
+//                             out(8, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(7, j) + sxc(1, j) * inp(4, j) );
+//                             // clang-format on
+//                         }
+//                     } else {
+//                         Eigen::MatrixXd rho = inp.row(0).transpose();
+//                         exc = Eigen::MatrixXd::Zero(1, nPts);
+//                         vxc = Eigen::MatrixXd::Zero(1, nPts);
+//                         sxc = Eigen::MatrixXd::Zero(1, nPts);
+//                         sigma = Eigen::MatrixXd::Zero(1, nPts);
+//                         for (size_t j = 0; j < nPts; j++) { sigma(j) = inp(1, j) * inp(1, j) + inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j); }
+//                         xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
 
-                        for (size_t j = 0; j < nPts; ++j) {
-                            //    xcfun calculates energy density per volume while libxc calculates
-                            //    energy density per electron, so we multiply by the density here
-                            out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
-                            out(1, j) += vxc(0, j) * libxc_coefs[i];
-                            out(2, j) += 2 * sxc(0, j) * inp(1, j) * libxc_coefs[i];
-                            out(3, j) += 2 * sxc(0, j) * inp(2, j) * libxc_coefs[i];
-                            out(4, j) += 2 * sxc(0, j) * inp(3, j) * libxc_coefs[i];
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-    } else {
-        if (nInp != xcfun_input_length(xcfun) or nOut != xcfun_output_length(xcfun)) { throw std::logic_error("Dimension mismatch!\n"); }
+//                         for (size_t j = 0; j < nPts; ++j) {
+//                             //    xcfun calculates energy density per volume while libxc calculates
+//                             //    energy density per electron, so we multiply by the density here
+//                             out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
+//                             out(1, j) += vxc(0, j) * libxc_coefs[i];
+//                             out(2, j) += 2 * sxc(0, j) * inp(1, j) * libxc_coefs[i];
+//                             out(3, j) += 2 * sxc(0, j) * inp(2, j) * libxc_coefs[i];
+//                             out(4, j) += 2 * sxc(0, j) * inp(3, j) * libxc_coefs[i];
+//                         }
+//                     }
+//                     break;
+//                 default:
+//                     break;
+//             }
+//         }
+//     } else {
+//         if (nInp != xcfun_input_length(xcfun) or nOut != xcfun_output_length(xcfun)) { throw std::logic_error("Dimension mismatch!\n"); }
 
-        for (int i = 0; i < nPts; i++) {
-            if (spin) {
-                if (inp(0, i) < cutoff and inp(1, i) < cutoff) continue;
-            } else {
-                if (inp(0, i) < cutoff) continue;
-            }
-            xcfun_eval(xcfun, inp.col(i).data(), out.col(i).data());
-        }
-    }
-}
+//         for (int i = 0; i < nPts; i++) {
+//             if (spin) {
+//                 if (inp(0, i) < cutoff and inp(1, i) < cutoff) continue;
+//             } else {
+//                 if (inp(0, i) < cutoff) continue;
+//             }
+//             xcfun_eval(xcfun, inp.col(i).data(), out.col(i).data());
+//         }
+//     }
+// }
 
-}; // mrdft
+} // mrdft

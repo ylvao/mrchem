@@ -30,6 +30,7 @@
 #include <MRCPP/trees/FunctionNode.h>
 #include <xc_funcs.h>
 #include <xc.h>
+#include "xclib.h"
 
 namespace mrdft {
 
@@ -41,12 +42,12 @@ namespace mrdft {
  */
 class Libxc final : public XClib {
 
-// public:
-//     double setFunctional(const std::string &name, double c, double cutoff, bool spin) override;
-//     double getAmountExx() const override;
-//     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) override;
-//     void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const override;
-//     void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nInp, int nOut) const override; 
+public:
+    double setFunctional(const std::string &name, double c, double cutoff, bool spin) override;
+    double getAmountExx() const override;
+    void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) override;
+    void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const override;
+    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const override; 
 
 };
 
