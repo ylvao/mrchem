@@ -145,31 +145,31 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     mrcpp::FunctionTree<3>* rho0=std::get<1>(inp[0]);
     mrcpp::MWNode<3> node(rho0->getNode(nodeIdx),true,false); //copy node from rho, but do not copy coef
     int ncoefs = rho0->getTDim() * rho0->getKp1_d();
-    int xcfun_inpsize = 1; // rho
+    int xclib_inpsize = 1; // rho
     int spinsize = 1; // paired
     if (isSpin()) spinsize = 2; // alpha, beta
-    xcfun_inpsize *= spinsize; // alpha and beta
-    if (isGGA()) xcfun_inpsize *= 4; // add gradient (3 components for each spin)
+    xclib_inpsize *= spinsize; // alpha and beta
+    if (isGGA()) xclib_inpsize *= 4; // add gradient (3 components for each spin)
 
-    Eigen::MatrixXd xcfun_inp(ncoefs, xcfun_inpsize); //input for xcfun
+    Eigen::MatrixXd xclib_inp(ncoefs, xclib_inpsize); //input for xcfun
     double* coef = node.getCoefs();
 
     for (int i = 0; i < spinsize; i++) {
         // make cv representation of density
         mrcpp::FunctionTree<3>* rho=std::get<1>(inp[i]);
         // we link into the node, in order to be able to do a mwtransform without copying the data back and forth
-        node.attachCoefs(xcfun_inp.col(i).data());
-        for (int j = 0; j < ncoefs; j++) xcfun_inp(j,i) = rho->getNode(nodeIdx).getCoefs()[j];
+        node.attachCoefs(xclib_inp.col(i).data());
+        for (int j = 0; j < ncoefs; j++) xclib_inp(j,i) = rho->getNode(nodeIdx).getCoefs()[j];
         node.mwTransform(mrcpp::Reconstruction);
         node.cvTransform(mrcpp::Forward);
 
         if (isGGA()) {
             //make gradient of input
             for (int d = 0; d < 3; d++) {
-                node.attachCoefs(xcfun_inp.col(spinsize + 3*i + d).data());
+                node.attachCoefs(xclib_inp.col(spinsize + 3*i + d).data());
 
                 mrcpp::DerivativeCalculator<3> derivcalc(d, *this->derivOp, *rho);
-                // derive rho and put result into xcfun_inp aka node
+                // derive rho and put result into xclib_inp aka node
                 derivcalc.calcNode(rho->getNode(nodeIdx), node);
                 // make cv representation of gradient of density
                 node.mwTransform(mrcpp::Reconstruction);
@@ -179,7 +179,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     }
 
     // send rho and grad rho to xcfun/libxc
-    Eigen::MatrixXd xc_out = Functional::evaluate_transposed(xcfun_inp);
+    Eigen::MatrixXd xc_out = Functional::evaluate_transposed(xclib_inp);
 
     // make gradient of the higher order densities
     //order:
