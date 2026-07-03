@@ -30,6 +30,7 @@
 #include <MRCPP/trees/FunctionNode.h>
 #include <xc_funcs.h>
 #include <xc.h>
+
 #include "xclib.h"
 
 namespace mrdft {

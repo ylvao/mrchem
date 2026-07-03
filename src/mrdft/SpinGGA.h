@@ -30,7 +30,6 @@
 #include "Functional.h"
 #include "MRCPP/MWOperators"
 #include "MRCPP/Printer"
-
 #include "xc_utils.h"
 
 namespace mrdft {
