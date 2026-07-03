@@ -103,62 +103,13 @@ double Libxc::getAmountExx() const {
 }
 
 void Libxc::printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const {
-    // Only run on main thread
-    if (mrcpp::mpi::world_rank != 0) {
-        return;
-    }
-
-    auto pwidth = mrcpp::Printer::getWidth();
-    int txt_width = 50;
-    auto pre_spaces = (pwidth - 6 - txt_width) / 2;
-    auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
-    std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
-    std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
-
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, '*');
-    println(0, pre_str << "                                                  " << post_str);
-    println(0, pre_str << "                  XC Functional                   " << post_str);
-    println(0, pre_str << "                                                  " << post_str);
-    mrcpp::print::separator(0, '*', 1);
-
-
-    // Conditional reference printing
-    auto print_wrap = [&](std::string str, std::size_t txt_width, int indent = 0) {
-        const std::string continuation_indent(indent, ' ');
-        size_t offset = 0;
-        while (offset + txt_width < str.size()) {
-            // Is the line already sufficiently short?
-            size_t newline_pos = str.find('\n', offset);
-            if (newline_pos < offset + txt_width) {
-                if (newline_pos != std::string::npos && newline_pos + 1 < str.size()) {
-                    str.insert(newline_pos + 1, continuation_indent);
-                    offset = newline_pos + 1 + continuation_indent.size();
-                } else {
-                    offset = newline_pos + 1;
-                }
-                continue;
-            }
-
-            size_t space_pos = str.rfind(' ', offset + txt_width);
-            // If the string doesn't have a space, or it is too far out, hard insert a newline
-            if (space_pos == std::string::npos || space_pos - offset > txt_width) {
-                space_pos = offset + txt_width;
-                str.insert(space_pos, "\n" + continuation_indent);
-            } else {
-                str[space_pos] = '\n';
-                str.insert(space_pos + 1, continuation_indent);
-            }
-            offset = space_pos + 1 + continuation_indent.size();
-        }
-        std::cout << str;
-    };
+    // Print header and provide wrapping utility via XClib helpers
+    XClib::printReferenceHeader(out_txt_width);
 
     std::string libxc_ref_str = "Using Libxc (version " + std::string(xc_version_string()) + ") to evaluate density functionals. Libxc is free software. It is " +
                                 "distributed under the Mozilla Public License, version 2.0. For " + "more information, please check the Libxc manual. You should cite\n\n" +
                                 xc_reference() + " DOI: " + xc_reference_doi() + "\n\nwhen " + "reporting the results of your calculation in a scientific article.\n";
-    print_wrap(libxc_ref_str, out_txt_width);
+    XClib::printWrap(libxc_ref_str, out_txt_width);
 
     // Avoid printing the same LibXC functional multiple times
     std::set<int> printed_ids;
@@ -174,14 +125,14 @@ void Libxc::printFunctionalReference(int out_txt_width, std::vector<std::string>
 
         char *name = xc_functional_get_name(id);
         std::string func_id_str = "  - " + std::string(name) + " (ID " + std::to_string(id) + "): " + func->info->name + "\n";
-        print_wrap(func_id_str, out_txt_width);
+        XClib::printWrap(func_id_str, out_txt_width);
         free(name);
 
         for (int number = 0; number < XC_MAX_REFERENCES; number++) {
             auto reference = xc_func_info_get_references(func->info, number);
             if (reference == nullptr) break;
             std::string func_ref_str = "     * " + std::string(xc_func_reference_get_ref(reference)) + ", DOI:" + xc_func_reference_get_doi(reference) + "\n";
-            print_wrap(func_ref_str, out_txt_width, 7);
+            XClib::printWrap(func_ref_str, out_txt_width, 7);
         }
     }
 }

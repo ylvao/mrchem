@@ -61,65 +61,16 @@ double XCFun::getAmountExx() const {
 }
 
 void XCFun::printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const {
-    // Only run on main thread
-    if (mrcpp::mpi::world_rank != 0) {
-        return;
+    // Print header and provide wrapping utility via XClib helpers
+    XClib::printReferenceHeader(out_txt_width);
+    printout(0, xcfun_splash());
+    std::cout << "\nXCFun functionals used in this calculation:\n";
+    for (const auto &func_name : xcfun_func_names) {
+        std::string xcfun_ref = xcfun_describe_long(func_name.c_str());
+        std::string xcfun_ref_str = "  - " + xcfun_ref;
+        XClib::printWrap(xcfun_ref_str, out_txt_width, 4);
     }
-
-    auto pwidth = mrcpp::Printer::getWidth();
-    int txt_width = 50;
-    auto pre_spaces = (pwidth - 6 - txt_width) / 2;
-    auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
-    std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
-    std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
-
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, ' ');
-    mrcpp::print::separator(0, '*');
-    println(0, pre_str << "                                                  " << post_str);
-    println(0, pre_str << "                  XC Functional                   " << post_str);
-    println(0, pre_str << "                                                  " << post_str);
-    mrcpp::print::separator(0, '*', 1);
-
-
-    // Conditional reference printing
-    auto print_wrap = [&](std::string str, std::size_t txt_width, int indent = 0) {
-        const std::string continuation_indent(indent, ' ');
-        size_t offset = 0;
-        while (offset + txt_width < str.size()) {
-            // Is the line already sufficiently short?
-            size_t newline_pos = str.find('\n', offset);
-            if (newline_pos < offset + txt_width) {
-                if (newline_pos != std::string::npos && newline_pos + 1 < str.size()) {
-                    str.insert(newline_pos + 1, continuation_indent);
-                    offset = newline_pos + 1 + continuation_indent.size();
-                } else {
-                    offset = newline_pos + 1;
-                }
-                continue;
-            }
-
-            size_t space_pos = str.rfind(' ', offset + txt_width);
-            // If the string doesn't have a space, or it is too far out, hard insert a newline
-            if (space_pos == std::string::npos || space_pos - offset > txt_width) {
-                space_pos = offset + txt_width;
-                str.insert(space_pos, "\n" + continuation_indent);
-            } else {
-                str[space_pos] = '\n';
-                str.insert(space_pos + 1, continuation_indent);
-            }
-            offset = space_pos + 1 + continuation_indent.size();
-        }
-        std::cout << str;
-    };
-        printout(0, xcfun_splash());
-        std::cout << "\nXCFun functionals used in this calculation:\n";
-        for (const auto &func_name : xcfun_func_names) {
-            std::string xcfun_ref = xcfun_describe_long(func_name.c_str());
-            std::string xcfun_ref_str = "  - " + xcfun_ref;
-            print_wrap(xcfun_ref_str, out_txt_width, 4);
-        return;
-    }
+    return;
 }
 
 void XCFun::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const {

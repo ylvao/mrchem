@@ -34,14 +34,17 @@ namespace mrdft {
 
 void Functional::print_functional_references() const {
     int outfile_txt_width = 75;
+    // xcfun_func_names should either be renamed or moved
     xclib->printFunctionalReference(outfile_txt_width, xcfun_func_names);
 }
 
+// Move to xclib_libxc
 void Functional::setLibxcFunctionalObject(std::vector<xc_func_type*> &libxc_objects_, std::vector<double> &libxc_coefs_) {
     xclib->libxc_objects = std::move(libxc_objects_);
     xclib->libxc_coefs  = std::move(libxc_coefs_);
 }
 
+// does this need to be here?
 double Functional::amountEXX() const {
     double lib_exx = xclib->getAmountExx();
     double exx = customExx + lib_exx;

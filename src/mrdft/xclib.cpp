@@ -40,4 +40,55 @@ XClib::XClib() {
     xcfun = xcfun_new();
 }
 
+void XClib::printReferenceHeader(int out_txt_width) {
+    // Only run on main thread
+    if (mrcpp::mpi::world_rank != 0) {
+        return;
+    }
+
+    auto pwidth = mrcpp::Printer::getWidth();
+    int txt_width = 50;
+    auto pre_spaces = (pwidth - 6 - txt_width) / 2;
+    auto post_spaces = pwidth - 6 - txt_width - pre_spaces;
+    std::string pre_str = std::string(3, '*') + std::string(pre_spaces, ' ');
+    std::string post_str = std::string(post_spaces, ' ') + std::string(3, '*');
+
+    mrcpp::print::separator(0, ' ');
+    mrcpp::print::separator(0, ' ');
+    mrcpp::print::separator(0, '*');
+    println(0, pre_str << "                                                  " << post_str);
+    println(0, pre_str << "                  XC Functional                   " << post_str);
+    println(0, pre_str << "                                                  " << post_str);
+    mrcpp::print::separator(0, '*', 1);
+}
+
+void XClib::printWrap(const std::string &str_in, std::size_t txt_width, int indent) {
+    std::string str = str_in;
+    const std::string continuation_indent(indent, ' ');
+    size_t offset = 0;
+    while (offset + txt_width < str.size()) {
+        size_t newline_pos = str.find('\n', offset);
+        if (newline_pos < offset + txt_width) {
+            if (newline_pos != std::string::npos && newline_pos + 1 < str.size()) {
+                str.insert(newline_pos + 1, continuation_indent);
+                offset = newline_pos + 1 + continuation_indent.size();
+            } else {
+                offset = newline_pos + 1;
+            }
+            continue;
+        }
+
+        size_t space_pos = str.rfind(' ', offset + txt_width);
+        if (space_pos == std::string::npos || space_pos - offset > txt_width) {
+            space_pos = offset + txt_width;
+            str.insert(space_pos, "\n" + continuation_indent);
+        } else {
+            str[space_pos] = '\n';
+            str.insert(space_pos + 1, continuation_indent);
+        }
+        offset = space_pos + 1 + continuation_indent.size();
+    }
+    std::cout << str;
+}
+
 } // mrdft

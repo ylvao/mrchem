@@ -63,11 +63,10 @@ std::unique_ptr<MRDFT> Factory::build() {
     auto grid_p = std::make_unique<Grid>(mra);
     setLibxc(XClib::libxc);
 
-    // Init XCFun or Libxc if not already created
+    // Init Libxc ot XCFun and set functional family bools
     bool gga = false;
     bool lda = false;
     bool mgga = false;
-
     xclib->initFunctionalLibrary(lda, gga, mgga, spin, order, gamma);
 
     // Init MW derivative
