@@ -36,8 +36,8 @@
 
 namespace mrdft {
 
-XClib::XClib() {
-    xcfun = xcfun_new();
+XClib::XClib(bool spin) : spin(spin) {
+    xcfun = xcfun_new(); // TODO remove this
 }
 
 void XClib::printReferenceHeader(int out_txt_width) {

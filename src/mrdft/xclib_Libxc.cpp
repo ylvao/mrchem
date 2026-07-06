@@ -35,7 +35,7 @@
 
 namespace mrdft {
 
-double Libxc::setFunctional(const std::string &name, double c, double cutoff, bool spin) {
+double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
     double customExx = 0.0;
     std::vector<int> ids;
     std::vector<double> coefs;
@@ -59,37 +59,40 @@ double Libxc::setFunctional(const std::string &name, double c, double cutoff, bo
     return customExx;
 }
 
-void Libxc::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) {
+void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
+    switch (family_type) {
+                case XC_FAMILY_LDA:
+    #ifdef XC_FAMILY_HYB_GGA
+                case XC_FAMILY_HYB_LDA:
+    #endif
+                    lda = true;
+                    break;
+
+                case XC_FAMILY_GGA:
+    #ifdef XC_FAMILY_HYB_GGA
+                case XC_FAMILY_HYB_GGA:
+    #endif
+                    gga = true;
+                    break;
+
+                case XC_FAMILY_MGGA:
+                case XC_FAMILY_HYB_MGGA:
+                    MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
+                    mgga = true;
+
+                default:
+                    MSG_ABORT("Libxc functional family not handled in MRChem!\n");
+            }
+}
+
+void Libxc::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {
     for (const auto *f : libxc_objects) {
-
-        switch (f->info->family) {
-            case XC_FAMILY_LDA:
-#ifdef XC_FAMILY_HYB_GGA
-            case XC_FAMILY_HYB_LDA:
-#endif
-                lda = true;
-                break;
-
-            case XC_FAMILY_GGA:
-#ifdef XC_FAMILY_HYB_GGA
-            case XC_FAMILY_HYB_GGA:
-#endif
-                gga = true;
-                break;
-
-            case XC_FAMILY_MGGA:
-            case XC_FAMILY_HYB_MGGA:
-                MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
-                mgga = true;
-
-            default:
-                MSG_ABORT("Libxc functional family not handled in MRChem!\n");
-        }
-
+        getFamilyType(f->info->family, lda, gga, mgga);
         // Check if functional is range separated
         if ((f->info->flags & XC_FLAGS_HYB_CAM)  || (f->info->flags & XC_FLAGS_HYB_LC)) MSG_ABORT("Coulomb attenuated functionals not supported in MRChem!\n");
         if ((f->info->flags & XC_FLAGS_HYB_CAMY) || (f->info->flags & XC_FLAGS_HYB_LCY)) MSG_ABORT("Yukawa attenuated functionals not supported in MRChem!\n");
     }
+
 }
 
 double Libxc::getAmountExx() const {
@@ -137,7 +140,7 @@ void Libxc::printFunctionalReference(int out_txt_width, std::vector<std::string>
     }
 }
 
-void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const {
+void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const {
     Eigen::MatrixXd exc, vxc, sxc, sigma;
     for (size_t i = 0; i < libxc_objects.size(); i++) {
         switch (libxc_objects[i]->info->family) {
@@ -238,6 +241,30 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                 break;
         }
     }
+}
+
+int Libxc::getnOut() {
+    bool lda = false;
+    bool gga = false;
+    bool mgga = false;
+    for (const auto *f : libxc_objects) {
+        getFamilyType(f->info->family, lda, gga, mgga);
+    }
+    if (gga) {
+        if (spin) {
+            return 9;
+        } else {
+            return 5;
+        }
+    } else if (lda) {
+        if (spin) {
+            return 3;
+        } else {
+            return 2;
+        }
+    }
+    MSG_ABORT("Unable to determine Libxc output length for the configured functionals!\n");
+    return 0;
 }
 
 } // mrdft

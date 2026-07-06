@@ -68,7 +68,7 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
     }
     out.setZero();
 
-    xclib->callLibEval(inp, out, nPts, nInp, nOut, spin, cutoff);
+    xclib->callLibEval(inp, out, nPts, nInp, nOut, cutoff);
 }
 
 Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {

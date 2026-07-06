@@ -56,7 +56,7 @@ public:
     /*
      * Setters
      */
-    void setSpin(bool s) { spin = s; }                        ///< Set spin polarization (true for unrestricted/spin-polarized) */
+    void setSpin(bool s);                                     ///< Set spin polarization (true for unrestricted/spin-polarized) */
     void setOrder(int k) { order = k; }                       ///< Set the polynomial order for the MRA basis
     void setUseGamma(bool g) { gamma = g; }                   ///< Toggle between gamma-type and explicit derivatives
     void setLogGradient(bool lg) { log_grad = lg; }           ///< Toggle the use of logarithmic gradients

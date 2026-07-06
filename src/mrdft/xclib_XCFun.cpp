@@ -34,13 +34,13 @@
 
 namespace mrdft {
 
-double XCFun::setFunctional(const std::string &name, double c, double cutoff, bool spin) {
+double XCFun::setFunctional(const std::string &name, double c, double cutoff) {
     double customExx = 0.0;
     xcfun_set(xcfun, name.c_str(), c);
     return customExx;
 }
 
-void XCFun::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) {
+void XCFun::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {
     gga = xcfun_is_gga(xcfun);
     lda = not gga;
     unsigned int mode = 1;                    //!< only partial derivative mode implemented
@@ -73,7 +73,7 @@ void XCFun::printFunctionalReference(int out_txt_width, std::vector<std::string>
     return;
 }
 
-void XCFun::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const {
+void XCFun::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const {
     if (nInp != xcfun_input_length(xcfun) or nOut != xcfun_output_length(xcfun)) { throw std::logic_error("Dimension mismatch!\n"); }
 
     for (int i = 0; i < nPts; i++) {

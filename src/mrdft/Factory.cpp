@@ -42,19 +42,30 @@ namespace mrdft {
 
 bool XClib::libxc = false;
 
+void Factory::setSpin(bool s) {
+    spin = s;
+    if (xclib) {
+        if (XClib::libxc) {
+            xclib = std::make_unique<Libxc>(spin);
+        } else {
+            xclib = std::make_unique<XCFun>(spin);
+        }
+    }
+}
+
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
         : mra(MRA) {
     if (XClib::libxc) {
-        xclib = std::make_unique<Libxc>();
+        xclib = std::make_unique<Libxc>(spin);
     } else {
-        xclib = std::make_unique<XCFun>();
+        xclib = std::make_unique<XCFun>(spin);
     }
 }
 
 void Factory::setFunctional(const std::string &name, double c) {
     setLibxc(XClib::libxc); // should probably be where setFunctional is called
 
-    customExx = xclib->setFunctional(name, c, cutoff, spin); // customExx should be moved to xclib_Libxc
+    customExx = xclib->setFunctional(name, c, cutoff); // customExx should be moved to xclib_Libxc
     if (!XClib::libxc) { xcfun_func_names.push_back(name); }
 }
 
@@ -67,7 +78,7 @@ std::unique_ptr<MRDFT> Factory::build() {
     bool gga = false;
     bool lda = false;
     bool mgga = false;
-    xclib->initFunctionalLibrary(lda, gga, mgga, spin, order, gamma);
+    xclib->initFunctionalLibrary(lda, gga, mgga, order, gamma);
 
     // Init MW derivative
     if (gga) {

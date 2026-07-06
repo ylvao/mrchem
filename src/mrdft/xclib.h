@@ -36,24 +36,27 @@ namespace mrdft {
 
 class XClib {
 public:
-    XClib();
+    XClib(bool spin);
 
     static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
 
     xcfun_t *xcfun;                               ///< @brief XCFun library handle
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
+    bool spin;
 
     bool use_gamma_derivatives{false}; // from old code: remove???
 
-    virtual double setFunctional(const std::string &name, double c, double cutoff, bool spin) = 0;
+    virtual double setFunctional(const std::string &name, double c, double cutoff) = 0;
     virtual double getAmountExx() const = 0;
-    virtual void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, bool spin, int order, bool gamma) = 0;
+    virtual int getnOut() = 0;
+    virtual void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) = 0;
+    virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const = 0;
     virtual void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const = 0;
-    virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, bool spin, double cutoff) const = 0;
     // Common printing helpers shared by Libxc and XCFun implementations
     static void printReferenceHeader(int out_txt_width);
     static void printWrap(const std::string &str, std::size_t txt_width, int indent = 0);
+
 };
 
 } // mrdft
