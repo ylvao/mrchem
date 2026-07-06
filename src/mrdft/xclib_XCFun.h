@@ -44,7 +44,9 @@ class XCFun final : public XClib {
 
 public:
     explicit XCFun(bool spin_enabled)
-        : XClib(spin_enabled) {}
+        : XClib(spin_enabled) {
+            xcfun = xcfun_new();
+        }
 
     double setFunctional(const std::string &name, double c, double cutoff) override;
     double getAmountExx() const override;
