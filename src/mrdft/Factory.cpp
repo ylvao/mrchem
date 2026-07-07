@@ -27,7 +27,6 @@
 
 #include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
-// #include <XCFun/xcfun.h>
 
 #include "GGA.h"
 #include "Grid.h"
@@ -65,8 +64,8 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
 void Factory::setFunctional(const std::string &name, double c) {
     setLibxc(XClib::libxc); // should probably be where setFunctional is called
 
-    customExx = xclib->setFunctional(name, c, cutoff); // customExx should be moved to xclib_Libxc
-    if (!XClib::libxc) { xcfun_func_names.push_back(name); }
+    xclib->setFunctional(name, c, cutoff);
+    if (!XClib::libxc) { xclib->addXCFunFunctionalName(name); }
 }
 
 std::unique_ptr<MRDFT> Factory::build() {
@@ -105,9 +104,7 @@ std::unique_ptr<MRDFT> Factory::build() {
             MSG_ABORT("Case not handled");
     }
     if (func_p == nullptr) MSG_ABORT("Invalid functional type");
-    if (not XClib::libxc) { func_p->setXCFunFunctionalNames(xcfun_func_names); }
     diff_p = std::make_unique<mrcpp::ABGVOperator<3>>(mra, 0.0, 0.0);
-    func_p->setCustomExx(customExx);
     func_p->setDerivOp(diff_p);
     func_p->setLogGradient(log_grad);
     func_p->setDensityCutoff(cutoff);

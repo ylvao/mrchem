@@ -36,13 +36,12 @@
 namespace mrdft {
 
 double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
-    double customExx = 0.0;
     std::vector<int> ids;
     std::vector<double> coefs;
     double scaled_custom_exx = 0.0;
 
     mapFunctionalName(name, ids, coefs, scaled_custom_exx);
-    customExx += c * scaled_custom_exx;
+    this->setCustomExx(c * scaled_custom_exx);
     xc_func_type *libxc_obj;
     for (size_t i = 0; i < ids.size(); i++) {
         libxc_obj = xc_func_alloc();
@@ -56,7 +55,7 @@ double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
         this->libxc_objects.push_back(libxc_obj);
         this->libxc_coefs.push_back(c * coefs[i]);
     }
-    return customExx;
+    return this->getCustomExx();
 }
 
 void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
@@ -105,7 +104,7 @@ double Libxc::getAmountExx() const {
     return exx;
 }
 
-void Libxc::printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const {
+void Libxc::printFunctionalReference(int out_txt_width) const {
     // Print header and provide wrapping utility via XClib helpers
     XClib::printReferenceHeader(out_txt_width);
 

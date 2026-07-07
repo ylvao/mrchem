@@ -35,9 +35,8 @@
 namespace mrdft {
 
 double XCFun::setFunctional(const std::string &name, double c, double cutoff) {
-    double customExx = 0.0;
     xcfun_set(xcfun, name.c_str(), c);
-    return customExx;
+    return this->getCustomExx();
 }
 
 void XCFun::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {
@@ -60,7 +59,7 @@ double XCFun::getAmountExx() const {
     return exx;
 }
 
-void XCFun::printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const {
+void XCFun::printFunctionalReference(int out_txt_width) const {
     // Print header and provide wrapping utility via XClib helpers
     XClib::printReferenceHeader(out_txt_width);
     printout(0, xcfun_splash());

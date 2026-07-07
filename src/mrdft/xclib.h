@@ -37,11 +37,15 @@ public:
         this->spin = spin_enabled;
     }
 
+    virtual ~XClib() = default;
+
     static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
 
     xcfun_t *xcfun;                               ///< @brief XCFun library handle
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
+    std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
+    double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
     bool spin;
 
     bool use_gamma_derivatives{false}; // from old code: remove???
@@ -51,7 +55,12 @@ public:
     virtual int getnOut() = 0;
     virtual void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) = 0;
     virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const = 0;
-    virtual void printFunctionalReference(int out_txt_width, std::vector<std::string> xcfun_func_names) const = 0;
+    virtual void printFunctionalReference(int out_txt_width) const = 0;
+
+    void setCustomExx(double exx) { customExx = exx; }
+    double getCustomExx() const { return customExx; }
+    void addXCFunFunctionalName(const std::string &name) { xcfun_func_names.push_back(name); }
+    const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; }
 
     // Common printing helpers shared by Libxc and XCFun implementations
     static void printReferenceHeader(int out_txt_width);
