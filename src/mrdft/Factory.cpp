@@ -42,12 +42,21 @@ namespace mrdft {
 bool XClib::libxc = false;
 
 void Factory::setSpin(bool s) {
+    if (spin == s) {
+        return;
+    }
+
     spin = s;
     if (xclib) {
+        const auto functional_specs = xclib->getFunctionalSpecs();
         if (XClib::libxc) {
             xclib = std::make_unique<Libxc>(spin);
         } else {
             xclib = std::make_unique<XCFun>(spin);
+        }
+
+        for (const auto &[name, coef] : functional_specs) {
+            xclib->setFunctional(name, coef, cutoff);
         }
     }
 }
@@ -65,7 +74,6 @@ void Factory::setFunctional(const std::string &name, double c) {
     setLibxc(XClib::libxc); // should probably be where setFunctional is called
 
     xclib->setFunctional(name, c, cutoff);
-    if (!XClib::libxc) { xclib->addXCFunFunctionalName(name); }
 }
 
 std::unique_ptr<MRDFT> Factory::build() {

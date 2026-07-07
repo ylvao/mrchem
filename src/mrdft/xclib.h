@@ -44,6 +44,7 @@ public:
     xcfun_t *xcfun;                               ///< @brief XCFun library handle
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
+    std::vector<std::pair<std::string, double>> functional_specs; ///< @brief Configured functionals and scaling coefficients
     std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
     double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
     bool spin;
@@ -59,6 +60,8 @@ public:
 
     void setCustomExx(double exx) { customExx = exx; }
     double getCustomExx() const { return customExx; }
+    void addFunctionalSpec(const std::string &name, double c) { functional_specs.emplace_back(name, c); }
+    const std::vector<std::pair<std::string, double>> &getFunctionalSpecs() const { return functional_specs; }
     void addXCFunFunctionalName(const std::string &name) { xcfun_func_names.push_back(name); }
     const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; }
 

@@ -40,8 +40,9 @@ double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
     std::vector<double> coefs;
     double scaled_custom_exx = 0.0;
 
+    addFunctionalSpec(name, c);
     mapFunctionalName(name, ids, coefs, scaled_custom_exx);
-    this->setCustomExx(c * scaled_custom_exx);
+    this->setCustomExx(this->getCustomExx() + c * scaled_custom_exx);
     xc_func_type *libxc_obj;
     for (size_t i = 0; i < ids.size(); i++) {
         libxc_obj = xc_func_alloc();

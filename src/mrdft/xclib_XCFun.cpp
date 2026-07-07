@@ -35,6 +35,7 @@
 namespace mrdft {
 
 double XCFun::setFunctional(const std::string &name, double c, double cutoff) {
+    addFunctionalSpec(name, c);
     xcfun_set(xcfun, name.c_str(), c);
     return this->getCustomExx();
 }
