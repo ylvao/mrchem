@@ -28,9 +28,7 @@
 #include <memory>
 #include <MRCPP/MWOperators>
 #include <MRCPP/trees/FunctionNode.h>
-#include <XCFun/xcfun.h>
 #include <xc_funcs.h>
-#include <xc.h>
 #include "xclib.h"
 
 namespace mrdft {

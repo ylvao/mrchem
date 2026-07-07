@@ -25,11 +25,6 @@
 
 #pragma once
 
-#include <MRCPP/MWOperators>
-#include <XCFun/xcfun.h>
-#include <xc_funcs.h>
-#include <xc.h>
-
 #include "xc_func_alias.h"
 #include "MRDFT.h"
 #include "xclib.h"

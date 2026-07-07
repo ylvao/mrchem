@@ -23,14 +23,8 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include <memory>
 #include <MRCPP/MWOperators>
-#include <MRCPP/trees/FunctionNode.h>
 #include <MRCPP/Printer>
-#include <XCFun/xcfun.h>
-#include <xc_funcs.h>
-#include <xc.h>
-
 #include "xclib.h"
 #include "xc_func_alias.h"
 
