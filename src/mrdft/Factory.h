@@ -56,7 +56,7 @@ public:
     void setUseGamma(bool g) { gamma = g; }                   ///< Toggle between gamma-type and explicit derivatives
     void setLogGradient(bool lg) { log_grad = lg; }           ///< Toggle the use of logarithmic gradients
     void setDensityCutoff(double c) { cutoff = c; }           ///< Set the threshold for neglecting low-density regions
-    void setLibxc(bool libxc_) {XClib::libxc = libxc_; }             ///< Toggle between Libxc (true) and XCFun (false) backends
+    void setLibxc(bool libxc_);             ///< Toggle between Libxc (true) and XCFun (false) backends
     void setDerivative(const std::string &n) { diff_s = n; }  ///< Set derivative operator type (e.g., "bspline", "abgv_00")
 
     /**
@@ -91,6 +91,8 @@ public:
     std::unique_ptr<MRDFT> build();
 
 private:
+    void rebuildXClib();
+
     int order{1};                  ///< Polynomial order of the Multi-Resolution Analysis (MRA) basis
     bool spin{false};              ///< If true, perform unrestricted calculations
     bool gamma{false};             ///< If true, use gamma-type derivatives (gradient squared) instead of explicit components

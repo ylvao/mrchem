@@ -41,24 +41,39 @@ namespace mrdft {
 
 bool XClib::libxc = false;
 
+void Factory::rebuildXClib() {
+    if (!xclib) {
+        return;
+    }
+
+    const auto functional_specs = xclib->getFunctionalSpecs();
+    if (XClib::libxc) {
+        xclib = std::make_unique<Libxc>(spin);
+    } else {
+        xclib = std::make_unique<XCFun>(spin);
+    }
+
+    for (const auto &[name, coef] : functional_specs) {
+        xclib->setFunctional(name, coef, cutoff);
+    }
+}
+
+void Factory::setLibxc(bool libxc_) {
+    if (XClib::libxc == libxc_) {
+        return;
+    }
+
+    XClib::libxc = libxc_;
+    rebuildXClib();
+}
+
 void Factory::setSpin(bool s) {
     if (spin == s) {
         return;
     }
 
     spin = s;
-    if (xclib) {
-        const auto functional_specs = xclib->getFunctionalSpecs();
-        if (XClib::libxc) {
-            xclib = std::make_unique<Libxc>(spin);
-        } else {
-            xclib = std::make_unique<XCFun>(spin);
-        }
-
-        for (const auto &[name, coef] : functional_specs) {
-            xclib->setFunctional(name, coef, cutoff);
-        }
-    }
+    rebuildXClib();
 }
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
@@ -71,17 +86,14 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
 }
 
 void Factory::setFunctional(const std::string &name, double c) {
-    setLibxc(XClib::libxc); // should probably be where setFunctional is called
-
     xclib->setFunctional(name, c, cutoff);
 }
 
 std::unique_ptr<MRDFT> Factory::build() {
     // Init DFT grid
     auto grid_p = std::make_unique<Grid>(mra);
-    setLibxc(XClib::libxc);
 
-    // Init Libxc ot XCFun and set functional family bools
+    // Init Libxc or XCFun and set functional family bools
     bool gga = false;
     bool lda = false;
     bool mgga = false;
