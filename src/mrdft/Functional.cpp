@@ -137,11 +137,8 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     mrcpp::FunctionTree<3>* rho0=std::get<1>(inp[0]);
     mrcpp::MWNode<3> node(rho0->getNode(nodeIdx),true,false); //copy node from rho, but do not copy coef
     int ncoefs = rho0->getTDim() * rho0->getKp1_d();
-    int xclib_inpsize = 1; // rho
-    int spinsize = 1; // paired
-    if (isSpin()) spinsize = 2; // alpha, beta
-    xclib_inpsize *= spinsize; // alpha and beta
-    if (isGGA()) xclib_inpsize *= 4; // add gradient (3 components for each spin)
+    int spinsize = densityChannels();
+    int xclib_inpsize = spinsize * (usesGradients() ? 4 : 1);
 
     Eigen::MatrixXd xclib_inp(ncoefs, xclib_inpsize); //input for xcfun
     double* coef = node.getCoefs();
@@ -155,7 +152,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
         node.mwTransform(mrcpp::Reconstruction);
         node.cvTransform(mrcpp::Forward);
 
-        if (isGGA()) {
+        if (usesGradients()) {
             //make gradient of input
             for (int d = 0; d < 3; d++) {
                 node.attachCoefs(xclib_inp.col(spinsize + 3*i + d).data());
@@ -185,7 +182,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     // drho_b_1/dz
     int ctrsize = inp.size()-spinsize; //number of higher order inputs
     int d_datasize = ctrsize;
-    if (isGGA()) d_datasize *= 4; // add gradient (3 components for each higher order rho)
+    if (usesGradients()) d_datasize *= 4; // add gradient (3 components for each higher order rho)
     Eigen::MatrixXd d_data = Eigen::MatrixXd::Zero(ncoefs, d_datasize);
     if (d_datasize > 0) {
         for (int i = 0; i < ctrsize; i++) {
@@ -196,7 +193,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
             for (int j = 0; j < ncoefs; j++) d_data(j,i) = rho->getNode(nodeIdx).getCoefs()[j];
             node.mwTransform(mrcpp::Reconstruction);
             node.cvTransform(mrcpp::Forward);
-            if (isGGA()) {
+            if (usesGradients()) {
                 //make gradient of input
                 for (int d = 0; d < 3; d++) {
                     node.attachCoefs(d_data.col(ctrsize + 3*i + d).data());
@@ -217,8 +214,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     //f_xc         : out[0] = inp[0]
     //df_xc/drho_a : out[1] = inp[1] - div(inp[3,4,5])
     //df_xc/drho_b : out[2] = inp[2] - div(inp[6,7,8])
-    int xc_outsize = 2;
-    if (isSpin()) xc_outsize = 3;
+    int xc_outsize = densityChannels() + 1;
     for (int i = 0; i < xc_outsize; i++) {
         // from cv to node values
         node.attachCoefs(Ctrout.col(i).data());
@@ -226,7 +222,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
         node.mwTransform(mrcpp::Compression);
         for (int j = 0; j < ncoefs; j++) xcNodes[i]->getCoefs()[j] = Ctrout(j,i);
         xcNodes[i]->setHasCoefs();
-        if (isGGA() and i>0) {
+        if (usesGradients() and i>0) {
             for (int d = 0; d < 3; d++) {
                 node.attachCoefs(Ctrout.col(xc_outsize + 3*(i-1) + d).data());
                 node.cvTransform(mrcpp::Backward);

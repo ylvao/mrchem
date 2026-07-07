@@ -50,6 +50,8 @@ public:
     bool isMetaGGA() const override { return false; }
     int numIn() const override { return 4; }
     int numOut() const override { return xclib->getnOut(); }
+    int densityChannels() const override { return 1; }
+    bool usesGradients() const override { return true; }
 
 private:
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivative{nullptr};

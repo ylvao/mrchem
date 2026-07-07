@@ -167,6 +167,9 @@ protected:
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr};  ///< @brief Operator used to compute gradients
     std::unique_ptr<XClib> xclib;
 
+    virtual int densityChannels() const = 0;
+    virtual bool usesGradients() const = 0;
+
     /**
      * @brief Run a collection of grid points through Libxc or XCFun
      * @param[in] inp  Matrix of input values, where each row is one grid point

@@ -48,6 +48,8 @@ public:
     bool isMetaGGA() const override { return false; }
     int numIn() const override { return 1; }
     int numOut() const override { return xclib->getnOut(); }
+    int densityChannels() const override { return 1; }
+    bool usesGradients() const override { return false; }
 
 private:
     mrcpp::FunctionTreeVector<3> rho;
