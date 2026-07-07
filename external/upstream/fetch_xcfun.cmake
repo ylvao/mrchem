@@ -21,8 +21,12 @@ else()
   set(XCFUN_MAX_ORDER 3)
   set(XCFUN_PYTHON_INTERFACE FALSE CACHE BOOL "" FORCE)
 
-  # Remove this line to restore the "old" pbe behaviour when using XCFun
-  add_compile_definitions(XCFUN_REF_PBEX_MU)
+  if(XCFUN_OLD_PBE)
+    message(STATUS "Compiling XCFun with old PBE parameters (different from LibXC)")
+  else()
+    message(STATUS "Compiling XCFun with new PBE parameters (same as LibXC)")
+    add_compile_definitions(XCFUN_REF_PBEX_MU)
+  endif()
 
   FetchContent_MakeAvailable(xcfun_sources)
 
