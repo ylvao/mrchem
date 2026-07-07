@@ -35,6 +35,14 @@
 
 namespace mrdft {
 
+Libxc::~Libxc() {
+    for (auto *func : libxc_objects) {
+        if (func != nullptr) {
+            xc_func_free(func);
+        }
+    }
+}
+
 double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
     std::vector<int> ids;
     std::vector<double> coefs;

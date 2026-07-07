@@ -34,6 +34,13 @@
 
 namespace mrdft {
 
+XCFun::~XCFun() {
+    if (xcfun != nullptr) {
+        xcfun_delete(xcfun);
+        xcfun = nullptr;
+    }
+}
+
 double XCFun::setFunctional(const std::string &name, double c, double cutoff) {
     addFunctionalSpec(name, c);
     xcfun_set(xcfun, name.c_str(), c);

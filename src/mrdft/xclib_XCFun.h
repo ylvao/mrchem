@@ -43,6 +43,8 @@ public:
             xcfun = xcfun_new();
         }
 
+    ~XCFun() override;
+
     double setFunctional(const std::string &name, double c, double cutoff) override;
     double getAmountExx() const override;
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) override;
