@@ -1,8 +1,10 @@
-find_package(MRCPP CONFIG QUIET
-  NO_CMAKE_PATH
-  NO_CMAKE_PACKAGE_REGISTRY
-  NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
-  )
+if(MRCPP_FIND_BEHAVIOUR STREQUAL "default" OR MRCPP_FIND_BEHAVIOUR STREQUAL "onlylocal")
+  find_package(MRCPP CONFIG QUIET
+    NO_CMAKE_PATH
+    NO_CMAKE_PACKAGE_REGISTRY
+    NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+    )
+endif()
 if(TARGET MRCPP::mrcpp)
   get_property(_loc TARGET MRCPP::mrcpp PROPERTY LOCATION)
   message(STATUS "Found MRCPP: ${_loc} (found version ${MRCPP_VERSION})")
@@ -30,7 +32,7 @@ if(TARGET MRCPP::mrcpp)
          Rebuild MRCPP with MPI support or disable it for MRChem."
       )
   endif()
-else()
+elseif(MRCPP_FIND_BEHAVIOUR STREQUAL "default" OR MRCPP_FIND_BEHAVIOUR STREQUAL "onlyfetch")
   message(STATUS "Suitable MRCPP could not be located. Fetching and building!")
   include(FetchContent)
 
@@ -51,4 +53,6 @@ else()
   set(ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
 
   FetchContent_MakeAvailable(mrcpp_sources)
+else()
+  message(FATAL_ERROR "No suitable MRCPP found or fetched. Aborting setup!")
 endif()

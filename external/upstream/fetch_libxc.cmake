@@ -1,12 +1,14 @@
-find_package(Libxc 7.0 CONFIG QUIET
-  NO_CMAKE_PATH
-  NO_CMAKE_PACKAGE_REGISTRY
-  NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
-  )
+if(LIBXC_FIND_BEHAVIOUR STREQUAL "default" OR LIBXC_FIND_BEHAVIOUR STREQUAL "onlylocal")
+  find_package(Libxc 7.0 CONFIG QUIET
+    NO_CMAKE_PATH
+    NO_CMAKE_PACKAGE_REGISTRY
+    NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+    )
+endif()
 if(TARGET Libxc::xc)
   get_target_property(_loc Libxc::xc LOCATION)
   message(STATUS "Found Libxc: ${_loc} (found version ${Libxc_VERSION})")
-else()
+elseif(LIBXC_FIND_BEHAVIOUR STREQUAL "default" OR LIBXC_FIND_BEHAVIOUR STREQUAL "onlyfetch")
   message(STATUS "Suitable LibXC could not be located. Fetching and building!")
   include(FetchContent)
   FetchContent_Declare(libxc_sources
@@ -43,4 +45,6 @@ else()
         $<INSTALL_INTERFACE:include/LibXC>
       )
   endif()
+else()
+  message(FATAL_ERROR "No suitable LibXC found or fetched. Aborting setup!")
 endif()

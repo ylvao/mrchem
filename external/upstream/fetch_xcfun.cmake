@@ -1,12 +1,14 @@
-find_package(XCFun 2.1 CONFIG QUIET
-  NO_CMAKE_PATH
-  NO_CMAKE_PACKAGE_REGISTRY
-  NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
-  )
+if(XCFUN_FIND_BEHAVIOUR STREQUAL "default" OR XCFUN_FIND_BEHAVIOUR STREQUAL "onlylocal")
+  find_package(XCFun 2.1 CONFIG QUIET
+    NO_CMAKE_PATH
+    NO_CMAKE_PACKAGE_REGISTRY
+    NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+    )
+endif()
 if(TARGET XCFun::xcfun)
   get_property(_loc TARGET XCFun::xcfun PROPERTY LOCATION)
   message(STATUS "Found XCFun: ${_loc} (found version ${XCFun_VERSION})")
-else()
+elseif(XCFUN_FIND_BEHAVIOUR STREQUAL "default" OR XCFUN_FIND_BEHAVIOUR STREQUAL "onlyfetch")
   message(STATUS "Suitable XCFun could not be located. Fetching and building!")
   include(FetchContent)
   FetchContent_Declare(xcfun_sources
@@ -34,4 +36,6 @@ else()
     # Suppress all warnings from XCFun's own compilation (-w overrides any -Wall/-Wextra from CMAKE_CXX_FLAGS)
     target_compile_options(xcfun PRIVATE -w)
   endif()
+else()
+  message(FATAL_ERROR "No suitable XCFun found or fetched. Aborting setup!")
 endif()
