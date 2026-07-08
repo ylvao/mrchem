@@ -25,8 +25,6 @@
 
 #pragma once
 
-// #include <XCFun/xcfun.h>
-
 #include "MRCPP/MWFunctions"
 #include "MRCPP/Printer"
 #include "xc_utils.h"
