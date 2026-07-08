@@ -47,12 +47,13 @@ public:
     ~XCFun() override;
 
     xcfun_t *xcfun;                               ///< @brief XCFun library handle
-    double setFunctional(const std::string &name, double c, double cutoff) override;
+    void setFunctional(const std::string &name, double c, double cutoff) override;
     double getAmountExx() const override;
+    int getnOut() override {return xcfun_output_length(xcfun);}
+
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) override;
     void printFunctionalReference(int out_txt_width) const override;
     void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const override; 
-    int getnOut() override {return xcfun_output_length(xcfun);}
 };
 
 } // mrdft

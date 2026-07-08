@@ -37,30 +37,24 @@ public:
 
     virtual ~XClib() = default;
 
-    static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
-    bool spin;
-    double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
-
     std::vector<std::pair<std::string, double>> functional_specs; ///< @brief Configured functionals and scaling coefficients
     std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
 
-    bool use_gamma_derivatives{false}; // from old code: remove???
-
-    virtual double setFunctional(const std::string &name, double c, double cutoff) = 0;
+    virtual void setFunctional(const std::string &name, double c, double cutoff) = 0;
     virtual double getAmountExx() const = 0;
     virtual int getnOut() = 0;
     virtual void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) = 0;
     virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const = 0;
     virtual void printFunctionalReference(int out_txt_width) const = 0;
-
-    void setCustomExx(double exx) { customExx = exx; }
-    double getCustomExx() const { return customExx; }
+    
     void addFunctionalSpec(const std::string &name, double c) { functional_specs.emplace_back(name, c); }
-    const std::vector<std::pair<std::string, double>> &getFunctionalSpecs() const { return functional_specs; }
     void addXCFunFunctionalName(const std::string &name) { xcfun_func_names.push_back(name); }
+    
+    static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
+    bool spin;
+    const std::vector<std::pair<std::string, double>> &getFunctionalSpecs() const { return functional_specs; }
     const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; }
 
-    // Common printing helpers shared by Libxc and XCFun implementations
     static void printReferenceHeader(int out_txt_width);
     static void printWrap(const std::string &str, std::size_t txt_width, int indent = 0);
 

@@ -39,10 +39,9 @@ XCFun::~XCFun() {
     }
 }
 
-double XCFun::setFunctional(const std::string &name, double c, double cutoff) {
+void XCFun::setFunctional(const std::string &name, double c, double cutoff) {
     addFunctionalSpec(name, c);
     xcfun_set(xcfun, name.c_str(), c);
-    return this->getCustomExx();
 }
 
 void XCFun::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {

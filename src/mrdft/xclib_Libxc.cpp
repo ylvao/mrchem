@@ -39,7 +39,7 @@ Libxc::~Libxc() {
     }
 }
 
-double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
+void Libxc::setFunctional(const std::string &name, double c, double cutoff) {
     std::vector<int> ids;
     std::vector<double> coefs;
     double scaled_custom_exx = 0.0;
@@ -60,7 +60,6 @@ double Libxc::setFunctional(const std::string &name, double c, double cutoff) {
         this->libxc_objects.push_back(libxc_obj);
         this->libxc_coefs.push_back(c * coefs[i]);
     }
-    return this->getCustomExx();
 }
 
 void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
@@ -106,7 +105,7 @@ double Libxc::getAmountExx() const {
         double frac = xc_hyb_exx_coef(f);
         exx += libxc_coefs[i] * frac;
     }
-    return exx;
+    return exx + customExx;
 }
 
 void Libxc::printFunctionalReference(int out_txt_width) const {

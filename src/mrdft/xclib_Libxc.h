@@ -27,7 +27,6 @@
 
 #include <xc_funcs.h>
 #include <xc.h>
-
 #include "xclib.h"
 
 namespace mrdft {
@@ -48,12 +47,16 @@ public:
 
     std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
     std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
-    double setFunctional(const std::string &name, double c, double cutoff) override;
+    double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
+    void setFunctional(const std::string &name, double c, double cutoff) override;
+    void setCustomExx(double exx) { customExx = exx; }
     double getAmountExx() const override;
+    double getCustomExx() const { return customExx; }
+    int getnOut() override;
+
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) override;
     void printFunctionalReference(int out_txt_width) const override;
     void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const override;
-    int getnOut() override;
     void mapFunctionalName(std::string name, std::vector<int> &ids, std::vector<double> &coefs, double &customExx);
 
 };

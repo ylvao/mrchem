@@ -37,10 +37,14 @@ void Functional::print_functional_references() const {
     xclib->printFunctionalReference(outfile_txt_width);
 }
 
+// double Functional::amountEXX() const {
+//     double lib_exx = xclib->getAmountExx();
+//     double exx = xclib->getCustomExx() + lib_exx;
+//     return exx;
+// }
+
 double Functional::amountEXX() const {
-    double lib_exx = xclib->getAmountExx();
-    double exx = xclib->getCustomExx() + lib_exx;
-    return exx;
+    return xclib->getAmountExx();
 }
 
 void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out) const {
