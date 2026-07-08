@@ -23,10 +23,8 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include <MRCPP/MWOperators>
 #include <MRCPP/Printer>
 #include "xclib.h"
-#include "xc_func_alias.h"
 
 namespace mrdft {
 

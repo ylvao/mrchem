@@ -24,14 +24,10 @@
  */
 
 #include <memory>
-#include <MRCPP/MWOperators>
 #include <MRCPP/trees/FunctionNode.h>
 #include <MRCPP/Printer>
-#include <xc_funcs.h>
-#include <xc.h>
 
 #include "xclib_Libxc.h"
-#include "xc_func_alias.h"
 
 namespace mrdft {
 

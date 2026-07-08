@@ -25,7 +25,6 @@
 
 #pragma once
 
-#include "xc_func_alias.h"
 #include "MRDFT.h"
 #include "xclib.h"
 

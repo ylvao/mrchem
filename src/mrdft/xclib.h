@@ -25,9 +25,7 @@
 
 #pragma once
 
-#include <XCFun/xcfun.h>
-#include <xc_funcs.h>
-#include <xc.h>
+#include <MRCPP/MWOperators>
 
 namespace mrdft {
 
@@ -40,14 +38,11 @@ public:
     virtual ~XClib() = default;
 
     static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
+    bool spin;
+    double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
 
-    xcfun_t *xcfun;                               ///< @brief XCFun library handle
-    std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
-    std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
     std::vector<std::pair<std::string, double>> functional_specs; ///< @brief Configured functionals and scaling coefficients
     std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
-    double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
-    bool spin;
 
     bool use_gamma_derivatives{false}; // from old code: remove???
 
