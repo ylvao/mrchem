@@ -25,10 +25,9 @@
 
 #pragma once
 
-#include <memory>
 #include <MRCPP/MWOperators>
 #include <MRCPP/trees/FunctionNode.h>
-#include <xc_funcs.h>
+#include <memory>
 #include "xclib.h"
 
 namespace mrdft {
@@ -107,28 +106,28 @@ public:
     /**
      * Setters
      */
-    void setLogGradient(bool log) { log_grad = log; }    ///< @brief Set whether to use logarithmic gradient transformations
-    void setDensityCutoff(double cut) { cutoff = cut; }  ///< @brief Set the density threshold below which density is set to 0
-    void setDerivOp(std::unique_ptr<mrcpp::DerivativeOperator<3>> &d) { derivOp = std::move(d); }   ///< @brief Set the numerical derivative operator for gradient-based functionals
+    void setLogGradient(bool log) { log_grad = log; }                                             ///< @brief Set whether to use logarithmic gradient transformations
+    void setDensityCutoff(double cut) { cutoff = cut; }                                           ///< @brief Set the density threshold below which density is set to 0
+    void setDerivOp(std::unique_ptr<mrcpp::DerivativeOperator<3>> &d) { derivOp = std::move(d); } ///< @brief Set the numerical derivative operator for gradient-based functionals
 
     /**
      * Functional type querying
      */
-    bool isLDA() const { return not (isGGA() or isMetaGGA()); }          ///< @return True if functional is LDA type (not a GGA or meta-GGA)
-    bool isHybrid() const { return (std::abs(amountEXX()) > 1.0e-10); }  ///< @return True if functional is a hybrid (includes exact exchange)
-    virtual bool isSpin() const = 0;                                     ///< @brief Returns True if the functional object is spin-polarized
-    virtual bool isGGA() const = 0;                                      ///< @brief Returns True if the functional is a GGA
-    virtual bool isMetaGGA() const = 0;                                  ///< @brief Returns True if the functional is a Meta-GGA
+    bool isLDA() const { return not(isGGA() or isMetaGGA()); }          ///< @return True if functional is LDA type (not a GGA or meta-GGA)
+    bool isHybrid() const { return (std::abs(amountEXX()) > 1.0e-10); } ///< @return True if functional is a hybrid (includes exact exchange)
+    virtual bool isSpin() const = 0;                                    ///< @brief Returns True if the functional object is spin-polarized
+    virtual bool isGGA() const = 0;                                     ///< @brief Returns True if the functional is a GGA
+    virtual bool isMetaGGA() const = 0;                                 ///< @brief Returns True if the functional is a Meta-GGA
 
-    virtual int numIn() const = 0;      ///< Fetches number of variables in the input matrix
-    virtual int numOut() const = 0;     ///< Fetches number of variables in the output matrix
+    virtual int numIn() const = 0;  ///< Fetches number of variables in the input matrix
+    virtual int numOut() const = 0; ///< Fetches number of variables in the output matrix
 
     /**
      * @brief Fetches the amount of exact exchange needed for a given functional
      * @return The total fraction of exx to be added to the functional
      */
     double amountEXX() const;
-    double XCenergy = 0.0;          ///< @brief Stores calculated xc energy for the current state
+    double XCenergy = 0.0; ///< @brief Stores calculated xc energy for the current state
 
     /**
      * @brief Evaluates the functional on a set of grid points
@@ -149,9 +148,9 @@ public:
     Eigen::MatrixXd evaluate_transposed(Eigen::MatrixXd &inp) const;
 
     /**
-     * @brief Prints the splash screens, version info, and references for the 
+     * @brief Prints the splash screens, version info, and references for the
      * active xc libraries and functionals
-     * @details If Libxc is used, it iterates through 
+     * @details If Libxc is used, it iterates through
      * all initialized functional objects to print their specific DOIs
      */
     void print_functional_references() const;
@@ -159,27 +158,27 @@ public:
     friend class MRDFT;
 
 protected:
-    const int order;            ///< @brief Order of functional derivatives. Eg. 0 (energy), 1 (potential), 2 (pot. gradient), etc.
-    bool log_grad{false};       ///< @brief Toggle for logarithmic gradient
-    double cutoff{-1.0};        ///< @brief Density threshold
-    Eigen::VectorXi d_mask;     ///< @brief density and derivative(s) mask vector for response calculations
-    Eigen::MatrixXi xc_mask;    ///< @brief functional and derivative(s) mask vector for response calculations
-    std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr};  ///< @brief Operator used to compute gradients
-    std::unique_ptr<XClib> xclib;
+    const int order;                                                ///< @brief Order of functional derivatives. Eg. 0 (energy), 1 (potential), 2 (pot. gradient), etc.
+    bool log_grad{false};                                           ///< @brief Toggle for logarithmic gradient
+    double cutoff{-1.0};                                            ///< @brief Density threshold
+    Eigen::VectorXi d_mask;                                         ///< @brief density and derivative(s) mask vector for response calculations
+    Eigen::MatrixXi xc_mask;                                        ///< @brief functional and derivative(s) mask vector for response calculations
+    std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr}; ///< @brief Operator used to compute gradients
+    std::unique_ptr<XClib> xclib;                                   ///< @brief Handle for exchange–correlation library interface
 
-    virtual int densityChannels() const = 0;
-    virtual bool usesGradients() const = 0;
+    virtual int densityChannels() const = 0; ///< @brief Returns number of densities/derivatives (eg. LDA/GGA -> 1, spinLDA/spinGGA -> 2)
+    virtual bool usesGradients() const = 0;  ///< @brief Returns true if functional type uses gradients (eg. true for GGAs og metaGGAs)
 
     /**
      * @brief Run a collection of grid points through Libxc or XCFun
      * @param[in] inp  Matrix of input values, where each row is one grid point
      * @param[out] out Matrix of output values
      */
-    void evaluate_data(const Eigen::MatrixXd & inp, Eigen::MatrixXd &out) const;
+    void evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out) const;
 
     /**
      * @brief Contracts a collection of grid points
-     * @details This is used to implement the chain rule for functionals involving 
+     * @details This is used to implement the chain rule for functionals involving
      * gradients or when calculating higher-order properties
      * @param[in] xc_data xc_data Matrix of functional partial derivative values
      * @param[in] d_data  d_data Matrix of density input values
@@ -189,7 +188,7 @@ protected:
     Eigen::MatrixXd contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const;
     /**
      * @brief Contracts a collection of grid points. Transposed version of Functional::contract
-     * @details This is used to implement the chain rule for functionals involving 
+     * @details This is used to implement the chain rule for functionals involving
      * gradients or when calculating higher-order properties
      * @param[in] xc_data xc_data Matrix of functional partial derivative values
      * @param[in] d_data  d_data Matrix of density input values
@@ -198,9 +197,8 @@ protected:
      */
     Eigen::MatrixXd contract_transposed(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &d_data) const;
 
-    virtual int getCtrOutputLength() const = 0;                         ///< @brief Expected number of output components for the contraction step
-    virtual void clear() = 0;                                           ///< @brief Clears internal functions
-
+    virtual int getCtrOutputLength() const = 0; ///< @brief Expected number of output components for the contraction step
+    virtual void clear() = 0;                   ///< @brief Clears internal functions
 };
 
 } // namespace mrdft

@@ -50,9 +50,7 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
     }
 }
 void Factory::rebuildXClib() {
-    if (!xclib) {
-        return;
-    }
+    if (!xclib) { return; }
 
     const auto functional_specs = xclib->getFunctionalSpecs();
     if (XClib::libxc) {
@@ -61,29 +59,22 @@ void Factory::rebuildXClib() {
         xclib = std::make_unique<XCFun>(spin);
     }
 
-    for (const auto &[name, coef] : functional_specs) {
-        xclib->setFunctional(name, coef, cutoff);
-    }
+    for (const auto &[name, coef] : functional_specs) { xclib->setFunctional(name, coef, cutoff); }
 }
 
 void Factory::setLibxc(bool libxc_) {
-    if (XClib::libxc == libxc_) {
-        return;
-    }
+    if (XClib::libxc == libxc_) { return; }
 
     XClib::libxc = libxc_;
     rebuildXClib();
 }
 
 void Factory::setSpin(bool s) {
-    if (spin == s) {
-        return;
-    }
+    if (spin == s) { return; }
 
     spin = s;
     rebuildXClib();
 }
-
 
 void Factory::setFunctional(const std::string &name, double c) {
     xclib->setFunctional(name, c, cutoff);

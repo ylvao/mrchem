@@ -25,8 +25,8 @@
 
 #pragma once
 
-#include <XCFun/xcfun.h>
 #include "xclib.h"
+#include <XCFun/xcfun.h>
 
 namespace mrdft {
 
@@ -40,25 +40,24 @@ class XCFun final : public XClib {
 
 public:
     explicit XCFun(bool spin_enabled)
-        : XClib(spin_enabled) {
-            xcfun = xcfun_new();
-        }
+            : XClib(spin_enabled) {
+        xcfun = xcfun_new();
+    }
 
     ~XCFun() override;
 
-    xcfun_t *xcfun;                               ///< @brief XCFun library handle
-    void setFunctional(const std::string &name, double c, double cutoff) override;
+    xcfun_t *xcfun; ///< @brief XCFun library handle
     double getAmountExx() const override;
-    int getnOut() override {return xcfun_output_length(xcfun);}
+    int getnOut() override { return xcfun_output_length(xcfun); }
 
+    void setFunctional(const std::string &name, double c, double cutoff) override;
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) override;
     void printFunctionalReference(int out_txt_width) const override;
-    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const override; 
-    const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; }
-    std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
-    void addXCFunFunctionalName(const std::string &name) { xcfun_func_names.push_back(name); }
+    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const override;
 
-
+    std::vector<std::string> xcfun_func_names;                                                   ///< @brief Names of XCFun functionals registered via setFunctional()
+    const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; } ///< @brief Get the list of XCFun functional names
+    void addXCFunFunctionalName(const std::string &name) { xcfun_func_names.push_back(name); }   ///< @brief Add an XCFun functional name to the xcfun_func_names list
 };
 
-} // mrdft
+} // namespace mrdft

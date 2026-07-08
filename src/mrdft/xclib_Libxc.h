@@ -25,40 +25,47 @@
 
 #pragma once
 
-#include <xc_funcs.h>
-#include <xc.h>
 #include "xclib.h"
+#include <xc.h>
+#include <xc_funcs.h>
 
 namespace mrdft {
 
 /**
  * @class Libxc
- * @brief Class for Exchange-Correlation functionals using LibXC
- * @details Provides the interface for evaluating XC potentials
+ * @brief Class for Exchange-Correlation functionals using Libxc
+ * @details Provides the interface for evaluating xc potentials
  * on the Multi-Resolution Analysis (MRA) grid using Libxc
  */
 class Libxc final : public XClib {
 
 public:
     explicit Libxc(bool spin_enabled)
-        : XClib(spin_enabled) {}
+            : XClib(spin_enabled) {}
 
     ~Libxc() override;
 
-    std::vector<xc_func_type*> libxc_objects;     ///< @brief Vector of initialized Libxc functionals
-    std::vector<double> libxc_coefs;              ///< @brief Vector scaling coefficients for each functional in libxc_objects
-    double customExx{0.0};                        ///< @brief Used in mapfunctionalName to set exx for custom functionals
-    void setFunctional(const std::string &name, double c, double cutoff) override;
-    void setCustomExx(double exx) { customExx = exx; }
+    std::vector<xc_func_type *> libxc_objects; ///< @brief Vector of initialized Libxc functionals
+    std::vector<double> libxc_coefs;           ///< @brief Vector scaling coefficients for each functional in libxc_objects
     double getAmountExx() const override;
     double getCustomExx() const { return customExx; }
     int getnOut() override;
 
+    void setFunctional(const std::string &name, double c, double cutoff) override;
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) override;
-    void printFunctionalReference(int out_txt_width) const override;
     void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const override;
-    void mapFunctionalName(std::string name, std::vector<int> &ids, std::vector<double> &coefs, double &customExx);
+    void printFunctionalReference(int out_txt_width) const override;
 
+    double customExx{0.0};                             ///< @brief Additional exact exchange provided by mapFunctionalName for custom functionals
+    void setCustomExx(double exx) { customExx = exx; } ///< @brief Used in mapFunctionalName() to set a custom fraction of exact exchange
+    /**
+     * @brief Maps a functional name string (eg., "PBE0", "LDA" or "XC_LDA_X", XC_GGA_X_B88) to its corresponding Libxc IDs and scaling coefficients
+     * @param[in] name        Name of the functional
+     * @param[in] ids         Vector to be populated with the IDs used by Libxc
+     * @param[in] coefs       Vector to be populated with the corresponding scaling coefficients
+     * @param[in] customExx   Variable for a customized exact exchange sat by a pre-defined functional
+     */
+    void mapFunctionalName(std::string name, std::vector<int> &ids, std::vector<double> &coefs, double &customExx);
 };
 
-} // mrdft
+} // namespace mrdft
