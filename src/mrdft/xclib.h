@@ -31,14 +31,11 @@ namespace mrdft {
 
 class XClib {
 public:
-    explicit XClib(bool spin_enabled) {
-        this->spin = spin_enabled;
-    }
+    explicit XClib(bool spin_enabled) { this->spin = spin_enabled; }
 
     virtual ~XClib() = default;
 
     std::vector<std::pair<std::string, double>> functional_specs; ///< @brief Configured functionals and scaling coefficients
-    std::vector<std::string> xcfun_func_names;    ///< @brief Vector for storing used XCFun functional names
 
     virtual void setFunctional(const std::string &name, double c, double cutoff) = 0;
     virtual double getAmountExx() const = 0;
@@ -46,18 +43,15 @@ public:
     virtual void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) = 0;
     virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const = 0;
     virtual void printFunctionalReference(int out_txt_width) const = 0;
-    
+
     void addFunctionalSpec(const std::string &name, double c) { functional_specs.emplace_back(name, c); }
-    void addXCFunFunctionalName(const std::string &name) { xcfun_func_names.push_back(name); }
-    
-    static bool libxc;                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
+
+    static bool libxc; ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
     bool spin;
     const std::vector<std::pair<std::string, double>> &getFunctionalSpecs() const { return functional_specs; }
-    const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; }
 
     static void printReferenceHeader(int out_txt_width);
     static void printWrap(const std::string &str, std::size_t txt_width, int indent = 0);
-
 };
 
-} // mrdft
+} // namespace mrdft
