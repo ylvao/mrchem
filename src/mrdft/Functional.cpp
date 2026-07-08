@@ -37,7 +37,6 @@ void Functional::print_functional_references() const {
     xclib->printFunctionalReference(outfile_txt_width);
 }
 
-// does this need to be here?
 double Functional::amountEXX() const {
     double lib_exx = xclib->getAmountExx();
     double exx = xclib->getCustomExx() + lib_exx;
@@ -91,15 +90,6 @@ Eigen::MatrixXd Functional::contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &
     for (int i = 0; i < this->xc_mask.rows(); i++) {
         Eigen::VectorXd cont_i = Eigen::VectorXd::Zero(nPts);
         for (int j = 0; j < this->xc_mask.cols(); j++) {
-            // Eigen::VectorXd cont_ij = Eigen::VectorXd::Zero(nPts);
-            // int xc_idx = this->xc_mask(i, j);
-            // int d_idx = this->d_mask(j);
-            // if (d_idx >= 0) {
-            //     cont_ij = xc_data.row(xc_idx).array() * d_data.row(d_idx).array();
-            // } else {
-            //     cont_ij = xc_data.row(xc_idx);
-            // }
-            // cont_i += cont_ij;
             int xc_idx = this->xc_mask(i, j);
             int d_idx = this->d_mask(j);
             if (d_idx >= 0) {
@@ -122,7 +112,6 @@ Eigen::MatrixXd Functional::contract_transposed(Eigen::MatrixXd &xc_data, Eigen:
     for (int i = 0; i < this->xc_mask.rows(); i++) {
         Eigen::VectorXd cont_i = Eigen::VectorXd::Zero(nPts);
         for (int j = 0; j < this->xc_mask.cols(); j++) {
-            // Eigen::VectorXd cont_ij = Eigen::VectorXd::Zero(nPts);
             int xc_idx = this->xc_mask(i, j);
             int d_idx = this->d_mask(j);
             if (d_idx >= 0) {
@@ -151,7 +140,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     Eigen::MatrixXd xclib_inp(ncoefs, xclib_inpsize); //input for xcfun
     double* coef = node.getCoefs();
 
-for (int i = 0; i < spinsize; i++) {
+    for (int i = 0; i < spinsize; i++) {
         // make cv representation of density
         mrcpp::FunctionTree<3>* rho = std::get<1>(inp[i]);
         auto &rhoNode = rho->getNode(nodeIdx);

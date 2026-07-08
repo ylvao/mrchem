@@ -37,8 +37,6 @@ using namespace std;
 
 namespace mrdft {
 
-// YOU CAN DO IT
-
 /** @brief Compute XC potentials from densities
  *
  * This routine computes the XC energy density and potentials on the
