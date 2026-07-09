@@ -280,8 +280,10 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
     std::string xc_lib;
 
     if (json_scf["fock_operator"].contains("xc_library")) {
-        xc_lib = json_scf["fock_operator"]["xc_library"][0].get<std::string>();
-    } else {xc_lib = "xcfun";}
+        xc_lib = json_scf["fock_operator"]["xc_library"].get<std::string>();
+    } else {
+        xc_lib = "xcfun";
+    }
 
     ///////////////////////////////////////////////////////////
     ////////////////   Building Fock Operator   ///////////////
@@ -1480,11 +1482,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
         // TODO: Look over and input parser so this is not necessary
         std::string xc_lib;
         if (json_fock.contains("xc_library")) {
-            if(json_fock["xc_library"].is_array()){
-                xc_lib = json_fock["xc_library"][0].get<std::string>();
-            }else{
-                xc_lib = json_fock["xc_library"]["xc_library"].get<std::string>();
-            }
+            xc_lib = json_fock["xc_library"].get<std::string>();
         } else {
             xc_lib = "xcfun";
         }
