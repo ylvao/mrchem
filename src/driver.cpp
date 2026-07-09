@@ -1489,9 +1489,7 @@ void driver::build_fock_operator(const json &json_fock, Molecule &mol, FockBuild
             xc_lib = "xcfun";
         }
 
-        mrdft::Factory xc_factory(*MRA);
-        xc_factory.setSpin(xc_spin);
-        xc_factory.setLibxc((xc_lib == "libxc") ? true : false);
+        mrdft::Factory xc_factory(*MRA, xc_spin, xc_lib);
         xc_factory.setOrder(xc_order);
         xc_factory.setDensityCutoff(xc_cutoff);
         for (const auto &f : xc_funcs) {

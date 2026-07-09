@@ -47,7 +47,6 @@ public:
 
     virtual ~XClib() = default;
 
-    static bool libxc;                                            ///< @brief Flag indicating if Libxc is active (True if "DFT {xc_library = libxc}" in input file)
     bool spin;                                                    ///< @brief True if density is spin-polarized
     std::vector<std::pair<std::string, double>> functional_specs; ///< @brief Configured functionals and scaling coefficients
     virtual double getAmountExx() const = 0;                      ///< @brief Get total fraction of exact exchange

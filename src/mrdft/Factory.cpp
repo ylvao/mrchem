@@ -39,41 +39,13 @@
 
 namespace mrdft {
 
-bool XClib::libxc = false;
-
-Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA)
-        : mra(MRA) {
-    if (XClib::libxc) {
-        xclib = std::make_unique<Libxc>(spin);
-    } else {
+Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const std::string &xclibname)
+        : spin(spin), xclibname(xclibname), mra(MRA) {
+    if (xclibname == "xcfun") {
         xclib = std::make_unique<XCFun>(spin);
-    }
-}
-void Factory::rebuildXClib() {
-    if (!xclib) { return; }
-
-    const auto functional_specs = xclib->getFunctionalSpecs();
-    if (XClib::libxc) {
+    } else if (xclibname == "libxc") {
         xclib = std::make_unique<Libxc>(spin);
-    } else {
-        xclib = std::make_unique<XCFun>(spin);
     }
-
-    for (const auto &[name, coef] : functional_specs) { xclib->setFunctional(name, coef, cutoff); }
-}
-
-void Factory::setLibxc(bool libxc_) {
-    if (XClib::libxc == libxc_) { return; }
-
-    XClib::libxc = libxc_;
-    rebuildXClib();
-}
-
-void Factory::setSpin(bool s) {
-    if (spin == s) { return; }
-
-    spin = s;
-    rebuildXClib();
 }
 
 void Factory::setFunctional(const std::string &name, double c) {
