@@ -110,7 +110,7 @@ double Libxc::getAmountExx() const {
 
 void Libxc::printFunctionalReference(int out_txt_width) const {
     // Print header and provide wrapping utility via XClib helpers
-    XClib::printReferenceHeader(out_txt_width);
+    XClib::printReferenceHeader();
 
     std::string libxc_ref_str = "Using Libxc (version " + std::string(xc_version_string()) + ") to evaluate density functionals. Libxc is free software. It is " +
                                 "distributed under the Mozilla Public License, version 2.0. For " + "more information, please check the Libxc manual. You should cite\n\n" +

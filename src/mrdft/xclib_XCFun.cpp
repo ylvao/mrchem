@@ -66,7 +66,7 @@ double XCFun::getAmountExx() const {
 
 void XCFun::printFunctionalReference(int out_txt_width) const {
     // Print header and provide wrapping utility via XClib helpers
-    XClib::printReferenceHeader(out_txt_width);
+    XClib::printReferenceHeader();
     printout(0, xcfun_splash());
     std::cout << "\nXCFun functionals used in this calculation:\n";
     for (const auto &func_name : xcfun_func_names) {

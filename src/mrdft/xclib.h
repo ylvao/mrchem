@@ -109,7 +109,7 @@ public:
      * @brief Print a common xc functional reference header
      * @param[in] out_txt_width h Maximum line width used when wrapping text
      */
-    static void printReferenceHeader(int out_txt_width);
+    static void printReferenceHeader();
 
     /**
      * @brief Helper function for word‑wrapping reference strings

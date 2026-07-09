@@ -29,7 +29,7 @@
 namespace mrdft {
 
 
-void XClib::printReferenceHeader(int out_txt_width) {
+void XClib::printReferenceHeader() {
     // Only run on main thread
     if (mrcpp::mpi::world_rank != 0) {
         return;
