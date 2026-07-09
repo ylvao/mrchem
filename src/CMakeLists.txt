@@ -53,7 +53,7 @@ target_link_libraries(mrchem
     Eigen3::Eigen
   PUBLIC
     ${LIBXC_LIBRARY}
-    XCFun::xcfun
+    ${XCFUN_LIBRARY}
     MRCPP::mrcpp
     nlohmann_json::nlohmann_json
     $<$<AND:$<TARGET_EXISTS:OpenMP::OpenMP_CXX>,$<BOOL:${ENABLE_OPENMP}>>:OpenMP::OpenMP_CXX>

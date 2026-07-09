@@ -39,14 +39,20 @@
 #include "xclib_Libxc.h"
 #endif
 
+#ifndef DISABLE_XCFUN
 #include "xclib_XCFun.h"
+#endif
 
 namespace mrdft {
 
 Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const std::string &xclibname)
         : spin(spin), xclibname(xclibname), mra(MRA) {
     if (xclibname == "xcfun") {
+#ifdef DISABLE_XCFUN
+        MSG_ABORT("LibXC support disabled during compilation!");
+#else
         xclib = std::make_unique<XCFun>(spin);
+#endif
     } else if (xclibname == "libxc") {
 #ifdef DISABLE_LIBXC
         MSG_ABORT("LibXC support disabled during compilation!");

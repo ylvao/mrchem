@@ -4,8 +4,13 @@ target_sources(mrchem PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/Functional.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/xc_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/xclib.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/xclib_XCFun.cpp
     )
+
+if(ENABLE_XCFUN)
+    target_sources(mrchem PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/xclib_XCFun.cpp
+        )
+endif()
 
 if(ENABLE_LIBXC)
     target_sources(mrchem PRIVATE

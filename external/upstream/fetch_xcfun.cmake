@@ -5,6 +5,8 @@ if(XCFUN_FIND_BEHAVIOUR STREQUAL "default" OR XCFUN_FIND_BEHAVIOUR STREQUAL "onl
     NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
     )
 endif()
+set(XCFUN_LIBRARY XCFun::xcfun)
+set(ENABLE_XCFUN ON)
 if(TARGET XCFun::xcfun)
   get_property(_loc TARGET XCFun::xcfun PROPERTY LOCATION)
   message(STATUS "Found XCFun: ${_loc} (found version ${XCFun_VERSION})")
@@ -37,5 +39,8 @@ elseif(XCFUN_FIND_BEHAVIOUR STREQUAL "default" OR XCFUN_FIND_BEHAVIOUR STREQUAL 
     target_compile_options(xcfun PRIVATE -w)
   endif()
 else()
-  message(FATAL_ERROR "No suitable XCFun found or fetched. Aborting setup!")
+  message(STATUS "Disabling XCFun support!")
+  add_compile_definitions(DISABLE_XCFUN)
+  set(XCFUN_LIBRARY "")
+  set(ENABLE_XCFUN OFF)
 endif()
