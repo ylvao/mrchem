@@ -69,7 +69,7 @@ private:
      *
      * Ownership of densities is outside MRDFT -> clear
      */
-    void clear() { mrcpp::clear(this->rho, false); }
+    void clear() override { mrcpp::clear(this->rho, false); }
 };
 
 } // namespace mrdft

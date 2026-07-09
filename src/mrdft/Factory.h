@@ -43,19 +43,17 @@ public:
      * @param[in] MRA The Multi-Resolution Analysis object providing the grid
      * and basis functions for the calculation
      */
-    Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA);
+    Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const std::string &libname);
 
     ~Factory() = default; ///< @brief Default destructor
 
     /*
      * Setters
      */
-    void setSpin(bool s);                                    ///< Set spin polarization (true for unrestricted/spin-polarized) */
     void setOrder(int k) { order = k; }                      ///< Set the polynomial order for the MRA basis
     void setUseGamma(bool g) { gamma = g; }                  ///< Toggle between gamma-type and explicit derivatives
     void setLogGradient(bool lg) { log_grad = lg; }          ///< Toggle the use of logarithmic gradients
     void setDensityCutoff(double c) { cutoff = c; }          ///< Set the threshold for neglecting low-density regions
-    void setLibxc(bool libxc_);                              ///< Toggle between Libxc (true) and XCFun (false) backends
     void setDerivative(const std::string &n) { diff_s = n; } ///< Set derivative operator type (e.g., "bspline", "abgv_00")
 
     /**
@@ -90,14 +88,13 @@ public:
     std::unique_ptr<MRDFT> build();
 
 private:
-    void rebuildXClib();           ///< @brief Rebuilds the XClib backend
-
     int order{1};                  ///< Polynomial order of the Multi-Resolution Analysis (MRA) basis
     bool spin{false};              ///< If true, perform unrestricted calculations
     bool gamma{false};             ///< If true, use gamma-type derivatives (gradient squared) instead of explicit components
     bool log_grad{false};          ///< Toggle for using logarithmic gradient transformations
     double cutoff{-1.0};           ///< Density threshold; values below this are sat to 0
     std::string diff_s{"abgv_00"}; ///< String identifier for the derivative operator type (e.g., "bspline", "abgv_55")
+    std::string xclibname;
 
     const mrcpp::MultiResolutionAnalysis<3> mra;          ///< @brief Reference to the 3D Multi-Resolution Analysis grid structure
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p; ///< @brief Pointer to the numerical derivative operator used for GGA gradients

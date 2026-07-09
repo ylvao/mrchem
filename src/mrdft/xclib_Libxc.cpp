@@ -153,13 +153,13 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                     Eigen::MatrixXd rho = Eigen::MatrixXd::Zero(2, nPts);
                     exc = Eigen::MatrixXd::Zero(1, nPts);
                     vxc = Eigen::MatrixXd::Zero(2, nPts);
-                    for (size_t j = 0; j < nPts; j++) {
+                    for (int j = 0; j < nPts; j++) {
                         // alpha_1, beta_1, alpha_2, beta_2, ..
                         rho(0, j) = inp(0, j);
                         rho(1, j) = inp(1, j);
                     }
                     xc_lda_exc_vxc(libxc_objects[i], nPts, rho.data(), exc.data(), vxc.data());
-                    for (size_t j = 0; j < nPts; ++j) {
+                    for (int j = 0; j < nPts; ++j) {
                         //    xcfun calculates actual energy density while libxc calculates
                         //    energy density per electron density
 
@@ -172,7 +172,7 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                     exc = Eigen::MatrixXd::Zero(1, nPts);
                     vxc = Eigen::MatrixXd::Zero(1, nPts);
                     xc_lda_exc_vxc(libxc_objects[i], nPts, inp.data(), exc.data(), vxc.data());
-                    for (size_t j = 0; j < nPts; ++j) {
+                    for (int j = 0; j < nPts; ++j) {
                         //    xcfun calculates actual energy density while libxc calculates
                         //    energy density per electron density
                         out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
@@ -188,12 +188,12 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                     vxc = Eigen::MatrixXd::Zero(2, nPts);
                     sxc = Eigen::MatrixXd::Zero(3, nPts);
                     sigma = Eigen::MatrixXd::Zero(3, nPts);
-                    for (size_t j = 0; j < nPts; j++) {
+                    for (int j = 0; j < nPts; j++) {
                         // alpha_1, beta_1, alpha_2, beta_2, ..
                         rho(0, j) = inp(0, j);
                         rho(1, j) = inp(1, j);
                     }
-                    for (size_t j = 0; j < nPts; j++) {
+                    for (int j = 0; j < nPts; j++) {
                         // clang-format off
                         // Libxc takes in reduced gradients: up-up, up-down, down-down
                         sigma(0, j) = inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j) + inp(4, j) * inp(4, j);
@@ -202,7 +202,7 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                     }
                     xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
 
-                    for (size_t j = 0; j < nPts; ++j) {
+                    for (int j = 0; j < nPts; ++j) {
                         // clang-format off
                         //    xcfun calculates energy density per volume while libxc calculates
                         //    energy density per electron, so we multiply by the density here
@@ -226,10 +226,10 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                     vxc = Eigen::MatrixXd::Zero(1, nPts);
                     sxc = Eigen::MatrixXd::Zero(1, nPts);
                     sigma = Eigen::MatrixXd::Zero(1, nPts);
-                    for (size_t j = 0; j < nPts; j++) { sigma(j) = inp(1, j) * inp(1, j) + inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j); }
+                    for (int j = 0; j < nPts; j++) { sigma(j) = inp(1, j) * inp(1, j) + inp(2, j) * inp(2, j) + inp(3, j) * inp(3, j); }
                     xc_gga_exc_vxc(libxc_objects[i], nPts, rho.data(), sigma.data(), exc.data(), vxc.data(), sxc.data());
 
-                    for (size_t j = 0; j < nPts; ++j) {
+                    for (int j = 0; j < nPts; ++j) {
                         //    xcfun calculates energy density per volume while libxc calculates
                         //    energy density per electron, so we multiply by the density here
                         out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
