@@ -74,7 +74,7 @@ private:
      * Ownership of densities is outside MRDFT -> clear
      * Ownership of gradients is inside MRDFT -> free
      */
-    void clear() {
+    void clear() override {
         mrcpp::clear(this->rho, false);
         mrcpp::clear(this->grad, true);
     }

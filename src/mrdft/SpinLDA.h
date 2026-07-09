@@ -70,7 +70,7 @@ private:
      *
      * Ownership of densities (alpha, beta) is outside MRDFT -> clear
      */
-    void clear() {
+    void clear() override {
         mrcpp::clear(this->rho_a, false);
         mrcpp::clear(this->rho_b, false);
     }
