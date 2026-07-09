@@ -34,7 +34,11 @@
 #include "MRDFT.h"
 #include "SpinGGA.h"
 #include "SpinLDA.h"
+
+#ifndef DISABLE_LIBXC
 #include "xclib_Libxc.h"
+#endif
+
 #include "xclib_XCFun.h"
 
 namespace mrdft {
@@ -44,7 +48,11 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const 
     if (xclibname == "xcfun") {
         xclib = std::make_unique<XCFun>(spin);
     } else if (xclibname == "libxc") {
+#ifdef DISABLE_LIBXC
+        MSG_ABORT("LibXC support disabled during compilation!");
+#else
         xclib = std::make_unique<Libxc>(spin);
+#endif
     }
 }
 

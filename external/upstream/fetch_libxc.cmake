@@ -5,6 +5,8 @@ if(LIBXC_FIND_BEHAVIOUR STREQUAL "default" OR LIBXC_FIND_BEHAVIOUR STREQUAL "onl
     NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
     )
 endif()
+set(LIBXC_LIBRARY Libxc::xc)
+set(ENABLE_LIBXC ON)
 if(TARGET Libxc::xc)
   get_target_property(_loc Libxc::xc LOCATION)
   message(STATUS "Found Libxc: ${_loc} (found version ${Libxc_VERSION})")
@@ -46,5 +48,8 @@ elseif(LIBXC_FIND_BEHAVIOUR STREQUAL "default" OR LIBXC_FIND_BEHAVIOUR STREQUAL 
       )
   endif()
 else()
-  message(FATAL_ERROR "No suitable LibXC found or fetched. Aborting setup!")
+  message(STATUS "Disabling LibXC support!")
+  add_compile_definitions(DISABLE_LIBXC)
+  set(LIBXC_LIBRARY "")
+  set(ENABLE_LIBXC OFF)
 endif()
