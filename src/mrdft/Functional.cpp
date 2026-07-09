@@ -45,7 +45,7 @@ double Functional::amountEXX() const {
 void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out) const {
     int nInp = numIn();
     int nOut = numOut();
-    int nPts = inp.cols();
+    size_t nPts = inp.cols();
     if (nInp != inp.rows()) {
         std::ostringstream oss;
         oss << "Invalid input: expected matrix with " << nInp << " rows, got " << inp.rows() << "!\n";
