@@ -347,7 +347,7 @@ json driver::scf::run(const json &json_scf, Molecule &mol) {
         solver.setRotation(rotation);
         solver.setLocalize(localize);
         solver.setMethodName(method);
-        solver.setLibxc((xc_lib == "libxc") ? true : false);
+        solver.setXCLibName(xc_lib);
         solver.setRelativityName(relativity);
         solver.setEnvironmentName(environment);
         solver.setExternalFieldName(external_field);
@@ -569,7 +569,7 @@ bool driver::scf::guess_energy(const json &json_guess, Molecule &mol, FockBuilde
     mrcpp::print::separator(0, '~');
     print_utils::text(0, "Calculation    ", "Compute initial energy");
     print_utils::text(0, "Method         ", method);
-    print_utils::text(0, "XC Library     ", (xc_lib == "libxc") ? "LibXC" : "XCFun");
+    print_utils::text(0, "XC Library     ", xc_lib);
     print_utils::text(0, "Relativity     ", relativity);
     print_utils::text(0, "Environment    ", environment);
     print_utils::text(0, "External fields", external_field);
