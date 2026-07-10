@@ -405,6 +405,7 @@ bool driver::scf::guess_orbitals(const json &json_guess, const json &json_occ, M
     auto cube_a = json_guess["file_CUBE_a"];
     auto cube_b = json_guess["file_CUBE_b"];
     auto xclib = json_guess["xc_library"];
+    auto cutoff = json_guess["cutoff"];
 
     int mult = mol.getMultiplicity();
     if (restricted && mult != 1) {
@@ -518,9 +519,9 @@ bool driver::scf::guess_orbitals(const json &json_guess, const json &json_occ, M
     } else if (type == "core") {
         success = initial_guess::core::setup(Phi, prec, nucs, zeta);
     } else if (type == "sad") {
-        success = initial_guess::sad::setup(Phi, prec, screen, nucs, xclib, zeta);
+        success = initial_guess::sad::setup(Phi, prec, screen, nucs, xclib, cutoff, zeta);
     } else if (type == "sad_gto") {
-        success = initial_guess::sad::setup(Phi, prec, screen, nucs, xclib);
+        success = initial_guess::sad::setup(Phi, prec, screen, nucs, xclib, cutoff);
     } else if (type == "gto") {
         success = initial_guess::gto::setup(Phi, prec, screen, gto_bas, gto_p, gto_a, gto_b);
     } else if (type == "cube") {
@@ -536,7 +537,7 @@ bool driver::scf::guess_orbitals(const json &json_guess, const json &json_occ, M
         std::string nao_directory = "";
         if (json_guess.contains(key)) nao_directory = json_guess[key];
 
-        success = initial_guess::nao::setup(Phi, prec, nucs, nmix, alpha_mix, xclib, nao_directory);
+        success = initial_guess::nao::setup(Phi, prec, nucs, nmix, alpha_mix, xclib, cutoff, nao_directory);
     } else {
         MSG_ERROR("Invalid initial guess");
         success = false;
