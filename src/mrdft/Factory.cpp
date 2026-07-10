@@ -49,7 +49,7 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const 
         : spin(spin), xclibname(xclibname), mra(MRA) {
     if (xclibname == "xcfun") {
 #ifdef DISABLE_XCFUN
-        MSG_ABORT("LibXC support disabled during compilation!");
+        MSG_ABORT("XCFun support disabled during compilation!");
 #else
         xclib = std::make_unique<XCFun>(spin);
 #endif
