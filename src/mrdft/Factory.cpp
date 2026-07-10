@@ -59,6 +59,12 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const 
 #else
         xclib = std::make_unique<Libxc>(spin);
 #endif
+    } else if (xclibname == "auto") {
+#ifndef DISABLE_XCFUN
+        xclib = std::make_unique<XCFun>(spin);
+#else
+        xclib = std::make_unique<Libxc>(spin);
+#endif
     }
 }
 

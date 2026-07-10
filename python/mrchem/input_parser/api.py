@@ -348,7 +348,7 @@ def stencil() -> JSONDict:
                     {   'keywords': [   {   'default': 0.0,
                                             'name': 'density_cutoff',
                                             'type': 'float'},
-                                        {   'default': 'xcfun',
+                                        {   'default': 'auto',
                                             'name': 'xc_library',
                                             'type': 'str'},
                                         {   'default': ' ',
