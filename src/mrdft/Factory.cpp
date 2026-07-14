@@ -63,7 +63,7 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const 
 #ifndef DISABLE_XCFUN
         xclib = std::make_unique<XCFun>(spin);
 #else
-#ifndef DISABLE_XCFUN
+#ifndef DISABLE_LIBXC
         xclib = std::make_unique<Libxc>(spin);
 #else
         MSG_ABORT("No XC library available!");
