@@ -39,7 +39,7 @@ Libxc::~Libxc() {
     }
 }
 
-void Libxc::setFunctional(const std::string &name, double c, double cutoff) {
+void Libxc::setFunctional(const std::string &name, double c) {
     std::vector<int> ids;
     std::vector<double> coefs;
     double scaled_custom_exx = 0.0;
@@ -59,6 +59,14 @@ void Libxc::setFunctional(const std::string &name, double c, double cutoff) {
         xc_func_set_dens_threshold(libxc_obj, cutoff);
         this->libxc_objects.push_back(libxc_obj);
         this->libxc_coefs.push_back(c * coefs[i]);
+    }
+}
+
+void Libxc::setCutoff(double cutoff) {
+    this->cutoff = cutoff;
+
+    for (auto *f : libxc_objects) {
+        xc_func_set_dens_threshold(f, cutoff);
     }
 }
 

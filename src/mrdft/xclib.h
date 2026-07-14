@@ -59,7 +59,7 @@ public:
      * @param[in] c      Scaling coefficient associated with @p name
      * @param[in] cutoff Density threshold; passed to ::xc_func_set_dens_threshold in Libxc, unused by XCFun
      */
-    virtual void setFunctional(const std::string &name, double c, double cutoff) = 0;
+    virtual void setFunctional(const std::string &name, double c) = 0;
 
     /**
      * @brief Get list of configured functional names and scaling coefficients
@@ -105,6 +105,8 @@ public:
      */
     virtual void printFunctionalReference(int out_txt_width) const = 0;
 
+    virtual void setCutoff(double cutoff) = 0;
+
     /**
      * @brief Print a common xc functional reference header
      * @param[in] out_txt_width h Maximum line width used when wrapping text
@@ -118,6 +120,9 @@ public:
      * @param[in] indent    Number of spaces to indent each wrapped line, used for tabbed lines
      */
     static void printWrap(const std::string &str, std::size_t txt_width, int indent = 0);
+
+protected:
+    double cutoff{-1.0};
 };
 
 } // namespace mrdft

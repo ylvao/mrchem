@@ -39,7 +39,7 @@ XCFun::~XCFun() {
     }
 }
 
-void XCFun::setFunctional(const std::string &name, double c, double cutoff) {
+void XCFun::setFunctional(const std::string &name, double c) {
     addFunctionalSpec(name, c);
     xcfun_set(xcfun, name.c_str(), c);
 }

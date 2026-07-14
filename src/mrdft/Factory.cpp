@@ -69,7 +69,12 @@ Factory::Factory(const mrcpp::MultiResolutionAnalysis<3> &MRA, bool spin, const 
 }
 
 void Factory::setFunctional(const std::string &name, double c) {
-    xclib->setFunctional(name, c, cutoff);
+    xclib->setFunctional(name, c);
+}
+
+void Factory::setDensityCutoff(double c) {
+    cutoff = c;
+    xclib->setCutoff(c);
 }
 
 std::unique_ptr<MRDFT> Factory::build() {
