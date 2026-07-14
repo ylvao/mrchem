@@ -72,31 +72,35 @@ void Libxc::setCutoff(double cutoff) {
 
 void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
     switch (family_type) {
-                case XC_FAMILY_LDA:
-    #ifdef XC_FAMILY_HYB_GGA
-                case XC_FAMILY_HYB_LDA:
-    #endif
-                    lda = true;
-                    break;
+        case XC_FAMILY_LDA:
+#ifdef XC_FAMILY_HYB_GGA
+        case XC_FAMILY_HYB_LDA:
+#endif
+            lda = true;
+            break;
 
-                case XC_FAMILY_GGA:
-    #ifdef XC_FAMILY_HYB_GGA
-                case XC_FAMILY_HYB_GGA:
-    #endif
-                    gga = true;
-                    break;
+        case XC_FAMILY_GGA:
+#ifdef XC_FAMILY_HYB_GGA
+        case XC_FAMILY_HYB_GGA:
+#endif
+            gga = true;
+            break;
 
-                case XC_FAMILY_MGGA:
-                case XC_FAMILY_HYB_MGGA:
-                    MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
-                    mgga = true;
+        case XC_FAMILY_MGGA:
+        case XC_FAMILY_HYB_MGGA:
+            mgga = true;
+            MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
 
-                default:
-                    MSG_ABORT("Libxc functional family not handled in MRChem!\n");
-            }
+        default:
+            MSG_ABORT("Libxc functional family not handled in MRChem!\n");
+    }
 }
 
 void Libxc::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {
+    gga = false;
+    mgga = false;
+    (void)order; // TODO: use order to choose which libxc functions to call to obtain higher derivatives (vxc, fxc, kxc, ...)
+    (void)gamma;
     for (const auto *f : libxc_objects) {
         getFamilyType(f->info->family, lda, gga, mgga);
         // Check if functional is range separated
@@ -151,7 +155,7 @@ void Libxc::printFunctionalReference(int out_txt_width) const {
     }
 }
 
-void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const {
+void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts) const {
     Eigen::MatrixXd exc, vxc, sxc, sigma;
     for (size_t i = 0; i < libxc_objects.size(); i++) {
         switch (libxc_objects[i]->info->family) {

@@ -58,7 +58,7 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
     }
     out.setZero();
 
-    xclib->callLibEval(inp, out, nPts, nInp, nOut, cutoff);
+    xclib->callLibEval(inp, out, nPts);
 }
 
 // NOT USED: evaluate_transposed is used instead

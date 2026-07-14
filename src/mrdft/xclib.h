@@ -97,7 +97,7 @@ public:
      * @param[in]  nOut   Number of output components (rows in @p out)
      * @param[in]  cutoff Density threshold (not used by Libxc)
      */
-    virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const = 0;
+    virtual void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts) const = 0;
 
     /**
      * @brief Print information and references for all active xc functionals

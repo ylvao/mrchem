@@ -53,7 +53,7 @@ public:
     void setFunctional(const std::string &name, double c) override;
     void initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) override;
     void printFunctionalReference(int out_txt_width) const override;
-    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts, int nInp, int nOut, double cutoff) const override;
+    void callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nPts) const override;
 
     std::vector<std::string> xcfun_func_names;                                                   ///< @brief Names of XCFun functionals registered via setFunctional()
     const std::vector<std::string> &getXCFunFunctionalNames() const { return xcfun_func_names; } ///< @brief Get the list of XCFun functional names
