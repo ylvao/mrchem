@@ -131,21 +131,11 @@ public:
 
     /**
      * @brief Evaluates the functional on a set of grid points
-     * @param[in] inp  Matrix of input values (density, gradient,...)
-     * @param[out] out out_data Matrix of output values (energy, potential, ...)
-     * @details Each column corresponds to one grid point
-     * From a performance point of view, (in pre and postprocessing) it is much more
-     * efficient to have the two consecutive points in two consecutive adresses in memory
-     */
-    Eigen::MatrixXd evaluate(Eigen::MatrixXd &inp) const;
-
-    /**
-     * @brief Evaluates the functional on a set of grid points. Transposed version of Functional::evaluate()
      * @param[in] inp Matrix of input values (density, gradient,...)
      * @param[out] out_trans Matrix of output values (energy, potential, ...)
-     * @details Each row corresponds to one grid point
+     * @details Each row corresponds to one grid point. Previously called evaluate_transposed()
      */
-    Eigen::MatrixXd evaluate_transposed(Eigen::MatrixXd &inp) const;
+    Eigen::MatrixXd evaluate(Eigen::MatrixXd &inp) const;
 
     /**
      * @brief Prints the splash screens, version info, and references for the

@@ -61,17 +61,8 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
     xclib->callLibEval(inp, out, nPts, nInp, nOut, cutoff);
 }
 
-// NOT USED: evaluate_transposed is used instead
 Eigen::MatrixXd Functional::evaluate(Eigen::MatrixXd &inp) const {
-    int nOut = numOut();
-    int nPts = inp.cols();
-
-    Eigen::MatrixXd out(nOut, nPts);
-    evaluate_data(inp, out);
-    return out;
-}
-
-Eigen::MatrixXd Functional::evaluate_transposed(Eigen::MatrixXd &inp) const {
+    // For efficiency: transpose inp and out matrices
     // NB: the data is stored colomn major, i.e. two consecutive points of for example energy density, are not consecutive in memory
     // That means that we cannot extract the energy density data with out.row(0).data() for example.
     Eigen::MatrixXd inp_trans(inp.transpose());
@@ -87,17 +78,17 @@ Eigen::MatrixXd Functional::contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &
     out_data.row(0) = xc_data.row(0); // we always keep the energy functional
 
     for (int i = 0; i < this->xc_mask.rows(); i++) {
-        Eigen::VectorXd cont_i = Eigen::VectorXd::Zero(nPts);
+        // Eigen::VectorXd cont_i = Eigen::VectorXd::Zero(nPts);
         for (int j = 0; j < this->xc_mask.cols(); j++) {
             int xc_idx = this->xc_mask(i, j);
             int d_idx = this->d_mask(j);
             if (d_idx >= 0) {
                 out_data.row(i + 1).array() += xc_data.row(xc_idx).array() * d_data.row(d_idx).array();
             } else {
-                cont_i.array() += xc_data.row(xc_idx).array();
+                out_data.row(i + 1).array() += xc_data.row(xc_idx).array();
             }
         }
-        out_data.row(i + 1) = cont_i; // The first column contains the energy functional
+        // out_data.row(i + 1) = cont_i; // The first column contains the energy functional
     }
     return out_data;
 }
@@ -109,7 +100,6 @@ Eigen::MatrixXd Functional::contract_transposed(Eigen::MatrixXd &xc_data, Eigen:
     out_data.col(0) = xc_data.col(0); // we always keep the energy functional
 
     for (int i = 0; i < this->xc_mask.rows(); i++) {
-        Eigen::VectorXd cont_i = Eigen::VectorXd::Zero(nPts);
         for (int j = 0; j < this->xc_mask.cols(); j++) {
             int xc_idx = this->xc_mask(i, j);
             int d_idx = this->d_mask(j);
@@ -163,7 +153,7 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
     }
 
     // send rho and grad rho to xcfun/libxc
-    Eigen::MatrixXd xc_out = Functional::evaluate_transposed(xclib_inp);
+    Eigen::MatrixXd xc_out = Functional::evaluate(xclib_inp);
 
     // make gradient of the higher order densities
     // layout per higher-order rho when gradients are used:
@@ -233,6 +223,6 @@ void Functional::makepot(mrcpp::FunctionTreeVector<3> &inp, std::vector<mrcpp::F
             }
         }
     }
-    node.attachCoefs(coef); // restablish the original link (for proper destructor behaviour)
+    node.attachCoefs(coef); // reestablish the original link (for proper destructor behaviour)
 }
 } // namespace mrdft
