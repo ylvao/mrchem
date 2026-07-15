@@ -23,7 +23,7 @@
  * <https://mrchem.readthedocs.io/>
  */
 
-#include "xclib_Libxc.h"
+#include "Libxc.h"
 #include <MRCPP/Printer>
 namespace mrdft {
 

@@ -24,12 +24,12 @@
  */
 
 #include <MRCPP/Printer>
-#include "xclib.h"
+#include "XCLib.h"
 
 namespace mrdft {
 
 
-void XClib::printReferenceHeader() {
+void XCLib::printReferenceHeader() {
     // Only run on main thread
     if (mrcpp::mpi::world_rank != 0) {
         return;
@@ -51,7 +51,7 @@ void XClib::printReferenceHeader() {
     mrcpp::print::separator(0, '*', 1);
 }
 
-void XClib::printWrap(const std::string &str_in, std::size_t txt_width, int indent) {
+void XCLib::printWrap(const std::string &str_in, std::size_t txt_width, int indent) {
     std::string str = str_in;
     const std::string continuation_indent(indent, ' ');
     size_t offset = 0;

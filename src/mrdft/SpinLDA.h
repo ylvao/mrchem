@@ -44,7 +44,7 @@ public:
      *             1: potential, etc.)
      * @param[in] f XC library handle (Libxc/XCFun); ownership is transferred
      */
-    SpinLDA(int k, XClib_p &f)
+    SpinLDA(int k, XCLib_p &f)
             : Functional(k, f) {
         xc_mask = xc_utils::build_output_mask(true, true, this->order);
         d_mask = xc_utils::build_density_mask(true, true, this->order);

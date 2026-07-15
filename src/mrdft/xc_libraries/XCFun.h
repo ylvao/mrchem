@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "xclib.h"
+#include "XCLib.h"
 #include <XCFun/xcfun.h>
 
 namespace mrdft {
@@ -36,11 +36,11 @@ namespace mrdft {
  * @details Provides the interface for evaluating XC potentials
  * on the Multi-Resolution Analysis (MRA) grid using XCFun
  */
-class XCFun final : public XClib {
+class XCFun final : public XCLib {
 
 public:
     explicit XCFun(bool spin_enabled)
-            : XClib(spin_enabled) {
+            : XCLib(spin_enabled) {
         xcfun = xcfun_new();
     }
 

@@ -28,7 +28,7 @@
 #include <MRCPP/Printer>
 #include <XCFun/xcfun.h>
 
-#include "xclib_XCFun.h"
+#include "XCFun.h"
 
 namespace mrdft {
 
@@ -66,13 +66,13 @@ double XCFun::getAmountExx() const {
 
 void XCFun::printFunctionalReference(int out_txt_width) const {
     // Print header and provide wrapping utility via XClib helpers
-    XClib::printReferenceHeader();
+    XCLib::printReferenceHeader();
     printout(0, xcfun_splash());
     std::cout << "\nXCFun functionals used in this calculation:\n";
     for (const auto &func_name : xcfun_func_names) {
         std::string xcfun_ref = xcfun_describe_long(func_name.c_str());
         std::string xcfun_ref_str = "  - " + xcfun_ref;
-        XClib::printWrap(xcfun_ref_str, out_txt_width, 4);
+        XCLib::printWrap(xcfun_ref_str, out_txt_width, 4);
     }
     return;
 }

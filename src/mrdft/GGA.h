@@ -45,7 +45,7 @@ public:
      * @param[in] f XC library handle (Libxc/XCFun); ownership is transferred
      * @param[in] d Numerical derivative operator used to compute density gradients
      */
-    GGA(int k, XClib_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
+    GGA(int k, XCLib_p &f, std::unique_ptr<mrcpp::DerivativeOperator<3>> &d)
             : Functional(k, f)
             , derivative(std::move(d)) {
         xc_mask = xc_utils::build_output_mask(false, false, this->order);

@@ -34,8 +34,8 @@
 #include "MRDFT.h"
 #include "SpinGGA.h"
 #include "SpinLDA.h"
-#include "xclib_Libxc.h"
-#include "xclib_XCFun.h"
+#include "xc_libraries/Libxc.h"
+#include "xc_libraries/XCFun.h"
 
 namespace mrdft {
 

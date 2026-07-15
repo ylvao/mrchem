@@ -26,7 +26,7 @@
 #pragma once
 
 #include "MRDFT.h"
-#include "xclib.h"
+#include "xc_libraries/XCLib.h"
 
 namespace mrdft {
 
@@ -98,7 +98,7 @@ private:
 
     const mrcpp::MultiResolutionAnalysis<3> mra;          ///< @brief Reference to the 3D Multi-Resolution Analysis grid structure
     std::unique_ptr<mrcpp::DerivativeOperator<3>> diff_p; ///< @brief Pointer to the numerical derivative operator used for GGA gradients
-    std::unique_ptr<XClib> xclib;                         ///< @brief Handle for exchange–correlation library interface
+    std::unique_ptr<XCLib> xclib;                         ///< @brief Handle for exchange–correlation library interface
 };
 
 } // namespace mrdft

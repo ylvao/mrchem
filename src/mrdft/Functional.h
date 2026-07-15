@@ -28,11 +28,11 @@
 #include <MRCPP/MWOperators>
 #include <MRCPP/trees/FunctionNode.h>
 #include <memory>
-#include "xclib.h"
+#include "xc_libraries/XCLib.h"
 
 namespace mrdft {
 
-using XClib_p = std::unique_ptr<XClib>;
+using XCLib_p = std::unique_ptr<XCLib>;
 
 /**
  * @class Functional
@@ -47,7 +47,7 @@ public:
      * @param[in] k The polynomial order for the MRA basis
      * @param[in] f The XCFun handle (ownership is transferred)
      */
-    Functional(int k, XClib_p &f)
+    Functional(int k, XCLib_p &f)
             : order(k)
             , xclib(std::move(f)) {}
     virtual ~Functional() = default;
@@ -154,7 +154,7 @@ protected:
     Eigen::VectorXi d_mask;                                         ///< @brief density and derivative(s) mask vector for response calculations
     Eigen::MatrixXi xc_mask;                                        ///< @brief functional and derivative(s) mask vector for response calculations
     std::unique_ptr<mrcpp::DerivativeOperator<3>> derivOp{nullptr}; ///< @brief Operator used to compute gradients
-    std::unique_ptr<XClib> xclib;                                   ///< @brief Handle for exchange–correlation library interface
+    std::unique_ptr<XCLib> xclib;                                   ///< @brief Handle for exchange–correlation library interface
 
     virtual int densityChannels() const = 0; ///< @brief Returns number of densities/derivatives (eg. LDA/GGA -> 1, spinLDA/spinGGA -> 2)
     virtual bool usesGradients() const = 0;  ///< @brief Returns true if functional type uses gradients (eg. true for GGAs og metaGGAs)

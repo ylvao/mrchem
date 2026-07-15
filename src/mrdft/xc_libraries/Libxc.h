@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "xclib.h"
+#include "XCLib.h"
 #include <xc.h>
 #include <xc_funcs.h>
 
@@ -37,11 +37,11 @@ namespace mrdft {
  * @details Provides the interface for evaluating xc potentials
  * on the Multi-Resolution Analysis (MRA) grid using Libxc
  */
-class Libxc final : public XClib {
+class Libxc final : public XCLib {
 
 public:
     explicit Libxc(bool spin_enabled)
-            : XClib(spin_enabled) {}
+            : XCLib(spin_enabled) {}
 
     ~Libxc() override;
 

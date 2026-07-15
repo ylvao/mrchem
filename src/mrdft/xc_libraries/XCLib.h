@@ -30,12 +30,12 @@
 namespace mrdft {
 
 /**
- * @class XClib
+ * @class XCLib
  * @brief Abstract exchange–correlation library interface
  * @details This class defines the common interface between MRDFT and the external
  * xc libraries Libxc and XCFun
  */
-class XClib {
+class XCLib {
 public:
     /**
      * @brief Construct a new XC library interface
@@ -43,9 +43,9 @@ public:
      *                         spin‑polarized calculations, otherwise
      *                         spin‑unpolarized
      */
-    explicit XClib(bool spin_enabled) { this->spin = spin_enabled; }
+    explicit XCLib(bool spin_enabled) { this->spin = spin_enabled; }
 
-    virtual ~XClib() = default;
+    virtual ~XCLib() = default;
 
     bool spin;                                                    ///< @brief True if density is spin-polarized
     std::vector<std::pair<std::string, double>> functional_specs; ///< @brief Configured functionals and scaling coefficients

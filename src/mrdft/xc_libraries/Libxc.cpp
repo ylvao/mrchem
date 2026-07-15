@@ -27,7 +27,7 @@
 #include <MRCPP/trees/FunctionNode.h>
 #include <MRCPP/Printer>
 
-#include "xclib_Libxc.h"
+#include "Libxc.h"
 
 namespace mrdft {
 
@@ -89,6 +89,8 @@ void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
 }
 
 void Libxc::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {
+    (void)order;
+    (void)gamma;
     for (const auto *f : libxc_objects) {
         getFamilyType(f->info->family, lda, gga, mgga);
         // Check if functional is range separated
@@ -110,12 +112,12 @@ double Libxc::getAmountExx() const {
 
 void Libxc::printFunctionalReference(int out_txt_width) const {
     // Print header and provide wrapping utility via XClib helpers
-    XClib::printReferenceHeader();
+    XCLib::printReferenceHeader();
 
     std::string libxc_ref_str = "Using Libxc (version " + std::string(xc_version_string()) + ") to evaluate density functionals. Libxc is free software. It is " +
                                 "distributed under the Mozilla Public License, version 2.0. For " + "more information, please check the Libxc manual. You should cite\n\n" +
                                 xc_reference() + " DOI: " + xc_reference_doi() + "\n\nwhen " + "reporting the results of your calculation in a scientific article.\n";
-    XClib::printWrap(libxc_ref_str, out_txt_width);
+    XCLib::printWrap(libxc_ref_str, out_txt_width);
 
     // Avoid printing the same LibXC functional multiple times
     std::set<int> printed_ids;
@@ -131,14 +133,14 @@ void Libxc::printFunctionalReference(int out_txt_width) const {
 
         char *name = xc_functional_get_name(id);
         std::string func_id_str = "  - " + std::string(name) + " (ID " + std::to_string(id) + "): " + func->info->name + "\n";
-        XClib::printWrap(func_id_str, out_txt_width);
+        XCLib::printWrap(func_id_str, out_txt_width);
         free(name);
 
         for (int number = 0; number < XC_MAX_REFERENCES; number++) {
             auto reference = xc_func_info_get_references(func->info, number);
             if (reference == nullptr) break;
             std::string func_ref_str = "     * " + std::string(xc_func_reference_get_ref(reference)) + ", DOI:" + xc_func_reference_get_doi(reference) + "\n";
-            XClib::printWrap(func_ref_str, out_txt_width, 7);
+            XCLib::printWrap(func_ref_str, out_txt_width, 7);
         }
     }
 }
