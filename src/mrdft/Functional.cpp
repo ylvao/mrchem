@@ -92,7 +92,7 @@ Eigen::MatrixXd Functional::contract(Eigen::MatrixXd &xc_data, Eigen::MatrixXd &
             int xc_idx = this->xc_mask(i, j);
             int d_idx = this->d_mask(j);
             if (d_idx >= 0) {
-                cont_i.array() += xc_data.row(xc_idx).array() * d_data.row(d_idx).array();
+                out_data.row(i + 1).array() += xc_data.row(xc_idx).array() * d_data.row(d_idx).array();
             } else {
                 cont_i.array() += xc_data.row(xc_idx).array();
             }
