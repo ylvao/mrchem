@@ -65,16 +65,16 @@ void Libxc::setFunctional(const std::string &name, double c, double cutoff) {
 void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
     switch (family_type) {
                 case XC_FAMILY_LDA:
-    #ifdef XC_FAMILY_HYB_GGA
+#ifdef XC_FAMILY_HYB_GGA
                 case XC_FAMILY_HYB_LDA:
-    #endif
+#endif
                     lda = true;
                     break;
 
                 case XC_FAMILY_GGA:
-    #ifdef XC_FAMILY_HYB_GGA
+#ifdef XC_FAMILY_HYB_GGA
                 case XC_FAMILY_HYB_GGA:
-    #endif
+#endif
                     gga = true;
                     break;
 
