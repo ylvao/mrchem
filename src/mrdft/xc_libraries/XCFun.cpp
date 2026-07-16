@@ -45,17 +45,26 @@ void XCFun::setFunctional(const std::string &name, double c, double cutoff) {
 }
 
 void XCFun::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, bool gamma) {
-    gga = xcfun_is_gga(xcfun);
-    lda = not gga;
+    auto *xcfun_p = xcfun;
+    gga = xcfun_is_gga(xcfun_p);
+    mgga = xcfun_is_metagga(xcfun_p);
+    if (not(gga)) { if (not(mgga)) {lda = true; } }
     unsigned int mode = 1;                    //!< only partial derivative mode implemented
-    unsigned int func_type = (gga) ? 1 : 0;   //!< only LDA and GGA supported for now
     unsigned int dens_type = 1 + spin;        //!< only n (dens_type = 1) or alpha & beta (denst_type = 2) supported now.
     unsigned int laplacian = 0;               //!< no laplacian
-    unsigned int kinetic = 0;                 //!< no kinetic energy density
+    unsigned int kinetic = mgga ? 1u : 0u;    //!< request kinetic energy density for meta-GGAs
     unsigned int current = 0;                 //!< no current density
     unsigned int exp_derivative = not(gamma); //!< use gamma or explicit derivatives
-    if (not(gga)) exp_derivative = 0;         //!< fall back to gamma-type derivatives if LDA
-    xcfun_user_eval_setup(xcfun, order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
+    if (lda) exp_derivative = 0;              //!< fall back to gamma-type derivatives if LDA
+    unsigned int func_type = 0;               //!< LDA = 0, GGA = 1, mGGA = 2
+        if (mgga) {
+            func_type = 2;
+        } else if (gga) {
+            func_type = 1;
+        } else {
+            func_type = 0;
+        }
+    xcfun_user_eval_setup(xcfun_p, order, func_type, dens_type, mode, laplacian, kinetic, current, exp_derivative);
 }
 
 double XCFun::getAmountExx() const {

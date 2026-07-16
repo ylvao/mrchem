@@ -65,23 +65,23 @@ void Libxc::setFunctional(const std::string &name, double c, double cutoff) {
 void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
     switch (family_type) {
                 case XC_FAMILY_LDA:
-    #ifdef XC_FAMILY_HYB_GGA
+#ifdef XC_FAMILY_HYB_GGA
                 case XC_FAMILY_HYB_LDA:
-    #endif
+#endif
                     lda = true;
                     break;
 
                 case XC_FAMILY_GGA:
-    #ifdef XC_FAMILY_HYB_GGA
+#ifdef XC_FAMILY_HYB_GGA
                 case XC_FAMILY_HYB_GGA:
-    #endif
+#endif
                     gga = true;
                     break;
 
                 case XC_FAMILY_MGGA:
                 case XC_FAMILY_HYB_MGGA:
-                    MSG_ABORT("Meta-GGA functionals are not supported in MRChem.!\n");
                     mgga = true;
+                    break;
 
                 default:
                     MSG_ABORT("Libxc functional family not handled in MRChem!\n");
@@ -241,6 +241,65 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                         out(4, j) += 2 * sxc(0, j) * inp(3, j) * libxc_coefs[i];
                     }
                 }
+            case XC_FAMILY_MGGA:
+            case XC_FAMILY_HYB_MGGA:
+                if (spin) {
+                    // Input:
+                    // row 0 : rho_a
+                    // row 1 : rho_b
+                    // row 2 : drho_a / dx
+                    // row 3 : drho_b / dx
+                    // row 4 : drho_a / dy
+                    // row 5 : drho_b / dy
+                    // row 6 : drho_a / dz
+                    // row 7 : drho_b / dz
+                    // row 8 : tau_a
+                    // row 9 : tau_b
+
+                    MSG_ABORT("Spin-polarized meta-GGA not supported in Functional::evaluate_data.");
+                } else {
+                    // Input:
+                    // row 0 : rho
+                    // row 1 : drho / dx
+                    // row 2 : drho / dy
+                    // row 3 : drho / dz
+                    // row 4 : tau
+
+                    Eigen::MatrixXd rho   = inp.row(0).transpose();
+                    exc   = Eigen::MatrixXd::Zero(1, nPts);
+                    vxc   = Eigen::MatrixXd::Zero(1, nPts);
+                    sxc   = Eigen::MatrixXd::Zero(1, nPts);
+                    sigma = Eigen::MatrixXd::Zero(1, nPts);
+                    Eigen::MatrixXd tau  = Eigen::MatrixXd::Zero(1, nPts);
+                    Eigen::MatrixXd vtau = Eigen::MatrixXd::Zero(1, nPts);
+
+                    for (size_t j = 0; j < nPts; j++) {
+                        sigma(j) = inp(1, j) * inp(1, j)
+                                    + inp(2, j) * inp(2, j)
+                                    + inp(3, j) * inp(3, j);
+                        tau(j)   = inp(4, j);
+                    }
+
+                    xc_mgga_exc_vxc(libxc_objects[i], nPts,
+                                    rho.data(), sigma.data(),
+                                    nullptr,      // TODO: laplacian
+                                    tau.data(),
+                                    exc.data(),
+                                    vxc.data(),
+                                    sxc.data(),
+                                    nullptr,      // v_laplacian
+                                    vtau.data());
+
+                    for (size_t j = 0; j < nPts; ++j) {
+                        // Libxc energy density is per particle, multiply by rho
+                        out(0, j) += exc(0, j) * libxc_coefs[i] * inp(0, j);
+                        out(1, j) += vxc(0, j) * libxc_coefs[i];
+                        out(2, j) += 2 * sxc(0, j) * inp(1, j) * libxc_coefs[i];
+                        out(3, j) += 2 * sxc(0, j) * inp(2, j) * libxc_coefs[i];
+                        out(4, j) += 2 * sxc(0, j) * inp(3, j) * libxc_coefs[i];
+                        out(5, j) += vtau(0, j) * libxc_coefs[i];
+                    }
+                }
                 break;
             default:
                 break;
@@ -255,7 +314,13 @@ int Libxc::getnOut() {
     for (const auto *f : libxc_objects) {
         getFamilyType(f->info->family, lda, gga, mgga);
     }
-    if (gga) {
+    if (mgga) {
+        if (spin) {
+            return 11;
+        } else {
+            return 6;
+        }
+    } else if (gga) {
         if (spin) {
             return 9;
         } else {

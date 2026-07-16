@@ -74,6 +74,7 @@ Eigen::MatrixXi xc_utils::build_output_mask(bool is_lda, bool is_spin_sep, int o
     return mask;
 }
 
+// TODO: Should also take into account meta-GGA
 Eigen::VectorXi xc_utils::build_density_mask(bool is_lda, bool is_spin_sep, int order) {
     bool is_gga = not is_lda;
     Eigen::VectorXi mask(1);
