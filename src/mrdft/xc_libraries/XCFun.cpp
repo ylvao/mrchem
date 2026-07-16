@@ -68,7 +68,7 @@ void XCFun::initFunctionalLibrary(bool &lda, bool &gga, bool &mgga, int order, b
 }
 
 double XCFun::getAmountExx() const {
-    double exx = 0;
+    double exx = 0.0;
     xcfun_get(xcfun, "exx", &exx);
     return exx;
 }

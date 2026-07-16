@@ -79,7 +79,9 @@ void getFamilyType(int family_type, bool &lda, bool &gga, bool &mgga) {
                     break;
 
                 case XC_FAMILY_MGGA:
+#ifdef XC_FAMILY_HYB_GGA
                 case XC_FAMILY_HYB_MGGA:
+#endif
                     mgga = true;
                     break;
 
@@ -212,11 +214,11 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                         out(1, j) += vxc(0, j) * libxc_coefs[i];
                         out(2, j) += vxc(1, j) * libxc_coefs[i];
 
-                        // alpha_i,     coef         * ( 2 * vaa               * grad_a_i  + vab       * grad_b_i ), i = x, y, z
+                        // alpha_i,     coef        * ( 2 * vaa       * grad_a_i  + vab       * grad_b_i ), i = x, y, z
                         out(3, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(2, j) + sxc(1, j) * inp(5, j) );
                         out(4, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(3, j) + sxc(1, j) * inp(6, j) );
                         out(5, j) += libxc_coefs[i] * ( 2 * sxc(0, j) * inp(4, j) + sxc(1, j) * inp(7, j) );
-                        // beta_i,       coef        * ( 2 * vbb               * grad_b_i  + vab               * grad_a_i ), i = x, y, z
+                        // beta_i,       coef       * ( 2 * vbb       * grad_b_i  + vab       * grad_a_i ), i = x, y, z
                         out(6, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(5, j) + sxc(1, j) * inp(2, j) );
                         out(7, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(6, j) + sxc(1, j) * inp(3, j) );
                         out(8, j) += libxc_coefs[i] * ( 2 * sxc(2, j) * inp(7, j) + sxc(1, j) * inp(4, j) );
@@ -241,6 +243,7 @@ void Libxc::callLibEval(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out, int nP
                         out(4, j) += 2 * sxc(0, j) * inp(3, j) * libxc_coefs[i];
                     }
                 }
+                break;
             case XC_FAMILY_MGGA:
             case XC_FAMILY_HYB_MGGA:
                 if (spin) {
