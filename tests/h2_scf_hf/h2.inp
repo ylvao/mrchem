@@ -36,5 +36,6 @@ SCF {
 }
 
 DFT {
+  xc_library = xcfun
   density_cutoff = -1.0
 }
