@@ -155,7 +155,7 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
     // could also return functional data object
     int nInp = numIn();
     int nOut = numOut();
-    int nPts = inp.cols();
+    size_t nPts = inp.cols();
     if (nInp != inp.rows()) {
         std::ostringstream oss;
         oss << "Invalid input: expected matrix with " << nInp << " rows, got " << inp.rows() << "!\n";
@@ -357,7 +357,7 @@ void Functional::evaluate_data(const Eigen::MatrixXd &inp, Eigen::MatrixXd &out)
     } else {
         if (nInp != xcfun_input_length(xcfun.get()) or nOut != xcfun_output_length(xcfun.get())) { throw std::logic_error("Dimension mismatch!\n"); }
 
-        for (int i = 0; i < nPts; i++) {
+        for (size_t i = 0; i < nPts; i++) {
             if (isSpin()) {
                 if (inp(0, i) < cutoff and inp(1, i) < cutoff) continue;
             } else {
