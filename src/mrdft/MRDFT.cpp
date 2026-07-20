@@ -69,8 +69,12 @@ mrcpp::FunctionTreeVector<3> MRDFT::evaluate(mrcpp::FunctionTreeVector<3> &inp) 
     // Note: we do not need to make the complete energy density (PotVec[0]) for each mpi,
     //       instead we compute the energy directly.
     mrcpp::Timer t_post;
-    int potvecSize = 2; // this size include PotVec[0], which is not used
-    if (functional().isSpin()) potvecSize = 3;
+    int potvecSize = 2; // this size includes PotVec[0], which is not used
+    if (functional().isMetaGGA() && !functional().isSpin()) {
+        potvecSize = 3;
+    } else if (functional().isSpin()) {
+        potvecSize = 3;
+    }
     mrcpp::FunctionTreeVector<3> PotVec = grid().generate(potvecSize);
     int nNodes = grid().size();
     // parallelization of loop both with omp (pragma omp for) and

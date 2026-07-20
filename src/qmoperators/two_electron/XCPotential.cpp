@@ -137,6 +137,15 @@ void XCPotential::setup(double prec) {
     mrcpp::copy_func(*v_global, v_local);
     this->potentials.push_back(std::make_tuple(1.0, v_global));
 
+    if (this->mrdft->functional().isMetaGGA() && !this->mrdft->functional().isSpin()) {
+        auto &v_tau = mrcpp::get_func(xc_out, 2);
+        auto tau_op = std::make_shared<QMPotential>(0, false);
+        mrcpp::copy_grid(tau_op->real(), v_tau);
+        mrcpp::copy_func(tau_op->real(), v_tau);
+        this->tauPotential = tau_op;
+        this->tauPotential.setup(prec);
+    }
+
     // Fetch potential
     if (this->mrdft->functional().isSpin()) {
         auto &v_local = mrcpp::get_func(xc_out, 2);
@@ -166,6 +175,7 @@ void XCPotential::clear() {
     this->energy = 0.0;
     for (auto &rho : this->densities) rho.free();
     mrcpp::clear(this->potentials, true);
+    this->tauPotential.clear();
     clearApplyPrec();
 }
 

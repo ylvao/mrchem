@@ -148,8 +148,10 @@ mrcpp::FunctionTreeVector<3> XCPotentialD1::setupDensities(double prec, mrcpp::F
                 mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_y);  // d2phi_ += d2phi_y
                 mrcpp::add(prec, tau_phi, 1.0, tau_phi, 1.0, d2phi_z);  // d2phi_ += d2phi_z
 
-                // tau += 1/2 tau_phi
-                mrcpp::add(prec, tau.real(), 1.0, tau.real(), 0.5, tau_phi);
+                // tau needs the same orbital occupancy weight as the density.
+                // For paired orbitals this restores the usual factor of 2.
+                double occ = phi_i.occ();
+                mrcpp::add(prec, tau.real(), 1.0, tau.real(), 0.5 * occ, tau_phi);
             }
 
             print_utils::qmfunction(3, "Compute tau", tau, timer);

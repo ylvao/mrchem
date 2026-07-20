@@ -57,6 +57,9 @@ void Libxc::setFunctional(const std::string &name, double c, double cutoff) {
             MSG_ABORT(oss.str());
         }
         xc_func_set_dens_threshold(libxc_obj, cutoff);
+        if (libxc_obj->info->family == XC_FAMILY_MGGA || libxc_obj->info->family == XC_FAMILY_HYB_MGGA) {
+            xc_func_set_tau_threshold(libxc_obj, cutoff);
+        }
         this->libxc_objects.push_back(libxc_obj);
         this->libxc_coefs.push_back(c * coefs[i]);
     }
